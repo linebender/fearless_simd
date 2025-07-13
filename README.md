@@ -1,6 +1,40 @@
-# Towards "fearless SIMD"
+<!--
+
+This repo-level readme needs restructuring, pending some Linebender templating decisions.
+https://xi.zulipchat.com/#narrow/channel/419691-linebender/topic/Bikeshedding.20badges/with/452312397
+
+For now, prefer updating the package-level readmes, e.g. fearless_simd/README.md.
+
+-->
+
+<div align="center">
+
+# Fearless SIMD
+
+**Safer and easier SIMD**
+
+[![Linebender Zulip](https://img.shields.io/badge/Linebender-%23vello-blue?logo=Zulip)](https://xi.zulipchat.com/#narrow/channel/197075-vello)
+[![dependency status](https://deps.rs/repo/github/linebender/fearless_simd/status.svg)](https://deps.rs/repo/github/linebender/fearless_simd)
+[![Apache 2.0 or MIT license.](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue.svg)](#license)
+
+[![Crates.io](https://img.shields.io/crates/v/fearless_simd.svg)](https://crates.io/crates/fearless_simd)
+[![Docs](https://docs.rs/vello/badge.svg)](https://docs.rs/vello)
+[![Build status](https://github.com/linebender/fearless_simd/workflows/CI/badge.svg)](https://github.com/linebender/fearless_simd/actions)
+
+</div>
+
+> [!CAUTION]
+> Fearless SIMD is in extremely early experimental development. As such, there are no stability
+> guarantees, APIs are incomplete, and architectures have missing implementations. Fearless SIMD is
+> being developed in conjunction with the [Vello Sparse
+> Strips](https://github.com/linebender/vello/) renderer.
+
+## Motivation
 
 This crate proposes an experimental way to use SIMD intrinsics reasonably safely, using the new [target_feature 1.1] feature in Rust, recently stabilized.
+The blog post [A plan for SIMD] contains the high level motivations, goal, and summary for Fearless SIMD.
+
+## History
 
 A [much earlier version][fearless_simd 0.1.1] of this crate experimented with an approach that tried to accomplish safety in safe Rust as of 2018, using types that witnessed the SIMD capability of the CPU. There is a blog post, [Towards fearless SIMD], that wrote up the experiment. That approach couldn't quite be made to work, but was an interesting exploration at the time. A practical development along roughly similar lines is the [pulp] crate.
 
@@ -26,6 +60,7 @@ This crate was inspired by [pulp], [std::simd], among others in the Rust ecosyst
 
 The [half] code was mentioned above. The proc macro was strongly inspired by the [safe-arch-macro] in [rbrotli-enc].
 
+[A plan for SIMD]: https://linebender.org/blog/a-plan-for-simd/
 [pulp]: https://crates.io/crates/pulp
 [target_feature 1.1]: https://github.com/rust-lang/rfcs/pull/2396
 [Towards fearless SIMD]: https://raphlinus.github.io/rust/simd/2018/10/19/fearless-simd.html
