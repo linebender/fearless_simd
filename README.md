@@ -13,13 +13,13 @@ For now, prefer updating the package-level readmes, e.g. fearless_simd/README.md
 
 **Safer and easier SIMD**
 
-[![Linebender Zulip](https://img.shields.io/badge/Linebender-%23vello-blue?logo=Zulip)](https://xi.zulipchat.com/#narrow/channel/197075-vello)
-[![dependency status](https://deps.rs/repo/github/linebender/fearless_simd/status.svg)](https://deps.rs/repo/github/linebender/fearless_simd)
+[![Latest published version.](https://img.shields.io/crates/v/fearless_simd.svg)](https://crates.io/crates/fearless_simd)
+[![Documentation build status.](https://docs.rs/vello/badge.svg)](https://docs.rs/vello)
 [![Apache 2.0 or MIT license.](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue.svg)](#license)
-
-[![Crates.io](https://img.shields.io/crates/v/fearless_simd.svg)](https://crates.io/crates/fearless_simd)
-[![Docs](https://docs.rs/vello/badge.svg)](https://docs.rs/vello)
-[![Build status](https://github.com/linebender/fearless_simd/workflows/CI/badge.svg)](https://github.com/linebender/fearless_simd/actions)
+\
+[![Linebender Zulip chat.](https://img.shields.io/badge/Linebender-%23simd-blue?logo=Zulip)](https://xi.zulipchat.com/#narrow/channel/514230-simd)
+[![GitHub Actions CI status.](https://github.com/linebender/fearless_simd/workflows/CI/badge.svg)](https://github.com/linebender/fearless_simd/actions)
+[![Dependency staleness status.](https://deps.rs/repo/github/linebender/fearless_simd/status.svg)](https://deps.rs/repo/github/linebender/fearless_simd)
 
 </div>
 
