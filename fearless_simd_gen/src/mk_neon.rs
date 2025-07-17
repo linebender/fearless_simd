@@ -131,7 +131,9 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Unary => {
                     let args = [quote! { a.into() }];
+
                     let expr = Neon.expr(method, vec_ty, &args);
+
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
@@ -319,6 +321,20 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 OpSig::Split => generic_split(vec_ty),
                 OpSig::Zip(zip1) => {
                     let neon = if zip1 { "vzip1" } else { "vzip2" };
+                    let zip = simple_intrinsic(neon, vec_ty);
+                    quote! {
+                        #[inline(always)]
+                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                            let x = a.into();
+                            let y = b.into();
+                            unsafe {
+                                #zip(x, y).simd_into(self)
+                            }
+                        }
+                    }
+                }
+                OpSig::Unzip(select_even) => {
+                    let neon = if select_even { "vuzp1" } else { "vuzp2" };
                     let zip = simple_intrinsic(neon, vec_ty);
                     quote! {
                         #[inline(always)]
