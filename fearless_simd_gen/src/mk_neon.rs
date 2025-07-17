@@ -333,8 +333,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Unzip(zip1) => {
-                    let neon = if zip1 { "vuzp1" } else { "vuzp2" };
+                OpSig::Unzip(select_even) => {
+                    let neon = if select_even { "vuzp1" } else { "vuzp2" };
                     let zip = simple_intrinsic(neon, vec_ty);
                     quote! {
                         #[inline(always)]
