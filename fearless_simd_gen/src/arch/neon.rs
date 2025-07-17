@@ -59,6 +59,11 @@ impl Arch for Neon {
 
     // expects args and return value in arch dialect
     fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
+        // There is no logical NOT for 64-bit, so we need this workaround.
+        if op == "not" && ty.scalar_bits == 64 && ty.scalar == ScalarType::Mask  {
+            return quote! { vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))) }
+        }
+        
         if let Some(xlat) = translate_op(op) {
             let intrinsic = simple_intrinsic(xlat, ty);
             return quote! { #intrinsic ( #( #args ),* ) };

@@ -132,11 +132,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 OpSig::Unary => {
                     let args = [quote! { a.into() }];
 
-                    let expr = if vec_ty.scalar == ScalarType::Mask && vec_ty.scalar_bits == 64 {
-                        quote! { vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))) }
-                    } else {
-                        Neon.expr(method, vec_ty, &args)
-                    };
+                    let expr = Neon.expr(method, vec_ty, &args);
 
                     quote! {
                         #[inline(always)]
