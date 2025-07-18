@@ -124,6 +124,9 @@ jobs:
       - name: cargo test
         run: cargo test --workspace --tests --locked --all-features --no-fail-fast
 
+      - name: check generated code
+        run: cargo run --bin fearless_simd_gen -- --check
+
   test-stable-wasm:
     name: test (wasm32)
     runs-on: ubuntu-latest
