@@ -790,6 +790,168 @@ test_wasm_simd_parity! {
     }
 }
 
+// Unzip Low and High
+
+test_wasm_simd_parity! {
+    fn unzip_low_f32x4() {
+        |s| -> [f32; 4] {
+            let a = f32x4::from_slice(s, &[1.0, 2.0, 3.0, 4.0]);
+            let b = f32x4::from_slice(s, &[5.0, 6.0, 7.0, 8.0]);
+            s.unzip_low_f32x4(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_high_f32x4() {
+        |s| -> [f32; 4] {
+            let a = f32x4::from_slice(s, &[1.0, 2.0, 3.0, 4.0]);
+            let b = f32x4::from_slice(s, &[5.0, 6.0, 7.0, 8.0]);
+            s.unzip_high_f32x4(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_low_i8x16() {
+        |s| -> [i8; 16] {
+            let a = i8x16::from_slice(s, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+            let b = i8x16::from_slice(s, &[17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+            s.unzip_low_i8x16(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_high_i8x16() {
+        |s| -> [i8; 16] {
+            let a = i8x16::from_slice(s, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+            let b = i8x16::from_slice(s, &[17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+            s.unzip_high_i8x16(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_low_u8x16() {
+        |s| -> [u8; 16] {
+            let a = u8x16::from_slice(s, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+            let b = u8x16::from_slice(s, &[17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+            s.unzip_low_u8x16(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_high_u8x16() {
+        |s| -> [u8; 16] {
+            let a = u8x16::from_slice(s, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+            let b = u8x16::from_slice(s, &[17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+            s.unzip_high_u8x16(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_low_i16x8() {
+        |s| -> [i16; 8] {
+            let a = i16x8::from_slice(s, &[1, 2, 3, 4, 5, 6, 7, 8]);
+            let b = i16x8::from_slice(s, &[9, 10, 11, 12, 13, 14, 15, 16]);
+            s.unzip_low_i16x8(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_high_i16x8() {
+        |s| -> [i16; 8] {
+            let a = i16x8::from_slice(s, &[1, 2, 3, 4, 5, 6, 7, 8]);
+            let b = i16x8::from_slice(s, &[9, 10, 11, 12, 13, 14, 15, 16]);
+            s.unzip_high_i16x8(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_low_u16x8() {
+        |s| -> [u16; 8] {
+            let a = u16x8::from_slice(s, &[1, 2, 3, 4, 5, 6, 7, 8]);
+            let b = u16x8::from_slice(s, &[9, 10, 11, 12, 13, 14, 15, 16]);
+            s.unzip_low_u16x8(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_high_u16x8() {
+        |s| -> [u16; 8] {
+            let a = u16x8::from_slice(s, &[1, 2, 3, 4, 5, 6, 7, 8]);
+            let b = u16x8::from_slice(s, &[9, 10, 11, 12, 13, 14, 15, 16]);
+            s.unzip_high_u16x8(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_low_i32x4() {
+        |s| -> [i32; 4] {
+            let a = i32x4::from_slice(s, &[1, 2, 3, 4]);
+            let b = i32x4::from_slice(s, &[5, 6, 7, 8]);
+            s.unzip_low_i32x4(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_high_i32x4() {
+        |s| -> [i32; 4] {
+            let a = i32x4::from_slice(s, &[1, 2, 3, 4]);
+            let b = i32x4::from_slice(s, &[5, 6, 7, 8]);
+            s.unzip_high_i32x4(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_low_u32x4() {
+        |s| -> [u32; 4] {
+            let a = u32x4::from_slice(s, &[1, 2, 3, 4]);
+            let b = u32x4::from_slice(s, &[5, 6, 7, 8]);
+            s.unzip_low_u32x4(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_high_u32x4() {
+        |s| -> [u32; 4] {
+            let a = u32x4::from_slice(s, &[1, 2, 3, 4]);
+            let b = u32x4::from_slice(s, &[5, 6, 7, 8]);
+            s.unzip_high_u32x4(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_low_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.0, 2.0]);
+            let b = f64x2::from_slice(s, &[3.0, 4.0]);
+            s.unzip_low_f64x2(a, b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn unzip_high_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.0, 2.0]);
+            let b = f64x2::from_slice(s, &[3.0, 4.0]);
+            s.unzip_high_f64x2(a, b).into()
+        }
+    }
+}
+
 // Right Shift
 
 test_wasm_simd_parity! {
@@ -1005,6 +1167,94 @@ test_wasm_simd_parity! {
                 128, 192, 224, 240, 248, 252, 254, 65535
             ]);
             s.narrow_u16x16(a).into()
+        }
+    }
+}
+
+// f64x2 operations
+
+test_wasm_simd_parity! {
+    fn abs_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[-1.5, 2.5]);
+            a.abs().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn neg_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.5, -2.5]);
+            a.neg().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn sqrt_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[4.0, 9.0]);
+            a.sqrt().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn copysign_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.5, -2.5]);
+            let b = f64x2::from_slice(s, &[-1.0, 1.0]);
+            a.copysign(b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn msub_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[2.0, 3.0]);
+            let b = f64x2::from_slice(s, &[4.0, 5.0]);
+            let c = f64x2::from_slice(s, &[1.0, 2.0]);
+            a.msub(b, c).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn madd_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[2.0, 3.0]);
+            let b = f64x2::from_slice(s, &[4.0, 5.0]);
+            let c = f64x2::from_slice(s, &[1.0, 2.0]);
+            a.madd(b, c).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn floor_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.7, -2.3]);
+            a.floor().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn fract_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.7, -2.3]);
+            a.fract().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn trunc_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.7, -2.3]);
+            a.trunc().into()
         }
     }
 }

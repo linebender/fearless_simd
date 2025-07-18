@@ -9,7 +9,7 @@ use crate::{
     arch::{Arch, wasm::Wasm},
     generic::{generic_combine, generic_op, generic_split},
     ops::{OpSig, TyFlavor, ops_for_type},
-    types::{SIMD_TYPES, ScalarType, VecType, type_imports},
+    types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
 #[derive(Clone, Copy)]
@@ -65,50 +65,43 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Unary => {
-                    if vec_ty.scalar_bits != 64 || vec_ty.scalar != ScalarType::Float {
-                        let args = [quote! { a.into() }];
-                        let expr = if matches!(method, "fract") {
-                            assert_eq!(ty_name, "f32x4", "only support fract_f32x4");
-                            quote! {
-                                self.sub_f32x4(a, self.trunc_f32x4(a))
-                            }
-                        } else {
-                            let expr = Wasm.expr(method, vec_ty, &args);
-                            quote! { #expr.simd_into(self) }
-                        };
+                    let args = [quote! { a.into() }];
+                    let expr = if matches!(method, "fract") {
+                        assert_eq!(
+                            vec_ty.scalar,
+                            ScalarType::Float,
+                            "only float supports fract"
+                        );
 
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
-                                #expr
-                            }
+                            a.sub(a.trunc())
                         }
                     } else {
-                        quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
-                                todo!();
-                            }
+                        let expr = Wasm.expr(method, vec_ty, &args);
+                        quote! { #expr.simd_into(self) }
+                    };
+
+                    quote! {
+                        #[inline(always)]
+                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #expr
                         }
                     }
                 }
                 OpSig::Binary if method == "copysign" => {
-                    if ty_name == "f32x4" {
-                        quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
-                                let sign_mask = f32x4_splat(-0.0_f32);
-                                let sign_bits = v128_and(b.into(), sign_mask.into());
-                                let magnitude = v128_andnot(a.into(), sign_mask.into());
-                                v128_or(magnitude, sign_bits).simd_into(self)
-                            }
-                        }
-                    } else {
-                        quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
-                                todo!()
-                            }
+                    let splat: Ident = format_ident!("{}_splat", vec_ty.rust_name());
+                    let sign_mask_literal = match vec_ty.scalar_bits {
+                        32 => quote! { -0.0_f32 },
+                        64 => quote! { -0.0_f64 },
+                        _ => unimplemented!(),
+                    };
+                    quote! {
+                        #[inline(always)]
+                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                            let sign_mask = #splat(#sign_mask_literal);
+                            let sign_bits = v128_and(b.into(), sign_mask.into());
+                            let magnitude = v128_andnot(a.into(), sign_mask.into());
+                            v128_or(magnitude, sign_bits).simd_into(self)
                         }
                     }
                 }
@@ -162,37 +155,18 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Ternary => {
-                    if vec_ty.scalar_bits == 64 && vec_ty.scalar == ScalarType::Float {
-                        quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, _: #ty<Self>, _: #ty<Self>, _: #ty<Self>) -> #ret_ty {
-                                todo!()
-                            }
-                        }
-                    } else if matches!(method, "madd" | "msub") {
-                        let first_ident = {
-                            let str = if method == "madd" {
-                                "add_f32x4"
-                            } else {
-                                "sub_f32x4"
-                            };
-
-                            Ident::new(str, Span::call_site())
+                    if matches!(method, "madd" | "msub") {
+                        let first_ident = if method == "madd" {
+                            quote! {add}
+                        } else {
+                            quote! {sub}
                         };
 
-                        assert_eq!(
-                            vec_ty,
-                            &VecType {
-                                scalar: ScalarType::Float,
-                                scalar_bits: 32,
-                                len: 4,
-                            }
-                        );
                         // TODO: `relaxed-simd` has madd.
                         quote! {
                             #[inline(always)]
                             fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
-                                self.#first_ident(a, self.mul_f32x4(b, c))
+                                a.#first_ident(b.mul(c))
                             }
                         }
                     } else {
@@ -265,10 +239,45 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Unzip(is_low) => {
+                    let (indices, shuffle_fn) = match vec_ty.scalar_bits {
+                        8 => {
+                            let indices = if is_low {
+                                quote! { 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30 }
+                            } else {
+                                quote! { 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31 }
+                            };
+                            (indices, quote! { u8x16_shuffle })
+                        }
+                        16 => {
+                            let indices = if is_low {
+                                quote! { 0, 2, 4, 6, 8, 10, 12, 14 }
+                            } else {
+                                quote! { 1, 3, 5, 7, 9, 11, 13, 15 }
+                            };
+                            (indices, quote! { u16x8_shuffle })
+                        }
+                        32 => {
+                            let indices = if is_low {
+                                quote! { 0, 2, 4, 6 }
+                            } else {
+                                quote! { 1, 3, 5, 7 }
+                            };
+                            (indices, quote! { u32x4_shuffle })
+                        }
+                        64 => {
+                            let indices = if is_low {
+                                quote! { 0, 2 }
+                            } else {
+                                quote! { 1, 3 }
+                            };
+                            (indices, quote! { u64x2_shuffle })
+                        }
+                        _ => panic!("unsupported scalar_bits for unzip operation"),
+                    };
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
-                            todo!()
+                            #shuffle_fn::<#indices>(a.into(), b.into()).simd_into(self)
                         }
                     }
                 }
