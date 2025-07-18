@@ -34,3 +34,9 @@ fn saturate_float_to_int() {
     simd_dispatch!(helper(level) = helper_inner);
     helper(Level::new());
 }
+
+// Ensure that we can cast between generic native-width vectors
+#[allow(dead_code)]
+fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
+    x.to_int()
+}
