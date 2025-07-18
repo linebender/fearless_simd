@@ -441,7 +441,7 @@ fn interleave_indices(
 ) -> TokenStream {
     let indices = {
         let indices = (0..len).collect::<Vec<_>>();
-        interleave(&indices, len / count as usize)
+        interleave(&indices, len / count)
     };
 
     make_list(indices.into_iter().map(func).collect::<Vec<_>>())
