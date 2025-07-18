@@ -265,10 +265,45 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Unzip(is_low) => {
+                    let (indices, shuffle_fn) = match vec_ty.scalar_bits {
+                        8 => {
+                            let indices = if is_low {
+                                quote! { 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30 }
+                            } else {
+                                quote! { 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31 }
+                            };
+                            (indices, quote! { u8x16_shuffle })
+                        }
+                        16 => {
+                            let indices = if is_low {
+                                quote! { 0, 2, 4, 6, 8, 10, 12, 14 }
+                            } else {
+                                quote! { 1, 3, 5, 7, 9, 11, 13, 15 }
+                            };
+                            (indices, quote! { u16x8_shuffle })
+                        }
+                        32 => {
+                            let indices = if is_low {
+                                quote! { 0, 2, 4, 6 }
+                            } else {
+                                quote! { 1, 3, 5, 7 }
+                            };
+                            (indices, quote! { u32x4_shuffle })
+                        }
+                        64 => {
+                            let indices = if is_low {
+                                quote! { 0, 2 }
+                            } else {
+                                quote! { 1, 3 }
+                            };
+                            (indices, quote! { u64x2_shuffle })
+                        }
+                        _ => panic!("unsupported scalar_bits for unzip operation"),
+                    };
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
-                            todo!()
+                            #shuffle_fn::<#indices>(a.into(), b.into()).simd_into(self)
                         }
                     }
                 }
