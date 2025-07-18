@@ -100,6 +100,26 @@ jobs:
       - name: cargo clippy
         run: cargo hack clippy -p fearless_simd --locked --target wasm32-unknown-unknown --optional-deps --each-feature --ignore-unknown-features --features std
 
+  check-generated-code:
+    name: check generated code
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install stable toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_STABLE_VER }}
+          components: rustfmt
+
+      - name: restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.event_name != 'merge_group' }}
+
+      - name: check generated code
+        run: cargo run --bin fearless_simd_gen -- --check
 
   test-stable:
     name: test
@@ -124,9 +144,6 @@ jobs:
 
       - name: cargo test
         run: cargo test --workspace --tests --locked --all-features --no-fail-fast
-
-      - name: check generated code
-        run: cargo run --bin fearless_simd_gen -- --check
 
   test-stable-wasm:
     name: test (wasm32)
