@@ -1170,3 +1170,91 @@ test_wasm_simd_parity! {
         }
     }
 }
+
+// f64x2 operations
+
+test_wasm_simd_parity! {
+    fn abs_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[-1.5, 2.5]);
+            a.abs().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn neg_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.5, -2.5]);
+            a.neg().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn sqrt_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[4.0, 9.0]);
+            a.sqrt().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn copysign_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.5, -2.5]);
+            let b = f64x2::from_slice(s, &[-1.0, 1.0]);
+            a.copysign(b).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn msub_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[2.0, 3.0]);
+            let b = f64x2::from_slice(s, &[4.0, 5.0]);
+            let c = f64x2::from_slice(s, &[1.0, 2.0]);
+            a.msub(b, c).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn madd_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[2.0, 3.0]);
+            let b = f64x2::from_slice(s, &[4.0, 5.0]);
+            let c = f64x2::from_slice(s, &[1.0, 2.0]);
+            a.madd(b, c).into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn floor_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.7, -2.3]);
+            a.floor().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn fract_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.7, -2.3]);
+            a.fract().into()
+        }
+    }
+}
+
+test_wasm_simd_parity! {
+    fn trunc_f64x2() {
+        |s| -> [f64; 2] {
+            let a = f64x2::from_slice(s, &[1.7, -2.3]);
+            a.trunc().into()
+        }
+    }
+}
