@@ -42,20 +42,14 @@ fn translate_op(op: &str) -> Option<&'static str> {
 fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
     let ty_prefix = Wasm.arch_ty(ty);
     let ident = Ident::new(name, Span::call_site());
-    let combined_ident = Ident::new(
-        &format!("{}_{}", ty_prefix.to_string(), ident.to_string()),
-        Span::call_site(),
-    );
+    let combined_ident = Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site());
     quote! { #combined_ident }
 }
 
 fn v128_intrinsic(name: &str) -> TokenStream {
     let ty_prefix = Ident::new("v128", Span::call_site());
     let ident = Ident::new(name, Span::call_site());
-    let combined_ident = Ident::new(
-        &format!("{}_{}", ty_prefix.to_string(), ident.to_string()),
-        Span::call_site(),
-    );
+    let combined_ident = Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site());
     quote! { #combined_ident }
 }
 

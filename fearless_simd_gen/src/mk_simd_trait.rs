@@ -15,7 +15,7 @@ pub fn mk_simd_trait() -> TokenStream {
     // Float methods
     for vec_ty in SIMD_TYPES {
         let ty_name = vec_ty.rust_name();
-        for (method, sig) in &ops_for_type(&vec_ty, true) {
+        for (method, sig) in &ops_for_type(vec_ty, true) {
             let method_name = format!("{method}_{ty_name}");
             let method = Ident::new(&method_name, Span::call_site());
             let args = sig.simd_trait_args(vec_ty);

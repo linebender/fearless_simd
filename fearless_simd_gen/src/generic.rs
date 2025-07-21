@@ -210,7 +210,7 @@ pub fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
         OpSig::Reinterpret(scalar, scalar_bits) => {
             let mut half = reinterpret_ty(ty, scalar, scalar_bits);
-            half.len = half.len / 2;
+            half.len /= 2;
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
             quote! {
                 #[inline(always)]
@@ -221,7 +221,7 @@ pub fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             }
         }
         OpSig::WidenNarrow(mut half) => {
-            half.len = half.len / 2;
+            half.len /= 2;
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
             quote! {
                 #[inline(always)]
