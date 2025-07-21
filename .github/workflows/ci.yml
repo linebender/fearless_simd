@@ -118,8 +118,11 @@ jobs:
         with:
           save-if: ${{ github.event_name != 'merge_group' }}
 
-      - name: check generated code
-        run: cargo run --bin fearless_simd_gen -- --check
+      - name: run code generator
+        run: cargo run --bin fearless_simd_gen
+
+      - name: check for uncommitted changes
+        run: git diff --exit-code
 
   test-stable:
     name: test
