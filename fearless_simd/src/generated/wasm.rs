@@ -1174,6 +1174,7 @@ impl Simd for WasmSimd128 {
         let (b0, _) = self.split_f32x8(b);
         self.combine_f32x4(self.zip_low_f32x4(a0, b0), self.zip_high_f32x4(a0, b0))
     }
+    // DO NOT COMMIT - test CI fails
     #[inline(always)]
     fn zip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
         let (_, a1) = self.split_f32x8(a);
