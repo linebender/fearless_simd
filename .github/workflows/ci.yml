@@ -119,17 +119,14 @@ jobs:
         with:
           save-if: ${{ github.event_name != 'merge_group' }}
 
-      # TODO: Add back the suffix ` -- -D warnings` onto this command to make warnings errors.
-      # Currently there are too many warnings to turn on this lint.
       - name: cargo clippy (no_std)
-        run: cargo hack clippy -p fearless_simd --locked --optional-deps --each-feature --ignore-unknown-features --features libm --exclude-features ${{ env.FEATURES_DEPENDING_ON_STD }} --target x86_64-unknown-none
+        run: cargo hack clippy -p fearless_simd --locked --optional-deps --each-feature --ignore-unknown-features --features libm --exclude-features ${{ env.FEATURES_DEPENDING_ON_STD }} --target x86_64-unknown-none -- -D warnings
 
-      # TODO: Add back the suffix ` -- -D warnings` onto this command to make warnings errors.
-      # Currently there are too many warnings to turn on this lint.
       - name: cargo clippy
-        run: cargo hack clippy --workspace --locked --optional-deps --each-feature --ignore-unknown-features --features std
+        run: cargo hack clippy --workspace --locked --optional-deps --each-feature --ignore-unknown-features --features std -- -D warnings
 
-      # TODO: Add (auxiliary) step.
+      - name: cargo clippy (auxiliary)
+        run: cargo hack clippy --workspace --locked --optional-deps --each-feature --ignore-unknown-features --features std --tests --benches --examples -- -D warnings
 
 
   clippy-stable-wasm:

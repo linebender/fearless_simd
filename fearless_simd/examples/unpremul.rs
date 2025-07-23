@@ -1,7 +1,7 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use fearless_simd::{Level, Simd};
+use fearless_simd::Level;
 
 // #[cfg(target_arch = "aarch64")]
 // use fearless_simd::{aarch64::Fp16, f16};
