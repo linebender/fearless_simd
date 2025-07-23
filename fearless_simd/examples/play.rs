@@ -29,7 +29,7 @@ simd_dispatch!(foo(level, x: f32) -> f32 = foo_inner);
 
 // currently requires `safe_wrappers` feature
 fn do_something_on_neon(_level: Level) -> f32 {
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(all(feature = "safe_wrappers", target_arch = "aarch64"))]
     if let Some(neon) = _level.as_neon() {
         return neon.vectorize(
             #[inline(always)]
