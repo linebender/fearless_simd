@@ -158,7 +158,7 @@ jobs:
       # TODO: Add back the suffix ` -- -D warnings` onto this command to make warnings errors.
       # Currently there are too many warnings to turn on this lint.
       - name: cargo clippy (no_std)
-        run: cargo hack clippy -p fearless_simd --locked --target wasm32-unknown-unknown --optional-deps --each-feature --ignore-unknown-features --features libm --exclude-features std,default,half
+        run: cargo hack clippy -p fearless_simd --locked --target wasm32-unknown-unknown --optional-deps --each-feature --ignore-unknown-features --features libm --exclude-features ${{ env.FEATURES_DEPENDING_ON_STD }}
 
       # TODO: Add back the suffix ` -- -D warnings` onto this command to make warnings errors.
       # Currently there are too many warnings to turn on this lint.
@@ -191,7 +191,7 @@ jobs:
       - name: check for uncommitted changes
         run: git diff --exit-code
 
- test-stable:
+  test-stable:
     name: cargo test
     runs-on: ${{ matrix.os }}
     strategy:
