@@ -1,6 +1,11 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    clippy::match_single_binding,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use crate::arch::Arch;
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};

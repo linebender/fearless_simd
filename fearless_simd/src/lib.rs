@@ -4,7 +4,11 @@
 //! A helper library to make SIMD more friendly.
 
 #![allow(non_camel_case_types)]
-#![allow(clippy::unused_unit, reason = "easier for code generation")]
+#![expect(clippy::unused_unit, reason = "easier for code generation")]
+#![expect(
+    clippy::new_without_default,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub mod core_arch;

@@ -70,7 +70,7 @@ fn mk_simd_base() -> TokenStream {
             /// all-0 for `false` and all-1 for `true`. When we get deep
             /// into AVX-512, we need to think about predication masks.
             ///
-            /// One possiblity to consider is that the SIMD trait grows
+            /// One possibility to consider is that the SIMD trait grows
             /// `maskAxB` associated types.
             type Mask: SimdMask<Element::Mask, S>;
             /// A 128 bit SIMD vector of the same scalar type.
