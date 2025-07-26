@@ -40,6 +40,11 @@ pub mod wasm32 {
     pub use crate::generated::WasmSimd128;
 }
 
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub mod x86 {
+    pub use crate::generated::Sse4_2;
+}
+
 /// The level enum with the specific SIMD capabilities available.
 #[derive(Clone, Copy, Debug)]
 pub enum Level {
@@ -48,6 +53,8 @@ pub enum Level {
     Neon(Neon),
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     WasmSimd128(WasmSimd128),
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    Sse4_2(Sse4_2),
 }
 
 impl Level {
@@ -58,6 +65,10 @@ impl Level {
         }
         #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
         return Level::WasmSimd128(WasmSimd128::new_unchecked());
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        if std::arch::is_x86_feature_detected!("sse4.2") {
+            return unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) };
+        }
         #[cfg(not(all(target_arch = "wasm32", target_feature = "simd128")))]
         Self::fallback()
     }
@@ -101,6 +112,13 @@ impl Level {
             f.with_simd(simd128)
         }
 
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #[target_feature(enable = "sse4.2")]
+        #[inline]
+        unsafe fn dispatch_sse4_2<W: WithSimd>(f: W, sse4_2: Sse4_2) -> W::Output {
+            f.with_simd(sse4_2)
+        }
+
         #[inline]
         fn dispatch_fallback<W: WithSimd>(f: W, fallback: Fallback) -> W::Output {
             f.with_simd(fallback)
@@ -111,6 +129,8 @@ impl Level {
             Level::Neon(neon) => unsafe { dispatch_neon(f, neon) },
             #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
             Level::WasmSimd128(simd128) => dispatch_simd128(f, simd128),
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            Level::Sse4_2(sse4_2) => unsafe { dispatch_sse4_2(f, sse4_2) },
             Level::Fallback(fallback) => dispatch_fallback(f, fallback),
         }
     }
