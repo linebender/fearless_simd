@@ -812,6 +812,12 @@ impl<S: Simd> core::ops::DerefMut for mask8x16<S> {
         &mut self.val
     }
 }
+impl<S: Simd> SimdFrom<i8, S> for mask8x16<S> {
+    #[inline(always)]
+    fn simd_from(value: i8, simd: S) -> Self {
+        simd.splat_mask8x16(value)
+    }
+}
 impl<S: Simd> Select<mask8x16<S>> for mask8x16<S> {
     #[inline(always)]
     fn select(self, if_true: mask8x16<S>, if_false: mask8x16<S>) -> mask8x16<S> {
@@ -1387,6 +1393,12 @@ impl<S: Simd> core::ops::DerefMut for mask16x8<S> {
         &mut self.val
     }
 }
+impl<S: Simd> SimdFrom<i16, S> for mask16x8<S> {
+    #[inline(always)]
+    fn simd_from(value: i16, simd: S) -> Self {
+        simd.splat_mask16x8(value)
+    }
+}
 impl<S: Simd> Select<mask16x8<S>> for mask16x8<S> {
     #[inline(always)]
     fn select(self, if_true: mask16x8<S>, if_false: mask16x8<S>) -> mask16x8<S> {
@@ -1949,6 +1961,12 @@ impl<S: Simd> core::ops::DerefMut for mask32x4<S> {
         &mut self.val
     }
 }
+impl<S: Simd> SimdFrom<i32, S> for mask32x4<S> {
+    #[inline(always)]
+    fn simd_from(value: i32, simd: S) -> Self {
+        simd.splat_mask32x4(value)
+    }
+}
 impl<S: Simd> Select<mask32x4<S>> for mask32x4<S> {
     #[inline(always)]
     fn select(self, if_true: mask32x4<S>, if_false: mask32x4<S>) -> mask32x4<S> {
@@ -2339,6 +2357,12 @@ impl<S: Simd> core::ops::DerefMut for mask64x2<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.val
+    }
+}
+impl<S: Simd> SimdFrom<i64, S> for mask64x2<S> {
+    #[inline(always)]
+    fn simd_from(value: i64, simd: S) -> Self {
+        simd.splat_mask64x2(value)
     }
 }
 impl<S: Simd> Select<mask64x2<S>> for mask64x2<S> {
@@ -3295,6 +3319,12 @@ impl<S: Simd> core::ops::DerefMut for mask8x32<S> {
         &mut self.val
     }
 }
+impl<S: Simd> SimdFrom<i8, S> for mask8x32<S> {
+    #[inline(always)]
+    fn simd_from(value: i8, simd: S) -> Self {
+        simd.splat_mask8x32(value)
+    }
+}
 impl<S: Simd> Select<mask8x32<S>> for mask8x32<S> {
     #[inline(always)]
     fn select(self, if_true: mask8x32<S>, if_false: mask8x32<S>) -> mask8x32<S> {
@@ -3894,6 +3924,12 @@ impl<S: Simd> core::ops::DerefMut for mask16x16<S> {
         &mut self.val
     }
 }
+impl<S: Simd> SimdFrom<i16, S> for mask16x16<S> {
+    #[inline(always)]
+    fn simd_from(value: i16, simd: S) -> Self {
+        simd.splat_mask16x16(value)
+    }
+}
 impl<S: Simd> Select<mask16x16<S>> for mask16x16<S> {
     #[inline(always)]
     fn select(self, if_true: mask16x16<S>, if_false: mask16x16<S>) -> mask16x16<S> {
@@ -4483,6 +4519,12 @@ impl<S: Simd> core::ops::DerefMut for mask32x8<S> {
         &mut self.val
     }
 }
+impl<S: Simd> SimdFrom<i32, S> for mask32x8<S> {
+    #[inline(always)]
+    fn simd_from(value: i32, simd: S) -> Self {
+        simd.splat_mask32x8(value)
+    }
+}
 impl<S: Simd> Select<mask32x8<S>> for mask32x8<S> {
     #[inline(always)]
     fn select(self, if_true: mask32x8<S>, if_false: mask32x8<S>) -> mask32x8<S> {
@@ -4873,6 +4915,12 @@ impl<S: Simd> core::ops::DerefMut for mask64x4<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.val
+    }
+}
+impl<S: Simd> SimdFrom<i64, S> for mask64x4<S> {
+    #[inline(always)]
+    fn simd_from(value: i64, simd: S) -> Self {
+        simd.splat_mask64x4(value)
     }
 }
 impl<S: Simd> Select<mask64x4<S>> for mask64x4<S> {
@@ -5924,6 +5972,12 @@ impl<S: Simd> core::ops::DerefMut for mask8x64<S> {
         &mut self.val
     }
 }
+impl<S: Simd> SimdFrom<i8, S> for mask8x64<S> {
+    #[inline(always)]
+    fn simd_from(value: i8, simd: S) -> Self {
+        simd.splat_mask8x64(value)
+    }
+}
 impl<S: Simd> Select<mask8x64<S>> for mask8x64<S> {
     #[inline(always)]
     fn select(self, if_true: mask8x64<S>, if_false: mask8x64<S>) -> mask8x64<S> {
@@ -6562,6 +6616,12 @@ impl<S: Simd> core::ops::DerefMut for mask16x32<S> {
         &mut self.val
     }
 }
+impl<S: Simd> SimdFrom<i16, S> for mask16x32<S> {
+    #[inline(always)]
+    fn simd_from(value: i16, simd: S) -> Self {
+        simd.splat_mask16x32(value)
+    }
+}
 impl<S: Simd> Select<mask16x32<S>> for mask16x32<S> {
     #[inline(always)]
     fn select(self, if_true: mask16x32<S>, if_false: mask16x32<S>) -> mask16x32<S> {
@@ -7166,6 +7226,12 @@ impl<S: Simd> core::ops::DerefMut for mask32x16<S> {
         &mut self.val
     }
 }
+impl<S: Simd> SimdFrom<i32, S> for mask32x16<S> {
+    #[inline(always)]
+    fn simd_from(value: i32, simd: S) -> Self {
+        simd.splat_mask32x16(value)
+    }
+}
 impl<S: Simd> Select<mask32x16<S>> for mask32x16<S> {
     #[inline(always)]
     fn select(self, if_true: mask32x16<S>, if_false: mask32x16<S>) -> mask32x16<S> {
@@ -7568,6 +7634,12 @@ impl<S: Simd> core::ops::DerefMut for mask64x8<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.val
+    }
+}
+impl<S: Simd> SimdFrom<i64, S> for mask64x8<S> {
+    #[inline(always)]
+    fn simd_from(value: i64, simd: S) -> Self {
+        simd.splat_mask64x8(value)
     }
 }
 impl<S: Simd> Select<mask64x8<S>> for mask64x8<S> {

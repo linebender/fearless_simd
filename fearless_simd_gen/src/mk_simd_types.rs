@@ -22,7 +22,7 @@ pub fn mk_simd_types() -> TokenStream {
         let select = Ident::new(&format!("select_{}", ty.rust_name()), Span::call_site());
         let bytes = VecType::new(ScalarType::Unsigned, 8, align).rust();
         let mask = ty.mask_ty().rust();
-        let scalar_impl = if ty.scalar != ScalarType::Mask {
+        let scalar_impl = {
             let splat = Ident::new(&format!("splat_{}", ty.rust_name()), Span::call_site());
             quote! {
                 impl<S: Simd> SimdFrom<#rust_scalar, S> for #name<S> {
@@ -32,9 +32,6 @@ pub fn mk_simd_types() -> TokenStream {
                     }
                 }
             }
-        } else {
-            // TODO: consider implementing splat for masks; portable_simd does
-            quote! {}
         };
         let impl_block = simd_impl(ty);
         let simd_from_items = make_list(

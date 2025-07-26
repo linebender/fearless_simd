@@ -42,6 +42,7 @@ pub fn mk_ops() -> TokenStream {
                     }
                 });
             } else {
+                let scalar = ty.scalar.rust(ty.scalar_bits);
                 impls.push(quote! {
                     impl<S: Simd> core::ops::#trait_id for #simd<S> {
                         type Output = Self;
@@ -50,28 +51,23 @@ pub fn mk_ops() -> TokenStream {
                             self.simd.#simd_fn(self, rhs)
                         }
                     }
+
+                    impl<S: Simd> core::ops::#trait_id<#scalar> for #simd<S> {
+                        type Output = Self;
+                        #[inline(always)]
+                        fn #opfn(self, rhs: #scalar) -> Self::Output {
+                            self.simd.#simd_fn(self, rhs.simd_into(self.simd))
+                        }
+                    }
+
+                    impl<S: Simd> core::ops::#trait_id<#simd<S>> for #scalar {
+                        type Output = #simd<S>;
+                        #[inline(always)]
+                        fn #opfn(self, rhs: #simd<S>) -> Self::Output {
+                            rhs.simd.#simd_fn(self.simd_into(rhs.simd), rhs)
+                        }
+                    }
                 });
-                if ty.scalar != ScalarType::Mask {
-                    let scalar = ty.scalar.rust(ty.scalar_bits);
-                    impls.push(quote! {
-
-                        impl<S: Simd> core::ops::#trait_id<#scalar> for #simd<S> {
-                            type Output = Self;
-                            #[inline(always)]
-                            fn #opfn(self, rhs: #scalar) -> Self::Output {
-                                self.simd.#simd_fn(self, rhs.simd_into(self.simd))
-                            }
-                        }
-
-                        impl<S: Simd> core::ops::#trait_id<#simd<S>> for #scalar {
-                            type Output = #simd<S>;
-                            #[inline(always)]
-                            fn #opfn(self, rhs: #simd<S>) -> Self::Output {
-                                rhs.simd.#simd_fn(self.simd_into(rhs.simd), rhs)
-                            }
-                        }
-                    });
-                }
             }
         }
     }
