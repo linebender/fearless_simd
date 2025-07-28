@@ -1,6 +1,11 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    clippy::too_many_arguments,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 //! Access to SSE2 intrinsics.
 
 use crate::impl_macros::delegate;
