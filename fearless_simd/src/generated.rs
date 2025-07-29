@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 #![cfg_attr(
-    not(feature = "std"),
+    all(feature = "std", target_arch = "x86_64"),
     expect(
         clippy::should_implement_trait,
         clippy::missing_transmute_annotations,
@@ -13,7 +13,7 @@
     )
 )]
 #![cfg_attr(
-    feature = "std",
+    all(feature = "std", not(target_arch = "x86_64")),
     expect(
         clippy::missing_safety_doc,
         clippy::should_implement_trait,
