@@ -50,9 +50,11 @@ The SIMD types in this crate are a thin newtype around the corresponding array, 
 
 A central idea is "levels," which represent a set of target features. Each level has a corresponding module. Each module for a level has a number of submodules, one for each type (though with an underscore instead of `x` to avoid name collision), with a large number of free functions for SIMD operations that operate on that type.
 
-On aarch64, the levels are `neon` and `fp16`. The `fp16` level implies `neon`.
+On aarch64, the level is `neon`.
 
-On x86-64, the currently supported level is `avx2`. This is actually short for the x86-64-v3 [microarchitecture level][x86-64 microarchitecture levels], which corresponds roughly to Haswell. The `avx512` level is also planned, which is x86-64-v4.
+On x86-64, the planned supported level is `avx2`. This is actually short for the x86-64-v3 [microarchitecture level][x86-64 microarchitecture levels], which corresponds roughly to Haswell. The `avx512` level is also planned, which is x86-64-v4.
+
+On wasm, the level is `simd128`.
 
 ## Credits
 
