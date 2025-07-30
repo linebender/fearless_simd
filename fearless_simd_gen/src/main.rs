@@ -1,6 +1,12 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    missing_docs,
+    clippy::use_self,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use std::{fs::File, io::Write, path::Path};
 
 use clap::{Parser, ValueEnum};

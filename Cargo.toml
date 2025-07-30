@@ -8,8 +8,8 @@ members = [
 ]
 
 [workspace.package]
-license = "MIT/Apache-2.0"
 edition = "2024"
+license = "Apache-2.0 OR MIT"
 repository = "https://github.com/linebender/fearless_simd"
 
 

@@ -1,6 +1,12 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    unreachable_pub,
+    clippy::shadow_unrelated,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -97,7 +103,7 @@ pub const MASK_OPS: &[(&str, OpSig)] = &[
     ("simd_eq", OpSig::Compare),
 ];
 
-/// Ops covered by core::ops
+/// Ops covered by `core::ops`
 pub const CORE_OPS: &[&str] = &[
     "not", "neg", "add", "sub", "mul", "div", "and", "or", "xor", "shr",
 ];

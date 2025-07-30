@@ -3,6 +3,8 @@
 
 #![expect(
     clippy::uninlined_format_args,
+    unreachable_pub,
+    clippy::shadow_unrelated,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
@@ -446,7 +448,7 @@ fn mk_type_impl() -> TokenStream {
                     unsafe { core::mem::transmute(value.val) }
                 }
             }
-        })
+        });
     }
     quote! {
         #( #result )*
