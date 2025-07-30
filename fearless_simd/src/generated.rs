@@ -13,7 +13,21 @@
     )
 )]
 #![cfg_attr(
-    all(feature = "std", not(target_arch = "x86_64")),
+    all(feature = "std", target_arch = "wasm32"),
+    expect(
+        clippy::should_implement_trait,
+        clippy::missing_transmute_annotations,
+        clippy::useless_transmute,
+        clippy::new_without_default,
+        clippy::unnecessary_cast,
+        reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+    )
+)]
+#![cfg_attr(
+    all(
+        feature = "std",
+        all(not(target_arch = "x86_64"), not(target_arch = "wasm32"))
+    ),
     expect(
         clippy::missing_safety_doc,
         clippy::should_implement_trait,
