@@ -169,12 +169,22 @@ fn mk_simd_impl() -> TokenStream {
                     _ => unreachable!(),
                 },
                 OpSig::Binary => {
-                    let args = [quote! { a.into() }, quote! { b.into() }];
-                    let expr = Sse4_2.expr(method, vec_ty, &args);
-                    quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
-                            unsafe { #expr.simd_into(self) }
+
+                    if method == "mul" && (vec_ty.scalar_bits == 8 || vec_ty.scalar_bits == 16) {
+                        quote! {
+                            #[inline(always)]
+                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                                todo!()
+                            }
+                        }
+                    }   else {
+                        let args = [quote! { a.into() }, quote! { b.into() }];
+                        let expr = Sse4_2.expr(method, vec_ty, &args);
+                        quote! {
+                            #[inline(always)]
+                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                                unsafe { #expr.simd_into(self) }
+                            }
                         }
                     }
                 }
@@ -185,41 +195,47 @@ fn mk_simd_impl() -> TokenStream {
                         _ => unreachable!(),
                     };
                     if scalar_bits == 8 {
-                        let extend = extend_intrinsic(vec_ty.scalar, 8, 16);
-                        let intrinsic = format_ident!("_mm_{op}_epi16");
-                        let narrow = format_ident!(
-                            "narrow_{}",
-                            VecType {
-                                scalar: ScalarType::Unsigned,
-                                scalar_bits: 16,
-                                ..*vec_ty
-                            }
-                            .rust_name()
-                        );
-                        let combine = format_ident!(
-                            "combine_{}",
-                            VecType {
-                                len: vec_ty.len / 2,
-                                scalar_bits: 16,
-                                ..*vec_ty
-                            }
-                            .rust_name()
-                        );
-                        let set1 = set1_intrinsic(vec_ty.scalar, 16);
                         quote! {
                             #[inline(always)]
                             fn #method_ident(self, a: #ty<Self>, b: u32) -> #ret_ty {
-                                unsafe {
-                                    let a1 = a.into();
-                                    let a2 = _mm_slli_si128(a1, 8);
-                                    let b = #set1(b as _);
-                                    self.#narrow(self.#combine(
-                                        #intrinsic(#extend(a1), b).simd_into(self),
-                                        #intrinsic(#extend(a2), b).simd_into(self),
-                                    ))
-                                }
+                                todo!()
                             }
                         }
+                        // let extend = extend_intrinsic(vec_ty.scalar, 8, 16);
+                        // let intrinsic = format_ident!("_mm_{op}_epi16");
+                        // let narrow = format_ident!(
+                        //     "narrow_{}",
+                        //     VecType {
+                        //         scalar: ScalarType::Unsigned,
+                        //         scalar_bits: 16,
+                        //         ..*vec_ty
+                        //     }
+                        //     .rust_name()
+                        // );
+                        // let combine = format_ident!(
+                        //     "combine_{}",
+                        //     VecType {
+                        //         len: vec_ty.len / 2,
+                        //         scalar_bits: 16,
+                        //         ..*vec_ty
+                        //     }
+                        //     .rust_name()
+                        // );
+                        // let set1 = set1_intrinsic(vec_ty.scalar, 16);
+                        // quote! {
+                        //     #[inline(always)]
+                        //     fn #method_ident(self, a: #ty<Self>, b: u32) -> #ret_ty {
+                        //         unsafe {
+                        //             let a1 = a.into();
+                        //             let a2 = _mm_slli_si128(a1, 8);
+                        //             let b = #set1(b as _);
+                        //             self.#narrow(self.#combine(
+                        //                 #intrinsic(#extend(a1), b).simd_into(self),
+                        //                 #intrinsic(#extend(a2), b).simd_into(self),
+                        //             ))
+                        //         }
+                        //     }
+                        // }
                     } else {
                         let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
                         let intrinsic = format_ident!("_mm_{op}_{suffix}");

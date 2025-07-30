@@ -218,7 +218,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { todo!().simd_into(self) }
+        todo!()
     }
     #[inline(always)]
     fn and_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -234,15 +234,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, b: u32) -> i8x16<Self> {
-        unsafe {
-            let a1 = a.into();
-            let a2 = _mm_slli_si128(a1, 8);
-            let b = _mm_set1_epi16(b as _);
-            self.narrow_u16x16(self.combine_i16x8(
-                _mm_sra_epi16(_mm_cvtepi8_epi16(a1), b).simd_into(self),
-                _mm_sra_epi16(_mm_cvtepi8_epi16(a2), b).simd_into(self),
-            ))
-        }
+        todo!()
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -331,7 +323,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { todo!().simd_into(self) }
+        todo!()
     }
     #[inline(always)]
     fn and_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -347,15 +339,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, b: u32) -> u8x16<Self> {
-        unsafe {
-            let a1 = a.into();
-            let a2 = _mm_slli_si128(a1, 8);
-            let b = _mm_set1_epi16(b as _);
-            self.narrow_u16x16(self.combine_u16x8(
-                _mm_srl_epi16(_mm_cvtepu8_epi16(a1), b).simd_into(self),
-                _mm_srl_epi16(_mm_cvtepu8_epi16(a2), b).simd_into(self),
-            ))
-        }
+        todo!()
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -486,7 +470,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { todo!().simd_into(self) }
+        todo!()
     }
     #[inline(always)]
     fn and_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -591,7 +575,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { todo!().simd_into(self) }
+        todo!()
     }
     #[inline(always)]
     fn and_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
