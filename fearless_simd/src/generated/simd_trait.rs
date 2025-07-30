@@ -844,7 +844,7 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     #[doc = r" all-0 for `false` and all-1 for `true`. When we get deep"]
     #[doc = r" into AVX-512, we need to think about predication masks."]
     #[doc = r""]
-    #[doc = r" One possiblity to consider is that the SIMD trait grows"]
+    #[doc = r" One possibility to consider is that the SIMD trait grows"]
     #[doc = r" `maskAxB` associated types."]
     type Mask: SimdMask<Element::Mask, S>;
     #[doc = r" A 128 bit SIMD vector of the same scalar type."]
