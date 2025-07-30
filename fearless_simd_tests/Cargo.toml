@@ -15,7 +15,7 @@ name = "tests"
 path = "tests/mod.rs"
 
 [lints]
-workspace=true
+workspace = true
 
 [dependencies]
 fearless_simd = { workspace = true, features = ["std"] }

@@ -19,7 +19,7 @@ std = []
 libm = ["dep:libm"]
 
 [lints]
-workspace=true
+workspace = true
 
 [dependencies]
 bytemuck = "1.23.0"
