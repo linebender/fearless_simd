@@ -10,6 +10,13 @@
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
     )
 )]
+#![cfg_attr(
+    target_arch = "x86_64",
+    expect(
+        clippy::too_many_arguments,
+        reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+    )
+)]
 
 #[cfg(target_arch = "aarch64")]
 pub mod aarch64;
