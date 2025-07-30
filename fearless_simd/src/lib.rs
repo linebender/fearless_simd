@@ -90,6 +90,14 @@ impl Level {
             _ => None,
         }
     }
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[inline]
+    pub fn as_sse4_2(self) -> Option<Sse4_2> {
+        match self {
+            Level::Sse4_2(sse42) => Some(sse42),
+            _ => None,
+        }
+    }
 
     #[inline]
     pub fn fallback() -> Self {
