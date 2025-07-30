@@ -3,6 +3,7 @@
 
 #![expect(
     clippy::excessive_precision,
+    missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 

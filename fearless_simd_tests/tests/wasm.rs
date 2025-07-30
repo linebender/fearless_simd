@@ -1,6 +1,10 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    missing_docs,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
 #![cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 
 use fearless_simd::*;
