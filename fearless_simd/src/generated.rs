@@ -13,7 +13,7 @@
     )
 )]
 #![cfg_attr(
-    all(feature = "std", target_arch = "wasm32"),
+    target_arch = "wasm32",
     expect(
         clippy::should_implement_trait,
         clippy::missing_transmute_annotations,
