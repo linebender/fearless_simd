@@ -6,7 +6,7 @@
 use crate::impl_macros::delegate;
 use core::arch::x86_64::*;
 
-/// A token for SSE4.2 intrinsics on x86_64.
+/// A token for SSE4.2 intrinsics on `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Sse4_2 {
     _private: (),

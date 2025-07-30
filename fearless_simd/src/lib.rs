@@ -3,10 +3,12 @@
 
 //! A helper library to make SIMD more friendly.
 
-#![allow(non_camel_case_types)]
+#![allow(non_camel_case_types, reason = "TODO")]
 #![expect(clippy::unused_unit, reason = "easier for code generation")]
 #![expect(
     clippy::new_without_default,
+    missing_docs,
+    clippy::use_self,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 #![cfg_attr(not(feature = "std"), no_std)]

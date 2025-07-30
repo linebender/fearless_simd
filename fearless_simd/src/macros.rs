@@ -3,6 +3,11 @@
 
 //! Macros publicly exported
 
+#![expect(
+    missing_docs,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 #[cfg(feature = "std")]
 #[macro_export]
 macro_rules! simd_dispatch {

@@ -3,9 +3,11 @@
 
 //! Macros used by implementations
 
-// Not all macros will be used by all implementations.
-#![allow(unused_macros)]
-#![allow(unused_imports)]
+#![allow(
+    unused_macros,
+    unused_imports,
+    reason = "Not all macros will be used by all implementations"
+)]
 
 // Adapted from similar macro in pulp
 macro_rules! delegate {
@@ -17,7 +19,7 @@ macro_rules! delegate {
         ) $(-> $ret: ty)?;
     )*) => {
         $(
-            #[allow(clippy::not_unsafe_ptr_arg_deref)]
+            #[allow(clippy::not_unsafe_ptr_arg_deref, reason = "TODO: https://github.com/linebender/fearless_simd/issues/40")]
             #[doc=concat!("See [`", stringify!($prefix), "::", stringify!($func), "`].")]
             $(#[$attr])*
             #[inline(always)]

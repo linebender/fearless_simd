@@ -1,6 +1,11 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    unreachable_pub,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
@@ -170,7 +175,7 @@ pub fn mk_simd_types() -> TokenStream {
 
 /// Create the impl block for the type
 ///
-/// This may go away, as possibly all methods will be subsumed by the vec_impl.
+/// This may go away, as possibly all methods will be subsumed by the `vec_impl`.
 fn simd_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
     let ty_name = ty.rust_name();
