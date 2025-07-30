@@ -27,7 +27,7 @@ macro_rules! simd_dispatch {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             #[target_feature(enable = "sse4.2")]
             #[inline]
-            unsafe fn inner_sse4_2(sse4_2: $crate::sse4_2::Sse4_2 $( , $arg: $ty )* ) $( -> $ret )? {
+            unsafe fn inner_sse4_2(sse4_2: $crate::x86::Sse4_2 $( , $arg: $ty )* ) $( -> $ret )? {
                 $inner( sse4_2 $( , $arg )* )
             }
             match level {
