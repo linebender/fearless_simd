@@ -11,7 +11,7 @@
     )
 )]
 #![cfg_attr(
-    target_arch = "x86_64",
+    all(not(feature = "std"), target_arch = "x86_64"),
     expect(
         clippy::too_many_arguments,
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
