@@ -1,6 +1,11 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    missing_docs,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
@@ -30,7 +35,7 @@ fn saturate_float_to_int<S: Simd>(simd: S) {
 }
 
 // Ensure that we can cast between generic native-width vectors
-#[allow(dead_code)]
+#[expect(dead_code, reason = "Compile only test")]
 fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
     x.to_int()
 }

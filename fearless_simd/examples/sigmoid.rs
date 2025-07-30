@@ -1,6 +1,12 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    missing_docs,
+    clippy::shadow_unrelated,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use fearless_simd::{Level, Simd, SimdBase, SimdFloat, simd_dispatch};
 
 #[inline(always)]
