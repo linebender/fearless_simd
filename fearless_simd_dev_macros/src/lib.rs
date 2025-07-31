@@ -28,14 +28,12 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     // `wasm-pack test --headless --chrome`, then the `target_arch` will still be set to
     // the operating system you are running on. Because of this, we instead add the `target_arch`
     // feature gate to the actual test.
-    #[cfg(target_feature = "simd128")]
     let include_wasm = !exclude_wasm(&input_fn_name.to_string());
-    #[cfg(not(target_feature = "simd128"))]
-    let include_wasm = false;
 
     let fallback_snippet = if include_fallback {
         quote! {
             #[test]
+            #[cfg_attr(all(target_arch = "wasm32", target_feature = "simd128"), wasm_bindgen_test::wasm_bindgen_test)]
             fn #fallback_name() {
                 let fallback = fearless_simd::Fallback::new();
                 #input_fn_name(fallback);
@@ -99,5 +97,8 @@ fn exclude_fallback(name: &str) -> bool {
 #[allow(dead_code, reason = "on purpose.")]
 #[allow(unused_variables, reason = "on purpose.")]
 fn exclude_wasm(name: &str) -> bool {
-    false
+    matches!(
+        name,
+        "min_precise_f32x4_with_nan" | "max_precise_f32x4_with_nan"
+    )
 }

@@ -98,18 +98,10 @@ fn max_precise_f32x4_with_nan<S: Simd>(simd: S) {
     let b = f32x4::from_slice(simd, &[1.0, f32::NAN, 7.0, f32::NEG_INFINITY]);
     let result = a.max_precise(b).val;
 
-    // Note: f32::NAN != f32::NAN hence we transmute to compare the bit pattern
-    unsafe {
-        assert_eq!(
-            std::mem::transmute::<[f32; 4], [u32; 4]>(result),
-            std::mem::transmute::<[f32; 4], [u32; 4]>([
-                1.0,
-                (-3.0f32).max(f32::NAN),
-                f32::INFINITY,
-                0.5
-            ])
-        );
-    }
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], f32::INFINITY);
+    assert_eq!(result[3], 0.5);
 }
 
 #[simd_test]
@@ -118,18 +110,10 @@ fn min_precise_f32x4_with_nan<S: Simd>(simd: S) {
     let b = f32x4::from_slice(simd, &[1.0, f32::NAN, 7.0, f32::NEG_INFINITY]);
     let result = a.min_precise(b).val;
 
-    // Note: f32::NAN != f32::NAN hence we transmute to compare the bit pattern
-    unsafe {
-        assert_eq!(
-            std::mem::transmute::<[f32; 4], [u32; 4]>(result),
-            std::mem::transmute::<[f32; 4], [u32; 4]>([
-                1.0,
-                (-3.0f32).min(f32::NAN),
-                7.0,
-                f32::NEG_INFINITY
-            ])
-        );
-    }
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], 7.0);
+    assert_eq!(result[3], f32::NEG_INFINITY);
 }
 
 #[simd_test]
