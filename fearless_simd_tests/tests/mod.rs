@@ -6,8 +6,7 @@ use fearless_simd::*;
 #[cfg(target_arch = "wasm32")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-#[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-mod wasm;
+mod harness;
 
 #[test]
 fn saturate_float_to_int() {

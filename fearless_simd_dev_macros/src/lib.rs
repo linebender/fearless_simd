@@ -16,16 +16,22 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let fallback_name = get_ident("fallback");
     let neon_name = get_ident("neon");
+    let wasm_name = get_ident("wasm");
 
     let include_fallback = !exclude_fallback(&input_fn_name.to_string());
-    let include_neon = {
-        #[cfg(not(target_arch = "aarch64"))]
-        let temp = false;
-        #[cfg(target_arch = "aarch64")]
-        let temp = std::arch::is_aarch64_feature_detected!("neon");
-
-        temp & !exclude_neon(&input_fn_name.to_string())
-    };
+    #[cfg(target_arch = "aarch64")]
+    let include_neon = std::arch::is_aarch64_feature_detected!("neon")
+        && !exclude_neon(&input_fn_name.to_string());
+    #[cfg(not(target_arch = "aarch64"))]
+    let include_neon = false;
+    // Note that we cannot feature-gate this with `target_arch`. If we run
+    // `wasm-pack test --headless --chrome`, then the `target_arch` will still be set to
+    // the operating system you are running on. Because of this, we instead add the `target_arch`
+    // feature gate to the actual test.
+    #[cfg(target_feature = "simd128")]
+    let include_wasm = !exclude_wasm(&input_fn_name.to_string());
+    #[cfg(not(target_feature = "simd128"))]
+    let include_wasm = false;
 
     let fallback_snippet = if include_fallback {
         quote! {
@@ -41,9 +47,23 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let neon_snippet = if include_neon {
         quote! {
+            #[cfg(target_arch = "aarch64")]
             #[test]
             fn #neon_name() {
-                let neon = unsafe { fearless_simd::Neon::new_unchecked() };
+                let neon = unsafe { fearless_simd::aarch64::Neon::new_unchecked() };
+                #input_fn_name(neon);
+            }
+        }
+    } else {
+        quote! {}
+    };
+
+    let wasm_snippet = if include_wasm {
+        quote! {
+            #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+            #[wasm_bindgen_test::wasm_bindgen_test]
+            fn #wasm_name() {
+                let neon = unsafe { fearless_simd::wasm32::WasmSimd128::new_unchecked() };
                 #input_fn_name(neon);
             }
         }
@@ -56,6 +76,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
         #fallback_snippet
         #neon_snippet
+        #wasm_snippet
     }
     .into()
 }
