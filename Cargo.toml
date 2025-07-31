@@ -3,8 +3,9 @@ resolver = "2"
 members = ["fearless_simd", "fearless_simd_gen", "fearless_simd_tests"]
 
 [workspace.package]
-license = "MIT/Apache-2.0"
 edition = "2024"
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/linebender/vello"
 
 
 [workspace.lints]

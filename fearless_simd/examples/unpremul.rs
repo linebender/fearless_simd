@@ -1,6 +1,12 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    missing_docs,
+    clippy::unseparated_literal_suffix,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use fearless_simd::Level;
 
 #[cfg(all(target_arch = "aarch64", any()))]
@@ -75,5 +81,5 @@ fn main() {
     let mut buf = vec![128u8; 1 << 20];
     let start = std::time::Instant::now();
     unpremultiply(level, &mut buf);
-    println!("{:?}, elapsed {:?}", &buf[0..4], start.elapsed())
+    println!("{:?}, elapsed {:?}", &buf[0..4], start.elapsed());
 }

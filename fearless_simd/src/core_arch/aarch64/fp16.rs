@@ -3,6 +3,14 @@
 
 //! Access to fp16 intrinsics on aarch64.
 
+#![cfg_attr(
+    feature = "safe_wrappers",
+    expect(
+        unreachable_pub,
+        reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+    )
+)]
+
 use core::arch::aarch64::*;
 
 use crate::core_arch::aarch64::Neon;
@@ -10,7 +18,10 @@ use crate::core_arch::aarch64::Neon;
 /// A token for FP16 intrinsics on aarch64.
 #[derive(Clone, Copy, Debug)]
 pub struct Fp16 {
-    #[allow(unused)]
+    #[allow(
+        unused,
+        reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+    )]
     neon: Neon,
 }
 

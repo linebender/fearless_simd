@@ -8,11 +8,20 @@
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
     )
 )]
+#![expect(
+    clippy::unseparated_literal_suffix,
+    clippy::cast_possible_truncation,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
 
 // Much of the code below is copy-pasted from half-rs by Kathryn Long, version 2.4.1.
 // <https://github.com/VoidStarKat/half-rs/releases/tag/v2.4.1>
 #[derive(Clone, Copy, Default)]
 #[repr(transparent)]
+#[expect(
+    missing_debug_implementations,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
 pub struct f16(u16);
 
 impl f16 {
