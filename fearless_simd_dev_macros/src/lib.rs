@@ -1,4 +1,4 @@
-//! Development macros for fearless_simd.
+//! Development macros for `fearless_simd`.
 
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
