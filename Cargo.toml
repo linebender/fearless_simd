@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["fearless_simd", "fearless_simd_gen", "fearless_simd_tests"]
+members = ["fearless_simd", "fearless_simd_dev_macros", "fearless_simd_gen", "fearless_simd_tests"]
 
 [workspace.package]
 license = "MIT/Apache-2.0"
@@ -57,3 +57,7 @@ clippy.wildcard_dependencies = "warn"
 
 [workspace.dependencies]
 fearless_simd = { path = "fearless_simd" }
+fearless_simd_dev_macros = { path = "fearless_simd_dev_macros" }
+proc-macro2 = "1.0.95"
+syn = { version = "2.0.101", features = ["full", "extra-traits"] }
+quote = "1.0.40"

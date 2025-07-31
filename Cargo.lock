@@ -141,6 +141,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fearless_simd_dev_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "fearless_simd_gen"
 version = "0.2.0"
 dependencies = [
@@ -154,6 +163,7 @@ name = "fearless_simd_tests"
 version = "0.0.0"
 dependencies = [
  "fearless_simd",
+ "fearless_simd_dev_macros",
  "wasm-bindgen",
  "wasm-bindgen-test",
 ]

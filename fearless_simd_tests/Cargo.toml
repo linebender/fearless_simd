@@ -16,6 +16,7 @@ path = "tests/mod.rs"
 
 [dependencies]
 fearless_simd = { workspace = true }
+fearless_simd_dev_macros = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 wasm-bindgen-test = "0.3.50"
