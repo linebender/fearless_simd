@@ -61,8 +61,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
             #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
             #[wasm_bindgen_test::wasm_bindgen_test]
             fn #wasm_name() {
-                let neon = unsafe { fearless_simd::wasm32::WasmSimd128::new_unchecked() };
-                #input_fn_name(neon);
+                let wasm = unsafe { fearless_simd::wasm32::WasmSimd128::new_unchecked() };
+                #input_fn_name(wasm);
             }
         }
     } else {
