@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["fearless_simd", "fearless_simd_dev_macros", "fearless_simd_gen", "fearless_simd_tests"]
+members = [
+    "fearless_simd", 
+    "fearless_simd_dev_macros", 
+    "fearless_simd_gen", 
+    "fearless_simd_tests"
+]
 
 [workspace.package]
 license = "MIT/Apache-2.0"
