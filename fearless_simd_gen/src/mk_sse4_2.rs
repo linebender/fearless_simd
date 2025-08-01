@@ -330,23 +330,38 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Select => {
                     let mask_ty = vec_ty.mask_ty().rust();
 
+
                     let expr = if vec_ty.scalar == ScalarType::Float {
-                        quote! { todo!() }
+                        let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+                        let (i1, i2, i3, i4) = (
+                            format_ident!("_mm_castsi128_{suffix}"),
+                            format_ident!("_mm_or_{suffix}"),
+                            format_ident!("_mm_and_{suffix}"),
+                            format_ident!("_mm_andnot_{suffix}"),
+                        );
+                        quote! {
+                            let mask = #i1(a.into());
+
+                            #i2(
+                                #i3(mask, b.into()),
+                                #i4(mask, c.into())
+                            )
+                        }
                     }   else {
                         quote! {
-                            unsafe {
-                                _mm_or_si128(
-                                    _mm_and_si128(a.into(), b.into()),
-                                    _mm_andnot_si128(a.into(), c.into())
-                                ).simd_into(self)
-                            }
+                            _mm_or_si128(
+                                _mm_and_si128(a.into(), b.into()),
+                                _mm_andnot_si128(a.into(), c.into())
+                            )
                         }
                     };
 
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, a: #mask_ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
-                            #expr
+                           unsafe {
+                                 #expr.simd_into(self)
+                            }
                         }
                     }
                 }

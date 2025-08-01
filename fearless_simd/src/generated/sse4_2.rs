@@ -170,7 +170,10 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_castsi128_ps(a.into());
+            _mm_or_ps(_mm_and_ps(mask, b.into()), _mm_andnot_ps(mask, c.into())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self> {
@@ -1275,7 +1278,10 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_castsi128_pd(a.into());
+            _mm_or_pd(_mm_and_pd(mask, b.into()), _mm_andnot_pd(mask, c.into())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self> {
