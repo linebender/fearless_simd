@@ -78,7 +78,7 @@ impl Arch for Sse4_2 {
                     let or = simple_intrinsic("or", ScalarType::Float, ty.scalar_bits);
                     quote! {
                         let mask = #set1(-0.0);
-                        #or(#and(mask, #a), #andnot(mask, #b))
+                        #or(#and(mask, #b), #andnot(mask, #a))
                     }
                 }
                 "mul" => match (ty.scalar, ty.scalar_bits) {
