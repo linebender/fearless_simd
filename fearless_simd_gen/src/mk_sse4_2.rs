@@ -318,10 +318,27 @@ fn mk_simd_impl() -> TokenStream {
                     }
                 }
                 OpSig::Unzip(select_even) => {
+                    let expr = if vec_ty.scalar == ScalarType::Float {
+                        let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+                        let intrinsic = format_ident!("_mm_shuffle_{suffix}");
+
+                        let mask = match (vec_ty.scalar_bits, select_even) {
+                            (32, true) => quote! { 0b10_00_10_00 },
+                            (32, false) => quote! { 0b11_01_11_01 },
+                            (64, true) => quote! { 0b00 },
+                            (64, false) => quote! { 0b11 },
+                            _ => unimplemented!(),
+                        };
+
+                        quote! { unsafe { #intrinsic::<{ #mask }>(a.into(), b.into()).simd_into(self) } }
+                    }   else {
+                        quote! { todo!() }
+                    };
+
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
-                            todo!()
+                            #expr
                         }
                     }
                 }
