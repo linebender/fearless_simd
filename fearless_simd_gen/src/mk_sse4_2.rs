@@ -332,7 +332,26 @@ fn mk_simd_impl() -> TokenStream {
 
                         quote! { unsafe { #intrinsic::<{ #mask }>(a.into(), b.into()).simd_into(self) } }
                     }   else {
-                        quote! { todo!() }
+                        match vec_ty.scalar_bits {
+                            32 => {
+                                let op = if select_even {
+                                    "lo"
+                                }   else {
+                                    "hi"
+                                };
+
+                                let intrinsic = format_ident!("_mm_unpack{op}_epi64");
+
+                                quote! {
+                                      unsafe {
+                                          let t1 = _mm_shuffle_epi32::<{0b11_01_10_00}>(a.into());
+                                          let t2 = _mm_shuffle_epi32::<{0b11_01_10_00}>(b.into());
+                                          #intrinsic(t1, t2).simd_into(self)
+                                    }
+                                }
+                            }
+                            _ => quote! { todo!() }
+                        }
                     };
 
                     quote! {
