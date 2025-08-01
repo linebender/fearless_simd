@@ -32,6 +32,9 @@ pub fn mk_sse4_2_impl() -> TokenStream {
     let ty_impl = mk_type_impl();
 
     quote! {
+        // Until we have implemented all functions.
+        #![allow(unused_variables)]
+
         use core::arch::x86_64::*;
         use core::ops::*;
         use crate::{seal::Seal, Level, Simd, SimdFrom, SimdInto};
@@ -119,7 +122,7 @@ fn mk_simd_impl() -> TokenStream {
 
                         let or_intrinsic = format_ident!("_mm_or_{suffix}");
 
-                        let mut eq_expr = Sse4_2.expr("simd_eq", vec_ty, &args);
+                        let eq_expr = Sse4_2.expr("simd_eq", vec_ty, &args);
                         quote! { #or_intrinsic(#expr, #eq_expr) }
                     } else {
                         Sse4_2.expr(method, vec_ty, &args)
@@ -318,14 +321,6 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 },
-                OpSig::Compare => {
-                    quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
-                            todo!()
-                        }
-                    }
-                }
                 OpSig::Select => {
                     let mask_ty = vec_ty.mask_ty().rust();
 
