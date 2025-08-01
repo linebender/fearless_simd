@@ -390,7 +390,8 @@ fn mk_simd_impl() -> TokenStream {
                 }
                 OpSig::StoreInterleaved(block_size, count) => {
                     let len = (block_size * count) as usize / vec_ty.scalar_bits;
-                    let items = interleave_indices(len, count as usize, |idx| quote! { a[#idx] });
+                    let items =
+                        interleave_indices(len, len / count as usize, |idx| quote! { a[#idx] });
 
                     let arg = store_interleaved_arg_ty(block_size, count, vec_ty);
 
@@ -437,12 +438,12 @@ fn mk_simd_impl() -> TokenStream {
 
 fn interleave_indices(
     len: usize,
-    count: usize,
+    stride: usize,
     func: impl FnMut(usize) -> TokenStream,
 ) -> TokenStream {
     let indices = {
         let indices = (0..len).collect::<Vec<_>>();
-        interleave(&indices, len / count)
+        interleave(&indices, stride)
     };
 
     make_list(indices.into_iter().map(func).collect::<Vec<_>>())

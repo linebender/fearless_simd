@@ -1,8 +1,16 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-// Much of the code below is copy-pasted from half-rs by Kathryn Long, version 2.4.1.
+#![cfg_attr(
+    feature = "std",
+    expect(
+        clippy::missing_safety_doc,
+        reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+    )
+)]
 
+// Much of the code below is copy-pasted from half-rs by Kathryn Long, version 2.4.1.
+// <https://github.com/VoidStarKat/half-rs/releases/tag/v2.4.1>
 #[derive(Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct f16(u16);

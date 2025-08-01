@@ -1,0 +1,17 @@
+[package]
+name = "fearless_simd_dev_macros"
+version = "0.1.0"
+publish = false
+license.workspace = true
+edition.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { workspace = true }
+quote = { workspace = true }
+proc-macro2 = { workspace = true }
+
+[lints]
+workspace = true

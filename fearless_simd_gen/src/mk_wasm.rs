@@ -367,20 +367,26 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     // For WASM we need to simulate interleaving with shuffle, and we only have
                     // access to 2, 4 and 16 lanes. So, for 64 u8's, we need to split and recombine
                     // the vectors.
-                    let (lower_indices, upper_indices, shuffle_fn) = match vec_ty.scalar_bits {
+                    let (i1, i2, i3, i4, shuffle_fn) = match vec_ty.scalar_bits {
                         8 => (
-                            quote! { 0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23 },
-                            quote! { 8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31 },
+                            quote! { 0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29 },
+                            quote! { 2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31 },
+                            quote! { 0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23 },
+                            quote! { 8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31 },
                             quote! { u8x16_shuffle },
                         ),
                         16 => (
-                            quote! { 0, 8, 1, 9, 2, 10, 3, 11 },
-                            quote! { 4, 12, 5, 13, 6, 14, 7, 15 },
+                            quote! { 0, 4, 8, 12, 1, 5, 9, 13 },
+                            quote! { 2, 6, 10, 14, 3, 7, 11, 15 },
+                            quote! { 0, 1, 2, 3,  8, 9, 10, 11 },
+                            quote! { 4, 5, 6, 7, 12, 13, 14, 15 },
                             quote! { u16x8_shuffle },
                         ),
                         32 => (
                             quote! { 0, 4, 1, 5 },
                             quote! { 2, 6, 3, 7 },
+                            quote! { 0, 1, 4, 5 },
+                            quote! { 2, 3, 6, 7 },
                             quote! { u32x4_shuffle },
                         ),
                         _ => panic!("unsupported scalar_bits"),
@@ -416,18 +422,18 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 let v3: v128 = unsafe { v128_load(src[3 * #elems_per_vec..].as_ptr() as *const v128) };
 
                                 // InterleaveLowerLanes(v0, v2) and InterleaveLowerLanes(v1, v3)
-                                let v02_lower = #shuffle_fn::<#lower_indices>(v0, v2);
-                                let v13_lower = #shuffle_fn::<#lower_indices>(v1, v3);
+                                let v01_lower = #shuffle_fn::<#i1>(v0, v1);
+                                let v23_lower = #shuffle_fn::<#i1>(v2, v3);
 
                                 // InterleaveUpperLanes(v0, v2) and InterleaveUpperLanes(v1, v3)
-                                let v02_upper = #shuffle_fn::<#upper_indices>(v0, v2);
-                                let v13_upper = #shuffle_fn::<#upper_indices>(v1, v3);
+                                let v01_upper = #shuffle_fn::<#i2>(v0, v1);
+                                let v23_upper = #shuffle_fn::<#i2>(v2, v3);
 
                                 // Interleave lower and upper to get final result
-                                let out0 = #shuffle_fn::<#lower_indices>(v02_lower, v13_lower);
-                                let out1 = #shuffle_fn::<#upper_indices>(v02_lower, v13_lower);
-                                let out2 = #shuffle_fn::<#lower_indices>(v02_upper, v13_upper);
-                                let out3 = #shuffle_fn::<#upper_indices>(v02_upper, v13_upper);
+                                let out0 = #shuffle_fn::<#i3>(v01_lower, v23_lower);
+                                let out1 = #shuffle_fn::<#i4>(v01_lower, v23_lower);
+                                let out2 = #shuffle_fn::<#i3>(v01_upper, v23_upper);
+                                let out3 = #shuffle_fn::<#i4>(v01_upper, v23_upper);
 
                                 #combine_code
                         }
