@@ -145,5 +145,7 @@ pub fn type_imports() -> TokenStream {
         let ident = ty.rust();
         imports.push(quote! { #ident });
     }
-    quote! { use crate::{ #( #imports ),* }; }
+    quote! {
+        use crate::{ #( #imports ),* };
+    }
 }

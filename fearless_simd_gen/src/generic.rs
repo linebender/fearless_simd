@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 
-use crate::ops::reinterpret_ty;
+use crate::ops::{load_interleaved_arg_ty, reinterpret_ty, store_interleaved_arg_ty};
 use crate::{
     ops::{OpSig, TyFlavor},
     types::{ScalarType, VecType},
@@ -233,6 +233,35 @@ pub fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
         OpSig::Split => generic_split(ty),
         OpSig::Combine => generic_combine(ty),
-        OpSig::LoadInterleaved(_, _) | OpSig::StoreInterleaved(_, _) => unimplemented!(),
+        OpSig::LoadInterleaved(block_size, count) => {
+            let arg = load_interleaved_arg_ty(block_size, count, ty);
+            let split_len = (block_size * count) as usize / (ty.scalar_bits * 2);
+            let delegate = format_ident!(
+                "{op}_{}",
+                VecType {
+                    len: ty.len / 2,
+                    ..*ty
+                }
+                .rust_name()
+            );
+            quote! {
+                #[inline(always)]
+                fn #name(self, #arg) -> #ret_ty {
+                    let (chunks, _) = src.as_chunks::<#split_len>();
+                    unsafe {
+                        core::mem::transmute([self.#delegate(&chunks[0]), self.#delegate(&chunks[1])])
+                    }
+                }
+            }
+        }
+        OpSig::StoreInterleaved(block_size, count) => {
+            let arg = store_interleaved_arg_ty(block_size, count, ty);
+            quote! {
+                #[inline(always)]
+                fn #name(self, #arg) -> #ret_ty {
+                    todo!()
+                }
+            }
+        }
     }
 }

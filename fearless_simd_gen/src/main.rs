@@ -13,6 +13,7 @@ mod mk_neon;
 mod mk_ops;
 mod mk_simd_trait;
 mod mk_simd_types;
+mod mk_sse4_2;
 mod mk_wasm;
 mod ops;
 mod types;
@@ -25,6 +26,7 @@ enum Module {
     Neon,
     Wasm,
     Fallback,
+    Sse4_2,
 }
 
 #[derive(Parser)]
@@ -53,6 +55,7 @@ impl Module {
             Module::Neon => mk_neon::mk_neon_impl(mk_neon::Level::Neon),
             Module::Wasm => mk_wasm::mk_wasm128_impl(mk_wasm::Level::WasmSimd128),
             Module::Fallback => mk_fallback::mk_fallback_impl(),
+            Module::Sse4_2 => mk_sse4_2::mk_sse4_2_impl(),
         }
     }
 
@@ -90,6 +93,7 @@ impl Module {
             Module::Neon => "neon",
             Module::Fallback => "fallback",
             Module::Wasm => "wasm",
+            Module::Sse4_2 => "sse4_2",
         }
     }
 }
@@ -101,6 +105,7 @@ const MODULES: &[Module] = &[
     Module::Neon,
     Module::Fallback,
     Module::Wasm,
+    Module::Sse4_2,
 ];
 
 const FILE_BASE: &str = "./fearless_simd/src/generated";

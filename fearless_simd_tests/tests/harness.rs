@@ -182,6 +182,12 @@ fn cvt_f32_u32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn cvt_u32_f32x4_rounding<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 0.49, 0.51, 0.99]);
+    assert_eq!(a.cvt_u32().val, [0, 0, 0, 0]);
+}
+
+#[simd_test]
 fn and_i8x16<S: Simd>(simd: S) {
     let a = i8x16::from_slice(
         simd,
@@ -518,10 +524,30 @@ fn zip_low_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn zip_low_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    let b = f32x8::from_slice(simd, &[8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]);
+    assert_eq!(
+        simd.zip_low_f32x8(a, b).val,
+        [0.0, 8.0, 1.0, 9.0, 2.0, 10.0, 3.0, 11.0]
+    );
+}
+
+#[simd_test]
 fn zip_high_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
     let b = f32x4::from_slice(simd, &[4.0, 5.0, 6.0, 7.0]);
     assert_eq!(simd.zip_high_f32x4(a, b).val, [2.0, 6.0, 3.0, 7.0]);
+}
+
+#[simd_test]
+fn zip_high_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    let b = f32x8::from_slice(simd, &[8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]);
+    assert_eq!(
+        simd.zip_high_f32x8(a, b).val,
+        [4.0, 12.0, 5.0, 13.0, 6.0, 14.0, 7.0, 15.0]
+    );
 }
 
 #[simd_test]
@@ -674,10 +700,30 @@ fn unzip_low_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn unzip_low_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    let b = f32x8::from_slice(simd, &[8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]);
+    assert_eq!(
+        simd.unzip_low_f32x8(a, b).val,
+        [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0]
+    );
+}
+
+#[simd_test]
 fn unzip_high_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
     let b = f32x4::from_slice(simd, &[5.0, 6.0, 7.0, 8.0]);
     assert_eq!(simd.unzip_high_f32x4(a, b).val, [2.0, 4.0, 6.0, 8.0]);
+}
+
+#[simd_test]
+fn unzip_high_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    let b = f32x8::from_slice(simd, &[8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]);
+    assert_eq!(
+        simd.unzip_high_f32x8(a, b).val,
+        [1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0]
+    );
 }
 
 #[simd_test]
