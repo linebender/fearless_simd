@@ -28,7 +28,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         && !exclude_neon(&input_fn_name.to_string());
     #[cfg(not(target_arch = "aarch64"))]
     let include_neon = false;
-    #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     let include_sse4 =
         std::arch::is_x86_feature_detected!("sse4.2") && !exclude_sse4(&input_fn_name.to_string());
     #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
@@ -67,7 +67,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let sse4_snippet = if include_sse4 {
         quote! {
-            #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             #[test]
             fn #sse4_name() {
                 let neon = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
