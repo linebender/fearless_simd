@@ -391,7 +391,7 @@ fn mk_simd_impl() -> TokenStream {
                             _ => unimplemented!(),
                         };
 
-                        quote! { unsafe { #intrinsic::<{ #mask }>(a.into(), b.into()).simd_into(self) } }
+                        quote! { unsafe { #intrinsic::<#mask>(a.into(), b.into()).simd_into(self) } }
                     } else {
                         match vec_ty.scalar_bits {
                             32 => {

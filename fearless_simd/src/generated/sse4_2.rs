@@ -126,11 +126,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn unzip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_shuffle_ps::<{ 0b10_00_10_00 }>(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_shuffle_ps::<0b10_00_10_00>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_shuffle_ps::<{ 0b11_01_11_01 }>(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_shuffle_ps::<0b11_01_11_01>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -1234,11 +1234,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn unzip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_shuffle_pd::<{ 0b00 }>(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_shuffle_pd::<0b00>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_shuffle_pd::<{ 0b11 }>(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_shuffle_pd::<0b11>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
