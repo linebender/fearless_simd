@@ -86,23 +86,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_castps_si128(_mm_cmpeq_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_castps_si128(_mm_cmplt_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe {
+            _mm_castps_si128(_mm_or_ps(
+                _mm_cmplt_ps(a.into(), b.into()),
+                _mm_cmpeq_ps(a.into(), b.into()),
+            ))
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe {
+            _mm_castps_si128(_mm_or_ps(
+                _mm_cmpgt_ps(a.into(), b.into()),
+                _mm_cmpeq_ps(a.into(), b.into()),
+            ))
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_castps_si128(_mm_cmpgt_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -241,23 +253,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe { _mm_cmplt_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmplt_epi8(a.into(), b.into()),
+                _mm_cmpeq_epi8(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmpgt_epi8(a.into(), b.into()),
+                _mm_cmpeq_epi8(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe { _mm_cmpgt_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -356,23 +380,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe { _mm_cmplt_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmplt_epi8(a.into(), b.into()),
+                _mm_cmpeq_epi8(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmpgt_epi8(a.into(), b.into()),
+                _mm_cmpeq_epi8(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe { _mm_cmpgt_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -466,7 +502,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self> {
@@ -513,23 +549,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe { _mm_cmplt_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmplt_epi16(a.into(), b.into()),
+                _mm_cmpeq_epi16(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmpgt_epi16(a.into(), b.into()),
+                _mm_cmpeq_epi16(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe { _mm_cmpgt_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -628,23 +676,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe { _mm_cmplt_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmplt_epi16(a.into(), b.into()),
+                _mm_cmpeq_epi16(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmpgt_epi16(a.into(), b.into()),
+                _mm_cmpeq_epi16(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe { _mm_cmpgt_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -736,7 +796,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self> {
@@ -783,23 +843,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_cmplt_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmplt_epi32(a.into(), b.into()),
+                _mm_cmpeq_epi32(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmpgt_epi32(a.into(), b.into()),
+                _mm_cmpeq_epi32(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_cmpgt_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -900,23 +972,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_cmplt_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmplt_epi32(a.into(), b.into()),
+                _mm_cmpeq_epi32(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_cmpgt_epi32(a.into(), b.into()),
+                _mm_cmpeq_epi32(a.into(), b.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_cmpgt_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1003,7 +1087,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self> {
@@ -1053,23 +1137,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        todo!()
+        unsafe { _mm_castpd_si128(_mm_cmpeq_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        todo!()
+        unsafe { _mm_castpd_si128(_mm_cmplt_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        todo!()
+        unsafe {
+            _mm_castpd_si128(_mm_or_pd(
+                _mm_cmplt_pd(a.into(), b.into()),
+                _mm_cmpeq_pd(a.into(), b.into()),
+            ))
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        todo!()
+        unsafe {
+            _mm_castpd_si128(_mm_or_pd(
+                _mm_cmpgt_pd(a.into(), b.into()),
+                _mm_cmpeq_pd(a.into(), b.into()),
+            ))
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        todo!()
+        unsafe { _mm_castpd_si128(_mm_cmpgt_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -1172,7 +1268,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        todo!()
+        unsafe { _mm_cmpeq_epi64(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self> {

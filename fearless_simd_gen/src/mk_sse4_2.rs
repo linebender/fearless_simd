@@ -100,6 +100,44 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
+                OpSig::Compare => {
+                    let args = [quote! { a.into() }, quote! { b.into() }];
+
+                    let mut expr = if matches!(method, "simd_le" | "simd_ge") {
+                        let patched_method = match method {
+                            "simd_le" => "simd_lt",
+                            "simd_ge" => "simd_gt",
+                            _ => method
+                        };
+                        let expr = Sse4_2.expr(patched_method, vec_ty, &args);
+
+                        let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
+                            (ScalarType::Float, 32) => "ps",
+                            (ScalarType::Float, 64) => "pd",
+                            _ => "si128",
+                        };
+
+                        let or_intrinsic = format_ident!("_mm_or_{suffix}");
+
+                        let mut eq_expr = Sse4_2.expr("simd_eq", vec_ty, &args);
+                        quote! { #or_intrinsic(#expr, #eq_expr) }
+                    }   else {
+                        Sse4_2.expr(method, vec_ty, &args)
+                    };
+
+                    if vec_ty.scalar == ScalarType::Float {
+                        let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+                        let ident = format_ident!("_mm_cast{suffix}_si128");
+                        expr = quote! { #ident(#expr) }
+                    }
+
+                    quote! {
+                        #[inline(always)]
+                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                            unsafe { #expr.simd_into(self) }
+                        }
+                    }
+                }
                 OpSig::Unary => match method {
                     "fract" => {
                         quote! {
