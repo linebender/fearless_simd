@@ -301,10 +301,19 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Combine => generic_combine(vec_ty),
                 OpSig::Split => generic_split(vec_ty),
                 OpSig::Zip(zip1) => {
+                    let op = if zip1 {
+                        "lo"
+                    }   else {
+                        "hi"
+                    };
+
+                    let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+                    let intrinsic = format_ident!("_mm_unpack{op}_{suffix}");
+
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
-                            todo!()
+                           unsafe {  #intrinsic(a.into(), b.into()).simd_into(self) }
                         }
                     }
                 }

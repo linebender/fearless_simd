@@ -106,11 +106,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        todo!()
+        unsafe { _mm_unpacklo_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        todo!()
+        unsafe { _mm_unpackhi_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -261,11 +261,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        todo!()
+        unsafe { _mm_unpacklo_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        todo!()
+        unsafe { _mm_unpackhi_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -366,11 +366,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        todo!()
+        unsafe { _mm_unpacklo_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        todo!()
+        unsafe { _mm_unpackhi_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -513,11 +513,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        todo!()
+        unsafe { _mm_unpacklo_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        todo!()
+        unsafe { _mm_unpackhi_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -618,11 +618,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        todo!()
+        unsafe { _mm_unpacklo_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        todo!()
+        unsafe { _mm_unpackhi_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -763,11 +763,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        todo!()
+        unsafe { _mm_unpacklo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        todo!()
+        unsafe { _mm_unpackhi_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -872,11 +872,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        todo!()
+        unsafe { _mm_unpacklo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        todo!()
+        unsafe { _mm_unpackhi_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1017,11 +1017,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        todo!()
+        unsafe { _mm_unpacklo_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        todo!()
+        unsafe { _mm_unpackhi_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn unzip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
