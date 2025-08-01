@@ -24,7 +24,7 @@ macro_rules! simd_dispatch {
             unsafe fn inner_wasm_simd128(simd128: $crate::wasm32::WasmSimd128 $( , $arg: $ty )* ) $( -> $ret )? {
                 $inner( simd128 $( , $arg )* )
             }
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
             #[target_feature(enable = "sse4.2")]
             #[inline]
             unsafe fn inner_sse4_2(sse4_2: $crate::x86::Sse4_2 $( , $arg: $ty )* ) $( -> $ret )? {
@@ -38,7 +38,7 @@ macro_rules! simd_dispatch {
                 Level::Neon(neon) => unsafe { inner_neon (neon $( , $arg )* ) }
                 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
                 Level::WasmSimd128(wasm) => unsafe { inner_wasm_simd128 (wasm $( , $arg )* ) }
-                #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+                #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
                 Level::Sse4_2(sse4_2) => unsafe { inner_sse4_2(sse4_2 $( , $arg)* ) }
             }
         }
