@@ -2906,14 +2906,14 @@ impl Simd for WasmSimd128 {
         let v1: v128 = unsafe { v128_load(src[1 * 4usize..].as_ptr() as *const v128) };
         let v2: v128 = unsafe { v128_load(src[2 * 4usize..].as_ptr() as *const v128) };
         let v3: v128 = unsafe { v128_load(src[3 * 4usize..].as_ptr() as *const v128) };
-        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
-        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
-        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
-        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
-        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
-        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
-        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
-        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
+        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
+        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
+        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
+        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
+        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
+        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
+        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
+        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
         let combined_lower = self.combine_f32x4(out0.simd_into(self), out1.simd_into(self));
         let combined_upper = self.combine_f32x4(out2.simd_into(self), out3.simd_into(self));
         self.combine_f32x8(combined_lower, combined_upper)
@@ -3248,25 +3248,25 @@ impl Simd for WasmSimd128 {
         let v1: v128 = unsafe { v128_load(src[1 * 16usize..].as_ptr() as *const v128) };
         let v2: v128 = unsafe { v128_load(src[2 * 16usize..].as_ptr() as *const v128) };
         let v3: v128 = unsafe { v128_load(src[3 * 16usize..].as_ptr() as *const v128) };
-        let v02_lower =
-            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v0, v2);
-        let v13_lower =
-            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v1, v3);
-        let v02_upper =
-            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v0, v2);
-        let v13_upper =
-            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v1, v3);
-        let out0 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
-            v02_lower, v13_lower,
+        let v01_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v0, v1);
+        let v23_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v2, v3);
+        let v01_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v0, v1);
+        let v23_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v2, v3);
+        let out0 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_lower, v23_lower,
         );
-        let out1 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
-            v02_lower, v13_lower,
+        let out1 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_lower, v23_lower,
         );
-        let out2 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
-            v02_upper, v13_upper,
+        let out2 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_upper, v23_upper,
         );
-        let out3 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
-            v02_upper, v13_upper,
+        let out3 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_upper, v23_upper,
         );
         let combined_lower = self.combine_u8x16(out0.simd_into(self), out1.simd_into(self));
         let combined_upper = self.combine_u8x16(out2.simd_into(self), out3.simd_into(self));
@@ -3671,14 +3671,14 @@ impl Simd for WasmSimd128 {
         let v1: v128 = unsafe { v128_load(src[1 * 8usize..].as_ptr() as *const v128) };
         let v2: v128 = unsafe { v128_load(src[2 * 8usize..].as_ptr() as *const v128) };
         let v3: v128 = unsafe { v128_load(src[3 * 8usize..].as_ptr() as *const v128) };
-        let v02_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v0, v2);
-        let v13_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v1, v3);
-        let v02_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v0, v2);
-        let v13_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v1, v3);
-        let out0 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_lower, v13_lower);
-        let out1 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_lower, v13_lower);
-        let out2 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_upper, v13_upper);
-        let out3 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_upper, v13_upper);
+        let v01_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v0, v1);
+        let v23_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v2, v3);
+        let v01_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v0, v1);
+        let v23_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v2, v3);
+        let out0 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_lower, v23_lower);
+        let out1 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_lower, v23_lower);
+        let out2 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_upper, v23_upper);
+        let out3 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_upper, v23_upper);
         let combined_lower = self.combine_u16x8(out0.simd_into(self), out1.simd_into(self));
         let combined_upper = self.combine_u16x8(out2.simd_into(self), out3.simd_into(self));
         self.combine_u16x16(combined_lower, combined_upper)
@@ -4076,14 +4076,14 @@ impl Simd for WasmSimd128 {
         let v1: v128 = unsafe { v128_load(src[1 * 4usize..].as_ptr() as *const v128) };
         let v2: v128 = unsafe { v128_load(src[2 * 4usize..].as_ptr() as *const v128) };
         let v3: v128 = unsafe { v128_load(src[3 * 4usize..].as_ptr() as *const v128) };
-        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
-        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
-        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
-        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
-        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
-        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
-        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
-        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
+        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
+        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
+        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
+        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
+        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
+        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
+        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
+        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
         let combined_lower = self.combine_u32x4(out0.simd_into(self), out1.simd_into(self));
         let combined_upper = self.combine_u32x4(out2.simd_into(self), out3.simd_into(self));
         self.combine_u32x8(combined_lower, combined_upper)

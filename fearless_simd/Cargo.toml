@@ -9,6 +9,7 @@ categories = ["hardware-support"]
 description = "Safer and easier SIMD"
 readme = "README.md"
 rust-version = "1.85"
+repository.workspace = true
 
 [features]
 safe_wrappers = []
