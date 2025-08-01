@@ -182,6 +182,12 @@ fn cvt_f32_u32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn cvt_u32_f32x4_rounding<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 0.49, 0.51, 0.99]);
+    assert_eq!(a.cvt_u32().val, [0, 0, 0, 0]);
+}
+
+#[simd_test]
 fn and_i8x16<S: Simd>(simd: S) {
     let a = i8x16::from_slice(
         simd,
