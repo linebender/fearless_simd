@@ -19,6 +19,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let fallback_name = get_ident("fallback");
     let neon_name = get_ident("neon");
+    let sse4_name = get_ident("sse4");
     let wasm_name = get_ident("wasm");
 
     let include_fallback = !exclude_fallback(&input_fn_name.to_string());
@@ -27,6 +28,11 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         && !exclude_neon(&input_fn_name.to_string());
     #[cfg(not(target_arch = "aarch64"))]
     let include_neon = false;
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    let include_sse4 = std::arch::is_x86_feature_detected!("sse4.2")
+        && !exclude_sse4(&input_fn_name.to_string());
+    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+    let include_sse4 = false;
     // Note that we cannot feature-gate this with `target_arch`. If we run
     // `wasm-pack test --headless --chrome`, then the `target_arch` will still be set to
     // the operating system you are running on. Because of this, we instead add the `target_arch`
@@ -59,6 +65,19 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         quote! {}
     };
 
+    let sse4_snippet = if include_sse4 {
+        quote! {
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            #[test]
+            fn #sse4_name() {
+                let neon = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
+                #input_fn_name(neon);
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     let wasm_snippet = if include_wasm {
         quote! {
             #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
@@ -78,6 +97,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #fallback_snippet
         #neon_snippet
         #wasm_snippet
+        #sse4_snippet
     }
     .into()
 }
@@ -94,6 +114,12 @@ fn exclude_neon(name: &str) -> bool {
 #[allow(dead_code, reason = "on purpose.")]
 #[allow(unused_variables, reason = "on purpose.")]
 fn exclude_fallback(name: &str) -> bool {
+    false
+}
+
+#[allow(dead_code, reason = "on purpose.")]
+#[allow(unused_variables, reason = "on purpose.")]
+fn exclude_sse4(name: &str) -> bool {
     false
 }
 
