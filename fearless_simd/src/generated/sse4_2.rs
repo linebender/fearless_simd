@@ -812,16 +812,16 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         unsafe {
-            let t1 = _mm_shuffle_epi32::<{ 0b11_01_10_00 }>(a.into());
-            let t2 = _mm_shuffle_epi32::<{ 0b11_01_10_00 }>(b.into());
+            let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+            let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn unzip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         unsafe {
-            let t1 = _mm_shuffle_epi32::<{ 0b11_01_10_00 }>(a.into());
-            let t2 = _mm_shuffle_epi32::<{ 0b11_01_10_00 }>(b.into());
+            let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+            let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
             _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }
@@ -929,16 +929,16 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         unsafe {
-            let t1 = _mm_shuffle_epi32::<{ 0b11_01_10_00 }>(a.into());
-            let t2 = _mm_shuffle_epi32::<{ 0b11_01_10_00 }>(b.into());
+            let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+            let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn unzip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         unsafe {
-            let t1 = _mm_shuffle_epi32::<{ 0b11_01_10_00 }>(a.into());
-            let t2 = _mm_shuffle_epi32::<{ 0b11_01_10_00 }>(b.into());
+            let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+            let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
             _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }

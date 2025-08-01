@@ -344,8 +344,8 @@ fn mk_simd_impl() -> TokenStream {
 
                                 quote! {
                                       unsafe {
-                                          let t1 = _mm_shuffle_epi32::<{0b11_01_10_00}>(a.into());
-                                          let t2 = _mm_shuffle_epi32::<{0b11_01_10_00}>(b.into());
+                                          let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+                                          let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
                                           #intrinsic(t1, t2).simd_into(self)
                                     }
                                 }
