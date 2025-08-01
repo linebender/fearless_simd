@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::sse4_2::{Sse4_2, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic};
+use crate::arch::sse4_2::{Sse4_2, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic, cvt_intrinsic};
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{
     OpSig, TyFlavor, load_interleaved_arg_ty, ops_for_type, reinterpret_ty,
@@ -317,10 +317,14 @@ fn mk_simd_impl() -> TokenStream {
                     }
                 }
                 OpSig::Cvt(scalar, scalar_bits) => {
+                    // IMPORTANT TODO: for f32 to u32, we are currently converting it to i32 instead
+                    // of u32. We need to properly polyfill this.
+                    let intrinsic = cvt_intrinsic(*vec_ty, VecType::new(scalar, scalar_bits, vec_ty.len));
+
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
-                            todo!()
+                            unsafe { #intrinsic(a.into()).simd_into(self) }
                         }
                     }
                 }

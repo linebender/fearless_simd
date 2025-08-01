@@ -139,6 +139,12 @@ pub fn extend_intrinsic(ty: ScalarType, from_bits: usize, to_bits: usize) -> Ide
     format_ident!("_mm_cvt{from_suffix}_{to_suffix}")
 }
 
+pub fn cvt_intrinsic(from: VecType, to: VecType) -> Ident {
+    let from_suffix = op_suffix(from.scalar, from.scalar_bits, false);
+    let to_suffix = op_suffix(to.scalar, to.scalar_bits, false);
+    format_ident!("_mm_cvt{from_suffix}_{to_suffix}")
+}
+
 pub fn pack_intrinsic(from_bits: usize, signed: bool) -> Ident {
     let unsigned = match signed {
         true => "",

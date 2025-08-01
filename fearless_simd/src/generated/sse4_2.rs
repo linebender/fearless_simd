@@ -197,11 +197,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        todo!()
+        unsafe { _mm_cvtps_epi32(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        todo!()
+        unsafe { _mm_cvtps_epi32(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
@@ -812,7 +812,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
-        todo!()
+        unsafe { _mm_cvtepi32_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_u32x4(self, val: u32) -> u32x4<Self> {
@@ -914,7 +914,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
-        todo!()
+        unsafe { _mm_cvtepi32_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_mask32x4(self, val: i32) -> mask32x4<Self> {

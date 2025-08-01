@@ -120,7 +120,12 @@ fn exclude_fallback(name: &str) -> bool {
 #[allow(dead_code, reason = "on purpose.")]
 #[allow(unused_variables, reason = "on purpose.")]
 fn exclude_sse4(name: &str) -> bool {
-    false
+    matches!(
+        name,
+        // works incorrectly for any values larger than i32::MAX and smaller than 0.
+        "cvt_u32_f32x4" |
+        "cvt_f32_u32x4",
+    )
 }
 
 #[allow(dead_code, reason = "on purpose.")]
