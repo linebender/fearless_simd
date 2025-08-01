@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::sse4_2::{Sse4_2, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic, cvt_intrinsic};
+use crate::arch::sse4_2::{
+    Sse4_2, cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic,
+};
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{
     OpSig, TyFlavor, load_interleaved_arg_ty, ops_for_type, reinterpret_ty,
@@ -107,7 +109,7 @@ fn mk_simd_impl() -> TokenStream {
                         let patched_method = match method {
                             "simd_le" => "simd_lt",
                             "simd_ge" => "simd_gt",
-                            _ => method
+                            _ => method,
                         };
                         let expr = Sse4_2.expr(patched_method, vec_ty, &args);
 
@@ -121,7 +123,7 @@ fn mk_simd_impl() -> TokenStream {
 
                         let mut eq_expr = Sse4_2.expr("simd_eq", vec_ty, &args);
                         quote! { #or_intrinsic(#expr, #eq_expr) }
-                    }   else {
+                    } else {
                         Sse4_2.expr(method, vec_ty, &args)
                     };
 
@@ -207,7 +209,6 @@ fn mk_simd_impl() -> TokenStream {
                     _ => unreachable!(),
                 },
                 OpSig::Binary => {
-
                     if method == "mul" && (vec_ty.scalar_bits == 8 || vec_ty.scalar_bits == 16) {
                         quote! {
                             #[inline(always)]
@@ -215,7 +216,7 @@ fn mk_simd_impl() -> TokenStream {
                                 todo!()
                             }
                         }
-                    }   else {
+                    } else {
                         let args = [quote! { a.into() }, quote! { b.into() }];
                         let expr = Sse4_2.expr(method, vec_ty, &args);
                         quote! {
@@ -330,7 +331,6 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Select => {
                     let mask_ty = vec_ty.mask_ty().rust();
 
-
                     let expr = if vec_ty.scalar == ScalarType::Float {
                         let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
                         let (i1, i2, i3, i4) = (
@@ -347,7 +347,7 @@ fn mk_simd_impl() -> TokenStream {
                                 #i4(mask, c.into())
                             )
                         }
-                    }   else {
+                    } else {
                         quote! {
                             _mm_or_si128(
                                 _mm_and_si128(a.into(), b.into()),
@@ -368,11 +368,7 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Combine => generic_combine(vec_ty),
                 OpSig::Split => generic_split(vec_ty),
                 OpSig::Zip(zip1) => {
-                    let op = if zip1 {
-                        "lo"
-                    }   else {
-                        "hi"
-                    };
+                    let op = if zip1 { "lo" } else { "hi" };
 
                     let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
                     let intrinsic = format_ident!("_mm_unpack{op}_{suffix}");
@@ -398,14 +394,10 @@ fn mk_simd_impl() -> TokenStream {
                         };
 
                         quote! { unsafe { #intrinsic::<{ #mask }>(a.into(), b.into()).simd_into(self) } }
-                    }   else {
+                    } else {
                         match vec_ty.scalar_bits {
                             32 => {
-                                let op = if select_even {
-                                    "lo"
-                                }   else {
-                                    "hi"
-                                };
+                                let op = if select_even { "lo" } else { "hi" };
 
                                 let intrinsic = format_ident!("_mm_unpack{op}_epi64");
 
@@ -419,10 +411,18 @@ fn mk_simd_impl() -> TokenStream {
                             }
                             16 | 8 => {
                                 let mask = match (scalar_bits, select_even) {
-                                    (8, true) => quote! { 0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14  },
-                                    (8, false) => quote! { 1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15  },
-                                    (16, true) => quote! { 0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13 },
-                                    (16, false) => quote! {  2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15 },
+                                    (8, true) => {
+                                        quote! { 0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14  }
+                                    }
+                                    (8, false) => {
+                                        quote! { 1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15  }
+                                    }
+                                    (16, true) => {
+                                        quote! { 0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13 }
+                                    }
+                                    (16, false) => {
+                                        quote! {  2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15 }
+                                    }
                                     _ => unreachable!(),
                                 };
 
@@ -435,8 +435,8 @@ fn mk_simd_impl() -> TokenStream {
                                         _mm_unpacklo_epi64(t1, t2).simd_into(self)
                                     }
                                 }
-                            },
-                            _ => quote! { todo!() }
+                            }
+                            _ => quote! { todo!() },
                         }
                     };
 
@@ -450,7 +450,8 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Cvt(scalar, scalar_bits) => {
                     // IMPORTANT TODO: for f32 to u32, we are currently converting it to i32 instead
                     // of u32. We need to properly polyfill this.
-                    let intrinsic = cvt_intrinsic(*vec_ty, VecType::new(scalar, scalar_bits, vec_ty.len));
+                    let intrinsic =
+                        cvt_intrinsic(*vec_ty, VecType::new(scalar, scalar_bits, vec_ty.len));
 
                     quote! {
                         #[inline(always)]

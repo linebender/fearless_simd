@@ -29,8 +29,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     #[cfg(not(target_arch = "aarch64"))]
     let include_neon = false;
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    let include_sse4 = std::arch::is_x86_feature_detected!("sse4.2")
-        && !exclude_sse4(&input_fn_name.to_string());
+    let include_sse4 =
+        std::arch::is_x86_feature_detected!("sse4.2") && !exclude_sse4(&input_fn_name.to_string());
     #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
     let include_sse4 = false;
     // Note that we cannot feature-gate this with `target_arch`. If we run
@@ -123,8 +123,7 @@ fn exclude_sse4(name: &str) -> bool {
     matches!(
         name,
         // works incorrectly for any values larger than i32::MAX and smaller than 0.
-        "cvt_u32_f32x4" |
-        "cvt_f32_u32x4",
+        "cvt_u32_f32x4" | "cvt_f32_u32x4",
     )
 }
 
