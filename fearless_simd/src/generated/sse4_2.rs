@@ -19,11 +19,6 @@ pub struct Sse4_2 {
     pub sse4_2: crate::core_arch::x86_64::Sse4_2,
 }
 impl Sse4_2 {
-    /// Create a SIMD token.
-    ///
-    /// # Safety:
-    ///
-    /// The required CPU features must be available.
     #[inline]
     pub unsafe fn new_unchecked() -> Self {
         Sse4_2 {
