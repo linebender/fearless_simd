@@ -329,10 +329,24 @@ fn mk_simd_impl() -> TokenStream {
                 }
                 OpSig::Select => {
                     let mask_ty = vec_ty.mask_ty().rust();
+
+                    let expr = if vec_ty.scalar == ScalarType::Float {
+                        quote! { todo!() }
+                    }   else {
+                        quote! {
+                            unsafe {
+                                _mm_or_si128(
+                                    _mm_and_si128(a.into(), b.into()),
+                                    _mm_andnot_si128(a.into(), c.into())
+                                ).simd_into(self)
+                            }
+                        }
+                    };
+
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, a: #mask_ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
-                            todo!()
+                            #expr
                         }
                     }
                 }

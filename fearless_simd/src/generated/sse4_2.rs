@@ -311,7 +311,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -438,7 +444,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -498,7 +510,13 @@ impl Simd for Sse4_2 {
         b: mask8x16<Self>,
         c: mask8x16<Self>,
     ) -> mask8x16<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -607,7 +625,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -734,7 +758,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -792,7 +822,13 @@ impl Simd for Sse4_2 {
         b: mask16x8<Self>,
         c: mask16x8<Self>,
     ) -> mask16x8<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -899,7 +935,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1028,7 +1070,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1083,7 +1131,13 @@ impl Simd for Sse4_2 {
         b: mask32x4<Self>,
         c: mask32x4<Self>,
     ) -> mask32x4<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -1264,7 +1318,13 @@ impl Simd for Sse4_2 {
         b: mask64x2<Self>,
         c: mask64x2<Self>,
     ) -> mask64x2<Self> {
-        todo!()
+        unsafe {
+            _mm_or_si128(
+                _mm_and_si128(a.into(), b.into()),
+                _mm_andnot_si128(a.into(), c.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
