@@ -350,6 +350,25 @@ fn mk_simd_impl() -> TokenStream {
                                     }
                                 }
                             }
+                            16 | 8 => {
+                                let mask = match (scalar_bits, select_even) {
+                                    (8, true) => quote! { 0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14  },
+                                    (8, false) => quote! { 1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15  },
+                                    (16, true) => quote! { 0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13 },
+                                    (16, false) => quote! {  2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15 },
+                                    _ => unreachable!(),
+                                };
+
+                                quote! {
+                                    unsafe {
+                                        let mask = _mm_setr_epi8(#mask);
+
+                                        let t1 = _mm_shuffle_epi8(a.into(), mask);
+                                        let t2 = _mm_shuffle_epi8(b.into(), mask);
+                                        _mm_unpacklo_epi64(t1, t2).simd_into(self)
+                                    }
+                                }
+                            },
                             _ => quote! { todo!() }
                         }
                     };

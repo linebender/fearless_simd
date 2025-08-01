@@ -269,11 +269,21 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn unzip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14);
+            let t1 = _mm_shuffle_epi8(a.into(), mask);
+            let t2 = _mm_shuffle_epi8(b.into(), mask);
+            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_setr_epi8(1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15);
+            let t1 = _mm_shuffle_epi8(a.into(), mask);
+            let t2 = _mm_shuffle_epi8(b.into(), mask);
+            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
@@ -374,11 +384,21 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn unzip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14);
+            let t1 = _mm_shuffle_epi8(a.into(), mask);
+            let t2 = _mm_shuffle_epi8(b.into(), mask);
+            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_setr_epi8(1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15);
+            let t1 = _mm_shuffle_epi8(a.into(), mask);
+            let t2 = _mm_shuffle_epi8(b.into(), mask);
+            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
@@ -521,11 +541,21 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn unzip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13);
+            let t1 = _mm_shuffle_epi8(a.into(), mask);
+            let t2 = _mm_shuffle_epi8(b.into(), mask);
+            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_setr_epi8(2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15);
+            let t1 = _mm_shuffle_epi8(a.into(), mask);
+            let t2 = _mm_shuffle_epi8(b.into(), mask);
+            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
@@ -626,11 +656,21 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn unzip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13);
+            let t1 = _mm_shuffle_epi8(a.into(), mask);
+            let t2 = _mm_shuffle_epi8(b.into(), mask);
+            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        todo!()
+        unsafe {
+            let mask = _mm_setr_epi8(2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15);
+            let t1 = _mm_shuffle_epi8(a.into(), mask);
+            let t2 = _mm_shuffle_epi8(b.into(), mask);
+            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
