@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::sse4_2::{Sse4_2, cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic};
+use crate::arch::sse4_2::{
+    Sse4_2, cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic,
+    simple_intrinsic,
+};
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{
     OpSig, TyFlavor, load_interleaved_arg_ty, ops_for_type, reinterpret_ty,
@@ -449,7 +452,8 @@ fn mk_simd_impl() -> TokenStream {
                     let mut expr = quote! { a.into() };
 
                     if vec_ty.scalar == ScalarType::Float {
-                        let floor_intrinsic = simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits);
+                        let floor_intrinsic =
+                            simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits);
                         expr = quote! { #floor_intrinsic(#expr) };
                     }
 
