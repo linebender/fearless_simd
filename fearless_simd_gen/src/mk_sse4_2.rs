@@ -53,7 +53,7 @@ pub fn mk_sse4_2_impl() -> TokenStream {
         impl Sse4_2 {
             /// Create a SIMD token.
             ///
-            /// # Safety:
+            /// # Safety
             ///
             /// The SSE4.2 CPU feature must be available.
             #[inline]
