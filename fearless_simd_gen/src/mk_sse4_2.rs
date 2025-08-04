@@ -16,7 +16,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 #[derive(Clone, Copy)]
-pub struct Level;
+pub(crate) struct Level;
 
 impl Level {
     fn name(self) -> &'static str {
@@ -29,7 +29,7 @@ impl Level {
     }
 }
 
-pub fn mk_sse4_2_impl() -> TokenStream {
+pub(crate) fn mk_sse4_2_impl() -> TokenStream {
     let imports = type_imports();
     let simd_impl = mk_simd_impl();
     let ty_impl = mk_type_impl();
@@ -559,7 +559,7 @@ fn mk_type_impl() -> TokenStream {
                     unsafe { core::mem::transmute(value.val) }
                 }
             }
-        })
+        });
     }
     quote! {
         #( #result )*

@@ -30,7 +30,7 @@ pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-pub struct Sse4_2;
+pub(crate) struct Sse4_2;
 
 impl Arch for Sse4_2 {
     fn arch_ty(&self, ty: &VecType) -> TokenStream {
@@ -103,7 +103,7 @@ impl Arch for Sse4_2 {
     }
 }
 
-pub fn op_suffix(mut ty: ScalarType, bits: usize, sign_aware: bool) -> &'static str {
+pub(crate) fn op_suffix(mut ty: ScalarType, bits: usize, sign_aware: bool) -> &'static str {
     use ScalarType::*;
     if !sign_aware && ty == Unsigned {
         ty = Int;
@@ -124,7 +124,7 @@ pub fn op_suffix(mut ty: ScalarType, bits: usize, sign_aware: bool) -> &'static 
     }
 }
 
-pub fn set1_intrinsic(ty: ScalarType, bits: usize) -> Ident {
+pub(crate) fn set1_intrinsic(ty: ScalarType, bits: usize) -> Ident {
     use ScalarType::*;
     let suffix = match (ty, bits) {
         (Int | Unsigned | Mask, 64) => "epi64x",
@@ -133,24 +133,24 @@ pub fn set1_intrinsic(ty: ScalarType, bits: usize) -> Ident {
     format_ident!("_mm_set1_{suffix}")
 }
 
-pub fn simple_intrinsic(name: &str, ty: ScalarType, bits: usize) -> Ident {
+pub(crate) fn simple_intrinsic(name: &str, ty: ScalarType, bits: usize) -> Ident {
     let suffix = op_suffix(ty, bits, true);
     format_ident!("_mm_{name}_{suffix}")
 }
 
-pub fn extend_intrinsic(ty: ScalarType, from_bits: usize, to_bits: usize) -> Ident {
+pub(crate) fn extend_intrinsic(ty: ScalarType, from_bits: usize, to_bits: usize) -> Ident {
     let from_suffix = op_suffix(ty, from_bits, true);
     let to_suffix = op_suffix(ty, to_bits, false);
     format_ident!("_mm_cvt{from_suffix}_{to_suffix}")
 }
 
-pub fn cvt_intrinsic(from: VecType, to: VecType) -> Ident {
+pub(crate) fn cvt_intrinsic(from: VecType, to: VecType) -> Ident {
     let from_suffix = op_suffix(from.scalar, from.scalar_bits, false);
     let to_suffix = op_suffix(to.scalar, to.scalar_bits, false);
     format_ident!("_mm_cvt{from_suffix}_{to_suffix}")
 }
 
-pub fn pack_intrinsic(from_bits: usize, signed: bool) -> Ident {
+pub(crate) fn pack_intrinsic(from_bits: usize, signed: bool) -> Ident {
     let unsigned = match signed {
         true => "",
         false => "u",
