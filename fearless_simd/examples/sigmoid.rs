@@ -3,7 +3,6 @@
 
 #![expect(
     missing_docs,
-    clippy::shadow_unrelated,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
