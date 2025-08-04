@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::sse4_2::{Sse4_2, cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic, unpack_intrinsic};
+use crate::arch::sse4_2::{
+    Sse4_2, cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic,
+    simple_intrinsic, unpack_intrinsic,
+};
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{
     OpSig, TyFlavor, load_interleaved_arg_ty, ops_for_type, reinterpret_ty,
@@ -256,7 +259,7 @@ fn mk_simd_impl() -> TokenStream {
                         // 16 bit, shift, and then back to 8-bit
 
                         let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false);
-                        let unpack_lo =  unpack_intrinsic(ScalarType::Int, 8, true);
+                        let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true);
 
                         let extend_expr = |expr| match vec_ty.scalar {
                             ScalarType::Unsigned => quote! {
@@ -265,7 +268,7 @@ fn mk_simd_impl() -> TokenStream {
                             ScalarType::Int => quote! {
                                  #expr(val, _mm_cmplt_epi8(val, _mm_setzero_si128()))
                             },
-                            _ => unimplemented!()
+                            _ => unimplemented!(),
                         };
 
                         let extend_intrinsic_lo = extend_expr(unpack_lo);
