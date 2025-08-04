@@ -309,7 +309,7 @@ fn mk_simd_impl() -> TokenStream {
                         quote! {
                             #[inline(always)]
                             fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
-                                a + b * c
+                                a - b * c
                             }
                         }
                     }

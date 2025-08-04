@@ -127,7 +127,6 @@ fn exclude_sse4(name: &str) -> bool {
             | "cvt_f32_u32x4"
             | "widen_u8x16"
             | "narrow_u16x16"
-            | "msub_f64x2"
             | "saturate_float_to_int",
     ) || name.contains("interleaved")
         || name.contains("precise")
