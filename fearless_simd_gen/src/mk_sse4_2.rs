@@ -204,6 +204,7 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                     "narrow" => {
+                        let mask = set1_intrinsic(vec_ty.scalar, scalar_bits);
                         let pack =
                             pack_intrinsic(scalar_bits, matches!(vec_ty.scalar, ScalarType::Int));
                         let split = format_ident!("split_{}", vec_ty.rust_name());
@@ -212,7 +213,13 @@ fn mk_simd_impl() -> TokenStream {
                             fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
                                 let (a, b) = self.#split(a);
                                 unsafe {
-                                    #pack(a.into(), b.into()).simd_into(self)
+                                    // Note that SSE4.2 only has an intrinsic for saturating cast,
+                                    // but not wrapping.
+                                    let mask = #mask(0xFF);
+                                    let lo_masked = _mm_and_si128(a.into(), mask);
+                                    let hi_masked = _mm_and_si128(b.into(), mask);
+                                    let result = #pack(lo_masked, hi_masked);
+                                    result.simd_into(self)
                                 }
                             }
                         }

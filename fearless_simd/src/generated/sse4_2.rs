@@ -2215,7 +2215,13 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
         let (a, b) = self.split_u16x16(a);
-        unsafe { _mm_packus_epi16(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let mask = _mm_set1_epi16(0xFF);
+            let lo_masked = _mm_and_si128(a.into(), mask);
+            let hi_masked = _mm_and_si128(b.into(), mask);
+            let result = _mm_packus_epi16(lo_masked, hi_masked);
+            result.simd_into(self)
+        }
     }
     #[inline(always)]
     fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
