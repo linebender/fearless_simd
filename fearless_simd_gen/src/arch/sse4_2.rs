@@ -158,3 +158,10 @@ pub(crate) fn pack_intrinsic(from_bits: usize, signed: bool) -> Ident {
     let suffix = op_suffix(ScalarType::Int, from_bits, false);
     format_ident!("_mm_pack{unsigned}s_{suffix}")
 }
+
+pub(crate) fn unpack_intrinsic(scalar_type: ScalarType, scalar_bits: usize, low: bool) -> Ident {
+    let suffix = op_suffix(scalar_type, scalar_bits, false);
+
+    let low_pref = if low { "lo" } else { "hi" };
+    format_ident!("_mm_unpack{low_pref}_{suffix}")
+}

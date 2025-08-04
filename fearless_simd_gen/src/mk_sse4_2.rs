@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::sse4_2::{
-    Sse4_2, cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic,
-    simple_intrinsic,
-};
+use crate::arch::sse4_2::{Sse4_2, cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic, unpack_intrinsic};
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{
     OpSig, TyFlavor, load_interleaved_arg_ty, ops_for_type, reinterpret_ty,
@@ -258,31 +255,22 @@ fn mk_simd_impl() -> TokenStream {
                         // SSE doesn't have shifting for 8-bit, so we first convert into
                         // 16 bit, shift, and then back to 8-bit
 
-                        let extend_intrinsic = match vec_ty.scalar {
-                            ScalarType::Unsigned => {
-                                quote! { _mm_unpacklo_epi8(val, _mm_setzero_si128()) }
-                            }
-                            ScalarType::Int => {
-                                quote! { _mm_unpacklo_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128())) }
-                            }
-                            _ => unreachable!(),
+                        let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false);
+                        let unpack_lo =  unpack_intrinsic(ScalarType::Int, 8, true);
+
+                        let extend_expr = |expr| match vec_ty.scalar {
+                            ScalarType::Unsigned => quote! {
+                                #expr(val, _mm_setzero_si128())
+                            },
+                            ScalarType::Int => quote! {
+                                 #expr(val, _mm_cmplt_epi8(val, _mm_setzero_si128()))
+                            },
+                            _ => unimplemented!()
                         };
 
-                        let extend_intrinsic_hi = match vec_ty.scalar {
-                            ScalarType::Unsigned => {
-                                quote! { _mm_unpackhi_epi8(val, _mm_setzero_si128()) }
-                            }
-                            ScalarType::Int => {
-                                quote! { _mm_unpackhi_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128())) }
-                            }
-                            _ => unreachable!(),
-                        };
-
-                        let pack_intrinsic = match vec_ty.scalar {
-                            ScalarType::Unsigned => quote! { _mm_packus_epi16 },
-                            ScalarType::Int => quote! { _mm_packs_epi16 },
-                            _ => unreachable!(),
-                        };
+                        let extend_intrinsic_lo = extend_expr(unpack_lo);
+                        let extend_intrinsic_hi = extend_expr(unpack_hi);
+                        let pack_intrinsic = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int);
 
                         quote! {
                             #[inline(always)]
@@ -291,16 +279,12 @@ fn mk_simd_impl() -> TokenStream {
                                     let val = a.into();
                                     let shift_count = _mm_cvtsi32_si128(b as i32);
 
-                                    // Unpack low 8 bytes to 16-bit
-                                    let lo_16 = #extend_intrinsic;
-                                    // Unpack high 8 bytes to 16-bit
+                                    let lo_16 = #extend_intrinsic_lo;
                                     let hi_16 = #extend_intrinsic_hi;
 
-                                    // Shift both parts
                                     let lo_shifted = #shift_intrinsic(lo_16, shift_count);
                                     let hi_shifted = #shift_intrinsic(hi_16, shift_count);
 
-                                    // Pack back to 8-bit
                                     #pack_intrinsic(lo_shifted, hi_shifted).simd_into(self)
                                 }
                             }
