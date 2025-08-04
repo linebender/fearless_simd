@@ -250,7 +250,15 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, b: u32) -> i8x16<Self> {
-        todo!()
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(b as i32);
+            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
+            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
+            let lo_shifted = _mm_sra_epi16(lo_16, shift_count);
+            let hi_shifted = _mm_sra_epi16(hi_16, shift_count);
+            _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -383,7 +391,15 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, b: u32) -> u8x16<Self> {
-        todo!()
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(b as i32);
+            let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
+            let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
+            let lo_shifted = _mm_srl_epi16(lo_16, shift_count);
+            let hi_shifted = _mm_srl_epi16(hi_16, shift_count);
+            _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {

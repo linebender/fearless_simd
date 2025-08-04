@@ -251,55 +251,65 @@ fn mk_simd_impl() -> TokenStream {
                         ScalarType::Int => "sra",
                         _ => unreachable!(),
                     };
+                    let suffix = op_suffix(vec_ty.scalar, scalar_bits.max(16), false);
+                    let shift_intrinsic = format_ident!("_mm_{op}_{suffix}");
+
                     if scalar_bits == 8 {
+                        // SSE doesn't have shifting for 8-bit, so we first convert into
+                        // 16 bit, shift, and then back to 8-bit
+
+                        let extend_intrinsic = match vec_ty.scalar {
+                            ScalarType::Unsigned => {
+                                quote! { _mm_unpacklo_epi8(val, _mm_setzero_si128()) }
+                            }
+                            ScalarType::Int => {
+                                quote! { _mm_unpacklo_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128())) }
+                            }
+                            _ => unreachable!(),
+                        };
+
+                        let extend_intrinsic_hi = match vec_ty.scalar {
+                            ScalarType::Unsigned => {
+                                quote! { _mm_unpackhi_epi8(val, _mm_setzero_si128()) }
+                            }
+                            ScalarType::Int => {
+                                quote! { _mm_unpackhi_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128())) }
+                            }
+                            _ => unreachable!(),
+                        };
+
+                        let pack_intrinsic = match vec_ty.scalar {
+                            ScalarType::Unsigned => quote! { _mm_packus_epi16 },
+                            ScalarType::Int => quote! { _mm_packs_epi16 },
+                            _ => unreachable!(),
+                        };
+
                         quote! {
                             #[inline(always)]
                             fn #method_ident(self, a: #ty<Self>, b: u32) -> #ret_ty {
-                                todo!()
+                                unsafe {
+                                    let val = a.into();
+                                    let shift_count = _mm_cvtsi32_si128(b as i32);
+
+                                    // Unpack low 8 bytes to 16-bit
+                                    let lo_16 = #extend_intrinsic;
+                                    // Unpack high 8 bytes to 16-bit
+                                    let hi_16 = #extend_intrinsic_hi;
+
+                                    // Shift both parts
+                                    let lo_shifted = #shift_intrinsic(lo_16, shift_count);
+                                    let hi_shifted = #shift_intrinsic(hi_16, shift_count);
+
+                                    // Pack back to 8-bit
+                                    #pack_intrinsic(lo_shifted, hi_shifted).simd_into(self)
+                                }
                             }
                         }
-                        // let extend = extend_intrinsic(vec_ty.scalar, 8, 16);
-                        // let intrinsic = format_ident!("_mm_{op}_epi16");
-                        // let narrow = format_ident!(
-                        //     "narrow_{}",
-                        //     VecType {
-                        //         scalar: ScalarType::Unsigned,
-                        //         scalar_bits: 16,
-                        //         ..*vec_ty
-                        //     }
-                        //     .rust_name()
-                        // );
-                        // let combine = format_ident!(
-                        //     "combine_{}",
-                        //     VecType {
-                        //         len: vec_ty.len / 2,
-                        //         scalar_bits: 16,
-                        //         ..*vec_ty
-                        //     }
-                        //     .rust_name()
-                        // );
-                        // let set1 = set1_intrinsic(vec_ty.scalar, 16);
-                        // quote! {
-                        //     #[inline(always)]
-                        //     fn #method_ident(self, a: #ty<Self>, b: u32) -> #ret_ty {
-                        //         unsafe {
-                        //             let a1 = a.into();
-                        //             let a2 = _mm_slli_si128(a1, 8);
-                        //             let b = #set1(b as _);
-                        //             self.#narrow(self.#combine(
-                        //                 #intrinsic(#extend(a1), b).simd_into(self),
-                        //                 #intrinsic(#extend(a2), b).simd_into(self),
-                        //             ))
-                        //         }
-                        //     }
-                        // }
                     } else {
-                        let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
-                        let intrinsic = format_ident!("_mm_{op}_{suffix}");
                         quote! {
                             #[inline(always)]
                             fn #method_ident(self, a: #ty<Self>, b: u32) -> #ret_ty {
-                                unsafe { #intrinsic(a.into(), _mm_cvtsi32_si128(b as _)).simd_into(self) }
+                                unsafe { #shift_intrinsic(a.into(), _mm_cvtsi32_si128(b as _)).simd_into(self) }
                             }
                         }
                     }
