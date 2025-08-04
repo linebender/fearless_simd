@@ -564,7 +564,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, b: u32) -> i16x8<Self> {
-        unsafe { _mm_sra_epi16(a.into(), _mm_set1_epi16(b as _)).simd_into(self) }
+        unsafe { _mm_sra_epi16(a.into(), _mm_cvtsi32_si128(b as _)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -697,7 +697,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, b: u32) -> u16x8<Self> {
-        unsafe { _mm_srl_epi16(a.into(), _mm_set1_epi16(b as _)).simd_into(self) }
+        unsafe { _mm_srl_epi16(a.into(), _mm_cvtsi32_si128(b as _)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -876,7 +876,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, b: u32) -> i32x4<Self> {
-        unsafe { _mm_sra_epi32(a.into(), _mm_set1_epi32(b as _)).simd_into(self) }
+        unsafe { _mm_sra_epi32(a.into(), _mm_cvtsi32_si128(b as _)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -1011,7 +1011,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, b: u32) -> u32x4<Self> {
-        unsafe { _mm_srl_epi32(a.into(), _mm_set1_epi32(b as _)).simd_into(self) }
+        unsafe { _mm_srl_epi32(a.into(), _mm_cvtsi32_si128(b as _)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {

@@ -296,11 +296,10 @@ fn mk_simd_impl() -> TokenStream {
                     } else {
                         let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
                         let intrinsic = format_ident!("_mm_{op}_{suffix}");
-                        let set1 = set1_intrinsic(vec_ty.scalar, scalar_bits);
                         quote! {
                             #[inline(always)]
                             fn #method_ident(self, a: #ty<Self>, b: u32) -> #ret_ty {
-                                unsafe { #intrinsic(a.into(), #set1(b as _)).simd_into(self) }
+                                unsafe { #intrinsic(a.into(), _mm_cvtsi32_si128(b as _)).simd_into(self) }
                             }
                         }
                     }
