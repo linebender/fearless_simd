@@ -227,7 +227,7 @@ fn mk_simd_impl() -> TokenStream {
                     _ => unreachable!(),
                 },
                 OpSig::Binary => {
-                    if method == "mul" && (vec_ty.scalar_bits == 8 || vec_ty.scalar_bits == 16) {
+                    if method == "mul" && vec_ty.scalar_bits == 8 {
                         quote! {
                             #[inline(always)]
                             fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {

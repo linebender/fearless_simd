@@ -1154,3 +1154,11 @@ fn trunc_f64x2<S: Simd>(simd: S) {
     let a = f64x2::from_slice(simd, &[1.7, -2.3]);
     assert_eq!(a.trunc().val, [1.0, -2.0]);
 }
+
+#[simd_test]
+fn mul_u16x8<S: Simd>(simd: S) {
+    let a = u16x8::from_slice(simd, &[0, 5, 10, 30, 500, 0, 0, 0]);
+    let b = u16x8::from_slice(simd, &[5, 8, 13, 21, 230, 0, 0, 0]);
+
+    assert_eq!((a * b).val, [0, 40, 130, 630, 49464, 0, 0, 0]);
+}

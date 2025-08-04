@@ -93,7 +93,9 @@ impl Arch for Sse4_2 {
                         quote! { #intrinsic ( #( #args ),* ) }
                     }
                     (ScalarType::Int | ScalarType::Unsigned, _) => {
-                        quote! { todo!() }
+                        let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
+                        let intrinsic = format_ident!("_mm_mullo_{suffix}");
+                        quote! { #intrinsic ( #( #args ),* ) }
                     }
                     (ScalarType::Mask, _) => unreachable!(),
                 },
