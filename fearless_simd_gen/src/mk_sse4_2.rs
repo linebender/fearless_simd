@@ -36,7 +36,7 @@ pub fn mk_sse4_2_impl() -> TokenStream {
 
     quote! {
         // Until we have implemented all functions.
-        #![allow(unused_variables)]
+        #![expect(unused_variables)]
 
         use core::arch::x86_64::*;
         use core::ops::*;
