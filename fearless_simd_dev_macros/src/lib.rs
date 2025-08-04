@@ -124,8 +124,7 @@ fn exclude_sse4(name: &str) -> bool {
         name,
         // works incorrectly for any values larger than i32::MAX and smaller than 0.
         "cvt_u32_f32x4" | "cvt_f32_u32x4" | "saturate_float_to_int",
-    ) || name.contains("interleaved")
-        || name.contains("precise")
+    ) || name.contains("precise")
 }
 
 #[allow(dead_code, reason = "on purpose.")]

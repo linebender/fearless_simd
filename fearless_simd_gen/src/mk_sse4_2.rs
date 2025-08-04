@@ -496,7 +496,7 @@ fn mk_simd_impl() -> TokenStream {
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, #arg) -> #ret_ty {
-                            todo!()
+                            crate::Fallback::new().#method_ident(src).val.simd_into(self)
                         }
                     }
                 }
@@ -505,7 +505,8 @@ fn mk_simd_impl() -> TokenStream {
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, #arg) -> #ret_ty {
-                            todo!()
+                            let fb = crate::Fallback::new();
+                            fb.#method_ident(a.val.simd_into(fb), dest)
                         }
                     }
                 }

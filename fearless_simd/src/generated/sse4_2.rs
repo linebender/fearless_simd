@@ -3139,11 +3139,15 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        todo!()
+        crate::Fallback::new()
+            .load_interleaved_128_f32x16(src)
+            .val
+            .simd_into(self)
     }
     #[inline(always)]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        todo!()
+        let fb = crate::Fallback::new();
+        fb.store_interleaved_128_f32x16(a.val.simd_into(fb), dest)
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -3447,11 +3451,15 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        todo!()
+        crate::Fallback::new()
+            .load_interleaved_128_u8x64(src)
+            .val
+            .simd_into(self)
     }
     #[inline(always)]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        todo!()
+        let fb = crate::Fallback::new();
+        fb.store_interleaved_128_u8x64(a.val.simd_into(fb), dest)
     }
     #[inline(always)]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
@@ -3812,11 +3820,15 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        todo!()
+        crate::Fallback::new()
+            .load_interleaved_128_u16x32(src)
+            .val
+            .simd_into(self)
     }
     #[inline(always)]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        todo!()
+        let fb = crate::Fallback::new();
+        fb.store_interleaved_128_u16x32(a.val.simd_into(fb), dest)
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
@@ -4183,11 +4195,15 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        todo!()
+        crate::Fallback::new()
+            .load_interleaved_128_u32x16(src)
+            .val
+            .simd_into(self)
     }
     #[inline(always)]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        todo!()
+        let fb = crate::Fallback::new();
+        fb.store_interleaved_128_u32x16(a.val.simd_into(fb), dest)
     }
     #[inline(always)]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
