@@ -70,8 +70,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             #[test]
             fn #sse4_name() {
-                let neon = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
-                #input_fn_name(neon);
+                let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
+                #input_fn_name(sse4);
             }
         }
     } else {
