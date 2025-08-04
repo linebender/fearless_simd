@@ -3151,7 +3151,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
         let fb = crate::Fallback::new();
-        fb.store_interleaved_128_f32x16(a.val.simd_into(fb), dest)
+        fb.store_interleaved_128_f32x16(a.val.simd_into(fb), dest);
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -3463,7 +3463,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
         let fb = crate::Fallback::new();
-        fb.store_interleaved_128_u8x64(a.val.simd_into(fb), dest)
+        fb.store_interleaved_128_u8x64(a.val.simd_into(fb), dest);
     }
     #[inline(always)]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
@@ -3832,7 +3832,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
         let fb = crate::Fallback::new();
-        fb.store_interleaved_128_u16x32(a.val.simd_into(fb), dest)
+        fb.store_interleaved_128_u16x32(a.val.simd_into(fb), dest);
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
@@ -4221,7 +4221,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
         let fb = crate::Fallback::new();
-        fb.store_interleaved_128_u32x16(a.val.simd_into(fb), dest)
+        fb.store_interleaved_128_u32x16(a.val.simd_into(fb), dest);
     }
     #[inline(always)]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {

@@ -499,7 +499,10 @@ fn mk_simd_impl() -> TokenStream {
                     // Implementing interleaved loading/storing for 32-bit is still quite doable, It's unclear
                     // how hard it would be for u16/u8. For now we only implement it for u32 since this is needed
                     // in packing in vello_cpu, where performance is very critical.
-                    let expr = if block_size == 128 && vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 32 {
+                    let expr = if block_size == 128
+                        && vec_ty.scalar == ScalarType::Unsigned
+                        && vec_ty.scalar_bits == 32
+                    {
                         quote! {
                             unsafe {
                                 // TODO: Once we support u64, we could do all of this using just zip + unzip
@@ -524,10 +527,9 @@ fn mk_simd_impl() -> TokenStream {
                                 )
                             }
                         }
-                    }   else {
+                    } else {
                         quote! { crate::Fallback::new().#method_ident(src).val.simd_into(self) }
                     };
-
 
                     quote! {
                         #[inline(always)]
@@ -542,7 +544,7 @@ fn mk_simd_impl() -> TokenStream {
                         #[inline(always)]
                         fn #method_ident(self, #arg) -> #ret_ty {
                             let fb = crate::Fallback::new();
-                            fb.#method_ident(a.val.simd_into(fb), dest)
+                            fb.#method_ident(a.val.simd_into(fb), dest);
                         }
                     }
                 }
