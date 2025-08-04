@@ -210,11 +210,15 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_cvtps_epi32(_mm_floor_ps(a.into())).simd_into(self) }
+        unsafe {
+            _mm_cvtps_epi32(_mm_max_ps(_mm_floor_ps(a.into()), _mm_set1_ps(0.0))).simd_into(self)
+        }
     }
     #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_cvtps_epi32(_mm_floor_ps(a.into())).simd_into(self) }
+        unsafe {
+            _mm_cvtps_epi32(_mm_max_ps(_mm_floor_ps(a.into()), _mm_set1_ps(0.0))).simd_into(self)
+        }
     }
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {

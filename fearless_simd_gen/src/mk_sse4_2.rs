@@ -464,7 +464,9 @@ fn mk_simd_impl() -> TokenStream {
                     if vec_ty.scalar == ScalarType::Float {
                         let floor_intrinsic =
                             simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits);
-                        expr = quote! { #floor_intrinsic(#expr) };
+                        let max_intrinsic = simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits);
+                        let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits);
+                        expr = quote! { #max_intrinsic(#floor_intrinsic(#expr), #set(0.0)) };
                     }
 
                     quote! {
