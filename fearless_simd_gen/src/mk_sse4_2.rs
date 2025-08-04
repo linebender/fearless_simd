@@ -36,7 +36,11 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
 
     quote! {
         // Until we have implemented all functions.
-        #![expect(unused_variables)]
+        #![expect(
+            unused_variables,
+            clippy::todo,
+            reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+        )]
 
         use core::arch::x86_64::*;
         use core::ops::*;
