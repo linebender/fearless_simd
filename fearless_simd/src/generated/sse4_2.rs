@@ -100,23 +100,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_le_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe {
-            _mm_castps_si128(_mm_or_ps(
-                _mm_cmplt_ps(a.into(), b.into()),
-                _mm_cmpeq_ps(a.into(), b.into()),
-            ))
-            .simd_into(self)
-        }
+        unsafe { _mm_castps_si128(_mm_cmple_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe {
-            _mm_castps_si128(_mm_or_ps(
-                _mm_cmpgt_ps(a.into(), b.into()),
-                _mm_cmpeq_ps(a.into(), b.into()),
-            ))
-            .simd_into(self)
-        }
+        unsafe { _mm_castps_si128(_mm_cmpge_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
@@ -1208,23 +1196,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_le_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe {
-            _mm_castpd_si128(_mm_or_pd(
-                _mm_cmplt_pd(a.into(), b.into()),
-                _mm_cmpeq_pd(a.into(), b.into()),
-            ))
-            .simd_into(self)
-        }
+        unsafe { _mm_castpd_si128(_mm_cmple_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe {
-            _mm_castpd_si128(_mm_or_pd(
-                _mm_cmpgt_pd(a.into(), b.into()),
-                _mm_cmpeq_pd(a.into(), b.into()),
-            ))
-            .simd_into(self)
-        }
+        unsafe { _mm_castpd_si128(_mm_cmpge_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
