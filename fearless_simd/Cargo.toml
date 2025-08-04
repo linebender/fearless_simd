@@ -3,19 +3,22 @@ name = "fearless_simd"
 version = "0.2.0"
 license.workspace = true
 edition.workspace = true
+repository.workspace = true
 authors = ["Raph Levien <raph.levien@gmail.com>"]
 keywords = ["simd"]
 categories = ["hardware-support"]
 description = "Safer and easier SIMD"
 readme = "README.md"
 rust-version = "1.85"
-repository.workspace = true
 
 [features]
 safe_wrappers = []
 default = ["std"]
 std = []
 libm = ["dep:libm"]
+
+[lints]
+workspace = true
 
 [dependencies]
 bytemuck = "1.23.0"

@@ -14,6 +14,9 @@ publish = false
 name = "tests"
 path = "tests/mod.rs"
 
+[lints]
+workspace = true
+
 [dependencies]
 fearless_simd = { workspace = true, features = ["std"] }
 fearless_simd_dev_macros = { workspace = true }

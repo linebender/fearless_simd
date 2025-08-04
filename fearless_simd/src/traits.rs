@@ -1,6 +1,10 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    missing_docs,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
 use crate::{Level, Simd};
 
 pub trait Select<T> {
@@ -36,6 +40,7 @@ pub trait Bytes: Sized {
 }
 
 pub(crate) mod seal {
+    #[expect(unnameable_types, reason = "TODO")]
     pub trait Seal {}
 }
 

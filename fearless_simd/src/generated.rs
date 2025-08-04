@@ -1,6 +1,13 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    missing_docs,
+    clippy::cast_possible_truncation,
+    clippy::unseparated_literal_suffix,
+    trivial_numeric_casts,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
 #![cfg_attr(
     target_arch = "x86_64",
     expect(

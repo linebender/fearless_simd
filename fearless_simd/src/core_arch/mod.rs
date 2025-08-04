@@ -3,6 +3,10 @@
 
 //! Access to architecture-specific intrinsics.
 
+#![expect(
+    missing_docs,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
 #![cfg_attr(
     not(target_arch = "wasm32"),
     expect(

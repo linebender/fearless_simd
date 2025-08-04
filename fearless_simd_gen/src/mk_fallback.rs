@@ -1,6 +1,11 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    unreachable_pub,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use crate::arch::fallback::Fallback;
 use crate::arch::{Arch, fallback};
 use crate::generic::{generic_combine, generic_op, generic_split};

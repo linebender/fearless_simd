@@ -1,6 +1,11 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    missing_docs,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use fearless_simd::{Level, Simd, SimdBase, WithSimd, simd_dispatch};
 
 // The WithSimd idea is adapted from pulp but is clunky; we

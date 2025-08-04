@@ -6,7 +6,7 @@
 use crate::impl_macros::delegate;
 use core::arch::x86_64::*;
 
-/// A token for FMA intrinsics on x86_64.
+/// A token for FMA intrinsics on `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Fma {
     _private: (),

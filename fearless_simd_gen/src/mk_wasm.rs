@@ -1,6 +1,12 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    unreachable_pub,
+    clippy::missing_assert_message,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
@@ -613,7 +619,7 @@ fn mk_type_impl() -> TokenStream {
                     unsafe { core::mem::transmute(value.val) }
                 }
             }
-        })
+        });
     }
     quote! {
         #( #result )*

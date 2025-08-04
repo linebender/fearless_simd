@@ -3,6 +3,7 @@
 
 #![expect(
     clippy::match_single_binding,
+    unreachable_pub,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
