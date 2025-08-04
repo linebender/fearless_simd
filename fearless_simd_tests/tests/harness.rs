@@ -1,6 +1,17 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+// The following lints are part of the Linebender standard set,
+// but resolving them has been deferred for now.
+// Feel free to send a PR that solves one or more of these.
+#![expect(
+    clippy::missing_assert_message,
+    clippy::unseparated_literal_suffix,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
+//! Tests for `fearless_simd`.
+
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
