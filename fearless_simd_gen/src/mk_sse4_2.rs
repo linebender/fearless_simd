@@ -496,10 +496,43 @@ fn mk_simd_impl() -> TokenStream {
                 }
                 OpSig::LoadInterleaved(block_size, count) => {
                     let arg = load_interleaved_arg_ty(block_size, count, vec_ty);
+                    // Implementing interleaved loading/storing for 32-bit is still quite doable, It's unclear
+                    // how hard it would be for u16/u8. For now we only implement it for u32 since this is needed
+                    // in packing in vello_cpu, where performance is very critical.
+                    let expr = if block_size == 128 && vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 32 {
+                        quote! {
+                            unsafe {
+                                // TODO: Once we support u64, we could do all of this using just zip + unzip
+                                let v0 = _mm_loadu_si128(src.as_ptr().add(0) as *const __m128i);
+                                let v1 = _mm_loadu_si128(src.as_ptr().add(4) as *const __m128i);
+                                let v2 = _mm_loadu_si128(src.as_ptr().add(8) as *const __m128i);
+                                let v3 = _mm_loadu_si128(src.as_ptr().add(12) as *const __m128i);
+
+                                let tmp0 = _mm_unpacklo_epi32(v0, v1); // [0,4,1,5]
+                                let tmp1 = _mm_unpackhi_epi32(v0, v1); // [2,6,3,7]
+                                let tmp2 = _mm_unpacklo_epi32(v2, v3); // [8,12,9,13]
+                                let tmp3 = _mm_unpackhi_epi32(v2, v3); // [10,14,11,15]
+
+                                let out0 = _mm_unpacklo_epi64(tmp0, tmp2); // [0,4,8,12]
+                                let out1 = _mm_unpackhi_epi64(tmp0, tmp2); // [1,5,9,13]
+                                let out2 = _mm_unpacklo_epi64(tmp1, tmp3); // [2,6,10,14]
+                                let out3 = _mm_unpackhi_epi64(tmp1, tmp3); // [3,7,11,15]
+
+                                self.combine_u32x8(
+                                    self.combine_u32x4(out0.simd_into(self), out1.simd_into(self)),
+                                    self.combine_u32x4(out2.simd_into(self), out3.simd_into(self)),
+                                )
+                            }
+                        }
+                    }   else {
+                        quote! { crate::Fallback::new().#method_ident(src).val.simd_into(self) }
+                    };
+
+
                     quote! {
                         #[inline(always)]
                         fn #method_ident(self, #arg) -> #ret_ty {
-                            crate::Fallback::new().#method_ident(src).val.simd_into(self)
+                            #expr
                         }
                     }
                 }

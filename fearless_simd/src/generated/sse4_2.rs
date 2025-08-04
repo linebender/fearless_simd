@@ -4199,10 +4199,24 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        crate::Fallback::new()
-            .load_interleaved_128_u32x16(src)
-            .val
-            .simd_into(self)
+        unsafe {
+            let v0 = _mm_loadu_si128(src.as_ptr().add(0) as *const __m128i);
+            let v1 = _mm_loadu_si128(src.as_ptr().add(4) as *const __m128i);
+            let v2 = _mm_loadu_si128(src.as_ptr().add(8) as *const __m128i);
+            let v3 = _mm_loadu_si128(src.as_ptr().add(12) as *const __m128i);
+            let tmp0 = _mm_unpacklo_epi32(v0, v1);
+            let tmp1 = _mm_unpackhi_epi32(v0, v1);
+            let tmp2 = _mm_unpacklo_epi32(v2, v3);
+            let tmp3 = _mm_unpackhi_epi32(v2, v3);
+            let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+            let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+            let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+            let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+            self.combine_u32x8(
+                self.combine_u32x4(out0.simd_into(self), out1.simd_into(self)),
+                self.combine_u32x4(out2.simd_into(self), out3.simd_into(self)),
+            )
+        }
     }
     #[inline(always)]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
