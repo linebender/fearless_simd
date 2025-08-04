@@ -195,8 +195,9 @@ fn mk_simd_impl() -> TokenStream {
                                 unsafe {
                                     let raw = a.into();
                                     let high = #extend(raw).simd_into(self);
-                                    // TODO: Document the magic number 8
-                                    let low = #extend(_mm_slli_si128(raw, 8)).simd_into(self);
+                                    // Shift by 8 since we want to get the higher part into the
+                                    // lower position.
+                                    let low = #extend(_mm_srli_si128::<8>(raw)).simd_into(self);
                                     self.#combine(high, low)
                                 }
                             }

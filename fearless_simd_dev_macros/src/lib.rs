@@ -123,9 +123,7 @@ fn exclude_sse4(name: &str) -> bool {
     matches!(
         name,
         // works incorrectly for any values larger than i32::MAX and smaller than 0.
-        "cvt_u32_f32x4"
-            | "cvt_f32_u32x4"
-            | "widen_u8x16"
+        "cvt_u32_f32x4" | "cvt_f32_u32x4"
             | "narrow_u16x16"
             | "saturate_float_to_int",
     ) || name.contains("interleaved")

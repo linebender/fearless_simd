@@ -473,7 +473,7 @@ impl Simd for Sse4_2 {
         unsafe {
             let raw = a.into();
             let high = _mm_cvtepu8_epi16(raw).simd_into(self);
-            let low = _mm_cvtepu8_epi16(_mm_slli_si128(raw, 8)).simd_into(self);
+            let low = _mm_cvtepu8_epi16(_mm_srli_si128::<8>(raw)).simd_into(self);
             self.combine_u16x8(high, low)
         }
     }
