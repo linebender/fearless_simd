@@ -86,19 +86,16 @@ impl Arch for Sse4_2 {
                         #or(#and(mask, #b), #andnot(mask, #a))
                     }
                 }
-                "mul" => match (ty.scalar, ty.scalar_bits) {
-                    (ScalarType::Float, _) | (ScalarType::Int | ScalarType::Unsigned, 32) => {
-                        let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
-                        let intrinsic = format_ident!("_mm_mul_{suffix}");
-                        quote! { #intrinsic ( #( #args ),* ) }
-                    }
-                    (ScalarType::Int | ScalarType::Unsigned, _) => {
-                        let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
-                        let intrinsic = format_ident!("_mm_mullo_{suffix}");
-                        quote! { #intrinsic ( #( #args ),* ) }
-                    }
-                    (ScalarType::Mask, _) => unreachable!(),
-                },
+                "mul" => {
+                    let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
+                    let intrinsic = if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+                        format_ident!("_mm_mullo_{suffix}")
+                    } else {
+                        format_ident!("_mm_mul_{suffix}")
+                    };
+
+                    quote! { #intrinsic ( #( #args ),* ) }
+                }
                 _ => unimplemented!("{}", op),
             }
         }

@@ -876,7 +876,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_mul_epi32(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_mullo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1011,7 +1011,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_mul_epi32(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_mullo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {

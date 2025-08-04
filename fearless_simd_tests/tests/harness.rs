@@ -1162,3 +1162,11 @@ fn mul_u16x8<S: Simd>(simd: S) {
 
     assert_eq!((a * b).val, [0, 40, 130, 630, 49464, 0, 0, 0]);
 }
+
+#[simd_test]
+fn mul_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[1, 5464, 23234, 456456]);
+    let b = u32x4::from_slice(simd, &[23, 34, 565, 34234]);
+
+    assert_eq!((a * b).val, [23, 185776, 13127210, 2741412816]);
+}
