@@ -114,7 +114,9 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Compare => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
 
-                    let mut expr = if matches!(method, "simd_le" | "simd_ge") && vec_ty.scalar != ScalarType::Float {
+                    let mut expr = if matches!(method, "simd_le" | "simd_ge")
+                        && vec_ty.scalar != ScalarType::Float
+                    {
                         let patched_method = match method {
                             "simd_le" => "simd_lt",
                             "simd_ge" => "simd_gt",
