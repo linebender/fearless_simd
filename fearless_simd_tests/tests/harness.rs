@@ -1178,3 +1178,10 @@ fn mul_f32x4<S: Simd>(simd: S) {
 
     assert_eq!((a * b).val, [83.43001, 0.0, -130.73201, 759761400.0]);
 }
+
+#[simd_test]
+fn cvt_i32_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-10.3, -0.9, 13.34, 234234.8]);
+
+    assert_eq!(a.cvt_i32().val, [-10, 0, 13, 234234]);
+}

@@ -459,16 +459,21 @@ fn mk_simd_impl() -> TokenStream {
                     let cvt_intrinsic =
                         cvt_intrinsic(*vec_ty, VecType::new(scalar, scalar_bits, vec_ty.len));
 
-                    let mut expr = quote! { a.into() };
-
-                    if vec_ty.scalar == ScalarType::Float {
+                    let expr = if vec_ty.scalar == ScalarType::Float {
                         let floor_intrinsic =
                             simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits);
                         let max_intrinsic =
                             simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits);
                         let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits);
-                        expr = quote! { #max_intrinsic(#floor_intrinsic(#expr), #set(0.0)) };
-                    }
+
+                        if scalar == ScalarType::Unsigned {
+                            quote! { #max_intrinsic(#floor_intrinsic(a.into()), #set(0.0)) }
+                        } else {
+                            quote! { a.trunc().into() }
+                        }
+                    } else {
+                        quote! { a.into() }
+                    };
 
                     quote! {
                         #[inline(always)]
