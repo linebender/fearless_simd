@@ -4,7 +4,7 @@
 use crate::arch::Arch;
 use crate::arch::sse4_2::{
     Sse4_2, cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic,
-    simple_intrinsic, unpack_intrinsic,
+    simple_intrinsic, simple_sign_unaware_intrinsic, unpack_intrinsic,
 };
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{
@@ -118,20 +118,52 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Compare => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
 
-                    let mut expr = if matches!(method, "simd_le" | "simd_ge")
-                        && vec_ty.scalar != ScalarType::Float
-                    {
-                        let patched_method = match method {
-                            "simd_le" => "simd_lt",
-                            "simd_ge" => "simd_gt",
-                            _ => method,
-                        };
-                        let expr = Sse4_2.expr(patched_method, vec_ty, &args);
+                    let mut expr = if vec_ty.scalar != ScalarType::Float {
+                        if matches!(method, "simd_le" | "simd_ge") {
+                            let max_min = match method {
+                                "simd_le" => "min",
+                                "simd_ge" => "max",
+                                _ => unreachable!(),
+                            };
 
-                        let or_intrinsic = format_ident!("_mm_or_si128");
+                            let eq_intrinsic = simple_sign_unaware_intrinsic(
+                                "cmpeq",
+                                vec_ty.scalar,
+                                vec_ty.scalar_bits,
+                            );
 
-                        let eq_expr = Sse4_2.expr("simd_eq", vec_ty, &args);
-                        quote! { #or_intrinsic(#expr, #eq_expr) }
+                            let max_min_expr = Sse4_2.expr(max_min, vec_ty, &args);
+                            quote! { #eq_intrinsic(#max_min_expr, a.into()) }
+                        } else if vec_ty.scalar == ScalarType::Unsigned {
+                            // SSE4.2 only has signed GT/LT, but not unsigned.
+                            let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits);
+                            let sign = match vec_ty.scalar_bits {
+                                8 => quote! { 0x80u8 },
+                                16 => quote! { 0x8000u16 },
+                                32 => quote! { 0x80000000u32 },
+                                _ => unimplemented!(),
+                            };
+                            let gt = simple_sign_unaware_intrinsic(
+                                "cmpgt",
+                                vec_ty.scalar,
+                                vec_ty.scalar_bits,
+                            );
+                            let args = if method == "simd_lt" {
+                                quote! { b_signed, a_signed }
+                            } else {
+                                quote! { a_signed, b_signed }
+                            };
+
+                            quote! {
+                                let sign_bit = #set(#sign as _);
+                                let a_signed = _mm_xor_si128(a.into(), sign_bit);
+                                let b_signed = _mm_xor_si128(b.into(), sign_bit);
+
+                                #gt(#args)
+                            }
+                        } else {
+                            Sse4_2.expr(method, vec_ty, &args)
+                        }
                     } else {
                         Sse4_2.expr(method, vec_ty, &args)
                     };

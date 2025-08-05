@@ -47,9 +47,11 @@ impl Arch for Sse4_2 {
 
     fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
         if let Some(op_name) = translate_op(op) {
+            let sign_aware = matches!(op, "max" | "min");
+
             let suffix = match op_name {
                 "and" | "or" | "xor" => "si128",
-                _ => op_suffix(ty.scalar, ty.scalar_bits, false),
+                _ => op_suffix(ty.scalar, ty.scalar_bits, sign_aware),
             };
             let intrinsic = format_ident!("_mm_{op_name}_{suffix}");
             quote! { #intrinsic ( #( #args ),* ) }
@@ -134,6 +136,11 @@ pub(crate) fn set1_intrinsic(ty: ScalarType, bits: usize) -> Ident {
 
 pub(crate) fn simple_intrinsic(name: &str, ty: ScalarType, bits: usize) -> Ident {
     let suffix = op_suffix(ty, bits, true);
+    format_ident!("_mm_{name}_{suffix}")
+}
+
+pub(crate) fn simple_sign_unaware_intrinsic(name: &str, ty: ScalarType, bits: usize) -> Ident {
+    let suffix = op_suffix(ty, bits, false);
     format_ident!("_mm_{name}_{suffix}")
 }
 

@@ -272,23 +272,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_le_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmplt_epi8(a.into(), b.into()),
-                _mm_cmpeq_epi8(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi8(_mm_min_epi8(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmpgt_epi8(a.into(), b.into()),
-                _mm_cmpeq_epi8(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi8(_mm_max_epi8(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -405,35 +393,38 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        unsafe { _mm_cmpeq_epi8(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let sign_bit = _mm_set1_epi8(0x80u8 as _);
+            let a_signed = _mm_xor_si128(a.into(), sign_bit);
+            let b_signed = _mm_xor_si128(b.into(), sign_bit);
+            _mm_cmpgt_epi8(a_signed, b_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        unsafe { _mm_cmplt_epi8(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let sign_bit = _mm_set1_epi8(0x80u8 as _);
+            let a_signed = _mm_xor_si128(a.into(), sign_bit);
+            let b_signed = _mm_xor_si128(b.into(), sign_bit);
+            _mm_cmpgt_epi8(b_signed, a_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmplt_epi8(a.into(), b.into()),
-                _mm_cmpeq_epi8(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi8(_mm_min_epu8(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmpgt_epi8(a.into(), b.into()),
-                _mm_cmpeq_epi8(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi8(_mm_max_epu8(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        unsafe { _mm_cmpgt_epi8(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let sign_bit = _mm_set1_epi8(0x80u8 as _);
+            let a_signed = _mm_xor_si128(a.into(), sign_bit);
+            let b_signed = _mm_xor_si128(b.into(), sign_bit);
+            _mm_cmpgt_epi8(a_signed, b_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -473,11 +464,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_min_epi8(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_min_epu8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_max_epi8(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_max_epu8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
@@ -594,23 +585,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_le_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmplt_epi16(a.into(), b.into()),
-                _mm_cmpeq_epi16(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi16(_mm_min_epi16(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmpgt_epi16(a.into(), b.into()),
-                _mm_cmpeq_epi16(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi16(_mm_max_epi16(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -719,35 +698,38 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        unsafe { _mm_cmpeq_epi16(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let sign_bit = _mm_set1_epi16(0x8000u16 as _);
+            let a_signed = _mm_xor_si128(a.into(), sign_bit);
+            let b_signed = _mm_xor_si128(b.into(), sign_bit);
+            _mm_cmpgt_epi16(a_signed, b_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        unsafe { _mm_cmplt_epi16(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let sign_bit = _mm_set1_epi16(0x8000u16 as _);
+            let a_signed = _mm_xor_si128(a.into(), sign_bit);
+            let b_signed = _mm_xor_si128(b.into(), sign_bit);
+            _mm_cmpgt_epi16(b_signed, a_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmplt_epi16(a.into(), b.into()),
-                _mm_cmpeq_epi16(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi16(_mm_min_epu16(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmpgt_epi16(a.into(), b.into()),
-                _mm_cmpeq_epi16(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi16(_mm_max_epu16(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        unsafe { _mm_cmpgt_epi16(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let sign_bit = _mm_set1_epi16(0x8000u16 as _);
+            let a_signed = _mm_xor_si128(a.into(), sign_bit);
+            let b_signed = _mm_xor_si128(b.into(), sign_bit);
+            _mm_cmpgt_epi16(a_signed, b_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -787,11 +769,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_min_epi16(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_min_epu16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_max_epi16(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_max_epu16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self> {
@@ -906,23 +888,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_le_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmplt_epi32(a.into(), b.into()),
-                _mm_cmpeq_epi32(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi32(_mm_min_epi32(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmpgt_epi32(a.into(), b.into()),
-                _mm_cmpeq_epi32(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi32(_mm_max_epi32(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -1033,35 +1003,38 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_cmpeq_epi32(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let sign_bit = _mm_set1_epi32(0x80000000u32 as _);
+            let a_signed = _mm_xor_si128(a.into(), sign_bit);
+            let b_signed = _mm_xor_si128(b.into(), sign_bit);
+            _mm_cmpgt_epi32(a_signed, b_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_cmplt_epi32(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let sign_bit = _mm_set1_epi32(0x80000000u32 as _);
+            let a_signed = _mm_xor_si128(a.into(), sign_bit);
+            let b_signed = _mm_xor_si128(b.into(), sign_bit);
+            _mm_cmpgt_epi32(b_signed, a_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmplt_epi32(a.into(), b.into()),
-                _mm_cmpeq_epi32(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi32(_mm_min_epu32(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_cmpgt_epi32(a.into(), b.into()),
-                _mm_cmpeq_epi32(a.into(), b.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi32(_mm_max_epu32(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_cmpgt_epi32(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let sign_bit = _mm_set1_epi32(0x80000000u32 as _);
+            let a_signed = _mm_xor_si128(a.into(), sign_bit);
+            let b_signed = _mm_xor_si128(b.into(), sign_bit);
+            _mm_cmpgt_epi32(a_signed, b_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1099,11 +1072,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_min_epi32(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_min_epu32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_max_epi32(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_max_epu32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self> {
