@@ -47,9 +47,11 @@ impl Arch for Sse4_2 {
 
     fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
         if let Some(op_name) = translate_op(op) {
+            let sign_aware = matches!(op, "max" | "min");
+
             let suffix = match op_name {
                 "and" | "or" | "xor" => "si128",
-                _ => op_suffix(ty.scalar, ty.scalar_bits, false),
+                _ => op_suffix(ty.scalar, ty.scalar_bits, sign_aware),
             };
             let intrinsic = format_ident!("_mm_{op_name}_{suffix}");
             quote! { #intrinsic ( #( #args ),* ) }
@@ -86,17 +88,16 @@ impl Arch for Sse4_2 {
                         #or(#and(mask, #b), #andnot(mask, #a))
                     }
                 }
-                "mul" => match (ty.scalar, ty.scalar_bits) {
-                    (ScalarType::Float, _) | (ScalarType::Int | ScalarType::Unsigned, 32) => {
-                        let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
-                        let intrinsic = format_ident!("_mm_mul_{suffix}");
-                        quote! { #intrinsic ( #( #args ),* ) }
-                    }
-                    (ScalarType::Int | ScalarType::Unsigned, _) => {
-                        quote! { todo!() }
-                    }
-                    (ScalarType::Mask, _) => unreachable!(),
-                },
+                "mul" => {
+                    let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
+                    let intrinsic = if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+                        format_ident!("_mm_mullo_{suffix}")
+                    } else {
+                        format_ident!("_mm_mul_{suffix}")
+                    };
+
+                    quote! { #intrinsic ( #( #args ),* ) }
+                }
                 _ => unimplemented!("{}", op),
             }
         }
@@ -138,6 +139,11 @@ pub(crate) fn simple_intrinsic(name: &str, ty: ScalarType, bits: usize) -> Ident
     format_ident!("_mm_{name}_{suffix}")
 }
 
+pub(crate) fn simple_sign_unaware_intrinsic(name: &str, ty: ScalarType, bits: usize) -> Ident {
+    let suffix = op_suffix(ty, bits, false);
+    format_ident!("_mm_{name}_{suffix}")
+}
+
 pub(crate) fn extend_intrinsic(ty: ScalarType, from_bits: usize, to_bits: usize) -> Ident {
     let from_suffix = op_suffix(ty, from_bits, true);
     let to_suffix = op_suffix(ty, to_bits, false);
@@ -157,4 +163,11 @@ pub(crate) fn pack_intrinsic(from_bits: usize, signed: bool) -> Ident {
     };
     let suffix = op_suffix(ScalarType::Int, from_bits, false);
     format_ident!("_mm_pack{unsigned}s_{suffix}")
+}
+
+pub(crate) fn unpack_intrinsic(scalar_type: ScalarType, scalar_bits: usize, low: bool) -> Ident {
+    let suffix = op_suffix(scalar_type, scalar_bits, false);
+
+    let low_pref = if low { "lo" } else { "hi" };
+    format_ident!("_mm_unpack{low_pref}_{suffix}")
 }

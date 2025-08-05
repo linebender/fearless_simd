@@ -1154,3 +1154,112 @@ fn trunc_f64x2<S: Simd>(simd: S) {
     let a = f64x2::from_slice(simd, &[1.7, -2.3]);
     assert_eq!(a.trunc().val, [1.0, -2.0]);
 }
+
+#[simd_test]
+fn mul_u16x8<S: Simd>(simd: S) {
+    let a = u16x8::from_slice(simd, &[0, 5, 10, 30, 500, 0, 0, 0]);
+    let b = u16x8::from_slice(simd, &[5, 8, 13, 21, 230, 0, 0, 0]);
+
+    assert_eq!((a * b).val, [0, 40, 130, 630, 49464, 0, 0, 0]);
+}
+
+#[simd_test]
+fn mul_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[1, 5464, 23234, 456456]);
+    let b = u32x4::from_slice(simd, &[23, 34, 565, 34234]);
+
+    assert_eq!((a * b).val, [23, 185776, 13127210, 2741412816]);
+}
+
+#[simd_test]
+fn mul_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-10.3, 0.0, 13.34, 234234.0]);
+    let b = f32x4::from_slice(simd, &[-8.1, 7.9, -9.8, 3243.6]);
+
+    assert_eq!((a * b).val, [83.43001, 0.0, -130.73201, 759761400.0]);
+}
+
+#[simd_test]
+fn cvt_i32_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-10.3, -0.9, 13.34, 234234.8]);
+
+    assert_eq!(a.cvt_i32().val, [-10, 0, 13, 234234]);
+}
+
+#[simd_test]
+fn simd_ge_u8x16<S: Simd>(simd: S) {
+    let vals = u8x16::from_slice(
+        simd,
+        &[
+            0, 12, 34, 50, 220, 180, 127, 128, 255, 50, 33, 126, 0, 0, 0, 0,
+        ],
+    );
+    let mask = vals.simd_ge(u8x16::splat(simd, 128));
+
+    assert_eq!(
+        mask.val,
+        [0, 0, 0, 0, -1, -1, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0]
+    );
+}
+
+#[simd_test]
+fn simd_gt_u8x16<S: Simd>(simd: S) {
+    let vals = u8x16::from_slice(
+        simd,
+        &[
+            0, 12, 34, 50, 220, 180, 127, 128, 255, 50, 33, 126, 0, 0, 0, 0,
+        ],
+    );
+    let mask = vals.simd_gt(u8x16::splat(simd, 128));
+
+    assert_eq!(
+        mask.val,
+        [0, 0, 0, 0, -1, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0]
+    );
+}
+
+#[simd_test]
+fn simd_le_u8x16<S: Simd>(simd: S) {
+    let vals = u8x16::from_slice(
+        simd,
+        &[
+            0, 12, 34, 50, 220, 180, 127, 128, 255, 50, 33, 126, 0, 0, 0, 0,
+        ],
+    );
+    let mask = vals.simd_le(u8x16::splat(simd, 128));
+
+    assert_eq!(
+        mask.val,
+        [-1, -1, -1, -1, 0, 0, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1]
+    );
+}
+
+#[simd_test]
+fn simd_lt_u8x16<S: Simd>(simd: S) {
+    let vals = u8x16::from_slice(
+        simd,
+        &[
+            0, 12, 34, 50, 220, 180, 127, 128, 255, 50, 33, 126, 0, 0, 0, 0,
+        ],
+    );
+    let mask = vals.simd_lt(u8x16::splat(simd, 128));
+
+    assert_eq!(
+        mask.val,
+        [-1, -1, -1, -1, 0, 0, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1]
+    );
+}
+
+#[simd_test]
+fn simd_ge_i8x16<S: Simd>(simd: S) {
+    let vals = i8x16::from_slice(
+        simd,
+        &[0, -45, -12, 34, 89, 122, -122, 13, -1, 0, 0, 0, 0, 0, 0, 0],
+    );
+    let mask = vals.simd_ge(i8x16::splat(simd, -1));
+
+    assert_eq!(
+        mask.val,
+        [-1, 0, 0, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+    );
+}

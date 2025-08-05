@@ -456,7 +456,10 @@ fn interleave_indices(
 
 /// Whether the second argument of the function needs to be passed by reference.
 fn rhs_reference(method: &str) -> bool {
-    !matches!(method, "copysign" | "min" | "max" | "wrapping_sub")
+    !matches!(
+        method,
+        "copysign" | "min" | "max" | "wrapping_sub" | "wrapping_mul"
+    )
 }
 
 fn make_list(items: Vec<TokenStream>) -> TokenStream {
