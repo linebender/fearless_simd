@@ -7,10 +7,7 @@ use crate::arch::sse4_2::{
     simple_intrinsic, simple_sign_unaware_intrinsic, unpack_intrinsic,
 };
 use crate::generic::{generic_combine, generic_op, generic_split};
-use crate::ops::{
-    OpSig, TyFlavor, load_interleaved_arg_ty, ops_for_type, reinterpret_ty,
-    store_interleaved_arg_ty, valid_reinterpret,
-};
+use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -82,7 +79,6 @@ fn mk_simd_impl() -> TokenStream {
     for vec_ty in SIMD_TYPES {
         let scalar_bits = vec_ty.scalar_bits;
         let ty_name = vec_ty.rust_name();
-        let ty = vec_ty.rust();
         for (method, sig) in ops_for_type(vec_ty, true) {
             let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
@@ -98,17 +94,20 @@ fn mk_simd_impl() -> TokenStream {
             let method_name = format!("{method}_{ty_name}");
             let method_ident = Ident::new(&method_name, Span::call_site());
             let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+            let args = sig.simd_trait_args(vec_ty);
+            let method_sig = quote! {
+                #[inline(always)]
+                fn #method_ident(#args) -> #ret_ty
+            };
             let method = match sig {
                 OpSig::Splat => {
-                    let scalar = vec_ty.scalar.rust(scalar_bits);
                     let intrinsic = set1_intrinsic(vec_ty.scalar, scalar_bits);
                     let cast = match vec_ty.scalar {
                         ScalarType::Unsigned => quote!(as _),
                         _ => quote!(),
                     };
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, val: #scalar) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #intrinsic(val #cast).simd_into(self)
                             }
@@ -175,8 +174,7 @@ fn mk_simd_impl() -> TokenStream {
                     }
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             unsafe { #expr.simd_into(self) }
                         }
                     }
@@ -184,16 +182,14 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Unary => match method {
                     "fract" => {
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 a - a.trunc()
                             }
                         }
                     }
                     "not" => {
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 a ^ !0
                             }
                         }
@@ -202,8 +198,7 @@ fn mk_simd_impl() -> TokenStream {
                         let args = [quote! { a.into() }];
                         let expr = Sse4_2.expr(method, vec_ty, &args);
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 unsafe { #expr.simd_into(self) }
                             }
                         }
@@ -222,8 +217,7 @@ fn mk_simd_impl() -> TokenStream {
                             .rust_name()
                         );
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 unsafe {
                                     let raw = a.into();
                                     let high = #extend(raw).simd_into(self);
@@ -241,8 +235,7 @@ fn mk_simd_impl() -> TokenStream {
                             pack_intrinsic(scalar_bits, matches!(vec_ty.scalar, ScalarType::Int));
                         let split = format_ident!("split_{}", vec_ty.rust_name());
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 let (a, b) = self.#split(a);
                                 unsafe {
                                     // Note that SSE4.2 only has an intrinsic for saturating cast,
@@ -261,8 +254,7 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Binary => {
                     if method == "mul" && vec_ty.scalar_bits == 8 {
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 todo!()
                             }
                         }
@@ -270,8 +262,7 @@ fn mk_simd_impl() -> TokenStream {
                         let args = [quote! { a.into() }, quote! { b.into() }];
                         let expr = Sse4_2.expr(method, vec_ty, &args);
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 unsafe { #expr.simd_into(self) }
                             }
                         }
@@ -308,11 +299,10 @@ fn mk_simd_impl() -> TokenStream {
                         let pack_intrinsic = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int);
 
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: u32) -> #ret_ty {
+                            #method_sig {
                                 unsafe {
                                     let val = a.into();
-                                    let shift_count = _mm_cvtsi32_si128(b as i32);
+                                    let shift_count = _mm_cvtsi32_si128(shift as i32);
 
                                     let lo_16 = #extend_intrinsic_lo;
                                     let hi_16 = #extend_intrinsic_hi;
@@ -326,9 +316,8 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     } else {
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: u32) -> #ret_ty {
-                                unsafe { #shift_intrinsic(a.into(), _mm_cvtsi32_si128(b as _)).simd_into(self) }
+                            #method_sig {
+                                unsafe { #shift_intrinsic(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
                             }
                         }
                     }
@@ -336,16 +325,14 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Ternary => match method {
                     "madd" => {
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 a + b * c
                             }
                         }
                     }
                     "msub" => {
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 a - b * c
                             }
                         }
@@ -359,16 +346,13 @@ fn mk_simd_impl() -> TokenStream {
 
                         let expr = Sse4_2.expr(method, vec_ty, &args);
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                #expr.simd_into(self)
                             }
                         }
                     }
                 },
                 OpSig::Select => {
-                    let mask_ty = vec_ty.mask_ty().rust();
-
                     let expr = if vec_ty.scalar == ScalarType::Float {
                         let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
                         let (i1, i2, i3, i4) = (
@@ -395,8 +379,7 @@ fn mk_simd_impl() -> TokenStream {
                     };
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #mask_ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                            unsafe {
                                  #expr.simd_into(self)
                             }
@@ -412,8 +395,7 @@ fn mk_simd_impl() -> TokenStream {
                     let intrinsic = format_ident!("_mm_unpack{op}_{suffix}");
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                            unsafe {  #intrinsic(a.into(), b.into()).simd_into(self) }
                         }
                     }
@@ -479,8 +461,7 @@ fn mk_simd_impl() -> TokenStream {
                     };
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #expr
                         }
                     }
@@ -508,8 +489,7 @@ fn mk_simd_impl() -> TokenStream {
                     };
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             unsafe { #cvt_intrinsic(#expr).simd_into(self) }
                         }
                     }
@@ -519,8 +499,7 @@ fn mk_simd_impl() -> TokenStream {
                         let to_ty = reinterpret_ty(vec_ty, scalar, scalar_bits).rust();
 
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 #to_ty {
                                     val: bytemuck::cast(a.val),
                                     simd: a.simd,
@@ -531,8 +510,7 @@ fn mk_simd_impl() -> TokenStream {
                         quote! {}
                     }
                 }
-                OpSig::LoadInterleaved(block_size, count) => {
-                    let arg = load_interleaved_arg_ty(block_size, count, vec_ty);
+                OpSig::LoadInterleaved(block_size, _) => {
                     // Implementing interleaved loading/storing for 32-bit is still quite doable, It's unclear
                     // how hard it would be for u16/u8. For now we only implement it for u32 since this is needed
                     // in packing in vello_cpu, where performance is very critical.
@@ -569,17 +547,14 @@ fn mk_simd_impl() -> TokenStream {
                     };
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, #arg) -> #ret_ty {
+                        #method_sig {
                             #expr
                         }
                     }
                 }
-                OpSig::StoreInterleaved(block_size, count) => {
-                    let arg = store_interleaved_arg_ty(block_size, count, vec_ty);
+                OpSig::StoreInterleaved(_, _) => {
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, #arg) -> #ret_ty {
+                        #method_sig {
                             let fb = crate::Fallback::new();
                             fb.#method_ident(a.val.simd_into(fb), dest);
                         }
