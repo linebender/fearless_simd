@@ -585,7 +585,12 @@ fn mk_simd_impl() -> TokenStream {
 
             #[inline]
             fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-                f()
+                #[target_feature(enable = "sse4.2")]
+                #[inline]
+                unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
+                    f()
+                }
+                unsafe { vectorize_sse4_2(f) }
             }
 
             #( #methods )*
