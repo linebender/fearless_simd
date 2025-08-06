@@ -17,7 +17,7 @@ For now, prefer updating the package-level readmes, e.g. fearless_simd/README.md
 [![Documentation build status.](https://docs.rs/fearless_simd/badge.svg)](https://docs.rs/fearless_simd)
 [![Apache 2.0 or MIT license.](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue.svg)](#license)
 \
-[![Linebender Zulip chat.](https://img.shields.io/badge/Linebender-%23simd-blue?logo=Zulip)](https://xi.zulipchat.com/#narrow/channel/514230-simd)
+[![Linebender Zulip, #simd channel.](https://img.shields.io/badge/Linebender-%23simd-blue?logo=Zulip)](https://xi.zulipchat.com/#narrow/channel/514230-simd)
 [![GitHub Actions CI status.](https://github.com/linebender/fearless_simd/workflows/CI/badge.svg)](https://github.com/linebender/fearless_simd/actions)
 [![Dependency staleness status.](https://deps.rs/repo/github/linebender/fearless_simd/status.svg)](https://deps.rs/repo/github/linebender/fearless_simd)
 
@@ -61,6 +61,39 @@ On wasm, the level is `simd128`.
 This crate was inspired by [pulp], [std::simd], among others in the Rust ecosystem, though makes many decisions differently. It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
 
 The [half] code was mentioned above. The proc macro was strongly inspired by the [safe-arch-macro] in [rbrotli-enc].
+
+## Minimum supported Rust Version (MSRV)
+
+This version of Fearless SIMD has been verified to compile with **Rust 1.85** and later.
+
+Future versions of Fearless SIMD might increase the Rust version requirement.
+It will not be treated as a breaking change and as such can even happen with small patch releases.
+
+## Community
+
+[![Linebender Zulip, #simd channel.](https://img.shields.io/badge/Linebender-%23simd-blue?logo=Zulip)](https://xi.zulipchat.com/#narrow/channel/514230-simd)
+
+Discussion of Fearless SIMD development happens in the [Linebender Zulip](https://xi.zulipchat.com/), specifically in [#simd](https://xi.zulipchat.com/#narrow/channel/514230-simd).
+All public content can be read without logging in.
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+
+at your option.
+
+## Contribution
+
+Contributions are welcome by pull request. The [Rust code of conduct] applies.
+Please feel free to add your name to the [AUTHORS] file in any substantive pull request.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be licensed as above, without any additional terms or conditions.
+
+[Rust Code of Conduct]: https://www.rust-lang.org/policies/code-of-conduct
+[AUTHORS]: ./AUTHORS
 
 [A plan for SIMD]: https://linebender.org/blog/a-plan-for-simd/
 [pulp]: https://crates.io/crates/pulp
