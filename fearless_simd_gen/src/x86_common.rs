@@ -1,13 +1,10 @@
 use crate::arch::Arch;
-use crate::arch::sse4_2::{
-    Sse4_2,
-};
+use crate::arch::sse4_2::Sse4_2;
 use crate::generic::{generic_combine, generic_split};
 use crate::ops::{OpSig, TyFlavor, reinterpret_ty, valid_reinterpret};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
-use crate::types::ScalarType::{Float, Int, Mask, Unsigned};
 
 pub(crate) fn make_method(
     method: &str,
@@ -481,7 +478,6 @@ pub(crate) fn make_method(
         }
     }
 }
-
 
 pub(crate) fn op_suffix(mut ty: ScalarType, bits: usize, sign_aware: bool) -> &'static str {
     use ScalarType::*;

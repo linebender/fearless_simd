@@ -3,9 +3,9 @@
 
 use crate::arch::Arch;
 use crate::types::{ScalarType, VecType};
+use crate::x86_common::{op_suffix, set1_intrinsic, simple_intrinsic};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
-use crate::x86_common::{op_suffix, set1_intrinsic, simple_intrinsic};
 
 pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
     Some(match op {
