@@ -9,10 +9,7 @@
 use crate::arch::fallback::Fallback;
 use crate::arch::{Arch, fallback};
 use crate::generic::{generic_combine, generic_op, generic_split};
-use crate::ops::{
-    OpSig, TyFlavor, load_interleaved_arg_ty, ops_for_type, reinterpret_ty,
-    store_interleaved_arg_ty, valid_reinterpret,
-};
+use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -274,7 +271,6 @@ fn mk_simd_impl() -> TokenStream {
                     }
                 }
                 OpSig::Select => {
-                    let mask_ty = vec_ty.mask_ty().rust();
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx| {
@@ -373,8 +369,6 @@ fn mk_simd_impl() -> TokenStream {
                     let len = (block_size * count) as usize / vec_ty.scalar_bits;
                     let items = interleave_indices(len, count as usize, |idx| quote! { src[#idx] });
 
-                    let arg = load_interleaved_arg_ty(block_size, count, vec_ty);
-
                     quote! {
                         #method_sig {
                             #items.simd_into(self)
@@ -385,8 +379,6 @@ fn mk_simd_impl() -> TokenStream {
                     let len = (block_size * count) as usize / vec_ty.scalar_bits;
                     let items =
                         interleave_indices(len, len / count as usize, |idx| quote! { a[#idx] });
-
-                    let arg = store_interleaved_arg_ty(block_size, count, vec_ty);
 
                     quote! {
                         #method_sig {

@@ -11,9 +11,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::quote;
 
 use crate::arch::neon::split_intrinsic;
-use crate::ops::{
-    load_interleaved_arg_ty, reinterpret_ty, store_interleaved_arg_ty, valid_reinterpret,
-};
+use crate::ops::{reinterpret_ty, valid_reinterpret};
 use crate::types::ScalarType;
 use crate::{
     arch::Arch,
@@ -150,7 +148,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::LoadInterleaved(block_size, count) => {
+                OpSig::LoadInterleaved(block_size, _) => {
                     let intrinsic = {
                         // The function expects 64-bit or 128-bit
                         let ty = VecType::new(
@@ -299,7 +297,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Select => {
                     let opt_q = crate::arch::neon::opt_q(vec_ty);
-                    let mask_ty = vec_ty.mask_ty().rust();
                     let reinterpret_str =
                         format!("vreinterpret{opt_q}_u{scalar_bits}_s{scalar_bits}");
                     let reinterpret = Ident::new(&reinterpret_str, Span::call_site());

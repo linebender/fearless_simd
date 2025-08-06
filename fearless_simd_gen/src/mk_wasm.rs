@@ -10,7 +10,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::ops::{load_interleaved_arg_ty, store_interleaved_arg_ty, valid_reinterpret};
+use crate::ops::valid_reinterpret;
 use crate::{
     arch::{Arch, wasm::Wasm},
     generic::{generic_combine, generic_op, generic_split},
@@ -41,7 +41,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
     let mut methods = vec![];
 
     for vec_ty in SIMD_TYPES {
-        let scalar_bits = vec_ty.scalar_bits;
         let ty_name = vec_ty.rust_name();
         let ty = vec_ty.rust();
 
@@ -66,7 +65,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
             };
             let m = match sig {
                 OpSig::Splat => {
-                    let scalar = vec_ty.scalar.rust(scalar_bits);
                     let expr = Wasm.expr(method, vec_ty, &[quote! { val }]);
                     quote! {
                         #method_sig {
