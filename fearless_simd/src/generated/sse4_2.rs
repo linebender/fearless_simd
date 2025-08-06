@@ -53,7 +53,12 @@ impl Simd for Sse4_2 {
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-        f()
+        #[target_feature(enable = "sse4.2")]
+        #[inline]
+        unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
+            f()
+        }
+        unsafe { vectorize_sse4_2(f) }
     }
     #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
