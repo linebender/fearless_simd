@@ -9,10 +9,7 @@
 use crate::arch::fallback::Fallback;
 use crate::arch::{Arch, fallback};
 use crate::generic::{generic_combine, generic_op, generic_split};
-use crate::ops::{
-    OpSig, TyFlavor, load_interleaved_arg_ty, ops_for_type, reinterpret_ty,
-    store_interleaved_arg_ty, valid_reinterpret,
-};
+use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -116,7 +113,6 @@ fn mk_simd_impl() -> TokenStream {
     for vec_ty in SIMD_TYPES {
         let scalar_bits = vec_ty.scalar_bits;
         let ty_name = vec_ty.rust_name();
-        let ty = vec_ty.rust();
         for (method, sig) in ops_for_type(vec_ty, true) {
             let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
@@ -130,13 +126,16 @@ fn mk_simd_impl() -> TokenStream {
             let method_name = format!("{method}_{ty_name}");
             let method_ident = Ident::new(&method_name, Span::call_site());
             let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+            let args = sig.simd_trait_args(vec_ty);
+            let method_sig = quote! {
+                #[inline(always)]
+                fn #method_ident(#args) -> #ret_ty
+            };
             let method = match sig {
                 OpSig::Splat => {
-                    let scalar = vec_ty.scalar.rust(scalar_bits);
                     let num_elements = vec_ty.len;
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, val: #scalar) -> #ret_ty {
+                        #method_sig {
                             [val; #num_elements].simd_into(self)
                         }
                     }
@@ -153,8 +152,7 @@ fn mk_simd_impl() -> TokenStream {
                     );
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #items.simd_into(self)
                         }
                     }
@@ -170,8 +168,7 @@ fn mk_simd_impl() -> TokenStream {
                     );
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #items.simd_into(self)
                         }
                     }
@@ -200,8 +197,7 @@ fn mk_simd_impl() -> TokenStream {
                     );
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #items.simd_into(self)
                         }
                     }
@@ -211,7 +207,7 @@ fn mk_simd_impl() -> TokenStream {
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx| {
-                                let args = [quote! { a[#idx] }, quote! { b as #arch_ty }];
+                                let args = [quote! { a[#idx] }, quote! { shift as #arch_ty }];
                                 let expr = Fallback.expr(method, vec_ty, &args);
                                 quote! { #expr }
                             })
@@ -219,8 +215,7 @@ fn mk_simd_impl() -> TokenStream {
                     );
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: u32) -> #ret_ty {
+                        #method_sig {
                             #items.simd_into(self)
                         }
                     }
@@ -230,16 +225,14 @@ fn mk_simd_impl() -> TokenStream {
                         // TODO: This is has slightly different semantics than a fused multiply-add,
                         // since we are not actually fusing it, should this be documented?
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                a.add(b.mul(c))
                             }
                         }
                     } else if method == "msub" {
                         // TODO: Same as above
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                a.sub(b.mul(c))
                             }
                         }
@@ -252,8 +245,7 @@ fn mk_simd_impl() -> TokenStream {
 
                         let expr = Fallback.expr(method, vec_ty, &args);
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                #expr.simd_into(self)
                             }
                         }
@@ -273,14 +265,12 @@ fn mk_simd_impl() -> TokenStream {
                     );
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #items.simd_into(self)
                         }
                     }
                 }
                 OpSig::Select => {
-                    let mask_ty = vec_ty.mask_ty().rust();
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx| {
@@ -290,8 +280,7 @@ fn mk_simd_impl() -> TokenStream {
                     );
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #mask_ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #items.simd_into(self)
                         }
                     }
@@ -314,8 +303,7 @@ fn mk_simd_impl() -> TokenStream {
                     );
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #zip.simd_into(self)
                         }
                     }
@@ -340,8 +328,7 @@ fn mk_simd_impl() -> TokenStream {
                     );
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #unzip.simd_into(self)
                         }
                     }
@@ -357,8 +344,7 @@ fn mk_simd_impl() -> TokenStream {
                             .collect::<Vec<_>>(),
                     );
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #items.simd_into(self)
                         }
                     }
@@ -368,8 +354,7 @@ fn mk_simd_impl() -> TokenStream {
                         let to_ty = reinterpret_ty(vec_ty, scalar, scalar_bits).rust();
 
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 #to_ty {
                                     val: bytemuck::cast(a.val),
                                     simd: a.simd,
@@ -384,11 +369,8 @@ fn mk_simd_impl() -> TokenStream {
                     let len = (block_size * count) as usize / vec_ty.scalar_bits;
                     let items = interleave_indices(len, count as usize, |idx| quote! { src[#idx] });
 
-                    let arg = load_interleaved_arg_ty(block_size, count, vec_ty);
-
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, #arg) -> #ret_ty {
+                        #method_sig {
                             #items.simd_into(self)
                         }
                     }
@@ -398,11 +380,8 @@ fn mk_simd_impl() -> TokenStream {
                     let items =
                         interleave_indices(len, len / count as usize, |idx| quote! { a[#idx] });
 
-                    let arg = store_interleaved_arg_ty(block_size, count, vec_ty);
-
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, #arg) -> #ret_ty {
+                        #method_sig {
                             *dest = #items;
                         }
                     }
