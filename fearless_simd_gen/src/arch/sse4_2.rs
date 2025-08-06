@@ -64,15 +64,15 @@ impl Arch for Sse4_2 {
                     quote! { #intrinsic ( #( #args, )* _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC) }
                 }
                 "neg" => {
-                    let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits);
-                    let xor = simple_intrinsic("xor", ScalarType::Float, ty.scalar_bits);
+                    let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
+                    let xor = simple_intrinsic("xor", ScalarType::Float, ty.scalar_bits, ty.n_bits());
                     quote! {
                         #( #xor(#args, #set1(-0.0)) )*
                     }
                 }
                 "abs" => {
-                    let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits);
-                    let andnot = simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits);
+                    let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
+                    let andnot = simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits, ty.n_bits());
                     quote! {
                         #( #andnot(#set1(-0.0), #args) )*
                     }
@@ -80,10 +80,10 @@ impl Arch for Sse4_2 {
                 "copysign" => {
                     let a = &args[0];
                     let b = &args[1];
-                    let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits);
-                    let and = simple_intrinsic("and", ScalarType::Float, ty.scalar_bits);
-                    let andnot = simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits);
-                    let or = simple_intrinsic("or", ScalarType::Float, ty.scalar_bits);
+                    let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
+                    let and = simple_intrinsic("and", ScalarType::Float, ty.scalar_bits, ty.n_bits());
+                    let andnot = simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits, ty.n_bits());
+                    let or = simple_intrinsic("or", ScalarType::Float, ty.scalar_bits, ty.n_bits());
                     quote! {
                         let mask = #set1(-0.0);
                         #or(#and(mask, #b), #andnot(mask, #a))

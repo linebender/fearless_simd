@@ -11,7 +11,7 @@ pub(crate) fn make_method(
     sig: OpSig,
     vec_ty: &VecType,
     arch: impl Arch,
-    bit_length: usize,
+    ty_bits: usize
 ) -> TokenStream {
     let scalar_bits = vec_ty.scalar_bits;
     let ty_name = vec_ty.rust_name();
@@ -26,7 +26,7 @@ pub(crate) fn make_method(
 
     match sig {
         OpSig::Splat => {
-            let intrinsic = set1_intrinsic(vec_ty.scalar, scalar_bits);
+            let intrinsic = set1_intrinsic(vec_ty.scalar, scalar_bits, ty_bits);
             let cast = match vec_ty.scalar {
                 ScalarType::Unsigned => quote!(as _),
                 _ => quote!(),
@@ -51,13 +51,13 @@ pub(crate) fn make_method(
                     };
 
                     let eq_intrinsic =
-                        simple_sign_unaware_intrinsic("cmpeq", vec_ty.scalar, vec_ty.scalar_bits);
+                        simple_sign_unaware_intrinsic("cmpeq", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
 
                     let max_min_expr = arch.expr(max_min, vec_ty, &args);
                     quote! { #eq_intrinsic(#max_min_expr, a.into()) }
                 } else if vec_ty.scalar == ScalarType::Unsigned {
                     // SSE4.2 only has signed GT/LT, but not unsigned.
-                    let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits);
+                    let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
                     let sign = match vec_ty.scalar_bits {
                         8 => quote! { 0x80u8 },
                         16 => quote! { 0x8000u16 },
@@ -65,7 +65,7 @@ pub(crate) fn make_method(
                         _ => unimplemented!(),
                     };
                     let gt =
-                        simple_sign_unaware_intrinsic("cmpgt", vec_ty.scalar, vec_ty.scalar_bits);
+                        simple_sign_unaware_intrinsic("cmpgt", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
                     let args = if method == "simd_lt" {
                         quote! { b_signed, a_signed }
                     } else {
@@ -125,7 +125,7 @@ pub(crate) fn make_method(
         },
         OpSig::WidenNarrow(t) => match method {
             "widen" => {
-                let extend = extend_intrinsic(vec_ty.scalar, scalar_bits, t.scalar_bits);
+                let extend = extend_intrinsic(vec_ty.scalar, scalar_bits, t.scalar_bits, ty_bits);
                 let combine = format_ident!(
                     "combine_{}",
                     VecType {
@@ -149,8 +149,8 @@ pub(crate) fn make_method(
                 }
             }
             "narrow" => {
-                let mask = set1_intrinsic(vec_ty.scalar, scalar_bits);
-                let pack = pack_intrinsic(scalar_bits, matches!(vec_ty.scalar, ScalarType::Int));
+                let mask = set1_intrinsic(vec_ty.scalar, scalar_bits, ty_bits);
+                let pack = pack_intrinsic(scalar_bits, matches!(vec_ty.scalar, ScalarType::Int), ty_bits);
                 let split = format_ident!("split_{}", vec_ty.rust_name());
                 quote! {
                     #method_sig {
@@ -199,8 +199,8 @@ pub(crate) fn make_method(
                 // SSE doesn't have shifting for 8-bit, so we first convert into
                 // 16 bit, shift, and then back to 8-bit
 
-                let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false);
-                let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true);
+                let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
+                let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
 
                 let extend_expr = |expr| match vec_ty.scalar {
                     ScalarType::Unsigned => quote! {
@@ -214,7 +214,7 @@ pub(crate) fn make_method(
 
                 let extend_intrinsic_lo = extend_expr(unpack_lo);
                 let extend_intrinsic_hi = extend_expr(unpack_hi);
-                let pack_intrinsic = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int);
+                let pack_intrinsic = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int, ty_bits);
 
                 quote! {
                     #method_sig {
@@ -391,9 +391,9 @@ pub(crate) fn make_method(
                 cvt_intrinsic(*vec_ty, VecType::new(scalar, scalar_bits, vec_ty.len));
 
             let expr = if vec_ty.scalar == ScalarType::Float {
-                let floor_intrinsic = simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits);
-                let max_intrinsic = simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits);
-                let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits);
+                let floor_intrinsic = simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+                let max_intrinsic = simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+                let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
 
                 if scalar == ScalarType::Unsigned {
                     quote! { #max_intrinsic(#floor_intrinsic(a.into()), #set(0.0)) }
@@ -500,49 +500,67 @@ pub(crate) fn op_suffix(mut ty: ScalarType, bits: usize, sign_aware: bool) -> &'
     }
 }
 
-pub(crate) fn set1_intrinsic(ty: ScalarType, bits: usize) -> Ident {
+pub(crate) fn set1_intrinsic(ty: ScalarType, bits: usize, ty_bits: usize) -> Ident {
     use ScalarType::*;
     let suffix = match (ty, bits) {
         (Int | Unsigned | Mask, 64) => "epi64x",
         _ => op_suffix(ty, bits, false),
     };
-    format_ident!("_mm_set1_{suffix}")
+
+    intrinsic_ident("set1", suffix, ty_bits)
 }
 
-pub(crate) fn simple_intrinsic(name: &str, ty: ScalarType, bits: usize) -> Ident {
+pub(crate) fn simple_intrinsic(name: &str, ty: ScalarType, bits: usize, ty_bits: usize) -> Ident {
     let suffix = op_suffix(ty, bits, true);
-    format_ident!("_mm_{name}_{suffix}")
+
+    intrinsic_ident(name, suffix, ty_bits)
 }
 
-pub(crate) fn simple_sign_unaware_intrinsic(name: &str, ty: ScalarType, bits: usize) -> Ident {
+pub(crate) fn simple_sign_unaware_intrinsic(name: &str, ty: ScalarType, bits: usize, ty_bits: usize) -> Ident {
     let suffix = op_suffix(ty, bits, false);
-    format_ident!("_mm_{name}_{suffix}")
+
+    intrinsic_ident(name, suffix, ty_bits)
 }
 
-pub(crate) fn extend_intrinsic(ty: ScalarType, from_bits: usize, to_bits: usize) -> Ident {
+pub(crate) fn extend_intrinsic(ty: ScalarType, from_bits: usize, to_bits: usize, ty_bits: usize) -> Ident {
     let from_suffix = op_suffix(ty, from_bits, true);
     let to_suffix = op_suffix(ty, to_bits, false);
-    format_ident!("_mm_cvt{from_suffix}_{to_suffix}")
+
+    intrinsic_ident(&format!("cvt{from_suffix}"), to_suffix, ty_bits)
 }
 
 pub(crate) fn cvt_intrinsic(from: VecType, to: VecType) -> Ident {
     let from_suffix = op_suffix(from.scalar, from.scalar_bits, false);
     let to_suffix = op_suffix(to.scalar, to.scalar_bits, false);
-    format_ident!("_mm_cvt{from_suffix}_{to_suffix}")
+
+    intrinsic_ident(&format!("cvt{from_suffix}"), to_suffix, from.n_bits())
 }
 
-pub(crate) fn pack_intrinsic(from_bits: usize, signed: bool) -> Ident {
+pub(crate) fn pack_intrinsic(from_bits: usize, signed: bool, ty_bits: usize) -> Ident {
     let unsigned = match signed {
         true => "",
         false => "u",
     };
     let suffix = op_suffix(ScalarType::Int, from_bits, false);
-    format_ident!("_mm_pack{unsigned}s_{suffix}")
+
+    intrinsic_ident(&format!("pack{unsigned}s"), suffix, ty_bits)
 }
 
-pub(crate) fn unpack_intrinsic(scalar_type: ScalarType, scalar_bits: usize, low: bool) -> Ident {
+pub(crate) fn unpack_intrinsic(scalar_type: ScalarType, scalar_bits: usize, low: bool, ty_bits: usize) -> Ident {
     let suffix = op_suffix(scalar_type, scalar_bits, false);
 
     let low_pref = if low { "lo" } else { "hi" };
-    format_ident!("_mm_unpack{low_pref}_{suffix}")
+
+    intrinsic_ident(&format!("unpack{low_pref}"), suffix, ty_bits)
+}
+
+pub(crate) fn intrinsic_ident(name: &str, suffix: &str, ty_bits: usize) -> Ident {
+    let prefix = match ty_bits {
+        128 => "",
+        256 => "256",
+        512 => "512",
+        _ => unreachable!(),
+    };
+
+    format_ident!("_mm{prefix}_{name}_{suffix}")
 }
