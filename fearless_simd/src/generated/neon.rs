@@ -240,8 +240,8 @@ impl Simd for Neon {
         unsafe { veorq_s8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_i8x16(self, val: i8x16<Self>, shift: u32) -> i8x16<Self> {
-        unsafe { vshlq_s8(val.into(), vdupq_n_s8(-(shift as i8))).simd_into(self) }
+    fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
+        unsafe { vshlq_s8(a.into(), vdupq_n_s8(-(shift as i8))).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -347,8 +347,8 @@ impl Simd for Neon {
         unsafe { veorq_u8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_u8x16(self, val: u8x16<Self>, shift: u32) -> u8x16<Self> {
-        unsafe { vshlq_u8(val.into(), vdupq_n_s8(-(shift as i8))).simd_into(self) }
+    fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
+        unsafe { vshlq_u8(a.into(), vdupq_n_s8(-(shift as i8))).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -498,8 +498,8 @@ impl Simd for Neon {
         unsafe { veorq_s16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_i16x8(self, val: i16x8<Self>, shift: u32) -> i16x8<Self> {
-        unsafe { vshlq_s16(val.into(), vdupq_n_s16(-(shift as i16))).simd_into(self) }
+    fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
+        unsafe { vshlq_s16(a.into(), vdupq_n_s16(-(shift as i16))).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -605,8 +605,8 @@ impl Simd for Neon {
         unsafe { veorq_u16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_u16x8(self, val: u16x8<Self>, shift: u32) -> u16x8<Self> {
-        unsafe { vshlq_u16(val.into(), vdupq_n_s16(-(shift as i16))).simd_into(self) }
+    fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
+        unsafe { vshlq_u16(a.into(), vdupq_n_s16(-(shift as i16))).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -752,8 +752,8 @@ impl Simd for Neon {
         unsafe { veorq_s32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_i32x4(self, val: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        unsafe { vshlq_s32(val.into(), vdupq_n_s32(-(shift as i32))).simd_into(self) }
+    fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
+        unsafe { vshlq_s32(a.into(), vdupq_n_s32(-(shift as i32))).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -863,8 +863,8 @@ impl Simd for Neon {
         unsafe { veorq_u32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_u32x4(self, val: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        unsafe { vshlq_u32(val.into(), vdupq_n_s32(-(shift as i32))).simd_into(self) }
+    fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
+        unsafe { vshlq_u32(a.into(), vdupq_n_s32(-(shift as i32))).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {

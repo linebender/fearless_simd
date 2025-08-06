@@ -83,7 +83,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
     for vec_ty in SIMD_TYPES {
         let scalar_bits = vec_ty.scalar_bits;
         let ty_name = vec_ty.rust_name();
-        let ty = vec_ty.rust();
 
         for (method, sig) in ops_for_type(vec_ty, true) {
             let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
@@ -99,13 +98,17 @@ fn mk_simd_impl(level: Level) -> TokenStream {
             let method_name = format!("{method}_{ty_name}");
             let method_ident = Ident::new(&method_name, Span::call_site());
             let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+            let args = sig.simd_trait_args(vec_ty);
+            let method_sig = quote! {
+                #[inline(always)]
+                fn #method_ident(#args) -> #ret_ty
+            };
+
             let method = match sig {
                 OpSig::Splat => {
-                    let scalar = vec_ty.scalar.rust(scalar_bits);
                     let expr = Neon.expr(method, vec_ty, &[quote! { val }]);
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, val: #scalar) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #expr.simd_into(self)
                             }
@@ -124,11 +127,10 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let expr = Neon.expr(
                         method,
                         vec_ty,
-                        &[quote! { val.into() }, quote! { #dup_intrinsic ( #shift ) }],
+                        &[quote! { a.into() }, quote! { #dup_intrinsic ( #shift ) }],
                     );
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, val: #ty<Self>, shift: u32) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #expr.simd_into(self)
                             }
@@ -141,8 +143,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let expr = Neon.expr(method, vec_ty, &args);
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #expr.simd_into(self)
                             }
@@ -159,18 +160,16 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         );
                         simple_intrinsic("vld4", &ty)
                     };
-                    let arg = load_interleaved_arg_ty(block_size, count, vec_ty);
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, #arg) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #intrinsic(src.as_ptr()).simd_into(self)
                             }
                         }
                     }
                 }
-                OpSig::StoreInterleaved(block_size, count) => {
+                OpSig::StoreInterleaved(block_size, _) => {
                     let intrinsic = {
                         // The function expects 64-bit or 128-bit
                         let ty = VecType::new(
@@ -180,11 +179,9 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         );
                         simple_intrinsic("vst4", &ty)
                     };
-                    let arg = store_interleaved_arg_ty(block_size, count, vec_ty);
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, #arg) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #intrinsic(dest.as_mut_ptr(), a.into())
                             }
@@ -192,7 +189,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::WidenNarrow(target_ty) => {
-                    let ret_ty = sig.ret_ty(&target_ty, TyFlavor::SimdTrait);
                     let vec_scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
                     let target_scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
 
@@ -207,8 +203,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         );
 
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 unsafe {
                                     let converted: #arch = a.into();
                                     let low = #id1(converted.0);
@@ -228,8 +223,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             Ident::new(&format!("vget_high_{}", vec_scalar_ty), Span::call_site());
 
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 unsafe {
                                     let low = #id1(#id2(a.into()));
                                     let high = #id1(#id3(a.into()));
@@ -254,8 +248,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         let vbsl = simple_intrinsic("vbsl", vec_ty);
 
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 unsafe {
                                     let sign_mask = #sign_mask;
                                     #vbsl(sign_mask, b.into(), a.into()).simd_into(self)
@@ -265,8 +258,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     } else {
                         let expr = Neon.expr(method, vec_ty, &args);
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 unsafe {
                                     #expr.simd_into(self)
                                 }
@@ -283,8 +275,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
                     let expr = Neon.expr(method, vec_ty, &args);
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #expr.simd_into(self)
                             }
@@ -299,8 +290,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         format!("vreinterpret{opt_q}_s{scalar_bits}_u{scalar_bits}");
                     let reinterpret = Ident::new(&reinterpret_str, Span::call_site());
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #reinterpret(#expr).simd_into(self)
                             }
@@ -315,8 +305,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let reinterpret = Ident::new(&reinterpret_str, Span::call_site());
                     let vbsl = simple_intrinsic("vbsl", vec_ty);
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #mask_ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #vbsl(#reinterpret(a.into()), b.into(), c.into()).simd_into(self)
                             }
@@ -329,8 +318,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let neon = if zip1 { "vzip1" } else { "vzip2" };
                     let zip = simple_intrinsic(neon, vec_ty);
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             let x = a.into();
                             let y = b.into();
                             unsafe {
@@ -343,8 +331,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let neon = if select_even { "vuzp1" } else { "vuzp2" };
                     let zip = simple_intrinsic(neon, vec_ty);
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             let x = a.into();
                             let y = b.into();
                             unsafe {
@@ -357,8 +344,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let to_ty = &VecType::new(scalar, scalar_bits, vec_ty.len);
                     let neon = cvt_intrinsic("vcvt", to_ty, vec_ty);
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             unsafe {
                                 #neon(a.into()).simd_into(self)
                             }
@@ -371,8 +357,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         let neon = cvt_intrinsic("vreinterpret", &to_ty, vec_ty);
 
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 unsafe {
                                     #neon(a.into()).simd_into(self)
                                 }
