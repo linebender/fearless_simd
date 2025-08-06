@@ -59,13 +59,17 @@ fn mk_simd_impl(level: Level) -> TokenStream {
             let method_name = format!("{method}_{ty_name}");
             let method_ident = Ident::new(&method_name, Span::call_site());
             let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+            let args = sig.simd_trait_args(vec_ty);
+            let method_sig = quote! {
+                #[inline(always)]
+                fn #method_ident(#args) -> #ret_ty
+            };
             let m = match sig {
                 OpSig::Splat => {
                     let scalar = vec_ty.scalar.rust(scalar_bits);
                     let expr = Wasm.expr(method, vec_ty, &[quote! { val }]);
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, val: #scalar) -> #ty<Self> {
+                        #method_sig {
                             #expr.simd_into(self)
                         }
                     }
@@ -88,8 +92,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     };
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #expr
                         }
                     }
@@ -102,8 +105,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         _ => unimplemented!(),
                     };
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             let sign_mask = #splat(#sign_mask_literal);
                             let sign_bits = v128_and(b.into(), sign_mask.into());
                             let magnitude = v128_andnot(a.into(), sign_mask.into());
@@ -143,8 +145,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             let swapped_args = [quote! { b.into() }, quote! { a.into() }];
                             let expr: TokenStream = Wasm.expr(method, vec_ty, &swapped_args);
                             quote! {
-                                #[inline(always)]
-                                fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                                #method_sig {
                                     #expr.simd_into(self)
                                 }
                             }
@@ -152,8 +153,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         _ => {
                             let expr = Wasm.expr(method, vec_ty, &args);
                             quote! {
-                                #[inline(always)]
-                                fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                                #method_sig {
                                     #expr.simd_into(self)
                                 }
                             }
@@ -170,8 +170,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
                         // TODO: `relaxed-simd` has madd.
                         quote! {
-                            #[inline(always)]
-                            fn #method_ident(self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                            #method_sig {
                                 a.#first_ident(b.mul(c))
                             }
                         }
@@ -183,17 +182,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let args = [quote! { a.into() }, quote! { b.into() }];
                     let expr = Wasm.expr(method, vec_ty, &args);
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #expr.simd_into(self)
                         }
                     }
                 }
                 OpSig::Select => {
-                    let mask_ty = vec_ty.mask_ty().rust();
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #mask_ty<Self>, b: #ty<Self>, c: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
                         }
                     }
@@ -238,8 +234,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     };
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #shuffle_fn::<#indices>(a.into(), b.into()).simd_into(self)
                         }
                     }
@@ -281,8 +276,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         _ => panic!("unsupported scalar_bits for unzip operation"),
                     };
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #shuffle_fn::<#indices>(a.into(), b.into()).simd_into(self)
                         }
                     }
@@ -293,8 +287,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let shift_fn = Ident::new(&shift_name, Span::call_site());
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>, shift: u32) -> #ret_ty {
+                        #method_sig {
                             #shift_fn(a.into(), shift).simd_into(self)
                         }
                     }
@@ -305,8 +298,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     assert!(valid_reinterpret(vec_ty, scalar, scalar_bits));
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             <v128>::from(a).simd_into(self)
                         }
                     }
@@ -325,8 +317,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     );
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                        #method_sig {
                             #conversion_fn(a.into()).simd_into(self)
                         }
                     }
@@ -337,8 +328,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             assert_eq!(vec_ty.rust_name(), "u8x16");
                             assert_eq!(to_ty.rust_name(), "u16x16");
                             quote! {
-                                #[inline(always)]
-                                fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                                #method_sig {
                                     let low = u16x8_extend_low_u8x16(a.into());
                                     let high = u16x8_extend_high_u8x16(a.into());
                                     self.combine_u16x8(low.simd_into(self), high.simd_into(self))
@@ -351,8 +341,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             // WASM SIMD only has saturating narrowing instructions, so we emulate
                             // truncated narrowing by masking out the
                             quote! {
-                                #[inline(always)]
-                                fn #method_ident(self, a: #ty<Self>) -> #ret_ty {
+                                #method_sig {
                                     let mask = u16x8_splat(0xFF);
                                     let (low, high) = self.split_u16x16(a);
                                     let low_masked = v128_and(low.into(), mask);
@@ -367,7 +356,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::LoadInterleaved(block_size, count) => {
                     assert_eq!(count, 4, "only count of 4 is crrently supported");
-                    let arg = load_interleaved_arg_ty(block_size, count, vec_ty);
                     let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
 
                     // For WASM we need to simulate interleaving with shuffle, and we only have
@@ -420,8 +408,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     };
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, #arg) -> #ret_ty {
+                        #method_sig {
                                 let v0: v128 = unsafe { v128_load(src[0 * #elems_per_vec..].as_ptr() as *const v128) };
                                 let v1: v128 = unsafe { v128_load(src[1 * #elems_per_vec..].as_ptr() as *const v128) };
                                 let v2: v128 = unsafe { v128_load(src[2 * #elems_per_vec..].as_ptr() as *const v128) };
@@ -447,7 +434,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::StoreInterleaved(block_size, count) => {
                     assert_eq!(count, 4, "only count of 4 is currently supported");
-                    let arg = store_interleaved_arg_ty(block_size, count, vec_ty);
                     let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
 
                     let (lower_indices, upper_indices, shuffle_fn) = match vec_ty.scalar_bits {
@@ -496,8 +482,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     };
 
                     quote! {
-                        #[inline(always)]
-                        fn #method_ident(self, #arg) -> #ret_ty {
+                        #method_sig {
                             #split_code
 
                             // InterleaveLowerLanes(v0, v2) and InterleaveLowerLanes(v1, v3)
