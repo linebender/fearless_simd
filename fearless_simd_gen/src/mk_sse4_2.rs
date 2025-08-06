@@ -3,8 +3,7 @@
 
 use crate::arch::Arch;
 use crate::arch::sse4_2::{
-    Sse4_2, cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic,
-    simple_intrinsic, simple_sign_unaware_intrinsic, unpack_intrinsic,
+    Sse4_2,
 };
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
