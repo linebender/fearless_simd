@@ -1,7 +1,7 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Access to intrinsics on `x86_64`.
+//! Access to intrinsics on `x86` and `x86_64`.
 
 mod avx;
 mod avx2;

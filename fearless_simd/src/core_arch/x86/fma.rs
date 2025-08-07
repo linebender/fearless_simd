@@ -4,9 +4,14 @@
 //! Access to FMA intrinsics.
 
 use crate::impl_macros::delegate;
-use core::arch::x86_64::*;
+#[cfg(target_arch = "x86")]
+use core::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64 as arch;
 
-/// A token for FMA intrinsics on `x86_64`.
+use arch::*;
+
+/// A token for FMA intrinsics on `x86` and `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Fma {
     _private: (),
@@ -23,7 +28,7 @@ impl Fma {
         Self { _private: () }
     }
 
-    delegate! { core::arch::x86_64:
+    delegate! { arch:
         fn _mm_fmadd_pd(a: __m128d, b: __m128d, c: __m128d) -> __m128d;
         fn _mm256_fmadd_pd(a: __m256d, b: __m256d, c: __m256d) -> __m256d;
         fn _mm_fmadd_ps(a: __m128, b: __m128, c: __m128) -> __m128;
