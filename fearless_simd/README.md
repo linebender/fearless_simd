@@ -39,7 +39,7 @@ The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/fe
 - `half`: Use `f16` (16 bit floating point) support from the [half] crate.
   If this feature isn't enabled, a minimal subset copied (under license) from that same crate is used.
   Only supported on aarch64, as other supported architectures don't have hardware support for these types.
-  This feature is only useful if the `safe_wrappers` feature is enabled, to use the `Fp16` type.
+  This feature is only useful if the `safe_wrappers` feature is enabled, to use the `core_arch::aarch64::Fp16` type.
 
 At least one of `std` and `libm` is required; `std` overrides `libm`.
 
