@@ -8,9 +8,9 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use crate::arch::x86_common::translate_op;
 
-pub(crate) struct Sse4_2;
+pub(crate) struct Avx2;
 
-impl Arch for Sse4_2 {
+impl Arch for Avx2 {
     fn arch_ty(&self, ty: &VecType) -> TokenStream {
         x86_common::arch_ty(ty)
     }
