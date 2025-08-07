@@ -1,5 +1,5 @@
 use crate::types::{ScalarType, VecType};
-use crate::x86_common::{op_suffix, set1_intrinsic, simple_intrinsic};
+use crate::x86_common::{intrinsic_ident, op_suffix, set1_intrinsic, simple_intrinsic};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
@@ -47,13 +47,13 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
             "and" | "or" | "xor" => "si128",
             _ => op_suffix(ty.scalar, ty.scalar_bits, sign_aware),
         };
-        let intrinsic = format_ident!("_mm_{op_name}_{suffix}");
+        let intrinsic = intrinsic_ident(op_name, suffix, ty.n_bits());
         quote! { #intrinsic ( #( #args ),* ) }
     } else {
         let suffix = op_suffix(ty.scalar, ty.scalar_bits, true);
         match op {
             "trunc" => {
-                let intrinsic = format_ident!("_mm_round_{suffix}");
+                let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
                 quote! { #intrinsic ( #( #args, )* _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC) }
             }
             "neg" => {
@@ -87,9 +87,9 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
             "mul" => {
                 let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
                 let intrinsic = if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
-                    format_ident!("_mm_mullo_{suffix}")
+                   intrinsic_ident("mullo", suffix, ty.n_bits())
                 } else {
-                    format_ident!("_mm_mul_{suffix}")
+                    intrinsic_ident("mul", suffix, ty.n_bits())
                 };
 
                 quote! { #intrinsic ( #( #args ),* ) }
