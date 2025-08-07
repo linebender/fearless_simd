@@ -13,21 +13,24 @@
 //! Fearless SIMD does not currently support vectors of less than 128 bits, due to there only being limited hardware
 //! with SIMD support but not support for 128 bit wide vectors. <!-- TODO: confirm -->
 //! These vector types implement some standard arithmetic traits (i.e. they can be added together using
-//!  `+`, multiplied by a scalar using `*`, among others), which are implemented as efficiently
+//! `+`, multiplied by a scalar using `*`, among others), which are implemented as efficiently
 //! as possible using SIMD instructions.
 //! These can be created in a SIMD context using the [`SimdFrom`] trait, or the
-//! [`from_slice`](SimdBase::from_slice) associated function.
+//! [`from_slice`][SimdBase::from_slice] associated function.
 //!
 //! To create a function which SIMD and can be multiversioned, it will have a signature like:
 //!
 //! ```rust
+//! use fearless_simd::{Simd, simd_dispatch};
+//!
 //! #[inline(always)]
-//! fn sigmoid_impl<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { ... }
+//! fn sigmoid_impl<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { /* ... */ }
 //!
 //! simd_dispatch!(sigmoid(level, x: &[f32], out: &mut [f32]) = sigmoid_impl);
 //! ```
 //!
 //! A few things to note:
+//!
 //! 1) This is generic over any `Simd` type.
 //! 2) The [`simd_dispatch`] macro is used to create a multi-versioned version of the given function.
 //! 3) The `_impl` suffix is used by convention to indicate the version of a function which will be dispatched to.
@@ -37,7 +40,8 @@
 //! The signature of the generated function will be:
 //!
 //! ```rust
-//! fn sigmoid(level: Level, x: &[f32], out: &mut [f32]) { ... }
+//! use fearless_simd::Level;
+//! fn sigmoid(level: Level, x: &[f32], out: &mut [f32]) { /* ... */ }
 //! ```
 //!
 //! The first parameter to this function is the [`Level`].
@@ -62,7 +66,7 @@
 //! # Webassembly
 //!
 //! WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle for WASM, one with SIMD and one without,
-//! then select the appropriate one for your user's browser.
+//! then select the appropriate one for your user's browser.P
 //! TODO: Expand on this.
 //!
 //! # Feature Flags

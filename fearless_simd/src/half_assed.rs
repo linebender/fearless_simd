@@ -11,6 +11,7 @@
 #![expect(
     clippy::unseparated_literal_suffix,
     clippy::cast_possible_truncation,
+    missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
