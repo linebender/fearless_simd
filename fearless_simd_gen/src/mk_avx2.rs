@@ -7,6 +7,7 @@ use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::mk_sse4_2;
 use crate::ops::{OpSig, TyFlavor, ops_for_type};
 use crate::types::{SIMD_TYPES, VecType, type_imports};
+use crate::x86_common::simple_intrinsic;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
@@ -114,7 +115,7 @@ fn mk_simd_impl() -> TokenStream {
 
             #[inline]
             fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-                #[target_feature(enable = "avx2, fma")]
+                #[target_feature(enable = "avx2,fma")]
                 #[inline]
                 unsafe fn vectorize_avx2<F: FnOnce() -> R, R>(f: F) -> R {
                     f()
@@ -188,7 +189,18 @@ fn make_method(
         }
         OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty, arch),
         OpSig::Shift => mk_sse4_2::handle_shift(method_sig, vec_ty, scalar_bits, ty_bits),
-        OpSig::Ternary => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
+        OpSig::Ternary => match method {
+            "madd" => {
+                let intrinsic =
+                    simple_intrinsic("fmadd", vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
+                quote! {
+                    #method_sig {
+                        unsafe { #intrinsic(b.into(), c.into(), a.into()).simd_into(self) }
+                    }
+                }
+            }
+            _ => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
+        },
         OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty, scalar_bits),
         OpSig::Combine => generic_combine(vec_ty),
         OpSig::Split => generic_split(vec_ty),
