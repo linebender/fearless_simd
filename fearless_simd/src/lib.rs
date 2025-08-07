@@ -152,7 +152,7 @@ impl Level {
         }
 
         #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
-        #[target_feature(enable = "sse4.2")]
+        #[target_feature(enable = "avx2,fma")]
         #[inline]
         unsafe fn dispatch_avx2<W: WithSimd>(f: W, avx2: Avx2) -> W::Output {
             f.with_simd(avx2)
