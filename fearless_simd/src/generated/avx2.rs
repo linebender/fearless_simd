@@ -15,6 +15,9 @@ use crate::{
     mask32x8, mask32x16, mask64x2, mask64x4, mask64x8, u8x16, u8x32, u8x64, u16x8, u16x16, u16x32,
     u32x4, u32x8, u32x16,
 };
+#[cfg(target_arch = "x86")]
+use core::arch::x86::*;
+#[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 use core::ops::*;
 #[doc = r#" The SIMD token for the "AVX2" and "FMA" level."#]

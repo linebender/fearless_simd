@@ -39,7 +39,11 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
             reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
         )]
 
+        #[cfg(target_arch = "x86")]
+        use core::arch::x86::*;
+        #[cfg(target_arch = "x86_64")]
         use core::arch::x86_64::*;
+
         use core::ops::*;
         use crate::{seal::Seal, Level, Simd, SimdFrom, SimdInto};
 
