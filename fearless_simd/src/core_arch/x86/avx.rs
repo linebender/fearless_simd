@@ -9,9 +9,14 @@
 //! Access to AVX intrinsics.
 
 use crate::impl_macros::delegate;
-use core::arch::x86_64::*;
+#[cfg(target_arch = "x86")]
+use core::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64 as arch;
 
-/// A token for AVX intrinsics on `x86_64`.
+use arch::*;
+
+/// A token for AVX intrinsics on `x86` and `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Avx {
     _private: (),
@@ -28,7 +33,7 @@ impl Avx {
         Self { _private: () }
     }
 
-    delegate! { core::arch::x86_64:
+    delegate! { arch:
         fn _mm256_add_pd(a: __m256d, b: __m256d) -> __m256d;
         fn _mm256_add_ps(a: __m256, b: __m256) -> __m256;
         fn _mm256_and_pd(a: __m256d, b: __m256d) -> __m256d;

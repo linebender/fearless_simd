@@ -4,9 +4,14 @@
 //! Access to SSE4.1 intrinsics.
 
 use crate::impl_macros::delegate;
-use core::arch::x86_64::*;
+#[cfg(target_arch = "x86")]
+use core::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64 as arch;
 
-/// A token for SSE4.1 intrinsics on `x86_64`.
+use arch::*;
+
+/// A token for SSE4.1 intrinsics on `x86` and `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Sse4_1 {
     _private: (),
@@ -23,7 +28,7 @@ impl Sse4_1 {
         Self { _private: () }
     }
 
-    delegate! { core::arch::x86_64:
+    delegate! { arch:
         fn _mm_blendv_epi8(a: __m128i, b: __m128i, mask: __m128i) -> __m128i;
         fn _mm_blend_epi16<const IMM8: i32>(a: __m128i, b: __m128i) -> __m128i;
         fn _mm_blendv_pd(a: __m128d, b: __m128d, mask: __m128d) -> __m128d;

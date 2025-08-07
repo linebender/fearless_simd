@@ -39,7 +39,11 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
             reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
         )]
 
+        #[cfg(target_arch = "x86")]
+        use core::arch::x86::*;
+        #[cfg(target_arch = "x86_64")]
         use core::arch::x86_64::*;
+
         use core::ops::*;
         use crate::{seal::Seal, Level, Simd, SimdFrom, SimdInto};
 
@@ -48,7 +52,7 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
         /// The SIMD token for the "SSE 4.2" level.
         #[derive(Clone, Copy, Debug)]
         pub struct Sse4_2 {
-            pub sse4_2: crate::core_arch::x86_64::Sse4_2,
+            pub sse4_2: crate::core_arch::x86::Sse4_2,
         }
 
         impl Sse4_2 {
@@ -60,7 +64,7 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
             #[inline]
             pub unsafe fn new_unchecked() -> Self {
                 Sse4_2 {
-                    sse4_2: unsafe { crate::core_arch::x86_64::Sse4_2::new_unchecked() },
+                    sse4_2: unsafe { crate::core_arch::x86::Sse4_2::new_unchecked() },
                 }
             }
         }

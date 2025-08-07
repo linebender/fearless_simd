@@ -12,9 +12,14 @@
 //! Access to SSE2 intrinsics.
 
 use crate::impl_macros::delegate;
-use core::arch::x86_64::*;
+#[cfg(target_arch = "x86")]
+use core::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64 as arch;
 
-/// A token for SSE2 intrinsics on `x86_64`.
+use arch::*;
+
+/// A token for SSE2 intrinsics on `x86` and `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Sse2 {
     _private: (),
@@ -31,7 +36,7 @@ impl Sse2 {
         Self { _private: () }
     }
 
-    delegate! { core::arch::x86_64:
+    delegate! { arch:
         fn _mm_pause();
         #[allow(clippy::not_unsafe_ptr_arg_deref)]
         fn _mm_clflush(p: *const u8);

@@ -4,9 +4,14 @@
 //! Access to SSE intrinsics.
 
 use crate::impl_macros::delegate;
-use core::arch::x86_64::*;
+#[cfg(target_arch = "x86")]
+use core::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64 as arch;
 
-/// A token for SSE intrinsics on `x86_64`.
+use arch::*;
+
+/// A token for SSE intrinsics on `x86` and `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Sse {
     _private: (),
@@ -23,7 +28,7 @@ impl Sse {
         Self { _private: () }
     }
 
-    delegate! { core::arch::x86_64:
+    delegate! { arch:
         fn _mm_add_ss(a: __m128, b: __m128) -> __m128;
         fn _mm_add_ps(a: __m128, b: __m128) -> __m128;
         fn _mm_sub_ss(a: __m128, b: __m128) -> __m128;

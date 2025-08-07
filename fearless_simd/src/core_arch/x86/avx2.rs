@@ -4,9 +4,14 @@
 //! Access to AVX2 intrinsics.
 
 use crate::impl_macros::delegate;
-use core::arch::x86_64::*;
+#[cfg(target_arch = "x86")]
+use core::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64 as arch;
 
-/// A token for AVX2 intrinsics on `x86_64`.
+use arch::*;
+
+/// A token for AVX2 intrinsics on `x86` and `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Avx2 {
     _private: (),
@@ -22,7 +27,7 @@ impl Avx2 {
         Self { _private: () }
     }
 
-    delegate! { core::arch::x86_64:
+    delegate! { arch:
         fn _mm256_abs_epi32(a: __m256i) -> __m256i;
         fn _mm256_abs_epi16(a: __m256i) -> __m256i;
         fn _mm256_abs_epi8(a: __m256i) -> __m256i;
