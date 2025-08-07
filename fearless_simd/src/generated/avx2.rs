@@ -8,18 +8,16 @@
     clippy::todo,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-use crate::{Level, Simd, SimdFrom, SimdInto, seal::Seal};
+use crate::{Simd, SimdFrom, seal::Seal};
 use crate::{
-    f32x4, f32x8, f32x16, f64x2, f64x4, f64x8, i8x16, i8x32, i8x64, i16x8, i16x16, i16x32, i32x4,
-    i32x8, i32x16, mask8x16, mask8x32, mask8x64, mask16x8, mask16x16, mask16x32, mask32x4,
-    mask32x8, mask32x16, mask64x2, mask64x4, mask64x8, u8x16, u8x32, u8x64, u16x8, u16x16, u16x32,
-    u32x4, u32x8, u32x16,
+    f32x8, f64x4, i8x32, i16x16,
+    i32x8, mask8x32, mask16x16,
+    mask32x8, mask64x4, u8x32, u16x16, u32x8,
 };
 use core::arch::x86_64::*;
-use core::ops::*;
 #[doc = r#" The SIMD token for the "AVX2" and "FMA" level."#]
 #[derive(Clone, Copy, Debug)]
-pub struct Avx2 {
+pub(super) struct Avx2 {
     pub avx2: crate::core_arch::x86_64::Avx2,
 }
 impl Avx2 {
@@ -29,7 +27,7 @@ impl Avx2 {
     #[doc = r""]
     #[doc = r" The AVX2 and FMA CPU feature must be available."]
     #[inline]
-    pub unsafe fn new_unchecked() -> Self {
+    pub(super) unsafe fn new_unchecked() -> Self {
         Avx2 {
             avx2: unsafe { crate::core_arch::x86_64::Avx2::new_unchecked() },
         }

@@ -2,11 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::{x86_common, Arch};
-use crate::types::{ScalarType, VecType};
-use crate::x86_common::{op_suffix, set1_intrinsic, simple_intrinsic};
-use proc_macro2::{Ident, Span, TokenStream};
-use quote::{format_ident, quote};
-use crate::arch::x86_common::translate_op;
+use crate::types::VecType;
+use proc_macro2::TokenStream;
 
 pub(crate) struct Sse4_2;
 

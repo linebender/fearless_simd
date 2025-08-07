@@ -3,10 +3,7 @@
 
 use crate::arch::Arch;
 use crate::arch::sse4_2::Sse4_2;
-use crate::generic::generic_op;
-use crate::ops::ops_for_type;
 use crate::types::{SIMD_TYPES, type_imports};
-use crate::x86_common::make_method;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
