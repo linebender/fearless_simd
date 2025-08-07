@@ -19,7 +19,7 @@
 //! At least one of `std` and `libm` is required; `std` overrides `libm`.
 #![cfg_attr(
     not(all(target_arch = "aarch64", feature = "half")),
-    doc = "[half]: https://docs.rs/half/latest/half/"
+    doc = "\n\n[half]: https://docs.rs/half/latest/half/"
 )]
 // LINEBENDER LINT SET - lib.rs - v3
 // See https://linebender.org/wiki/canonical-lints/
