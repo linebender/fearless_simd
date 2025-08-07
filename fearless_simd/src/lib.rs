@@ -67,6 +67,7 @@ pub use traits::*;
 // For now, only bring in f16 on aarch64. We can also bring it in
 // on x86_64, but only Sapphire Rapids supports it.
 
+/// The f16 type used in this crate, a re-export of the f16 type from [`half`].
 #[cfg(all(target_arch = "aarch64", feature = "half"))]
 pub type f16 = half::f16;
 #[cfg(all(target_arch = "aarch64", not(feature = "half")))]
