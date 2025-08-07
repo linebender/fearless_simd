@@ -32,12 +32,14 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     let include_sse4 =
         std::arch::is_x86_feature_detected!("sse4.2") && !exclude_sse4(&input_fn_name.to_string());
+    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+    let include_sse4 = false;
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     let include_avx2 = std::arch::is_x86_feature_detected!("avx2")
         && std::arch::is_x86_feature_detected!("fma")
         && !exclude_avx2(&input_fn_name.to_string());
     #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-    let include_sse4 = false;
+    let include_avx2 = false;
     // Note that we cannot feature-gate this with `target_arch`. If we run
     // `wasm-pack test --headless --chrome`, then the `target_arch` will still be set to
     // the operating system you are running on. Because of this, we instead add the `target_arch`
@@ -83,7 +85,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         quote! {}
     };
 
-    let avx2_snippet = if include_sse4 {
+    let avx2_snippet = if include_avx2 {
         quote! {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             #[test]

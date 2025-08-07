@@ -10,6 +10,7 @@ use crate::types::{SIMD_TYPES, VecType, type_imports};
 use crate::x86_common::simple_intrinsic;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
+use crate::arch::avx2::Avx2;
 
 #[derive(Clone, Copy)]
 pub(crate) struct Level;
@@ -136,7 +137,7 @@ fn mk_type_impl() -> TokenStream {
             continue;
         }
         let simd = ty.rust();
-        let arch = Sse4_2.arch_ty(ty);
+        let arch = Avx2.arch_ty(ty);
         result.push(quote! {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]
