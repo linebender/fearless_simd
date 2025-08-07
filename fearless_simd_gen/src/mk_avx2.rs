@@ -48,7 +48,7 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
         /// The SIMD token for the "AVX2" and "FMA" level.
         #[derive(Clone, Copy, Debug)]
         pub struct Avx2 {
-            pub avx2: crate::core_arch::x86_64::Avx2,
+            pub avx2: crate::core_arch::x86::Avx2,
         }
 
         impl Avx2 {
