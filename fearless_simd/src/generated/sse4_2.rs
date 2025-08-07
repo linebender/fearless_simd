@@ -15,12 +15,15 @@ use crate::{
     mask32x8, mask32x16, mask64x2, mask64x4, mask64x8, u8x16, u8x32, u8x64, u16x8, u16x16, u16x32,
     u32x4, u32x8, u32x16,
 };
+#[cfg(target_arch = "x86")]
+use core::arch::x86::*;
+#[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 use core::ops::*;
 #[doc = r#" The SIMD token for the "SSE 4.2" level."#]
 #[derive(Clone, Copy, Debug)]
 pub struct Sse4_2 {
-    pub sse4_2: crate::core_arch::x86_64::Sse4_2,
+    pub sse4_2: crate::core_arch::x86::Sse4_2,
 }
 impl Sse4_2 {
     #[doc = r" Create a SIMD token."]
@@ -31,7 +34,7 @@ impl Sse4_2 {
     #[inline]
     pub unsafe fn new_unchecked() -> Self {
         Sse4_2 {
-            sse4_2: unsafe { crate::core_arch::x86_64::Sse4_2::new_unchecked() },
+            sse4_2: unsafe { crate::core_arch::x86::Sse4_2::new_unchecked() },
         }
     }
 }

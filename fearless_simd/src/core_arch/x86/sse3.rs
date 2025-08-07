@@ -4,9 +4,14 @@
 //! Access to SSE3 intrinsics.
 
 use crate::impl_macros::delegate;
-use core::arch::x86_64::*;
+#[cfg(target_arch = "x86")]
+use core::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64 as arch;
 
-/// A token for SSE3 intrinsics on `x86_64`.
+use arch::*;
+
+/// A token for SSE3 intrinsics on `x86` and `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Sse3 {
     _private: (),
@@ -23,7 +28,7 @@ impl Sse3 {
         Self { _private: () }
     }
 
-    delegate! { core::arch::x86_64:
+    delegate! { arch:
         fn _mm_addsub_ps(a: __m128, b: __m128) -> __m128;
         fn _mm_addsub_pd(a: __m128d, b: __m128d) -> __m128d;
         fn _mm_hadd_pd(a: __m128d, b: __m128d) -> __m128d;

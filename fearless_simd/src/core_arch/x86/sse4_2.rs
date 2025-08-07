@@ -4,9 +4,14 @@
 //! Access to SSE4.2 intrinsics.
 
 use crate::impl_macros::delegate;
-use core::arch::x86_64::*;
+#[cfg(target_arch = "x86")]
+use core::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64 as arch;
 
-/// A token for SSE4.2 intrinsics on `x86_64`.
+use arch::*;
+
+/// A token for SSE4.2 intrinsics on `x86` and `x86_64`.
 #[derive(Clone, Copy, Debug)]
 pub struct Sse4_2 {
     _private: (),
@@ -23,7 +28,7 @@ impl Sse4_2 {
         Self { _private: () }
     }
 
-    delegate! { core::arch::x86_64:
+    delegate! { arch:
         fn _mm_cmpistrm<const IMM8: i32>(a: __m128i, b: __m128i) -> __m128i;
         fn _mm_cmpistri<const IMM8: i32>(a: __m128i, b: __m128i) -> i32;
         fn _mm_cmpistrz<const IMM8: i32>(a: __m128i, b: __m128i) -> i32;
