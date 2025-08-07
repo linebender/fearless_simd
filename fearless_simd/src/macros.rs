@@ -45,6 +45,7 @@ macro_rules! simd_dispatch {
                 Level::WasmSimd128(wasm) => unsafe { inner_wasm_simd128 (wasm $( , $arg )* ) }
                 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
                 Level::Sse4_2(sse4_2) => unsafe { inner_sse4_2(sse4_2 $( , $arg)* ) }
+                _ => unreachable!()
             }
         }
     };

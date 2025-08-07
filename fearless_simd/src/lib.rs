@@ -3,6 +3,10 @@
 
 //! A helper library to make SIMD more friendly.
 //!
+//! ## Webassembly
+//!
+//! TODO: Talk about how WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle.
+//!
 //! # Feature Flags
 //!
 //! The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
@@ -35,7 +39,6 @@
 #![expect(clippy::unused_unit, reason = "easier for code generation")]
 #![expect(
     clippy::new_without_default,
-    missing_docs,
     clippy::use_self,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
@@ -71,34 +74,54 @@ mod half_assed;
 #[cfg(all(target_arch = "aarch64", not(feature = "half")))]
 pub use half_assed::f16;
 
+/// Implementations of [`Simd`] for 64 bit ARM.
 #[cfg(all(feature = "std", target_arch = "aarch64"))]
 pub mod aarch64 {
     pub use crate::generated::Neon;
 }
 
+/// Implementations of [`Simd`] for webassembly.
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 pub mod wasm32 {
     pub use crate::generated::WasmSimd128;
 }
 
+/// Implementations of [`Simd`] on x86 architectures (both 32 and 64 bit).
 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
 pub mod x86 {
     pub use crate::generated::Sse4_2;
 }
 
 /// The level enum with the specific SIMD capabilities available.
+///
+/// The contained values serve as a proof that the associated target
+/// feature is available.
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum Level {
+    /// Scalar fallback level, i.e. no supported SIMD features are to be used.
+    ///
+    /// This can be created with [`Level::fallback`].
     Fallback(Fallback),
+    /// The Neon instruction set on 64 bit ARM.
     #[cfg(all(feature = "std", target_arch = "aarch64"))]
     Neon(Neon),
+    /// The SIMD 128 instructions on 32-bit WebAssembly.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     WasmSimd128(WasmSimd128),
+    /// The SSE4.2 instruction set on (32 and 64 bit) x86.
     #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
     Sse4_2(Sse4_2),
+    // If new variants are added, make sure to handle them in `Level::dispatch`
+    // and `simd_dispatch`
 }
 
 impl Level {
+    /// Detect the available features on the current CPU, and returns the best level.
+    ///
+    /// If no SIMD instruction set is available, a scalar fallback will be used instead.
+    ///
+    /// This value will be passed to functions generated using [`simd_dispatch`].
     pub fn new() -> Self {
         #[cfg(all(feature = "std", target_arch = "aarch64"))]
         if std::arch::is_aarch64_feature_detected!("neon") {
@@ -114,6 +137,13 @@ impl Level {
         Self::fallback()
     }
 
+    /// If this is a proof that Neon (or better) is available, access that instruction set.
+    ///
+    /// This method should be preferred over matching against the `Neon` variant of self,
+    /// because if Fearless SIMD gets support for an instruction set which is a superset of Neon,
+    /// this method will return a value even if that "better" instruction set is available.
+    ///
+    /// This is primarily intended to be used if the `safe_wrappers` feature is enabled.
     #[cfg(all(feature = "std", target_arch = "aarch64"))]
     #[inline]
     pub fn as_neon(self) -> Option<Neon> {
@@ -123,6 +153,13 @@ impl Level {
         }
     }
 
+    /// If this is a proof that SIMD 128 (or better) is available, access that instruction set.
+    ///
+    /// This method should be preferred over matching against the `WasmSimd128` variant of self,
+    /// because if Fearless SIMD gets support for an instruction set which is a superset of SIMD 128,
+    /// this method will return a value even if that "better" instruction set is available.
+    ///
+    /// This is primarily intended to be used if the `safe_wrappers` feature is enabled.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[inline]
     pub fn as_wasm_simd128(self) -> Option<WasmSimd128> {
@@ -131,6 +168,14 @@ impl Level {
             _ => None,
         }
     }
+
+    /// If this is a proof that SSE4.2 (or better) is available, access that instruction set.
+    ///
+    /// This method should be preferred over matching against the `Sse4_2` variant of self,
+    /// because if Fearless SIMD gets support for an instruction set which is a superset of SSE4.2,
+    /// this method will return a value even if that "better" instruction set is available.
+    ///
+    /// This is primarily intended to be used if the `safe_wrappers` feature is enabled.
     #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
     #[inline]
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
@@ -140,11 +185,26 @@ impl Level {
         }
     }
 
+    /// Create a scalar fallback level, which uses no SIMD instructions.
+    ///
+    /// This is primarily intended for tests; most users should prefer [`Level::new`].
     #[inline]
     pub fn fallback() -> Self {
         Self::Fallback(Fallback::new())
     }
 
+    /// Dispatch `f` to a context where the target features which this `Level` proves are available are [enabled].
+    ///
+    /// Most users of Fearless SIMD should prefer to use [`simd_dispatch`] to
+    /// explicitly vectorise a function. That has a better developer experience
+    /// than an implementation of `WithSimd`, and is less likely to miss a vectorisation
+    /// opportunity.
+    ///
+    /// This has two use cases:
+    /// 1) To call a manually written implementation of [`WithSimd`].
+    /// 2) To ask the compiler to autovectorise scalar code.
+    ///
+    /// [enabled]: https://doc.rust-lang.org/reference/attributes/codegen.html#the-target_feature-attribute
     #[inline]
     pub fn dispatch<W: WithSimd>(self, f: W) -> W::Output {
         #[cfg(all(feature = "std", target_arch = "aarch64"))]
