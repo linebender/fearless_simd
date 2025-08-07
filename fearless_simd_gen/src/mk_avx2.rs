@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
+use crate::arch::avx2::Avx2;
 use crate::arch::sse4_2::Sse4_2;
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::mk_sse4_2;
@@ -10,7 +11,6 @@ use crate::types::{SIMD_TYPES, VecType, type_imports};
 use crate::x86_common::simple_intrinsic;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-use crate::arch::avx2::Avx2;
 
 #[derive(Clone, Copy)]
 pub(crate) struct Level;
