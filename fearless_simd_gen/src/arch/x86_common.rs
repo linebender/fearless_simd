@@ -1,7 +1,7 @@
-use proc_macro2::{Ident, Span, TokenStream};
-use quote::{format_ident, quote};
 use crate::types::{ScalarType, VecType};
 use crate::x86_common::{op_suffix, set1_intrinsic, simple_intrinsic};
+use proc_macro2::{Ident, Span, TokenStream};
+use quote::{format_ident, quote};
 
 pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
     Some(match op {
@@ -60,27 +60,29 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                 let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
                 let xor = simple_intrinsic("xor", ScalarType::Float, ty.scalar_bits, ty.n_bits());
                 quote! {
-                        #( #xor(#args, #set1(-0.0)) )*
-                    }
+                    #( #xor(#args, #set1(-0.0)) )*
+                }
             }
             "abs" => {
                 let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
-                let andnot = simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits, ty.n_bits());
+                let andnot =
+                    simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits, ty.n_bits());
                 quote! {
-                        #( #andnot(#set1(-0.0), #args) )*
-                    }
+                    #( #andnot(#set1(-0.0), #args) )*
+                }
             }
             "copysign" => {
                 let a = &args[0];
                 let b = &args[1];
                 let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
                 let and = simple_intrinsic("and", ScalarType::Float, ty.scalar_bits, ty.n_bits());
-                let andnot = simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits, ty.n_bits());
+                let andnot =
+                    simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits, ty.n_bits());
                 let or = simple_intrinsic("or", ScalarType::Float, ty.scalar_bits, ty.n_bits());
                 quote! {
-                        let mask = #set1(-0.0);
-                        #or(#and(mask, #b), #andnot(mask, #a))
-                    }
+                    let mask = #set1(-0.0);
+                    #or(#and(mask, #b), #andnot(mask, #a))
+                }
             }
             "mul" => {
                 let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);

@@ -11,7 +11,7 @@ pub(crate) fn make_method(
     sig: OpSig,
     vec_ty: &VecType,
     arch: impl Arch,
-    ty_bits: usize
+    ty_bits: usize,
 ) -> TokenStream {
     let scalar_bits = vec_ty.scalar_bits;
     let ty_name = vec_ty.rust_name();
@@ -50,8 +50,12 @@ pub(crate) fn make_method(
                         _ => unreachable!(),
                     };
 
-                    let eq_intrinsic =
-                        simple_sign_unaware_intrinsic("cmpeq", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+                    let eq_intrinsic = simple_sign_unaware_intrinsic(
+                        "cmpeq",
+                        vec_ty.scalar,
+                        vec_ty.scalar_bits,
+                        ty_bits,
+                    );
 
                     let max_min_expr = arch.expr(max_min, vec_ty, &args);
                     quote! { #eq_intrinsic(#max_min_expr, a.into()) }
@@ -64,8 +68,12 @@ pub(crate) fn make_method(
                         32 => quote! { 0x80000000u32 },
                         _ => unimplemented!(),
                     };
-                    let gt =
-                        simple_sign_unaware_intrinsic("cmpgt", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+                    let gt = simple_sign_unaware_intrinsic(
+                        "cmpgt",
+                        vec_ty.scalar,
+                        vec_ty.scalar_bits,
+                        ty_bits,
+                    );
                     let args = if method == "simd_lt" {
                         quote! { b_signed, a_signed }
                     } else {
@@ -150,7 +158,11 @@ pub(crate) fn make_method(
             }
             "narrow" => {
                 let mask = set1_intrinsic(vec_ty.scalar, scalar_bits, ty_bits);
-                let pack = pack_intrinsic(scalar_bits, matches!(vec_ty.scalar, ScalarType::Int), ty_bits);
+                let pack = pack_intrinsic(
+                    scalar_bits,
+                    matches!(vec_ty.scalar, ScalarType::Int),
+                    ty_bits,
+                );
                 let split = format_ident!("split_{}", vec_ty.rust_name());
                 quote! {
                     #method_sig {
@@ -391,8 +403,10 @@ pub(crate) fn make_method(
                 cvt_intrinsic(*vec_ty, VecType::new(scalar, scalar_bits, vec_ty.len));
 
             let expr = if vec_ty.scalar == ScalarType::Float {
-                let floor_intrinsic = simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
-                let max_intrinsic = simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+                let floor_intrinsic =
+                    simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+                let max_intrinsic =
+                    simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
                 let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
 
                 if scalar == ScalarType::Unsigned {
@@ -516,13 +530,23 @@ pub(crate) fn simple_intrinsic(name: &str, ty: ScalarType, bits: usize, ty_bits:
     intrinsic_ident(name, suffix, ty_bits)
 }
 
-pub(crate) fn simple_sign_unaware_intrinsic(name: &str, ty: ScalarType, bits: usize, ty_bits: usize) -> Ident {
+pub(crate) fn simple_sign_unaware_intrinsic(
+    name: &str,
+    ty: ScalarType,
+    bits: usize,
+    ty_bits: usize,
+) -> Ident {
     let suffix = op_suffix(ty, bits, false);
 
     intrinsic_ident(name, suffix, ty_bits)
 }
 
-pub(crate) fn extend_intrinsic(ty: ScalarType, from_bits: usize, to_bits: usize, ty_bits: usize) -> Ident {
+pub(crate) fn extend_intrinsic(
+    ty: ScalarType,
+    from_bits: usize,
+    to_bits: usize,
+    ty_bits: usize,
+) -> Ident {
     let from_suffix = op_suffix(ty, from_bits, true);
     let to_suffix = op_suffix(ty, to_bits, false);
 
@@ -546,7 +570,12 @@ pub(crate) fn pack_intrinsic(from_bits: usize, signed: bool, ty_bits: usize) -> 
     intrinsic_ident(&format!("pack{unsigned}s"), suffix, ty_bits)
 }
 
-pub(crate) fn unpack_intrinsic(scalar_type: ScalarType, scalar_bits: usize, low: bool, ty_bits: usize) -> Ident {
+pub(crate) fn unpack_intrinsic(
+    scalar_type: ScalarType,
+    scalar_bits: usize,
+    low: bool,
+    ty_bits: usize,
+) -> Ident {
     let suffix = op_suffix(scalar_type, scalar_bits, false);
 
     let low_pref = if low { "lo" } else { "hi" };

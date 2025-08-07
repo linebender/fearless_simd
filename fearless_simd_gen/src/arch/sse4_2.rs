@@ -1,7 +1,7 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use crate::arch::{x86_common, Arch};
+use crate::arch::{Arch, x86_common};
 use crate::types::VecType;
 use proc_macro2::TokenStream;
 

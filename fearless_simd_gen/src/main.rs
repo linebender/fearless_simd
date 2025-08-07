@@ -14,13 +14,13 @@ use proc_macro2::TokenStream;
 
 mod arch;
 mod generic;
+mod mk_avx2;
 mod mk_fallback;
 mod mk_neon;
 mod mk_ops;
 mod mk_simd_trait;
 mod mk_simd_types;
 mod mk_sse4_2;
-mod mk_avx2;
 mod mk_wasm;
 mod ops;
 mod types;
