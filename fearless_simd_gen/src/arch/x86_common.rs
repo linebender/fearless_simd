@@ -87,7 +87,7 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
             "mul" => {
                 let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
                 let intrinsic = if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
-                   intrinsic_ident("mullo", suffix, ty.n_bits())
+                    intrinsic_ident("mullo", suffix, ty.n_bits())
                 } else {
                     intrinsic_ident("mul", suffix, ty.n_bits())
                 };

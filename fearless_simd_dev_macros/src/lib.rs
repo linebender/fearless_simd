@@ -20,6 +20,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     let fallback_name = get_ident("fallback");
     let neon_name = get_ident("neon");
     let sse4_name = get_ident("sse4");
+    let avx2_name = get_ident("avx2");
     let wasm_name = get_ident("wasm");
 
     let include_fallback = !exclude_fallback(&input_fn_name.to_string());
@@ -31,6 +32,10 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     let include_sse4 =
         std::arch::is_x86_feature_detected!("sse4.2") && !exclude_sse4(&input_fn_name.to_string());
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    let include_avx2 = std::arch::is_x86_feature_detected!("avx2")
+        && std::arch::is_x86_feature_detected!("fma")
+        && !exclude_avx2(&input_fn_name.to_string());
     #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
     let include_sse4 = false;
     // Note that we cannot feature-gate this with `target_arch`. If we run
@@ -78,6 +83,19 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         quote! {}
     };
 
+    let avx2_snippet = if include_sse4 {
+        quote! {
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            #[test]
+            fn #avx2_name() {
+                let avx2 = unsafe { fearless_simd::x86::Avx2::new_unchecked() };
+                #input_fn_name(avx2);
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     let wasm_snippet = if include_wasm {
         quote! {
             #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
@@ -98,6 +116,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #neon_snippet
         #wasm_snippet
         #sse4_snippet
+        #avx2_snippet
     }
     .into()
 }
@@ -120,6 +139,16 @@ fn exclude_fallback(name: &str) -> bool {
 #[allow(dead_code, reason = "on purpose.")]
 #[allow(unused_variables, reason = "on purpose.")]
 fn exclude_sse4(name: &str) -> bool {
+    matches!(
+        name,
+        // works incorrectly for any values larger than i32::MAX and smaller than 0.
+        "cvt_u32_f32x4" | "cvt_f32_u32x4" | "saturate_float_to_int",
+    ) || name.contains("precise")
+}
+
+#[allow(dead_code, reason = "on purpose.")]
+#[allow(unused_variables, reason = "on purpose.")]
+fn exclude_avx2(name: &str) -> bool {
     matches!(
         name,
         // works incorrectly for any values larger than i32::MAX and smaller than 0.

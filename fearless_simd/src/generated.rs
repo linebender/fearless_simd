@@ -63,6 +63,8 @@ mod sse4_2;
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 mod wasm;
 
+#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+pub use avx2::*;
 pub use fallback::*;
 #[cfg(all(feature = "std", target_arch = "aarch64"))]
 pub use neon::*;

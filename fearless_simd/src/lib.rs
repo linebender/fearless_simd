@@ -48,6 +48,7 @@ pub mod wasm32 {
 
 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
 pub mod x86 {
+    pub use crate::generated::Avx2;
     pub use crate::generated::Sse4_2;
 }
 
@@ -61,6 +62,8 @@ pub enum Level {
     WasmSimd128(WasmSimd128),
     #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
     Sse4_2(Sse4_2),
+    #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+    Avx2(Avx2),
 }
 
 impl Level {
@@ -72,8 +75,14 @@ impl Level {
         #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
         return Level::WasmSimd128(WasmSimd128::new_unchecked());
         #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
-        if std::arch::is_x86_feature_detected!("sse4.2") {
-            return unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) };
+        {
+            if std::arch::is_x86_feature_detected!("avx2")
+                && std::arch::is_x86_feature_detected!("fma")
+            {
+                return unsafe { Level::Avx2(Avx2::new_unchecked()) };
+            } else if std::arch::is_x86_feature_detected!("sse4.2") {
+                return unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) };
+            }
         }
         #[cfg(not(all(target_arch = "wasm32", target_feature = "simd128")))]
         Self::fallback()
@@ -101,6 +110,15 @@ impl Level {
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
         match self {
             Level::Sse4_2(sse42) => Some(sse42),
+            _ => None,
+        }
+    }
+
+    #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+    #[inline]
+    pub fn as_avx2(self) -> Option<Avx2> {
+        match self {
+            Level::Avx2(avx2) => Some(avx2),
             _ => None,
         }
     }
@@ -133,6 +151,13 @@ impl Level {
             f.with_simd(sse4_2)
         }
 
+        #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+        #[target_feature(enable = "sse4.2")]
+        #[inline]
+        unsafe fn dispatch_avx2<W: WithSimd>(f: W, avx2: Avx2) -> W::Output {
+            f.with_simd(avx2)
+        }
+
         #[inline]
         fn dispatch_fallback<W: WithSimd>(f: W, fallback: Fallback) -> W::Output {
             f.with_simd(fallback)
@@ -145,6 +170,8 @@ impl Level {
             Level::WasmSimd128(simd128) => dispatch_simd128(f, simd128),
             #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
             Level::Sse4_2(sse4_2) => unsafe { dispatch_sse4_2(f, sse4_2) },
+            #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+            Level::Avx2(avx2) => unsafe { dispatch_avx2(f, avx2) },
             Level::Fallback(fallback) => dispatch_fallback(f, fallback),
         }
     }

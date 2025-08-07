@@ -3,7 +3,10 @@
 
 use crate::arch::Arch;
 use crate::arch::sse4_2::Sse4_2;
-use crate::types::{SIMD_TYPES, type_imports};
+use crate::generic::{generic_combine, generic_op, generic_split};
+use crate::mk_sse4_2;
+use crate::ops::{OpSig, TyFlavor, ops_for_type};
+use crate::types::{SIMD_TYPES, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
@@ -12,7 +15,7 @@ pub(crate) struct Level;
 
 impl Level {
     fn name(self) -> &'static str {
-        "Sse4_2"
+        "Avx2"
     }
 
     fn token(self) -> TokenStream {
@@ -23,7 +26,7 @@ impl Level {
 
 pub(crate) fn mk_avx2_impl() -> TokenStream {
     let imports = type_imports();
-    // let simd_impl = mk_simd_impl();
+    let simd_impl = mk_simd_impl();
     let ty_impl = mk_type_impl();
 
     quote! {
@@ -62,66 +65,67 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
 
         impl Seal for Avx2 {}
 
-        // #simd_impl
+        #simd_impl
 
         #ty_impl
     }
 }
 
-// fn mk_simd_impl() -> TokenStream {
-//     let level_tok = Level.token();
-//     let mut methods = vec![];
-//     for vec_ty in SIMD_TYPES {
-//         for (method, sig) in ops_for_type(vec_ty, true) {
-//             let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
-//                 || vec_ty.n_bits() > 256;
-//
-//             let b2 = !matches!(method, "load_interleaved_128")
-//                 && !matches!(method, "store_interleaved_128");
-//
-//             if b1 && b2 {
-//                 methods.push(generic_op(method, sig, vec_ty));
-//                 continue;
-//             }
-//
-//             let method = make_method(method, sig, vec_ty, Sse4_2, 128);
-//
-//             methods.push(method);
-//         }
-//     }
-//     // Note: the `vectorize` implementation is pretty boilerplate and should probably
-//     // be factored out for DRY.
-//     quote! {
-//         impl Simd for #level_tok {
-//             type f32s = f32x4<Self>;
-//             type u8s = u8x16<Self>;
-//             type i8s = i8x16<Self>;
-//             type u16s = u16x8<Self>;
-//             type i16s = i16x8<Self>;
-//             type u32s = u32x4<Self>;
-//             type i32s = i32x4<Self>;
-//             type mask8s = mask8x16<Self>;
-//             type mask16s = mask16x8<Self>;
-//             type mask32s = mask32x4<Self>;
-//             #[inline(always)]
-//             fn level(self) -> Level {
-//                 Level::#level_tok(self)
-//             }
-//
-//             #[inline]
-//             fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-//                 #[target_feature(enable = "sse4.2")]
-//                 #[inline]
-//                 unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
-//                     f()
-//                 }
-//                 unsafe { vectorize_sse4_2(f) }
-//             }
-//
-//             #( #methods )*
-//         }
-//     }
-// }
+fn mk_simd_impl() -> TokenStream {
+    let level_tok = Level.token();
+    let mut methods = vec![];
+    for vec_ty in SIMD_TYPES {
+        for (method, sig) in ops_for_type(vec_ty, true) {
+            let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
+                || vec_ty.n_bits() > 256;
+
+            let b2 = !matches!(method, "load_interleaved_128")
+                && !matches!(method, "store_interleaved_128");
+
+            if b1 && b2 {
+                methods.push(generic_op(method, sig, vec_ty));
+                continue;
+            }
+
+            let method = make_method(method, sig, vec_ty, Sse4_2, 128);
+
+            methods.push(method);
+        }
+    }
+
+    // Note: the `vectorize` implementation is pretty boilerplate and should probably
+    // be factored out for DRY.
+    quote! {
+        impl Simd for #level_tok {
+            type f32s = f32x4<Self>;
+            type u8s = u8x16<Self>;
+            type i8s = i8x16<Self>;
+            type u16s = u16x8<Self>;
+            type i16s = i16x8<Self>;
+            type u32s = u32x4<Self>;
+            type i32s = i32x4<Self>;
+            type mask8s = mask8x16<Self>;
+            type mask16s = mask16x8<Self>;
+            type mask32s = mask32x4<Self>;
+            #[inline(always)]
+            fn level(self) -> Level {
+                Level::#level_tok(self)
+            }
+
+            #[inline]
+            fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
+                #[target_feature(enable = "avx2, fma")]
+                #[inline]
+                unsafe fn vectorize_avx2<F: FnOnce() -> R, R>(f: F) -> R {
+                    f()
+                }
+                unsafe { vectorize_avx2(f) }
+            }
+
+            #( #methods )*
+        }
+    }
+}
 
 fn mk_type_impl() -> TokenStream {
     let mut result = vec![];
@@ -152,5 +156,57 @@ fn mk_type_impl() -> TokenStream {
     }
     quote! {
         #( #result )*
+    }
+}
+
+fn make_method(
+    method: &str,
+    sig: OpSig,
+    vec_ty: &VecType,
+    arch: impl Arch,
+    ty_bits: usize,
+) -> TokenStream {
+    let scalar_bits = vec_ty.scalar_bits;
+    let ty_name = vec_ty.rust_name();
+    let method_name = format!("{method}_{ty_name}");
+    let method_ident = Ident::new(&method_name, Span::call_site());
+    let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+    let args = sig.simd_trait_args(vec_ty);
+    let method_sig = quote! {
+        #[inline(always)]
+        fn #method_ident(#args) -> #ret_ty
+    };
+
+    match sig {
+        OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty, scalar_bits, ty_bits),
+        OpSig::Compare => {
+            mk_sse4_2::handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch)
+        }
+        OpSig::Unary => mk_sse4_2::handle_unary(method_sig, method, vec_ty, arch),
+        OpSig::WidenNarrow(t) => {
+            mk_sse4_2::handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
+        }
+        OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty, arch),
+        OpSig::Shift => mk_sse4_2::handle_shift(method_sig, vec_ty, scalar_bits, ty_bits),
+        OpSig::Ternary => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
+        OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty, scalar_bits),
+        OpSig::Combine => generic_combine(vec_ty),
+        OpSig::Split => generic_split(vec_ty),
+        OpSig::Zip(zip1) => mk_sse4_2::handle_zip(method_sig, vec_ty, scalar_bits, zip1),
+        OpSig::Unzip(select_even) => {
+            mk_sse4_2::handle_unzip(method_sig, vec_ty, scalar_bits, select_even)
+        }
+        OpSig::Cvt(scalar, target_scalar_bits) => {
+            mk_sse4_2::handle_cvt(method_sig, vec_ty, ty_bits, scalar, target_scalar_bits)
+        }
+        OpSig::Reinterpret(scalar, target_scalar_bits) => {
+            mk_sse4_2::handle_reinterpret(method_sig, vec_ty, scalar, target_scalar_bits)
+        }
+        OpSig::LoadInterleaved(block_size, _) => {
+            mk_sse4_2::handle_load_interleaved(method_sig, &method_ident, vec_ty, block_size)
+        }
+        OpSig::StoreInterleaved(_, _) => {
+            mk_sse4_2::handle_store_interleaved(method_sig, &method_ident)
+        }
     }
 }

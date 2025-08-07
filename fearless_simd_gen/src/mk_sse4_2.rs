@@ -4,9 +4,12 @@
 use crate::arch::Arch;
 use crate::arch::sse4_2::Sse4_2;
 use crate::generic::{generic_combine, generic_op, generic_split};
-use crate::ops::{ops_for_type, reinterpret_ty, valid_reinterpret, OpSig, TyFlavor};
-use crate::types::{SIMD_TYPES, type_imports, VecType, ScalarType};
-use crate::x86_common::{cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic, unpack_intrinsic};
+use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
+use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
+use crate::x86_common::{
+    cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic,
+    simple_sign_unaware_intrinsic, unpack_intrinsic,
+};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
@@ -158,7 +161,7 @@ fn mk_type_impl() -> TokenStream {
     }
 }
 
-pub(crate) fn make_method(
+fn make_method(
     method: &str,
     sig: OpSig,
     vec_ty: &VecType,
@@ -180,7 +183,9 @@ pub(crate) fn make_method(
         OpSig::Splat => handle_splat(method_sig, vec_ty, scalar_bits, ty_bits),
         OpSig::Compare => handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch),
         OpSig::Unary => handle_unary(method_sig, method, vec_ty, arch),
-        OpSig::WidenNarrow(t) => handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t),
+        OpSig::WidenNarrow(t) => {
+            handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
+        }
         OpSig::Binary => handle_binary(method_sig, method, vec_ty, arch),
         OpSig::Shift => handle_shift(method_sig, vec_ty, scalar_bits, ty_bits),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
@@ -189,9 +194,15 @@ pub(crate) fn make_method(
         OpSig::Split => generic_split(vec_ty),
         OpSig::Zip(zip1) => handle_zip(method_sig, vec_ty, scalar_bits, zip1),
         OpSig::Unzip(select_even) => handle_unzip(method_sig, vec_ty, scalar_bits, select_even),
-        OpSig::Cvt(scalar, target_scalar_bits) => handle_cvt(method_sig, vec_ty, ty_bits, scalar, target_scalar_bits),
-        OpSig::Reinterpret(scalar, target_scalar_bits) => handle_reinterpret(method_sig, vec_ty, scalar, target_scalar_bits),
-        OpSig::LoadInterleaved(block_size, _) => handle_load_interleaved(method_sig, &method_ident, vec_ty, block_size),
+        OpSig::Cvt(scalar, target_scalar_bits) => {
+            handle_cvt(method_sig, vec_ty, ty_bits, scalar, target_scalar_bits)
+        }
+        OpSig::Reinterpret(scalar, target_scalar_bits) => {
+            handle_reinterpret(method_sig, vec_ty, scalar, target_scalar_bits)
+        }
+        OpSig::LoadInterleaved(block_size, _) => {
+            handle_load_interleaved(method_sig, &method_ident, vec_ty, block_size)
+        }
         OpSig::StoreInterleaved(_, _) => handle_store_interleaved(method_sig, &method_ident),
     }
 }
@@ -234,12 +245,8 @@ pub(crate) fn handle_compare(
                 _ => unreachable!(),
             };
 
-            let eq_intrinsic = simple_sign_unaware_intrinsic(
-                "cmpeq",
-                vec_ty.scalar,
-                vec_ty.scalar_bits,
-                ty_bits,
-            );
+            let eq_intrinsic =
+                simple_sign_unaware_intrinsic("cmpeq", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
 
             let max_min_expr = arch.expr(max_min, vec_ty, &args);
             quote! { #eq_intrinsic(#max_min_expr, a.into()) }
@@ -252,12 +259,8 @@ pub(crate) fn handle_compare(
                 32 => quote! { 0x80000000u32 },
                 _ => unimplemented!(),
             };
-            let gt = simple_sign_unaware_intrinsic(
-                "cmpgt",
-                vec_ty.scalar,
-                vec_ty.scalar_bits,
-                ty_bits,
-            );
+            let gt =
+                simple_sign_unaware_intrinsic("cmpgt", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
             let args = if method == "simd_lt" {
                 quote! { b_signed, a_signed }
             } else {
@@ -643,14 +646,11 @@ pub(crate) fn handle_cvt(
 ) -> TokenStream {
     // IMPORTANT TODO: for f32 to u32, we are currently converting it to i32 instead
     // of u32. We need to properly polyfill this.
-    let cvt_intrinsic =
-        cvt_intrinsic(*vec_ty, VecType::new(scalar, scalar_bits, vec_ty.len));
+    let cvt_intrinsic = cvt_intrinsic(*vec_ty, VecType::new(scalar, scalar_bits, vec_ty.len));
 
     let expr = if vec_ty.scalar == ScalarType::Float {
-        let floor_intrinsic =
-            simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
-        let max_intrinsic =
-            simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+        let floor_intrinsic = simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+        let max_intrinsic = simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
         let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
 
         if scalar == ScalarType::Unsigned {
@@ -700,37 +700,35 @@ pub(crate) fn handle_load_interleaved(
     // Implementing interleaved loading/storing for 32-bit is still quite doable, It's unclear
     // how hard it would be for u16/u8. For now we only implement it for u32 since this is needed
     // in packing in vello_cpu, where performance is very critical.
-    let expr = if block_size == 128
-        && vec_ty.scalar == ScalarType::Unsigned
-        && vec_ty.scalar_bits == 32
-    {
-        quote! {
-            unsafe {
-                // TODO: Once we support u64, we could do all of this using just zip + unzip
-                let v0 = _mm_loadu_si128(src.as_ptr().add(0) as *const __m128i);
-                let v1 = _mm_loadu_si128(src.as_ptr().add(4) as *const __m128i);
-                let v2 = _mm_loadu_si128(src.as_ptr().add(8) as *const __m128i);
-                let v3 = _mm_loadu_si128(src.as_ptr().add(12) as *const __m128i);
+    let expr =
+        if block_size == 128 && vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 32 {
+            quote! {
+                unsafe {
+                    // TODO: Once we support u64, we could do all of this using just zip + unzip
+                    let v0 = _mm_loadu_si128(src.as_ptr().add(0) as *const __m128i);
+                    let v1 = _mm_loadu_si128(src.as_ptr().add(4) as *const __m128i);
+                    let v2 = _mm_loadu_si128(src.as_ptr().add(8) as *const __m128i);
+                    let v3 = _mm_loadu_si128(src.as_ptr().add(12) as *const __m128i);
 
-                let tmp0 = _mm_unpacklo_epi32(v0, v1); // [0,4,1,5]
-                let tmp1 = _mm_unpackhi_epi32(v0, v1); // [2,6,3,7]
-                let tmp2 = _mm_unpacklo_epi32(v2, v3); // [8,12,9,13]
-                let tmp3 = _mm_unpackhi_epi32(v2, v3); // [10,14,11,15]
+                    let tmp0 = _mm_unpacklo_epi32(v0, v1); // [0,4,1,5]
+                    let tmp1 = _mm_unpackhi_epi32(v0, v1); // [2,6,3,7]
+                    let tmp2 = _mm_unpacklo_epi32(v2, v3); // [8,12,9,13]
+                    let tmp3 = _mm_unpackhi_epi32(v2, v3); // [10,14,11,15]
 
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2); // [0,4,8,12]
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2); // [1,5,9,13]
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3); // [2,6,10,14]
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3); // [3,7,11,15]
+                    let out0 = _mm_unpacklo_epi64(tmp0, tmp2); // [0,4,8,12]
+                    let out1 = _mm_unpackhi_epi64(tmp0, tmp2); // [1,5,9,13]
+                    let out2 = _mm_unpacklo_epi64(tmp1, tmp3); // [2,6,10,14]
+                    let out3 = _mm_unpackhi_epi64(tmp1, tmp3); // [3,7,11,15]
 
-                self.combine_u32x8(
-                    self.combine_u32x4(out0.simd_into(self), out1.simd_into(self)),
-                    self.combine_u32x4(out2.simd_into(self), out3.simd_into(self)),
-                )
+                    self.combine_u32x8(
+                        self.combine_u32x4(out0.simd_into(self), out1.simd_into(self)),
+                        self.combine_u32x4(out2.simd_into(self), out3.simd_into(self)),
+                    )
+                }
             }
-        }
-    } else {
-        quote! { crate::Fallback::new().#method_ident(src).val.simd_into(self) }
-    };
+        } else {
+            quote! { crate::Fallback::new().#method_ident(src).val.simd_into(self) }
+        };
 
     quote! {
         #method_sig {
