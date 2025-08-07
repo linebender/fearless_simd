@@ -2,7 +2,25 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 //! A helper library to make SIMD more friendly.
-
+//!
+//! # Feature Flags
+//!
+//! The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
+//!
+//! - `std` (enabled by default): Get floating point functions from the standard library (likely using your targets libc).
+//! - `libm`: Use floating point implementations from [libm].
+//!
+//! At least one of `std` and `libm` is required; `std` overrides `libm`.
+// LINEBENDER LINT SET - lib.rs - v3
+// See https://linebender.org/wiki/canonical-lints/
+// These lints shouldn't apply to examples or tests.
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
+// These lints shouldn't apply to examples.
+#![warn(clippy::print_stdout, clippy::print_stderr)]
+// Targeting e.g. 32-bit means structs containing usize can give false positives for 64-bit.
+#![cfg_attr(target_pointer_width = "64", warn(clippy::trivially_copy_pass_by_ref))]
+// END LINEBENDER LINT SET
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![allow(non_camel_case_types, reason = "TODO")]
 #![expect(clippy::unused_unit, reason = "easier for code generation")]
 #![expect(
@@ -11,7 +29,10 @@
     clippy::use_self,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-#![cfg_attr(not(feature = "std"), no_std)]
+#![no_std]
+
+#[cfg(feature = "std")]
+extern crate std;
 
 pub mod core_arch;
 mod impl_macros;

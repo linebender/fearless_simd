@@ -21,9 +21,20 @@ Full documentation at https://github.com/orium/cargo-rdme -->
 
 <!-- Intra-doc links used in lib.rs should be evaluated here. 
 See https://linebender.org/blog/doc-include/ for related discussion. -->
+
+[libm]: https://crates.io/crates/libm
 <!-- cargo-rdme start -->
 
 A helper library to make SIMD more friendly.
+
+# Feature Flags
+
+The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
+
+- `std` (enabled by default): Get floating point functions from the standard library (likely using your targets libc).
+- `libm`: Use floating point implementations from [libm].
+
+At least one of `std` and `libm` is required; `std` overrides `libm`.
 
 <!-- cargo-rdme end -->
 

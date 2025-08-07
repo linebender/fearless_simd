@@ -11,6 +11,13 @@ description = "Safer and easier SIMD"
 readme = "README.md"
 rust-version = "1.85"
 
+[package.metadata.docs.rs]
+all-features = true
+# TODO: Get the right set of targets here. x86 linux, x86-64 linux, arm-macos, wasm
+# default-target = "x86_64-unknown-linux-gnu"
+# targets = []
+
+
 [features]
 safe_wrappers = []
 default = ["std"]
