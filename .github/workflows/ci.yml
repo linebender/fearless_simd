@@ -95,6 +95,14 @@ jobs:
       - name: check copyright headers
         run: bash .github/copyright.sh
 
+      - name: Install cargo-rdme
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-rdme
+
+      - name: Run cargo rdme (fearless_simd)
+        run: cargo rdme --check --heading-base-level=0 --workspace-project=fearless_simd
+
   clippy-stable:
     name: cargo clippy
     runs-on: ${{ matrix.os }}
