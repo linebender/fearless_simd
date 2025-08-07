@@ -1,3 +1,6 @@
+// Copyright 2024 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use crate::types::{ScalarType, VecType};
 use crate::x86_common::{intrinsic_ident, op_suffix, set1_intrinsic, simple_intrinsic};
 use proc_macro2::{Ident, Span, TokenStream};

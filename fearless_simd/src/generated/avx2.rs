@@ -31,7 +31,7 @@ impl Avx2 {
     #[inline]
     pub unsafe fn new_unchecked() -> Self {
         Avx2 {
-            avx2: unsafe { crate::core_arch::x86_64::Avx2::new_unchecked() },
+            avx2: unsafe { crate::core_arch::x86::Avx2::new_unchecked() },
         }
     }
 }
