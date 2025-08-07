@@ -3,9 +3,67 @@
 
 //! A helper library to make SIMD more friendly.
 //!
-//! ## Webassembly
+//! Fearless SIMD exposes safe SIMD with ergonomic multi-versioning in Rust.
 //!
-//! TODO: Talk about how WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle.
+//! Fearless SIMD uses "marker values" which serve as proofs of which target features are available on the current CPU.
+//! These each implement the [`Simd`] trait, which exposes a core set of SIMD operations which are implemented as
+//! efficiently as possible on each target platform.
+//!
+//! Additionally, there are types for packed vectors of a specific width and element type (such as [`f32x4`]).
+//! Fearless SIMD does not currently support vectors of less than 128 bits, due to there only being limited hardware
+//! with SIMD support but not support for 128 bit wide vectors. <!-- TODO: confirm -->
+//! These vector types implement some standard arithmetic traits (i.e. they can be added together using
+//!  `+`, multiplied by a scalar using `*`, among others), which are implemented as efficiently
+//! as possible using SIMD instructions.
+//! These can be created in a SIMD context using the [`SimdFrom`] trait, or the
+//! [`from_slice`](SimdBase::from_slice) associated function.
+//!
+//! To create a function which SIMD and can be multiversioned, it will have a signature like:
+//!
+//! ```rust
+//! #[inline(always)]
+//! fn sigmoid_impl<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { ... }
+//!
+//! simd_dispatch!(sigmoid(level, x: &[f32], out: &mut [f32]) = sigmoid_impl);
+//! ```
+//!
+//! A few things to note:
+//! 1) This is generic over any `Simd` type.
+//! 2) The [`simd_dispatch`] macro is used to create a multi-versioned version of the given function.
+//! 3) The `_impl` suffix is used by convention to indicate the version of a function which will be dispatched to.
+//! 4) The `impl` function *must* be `#[inline(always)]`.
+//!    The performance of the SIMD implementation will be poor if that isn't the case. See [the section on inlining for details](#inlining)
+//!
+//! The signature of the generated function will be:
+//!
+//! ```rust
+//! fn sigmoid(level: Level, x: &[f32], out: &mut [f32]) { ... }
+//! ```
+//!
+//! The first parameter to this function is the [`Level`].
+//! If you are writing an application, you should create this once (using [`Level::new`]), and pass it to any function which wants to use SIMD.
+//! This type stores which instruction sets are available for the current process, which is used
+//! in the (generated) `sigmoid` function to dispatch to the most optimal variant of the function for this process.
+//!
+//! # Inlining
+//!
+//! Fearless SIMD relies heavily on Rust's inlining support to create functions which have the
+//! given target features enabled.
+//! As such, most functions which you write when using Fearless SIMD should have the `#[inline(always)]` attribute.
+//! This is required because in LLVM, functions with different target features cannot.
+//!
+//! <!--
+//! # Kernels vs not kernels
+//!
+//! TODO: Talk about writing versions of functions which can be called in other `S: Simd` functions.
+//! I think this pattern can also have a macro.
+//! -->
+//!
+//! # Webassembly
+//!
+//! WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle for WASM, one with SIMD and one without,
+//! then select the appropriate one for your user's browser.
+//! TODO: Expand on this.
 //!
 //! # Feature Flags
 //!
@@ -205,6 +263,10 @@ impl Level {
     /// 1) To call a manually written implementation of [`WithSimd`].
     /// 2) To ask the compiler to autovectorise scalar code.
     ///
+    /// For the second case to work, the provided function *must* be attributed with `#[inline(always)]`.
+    /// Note also that any calls that function makes to other functions will likely not be autovectoised,
+    /// unless they are also `#[inline(always)]`.
+    ///
     /// [enabled]: https://doc.rust-lang.org/reference/attributes/codegen.html#the-target_feature-attribute
     #[inline]
     pub fn dispatch<W: WithSimd>(self, f: W) -> W::Output {
@@ -243,5 +305,17 @@ impl Level {
             Level::Sse4_2(sse4_2) => unsafe { dispatch_sse4_2(f, sse4_2) },
             Level::Fallback(fallback) => dispatch_fallback(f, fallback),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Level;
+
+    const fn assert_is_send_sync<T: Send + Sync>() {}
+    /// If this test compiles, we know that [`Level`] is properly `Send` and `Sync`.
+    #[test]
+    fn level_is_send_sync() {
+        assert_is_send_sync::<Level>();
     }
 }
