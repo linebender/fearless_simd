@@ -9,8 +9,18 @@
 //!
 //! - `std` (enabled by default): Get floating point functions from the standard library (likely using your targets libc).
 //! - `libm`: Use floating point implementations from [libm].
+//! - `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
+//!   beyond the basic SIMD operations abstracted on all platforms.
+//! - `half`: Use `f16` (16 bit floating point) support from the [half] crate.
+//!   If this feature isn't enabled, a minimal subset copied (under license) from that same crate is used.
+//!   Only supported on aarch64, as other supported architectures don't have hardware support for these types.
+//!   This feature is only useful if the `safe_wrappers` feature is enabled, to use the `core_arch::aarch64::Fp16` type.
 //!
 //! At least one of `std` and `libm` is required; `std` overrides `libm`.
+#![cfg_attr(
+    not(all(target_arch = "aarch64", feature = "half")),
+    doc = "[half]: https://docs.rs/half/latest/half/"
+)]
 // LINEBENDER LINT SET - lib.rs - v3
 // See https://linebender.org/wiki/canonical-lints/
 // These lints shouldn't apply to examples or tests.
@@ -34,6 +44,13 @@
 #[cfg(feature = "std")]
 extern crate std;
 
+#[cfg(all(not(feature = "libm"), not(feature = "std")))]
+compile_error!("fearless_simd requires either the `std` or `libm` feature");
+
+// Suppress the unused_crate_dependencies lint when both std and libm are specified.
+#[cfg(all(feature = "std", feature = "libm"))]
+use libm as _;
+
 pub mod core_arch;
 mod impl_macros;
 
@@ -53,9 +70,6 @@ pub type f16 = half::f16;
 mod half_assed;
 #[cfg(all(target_arch = "aarch64", not(feature = "half")))]
 pub use half_assed::f16;
-
-#[cfg(all(not(feature = "libm"), not(feature = "std")))]
-compile_error!("fearless_simd requires either the `std` or `libm` feature");
 
 #[cfg(all(feature = "std", target_arch = "aarch64"))]
 pub mod aarch64 {
