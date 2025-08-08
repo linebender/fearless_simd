@@ -5,9 +5,9 @@ use crate::arch::{Arch, x86_common};
 use crate::types::VecType;
 use proc_macro2::TokenStream;
 
-pub(crate) struct Sse4_2;
+pub(crate) struct Avx2;
 
-impl Arch for Sse4_2 {
+impl Arch for Avx2 {
     fn arch_ty(&self, ty: &VecType) -> TokenStream {
         x86_common::arch_ty(ty)
     }
