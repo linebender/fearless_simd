@@ -76,16 +76,8 @@
 //! - `libm`: Use floating point implementations from [libm].
 //! - `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
 //!   beyond the basic SIMD operations abstracted on all platforms.
-//! - `half`: Use `f16` (16 bit floating point) support from the [half] crate.
-//!   If this feature isn't enabled, a minimal subset copied (under license) from that same crate is used.
-//!   Only supported on aarch64, as other supported architectures don't have hardware support for these types.
-//!   This feature is only useful if the `safe_wrappers` feature is enabled, to use the `core_arch::aarch64::Fp16` type.
 //!
 //! At least one of `std` and `libm` is required; `std` overrides `libm`.
-#![cfg_attr(
-    not(all(target_arch = "aarch64", feature = "half")),
-    doc = "\n\n[half]: https://docs.rs/half/latest/half/"
-)]
 // LINEBENDER LINT SET - lib.rs - v3
 // See https://linebender.org/wiki/canonical-lints/
 // These lints shouldn't apply to examples or tests.
@@ -124,17 +116,6 @@ mod traits;
 
 pub use generated::*;
 pub use traits::*;
-
-// For now, only bring in f16 on aarch64. We can also bring it in
-// on x86_64, but only Sapphire Rapids supports it.
-
-/// The f16 type used in this crate, a re-export of the f16 type from [`half`].
-#[cfg(all(target_arch = "aarch64", feature = "half"))]
-pub type f16 = half::f16;
-#[cfg(all(target_arch = "aarch64", not(feature = "half")))]
-mod half_assed;
-#[cfg(all(target_arch = "aarch64", not(feature = "half")))]
-pub use half_assed::f16;
 
 /// Implementations of [`Simd`] for 64 bit ARM.
 #[cfg(all(feature = "std", target_arch = "aarch64"))]
