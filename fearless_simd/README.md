@@ -42,8 +42,7 @@ These each implement the [`Simd`] trait, which exposes a core set of SIMD operat
 efficiently as possible on each target platform.
 
 Additionally, there are types for packed vectors of a specific width and element type (such as [`f32x4`]).
-Fearless SIMD does not currently support vectors of less than 128 bits, due to there only being limited hardware
-with SIMD support but not support for 128 bit wide vectors. <!-- TODO: confirm -->
+Fearless SIMD does not currently support vectors of less than 128 bits.
 These vector types implement some standard arithmetic traits (i.e. they can be added together using
 `+`, multiplied by a scalar using `*`, among others), which are implemented as efficiently
 as possible using SIMD instructions.
@@ -98,14 +97,14 @@ I think this pattern can also have a macro.
 # Webassembly
 
 WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle for WASM, one with SIMD and one without,
-then select the appropriate one for your user's browser.P
+then select the appropriate one for your user's browser.
 TODO: Expand on this.
 
 # Feature Flags
 
 The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
 
-- `std` (enabled by default): Get floating point functions from the standard library (likely using your targets libc).
+- `std` (enabled by default): Get floating point functions from the standard library (likely using your target's libc).
 - `libm`: Use floating point implementations from [libm].
 - `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
   beyond the basic SIMD operations abstracted on all platforms.

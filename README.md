@@ -31,8 +31,7 @@ For now, prefer updating the package-level readmes, e.g. fearless_simd/README.md
 
 ## Motivation
 
-<!-- TODO: I don't think we use Target Feature 1.1 - our MSRV is 1.85, when TF1.1 stabilised in 1.86 -->
-This crate proposes an experimental way to use SIMD intrinsics reasonably safely, using the new [target_feature 1.1] feature in Rust, recently stabilized.
+This crate proposes an experimental way to use SIMD intrinsics reasonably safely.
 The blog post [A plan for SIMD] contains the high level motivations, goal, and summary for Fearless SIMD.
 
 ## History
