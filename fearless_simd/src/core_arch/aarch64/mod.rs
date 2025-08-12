@@ -36,6 +36,10 @@ type p64 = u64;
 type p128 = u128;
 
 #[cfg(feature = "safe_wrappers")]
+#[expect(
+    clippy::missing_safety_doc,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
 impl Neon {
     delegate! { core::arch::aarch64:
         fn vand_s8(a: int8x8_t, b: int8x8_t) -> int8x8_t;
