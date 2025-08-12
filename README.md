@@ -38,8 +38,6 @@ The blog post [A plan for SIMD] contains the high level motivations, goal, and s
 
 A [much earlier version][fearless_simd 0.1.1] of this crate experimented with an approach that tried to accomplish safety in safe Rust as of 2018, using types that witnessed the SIMD capability of the CPU. There is a blog post, [Towards fearless SIMD], that wrote up the experiment. That approach couldn't quite be made to work, but was an interesting exploration at the time. A practical development along roughly similar lines is the [pulp] crate.
 
-Some code has been cut and pasted from the [half] crate, which is released under identical license. That crate is also an optional dependency, for more full f16 support. This dependency will be removed when `f16` stabilizes.
-
 For more discussion about this crate, see [Towards fearless SIMD, 7 years later]. A planned future direction is to autogenerate the the SIMD types and methods, rather than having to maintain a significant amount of boilerplate code.
 
 ## SIMD types
@@ -60,7 +58,7 @@ On wasm, the level is `simd128`.
 
 This crate was inspired by [pulp], [std::simd], among others in the Rust ecosystem, though makes many decisions differently. It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
 
-The [half] code was mentioned above. The proc macro was strongly inspired by the [safe-arch-macro] in [rbrotli-enc].
+The proc macro was strongly inspired by the [safe-arch-macro] in [rbrotli-enc].
 
 ## Minimum supported Rust Version (MSRV)
 
@@ -97,10 +95,8 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 
 [A plan for SIMD]: https://linebender.org/blog/a-plan-for-simd/
 [pulp]: https://crates.io/crates/pulp
-[target_feature 1.1]: https://github.com/rust-lang/rfcs/pull/2396
 [Towards fearless SIMD]: https://raphlinus.github.io/rust/simd/2018/10/19/fearless-simd.html
 [fearless_simd 0.1.1]: https://crates.io/crates/fearless_simd/0.1.1
-[half]: https://crates.io/crates/half
 [x86-64 microarchitecture levels]: https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
 [std::simd]: https://doc.rust-lang.org/std/simd/index.html
 [safe-arch-macro]: https://github.com/google/rbrotli-enc/blob/ce44d008ff1beff1eee843e808542d01951add45/safe-arch-macro/src/lib.rs

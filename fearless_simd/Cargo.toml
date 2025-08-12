@@ -28,9 +28,6 @@ libm = ["dep:libm"]
 # Include safe wrappers for (some) target feature specific intrinsics,
 # beyond the basic SIMD operations abstracted on all platforms
 safe_wrappers = []
-# Enable `f16` (16 bit floating point) support. Only supported on aarch64, as other
-# supported architectures don't have hardware support for these types.
-half = ["dep:half"]
 
 [lints]
 workspace = true
@@ -38,6 +35,3 @@ workspace = true
 [dependencies]
 bytemuck = "1.23.0"
 libm = { version = "0.2.15", optional = true }
-
-[target.'cfg(target_arch = "aarch64")'.dependencies]
-half = { version = "2.4.1", optional = true }

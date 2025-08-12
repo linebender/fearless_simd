@@ -23,7 +23,6 @@ Full documentation at https://github.com/orium/cargo-rdme -->
 See https://linebender.org/blog/doc-include/ for related discussion. -->
 
 [libm]: https://crates.io/crates/libm
-[half]: https://docs.rs/half/latest/half/
 [`f32x4`]: https://docs.rs/fearless_simd/latest/fearless_simd/generated/simd_types/struct.f32x4.html
 [`Simd`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/generated/simd_trait/trait.Simd.html
 [`SimdFrom`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/traits/trait.SimdFrom.html
@@ -108,10 +107,6 @@ The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/fe
 - `libm`: Use floating point implementations from [libm].
 - `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
   beyond the basic SIMD operations abstracted on all platforms.
-- `half`: Use `f16` (16 bit floating point) support from the [half] crate.
-  If this feature isn't enabled, a minimal subset copied (under license) from that same crate is used.
-  Only supported on aarch64, as other supported architectures don't have hardware support for these types.
-  This feature is only useful if the `safe_wrappers` feature is enabled, to use the `core_arch::aarch64::Fp16` type.
 
 At least one of `std` and `libm` is required; `std` overrides `libm`.
 

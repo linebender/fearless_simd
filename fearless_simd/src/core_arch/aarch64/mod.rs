@@ -5,10 +5,6 @@
 
 // These implementations are cut and pasted from pulp.
 
-mod fp16;
-
-pub use fp16::{Fp16, float16x4_t, float16x8_t};
-
 /// A token for Neon intrinsics on aarch64.
 #[derive(Clone, Copy, Debug)]
 pub struct Neon {
