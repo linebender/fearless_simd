@@ -205,7 +205,8 @@ impl Level {
     /// because if Fearless SIMD gets support for an instruction set which is a superset of Neon,
     /// this method will return a value even if that "better" instruction set is available.
     ///
-    /// This is primarily intended to be used if the `safe_wrappers` feature is enabled.
+    /// This can be used in combination with the `safe_wrappers` feature to gain checked access to
+    /// the level-specific SIMD capabilities.
     #[cfg(all(feature = "std", target_arch = "aarch64"))]
     #[inline]
     pub fn as_neon(self) -> Option<Neon> {
@@ -221,7 +222,8 @@ impl Level {
     /// because if Fearless SIMD gets support for an instruction set which is a superset of SIMD 128,
     /// this method will return a value even if that "better" instruction set is available.
     ///
-    /// This is primarily intended to be used if the `safe_wrappers` feature is enabled.
+    /// This can be used in combination with the `safe_wrappers` feature to gain checked access to
+    /// the level-specific SIMD capabilities.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[inline]
     pub fn as_wasm_simd128(self) -> Option<WasmSimd128> {
@@ -237,7 +239,8 @@ impl Level {
     /// because if Fearless SIMD gets support for an instruction set which is a superset of SSE4.2,
     /// this method will return a value even if that "better" instruction set is available.
     ///
-    /// This is primarily intended to be used if the `safe_wrappers` feature is enabled.
+    /// This can be used in combination with the `safe_wrappers` feature to gain checked access to
+    /// the level-specific SIMD capabilities.
     #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
     #[inline]
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
