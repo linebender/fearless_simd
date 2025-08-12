@@ -36,15 +36,16 @@ macro_rules! simd_dispatch {
                 $inner( sse4_2 $( , $arg )* )
             }
             match level {
-                Level::Fallback(fb) => {
+                $crate::Level::Fallback(fb) => {
                     $inner(fb $( , $arg )* )
                 },
                 #[cfg(target_arch = "aarch64")]
-                Level::Neon(neon) => unsafe { inner_neon (neon $( , $arg )* ) }
+                $crate::Level::Neon(neon) => unsafe { inner_neon (neon $( , $arg )* ) }
                 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-                Level::WasmSimd128(wasm) => unsafe { inner_wasm_simd128 (wasm $( , $arg )* ) }
+                $crate::Level::WasmSimd128(wasm) => unsafe { inner_wasm_simd128 (wasm $( , $arg )* ) }
                 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
-                Level::Sse4_2(sse4_2) => unsafe { inner_sse4_2(sse4_2 $( , $arg)* ) }
+                $crate::Level::Sse4_2(sse4_2) => unsafe { inner_sse4_2(sse4_2 $( , $arg)* ) }
+                _ => unreachable!()
             }
         }
     };

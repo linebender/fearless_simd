@@ -14,11 +14,11 @@ For now, prefer updating the package-level readmes, e.g. fearless_simd/README.md
 **Safer and easier SIMD**
 
 [![Latest published version.](https://img.shields.io/crates/v/fearless_simd.svg)](https://crates.io/crates/fearless_simd)
-[![Documentation build status.](https://docs.rs/fearless_simd/badge.svg)](https://docs.rs/fearless_simd)
+[![Documentation build status.](https://img.shields.io/docsrs/fearless_simd.svg)](https://docs.rs/fearless_simd)
 [![Apache 2.0 or MIT license.](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue.svg)](#license)
 \
 [![Linebender Zulip, #simd channel.](https://img.shields.io/badge/Linebender-%23simd-blue?logo=Zulip)](https://xi.zulipchat.com/#narrow/channel/514230-simd)
-[![GitHub Actions CI status.](https://github.com/linebender/fearless_simd/workflows/CI/badge.svg)](https://github.com/linebender/fearless_simd/actions)
+[![GitHub Actions CI status.](https://img.shields.io/github/actions/workflow/status/linebender/fearless_simd/ci.yml?logo=github&label=CI)](https://github.com/linebender/fearless_simd/actions)
 [![Dependency staleness status.](https://deps.rs/repo/github/linebender/fearless_simd/status.svg)](https://deps.rs/repo/github/linebender/fearless_simd)
 
 </div>
@@ -31,7 +31,7 @@ For now, prefer updating the package-level readmes, e.g. fearless_simd/README.md
 
 ## Motivation
 
-This crate proposes an experimental way to use SIMD intrinsics reasonably safely, using the new [target_feature 1.1] feature in Rust, recently stabilized.
+This crate proposes an experimental way to use SIMD intrinsics reasonably safely.
 The blog post [A plan for SIMD] contains the high level motivations, goal, and summary for Fearless SIMD.
 
 ## History
