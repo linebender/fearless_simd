@@ -1,6 +1,11 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#![expect(
+    clippy::missing_safety_doc,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+
 //! Access to AVX2 intrinsics.
 
 use crate::impl_macros::delegate;

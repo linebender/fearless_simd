@@ -17,6 +17,10 @@ pub struct Sse3 {
     _private: (),
 }
 
+#[expect(
+    clippy::missing_safety_doc,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
 impl Sse3 {
     /// Create a SIMD token.
     ///
