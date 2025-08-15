@@ -52,7 +52,7 @@ macro_rules! simd_dispatch {
                 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
                 $crate::Level::Sse4_2(sse4_2) => unsafe { inner_sse4_2(sse4_2 $( , $arg)* ) }
                 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
-                Level::Avx2(avx2) => unsafe { inner_avx2(avx2 $( , $arg)* ) }
+                $crate::Level::Avx2(avx2) => unsafe { inner_avx2(avx2 $( , $arg)* ) }
                 _ => unreachable!()
             }
         }
