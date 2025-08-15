@@ -94,7 +94,7 @@ fn mk_simd_impl() -> TokenStream {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
-            
+
             let method = make_method(method, sig, vec_ty, Sse4_2, 128);
 
             methods.push(method);
