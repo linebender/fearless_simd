@@ -156,6 +156,7 @@ pub enum Level {
     /// The SSE4.2 instruction set on (32 and 64 bit) x86.
     #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
     Sse4_2(Sse4_2),
+    /// The AVX2 and FMA instruction set on (32 and 64 bit) x86.
     #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
     Avx2(Avx2),
     // If new variants are added, make sure to handle them in `Level::dispatch`
@@ -240,6 +241,14 @@ impl Level {
         }
     }
 
+    /// If this is a proof that AVX2 and FMA (or better) is available, access that instruction set.
+    ///
+    /// This method should be preferred over matching against the `AVX2` variant of self,
+    /// because if Fearless SIMD gets support for an instruction set which is a superset of AVX2,
+    /// this method will return a value even if that "better" instruction set is available.
+    ///
+    /// This can be used in combination with the `safe_wrappers` feature to gain checked access to
+    /// the level-specific SIMD capabilities.
     #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
     #[inline]
     pub fn as_avx2(self) -> Option<Avx2> {
