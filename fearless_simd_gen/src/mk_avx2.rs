@@ -82,6 +82,8 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for (method, sig) in ops_for_type(vec_ty, true) {
+            // TODO: Right now, we are basically adding the same methods as for SSE4.2 (except for
+            // FMA). In the future, we'll obviously want to use AVX2 intrinsics for 256 bit.
             let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
 
@@ -92,7 +94,7 @@ fn mk_simd_impl() -> TokenStream {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
-
+            
             let method = make_method(method, sig, vec_ty, Sse4_2, 128);
 
             methods.push(method);
