@@ -14,6 +14,7 @@ use proc_macro2::TokenStream;
 
 mod arch;
 mod generic;
+mod mk_avx2;
 mod mk_fallback;
 mod mk_neon;
 mod mk_ops;
@@ -23,6 +24,7 @@ mod mk_sse4_2;
 mod mk_wasm;
 mod ops;
 mod types;
+mod x86_common;
 
 #[derive(Clone, Copy, ValueEnum, Debug)]
 enum Module {
@@ -33,6 +35,7 @@ enum Module {
     Wasm,
     Fallback,
     Sse4_2,
+    Avx2,
 }
 
 #[derive(Parser)]
@@ -62,6 +65,7 @@ impl Module {
             Module::Wasm => mk_wasm::mk_wasm128_impl(mk_wasm::Level::WasmSimd128),
             Module::Fallback => mk_fallback::mk_fallback_impl(),
             Module::Sse4_2 => mk_sse4_2::mk_sse4_2_impl(),
+            Module::Avx2 => mk_avx2::mk_avx2_impl(),
         }
     }
 
@@ -100,6 +104,7 @@ impl Module {
             Module::Fallback => "fallback",
             Module::Wasm => "wasm",
             Module::Sse4_2 => "sse4_2",
+            Module::Avx2 => "avx2",
         }
     }
 }
@@ -112,6 +117,7 @@ const MODULES: &[Module] = &[
     Module::Fallback,
     Module::Wasm,
     Module::Sse4_2,
+    Module::Avx2,
 ];
 
 const FILE_BASE: &str = "./fearless_simd/src/generated";

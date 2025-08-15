@@ -35,6 +35,12 @@ macro_rules! simd_dispatch {
             unsafe fn inner_sse4_2(sse4_2: $crate::x86::Sse4_2 $( , $arg: $ty )* ) $( -> $ret )? {
                 $inner( sse4_2 $( , $arg )* )
             }
+            #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+            #[target_feature(enable = "avx2,fma")]
+            #[inline]
+            unsafe fn inner_avx2(avx2: $crate::x86::Avx2 $( , $arg: $ty )* ) $( -> $ret )? {
+                $inner( avx2 $( , $arg )* )
+            }
             match level {
                 $crate::Level::Fallback(fb) => {
                     $inner(fb $( , $arg )* )
@@ -45,6 +51,8 @@ macro_rules! simd_dispatch {
                 $crate::Level::WasmSimd128(wasm) => unsafe { inner_wasm_simd128 (wasm $( , $arg )* ) }
                 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
                 $crate::Level::Sse4_2(sse4_2) => unsafe { inner_sse4_2(sse4_2 $( , $arg)* ) }
+                #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+                $crate::Level::Avx2(avx2) => unsafe { inner_avx2(avx2 $( , $arg)* ) }
                 _ => unreachable!()
             }
         }
