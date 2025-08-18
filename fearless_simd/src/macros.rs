@@ -78,6 +78,7 @@ macro_rules! simd_dispatch {
                 Level::Fallback(fb) => $inner(fb $( , $arg )* ),
                 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
                 Level::WasmSimd128(wasm) => unsafe { inner_wasm_simd128 (wasm $( , $arg )* ) }
+                _ => unreachable!()
             }
         }
     };
