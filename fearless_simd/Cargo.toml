@@ -4,12 +4,12 @@ version = "0.2.0"
 license.workspace = true
 edition.workspace = true
 repository.workspace = true
+rust-version.workspace = true
 authors = ["Raph Levien <raph.levien@gmail.com>"]
 keywords = ["simd"]
 categories = ["hardware-support"]
 description = "Safer and easier SIMD"
 readme = "README.md"
-rust-version = "1.85"
 
 [package.metadata.docs.rs]
 all-features = true
