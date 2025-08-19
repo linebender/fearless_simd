@@ -68,6 +68,11 @@
 //! then select the appropriate one for your user's browser.
 //! TODO: Expand on this.
 //!
+//! ## Credits
+//!
+//! This crate was inspired by [`pulp`], [`std::simd`], among others in the Rust ecosystem, though makes many decisions differently.
+//! It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
+//!
 //! # Feature Flags
 //!
 //! The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
@@ -78,6 +83,8 @@
 //!   beyond the basic SIMD operations abstracted on all platforms.
 //!
 //! At least one of `std` and `libm` is required; `std` overrides `libm`.
+//!
+//! [`pulp`]: https://crates.io/crates/pulp
 // LINEBENDER LINT SET - lib.rs - v3
 // See https://linebender.org/wiki/canonical-lints/
 // These lints shouldn't apply to examples or tests.
