@@ -29,36 +29,33 @@ For now, prefer updating the package-level readmes, e.g. fearless_simd/README.md
 > being developed in conjunction with the [Vello Sparse
 > Strips](https://github.com/linebender/vello/) renderer.
 
+Full details of how to use Fearless SIMD can be found in the [Fearless SIMD package's README](./fearless_simd/README.md).
+
 ## Motivation
 
 This crate proposes an experimental way to use SIMD intrinsics reasonably safely.
 The blog post [A plan for SIMD] contains the high level motivations, goal, and summary for Fearless SIMD.
 
+## Repository Structure
+
+The only package which is published to crates.io from this repository is Fearless SIMD, which can be found in the `fearless_simd` folder.
+This folder also contains the examples.
+The other packages are as follows:
+
+- `fearless_simd_gen`: A code generator, used to generate the low signal-to-noise parts of the Fearless SIMD crate.
+- `fearless_simd_tests`: Tests of functionality in Fearless SIMD, to validate that all implementations give the same and correct results.
+- `fearless_simd_dev_macros`: Procedural macros used in `fearless_simd_tests` to generate versions of each test for each SIMD level supported on the current machine.
+
 ## History
 
 A [much earlier version][fearless_simd 0.1.1] of this crate experimented with an approach that tried to accomplish safety in safe Rust as of 2018, using types that witnessed the SIMD capability of the CPU. There is a blog post, [Towards fearless SIMD], that wrote up the experiment. That approach couldn't quite be made to work, but was an interesting exploration at the time. A practical development along roughly similar lines is the [pulp] crate.
 
-For more discussion about this crate, see [Towards fearless SIMD, 7 years later]. A planned future direction is to autogenerate the the SIMD types and methods, rather than having to maintain a significant amount of boilerplate code.
-
-## SIMD types
-
-The SIMD types in this crate are a thin newtype around the corresponding array, for example `f32x4` is a newtype for `[f32; 4]`, and also contains a zero-sized token representing a witness to the CPU level. These types are in the crate root and have a number of methods, including loading and storing, that do not require intrinsics. The SIMD types are aligned, but this only affects storage.
-
-## Levels
-
-A central idea is "levels," which represent a set of target features. Each level has a corresponding module. Each module for a level has a number of submodules, one for each type (though with an underscore instead of `x` to avoid name collision), with a large number of free functions for SIMD operations that operate on that type.
-
-On aarch64, the level is `neon`.
-
-On x86-64, the planned supported level is `avx2`. This is actually short for the x86-64-v3 [microarchitecture level][x86-64 microarchitecture levels], which corresponds roughly to Haswell. The `avx512` level is also planned, which is x86-64-v4.
-
-On wasm, the level is `simd128`.
+For more discussion about this crate, see [Towards fearless SIMD, 7 years later].
 
 ## Credits
 
-This crate was inspired by [pulp], [std::simd], among others in the Rust ecosystem, though makes many decisions differently. It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
-
-The proc macro was strongly inspired by the [safe-arch-macro] in [rbrotli-enc].
+This crate was inspired by [`pulp`], [std::simd], among others in the Rust ecosystem, though makes many decisions differently.
+It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
 
 ## Minimum supported Rust Version (MSRV)
 
@@ -97,8 +94,5 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 [pulp]: https://crates.io/crates/pulp
 [Towards fearless SIMD]: https://raphlinus.github.io/rust/simd/2018/10/19/fearless-simd.html
 [fearless_simd 0.1.1]: https://crates.io/crates/fearless_simd/0.1.1
-[x86-64 microarchitecture levels]: https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
 [std::simd]: https://doc.rust-lang.org/std/simd/index.html
-[safe-arch-macro]: https://github.com/google/rbrotli-enc/blob/ce44d008ff1beff1eee843e808542d01951add45/safe-arch-macro/src/lib.rs
-[rbrotli-enc]: https://github.com/google/rbrotli-enc
 [Towards fearless SIMD, 7 years later]: https://linebender.org/blog/towards-fearless-simd/

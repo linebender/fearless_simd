@@ -14,6 +14,12 @@
 
 </div>
 
+> [!CAUTION]
+> Fearless SIMD is in extremely early experimental development. As such, there are no stability
+> guarantees, APIs are incomplete, and architectures have missing implementations. Fearless SIMD is
+> being developed in conjunction with the [Vello Sparse
+> Strips](https://github.com/linebender/vello/) renderer.
+
 <!-- We use cargo-rdme to update the README with the contents of lib.rs.
 To edit the following section, update it in lib.rs, then run:
 cargo rdme --workspace-project=fearless_simd --heading-base-level=0
@@ -30,6 +36,7 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 [`simd_dispatch`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/macros/macro.simd_dispatch.html
 [`Level`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/enum.Level.html
 [`Level::new`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/enum.Level.html#method.new
+[`std::simd`]: https://doc.rust-lang.org/std/simd/index.html
 <!-- cargo-rdme start -->
 
 A helper library to make SIMD more friendly.
@@ -99,6 +106,11 @@ WASM SIMD doesn't have feature detection, and so you need to compile two version
 then select the appropriate one for your user's browser.
 TODO: Expand on this.
 
+## Credits
+
+This crate was inspired by [`pulp`], [`std::simd`], among others in the Rust ecosystem, though makes many decisions differently.
+It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
+
 # Feature Flags
 
 The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
@@ -109,6 +121,8 @@ The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/fe
   beyond the basic SIMD operations abstracted on all platforms.
 
 At least one of `std` and `libm` is required; `std` overrides `libm`.
+
+[`pulp`]: https://crates.io/crates/pulp
 
 <!-- cargo-rdme end -->
 
