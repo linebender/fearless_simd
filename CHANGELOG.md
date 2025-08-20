@@ -8,7 +8,7 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 # Changelog
 
-The latest published Color release is [0.1.1](#011-2018-11-05) which was released on 2018-11-05.
+The latest published Fearless SIMD release is [0.1.1](#011-2018-11-05) which was released on 2018-11-05.
 You can find its changes [documented below](#011-2018-11-05).
 
 ## [Unreleased]
@@ -32,7 +32,7 @@ No changelog was kept for this release.
 <!-- No contributors or PRs discussed yet, but they go here -->
 <!-- [@x]: https://github.com/x -->
 
-<!-- [#x]: https://github.com/linebender/color/pull/x -->
+<!-- [#x]: https://github.com/linebender/fearless_simd/pull/x -->
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...HEAD
 <!-- [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0 -->
