@@ -8,7 +8,7 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 # Changelog
 
-The latest published Color release is [0.1.1](#011-2018-11-05) which was released on 2025-11-05.
+The latest published Color release is [0.1.1](#011-2018-11-05) which was released on 2018-11-05.
 You can find its changes [documented below](#011-2018-11-05).
 
 ## [Unreleased]
