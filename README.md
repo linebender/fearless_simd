@@ -46,8 +46,6 @@ The other packages are as follows:
 - `fearless_simd_tests`: Tests of functionality in Fearless SIMD, to validate that all implementations give the same and correct results.
 - `fearless_simd_dev_macros`: Procedural macros used in `fearless_simd_tests` to generate versions of each test for each SIMD level supported on the current machine.
 
-## Repository structure
-
 ## History
 
 A [much earlier version][fearless_simd 0.1.1] of this crate experimented with an approach that tried to accomplish safety in safe Rust as of 2018, using types that witnessed the SIMD capability of the CPU. There is a blog post, [Towards fearless SIMD], that wrote up the experiment. That approach couldn't quite be made to work, but was an interesting exploration at the time. A practical development along roughly similar lines is the [pulp] crate.
