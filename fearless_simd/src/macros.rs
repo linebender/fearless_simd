@@ -6,12 +6,21 @@
 /// Defines a new function which dispatches to a SIMD-generic function, enabling the correct
 /// target features.
 ///
+/// The `fn` token in the definition can be prefixed with a visibility (e.g. `pub`),
+/// to set the visibility of the outer function.
+/// We recommend that the implementation function remains private, and
+/// should only be called through the dispatch function.
+/// (The exact patterns for SIMD functions using Fearleess SIMD have not
+/// yet been designed/enumerated).
+///
 /// The implementation function (which is outside of this macro) *should* have the
 /// `#[inline(always)]` attribute.
 /// There are likely to be severe performance consequences if this is not the case, as
 /// Rust will be unable to inline SIMD intrinsics in that case.
 ///
 /// The `fn` token in the definition can be prefixed with `unsafe`, to allow an unsafe inner function.
+/// The safety comment added by you in the call to  `simd_dispatch` the function must have
+/// the preconditions required to call the inner function.
 ///
 /// # Examples
 ///
