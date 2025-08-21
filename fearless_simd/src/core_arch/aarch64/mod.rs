@@ -2138,8 +2138,8 @@ impl Neon {
         fn vdup_n_p8(value: p8) -> poly8x8_t;
         fn vdup_n_p16(value: p16) -> poly16x4_t;
         fn vdup_n_f32(value: f32) -> float32x2_t;
-        fn vldrq_p128(a: *const p128) -> p128;
-        fn vstrq_p128(a: *mut p128, b: p128);
+        unsafe fn vldrq_p128(a: *const p128) -> p128;
+        unsafe fn vstrq_p128(a: *mut p128, b: p128);
         fn vmov_n_s8(value: i8) -> int8x8_t;
         fn vmov_n_s16(value: i16) -> int16x4_t;
         fn vmov_n_s32(value: i32) -> int32x2_t;
