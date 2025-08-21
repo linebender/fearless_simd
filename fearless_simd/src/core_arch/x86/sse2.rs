@@ -34,8 +34,7 @@ impl Sse2 {
 
     delegate! { arch:
         fn _mm_pause();
-        #[allow(clippy::not_unsafe_ptr_arg_deref)]
-        fn _mm_clflush(p: *const u8);
+        unsafe fn _mm_clflush(p: *const u8);
         fn _mm_lfence();
         fn _mm_mfence();
         fn _mm_add_epi8(a: __m128i, b: __m128i) -> __m128i;

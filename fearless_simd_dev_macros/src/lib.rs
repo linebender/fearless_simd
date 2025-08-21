@@ -126,43 +126,41 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 // You can update below functions if you want to exclude certain tests from different architectures
 // (for example because they haven't been implemented yet).
 
-#[allow(dead_code, reason = "on purpose.")]
-#[allow(unused_variables, reason = "on purpose.")]
-fn exclude_neon(name: &str) -> bool {
+#[allow(clippy::allow_attributes, reason = "Lints only apply in some cfgs.")]
+#[allow(dead_code, reason = "Used only on aarch64, but always type-checked.")]
+fn exclude_neon(_test_name: &str) -> bool {
     false
 }
 
-#[allow(dead_code, reason = "on purpose.")]
-#[allow(unused_variables, reason = "on purpose.")]
-fn exclude_fallback(name: &str) -> bool {
+fn exclude_fallback(_test_name: &str) -> bool {
     false
 }
 
-#[allow(dead_code, reason = "on purpose.")]
-#[allow(unused_variables, reason = "on purpose.")]
-fn exclude_sse4(name: &str) -> bool {
+#[allow(clippy::allow_attributes, reason = "Lints only apply in some cfgs.")]
+#[allow(dead_code, reason = "Used only on x86(-64), but always type-checked.")]
+fn exclude_sse4(test_name: &str) -> bool {
     matches!(
-        name,
+        test_name,
         // works incorrectly for any values larger than i32::MAX and smaller than 0.
         "cvt_u32_f32x4" | "cvt_f32_u32x4" | "saturate_float_to_int",
-    ) || name.contains("precise")
+    ) || test_name.contains("precise")
 }
 
-#[allow(dead_code, reason = "on purpose.")]
-#[allow(unused_variables, reason = "on purpose.")]
-fn exclude_avx2(name: &str) -> bool {
+#[allow(clippy::allow_attributes, reason = "Lints only apply in some cfgs.")]
+#[allow(dead_code, reason = "Used only on x86(-64), but always type-checked.")]
+fn exclude_avx2(test_name: &str) -> bool {
     matches!(
-        name,
+        test_name,
         // works incorrectly for any values larger than i32::MAX and smaller than 0.
         "cvt_u32_f32x4" | "cvt_f32_u32x4" | "saturate_float_to_int",
-    ) || name.contains("precise")
+    ) || test_name.contains("precise")
 }
 
-#[allow(dead_code, reason = "on purpose.")]
-#[allow(unused_variables, reason = "on purpose.")]
-fn exclude_wasm(name: &str) -> bool {
+#[allow(clippy::allow_attributes, reason = "Lints only apply in some cfgs.")]
+#[allow(dead_code, reason = "Used only on wasm32, but always type-checked.")]
+fn exclude_wasm(test_name: &str) -> bool {
     matches!(
-        name,
+        test_name,
         "min_precise_f32x4_with_nan" | "max_precise_f32x4_with_nan"
     )
 }

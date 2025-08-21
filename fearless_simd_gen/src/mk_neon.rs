@@ -236,11 +236,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let args = [quote! { a.into() }, quote! { b.into() }];
                     if method == "copysign" {
                         let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
-                        let unsigned_ty = VecType::new(
-                            crate::types::ScalarType::Unsigned,
-                            vec_ty.scalar_bits,
-                            vec_ty.len,
-                        );
+                        let unsigned_ty =
+                            VecType::new(ScalarType::Unsigned, vec_ty.scalar_bits, vec_ty.len);
                         let sign_mask =
                             Neon.expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
                         let vbsl = simple_intrinsic("vbsl", vec_ty);
