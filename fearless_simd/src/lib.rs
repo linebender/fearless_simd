@@ -337,8 +337,7 @@ impl Level {
         #[cfg(target_arch = "aarch64")]
         #[target_feature(enable = "neon")]
         #[inline]
-        // unsafe not needed here with tf11, but can be justified
-        unsafe fn dispatch_neon<W: WithSimd>(f: W, neon: Neon) -> W::Output {
+        fn dispatch_neon<W: WithSimd>(f: W, neon: Neon) -> W::Output {
             f.with_simd(neon)
         }
 
@@ -351,14 +350,14 @@ impl Level {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         #[target_feature(enable = "sse4.2")]
         #[inline]
-        unsafe fn dispatch_sse4_2<W: WithSimd>(f: W, sse4_2: Sse4_2) -> W::Output {
+        fn dispatch_sse4_2<W: WithSimd>(f: W, sse4_2: Sse4_2) -> W::Output {
             f.with_simd(sse4_2)
         }
 
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         #[target_feature(enable = "avx2,fma")]
         #[inline]
-        unsafe fn dispatch_avx2<W: WithSimd>(f: W, avx2: Avx2) -> W::Output {
+        fn dispatch_avx2<W: WithSimd>(f: W, avx2: Avx2) -> W::Output {
             f.with_simd(avx2)
         }
 
