@@ -19,7 +19,6 @@ macro_rules! delegate {
         ) $(-> $ret: ty)?;
     )*) => {
         $(
-            #[allow(clippy::not_unsafe_ptr_arg_deref, reason = "TODO: https://github.com/linebender/fearless_simd/issues/40")]
             #[doc=concat!("See [`", stringify!($prefix), "::", stringify!($func), "`].")]
             $(#[$attr])*
             #[inline(always)]

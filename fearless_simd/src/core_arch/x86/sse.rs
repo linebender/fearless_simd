@@ -125,7 +125,7 @@ impl Sse {
         unsafe fn _mm_storer_ps(p: *mut f32, a: __m128);
         fn _mm_move_ss(a: __m128, b: __m128) -> __m128;
         fn _mm_sfence();
-        #[allow(clippy::not_unsafe_ptr_arg_deref)]
+        #[expect(clippy::not_unsafe_ptr_arg_deref, reason="Prefetch has no preconditions, so is valid to accept a pointer.")]
         fn _mm_prefetch<const STRATEGY: i32>(p: *const i8);
         fn _mm_undefined_ps() -> __m128;
         #[allow(non_snake_case)]
