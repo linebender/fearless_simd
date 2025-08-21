@@ -78,6 +78,7 @@
 //! The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
 //!
 //! - `std` (enabled by default): Get floating point functions from the standard library (likely using your target's libc).
+//!   Also allows using [`Level::new`] on all platforms, to detect which target features are enabled.
 //! - `libm`: Use floating point implementations from [libm].
 //! - `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
 //!   beyond the basic SIMD operations abstracted on all platforms.
@@ -125,7 +126,7 @@ pub use generated::*;
 pub use traits::*;
 
 /// Implementations of [`Simd`] for 64 bit ARM.
-#[cfg(all(feature = "std", target_arch = "aarch64"))]
+#[cfg(target_arch = "aarch64")]
 pub mod aarch64 {
     pub use crate::generated::Neon;
 }
@@ -137,7 +138,7 @@ pub mod wasm32 {
 }
 
 /// Implementations of [`Simd`] on x86 architectures (both 32 and 64 bit).
-#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub mod x86 {
     pub use crate::generated::Avx2;
     pub use crate::generated::Sse4_2;
@@ -153,18 +154,19 @@ pub enum Level {
     /// Scalar fallback level, i.e. no supported SIMD features are to be used.
     ///
     /// This can be created with [`Level::fallback`].
+    // TODO: Allow not compiling this in (probably only on web, but maybe elsewhere?)
     Fallback(Fallback),
     /// The Neon instruction set on 64 bit ARM.
-    #[cfg(all(feature = "std", target_arch = "aarch64"))]
+    #[cfg(target_arch = "aarch64")]
     Neon(Neon),
     /// The SIMD 128 instructions on 32-bit WebAssembly.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     WasmSimd128(WasmSimd128),
     /// The SSE4.2 instruction set on (32 and 64 bit) x86.
-    #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Sse4_2(Sse4_2),
     /// The AVX2 and FMA instruction set on (32 and 64 bit) x86.
-    #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Avx2(Avx2),
     // If new variants are added, make sure to handle them in `Level::dispatch`
     // and `simd_dispatch`
@@ -175,15 +177,42 @@ impl Level {
     ///
     /// If no SIMD instruction set is available, a scalar fallback will be used instead.
     ///
+    /// This function requires the standard library, to use the
+    /// [`is_x86_feature_detected`](std::arch::is_x86_feature_detected)
+    /// or [`is_aarch64_feature_detected`](std::arch::is_aarch64_feature_detected).
+    /// If you are on wasm32, you can use `Level::new_wasm` instead.
+    ///
+    /// Note that in most cases, this function should only be called by end-user applications.
+    /// Libraries should instead accept a `Level` argument, probably as they are
+    /// creating their data structures, then storing the level for any computations.
+    /// Libraries which wish to abstract away SIMD usage for their common-case clients,
+    /// should make their non-`Level` entrypoint match this function's `cfg`; to instead
+    /// handle this at runtime, they can use [`try_detect`](Self::try_detect),
+    /// handling the `None` case as they deem fit (probably panicking).
+    /// This strategy avoids users of the library inadvertently using the fallback level,
+    /// even if the requisite target features are available.
+    ///
+    /// If you are on an embedded device where these macros are not supported,
+    /// you should construct the relevant variants yourself, using whatever
+    /// way your specific chip supports accessing the current level.
+    ///
     /// This value will be passed to functions generated using [`simd_dispatch`].
+    #[cfg(any(feature = "std", target_arch = "wasm32"))]
+    #[must_use]
     pub fn new() -> Self {
-        #[cfg(all(feature = "std", target_arch = "aarch64"))]
+        #[cfg(target_arch = "aarch64")]
         if std::arch::is_aarch64_feature_detected!("neon") {
             return unsafe { Level::Neon(Neon::new_unchecked()) };
         }
-        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-        return Level::WasmSimd128(WasmSimd128::new_unchecked());
-        #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+        #[cfg(target_arch = "wasm32")]
+        {
+            // WASM always either has the SIMD feature compiled in or not.
+            #[cfg(target_feature = "simd128")]
+            return Level::WasmSimd128(WasmSimd128::new_unchecked());
+            #[cfg(not(target_feature = "simd128"))]
+            return Level::fallback();
+        }
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
             if std::arch::is_x86_feature_detected!("avx2")
                 && std::arch::is_x86_feature_detected!("fma")
@@ -193,8 +222,22 @@ impl Level {
                 return unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) };
             }
         }
-        #[cfg(not(all(target_arch = "wasm32", target_feature = "simd128")))]
+        #[cfg(not(target_arch = "wasm32"))]
         Self::fallback()
+    }
+
+    /// Get the target feature level suitable for this run.
+    ///
+    /// Should be used in libraries if they wish to handle the case where
+    /// target features cannot be detected at runtime.
+    /// Most users should prefer [`new`](Self::new).
+    /// This is discussed in more detail in `new`'s documentation.
+    #[allow(clippy::allow_attributes, reason = "Only needed in some cfgs.")]
+    #[allow(unreachable_code, reason = "Fallback unreachable in some cfgs.")]
+    pub fn try_detect() -> Option<Self> {
+        #[cfg(any(feature = "std", target_arch = "wasm32"))]
+        return Some(Self::new());
+        None
     }
 
     /// If this is a proof that Neon (or better) is available, access that instruction set.
@@ -205,7 +248,7 @@ impl Level {
     ///
     /// This can be used in combination with the `safe_wrappers` feature to gain checked access to
     /// the level-specific SIMD capabilities.
-    #[cfg(all(feature = "std", target_arch = "aarch64"))]
+    #[cfg(target_arch = "aarch64")]
     #[inline]
     pub fn as_neon(self) -> Option<Neon> {
         match self {
@@ -239,7 +282,7 @@ impl Level {
     ///
     /// This can be used in combination with the `safe_wrappers` feature to gain checked access to
     /// the level-specific SIMD capabilities.
-    #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[inline]
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
         match self {
@@ -256,7 +299,7 @@ impl Level {
     ///
     /// This can be used in combination with the `safe_wrappers` feature to gain checked access to
     /// the level-specific SIMD capabilities.
-    #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[inline]
     pub fn as_avx2(self) -> Option<Avx2> {
         match self {
@@ -291,7 +334,7 @@ impl Level {
     /// [enabled]: https://doc.rust-lang.org/reference/attributes/codegen.html#the-target_feature-attribute
     #[inline]
     pub fn dispatch<W: WithSimd>(self, f: W) -> W::Output {
-        #[cfg(all(feature = "std", target_arch = "aarch64"))]
+        #[cfg(target_arch = "aarch64")]
         #[target_feature(enable = "neon")]
         #[inline]
         // unsafe not needed here with tf11, but can be justified
@@ -305,14 +348,14 @@ impl Level {
             f.with_simd(simd128)
         }
 
-        #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         #[target_feature(enable = "sse4.2")]
         #[inline]
         unsafe fn dispatch_sse4_2<W: WithSimd>(f: W, sse4_2: Sse4_2) -> W::Output {
             f.with_simd(sse4_2)
         }
 
-        #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         #[target_feature(enable = "avx2,fma")]
         #[inline]
         unsafe fn dispatch_avx2<W: WithSimd>(f: W, avx2: Avx2) -> W::Output {
@@ -325,13 +368,13 @@ impl Level {
         }
 
         match self {
-            #[cfg(all(feature = "std", target_arch = "aarch64"))]
+            #[cfg(target_arch = "aarch64")]
             Level::Neon(neon) => unsafe { dispatch_neon(f, neon) },
             #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
             Level::WasmSimd128(simd128) => dispatch_simd128(f, simd128),
-            #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             Level::Sse4_2(sse4_2) => unsafe { dispatch_sse4_2(f, sse4_2) },
-            #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             Level::Avx2(avx2) => unsafe { dispatch_avx2(f, avx2) },
             Level::Fallback(fallback) => dispatch_fallback(f, fallback),
         }

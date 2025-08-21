@@ -8,7 +8,6 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-#[cfg(feature = "std")]
 #[macro_export]
 macro_rules! simd_dispatch {
     (
@@ -53,31 +52,6 @@ macro_rules! simd_dispatch {
                 $crate::Level::Sse4_2(sse4_2) => unsafe { inner_sse4_2(sse4_2 $( , $arg)* ) }
                 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
                 $crate::Level::Avx2(avx2) => unsafe { inner_avx2(avx2 $( , $arg)* ) }
-                _ => unreachable!()
-            }
-        }
-    };
-}
-
-#[cfg(not(feature = "std"))]
-#[macro_export]
-macro_rules! simd_dispatch {
-    (
-        $( #[$meta:meta] )* $vis:vis
-        $func:ident ( level $( , $arg:ident : $ty:ty $(,)? )* ) $( -> $ret:ty )?
-        = $inner:ident
-    ) => {
-        $( #[$meta] )* $vis
-        fn $func(level: $crate::Level $(, $arg: $ty )*) $( -> $ret )? {
-            #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-            #[inline]
-            unsafe fn inner_wasm_simd128(simd128: $crate::wasm32::WasmSimd128 $( , $arg: $ty )* ) $( -> $ret )? {
-                $inner( simd128 $( , $arg )* )
-            }
-            match level {
-                Level::Fallback(fb) => $inner(fb $( , $arg )* ),
-                #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-                Level::WasmSimd128(wasm) => unsafe { inner_wasm_simd128 (wasm $( , $arg )* ) }
                 _ => unreachable!()
             }
         }
