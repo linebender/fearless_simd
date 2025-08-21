@@ -13,7 +13,7 @@ You can find its changes [documented below](#011-2018-11-05).
 
 ## [Unreleased]
 
-This release has an [MSRV][] of 1.85.
+This release has an [MSRV][] of 1.86.
 
 There has been a complete rewrite of Fearless SIMD.
 For some details of the ideas used, see our blog post [*Towards fearless SIMD, 7 years later*](https://linebender.org/blog/towards-fearless-simd/).
