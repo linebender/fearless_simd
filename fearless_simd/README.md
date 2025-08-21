@@ -63,7 +63,7 @@ use fearless_simd::{Simd, simd_dispatch};
 #[inline(always)]
 fn sigmoid_impl<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { /* ... */ }
 
-simd_dispatch!(sigmoid(level, x: &[f32], out: &mut [f32]) = sigmoid_impl);
+simd_dispatch!(fn sigmoid(level, x: &[f32], out: &mut [f32]) = sigmoid_impl);
 ```
 
 A few things to note:
