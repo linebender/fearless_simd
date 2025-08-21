@@ -20,7 +20,8 @@ all-features = true
 
 [features]
 default = ["std"]
-# Get floating point functions from the standard library (likely using your targets libc)
+# Get floating point functions from the standard library (likely using your targets libc).
+# Also allows using `Level::new` on all platforms, to detect which target features are enabled
 std = []
 # Use floating point implementations from libm
 libm = ["dep:libm"]

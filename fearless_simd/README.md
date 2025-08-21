@@ -116,6 +116,7 @@ It benefited from conversations with Luca Versari, though he is not responsible 
 The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
 
 - `std` (enabled by default): Get floating point functions from the standard library (likely using your target's libc).
+  Also allows using [`Level::new`] on all platforms, to detect which target features are enabled.
 - `libm`: Use floating point implementations from [libm].
 - `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
   beyond the basic SIMD operations abstracted on all platforms.
