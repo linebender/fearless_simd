@@ -30,7 +30,7 @@ fn foo_inner<S: Simd>(simd: S, x: f32) -> f32 {
     simd.splat_f32x4(x).sqrt()[0]
 }
 
-simd_dispatch!(foo(level, x: f32) -> f32 = foo_inner);
+simd_dispatch!(fn foo(level, x: f32) -> f32 = foo_inner);
 
 // currently requires `safe_wrappers` feature
 fn do_something_on_neon(_level: Level) -> f32 {

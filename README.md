@@ -59,7 +59,7 @@ It benefited from conversations with Luca Versari, though he is not responsible 
 
 ## Minimum supported Rust Version (MSRV)
 
-This version of Fearless SIMD has been verified to compile with **Rust 1.85** and later.
+This version of Fearless SIMD has been verified to compile with **Rust 1.86** and later.
 
 Future versions of Fearless SIMD might increase the Rust version requirement.
 It will not be treated as a breaking change and as such can even happen with small patch releases.

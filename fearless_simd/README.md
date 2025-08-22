@@ -63,7 +63,7 @@ use fearless_simd::{Simd, simd_dispatch};
 #[inline(always)]
 fn sigmoid_impl<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { /* ... */ }
 
-simd_dispatch!(sigmoid(level, x: &[f32], out: &mut [f32]) = sigmoid_impl);
+simd_dispatch!(fn sigmoid(level, x: &[f32], out: &mut [f32]) = sigmoid_impl);
 ```
 
 A few things to note:
@@ -129,7 +129,7 @@ At least one of `std` and `libm` is required; `std` overrides `libm`.
 
 ## Minimum supported Rust Version (MSRV)
 
-This version of Fearless SIMD has been verified to compile with **Rust 1.85** and later.
+This version of Fearless SIMD has been verified to compile with **Rust 1.86** and later.
 
 Future versions of Fearless SIMD might increase the Rust version requirement.
 It will not be treated as a breaking change and as such can even happen with small patch releases.

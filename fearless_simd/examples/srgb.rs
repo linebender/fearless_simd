@@ -67,7 +67,7 @@ fn to_srgb_impl<S: Simd>(simd: S, rgba: [f32; 4]) -> [f32; 4] {
     result.into()
 }
 
-simd_dispatch!(to_srgb(level, rgba: [f32; 4]) -> [f32; 4] = to_srgb_impl);
+simd_dispatch!(fn to_srgb(level, rgba: [f32; 4]) -> [f32; 4] = to_srgb_impl);
 
 fn main() {
     let level = Level::new();
