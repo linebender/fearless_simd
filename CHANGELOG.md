@@ -8,14 +8,14 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 # Changelog
 
-The latest published Fearless SIMD release is [0.2.0](#020-2025-08-27) which was released on 2025-08-27.
-You can find its changes [documented below](#020-2025-08-27).
+The latest published Fearless SIMD release is [0.2.0](#020-2025-08-26) which was released on 2025-08-26.
+You can find its changes [documented below](#020-2025-08-26).
 
 ## [Unreleased]
 
 This release has an [MSRV][] of 1.86.
 
-## [0.2.0][] (2025-08-27)
+## [0.2.0][] (2025-08-26)
 
 There has been a complete rewrite of Fearless SIMD.
 For some details of the ideas used, see our blog post [*Towards fearless SIMD, 7 years later*](https://linebender.org/blog/towards-fearless-simd/).
