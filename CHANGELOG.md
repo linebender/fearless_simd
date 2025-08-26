@@ -15,7 +15,7 @@ You can find its changes [documented below](#020-2025-08-27).
 
 This release has an [MSRV][] of 1.86.
 
-## [0.2.0] (2025-08-27)
+## [0.2.0][] (2025-08-27)
 
 There has been a complete rewrite of Fearless SIMD.
 For some details of the ideas used, see our blog post [*Towards fearless SIMD, 7 years later*](https://linebender.org/blog/towards-fearless-simd/).
@@ -36,8 +36,8 @@ No changelog was kept for this release.
 
 <!-- [#x]: https://github.com/linebender/fearless_simd/pull/x -->
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...HEAD
-<!-- [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0 -->
+[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0
 [0.1.1]: https://github.com/linebender/fearless_simd/compare/d683506b50721d35745cfc098527e007f1cb3425...e54304c66fc3e42d9604ddc7775b3345b589ce1a
 [0.1.0]: https://github.com/linebender/fearless_simd/commit/d683506b50721d35745cfc098527e007f1cb3425
 
