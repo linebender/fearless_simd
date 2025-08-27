@@ -180,7 +180,7 @@ impl Level {
     /// This function requires the standard library, to use the
     /// [`is_x86_feature_detected`](std::arch::is_x86_feature_detected)
     /// or [`is_aarch64_feature_detected`](std::arch::is_aarch64_feature_detected).
-    /// If you are on wasm32, you can use `Level::new_wasm` instead.
+    /// On wasm32, this requirement does not apply, so the standard library isn't required.
     ///
     /// Note that in most cases, this function should only be called by end-user applications.
     /// Libraries should instead accept a `Level` argument, probably as they are
