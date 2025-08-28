@@ -15,6 +15,11 @@ You can find its changes [documented below](#020-2025-08-26).
 
 This release has an [MSRV][] of 1.86.
 
+## Added
+
+- `SimdInt::from_mask` allows construction of an integer vector from
+  the associated mask type. ([#75][] by [@Ralith][])
+
 ## Fixed
 
 - `Simd` now requires consistent mask types for native-width
