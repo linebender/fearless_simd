@@ -227,6 +227,12 @@ impl<S: Simd> core::ops::BitXor<i8x16<S>> for i8 {
         rhs.simd.xor_i8x16(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Shr<u32> for i8x16<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_i8x16(self, rhs)
+    }
+}
 impl<S: Simd> core::ops::Add for u8x16<S> {
     type Output = Self;
     #[inline(always)]
@@ -351,6 +357,12 @@ impl<S: Simd> core::ops::BitXor<u8x16<S>> for u8 {
     #[inline(always)]
     fn bitxor(self, rhs: u8x16<S>) -> Self::Output {
         rhs.simd.xor_u8x16(self.simd_into(rhs.simd), rhs)
+    }
+}
+impl<S: Simd> core::ops::Shr<u32> for u8x16<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAnd for mask8x16<S> {
@@ -549,6 +561,12 @@ impl<S: Simd> core::ops::BitXor<i16x8<S>> for i16 {
         rhs.simd.xor_i16x8(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Shr<u32> for i16x8<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_i16x8(self, rhs)
+    }
+}
 impl<S: Simd> core::ops::Add for u16x8<S> {
     type Output = Self;
     #[inline(always)]
@@ -673,6 +691,12 @@ impl<S: Simd> core::ops::BitXor<u16x8<S>> for u16 {
     #[inline(always)]
     fn bitxor(self, rhs: u16x8<S>) -> Self::Output {
         rhs.simd.xor_u16x8(self.simd_into(rhs.simd), rhs)
+    }
+}
+impl<S: Simd> core::ops::Shr<u32> for u16x8<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAnd for mask16x8<S> {
@@ -871,6 +895,12 @@ impl<S: Simd> core::ops::BitXor<i32x4<S>> for i32 {
         rhs.simd.xor_i32x4(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Shr<u32> for i32x4<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_i32x4(self, rhs)
+    }
+}
 impl<S: Simd> core::ops::Add for u32x4<S> {
     type Output = Self;
     #[inline(always)]
@@ -995,6 +1025,12 @@ impl<S: Simd> core::ops::BitXor<u32x4<S>> for u32 {
     #[inline(always)]
     fn bitxor(self, rhs: u32x4<S>) -> Self::Output {
         rhs.simd.xor_u32x4(self.simd_into(rhs.simd), rhs)
+    }
+}
+impl<S: Simd> core::ops::Shr<u32> for u32x4<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAnd for mask32x4<S> {
@@ -1445,6 +1481,12 @@ impl<S: Simd> core::ops::BitXor<i8x32<S>> for i8 {
         rhs.simd.xor_i8x32(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Shr<u32> for i8x32<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_i8x32(self, rhs)
+    }
+}
 impl<S: Simd> core::ops::Add for u8x32<S> {
     type Output = Self;
     #[inline(always)]
@@ -1569,6 +1611,12 @@ impl<S: Simd> core::ops::BitXor<u8x32<S>> for u8 {
     #[inline(always)]
     fn bitxor(self, rhs: u8x32<S>) -> Self::Output {
         rhs.simd.xor_u8x32(self.simd_into(rhs.simd), rhs)
+    }
+}
+impl<S: Simd> core::ops::Shr<u32> for u8x32<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAnd for mask8x32<S> {
@@ -1767,6 +1815,12 @@ impl<S: Simd> core::ops::BitXor<i16x16<S>> for i16 {
         rhs.simd.xor_i16x16(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Shr<u32> for i16x16<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_i16x16(self, rhs)
+    }
+}
 impl<S: Simd> core::ops::Add for u16x16<S> {
     type Output = Self;
     #[inline(always)]
@@ -1891,6 +1945,12 @@ impl<S: Simd> core::ops::BitXor<u16x16<S>> for u16 {
     #[inline(always)]
     fn bitxor(self, rhs: u16x16<S>) -> Self::Output {
         rhs.simd.xor_u16x16(self.simd_into(rhs.simd), rhs)
+    }
+}
+impl<S: Simd> core::ops::Shr<u32> for u16x16<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAnd for mask16x16<S> {
@@ -2089,6 +2149,12 @@ impl<S: Simd> core::ops::BitXor<i32x8<S>> for i32 {
         rhs.simd.xor_i32x8(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Shr<u32> for i32x8<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_i32x8(self, rhs)
+    }
+}
 impl<S: Simd> core::ops::Add for u32x8<S> {
     type Output = Self;
     #[inline(always)]
@@ -2213,6 +2279,12 @@ impl<S: Simd> core::ops::BitXor<u32x8<S>> for u32 {
     #[inline(always)]
     fn bitxor(self, rhs: u32x8<S>) -> Self::Output {
         rhs.simd.xor_u32x8(self.simd_into(rhs.simd), rhs)
+    }
+}
+impl<S: Simd> core::ops::Shr<u32> for u32x8<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAnd for mask32x8<S> {
@@ -2663,6 +2735,12 @@ impl<S: Simd> core::ops::BitXor<i8x64<S>> for i8 {
         rhs.simd.xor_i8x64(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Shr<u32> for i8x64<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_i8x64(self, rhs)
+    }
+}
 impl<S: Simd> core::ops::Add for u8x64<S> {
     type Output = Self;
     #[inline(always)]
@@ -2787,6 +2865,12 @@ impl<S: Simd> core::ops::BitXor<u8x64<S>> for u8 {
     #[inline(always)]
     fn bitxor(self, rhs: u8x64<S>) -> Self::Output {
         rhs.simd.xor_u8x64(self.simd_into(rhs.simd), rhs)
+    }
+}
+impl<S: Simd> core::ops::Shr<u32> for u8x64<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAnd for mask8x64<S> {
@@ -2985,6 +3069,12 @@ impl<S: Simd> core::ops::BitXor<i16x32<S>> for i16 {
         rhs.simd.xor_i16x32(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Shr<u32> for i16x32<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_i16x32(self, rhs)
+    }
+}
 impl<S: Simd> core::ops::Add for u16x32<S> {
     type Output = Self;
     #[inline(always)]
@@ -3109,6 +3199,12 @@ impl<S: Simd> core::ops::BitXor<u16x32<S>> for u16 {
     #[inline(always)]
     fn bitxor(self, rhs: u16x32<S>) -> Self::Output {
         rhs.simd.xor_u16x32(self.simd_into(rhs.simd), rhs)
+    }
+}
+impl<S: Simd> core::ops::Shr<u32> for u16x32<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAnd for mask16x32<S> {
@@ -3307,6 +3403,12 @@ impl<S: Simd> core::ops::BitXor<i32x16<S>> for i32 {
         rhs.simd.xor_i32x16(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Shr<u32> for i32x16<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_i32x16(self, rhs)
+    }
+}
 impl<S: Simd> core::ops::Add for u32x16<S> {
     type Output = Self;
     #[inline(always)]
@@ -3431,6 +3533,12 @@ impl<S: Simd> core::ops::BitXor<u32x16<S>> for u32 {
     #[inline(always)]
     fn bitxor(self, rhs: u32x16<S>) -> Self::Output {
         rhs.simd.xor_u32x16(self.simd_into(rhs.simd), rhs)
+    }
+}
+impl<S: Simd> core::ops::Shr<u32> for u32x16<S> {
+    type Output = Self;
+    fn shr(self, rhs: u32) -> Self {
+        self.simd.shr_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAnd for mask32x16<S> {

@@ -7,7 +7,7 @@
 )]
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 
 use crate::types::{SIMD_TYPES, ScalarType, type_imports};
 
@@ -74,6 +74,17 @@ pub fn mk_ops() -> TokenStream {
                     }
                 });
             }
+        }
+        if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+            let simd_fn = format_ident!("shr_{}", ty.rust_name());
+            impls.push(quote! {
+                impl<S: Simd> core::ops::Shr<u32> for #simd<S> {
+                    type Output = Self;
+                    fn shr(self, rhs: u32) -> Self {
+                        self.simd.#simd_fn(self, rhs)
+                    }
+                }
+            });
         }
     }
 
