@@ -31,7 +31,7 @@ pub fn mk_simd_trait() -> TokenStream {
         }
     }
     let mut code = quote! {
-        use crate::{seal::Seal, Level, SimdElement, SimdInto, SimdCvtTruncate, SimdCvtFloat};
+        use crate::{seal::Seal, Level, SimdElement, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select};
         #imports
         /// TODO: docstring
         // TODO: Seal
@@ -43,9 +43,9 @@ pub fn mk_simd_trait() -> TokenStream {
             type i16s: SimdInt<i16, Self, Block = i16x8<Self>, Mask = Self::mask16s>;
             type u32s: SimdInt<u32, Self, Block = u32x4<Self>, Mask = Self::mask32s> + SimdCvtTruncate<Self::f32s>;
             type i32s: SimdInt<i32, Self, Block = i32x4<Self>, Mask = Self::mask32s> + SimdCvtTruncate<Self::f32s>;
-            type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>>;
-            type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>>;
-            type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>>;
+            type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>> + Select<Self::u8s> + Select<Self::i8s>;
+            type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>> + Select<Self::u16s> + Select<Self::i16s>;
+            type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>> + Select<Self::f32s> + Select<Self::u32s> + Select<Self::i32s>;
             fn level(self) -> Level;
 
             /// Call function with CPU features enabled.
