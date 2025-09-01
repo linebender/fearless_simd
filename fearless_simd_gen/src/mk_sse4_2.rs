@@ -3,7 +3,7 @@
 
 use crate::arch::Arch;
 use crate::arch::sse4_2::Sse4_2;
-use crate::generic::{generic_combine, generic_op, generic_split};
+use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
 use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use crate::x86_common::{
@@ -182,6 +182,10 @@ fn make_method(
         #[inline(always)]
         fn #method_ident(#args) -> #ret_ty
     };
+
+    if method == "shrv" {
+        return scalar_binary(&method_ident, quote!(core::ops::Shr::shr), vec_ty);
+    }
 
     match sig {
         OpSig::Splat => handle_splat(method_sig, vec_ty, scalar_bits, ty_bits),

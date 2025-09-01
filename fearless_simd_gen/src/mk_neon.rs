@@ -8,7 +8,7 @@
 )]
 
 use proc_macro2::{Ident, Literal, Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 
 use crate::arch::neon::split_intrinsic;
 use crate::ops::{reinterpret_ty, valid_reinterpret};
@@ -233,7 +233,27 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Binary => {
-                    let args = [quote! { a.into() }, quote! { b.into() }];
+                    let args = match method {
+                        "shrv" => {
+                            let neg = simple_intrinsic(
+                                "vneg",
+                                &VecType {
+                                    scalar: ScalarType::Int,
+                                    ..*vec_ty
+                                },
+                            );
+                            if vec_ty.scalar == ScalarType::Int {
+                                // Signed case
+                                [quote! { a.into() }, quote! { #neg(b.into()) }]
+                            } else {
+                                // Unsigned case
+                                let bits = vec_ty.scalar_bits;
+                                let reinterpret = format_ident!("vreinterpretq_s{bits}_u{bits}");
+                                [quote! { a.into() }, quote! { #neg(#reinterpret(b.into())) }]
+                            }
+                        }
+                        _ => [quote! { a.into() }, quote! { b.into() }],
+                    };
                     if method == "copysign" {
                         let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
                         let unsigned_ty =

@@ -78,6 +78,8 @@ pub const INT_OPS: &[(&str, OpSig)] = &[
     ("or", OpSig::Binary),
     ("xor", OpSig::Binary),
     ("shr", OpSig::Shift),
+    // Shift right by vector
+    ("shrv", OpSig::Binary),
     ("simd_eq", OpSig::Compare),
     ("simd_lt", OpSig::Compare),
     ("simd_le", OpSig::Compare),
