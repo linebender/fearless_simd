@@ -186,6 +186,10 @@ impl<S: Simd> crate::SimdBase<f32, S> for f32x4<S> {
     type Mask = mask32x4<S>;
     type Block = f32x4<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[f32] {
         &self.val
     }
@@ -469,6 +473,10 @@ impl<S: Simd> crate::SimdBase<i8, S> for i8x16<S> {
     type Mask = mask8x16<S>;
     type Block = i8x16<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[i8] {
         &self.val
     }
@@ -703,6 +711,10 @@ impl<S: Simd> crate::SimdBase<u8, S> for u8x16<S> {
     type Mask = mask8x16<S>;
     type Block = u8x16<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[u8] {
         &self.val
     }
@@ -893,6 +905,10 @@ impl<S: Simd> crate::SimdBase<i8, S> for mask8x16<S> {
     type Mask = mask8x16<S>;
     type Block = mask8x16<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[i8] {
         &self.val
     }
@@ -1075,6 +1091,10 @@ impl<S: Simd> crate::SimdBase<i16, S> for i16x8<S> {
     const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = i16x8<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i16] {
         &self.val
@@ -1306,6 +1326,10 @@ impl<S: Simd> crate::SimdBase<u16, S> for u16x8<S> {
     type Mask = mask16x8<S>;
     type Block = u16x8<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[u16] {
         &self.val
     }
@@ -1488,6 +1512,10 @@ impl<S: Simd> crate::SimdBase<i16, S> for mask16x8<S> {
     type Mask = mask16x8<S>;
     type Block = mask16x8<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[i16] {
         &self.val
     }
@@ -1665,6 +1693,10 @@ impl<S: Simd> crate::SimdBase<i32, S> for i32x4<S> {
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = i32x4<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
         &self.val
@@ -1892,6 +1924,10 @@ impl<S: Simd> crate::SimdBase<u32, S> for u32x4<S> {
     type Mask = mask32x4<S>;
     type Block = u32x4<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[u32] {
         &self.val
     }
@@ -2069,6 +2105,10 @@ impl<S: Simd> crate::SimdBase<i32, S> for mask32x4<S> {
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = mask32x4<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
         &self.val
@@ -2259,6 +2299,10 @@ impl<S: Simd> crate::SimdBase<f64, S> for f64x2<S> {
     const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = f64x2<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[f64] {
         &self.val
@@ -2467,6 +2511,10 @@ impl<S: Simd> crate::SimdBase<i64, S> for mask64x2<S> {
     const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = mask64x2<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i64] {
         &self.val
@@ -2686,6 +2734,10 @@ impl<S: Simd> crate::SimdBase<f32, S> for f32x8<S> {
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = f32x4<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[f32] {
         &self.val
@@ -2986,6 +3038,10 @@ impl<S: Simd> crate::SimdBase<i8, S> for i8x32<S> {
     type Mask = mask8x32<S>;
     type Block = i8x16<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[i8] {
         &self.val
     }
@@ -3236,6 +3292,10 @@ impl<S: Simd> crate::SimdBase<u8, S> for u8x32<S> {
     type Mask = mask8x32<S>;
     type Block = u8x16<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[u8] {
         &self.val
     }
@@ -3442,6 +3502,10 @@ impl<S: Simd> crate::SimdBase<i8, S> for mask8x32<S> {
     type Mask = mask8x32<S>;
     type Block = mask8x16<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[i8] {
         &self.val
     }
@@ -3632,6 +3696,10 @@ impl<S: Simd> crate::SimdBase<i16, S> for i16x16<S> {
     const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = i16x8<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i16] {
         &self.val
@@ -3871,6 +3939,10 @@ impl<S: Simd> crate::SimdBase<u16, S> for u16x16<S> {
     type Mask = mask16x16<S>;
     type Block = u16x8<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[u16] {
         &self.val
     }
@@ -4061,6 +4133,10 @@ impl<S: Simd> crate::SimdBase<i16, S> for mask16x16<S> {
     type Mask = mask16x16<S>;
     type Block = mask16x8<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[i16] {
         &self.val
     }
@@ -4247,6 +4323,10 @@ impl<S: Simd> crate::SimdBase<i32, S> for i32x8<S> {
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = i32x4<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
         &self.val
@@ -4483,6 +4563,10 @@ impl<S: Simd> crate::SimdBase<u32, S> for u32x8<S> {
     type Mask = mask32x8<S>;
     type Block = u32x4<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[u32] {
         &self.val
     }
@@ -4669,6 +4753,10 @@ impl<S: Simd> crate::SimdBase<i32, S> for mask32x8<S> {
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = mask32x4<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
         &self.val
@@ -4859,6 +4947,10 @@ impl<S: Simd> crate::SimdBase<f64, S> for f64x4<S> {
     const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = f64x2<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[f64] {
         &self.val
@@ -5067,6 +5159,10 @@ impl<S: Simd> crate::SimdBase<i64, S> for mask64x4<S> {
     const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = mask64x2<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i64] {
         &self.val
@@ -5290,6 +5386,10 @@ impl<S: Simd> crate::SimdBase<f32, S> for f32x16<S> {
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = f32x4<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[f32] {
         &self.val
@@ -5619,6 +5719,10 @@ impl<S: Simd> crate::SimdBase<i8, S> for i8x64<S> {
     type Mask = mask8x64<S>;
     type Block = i8x16<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[i8] {
         &self.val
     }
@@ -5898,6 +6002,10 @@ impl<S: Simd> crate::SimdBase<u8, S> for u8x64<S> {
     type Mask = mask8x64<S>;
     type Block = u8x16<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[u8] {
         &self.val
     }
@@ -6133,6 +6241,10 @@ impl<S: Simd> crate::SimdBase<i8, S> for mask8x64<S> {
     type Mask = mask8x64<S>;
     type Block = mask8x16<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[i8] {
         &self.val
     }
@@ -6336,6 +6448,10 @@ impl<S: Simd> crate::SimdBase<i16, S> for i16x32<S> {
     const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = i16x8<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i16] {
         &self.val
@@ -6588,6 +6704,10 @@ impl<S: Simd> crate::SimdBase<u16, S> for u16x32<S> {
     type Mask = mask16x32<S>;
     type Block = u16x8<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[u16] {
         &self.val
     }
@@ -6791,6 +6911,10 @@ impl<S: Simd> crate::SimdBase<i16, S> for mask16x32<S> {
     type Mask = mask16x32<S>;
     type Block = mask16x8<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[i16] {
         &self.val
     }
@@ -6982,6 +7106,10 @@ impl<S: Simd> crate::SimdBase<i32, S> for i32x16<S> {
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = i32x4<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
         &self.val
@@ -7223,6 +7351,10 @@ impl<S: Simd> crate::SimdBase<u32, S> for u32x16<S> {
     type Mask = mask32x16<S>;
     type Block = u32x4<S>;
     #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
+    #[inline(always)]
     fn as_slice(&self) -> &[u32] {
         &self.val
     }
@@ -7414,6 +7546,10 @@ impl<S: Simd> crate::SimdBase<i32, S> for mask32x16<S> {
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = mask32x4<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
         &self.val
@@ -7610,6 +7746,10 @@ impl<S: Simd> crate::SimdBase<f64, S> for f64x8<S> {
     const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = f64x2<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[f64] {
         &self.val
@@ -7824,6 +7964,10 @@ impl<S: Simd> crate::SimdBase<i64, S> for mask64x8<S> {
     const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = mask64x2<S>;
+    #[inline(always)]
+    fn witness(&self) -> S {
+        self.simd
+    }
     #[inline(always)]
     fn as_slice(&self) -> &[i64] {
         &self.val

@@ -80,6 +80,8 @@ fn mk_simd_base() -> TokenStream {
             type Mask: SimdMask<Element::Mask, S>;
             /// A 128 bit SIMD vector of the same scalar type.
             type Block: SimdBase<Element, S>;
+            /// Get the [`Simd`] implementation associated with this type.
+            fn witness(&self) -> S;
             fn as_slice(&self) -> &[Element];
             fn as_mut_slice(&mut self) -> &mut [Element];
             /// Create a SIMD vector from a slice.
