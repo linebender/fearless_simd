@@ -15,6 +15,16 @@ You can find its changes [documented below](#020-2025-08-26).
 
 This release has an [MSRV][] of 1.86.
 
+## Added
+
+- `SimdInt::from_mask` allows construction of an integer vector from
+  the associated mask type. ([#75][] by [@Ralith][])
+
+## Fixed
+
+- `Simd` now requires consistent mask types for native-width
+  vectors. ([#75][] by [@Ralith][])
+
 ## [0.2.0][] (2025-08-26)
 
 There has been a complete rewrite of Fearless SIMD.
@@ -31,10 +41,9 @@ No changelog was kept for this release.
 This is the initial release.
 No changelog was kept for this release.
 
-<!-- No contributors or PRs discussed yet, but they go here -->
-<!-- [@x]: https://github.com/x -->
+[@Ralith]: https://github.com/Ralith
 
-<!-- [#x]: https://github.com/linebender/fearless_simd/pull/x -->
+[#75]: https://github.com/linebender/fearless_simd/pull/75
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0

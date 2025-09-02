@@ -12,15 +12,17 @@ use crate::{
 };
 #[doc = r" TODO: docstring"]
 pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
-    type f32s: SimdFloat<f32, Self, Block = f32x4<Self>>
+    type f32s: SimdFloat<f32, Self, Block = f32x4<Self>, Mask = Self::mask32s>
         + SimdCvtFloat<Self::u32s>
         + SimdCvtFloat<Self::i32s>;
-    type u8s: SimdInt<u8, Self, Block = u8x16<Self>>;
-    type i8s: SimdInt<i8, Self, Block = i8x16<Self>>;
-    type u16s: SimdInt<u16, Self, Block = u16x8<Self>>;
-    type i16s: SimdInt<i16, Self, Block = i16x8<Self>>;
-    type u32s: SimdInt<u32, Self, Block = u32x4<Self>> + SimdCvtTruncate<Self::f32s>;
-    type i32s: SimdInt<i32, Self, Block = i32x4<Self>> + SimdCvtTruncate<Self::f32s>;
+    type u8s: SimdInt<u8, Self, Block = u8x16<Self>, Mask = Self::mask8s>;
+    type i8s: SimdInt<i8, Self, Block = i8x16<Self>, Mask = Self::mask8s>;
+    type u16s: SimdInt<u16, Self, Block = u16x8<Self>, Mask = Self::mask16s>;
+    type i16s: SimdInt<i16, Self, Block = i16x8<Self>, Mask = Self::mask16s>;
+    type u32s: SimdInt<u32, Self, Block = u32x4<Self>, Mask = Self::mask32s>
+        + SimdCvtTruncate<Self::f32s>;
+    type i32s: SimdInt<i32, Self, Block = i32x4<Self>, Mask = Self::mask32s>
+        + SimdCvtTruncate<Self::f32s>;
     type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>>;
     type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>>;
     type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>>;
@@ -918,6 +920,11 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
     }
+    #[doc = r" Construct the integer vector with the same representation as `mask`"]
+    #[doc = r""]
+    #[doc = r" Unset lanes become 0. Set lanes become -1 or the maximum value for signed or"]
+    #[doc = r" unsigned element types respectively."]
+    fn from_mask(mask: Self::Mask) -> Self;
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     fn simd_le(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
