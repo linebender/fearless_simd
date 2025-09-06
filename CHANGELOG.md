@@ -46,7 +46,7 @@ No changelog was kept for this release.
 [@Ralith]: https://github.com/Ralith
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
-[#76]: https://github.com/linebender/fearless_simd/pull/75
+[#76]: https://github.com/linebender/fearless_simd/pull/76
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0
