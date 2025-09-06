@@ -854,6 +854,8 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     type Mask: SimdMask<Element::Mask, S>;
     #[doc = r" A 128 bit SIMD vector of the same scalar type."]
     type Block: SimdBase<Element, S>;
+    #[doc = r" Get the [`Simd`] implementation associated with this type."]
+    fn witness(&self) -> S;
     fn as_slice(&self) -> &[Element];
     fn as_mut_slice(&mut self) -> &mut [Element];
     #[doc = r" Create a SIMD vector from a slice."]

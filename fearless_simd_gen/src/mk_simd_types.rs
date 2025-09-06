@@ -309,6 +309,11 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             type Block = #block_ty<S>;
 
             #[inline(always)]
+            fn witness(&self) -> S {
+                self.simd
+            }
+
+            #[inline(always)]
             fn as_slice(&self) -> &[#scalar] {
                 &self.val
             }
