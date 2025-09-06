@@ -1287,3 +1287,51 @@ fn mask_to_i8_native<S: Simd>(simd: S) {
     let converted = S::i8s::from_mask(mask);
     assert_eq!(converted.as_slice(), values);
 }
+
+#[simd_test]
+fn select_native_width_vectors<S: Simd>(simd: S) {
+    // Test with native f32 vectors
+    let a_f32 = S::f32s::from_slice(simd, &vec![1.0f32; S::f32s::N]);
+    let b_f32 = S::f32s::from_slice(simd, &vec![2.0f32; S::f32s::N]);
+    let mask_f32 = S::mask32s::from_slice(simd, &vec![-1i32; S::mask32s::N]);
+    let result_f32 = mask_f32.select(a_f32, b_f32);
+    assert_eq!(result_f32.as_slice(), vec![1.0f32; S::f32s::N]);
+
+    // Test with native u32 vectors
+    let a_u32 = S::u32s::from_slice(simd, &vec![10u32; S::u32s::N]);
+    let b_u32 = S::u32s::from_slice(simd, &vec![20u32; S::u32s::N]);
+    let result_u32 = mask_f32.select(a_u32, b_u32);
+    assert_eq!(result_u32.as_slice(), vec![10u32; S::u32s::N]);
+
+    // Test with native i32 vectors
+    let a_i32 = S::i32s::from_slice(simd, &vec![100i32; S::i32s::N]);
+    let b_i32 = S::i32s::from_slice(simd, &vec![-100i32; S::i32s::N]);
+    let result_i32 = mask_f32.select(a_i32, b_i32);
+    assert_eq!(result_i32.as_slice(), vec![100i32; S::i32s::N]);
+
+    // Test with native u8 vectors
+    let a_u8 = S::u8s::from_slice(simd, &vec![1u8; S::u8s::N]);
+    let b_u8 = S::u8s::from_slice(simd, &vec![2u8; S::u8s::N]);
+    let mask_u8 = S::mask8s::from_slice(simd, &vec![0i8; S::u8s::N]);
+    let result_u8 = mask_u8.select(a_u8, b_u8);
+    assert_eq!(result_u8.as_slice(), vec![2u8; S::u8s::N]);
+
+    // Test with native i8 vectors
+    let a_i8 = S::i8s::from_slice(simd, &vec![10i8; S::i8s::N]);
+    let b_i8 = S::i8s::from_slice(simd, &vec![-10i8; S::i8s::N]);
+    let result_i8 = mask_u8.select(a_i8, b_i8);
+    assert_eq!(result_i8.as_slice(), vec![-10i8; S::i8s::N]);
+
+    // Test with native u16 vectors
+    let a_u16 = S::u16s::from_slice(simd, &vec![100u16; S::u16s::N]);
+    let b_u16 = S::u16s::from_slice(simd, &vec![200u16; S::u16s::N]);
+    let mask_u16 = S::mask16s::from_slice(simd, &vec![-1i16; S::mask16s::N]);
+    let result_u16 = mask_u16.select(a_u16, b_u16);
+    assert_eq!(result_u16.as_slice(), vec![100u16; S::u16s::N]);
+
+    // Test with native i16 vectors
+    let a_i16 = S::i16s::from_slice(simd, &vec![50i16; S::i16s::N]);
+    let b_i16 = S::i16s::from_slice(simd, &vec![-50i16; S::i16s::N]);
+    let result_i16 = mask_u16.select(a_i16, b_i16);
+    assert_eq!(result_i16.as_slice(), vec![50i16; S::i16s::N]);
+}

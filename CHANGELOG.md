@@ -21,6 +21,7 @@ This release has an [MSRV][] of 1.86.
   the associated mask type. ([#75][] by [@Ralith][])
 - `SimdBase::witness` to fetch the `Simd` implementation associated with a
   generic vector. ([#76][] by [@Ralith][])
+- `Select` is now available on native-width masks. ([#77][] by [@Ralith][])
 
 ## Fixed
 
@@ -46,7 +47,8 @@ No changelog was kept for this release.
 [@Ralith]: https://github.com/Ralith
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
-[#76]: https://github.com/linebender/fearless_simd/pull/75
+[#76]: https://github.com/linebender/fearless_simd/pull/76
+[#77]: https://github.com/linebender/fearless_simd/pull/77
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0
