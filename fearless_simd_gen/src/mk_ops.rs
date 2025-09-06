@@ -33,7 +33,9 @@ pub fn mk_ops() -> TokenStream {
             } else {
                 Ident::new(op, Span::call_site())
             };
+            let op_assign_fn = format_ident!("{opfn}_assign");
             let trait_id = Ident::new(&trait_name, Span::call_site());
+            let trait_assign_id = format_ident!("{trait_name}Assign");
             let simd_fn_name = format!("{op}_{}", ty.rust_name());
             let simd_fn = Ident::new(&simd_fn_name, Span::call_site());
             if is_unary {
@@ -57,11 +59,25 @@ pub fn mk_ops() -> TokenStream {
                         }
                     }
 
+                    impl<S: Simd> core::ops::#trait_assign_id for #simd<S> {
+                        #[inline(always)]
+                        fn #op_assign_fn(&mut self, rhs: Self) {
+                            *self = self.simd.#simd_fn(*self, rhs);
+                        }
+                    }
+
                     impl<S: Simd> core::ops::#trait_id<#scalar> for #simd<S> {
                         type Output = Self;
                         #[inline(always)]
                         fn #opfn(self, rhs: #scalar) -> Self::Output {
                             self.simd.#simd_fn(self, rhs.simd_into(self.simd))
+                        }
+                    }
+
+                    impl<S: Simd> core::ops::#trait_assign_id<#scalar> for #simd<S> {
+                        #[inline(always)]
+                        fn #op_assign_fn(&mut self, rhs: #scalar) {
+                            *self = self.simd.#simd_fn(*self, rhs.simd_into(self.simd));
                         }
                     }
 
@@ -89,11 +105,25 @@ pub fn mk_ops() -> TokenStream {
                     }
                 }
 
+                impl<S: Simd> core::ops::ShrAssign<u32> for #simd<S> {
+                    #[inline(always)]
+                    fn shr_assign(&mut self, rhs: u32) {
+                        *self = self.simd.#shift_right_fn(*self, rhs);
+                    }
+                }
+
                 impl<S: Simd> core::ops::Shr for #simd<S> {
                     type Output = Self;
                     #[inline(always)]
                     fn shr(self, rhs: Self) -> Self::Output {
                         self.simd.#shift_right_vectored_fn(self, rhs)
+                    }
+                }
+
+                impl<S: Simd> core::ops::ShrAssign for #simd<S> {
+                    #[inline(always)]
+                    fn shr_assign(&mut self, rhs: Self) {
+                        *self = self.simd.#shift_right_vectored_fn(*self, rhs);
                     }
                 }
             });

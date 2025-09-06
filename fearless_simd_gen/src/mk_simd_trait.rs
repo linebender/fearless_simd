@@ -100,13 +100,21 @@ fn mk_simd_float() -> TokenStream {
         pub trait SimdFloat<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             + core::ops::Neg<Output = Self>
             + core::ops::Add<Output = Self>
+            + core::ops::AddAssign
             + core::ops::Add<Element, Output = Self>
+            + core::ops::AddAssign<Element>
             + core::ops::Sub<Output = Self>
+            + core::ops::SubAssign
             + core::ops::Sub<Element, Output = Self>
+            + core::ops::SubAssign<Element>
             + core::ops::Mul<Output = Self>
+            + core::ops::MulAssign
             + core::ops::Mul<Element, Output = Self>
+            + core::ops::MulAssign<Element>
             + core::ops::Div<Output = Self>
+            + core::ops::DivAssign
             + core::ops::Div<Element, Output = Self>
+            + core::ops::DivAssign<Element>
         {
             #[inline(always)]
             fn to_int<T: SimdCvtTruncate<Self>>(self) -> T { T::truncate_from(self) }
@@ -121,19 +129,33 @@ fn mk_simd_int() -> TokenStream {
     quote! {
         pub trait SimdInt<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             + core::ops::Add<Output = Self>
+            + core::ops::AddAssign
             + core::ops::Add<Element, Output = Self>
+            + core::ops::AddAssign<Element>
             + core::ops::Sub<Output = Self>
+            + core::ops::SubAssign
             + core::ops::Sub<Element, Output = Self>
+            + core::ops::SubAssign<Element>
             + core::ops::Mul<Output = Self>
+            + core::ops::MulAssign
             + core::ops::Mul<Element, Output = Self>
+            + core::ops::MulAssign<Element>
             + core::ops::BitAnd<Output = Self>
+            + core::ops::BitAndAssign
             + core::ops::BitAnd<Element, Output = Self>
+            + core::ops::BitAndAssign<Element>
             + core::ops::BitOr<Output = Self>
+            + core::ops::BitOrAssign
             + core::ops::BitOr<Element, Output = Self>
+            + core::ops::BitOrAssign<Element>
             + core::ops::BitXor<Output = Self>
+            + core::ops::BitXorAssign
             + core::ops::BitXor<Element, Output = Self>
+            + core::ops::BitXorAssign<Element>
             + core::ops::Shr<Output = Self>
+            + core::ops::ShrAssign
             + core::ops::Shr<u32, Output = Self>
+            + core::ops::ShrAssign<u32>
         {
             #[inline(always)]
             fn to_float<T: SimdCvtFloat<Self>>(self) -> T { T::float_from(self) }
