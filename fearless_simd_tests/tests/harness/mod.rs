@@ -1363,3 +1363,12 @@ fn select_native_width_vectors<S: Simd>(simd: S) {
     let result_i16 = mask_u16.select(a_i16, b_i16);
     assert_eq!(result_i16.as_slice(), vec![50i16; S::i16s::N]);
 }
+
+#[simd_test]
+fn bitcast_native<S: Simd>(simd: S) {
+    let a_i32 = S::i32s::from_slice(simd, &vec![-1; S::i32s::N]);
+    assert_eq!(
+        a_i32.bitcast::<S::u32s>().as_slice(),
+        &vec![u32::MAX; S::i32s::N]
+    );
+}
