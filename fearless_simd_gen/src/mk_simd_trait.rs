@@ -132,6 +132,8 @@ fn mk_simd_int() -> TokenStream {
             + core::ops::BitOr<Element, Output = Self>
             + core::ops::BitXor<Output = Self>
             + core::ops::BitXor<Element, Output = Self>
+            + core::ops::Shr<Output = Self>
+            + core::ops::Shr<u32, Output = Self>
         {
             #[inline(always)]
             fn to_float<T: SimdCvtFloat<Self>>(self) -> T { T::float_from(self) }

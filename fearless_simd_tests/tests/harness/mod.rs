@@ -894,7 +894,7 @@ fn shr_i8x16<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        a.shr(2).val,
+        (a >> 2).val,
         [-32, -16, -8, -4, -2, -1, -1, -1, 31, 16, 8, 4, 2, 1, 0, 0]
     );
 }
@@ -906,7 +906,7 @@ fn shr_u8x16<S: Simd>(simd: S) {
         &[255, 128, 64, 32, 16, 8, 4, 2, 254, 127, 63, 31, 15, 7, 3, 1],
     );
     assert_eq!(
-        a.shr(2).val,
+        (a >> 2).val,
         [63, 32, 16, 8, 4, 2, 1, 0, 63, 31, 15, 7, 3, 1, 0, 0]
     );
 }
@@ -914,26 +914,26 @@ fn shr_u8x16<S: Simd>(simd: S) {
 #[simd_test]
 fn shr_i16x8<S: Simd>(simd: S) {
     let a = i16x8::from_slice(simd, &[-32768, -16384, -1024, -1, 32767, 16384, 1024, 1]);
-    assert_eq!(a.shr(4).val, [-2048, -1024, -64, -1, 2047, 1024, 64, 0]);
+    assert_eq!((a >> 4).val, [-2048, -1024, -64, -1, 2047, 1024, 64, 0]);
 }
 
 #[simd_test]
 fn shr_u16x8<S: Simd>(simd: S) {
     let a = u16x8::from_slice(simd, &[65535, 32768, 16384, 8192, 4096, 2048, 1024, 512]);
-    assert_eq!(a.shr(4).val, [4095, 2048, 1024, 512, 256, 128, 64, 32]);
+    assert_eq!((a >> 4).val, [4095, 2048, 1024, 512, 256, 128, 64, 32]);
 }
 
 #[simd_test]
 fn shr_i32x4<S: Simd>(simd: S) {
     let a = i32x4::from_slice(simd, &[i32::MIN, -65536, 65536, i32::MAX]);
-    assert_eq!(a.shr(8).val, [-8388608, -256, 256, 8388607]);
+    assert_eq!((a >> 8).val, [-8388608, -256, 256, 8388607]);
 }
 
 #[simd_test]
 fn shrv_i32x4<S: Simd>(simd: S) {
     let a = i32x4::from_slice(simd, &[i32::MIN, -65536, 65536, i32::MAX]);
     assert_eq!(
-        simd.shrv_i32x4(a, i32x4::splat(simd, 8)).val,
+        (a >> i32x4::splat(simd, 8)).val,
         [-8388608, -256, 256, 8388607]
     );
 }
@@ -941,14 +941,14 @@ fn shrv_i32x4<S: Simd>(simd: S) {
 #[simd_test]
 fn shr_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[u32::MAX, 2147483648, 65536, 256]);
-    assert_eq!(a.shr(8).val, [16777215, 8388608, 256, 1]);
+    assert_eq!((a >> 8).val, [16777215, 8388608, 256, 1]);
 }
 
 #[simd_test]
 fn shrv_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[u32::MAX, 2147483648, 65536, 256]);
     assert_eq!(
-        simd.shrv_u32x4(a, u32x4::splat(simd, 8)).val,
+        (a >> u32x4::splat(simd, 8)).val,
         [16777215, 8388608, 256, 1]
     );
 }

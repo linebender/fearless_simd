@@ -24,6 +24,7 @@ This release has an [MSRV][] of 1.86.
 - `Select` is now available on native-width masks. ([#77][] by [@Ralith][])
 - `Simd::shrv_*` preforms a right shift with shift amount specified
   per-lane. ([#79][] by [@Ralith][])
+- The `>>` operator is implemented for SIMD vectors. ([#79][] by [@Ralith][])
 
 ## Fixed
 

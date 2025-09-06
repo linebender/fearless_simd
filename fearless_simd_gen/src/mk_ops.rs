@@ -7,7 +7,7 @@
 )]
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 
 use crate::types::{SIMD_TYPES, ScalarType, type_imports};
 
@@ -74,6 +74,29 @@ pub fn mk_ops() -> TokenStream {
                     }
                 });
             }
+        }
+
+        // Shifts
+        if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+            let shift_right_fn = format_ident!("shr_{}", ty.rust_name());
+            let shift_right_vectored_fn = format_ident!("shrv_{}", ty.rust_name());
+            impls.push(quote! {
+                impl<S: Simd> core::ops::Shr<u32> for #simd<S> {
+                    type Output = Self;
+                    #[inline(always)]
+                    fn shr(self, rhs: u32) -> Self::Output {
+                        self.simd.#shift_right_fn(self, rhs)
+                    }
+                }
+
+                impl<S: Simd> core::ops::Shr for #simd<S> {
+                    type Output = Self;
+                    #[inline(always)]
+                    fn shr(self, rhs: Self) -> Self::Output {
+                        self.simd.#shift_right_vectored_fn(self, rhs)
+                    }
+                }
+            });
         }
     }
 
