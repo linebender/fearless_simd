@@ -270,3 +270,13 @@ pub fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
     }
 }
+
+pub fn scalar_binary(name: &Ident, f: TokenStream, ty: &VecType) -> TokenStream {
+    let ty_rust = ty.rust();
+    quote! {
+        #[inline(always)]
+        fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #ty_rust<Self> {
+            core::array::from_fn(|i| #f(a.val[i], b.val[i])).simd_into(self)
+        }
+    }
+}

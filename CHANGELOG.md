@@ -22,6 +22,9 @@ This release has an [MSRV][] of 1.86.
 - `SimdBase::witness` to fetch the `Simd` implementation associated with a
   generic vector. ([#76][] by [@Ralith][])
 - `Select` is now available on native-width masks. ([#77][] by [@Ralith][])
+- `Simd::shrv_*` preforms a right shift with shift amount specified
+  per-lane. ([#79][] by [@Ralith][])
+- The `>>` operator is implemented for SIMD vectors. ([#79][] by [@Ralith][])
 
 ## Fixed
 
@@ -49,6 +52,7 @@ No changelog was kept for this release.
 [#75]: https://github.com/linebender/fearless_simd/pull/75
 [#76]: https://github.com/linebender/fearless_simd/pull/76
 [#77]: https://github.com/linebender/fearless_simd/pull/77
+[#79]: https://github.com/linebender/fearless_simd/pull/79
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0

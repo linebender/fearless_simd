@@ -36,6 +36,7 @@ fn translate_op(op: &str) -> Option<&'static str> {
         "and" => "and",
         "or" => "or",
         "xor" => "xor",
+        "shrv" => "shr",
         "max" => "max",
         "min" => "min",
         "max_precise" => "pmax",

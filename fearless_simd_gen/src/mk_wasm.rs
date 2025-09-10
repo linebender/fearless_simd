@@ -10,6 +10,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
+use crate::generic::scalar_binary;
 use crate::ops::valid_reinterpret;
 use crate::{
     arch::{Arch, wasm::Wasm},
@@ -110,6 +111,9 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             v128_or(magnitude, sign_bits).simd_into(self)
                         }
                     }
+                }
+                OpSig::Binary if method == "shrv" => {
+                    scalar_binary(&method_ident, quote!(core::ops::Shr::shr), vec_ty)
                 }
                 OpSig::Binary => {
                     let args = [quote! { a.into() }, quote! { b.into() }];

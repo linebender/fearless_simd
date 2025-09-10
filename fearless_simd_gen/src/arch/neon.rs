@@ -36,6 +36,7 @@ fn translate_op(op: &str) -> Option<&'static str> {
         "max" => "vmax",
         "min" => "vmin",
         "shr" => "vshl",
+        "shrv" => "vshl",
         "max_precise" => "vmaxnm",
         "min_precise" => "vminnm",
         "madd" => "vfma",
