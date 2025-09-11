@@ -31,6 +31,7 @@ This release has an [MSRV][] of 1.86.
   vectors. ([#75][] by [@Ralith][])
 - `Simd` now requires consistent `Bytes` types for native-width vectors,
   enabling `Bytes::bitcast` in generic code. ([#81][] by [@Ralith][])
+- Scalar fallback now uses wrapping integer addition. ([#85][] by [@Ralith][])
 
 ## [0.2.0][] (2025-08-26)
 
@@ -57,6 +58,7 @@ No changelog was kept for this release.
 [#80]: https://github.com/linebender/fearless_simd/pull/80
 [#81]: https://github.com/linebender/fearless_simd/pull/81
 [#83]: https://github.com/linebender/fearless_simd/pull/83
+[#85]: https://github.com/linebender/fearless_simd/pull/85
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0

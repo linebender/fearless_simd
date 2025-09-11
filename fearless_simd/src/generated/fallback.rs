@@ -411,22 +411,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         [
-            i8::add(a[0usize], &b[0usize]),
-            i8::add(a[1usize], &b[1usize]),
-            i8::add(a[2usize], &b[2usize]),
-            i8::add(a[3usize], &b[3usize]),
-            i8::add(a[4usize], &b[4usize]),
-            i8::add(a[5usize], &b[5usize]),
-            i8::add(a[6usize], &b[6usize]),
-            i8::add(a[7usize], &b[7usize]),
-            i8::add(a[8usize], &b[8usize]),
-            i8::add(a[9usize], &b[9usize]),
-            i8::add(a[10usize], &b[10usize]),
-            i8::add(a[11usize], &b[11usize]),
-            i8::add(a[12usize], &b[12usize]),
-            i8::add(a[13usize], &b[13usize]),
-            i8::add(a[14usize], &b[14usize]),
-            i8::add(a[15usize], &b[15usize]),
+            i8::wrapping_add(a[0usize], b[0usize]),
+            i8::wrapping_add(a[1usize], b[1usize]),
+            i8::wrapping_add(a[2usize], b[2usize]),
+            i8::wrapping_add(a[3usize], b[3usize]),
+            i8::wrapping_add(a[4usize], b[4usize]),
+            i8::wrapping_add(a[5usize], b[5usize]),
+            i8::wrapping_add(a[6usize], b[6usize]),
+            i8::wrapping_add(a[7usize], b[7usize]),
+            i8::wrapping_add(a[8usize], b[8usize]),
+            i8::wrapping_add(a[9usize], b[9usize]),
+            i8::wrapping_add(a[10usize], b[10usize]),
+            i8::wrapping_add(a[11usize], b[11usize]),
+            i8::wrapping_add(a[12usize], b[12usize]),
+            i8::wrapping_add(a[13usize], b[13usize]),
+            i8::wrapping_add(a[14usize], b[14usize]),
+            i8::wrapping_add(a[15usize], b[15usize]),
         ]
         .simd_into(self)
     }
@@ -869,22 +869,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         [
-            u8::add(a[0usize], &b[0usize]),
-            u8::add(a[1usize], &b[1usize]),
-            u8::add(a[2usize], &b[2usize]),
-            u8::add(a[3usize], &b[3usize]),
-            u8::add(a[4usize], &b[4usize]),
-            u8::add(a[5usize], &b[5usize]),
-            u8::add(a[6usize], &b[6usize]),
-            u8::add(a[7usize], &b[7usize]),
-            u8::add(a[8usize], &b[8usize]),
-            u8::add(a[9usize], &b[9usize]),
-            u8::add(a[10usize], &b[10usize]),
-            u8::add(a[11usize], &b[11usize]),
-            u8::add(a[12usize], &b[12usize]),
-            u8::add(a[13usize], &b[13usize]),
-            u8::add(a[14usize], &b[14usize]),
-            u8::add(a[15usize], &b[15usize]),
+            u8::wrapping_add(a[0usize], b[0usize]),
+            u8::wrapping_add(a[1usize], b[1usize]),
+            u8::wrapping_add(a[2usize], b[2usize]),
+            u8::wrapping_add(a[3usize], b[3usize]),
+            u8::wrapping_add(a[4usize], b[4usize]),
+            u8::wrapping_add(a[5usize], b[5usize]),
+            u8::wrapping_add(a[6usize], b[6usize]),
+            u8::wrapping_add(a[7usize], b[7usize]),
+            u8::wrapping_add(a[8usize], b[8usize]),
+            u8::wrapping_add(a[9usize], b[9usize]),
+            u8::wrapping_add(a[10usize], b[10usize]),
+            u8::wrapping_add(a[11usize], b[11usize]),
+            u8::wrapping_add(a[12usize], b[12usize]),
+            u8::wrapping_add(a[13usize], b[13usize]),
+            u8::wrapping_add(a[14usize], b[14usize]),
+            u8::wrapping_add(a[15usize], b[15usize]),
         ]
         .simd_into(self)
     }
@@ -1506,14 +1506,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         [
-            i16::add(a[0usize], &b[0usize]),
-            i16::add(a[1usize], &b[1usize]),
-            i16::add(a[2usize], &b[2usize]),
-            i16::add(a[3usize], &b[3usize]),
-            i16::add(a[4usize], &b[4usize]),
-            i16::add(a[5usize], &b[5usize]),
-            i16::add(a[6usize], &b[6usize]),
-            i16::add(a[7usize], &b[7usize]),
+            i16::wrapping_add(a[0usize], b[0usize]),
+            i16::wrapping_add(a[1usize], b[1usize]),
+            i16::wrapping_add(a[2usize], b[2usize]),
+            i16::wrapping_add(a[3usize], b[3usize]),
+            i16::wrapping_add(a[4usize], b[4usize]),
+            i16::wrapping_add(a[5usize], b[5usize]),
+            i16::wrapping_add(a[6usize], b[6usize]),
+            i16::wrapping_add(a[7usize], b[7usize]),
         ]
         .simd_into(self)
     }
@@ -1797,14 +1797,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         [
-            u16::add(a[0usize], &b[0usize]),
-            u16::add(a[1usize], &b[1usize]),
-            u16::add(a[2usize], &b[2usize]),
-            u16::add(a[3usize], &b[3usize]),
-            u16::add(a[4usize], &b[4usize]),
-            u16::add(a[5usize], &b[5usize]),
-            u16::add(a[6usize], &b[6usize]),
-            u16::add(a[7usize], &b[7usize]),
+            u16::wrapping_add(a[0usize], b[0usize]),
+            u16::wrapping_add(a[1usize], b[1usize]),
+            u16::wrapping_add(a[2usize], b[2usize]),
+            u16::wrapping_add(a[3usize], b[3usize]),
+            u16::wrapping_add(a[4usize], b[4usize]),
+            u16::wrapping_add(a[5usize], b[5usize]),
+            u16::wrapping_add(a[6usize], b[6usize]),
+            u16::wrapping_add(a[7usize], b[7usize]),
         ]
         .simd_into(self)
     }
@@ -2184,10 +2184,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         [
-            i32::add(a[0usize], &b[0usize]),
-            i32::add(a[1usize], &b[1usize]),
-            i32::add(a[2usize], &b[2usize]),
-            i32::add(a[3usize], &b[3usize]),
+            i32::wrapping_add(a[0usize], b[0usize]),
+            i32::wrapping_add(a[1usize], b[1usize]),
+            i32::wrapping_add(a[2usize], b[2usize]),
+            i32::wrapping_add(a[3usize], b[3usize]),
         ]
         .simd_into(self)
     }
@@ -2405,10 +2405,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         [
-            u32::add(a[0usize], &b[0usize]),
-            u32::add(a[1usize], &b[1usize]),
-            u32::add(a[2usize], &b[2usize]),
-            u32::add(a[3usize], &b[3usize]),
+            u32::wrapping_add(a[0usize], b[0usize]),
+            u32::wrapping_add(a[1usize], b[1usize]),
+            u32::wrapping_add(a[2usize], b[2usize]),
+            u32::wrapping_add(a[3usize], b[3usize]),
         ]
         .simd_into(self)
     }

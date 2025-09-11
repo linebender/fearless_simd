@@ -437,7 +437,7 @@ fn interleave_indices(
 fn rhs_reference(method: &str) -> bool {
     !matches!(
         method,
-        "copysign" | "min" | "max" | "wrapping_sub" | "wrapping_mul"
+        "copysign" | "min" | "max" | "wrapping_sub" | "wrapping_mul" | "wrapping_add"
     )
 }
 

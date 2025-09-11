@@ -1348,3 +1348,11 @@ fn bitcast_native<S: Simd>(simd: S) {
         &vec![u32::MAX; S::i32s::N]
     );
 }
+
+#[simd_test]
+fn wrapping_add_u32<S: Simd>(simd: S) {
+    assert_eq!(
+        (S::u32s::splat(simd, u32::MAX) + 1).as_slice(),
+        &vec![0; S::u32s::N]
+    );
+}
