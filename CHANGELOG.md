@@ -24,6 +24,7 @@ This release has an [MSRV][] of 1.86.
   per-lane. ([#79][] by [@Ralith][])
 - The `>>` operator is implemented for SIMD vectors. ([#79][] by [@Ralith][])
 - Assignment operator implementations. ([#80][] by [@Ralith][])
+- `SimdFrom` splatting is available on native-width vectors. ([#84][] by [@Ralith][])
 
 ## Fixed
 
@@ -58,6 +59,7 @@ No changelog was kept for this release.
 [#80]: https://github.com/linebender/fearless_simd/pull/80
 [#81]: https://github.com/linebender/fearless_simd/pull/81
 [#83]: https://github.com/linebender/fearless_simd/pull/83
+[#84]: https://github.com/linebender/fearless_simd/pull/84
 [#85]: https://github.com/linebender/fearless_simd/pull/85
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
