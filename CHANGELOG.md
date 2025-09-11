@@ -25,6 +25,7 @@ This release has an [MSRV][] of 1.86.
 - `Simd::shrv_*` preforms a right shift with shift amount specified
   per-lane. ([#79][] by [@Ralith][])
 - The `>>` operator is implemented for SIMD vectors. ([#79][] by [@Ralith][])
+- Assignment operator implementations. ([#80][] by [@Ralith][])
 
 ## Fixed
 
@@ -55,6 +56,7 @@ No changelog was kept for this release.
 [#76]: https://github.com/linebender/fearless_simd/pull/76
 [#77]: https://github.com/linebender/fearless_simd/pull/77
 [#79]: https://github.com/linebender/fearless_simd/pull/79
+[#80]: https://github.com/linebender/fearless_simd/pull/80
 [#81]: https://github.com/linebender/fearless_simd/pull/81
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
