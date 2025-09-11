@@ -21,6 +21,7 @@ pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
         "simd_gt" => "cmpgt",
         "or" => "or",
         "xor" => "xor",
+        "shl" => "shl",
         "shr" => "shr",
         "max" => "max",
         "min" => "min",

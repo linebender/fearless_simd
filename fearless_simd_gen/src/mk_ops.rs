@@ -94,14 +94,30 @@ pub fn mk_ops() -> TokenStream {
 
         // Shifts
         if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+            let shift_left_fn = format_ident!("shl_{}", ty.rust_name());
             let shift_right_fn = format_ident!("shr_{}", ty.rust_name());
             let shift_right_vectored_fn = format_ident!("shrv_{}", ty.rust_name());
             impls.push(quote! {
+                impl<S: Simd> core::ops::Shl<u32> for #simd<S> {
+                    type Output = Self;
+                    #[inline(always)]
+                    fn shl(self, rhs: u32) -> Self::Output {
+                        self.simd.#shift_left_fn(self, rhs)
+                    }
+                }
+
                 impl<S: Simd> core::ops::Shr<u32> for #simd<S> {
                     type Output = Self;
                     #[inline(always)]
                     fn shr(self, rhs: u32) -> Self::Output {
                         self.simd.#shift_right_fn(self, rhs)
+                    }
+                }
+
+                impl<S: Simd> core::ops::ShlAssign<u32> for #simd<S> {
+                    #[inline(always)]
+                    fn shl_assign(&mut self, rhs: u32) {
+                        *self = self.simd.#shift_left_fn(*self, rhs);
                     }
                 }
 

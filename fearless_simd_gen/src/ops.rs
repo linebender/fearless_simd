@@ -80,6 +80,7 @@ pub const INT_OPS: &[(&str, OpSig)] = &[
     ("shr", OpSig::Shift),
     // Shift right by vector
     ("shrv", OpSig::Binary),
+    ("shl", OpSig::Shift),
     ("simd_eq", OpSig::Compare),
     ("simd_lt", OpSig::Compare),
     ("simd_le", OpSig::Compare),
@@ -106,7 +107,7 @@ pub const MASK_OPS: &[(&str, OpSig)] = &[
 
 /// Ops covered by `core::ops`
 pub const CORE_OPS: &[&str] = &[
-    "not", "neg", "add", "sub", "mul", "div", "and", "or", "xor", "shr", "shrv",
+    "not", "neg", "add", "sub", "mul", "div", "and", "or", "xor", "shr", "shrv", "shl",
 ];
 
 pub fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
