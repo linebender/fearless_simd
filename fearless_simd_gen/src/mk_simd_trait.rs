@@ -31,21 +31,23 @@ pub fn mk_simd_trait() -> TokenStream {
         }
     }
     let mut code = quote! {
-        use crate::{seal::Seal, Level, SimdElement, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select, Bytes};
+        use crate::{seal::Seal, Level, SimdElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select, Bytes};
         #imports
         /// TODO: docstring
         // TODO: Seal
         pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
-            type f32s: SimdFloat<f32, Self, Block = f32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>;
-            type u8s: SimdInt<u8, Self, Block = u8x16<Self>, Mask = Self::mask8s>;
-            type i8s: SimdInt<i8, Self, Block = i8x16<Self>, Mask = Self::mask8s, Bytes = <Self::u8s as Bytes>::Bytes>;
-            type u16s: SimdInt<u16, Self, Block = u16x8<Self>, Mask = Self::mask16s>;
-            type i16s: SimdInt<i16, Self, Block = i16x8<Self>, Mask = Self::mask16s, Bytes = <Self::u16s as Bytes>::Bytes>;
-            type u32s: SimdInt<u32, Self, Block = u32x4<Self>, Mask = Self::mask32s> + SimdCvtTruncate<Self::f32s>;
-            type i32s: SimdInt<i32, Self, Block = i32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtTruncate<Self::f32s>;
-            type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
-            type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes> + Select<Self::u16s> + Select<Self::i16s> + Select<Self::mask16s>;
-            type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes> + Select<Self::f32s> + Select<Self::u32s> + Select<Self::i32s> + Select<Self::mask32s>;
+            type f32s: SimdFloat<f32, Self, Block = f32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>
+                + SimdFrom<f32, Self>;
+            type u8s: SimdInt<u8, Self, Block = u8x16<Self>, Mask = Self::mask8s> + SimdFrom<u8, Self>;
+            type i8s: SimdInt<i8, Self, Block = i8x16<Self>, Mask = Self::mask8s, Bytes = <Self::u8s as Bytes>::Bytes> + SimdFrom<i8, Self>;
+            type u16s: SimdInt<u16, Self, Block = u16x8<Self>, Mask = Self::mask16s> + SimdFrom<u16, Self>;
+            type i16s: SimdInt<i16, Self, Block = i16x8<Self>, Mask = Self::mask16s, Bytes = <Self::u16s as Bytes>::Bytes> + SimdFrom<i16, Self>;
+            type u32s: SimdInt<u32, Self, Block = u32x4<Self>, Mask = Self::mask32s> + SimdCvtTruncate<Self::f32s> + SimdFrom<u32, Self>;
+            type i32s: SimdInt<i32, Self, Block = i32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtTruncate<Self::f32s> + SimdFrom<i32, Self>;
+            type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes> + SimdFrom<i8, Self> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
+            type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes> + SimdFrom<i16, Self> + Select<Self::u16s> + Select<Self::i16s> + Select<Self::mask16s>;
+            type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes> + SimdFrom<i32, Self>
+                + Select<Self::f32s> + Select<Self::u32s> + Select<Self::i32s> + Select<Self::mask32s>;
             fn level(self) -> Level;
 
             /// Call function with CPU features enabled.
