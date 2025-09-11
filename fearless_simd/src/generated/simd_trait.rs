@@ -49,14 +49,17 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
         > + SimdCvtTruncate<Self::f32s>;
     type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes>
         + Select<Self::u8s>
-        + Select<Self::i8s>;
+        + Select<Self::i8s>
+        + Select<Self::mask8s>;
     type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes>
         + Select<Self::u16s>
-        + Select<Self::i16s>;
+        + Select<Self::i16s>
+        + Select<Self::mask16s>;
     type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes>
         + Select<Self::f32s>
         + Select<Self::u32s>
-        + Select<Self::i32s>;
+        + Select<Self::i32s>
+        + Select<Self::mask32s>;
     fn level(self) -> Level;
     #[doc = r" Call function with CPU features enabled."]
     #[doc = r""]
