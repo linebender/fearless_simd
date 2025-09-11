@@ -1293,30 +1293,6 @@ fn simd_ge_i8x16<S: Simd>(simd: S) {
 }
 
 #[simd_test]
-fn mask_to_i8x16<S: Simd>(simd: S) {
-    let value = [-1; 16];
-    let mask = mask8x16::simd_from(value, simd);
-    let converted = i8x16::from_mask(mask);
-    assert_eq!(converted.val, value);
-}
-
-#[simd_test]
-fn mask_to_u8x16<S: Simd>(simd: S) {
-    let value = [-1; 16];
-    let mask = mask8x16::simd_from(value, simd);
-    let converted = u8x16::from_mask(mask);
-    assert_eq!(converted.val, value.map(|x| x as u8));
-}
-
-#[simd_test]
-fn mask_to_i8_native<S: Simd>(simd: S) {
-    let values = vec![-1; S::mask8s::N];
-    let mask = S::mask8s::from_slice(simd, &values);
-    let converted = S::i8s::from_mask(mask);
-    assert_eq!(converted.as_slice(), values);
-}
-
-#[simd_test]
 fn select_native_width_vectors<S: Simd>(simd: S) {
     // Test with native f32 vectors
     let a_f32 = S::f32s::from_slice(simd, &vec![1.0f32; S::f32s::N]);

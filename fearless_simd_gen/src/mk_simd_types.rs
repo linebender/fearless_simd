@@ -274,17 +274,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         }
     }
     let mask_ty = ty.mask_ty().rust();
-    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Int) {
-        methods.push(quote! {
-            #[inline(always)]
-            fn from_mask(mask: #mask_ty<S>) -> Self {
-                Self {
-                    val: unsafe { core::mem::transmute(mask.val) },
-                    simd: mask.simd,
-                }
-            }
-        });
-    }
     let block_ty = VecType::new(ty.scalar, ty.scalar_bits, 128 / ty.scalar_bits).rust();
     let block_splat_body = match ty.n_bits() {
         64 => quote! {
