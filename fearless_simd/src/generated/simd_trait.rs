@@ -995,11 +995,6 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
     }
-    #[doc = r" Construct the integer vector with the same representation as `mask`"]
-    #[doc = r""]
-    #[doc = r" Unset lanes become 0. Set lanes become -1 or the maximum value for signed or"]
-    #[doc = r" unsigned element types respectively."]
-    fn from_mask(mask: Self::Mask) -> Self;
     fn shrv(self, rhs: impl SimdInto<Self, S>) -> Self;
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;

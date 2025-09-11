@@ -160,12 +160,6 @@ fn mk_simd_int() -> TokenStream {
             #[inline(always)]
             fn to_float<T: SimdCvtFloat<Self>>(self) -> T { T::float_from(self) }
 
-            /// Construct the integer vector with the same representation as `mask`
-            ///
-            /// Unset lanes become 0. Set lanes become -1 or the maximum value for signed or
-            /// unsigned element types respectively.
-            fn from_mask(mask: Self::Mask) -> Self;
-
             #( #methods )*
         }
     }

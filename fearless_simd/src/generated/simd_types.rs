@@ -552,13 +552,6 @@ impl<S: Simd> crate::SimdInt<i8, S> for i8x16<S> {
     fn max(self, rhs: impl SimdInto<Self, S>) -> i8x16<S> {
         self.simd.max_i8x16(self, rhs.simd_into(self.simd))
     }
-    #[inline(always)]
-    fn from_mask(mask: mask8x16<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
-    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(16))]
@@ -797,13 +790,6 @@ impl<S: Simd> crate::SimdInt<u8, S> for u8x16<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> u8x16<S> {
         self.simd.max_u8x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn from_mask(mask: mask8x16<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -1187,13 +1173,6 @@ impl<S: Simd> crate::SimdInt<i16, S> for i16x8<S> {
     fn max(self, rhs: impl SimdInto<Self, S>) -> i16x8<S> {
         self.simd.max_i16x8(self, rhs.simd_into(self.simd))
     }
-    #[inline(always)]
-    fn from_mask(mask: mask16x8<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
-    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(16))]
@@ -1428,13 +1407,6 @@ impl<S: Simd> crate::SimdInt<u16, S> for u16x8<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> u16x8<S> {
         self.simd.max_u16x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn from_mask(mask: mask16x8<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -1805,13 +1777,6 @@ impl<S: Simd> crate::SimdInt<i32, S> for i32x4<S> {
     fn max(self, rhs: impl SimdInto<Self, S>) -> i32x4<S> {
         self.simd.max_i32x4(self, rhs.simd_into(self.simd))
     }
-    #[inline(always)]
-    fn from_mask(mask: mask32x4<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
-    }
 }
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for i32x4<S> {
     fn truncate_from(x: f32x4<S>) -> Self {
@@ -2042,13 +2007,6 @@ impl<S: Simd> crate::SimdInt<u32, S> for u32x4<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> u32x4<S> {
         self.simd.max_u32x4(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn from_mask(mask: mask32x4<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
@@ -3165,13 +3123,6 @@ impl<S: Simd> crate::SimdInt<i8, S> for i8x32<S> {
     fn max(self, rhs: impl SimdInto<Self, S>) -> i8x32<S> {
         self.simd.max_i8x32(self, rhs.simd_into(self.simd))
     }
-    #[inline(always)]
-    fn from_mask(mask: mask8x32<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
-    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(32))]
@@ -3426,13 +3377,6 @@ impl<S: Simd> crate::SimdInt<u8, S> for u8x32<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> u8x32<S> {
         self.simd.max_u8x32(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn from_mask(mask: mask8x32<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -3840,13 +3784,6 @@ impl<S: Simd> crate::SimdInt<i16, S> for i16x16<S> {
     fn max(self, rhs: impl SimdInto<Self, S>) -> i16x16<S> {
         self.simd.max_i16x16(self, rhs.simd_into(self.simd))
     }
-    #[inline(always)]
-    fn from_mask(mask: mask16x16<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
-    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(32))]
@@ -4089,13 +4026,6 @@ impl<S: Simd> crate::SimdInt<u16, S> for u16x16<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> u16x16<S> {
         self.simd.max_u16x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn from_mask(mask: mask16x16<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -4483,13 +4413,6 @@ impl<S: Simd> crate::SimdInt<i32, S> for i32x8<S> {
     fn max(self, rhs: impl SimdInto<Self, S>) -> i32x8<S> {
         self.simd.max_i32x8(self, rhs.simd_into(self.simd))
     }
-    #[inline(always)]
-    fn from_mask(mask: mask32x8<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
-    }
 }
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for i32x8<S> {
     fn truncate_from(x: f32x8<S>) -> Self {
@@ -4729,13 +4652,6 @@ impl<S: Simd> crate::SimdInt<u32, S> for u32x8<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> u32x8<S> {
         self.simd.max_u32x8(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn from_mask(mask: mask32x8<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for u32x8<S> {
@@ -5895,13 +5811,6 @@ impl<S: Simd> crate::SimdInt<i8, S> for i8x64<S> {
     fn max(self, rhs: impl SimdInto<Self, S>) -> i8x64<S> {
         self.simd.max_i8x64(self, rhs.simd_into(self.simd))
     }
-    #[inline(always)]
-    fn from_mask(mask: mask8x64<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
-    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(64))]
@@ -6185,13 +6094,6 @@ impl<S: Simd> crate::SimdInt<u8, S> for u8x64<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> u8x64<S> {
         self.simd.max_u8x64(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn from_mask(mask: mask8x64<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -6641,13 +6543,6 @@ impl<S: Simd> crate::SimdInt<i16, S> for i16x32<S> {
     fn max(self, rhs: impl SimdInto<Self, S>) -> i16x32<S> {
         self.simd.max_i16x32(self, rhs.simd_into(self.simd))
     }
-    #[inline(always)]
-    fn from_mask(mask: mask16x32<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
-    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(64))]
@@ -6903,13 +6798,6 @@ impl<S: Simd> crate::SimdInt<u16, S> for u16x32<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> u16x32<S> {
         self.simd.max_u16x32(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn from_mask(mask: mask16x32<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -7315,13 +7203,6 @@ impl<S: Simd> crate::SimdInt<i32, S> for i32x16<S> {
     fn max(self, rhs: impl SimdInto<Self, S>) -> i32x16<S> {
         self.simd.max_i32x16(self, rhs.simd_into(self.simd))
     }
-    #[inline(always)]
-    fn from_mask(mask: mask32x16<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
-    }
 }
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for i32x16<S> {
     fn truncate_from(x: f32x16<S>) -> Self {
@@ -7566,13 +7447,6 @@ impl<S: Simd> crate::SimdInt<u32, S> for u32x16<S> {
     #[inline(always)]
     fn max(self, rhs: impl SimdInto<Self, S>) -> u32x16<S> {
         self.simd.max_u32x16(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn from_mask(mask: mask32x16<S>) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute(mask.val) },
-            simd: mask.simd,
-        }
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for u32x16<S> {

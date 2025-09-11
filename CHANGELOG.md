@@ -17,8 +17,6 @@ This release has an [MSRV][] of 1.86.
 
 ## Added
 
-- `SimdInt::from_mask` allows construction of an integer vector from
-  the associated mask type. ([#75][] by [@Ralith][])
 - `SimdBase::witness` to fetch the `Simd` implementation associated with a
   generic vector. ([#76][] by [@Ralith][])
 - `Select` is now available on native-width masks. ([#77][] by [@Ralith][])
