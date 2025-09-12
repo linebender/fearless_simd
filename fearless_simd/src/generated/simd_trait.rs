@@ -1005,7 +1005,6 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
     }
-    fn shrv(self, rhs: impl SimdInto<Self, S>) -> Self;
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     fn simd_le(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
