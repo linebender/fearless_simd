@@ -160,7 +160,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn msub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        a * b - c
+        unsafe { _mm_fmsub_ps(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -1311,7 +1311,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn msub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        a * b - c
+        unsafe { _mm_fmsub_pd(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
