@@ -31,7 +31,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
             Block = i8x16<Self>,
             Mask = Self::mask8s,
             Bytes = <Self::u8s as Bytes>::Bytes,
-        > + SimdFrom<i8, Self>;
+        > + SimdFrom<i8, Self>
+        + core::ops::Neg<Output = Self::i8s>;
     type u16s: SimdInt<u16, Self, Block = u16x8<Self>, Mask = Self::mask16s> + SimdFrom<u16, Self>;
     type i16s: SimdInt<
             i16,
@@ -39,7 +40,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
             Block = i16x8<Self>,
             Mask = Self::mask16s,
             Bytes = <Self::u16s as Bytes>::Bytes,
-        > + SimdFrom<i16, Self>;
+        > + SimdFrom<i16, Self>
+        + core::ops::Neg<Output = Self::i16s>;
     type u32s: SimdInt<u32, Self, Block = u32x4<Self>, Mask = Self::mask32s>
         + SimdCvtTruncate<Self::f32s>
         + SimdFrom<u32, Self>;
@@ -50,7 +52,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
             Mask = Self::mask32s,
             Bytes = <Self::u32s as Bytes>::Bytes,
         > + SimdCvtTruncate<Self::f32s>
-        + SimdFrom<i32, Self>;
+        + SimdFrom<i32, Self>
+        + core::ops::Neg<Output = Self::i32s>;
     type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes>
         + SimdFrom<i8, Self>
         + Select<Self::u8s>
@@ -131,6 +134,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self>;
+    fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self>;
     fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self>;
     fn splat_u8x16(self, val: u8) -> u8x16<Self>;
@@ -196,6 +200,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self>;
+    fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self>;
     fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self>;
     fn splat_u16x8(self, val: u16) -> u16x8<Self>;
@@ -261,6 +266,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self>;
+    fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self>;
     fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self>;
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self>;
@@ -407,6 +413,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self>;
     fn split_i8x32(self, a: i8x32<Self>) -> (i8x16<Self>, i8x16<Self>);
+    fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self>;
     fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self>;
     fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self>;
     fn splat_u8x32(self, val: u8) -> u8x32<Self>;
@@ -475,6 +482,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self>;
     fn split_i16x16(self, a: i16x16<Self>) -> (i16x8<Self>, i16x8<Self>);
+    fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self>;
     fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self>;
     fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self>;
     fn splat_u16x16(self, val: u16) -> u16x16<Self>;
@@ -544,6 +552,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self>;
     fn split_i32x8(self, a: i32x8<Self>) -> (i32x4<Self>, i32x4<Self>);
+    fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self>;
     fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self>;
     fn reinterpret_u32_i32x8(self, a: i32x8<Self>) -> u32x8<Self>;
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self>;
@@ -694,6 +703,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>);
+    fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self>;
     fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self>;
     fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self>;
     fn splat_u8x64(self, val: u8) -> u8x64<Self>;
@@ -760,6 +770,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>);
+    fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self>;
     fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self>;
     fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self>;
     fn splat_u16x32(self, val: u16) -> u16x32<Self>;
@@ -828,6 +839,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>);
+    fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self>;
     fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self>;
     fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self>;
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self>;

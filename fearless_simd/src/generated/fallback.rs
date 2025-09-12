@@ -849,6 +849,28 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        [
+            i8::neg(a[0usize]),
+            i8::neg(a[1usize]),
+            i8::neg(a[2usize]),
+            i8::neg(a[3usize]),
+            i8::neg(a[4usize]),
+            i8::neg(a[5usize]),
+            i8::neg(a[6usize]),
+            i8::neg(a[7usize]),
+            i8::neg(a[8usize]),
+            i8::neg(a[9usize]),
+            i8::neg(a[10usize]),
+            i8::neg(a[11usize]),
+            i8::neg(a[12usize]),
+            i8::neg(a[13usize]),
+            i8::neg(a[14usize]),
+            i8::neg(a[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
         u8x16 {
             val: bytemuck::cast(a.val),
@@ -1821,6 +1843,20 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::neg(a[0usize]),
+            i16::neg(a[1usize]),
+            i16::neg(a[2usize]),
+            i16::neg(a[3usize]),
+            i16::neg(a[4usize]),
+            i16::neg(a[5usize]),
+            i16::neg(a[6usize]),
+            i16::neg(a[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
         u8x16 {
             val: bytemuck::cast(a.val),
@@ -2445,6 +2481,16 @@ impl Simd for Fallback {
         result[0..4usize].copy_from_slice(&a.val);
         result[4usize..8usize].copy_from_slice(&b.val);
         result.simd_into(self)
+    }
+    #[inline(always)]
+    fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        [
+            i32::neg(a[0usize]),
+            i32::neg(a[1usize]),
+            i32::neg(a[2usize]),
+            i32::neg(a[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
@@ -3391,6 +3437,11 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.neg_i8x16(a0), self.neg_i8x16(a1))
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         self.combine_u8x16(self.reinterpret_u8_i8x16(a0), self.reinterpret_u8_i8x16(a1))
@@ -3779,6 +3830,11 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val[0..8usize]);
         b1.copy_from_slice(&a.val[8usize..16usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
     }
     #[inline(always)]
     fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
@@ -4191,6 +4247,11 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.neg_i32x4(a0), self.neg_i32x4(a1))
     }
     #[inline(always)]
     fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
@@ -5082,6 +5143,11 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         self.combine_u8x32(self.reinterpret_u8_i8x32(a0), self.reinterpret_u8_i8x32(a1))
@@ -5537,6 +5603,11 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
+    }
+    #[inline(always)]
     fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_i16x32(a);
         self.combine_u8x32(
@@ -5972,6 +6043,11 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val[0..8usize]);
         b1.copy_from_slice(&a.val[8usize..16usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
     }
     #[inline(always)]
     fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {

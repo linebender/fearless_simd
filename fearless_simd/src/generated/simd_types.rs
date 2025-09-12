@@ -468,6 +468,10 @@ impl<S: Simd> i8x16<S> {
         self.simd.combine_i8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    pub fn neg(self) -> i8x16<S> {
+        self.simd.neg_i8x16(self)
+    }
+    #[inline(always)]
     pub fn reinterpret_u8(self) -> u8x16<S> {
         self.simd.reinterpret_u8_i8x16(self)
     }
@@ -1089,6 +1093,10 @@ impl<S: Simd> i16x8<S> {
         self.simd.combine_i16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    pub fn neg(self) -> i16x8<S> {
+        self.simd.neg_i16x8(self)
+    }
+    #[inline(always)]
     pub fn reinterpret_u8(self) -> u8x16<S> {
         self.simd.reinterpret_u8_i16x8(self)
     }
@@ -1687,6 +1695,10 @@ impl<S: Simd> i32x4<S> {
     #[inline(always)]
     pub fn combine(self, rhs: impl SimdInto<Self, S>) -> i32x8<S> {
         self.simd.combine_i32x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    pub fn neg(self) -> i32x4<S> {
+        self.simd.neg_i32x4(self)
     }
     #[inline(always)]
     pub fn reinterpret_u8(self) -> u8x16<S> {
@@ -3039,6 +3051,10 @@ impl<S: Simd> i8x32<S> {
         self.simd.combine_i8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    pub fn neg(self) -> i8x32<S> {
+        self.simd.neg_i8x32(self)
+    }
+    #[inline(always)]
     pub fn reinterpret_u8(self) -> u8x32<S> {
         self.simd.reinterpret_u8_i8x32(self)
     }
@@ -3700,6 +3716,10 @@ impl<S: Simd> i16x16<S> {
         self.simd.combine_i16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    pub fn neg(self) -> i16x16<S> {
+        self.simd.neg_i16x16(self)
+    }
+    #[inline(always)]
     pub fn reinterpret_u8(self) -> u8x32<S> {
         self.simd.reinterpret_u8_i16x16(self)
     }
@@ -4323,6 +4343,10 @@ impl<S: Simd> i32x8<S> {
     #[inline(always)]
     pub fn combine(self, rhs: impl SimdInto<Self, S>) -> i32x16<S> {
         self.simd.combine_i32x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    pub fn neg(self) -> i32x8<S> {
+        self.simd.neg_i32x8(self)
     }
     #[inline(always)]
     pub fn reinterpret_u8(self) -> u8x32<S> {
@@ -5726,6 +5750,10 @@ impl<S: Simd> i8x64<S> {
         self.simd.max_i8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    pub fn neg(self) -> i8x64<S> {
+        self.simd.neg_i8x64(self)
+    }
+    #[inline(always)]
     pub fn reinterpret_u8(self) -> u8x64<S> {
         self.simd.reinterpret_u8_i8x64(self)
     }
@@ -6458,6 +6486,10 @@ impl<S: Simd> i16x32<S> {
         self.simd.max_i16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
+    pub fn neg(self) -> i16x32<S> {
+        self.simd.neg_i16x32(self)
+    }
+    #[inline(always)]
     pub fn reinterpret_u8(self) -> u8x64<S> {
         self.simd.reinterpret_u8_i16x32(self)
     }
@@ -7112,6 +7144,10 @@ impl<S: Simd> i32x16<S> {
     #[inline(always)]
     pub fn max(self, rhs: impl SimdInto<Self, S>) -> i32x16<S> {
         self.simd.max_i32x16(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    pub fn neg(self) -> i32x16<S> {
+        self.simd.neg_i32x16(self)
     }
     #[inline(always)]
     pub fn reinterpret_u8(self) -> u8x64<S> {

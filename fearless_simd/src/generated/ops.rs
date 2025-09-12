@@ -149,6 +149,13 @@ impl<S: Simd> core::ops::Div<f32x4<S>> for f32 {
         rhs.simd.div_f32x4(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Neg for i8x16<S> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        self.simd.neg_i8x16(self)
+    }
+}
 impl<S: Simd> core::ops::Add for i8x16<S> {
     type Output = Self;
     #[inline(always)]
@@ -729,6 +736,13 @@ impl<S: Simd> core::ops::Not for mask8x16<S> {
         self.simd.not_mask8x16(self)
     }
 }
+impl<S: Simd> core::ops::Neg for i16x8<S> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        self.simd.neg_i16x8(self)
+    }
+}
 impl<S: Simd> core::ops::Add for i16x8<S> {
     type Output = Self;
     #[inline(always)]
@@ -1307,6 +1321,13 @@ impl<S: Simd> core::ops::Not for mask16x8<S> {
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask16x8(self)
+    }
+}
+impl<S: Simd> core::ops::Neg for i32x4<S> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        self.simd.neg_i32x4(self)
     }
 }
 impl<S: Simd> core::ops::Add for i32x4<S> {
@@ -2273,6 +2294,13 @@ impl<S: Simd> core::ops::Div<f32x8<S>> for f32 {
         rhs.simd.div_f32x8(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Neg for i8x32<S> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        self.simd.neg_i8x32(self)
+    }
+}
 impl<S: Simd> core::ops::Add for i8x32<S> {
     type Output = Self;
     #[inline(always)]
@@ -2853,6 +2881,13 @@ impl<S: Simd> core::ops::Not for mask8x32<S> {
         self.simd.not_mask8x32(self)
     }
 }
+impl<S: Simd> core::ops::Neg for i16x16<S> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        self.simd.neg_i16x16(self)
+    }
+}
 impl<S: Simd> core::ops::Add for i16x16<S> {
     type Output = Self;
     #[inline(always)]
@@ -3431,6 +3466,13 @@ impl<S: Simd> core::ops::Not for mask16x16<S> {
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask16x16(self)
+    }
+}
+impl<S: Simd> core::ops::Neg for i32x8<S> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        self.simd.neg_i32x8(self)
     }
 }
 impl<S: Simd> core::ops::Add for i32x8<S> {
@@ -4397,6 +4439,13 @@ impl<S: Simd> core::ops::Div<f32x16<S>> for f32 {
         rhs.simd.div_f32x16(self.simd_into(rhs.simd), rhs)
     }
 }
+impl<S: Simd> core::ops::Neg for i8x64<S> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        self.simd.neg_i8x64(self)
+    }
+}
 impl<S: Simd> core::ops::Add for i8x64<S> {
     type Output = Self;
     #[inline(always)]
@@ -4977,6 +5026,13 @@ impl<S: Simd> core::ops::Not for mask8x64<S> {
         self.simd.not_mask8x64(self)
     }
 }
+impl<S: Simd> core::ops::Neg for i16x32<S> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        self.simd.neg_i16x32(self)
+    }
+}
 impl<S: Simd> core::ops::Add for i16x32<S> {
     type Output = Self;
     #[inline(always)]
@@ -5555,6 +5611,13 @@ impl<S: Simd> core::ops::Not for mask16x32<S> {
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask16x32(self)
+    }
+}
+impl<S: Simd> core::ops::Neg for i32x16<S> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        self.simd.neg_i32x16(self)
     }
 }
 impl<S: Simd> core::ops::Add for i32x16<S> {

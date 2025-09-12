@@ -308,6 +308,10 @@ impl Simd for WasmSimd128 {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        i8x16_neg(a.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
         <v128>::from(a).simd_into(self)
     }
@@ -580,6 +584,10 @@ impl Simd for WasmSimd128 {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        i16x8_neg(a.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
         <v128>::from(a).simd_into(self)
     }
@@ -832,6 +840,10 @@ impl Simd for WasmSimd128 {
         result[0..4usize].copy_from_slice(&a.val);
         result[4usize..8usize].copy_from_slice(&b.val);
         result.simd_into(self)
+    }
+    #[inline(always)]
+    fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        i32x4_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
@@ -1533,6 +1545,11 @@ impl Simd for WasmSimd128 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.neg_i8x16(a0), self.neg_i8x16(a1))
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         self.combine_u8x16(self.reinterpret_u8_i8x16(a0), self.reinterpret_u8_i8x16(a1))
@@ -1921,6 +1938,11 @@ impl Simd for WasmSimd128 {
         b0.copy_from_slice(&a.val[0..8usize]);
         b1.copy_from_slice(&a.val[8usize..16usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
     }
     #[inline(always)]
     fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
@@ -2320,6 +2342,11 @@ impl Simd for WasmSimd128 {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.neg_i32x4(a0), self.neg_i32x4(a1))
     }
     #[inline(always)]
     fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
@@ -3223,6 +3250,11 @@ impl Simd for WasmSimd128 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         self.combine_u8x32(self.reinterpret_u8_i8x32(a0), self.reinterpret_u8_i8x32(a1))
@@ -3659,6 +3691,11 @@ impl Simd for WasmSimd128 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
+    }
+    #[inline(always)]
     fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_i16x32(a);
         self.combine_u8x32(
@@ -4088,6 +4125,11 @@ impl Simd for WasmSimd128 {
         b0.copy_from_slice(&a.val[0..8usize]);
         b1.copy_from_slice(&a.val[8usize..16usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
     }
     #[inline(always)]
     fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
