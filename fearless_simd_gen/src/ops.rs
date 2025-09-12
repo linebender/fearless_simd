@@ -106,7 +106,7 @@ pub const MASK_OPS: &[(&str, OpSig)] = &[
 
 /// Ops covered by `core::ops`
 pub const CORE_OPS: &[&str] = &[
-    "not", "neg", "add", "sub", "mul", "div", "and", "or", "xor", "shr",
+    "not", "neg", "add", "sub", "mul", "div", "and", "or", "xor", "shr", "shrv",
 ];
 
 pub fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
