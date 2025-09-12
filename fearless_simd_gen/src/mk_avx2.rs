@@ -210,6 +210,15 @@ fn make_method(
                     }
                 }
             }
+            "msub" => {
+                let intrinsic =
+                    simple_intrinsic("fmsub", vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
+                quote! {
+                    #method_sig {
+                        unsafe { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) }
+                    }
+                }
+            }
             _ => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
         },
         OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty, scalar_bits),
