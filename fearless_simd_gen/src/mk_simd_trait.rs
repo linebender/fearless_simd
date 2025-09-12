@@ -154,6 +154,8 @@ fn mk_simd_int() -> TokenStream {
             + core::ops::BitXorAssign
             + core::ops::BitXor<Element, Output = Self>
             + core::ops::BitXorAssign<Element>
+            + core::ops::Shl<u32, Output = Self>
+            + core::ops::ShlAssign<u32>
             + core::ops::Shr<Output = Self>
             + core::ops::ShrAssign
             + core::ops::Shr<u32, Output = Self>

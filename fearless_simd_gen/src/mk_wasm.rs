@@ -285,7 +285,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Shift => {
                     let prefix = vec_ty.scalar.prefix();
-                    let shift_name = format!("{prefix}{}x{}_shr", vec_ty.scalar_bits, vec_ty.len);
+                    let shift_name =
+                        format!("{prefix}{}x{}_{method}", vec_ty.scalar_bits, vec_ty.len);
                     let shift_fn = Ident::new(&shift_name, Span::call_site());
 
                     quote! {

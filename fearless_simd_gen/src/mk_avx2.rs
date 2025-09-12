@@ -199,7 +199,7 @@ fn make_method(
             mk_sse4_2::handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
         }
         OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty, arch),
-        OpSig::Shift => mk_sse4_2::handle_shift(method_sig, vec_ty, scalar_bits, ty_bits),
+        OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty, scalar_bits, ty_bits),
         OpSig::Ternary => match method {
             "madd" => {
                 let intrinsic =

@@ -195,7 +195,7 @@ fn make_method(
             handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
         }
         OpSig::Binary => handle_binary(method_sig, method, vec_ty, arch),
-        OpSig::Shift => handle_shift(method_sig, vec_ty, scalar_bits, ty_bits),
+        OpSig::Shift => handle_shift(method_sig, method, vec_ty, scalar_bits, ty_bits),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
         OpSig::Select => handle_select(method_sig, vec_ty, scalar_bits),
         OpSig::Combine => generic_combine(vec_ty),
@@ -420,13 +420,15 @@ pub(crate) fn handle_binary(
 
 pub(crate) fn handle_shift(
     method_sig: TokenStream,
+    method: &str,
     vec_ty: &VecType,
     scalar_bits: usize,
     ty_bits: usize,
 ) -> TokenStream {
-    let op = match vec_ty.scalar {
-        ScalarType::Unsigned => "srl",
-        ScalarType::Int => "sra",
+    let op = match (method, vec_ty.scalar) {
+        ("shr", ScalarType::Unsigned) => "srl",
+        ("shr", ScalarType::Int) => "sra",
+        ("shl", _) => "sll",
         _ => unreachable!(),
     };
     let suffix = op_suffix(vec_ty.scalar, scalar_bits.max(16), false);

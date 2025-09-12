@@ -964,6 +964,12 @@ fn shrv_u32x4_varied<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn shl_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0xFFFFFFFF, 0xFFFF, 0xFF, 0]);
+    assert_eq!((a << 4).val, [0xFFFFFFF0, 0xFFFF0, 0xFF0, 0]);
+}
+
+#[simd_test]
 fn select_f32x4<S: Simd>(simd: S) {
     let mask = mask32x4::from_slice(simd, &[-1, 0, -1, 0]);
     let b = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
