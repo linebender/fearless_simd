@@ -206,7 +206,7 @@ fn make_method(
                     simple_intrinsic("fmadd", vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
                 quote! {
                     #method_sig {
-                        unsafe { #intrinsic(b.into(), c.into(), a.into()).simd_into(self) }
+                        unsafe { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) }
                     }
                 }
             }

@@ -226,14 +226,14 @@ fn mk_simd_impl() -> TokenStream {
                         // since we are not actually fusing it, should this be documented?
                         quote! {
                             #method_sig {
-                               a.add(b.mul(c))
+                               a.mul(b).add(c)
                             }
                         }
                     } else if method == "msub" {
                         // TODO: Same as above
                         quote! {
                             #method_sig {
-                               a.sub(b.mul(c))
+                                a.mul(b).sub(c)
                             }
                         }
                     } else {

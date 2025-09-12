@@ -150,11 +150,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn madd_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        unsafe { vfmaq_f32(a.into(), b.into(), c.into()).simd_into(self) }
+        unsafe { vfmaq_f32(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn msub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        unsafe { vfmsq_f32(a.into(), b.into(), c.into()).simd_into(self) }
+        unsafe { vnegq_f32(vfmsq_f32(c.into(), b.into(), a.into())).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -1102,11 +1102,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn madd_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        unsafe { vfmaq_f64(a.into(), b.into(), c.into()).simd_into(self) }
+        unsafe { vfmaq_f64(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn msub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        unsafe { vfmsq_f64(a.into(), b.into(), c.into()).simd_into(self) }
+        unsafe { vnegq_f64(vfmsq_f64(c.into(), b.into(), a.into())).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {

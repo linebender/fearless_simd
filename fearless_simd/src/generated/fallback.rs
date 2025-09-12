@@ -281,11 +281,11 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn madd_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        a.add(b.mul(c))
+        a.mul(b).add(c)
     }
     #[inline(always)]
     fn msub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        a.sub(b.mul(c))
+        a.mul(b).sub(c)
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -2824,11 +2824,11 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn madd_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        a.add(b.mul(c))
+        a.mul(b).add(c)
     }
     #[inline(always)]
     fn msub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        a.sub(b.mul(c))
+        a.mul(b).sub(c)
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {

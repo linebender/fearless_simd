@@ -488,14 +488,14 @@ pub(crate) fn handle_ternary(
         "madd" => {
             quote! {
                 #method_sig {
-                    a + b * c
+                    a * b + c
                 }
             }
         }
         "msub" => {
             quote! {
                 #method_sig {
-                    a - b * c
+                    a * b - c
                 }
             }
         }

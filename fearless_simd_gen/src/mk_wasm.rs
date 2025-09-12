@@ -173,7 +173,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         // TODO: `relaxed-simd` has madd.
                         quote! {
                             #method_sig {
-                                a.#first_ident(b.mul(c))
+                                a.mul(b).#first_ident(c)
                             }
                         }
                     } else {

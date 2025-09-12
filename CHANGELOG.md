@@ -34,6 +34,12 @@ This release has an [MSRV][] of 1.86.
   enabling `Bytes::bitcast` in generic code. ([#81][] by [@Ralith][])
 - Scalar fallback now uses wrapping integer addition. ([#85][] by [@Ralith][])
 
+## Changed
+
+- Breaking: `a.madd(b, c)` and `a.msub(b, c)` now correspond to `a *
+  b + c` and `a * b - c` for consistency with `mul_add` in
+  std. ([#88][] by [@Ralith][])
+
 ## [0.2.0][] (2025-08-26)
 
 There has been a complete rewrite of Fearless SIMD.
@@ -61,6 +67,7 @@ No changelog was kept for this release.
 [#83]: https://github.com/linebender/fearless_simd/pull/83
 [#84]: https://github.com/linebender/fearless_simd/pull/84
 [#85]: https://github.com/linebender/fearless_simd/pull/85
+[#88]: https://github.com/linebender/fearless_simd/pull/88
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0
