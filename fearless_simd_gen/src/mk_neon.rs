@@ -282,13 +282,25 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Ternary => {
-                    let args = [
-                        quote! { a.into() },
-                        quote! { b.into() },
-                        quote! { c.into() },
-                    ];
+                    let args = match method {
+                        "madd" | "msub" => [
+                            quote! { c.into() },
+                            quote! { b.into() },
+                            quote! { a.into() },
+                        ],
+                        _ => [
+                            quote! { a.into() },
+                            quote! { b.into() },
+                            quote! { c.into() },
+                        ],
+                    };
 
-                    let expr = Neon.expr(method, vec_ty, &args);
+                    let mut expr = Neon.expr(method, vec_ty, &args);
+                    if method == "msub" {
+                        // -(c - a * b) = (a * b - c)
+                        let neg = simple_intrinsic("vneg", vec_ty);
+                        expr = quote! { #neg(#expr) };
+                    }
                     quote! {
                         #method_sig {
                             unsafe {

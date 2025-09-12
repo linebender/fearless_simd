@@ -72,9 +72,9 @@ fn simd_gt_f32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn madd_f32x4<S: Simd>(simd: S) {
-    let a = f32x4::from_slice(simd, &[2.0, -3.0, 0.0, 0.5]);
+    let a = f32x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
     let b = f32x4::from_slice(simd, &[5.0, 4.0, 100.0, 8.0]);
-    let c = f32x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
+    let c = f32x4::from_slice(simd, &[2.0, -3.0, 0.0, 0.5]);
     assert_eq!(a.madd(b, c).val, [7.0, -11.0, 700.0, 24.5]);
 }
 
@@ -1154,14 +1154,14 @@ fn msub_f64x2<S: Simd>(simd: S) {
     let a = f64x2::from_slice(simd, &[2.0, 3.0]);
     let b = f64x2::from_slice(simd, &[4.0, 5.0]);
     let c = f64x2::from_slice(simd, &[1.0, 2.0]);
-    assert_eq!(a.msub(b, c).val, [-2.0, -7.0]);
+    assert_eq!(a.msub(b, c).val, [7.0, 13.0]);
 }
 
 #[simd_test]
 fn madd_f64x2<S: Simd>(simd: S) {
-    let a = f64x2::from_slice(simd, &[2.0, 3.0]);
+    let a = f64x2::from_slice(simd, &[1.0, 2.0]);
     let b = f64x2::from_slice(simd, &[4.0, 5.0]);
-    let c = f64x2::from_slice(simd, &[1.0, 2.0]);
+    let c = f64x2::from_slice(simd, &[2.0, 3.0]);
     assert_eq!(a.madd(b, c).val, [6.0, 13.0]);
 }
 
