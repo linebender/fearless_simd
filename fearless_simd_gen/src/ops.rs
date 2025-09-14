@@ -123,6 +123,9 @@ pub fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
     if ty.n_bits() > 128 {
         ops.push(("split", OpSig::Split));
     }
+    if ty.scalar == ScalarType::Int {
+        ops.push(("neg", OpSig::Unary));
+    }
 
     if ty.scalar == ScalarType::Float {
         if cvt {

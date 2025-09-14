@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::types::{ScalarType, VecType};
-use crate::x86_common::{intrinsic_ident, op_suffix, set1_intrinsic, simple_intrinsic};
+use crate::x86_common::{
+    intrinsic_ident, op_suffix, set0_intrinsic, set1_intrinsic, simple_intrinsic,
+};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
@@ -60,13 +62,25 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                 let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
                 quote! { #intrinsic ( #( #args, )* _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC) }
             }
-            "neg" => {
-                let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
-                let xor = simple_intrinsic("xor", ScalarType::Float, ty.scalar_bits, ty.n_bits());
-                quote! {
-                    #( #xor(#args, #set1(-0.0)) )*
+            "neg" => match ty.scalar {
+                ScalarType::Float => {
+                    let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
+                    let xor =
+                        simple_intrinsic("xor", ScalarType::Float, ty.scalar_bits, ty.n_bits());
+                    quote! {
+                        #( #xor(#args, #set1(-0.0)) )*
+                    }
                 }
-            }
+                ScalarType::Int => {
+                    let set0 = set0_intrinsic(*ty);
+                    let sub = simple_intrinsic("sub", ty.scalar, ty.scalar_bits, ty.n_bits());
+                    let arg = &args[0];
+                    quote! {
+                        #sub(#set0(), #arg)
+                    }
+                }
+                _ => unreachable!(),
+            },
             "abs" => {
                 let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
                 let andnot =

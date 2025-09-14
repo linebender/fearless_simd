@@ -1143,6 +1143,14 @@ fn neg_f64x2<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn neg_i32x4<S: Simd>(simd: S) {
+    assert_eq!(
+        (-i32x4::from_slice(simd, &[1, -2, 3, -4])).val,
+        [-1, 2, -3, 4]
+    );
+}
+
+#[simd_test]
 fn sqrt_f64x2<S: Simd>(simd: S) {
     let a = f64x2::from_slice(simd, &[4.0, 9.0]);
     assert_eq!(a.sqrt().val, [2.0, 3.0]);

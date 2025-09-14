@@ -26,6 +26,18 @@ pub(crate) fn op_suffix(mut ty: ScalarType, bits: usize, sign_aware: bool) -> &'
     }
 }
 
+pub(crate) fn set0_intrinsic(vec_ty: VecType) -> Ident {
+    use ScalarType::*;
+    let suffix = match (vec_ty.scalar, vec_ty.n_bits()) {
+        (Int | Unsigned | Mask, 128) => "si128",
+        (Int | Unsigned | Mask, 256) => "si256",
+        (Int | Unsigned | Mask, 512) => "si512",
+        _ => op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false),
+    };
+
+    intrinsic_ident("setzero", suffix, vec_ty.n_bits())
+}
+
 pub(crate) fn set1_intrinsic(ty: ScalarType, bits: usize, ty_bits: usize) -> Ident {
     use ScalarType::*;
     let suffix = match (ty, bits) {
