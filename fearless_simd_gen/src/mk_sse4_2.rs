@@ -63,7 +63,7 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
             ///
             /// The SSE4.2 CPU feature must be available.
             #[inline]
-            pub unsafe fn new_unchecked() -> Self {
+            pub const unsafe fn new_unchecked() -> Self {
                 Sse4_2 {
                     sse4_2: unsafe { crate::core_arch::x86::Sse4_2::new_unchecked() },
                 }

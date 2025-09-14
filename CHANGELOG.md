@@ -42,6 +42,7 @@ This release has an [MSRV][] of 1.86.
 - Breaking: `a.madd(b, c)` and `a.msub(b, c)` now correspond to `a *
   b + c` and `a * b - c` for consistency with `mul_add` in
   std. ([#88][] by [@Ralith][])
+- Constructors for static SIMD levels are now `const` ([#93][] by [@Ralith][])
 
 ## [0.2.0][] (2025-08-26)
 
@@ -73,6 +74,7 @@ No changelog was kept for this release.
 [#86]: https://github.com/linebender/fearless_simd/pull/86
 [#88]: https://github.com/linebender/fearless_simd/pull/88
 [#91]: https://github.com/linebender/fearless_simd/pull/91
+[#93]: https://github.com/linebender/fearless_simd/pull/93
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0

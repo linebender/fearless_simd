@@ -94,7 +94,7 @@ pub fn mk_fallback_impl() -> TokenStream {
 
         impl Fallback {
             #[inline]
-            pub fn new() -> Self {
+            pub const fn new() -> Self {
                 Fallback {
                     fallback: crate::core_arch::fallback::Fallback::new(),
                 }

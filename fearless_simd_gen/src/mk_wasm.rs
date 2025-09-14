@@ -571,7 +571,7 @@ pub fn mk_wasm128_impl(level: Level) -> TokenStream {
 
         impl #level_tok {
             #[inline]
-            pub fn new_unchecked() -> Self {
+            pub const fn new_unchecked() -> Self {
                 Self { _private: () }
             }
         }

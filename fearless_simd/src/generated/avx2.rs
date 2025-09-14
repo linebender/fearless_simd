@@ -32,7 +32,7 @@ impl Avx2 {
     #[doc = r""]
     #[doc = r" The AVX2 and FMA CPU feature must be available."]
     #[inline]
-    pub unsafe fn new_unchecked() -> Self {
+    pub const unsafe fn new_unchecked() -> Self {
         Avx2 {
             avx2: unsafe { crate::core_arch::x86::Avx2::new_unchecked() },
         }

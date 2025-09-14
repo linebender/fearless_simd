@@ -312,7 +312,7 @@ impl Level {
     ///
     /// This is primarily intended for tests; most users should prefer [`Level::new`].
     #[inline]
-    pub fn fallback() -> Self {
+    pub const fn fallback() -> Self {
         Self::Fallback(Fallback::new())
     }
 

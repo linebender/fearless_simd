@@ -32,7 +32,7 @@ impl Sse4_2 {
     #[doc = r""]
     #[doc = r" The SSE4.2 CPU feature must be available."]
     #[inline]
-    pub unsafe fn new_unchecked() -> Self {
+    pub const unsafe fn new_unchecked() -> Self {
         Sse4_2 {
             sse4_2: unsafe { crate::core_arch::x86::Sse4_2::new_unchecked() },
         }
