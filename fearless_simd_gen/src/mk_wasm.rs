@@ -386,6 +386,13 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             quote! { 2, 3, 6, 7 },
                             quote! { u32x4_shuffle },
                         ),
+                        64 => (
+                            quote! { 0, 2 },
+                            quote! { 1, 3 },
+                            quote! { 0, 1 },
+                            quote! { 2, 3 },
+                            quote! { u64x2_shuffle },
+                        ),
                         _ => panic!("unsupported scalar_bits"),
                     };
 
@@ -455,6 +462,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             quote! { 2, 6, 3, 7 },
                             quote! { u32x4_shuffle },
                         ),
+                        64 => (quote! { 0, 2 }, quote! { 1, 3 }, quote! { u64x2_shuffle }),
                         _ => panic!("unsupported scalar_bits"),
                     };
 

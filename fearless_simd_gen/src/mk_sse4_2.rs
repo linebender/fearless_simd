@@ -110,9 +110,12 @@ fn mk_simd_impl() -> TokenStream {
             type i16s = i16x8<Self>;
             type u32s = u32x4<Self>;
             type i32s = i32x4<Self>;
+            type u64s = u64x2<Self>;
+            type i64s = i64x2<Self>;
             type mask8s = mask8x16<Self>;
             type mask16s = mask16x8<Self>;
             type mask32s = mask32x4<Self>;
+            type mask64s = mask64x2<Self>;
             #[inline(always)]
             fn level(self) -> Level {
                 Level::#level_tok(self)
@@ -265,6 +268,7 @@ pub(crate) fn handle_compare(
                 8 => quote! { 0x80u8 },
                 16 => quote! { 0x8000u16 },
                 32 => quote! { 0x80000000u32 },
+                64 => quote! { 0x8000000000000000u64 },
                 _ => unimplemented!(),
             };
             let gt =
@@ -280,6 +284,17 @@ pub(crate) fn handle_compare(
                 let a_signed = _mm_xor_si128(a.into(), sign_bit);
                 let b_signed = _mm_xor_si128(b.into(), sign_bit);
 
+                #gt(#args)
+            }
+        } else if vec_ty.scalar == ScalarType::Int {
+            let gt = simple_intrinsic("cmpgt", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+            let args = if method == "simd_lt" {
+                quote! { b.into(), a.into() }
+            } else {
+                quote! { a.into(), b.into() }
+            };
+
+            quote! {
                 #gt(#args)
             }
         } else {
