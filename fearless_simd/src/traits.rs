@@ -120,7 +120,7 @@ impl SimdElement for i64 {
 }
 
 impl SimdElement for u64 {
-    type Mask = u64;
+    type Mask = i64;
 }
 
 /// Construction of integer vectors from floats by truncation
