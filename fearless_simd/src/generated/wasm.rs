@@ -18,7 +18,7 @@ pub struct WasmSimd128 {
 }
 impl WasmSimd128 {
     #[inline]
-    pub fn new_unchecked() -> Self {
+    pub const fn new_unchecked() -> Self {
         Self { _private: () }
     }
 }

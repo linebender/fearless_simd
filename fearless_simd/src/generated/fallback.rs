@@ -63,7 +63,7 @@ pub struct Fallback {
 }
 impl Fallback {
     #[inline]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Fallback {
             fallback: crate::core_arch::fallback::Fallback::new(),
         }

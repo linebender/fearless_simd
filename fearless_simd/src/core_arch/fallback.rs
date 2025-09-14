@@ -10,7 +10,7 @@ pub struct Fallback {
 impl Fallback {
     /// Create a SIMD token.
     #[inline]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { _private: () }
     }
 }

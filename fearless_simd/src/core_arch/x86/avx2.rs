@@ -28,7 +28,7 @@ impl Avx2 {
     /// # Safety
     ///
     /// The required CPU features must be available.
-    pub unsafe fn new_unchecked() -> Self {
+    pub const unsafe fn new_unchecked() -> Self {
         Self { _private: () }
     }
 

@@ -60,7 +60,7 @@ pub fn mk_neon_impl(level: Level) -> TokenStream {
 
         impl Neon {
             #[inline]
-            pub unsafe fn new_unchecked() -> Self {
+            pub const unsafe fn new_unchecked() -> Self {
                 Neon {
                     neon: unsafe { crate::core_arch::aarch64::Neon::new_unchecked() },
                 }
