@@ -119,6 +119,10 @@ impl SimdElement for i64 {
     type Mask = i64;
 }
 
+impl SimdElement for u64 {
+    type Mask = u64;
+}
+
 /// Construction of integer vectors from floats by truncation
 pub trait SimdCvtTruncate<T> {
     fn truncate_from(x: T) -> Self;
