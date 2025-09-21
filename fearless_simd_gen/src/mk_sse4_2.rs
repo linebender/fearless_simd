@@ -611,6 +611,16 @@ pub(crate) fn handle_unzip(
         quote! { unsafe { #intrinsic::<#mask>(a.into(), b.into()).simd_into(self) } }
     } else {
         match vec_ty.scalar_bits {
+            64 => {
+                let op = if select_even { "lo" } else { "hi" };
+                let intrinsic = format_ident!("_mm_unpack{op}_epi64");
+
+                quote! {
+                    unsafe {
+                        #intrinsic(a.into(), b.into()).simd_into(self)
+                    }
+                }
+            }
             32 => {
                 let op = if select_even { "lo" } else { "hi" };
 
