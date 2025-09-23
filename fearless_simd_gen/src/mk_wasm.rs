@@ -12,6 +12,7 @@ use quote::{format_ident, quote};
 
 use crate::generic::scalar_binary;
 use crate::ops::valid_reinterpret;
+use crate::types::VecType;
 use crate::{
     arch::{Arch, wasm::Wasm},
     generic::{generic_combine, generic_op, generic_split},
@@ -64,6 +65,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 #[inline(always)]
                 fn #method_ident(#args) -> #ret_ty
             };
+
             let m = match sig {
                 OpSig::Splat => {
                     let expr = Wasm.expr(method, vec_ty, &[quote! { val }]);
@@ -118,6 +120,45 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 OpSig::Binary => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
                     match method {
+                        "max" | "min" if vec_ty.scalar_bits == 64 && vec_ty.len == 2 => {
+                            let is_max = method == "max";
+
+                            let xor_for_unsigned = if vec_ty.scalar == ScalarType::Unsigned {
+                                quote! {
+                                    let sign_bit = i64x2_splat(0x8000_0000_0000_0000u64 as i64);
+                                    let a_signed = v128_xor(a.into(), sign_bit);
+                                    let b_signed = v128_xor(b.into(), sign_bit);
+                                }
+                            } else {
+                                quote! {
+                                    let a_signed = a.into();
+                                    let b_signed = b.into();
+                                }
+                            };
+
+                            let body = if is_max {
+                                quote! {
+                                    let mask = i64x2_gt(a_signed, b_signed);
+                                    let a_masked = v128_and(mask, a.into());
+                                    let b_masked = v128_andnot(mask, b.into());
+                                    v128_or(a_masked, b_masked)
+                                }
+                            } else {
+                                quote! {
+                                    let mask = i64x2_gt(a_signed, b_signed);
+                                    let a_masked = v128_andnot(mask, a.into());
+                                    let b_masked = v128_and(mask, b.into());
+                                    v128_or(a_masked, b_masked)
+                                }
+                            };
+
+                            quote! {
+                                #method_sig {
+                                    #xor_for_unsigned
+                                    #body.simd_into(self)
+                                }
+                            }
+                        }
                         "mul" if vec_ty.scalar_bits == 8 && vec_ty.len == 16 => {
                             let (extmul_low, extmul_high) = match vec_ty.scalar {
                                 ScalarType::Unsigned => (
@@ -183,9 +224,31 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 OpSig::Compare => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
                     let expr = Wasm.expr(method, vec_ty, &args);
-                    quote! {
-                        #method_sig {
-                            #expr.simd_into(self)
+
+                    let missing_op = ["lt", "gt", "le", "ge"]
+                        .iter()
+                        .find(|&op| method.ends_with(op));
+
+                    if vec_ty.scalar_bits == 64
+                        && vec_ty.scalar == ScalarType::Unsigned
+                        && missing_op.is_some()
+                    {
+                        let op = missing_op.unwrap();
+                        let wasm_ident = format_ident!("i64x2_{}", op);
+                        quote! {
+                            #method_sig {
+                                let sign_bit = i64x2_splat(0x8000_0000_0000_0000u64 as i64);
+                                let a_signed = v128_xor(a.into(), sign_bit);
+                                let b_signed = v128_xor(b.into(), sign_bit);
+
+                                #wasm_ident(a_signed, b_signed).simd_into(self)
+                            }
+                        }
+                    } else {
+                        quote! {
+                            #method_sig {
+                                #expr.simd_into(self)
+                            }
                         }
                     }
                 }
