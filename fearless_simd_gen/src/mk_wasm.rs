@@ -12,7 +12,6 @@ use quote::{format_ident, quote};
 
 use crate::generic::scalar_binary;
 use crate::ops::valid_reinterpret;
-use crate::types::VecType;
 use crate::{
     arch::{Arch, wasm::Wasm},
     generic::{generic_combine, generic_op, generic_split},

@@ -45,7 +45,7 @@ pub fn mk_simd_trait() -> TokenStream {
             type i32s: SimdInt<i32, Self, Block = i32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtTruncate<Self::f32s>
                 + core::ops::Neg<Output = Self::i32s>;
             type u64s: SimdInt<u64, Self, Block = u64x2<Self>, Mask = Self::mask64s>; // + SimdCvtTruncate<Self::f64s>;
-            type i64s: SimdInt<i64, Self, Block = i64x2<Self>, Mask = Self::mask64s, Bytes = <Self::u64s as Bytes>::Bytes>; // + SimdCvtTruncate<Self::f64s>;
+            type i64s: SimdInt<i64, Self, Block = i64x2<Self>, Mask = Self::mask64s, Bytes = <Self::u64s as Bytes>::Bytes> + core::ops::Neg<Output = Self::i64s>; // + SimdCvtTruncate<Self::f64s>;
             type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
             type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes> + Select<Self::u16s> + Select<Self::i16s> + Select<Self::mask16s>;
             type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes> + Select<Self::f32s> + Select<Self::u32s> + Select<Self::i32s> + Select<Self::mask32s>;
