@@ -6,10 +6,10 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use fearless_simd::{Level, Simd, SimdBase, WithSimd, simd_dispatch};
+use fearless_simd::{Level, Simd, SimdBase, WithSimd, dispatch};
 
 // The WithSimd idea is adapted from pulp but is clunky; we
-// will probably prefer the `simd_dispatch!` macro.
+// will probably prefer the `dispatch!` macro.
 struct Foo;
 
 impl WithSimd for Foo {
@@ -24,13 +24,11 @@ impl WithSimd for Foo {
 }
 
 #[inline(always)]
-fn foo_inner<S: Simd>(simd: S, x: f32) -> f32 {
+fn foo<S: Simd>(simd: S, x: f32) -> f32 {
     let n = S::f32s::N;
     println!("n = {n}");
     simd.splat_f32x4(x).sqrt()[0]
 }
-
-simd_dispatch!(fn foo(level, x: f32) -> f32 = foo_inner);
 
 // currently requires `safe_wrappers` feature
 fn do_something_on_neon(_level: Level) -> f32 {
@@ -50,7 +48,10 @@ fn do_something_on_neon(_level: Level) -> f32 {
 fn main() {
     let level = Level::new();
     let x = level.dispatch(Foo);
-    let y = foo(level, 42.0);
+    let y = dispatch!(level, {
+        #[inline(always)]
+        |simd| foo(simd, 42.0)
+    });
     let z = do_something_on_neon(level);
 
     println!("level = {level:?}, x = {x}, y = {y}, z = {z}");

@@ -6,10 +6,10 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use fearless_simd::{Level, Simd, SimdBase, SimdFloat, simd_dispatch};
+use fearless_simd::{Level, Simd, SimdBase, SimdFloat, dispatch};
 
 #[inline(always)]
-fn sigmoid_impl<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
+fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
     let n = S::f32s::N;
     for (x, y) in x.chunks_exact(n).zip(out.chunks_exact_mut(n)) {
         let a = S::f32s::from_slice(simd, x);
@@ -18,12 +18,13 @@ fn sigmoid_impl<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
     }
 }
 
-simd_dispatch!(fn sigmoid(level, x: &[f32], out: &mut [f32]) = sigmoid_impl);
-
 fn main() {
     let level = Level::new();
     let inp = [0.1, -0.2, 0.001, 0.4, 1., 2., 3., 4.];
     let mut out = [0.; 8];
-    sigmoid(level, &inp, &mut out);
+    dispatch!(level, {
+        #[inline(always)]
+        |simd| sigmoid(simd, &inp, &mut out)
+    });
     println!("{out:?}");
 }

@@ -40,6 +40,7 @@
 /// fn sigmoid(level: Level, x: &[f32], out: &mut [f32]) { /* ... */ }
 /// ```
 #[macro_export]
+#[deprecated = "use dispatch!(level, function) instead"]
 macro_rules! simd_dispatch {
     (
         $( #[$meta:meta] )* $vis:vis
@@ -111,4 +112,100 @@ macro_rules! simd_dispatch {
             }
         }
     };
+}
+
+/// Invoke a function with SIMD level `level`, with target-feature-specific code generation.
+///
+/// The first parameter to the macro is the [`Level`]. Prefer to construct a [`Level`] once and pass
+/// it around rather than frequently calling [`Level::new()`].
+///
+/// To guarantee target-feature-specific code generation, the supplied function should be marked
+/// `#[inline(always)]`. As of this writing, a literal closure must be enclosed in curly braces when
+/// passed to this macro for an attribute to parse.
+///
+/// # Examples
+///
+/// ```
+/// use fearless_simd::{Level, Simd, dispatch};
+///
+/// #[inline(always)]
+/// fn work<S: Simd>(simd: S) { /* ... */ }
+///
+/// dispatch!(Level::new(), work);
+/// ```
+///
+/// ```
+/// use fearless_simd::{Level, Simd, dispatch};
+///
+/// #[inline(always)]
+/// fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { /* ... */ }
+///
+/// dispatch!(Level::new(), { #[inline(always)] |simd| sigmoid(simd, &[/*...*/], &mut [/*...*/]) });
+/// ```
+///
+/// [`Level`]: crate::Level
+/// [`Level::new()`]: crate::Level::new
+#[macro_export]
+macro_rules! dispatch {
+    ($level:expr, $fn:expr) => {{
+        #[inline(always)]
+        fn launder<S: $crate::Simd>(x: S) -> impl $crate::Simd {
+            x
+        }
+
+        match $level {
+            $crate::Level::Fallback(fb) => ($fn)(launder(fb)),
+            #[cfg(target_arch = "aarch64")]
+            $crate::Level::Neon(neon) => neon.vectorize(
+                #[inline(always)]
+                || $fn(launder(neon)),
+            ),
+            #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+            $crate::Level::WasmSimd128(wasm) => wasm.vectorize(
+                #[inline(always)]
+                || $fn(launder(wasm)),
+            ),
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            $crate::Level::Sse4_2(sse4_2) => sse4_2.vectorize(
+                #[inline(always)]
+                || $fn(launder(sse4_2)),
+            ),
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            $crate::Level::Avx2(avx2) => avx2.vectorize(
+                #[inline(always)]
+                || $fn(launder(avx2)),
+            ),
+            _ => unreachable!(),
+        }
+    }};
+}
+
+#[cfg(test)]
+#[allow(
+    unreachable_patterns,
+    reason = "`Level` is non-exhaustive, but rustc ignores that for code in the same crate"
+)]
+mod tests {
+    use crate::{Level, Simd};
+
+    #[allow(dead_code, reason = "Compile test")]
+    fn dispatch_generic() {
+        fn generic<S: Simd, T>(_: S, x: T) -> T {
+            x
+        }
+        dispatch!(Level::new(), |simd| generic::<_, ()>(simd, ()));
+    }
+
+    #[allow(dead_code, reason = "Compile test")]
+    fn dispatch_value() {
+        fn make_fn<S: Simd>() -> impl FnOnce(S) {
+            |_| ()
+        }
+        dispatch!(Level::new(), make_fn());
+    }
+
+    #[test]
+    fn dispatch_output() {
+        assert_eq!(42, dispatch!(Level::new(), |_| 42));
+    }
 }
