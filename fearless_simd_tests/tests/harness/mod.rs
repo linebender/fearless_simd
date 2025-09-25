@@ -1349,6 +1349,54 @@ fn simd_ge_i8x16<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn simd_ge_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[0, -45]);
+    let mask = vals.simd_ge(i64x2::splat(simd, -1));
+
+    assert_eq!(mask.val, [-1, 0]);
+}
+
+#[simd_test]
+fn simd_le_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[0, -45]);
+    let mask = vals.simd_le(i64x2::splat(simd, -1));
+
+    assert_eq!(mask.val, [0, -1]);
+}
+
+#[simd_test]
+fn simd_ge_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_ge(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [0, -1]);
+}
+
+#[simd_test]
+fn simd_le_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_le(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [-1, -1]);
+}
+
+#[simd_test]
+fn simd_lt_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_lt(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [-1, 0]);
+}
+
+#[simd_test]
+fn simd_gt_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_gt(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [0, 0]);
+}
+
+#[simd_test]
 fn select_native_width_vectors<S: Simd>(simd: S) {
     // Test with native f32 vectors
     let a_f32 = S::f32s::from_slice(simd, &vec![1.0f32; S::f32s::N]);
