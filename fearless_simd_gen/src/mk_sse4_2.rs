@@ -286,8 +286,9 @@ pub(crate) fn handle_compare(
 
                 #gt(#args)
             }
-        } else if vec_ty.scalar == ScalarType::Int {
+        } else if vec_ty.scalar == ScalarType::Int && vec_ty.scalar_bits == 64 && vec_ty.len == 2 {
             let gt = simple_intrinsic("cmpgt", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+            // SSE4.2 only has signed GT for i64
             let args = if method == "simd_lt" {
                 quote! { b.into(), a.into() }
             } else {
