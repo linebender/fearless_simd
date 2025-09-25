@@ -1397,6 +1397,22 @@ fn simd_gt_u64x2<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn simd_eq_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[45, 45]);
+    let mask = vals.simd_eq(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [-1, -1]);
+}
+
+#[simd_test]
+fn simd_eq_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[-3, -3]);
+    let mask = vals.simd_eq(i64x2::splat(simd, -3));
+
+    assert_eq!(mask.val, [-1, -1]);
+}
+
+#[simd_test]
 fn select_native_width_vectors<S: Simd>(simd: S) {
     // Test with native f32 vectors
     let a_f32 = S::f32s::from_slice(simd, &vec![1.0f32; S::f32s::N]);
