@@ -261,6 +261,10 @@ pub(crate) fn handle_compare(
 
             let max_min_expr = arch.expr(max_min, vec_ty, &args);
             quote! { #eq_intrinsic(#max_min_expr, a.into()) }
+        } else if matches!(method, "simd_eq") && vec_ty.scalar_bits == 64 {
+            let eq =
+                simple_sign_unaware_intrinsic("cmpeq", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+            quote! { #eq(a.into(), b.into()) }
         } else if vec_ty.scalar == ScalarType::Unsigned {
             // SSE4.2 only has signed GT/LT, but not unsigned.
             let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
@@ -286,8 +290,14 @@ pub(crate) fn handle_compare(
 
                 #gt(#args)
             }
-        } else if vec_ty.scalar == ScalarType::Int && vec_ty.scalar_bits == 64 && vec_ty.len == 2 {
-            let gt = simple_intrinsic("cmpgt", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+        } else if vec_ty.scalar_bits == 64 {
+            let intrinsic_name = if matches!(method, "simd_eq") {
+                "cmpeq"
+            } else {
+                "cmpgt"
+            };
+
+            let cmp = simple_intrinsic(intrinsic_name, vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
             // SSE4.2 only has signed GT for i64
             let args = if method == "simd_lt" {
                 quote! { b.into(), a.into() }
@@ -295,13 +305,17 @@ pub(crate) fn handle_compare(
                 quote! { a.into(), b.into() }
             };
 
-            quote! {
-                #gt(#args)
-            }
+            let res = quote! {
+                #cmp(#args)
+            };
+
+            let str = res.to_string();
+            res
         } else {
             arch.expr(method, vec_ty, &args)
         }
     } else {
+        // Floating point comparison
         arch.expr(method, vec_ty, &args)
     };
 

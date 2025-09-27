@@ -1357,17 +1357,17 @@ fn simd_ge_i64x2<S: Simd>(simd: S) {
 }
 
 #[simd_test]
-fn simd_le_i64x2<S: Simd>(simd: S) {
-    let vals = i64x2::from_slice(simd, &[0, -45]);
-    let mask = vals.simd_le(i64x2::splat(simd, -1));
+fn simd_ge_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_ge(u64x2::splat(simd, 45));
 
     assert_eq!(mask.val, [0, -1]);
 }
 
 #[simd_test]
-fn simd_ge_u64x2<S: Simd>(simd: S) {
-    let vals = u64x2::from_slice(simd, &[0, 45]);
-    let mask = vals.simd_ge(u64x2::splat(simd, 45));
+fn simd_le_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[0, -45]);
+    let mask = vals.simd_le(i64x2::splat(simd, -1));
 
     assert_eq!(mask.val, [0, -1]);
 }
@@ -1389,11 +1389,27 @@ fn simd_lt_u64x2<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn simd_lt_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[0, -45]);
+    let mask = vals.simd_lt(i64x2::splat(simd, 0));
+
+    assert_eq!(mask.val, [0, -1]);
+}
+
+#[simd_test]
 fn simd_gt_u64x2<S: Simd>(simd: S) {
     let vals = u64x2::from_slice(simd, &[0, 45]);
     let mask = vals.simd_gt(u64x2::splat(simd, 45));
 
     assert_eq!(mask.val, [0, 0]);
+}
+
+#[simd_test]
+fn simd_gt_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_gt(i64x2::splat(simd, 44));
+
+    assert_eq!(mask.val, [0, -1]);
 }
 
 #[simd_test]
