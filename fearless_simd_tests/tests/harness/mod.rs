@@ -1504,7 +1504,7 @@ fn select_native_width_vectors<S: Simd>(simd: S) {
     let result_i16 = mask_u16.select(a_i16, b_i16);
     assert_eq!(result_i16.as_slice(), vec![50i16; S::i16s::N]);
 
-    // Test with native u64 vectors
+    // Test with native i64 vectors
     let a_i64 = S::i64s::from_slice(simd, &vec![50i64; S::i64s::N]);
     let b_i64 = S::i64s::from_slice(simd, &vec![-50i64; S::i64s::N]);
     let mask_i64 = S::mask64s::from_slice(simd, &vec![-1i64; S::mask64s::N]);
