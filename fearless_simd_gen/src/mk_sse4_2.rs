@@ -305,12 +305,9 @@ pub(crate) fn handle_compare(
                 quote! { a.into(), b.into() }
             };
 
-            let res = quote! {
+            quote! {
                 #cmp(#args)
-            };
-
-            let str = res.to_string();
-            res
+            }
         } else {
             arch.expr(method, vec_ty, &args)
         }
