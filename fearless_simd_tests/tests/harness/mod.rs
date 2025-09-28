@@ -987,6 +987,12 @@ fn shr_u32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn shr_u64x2<S: Simd>(simd: S) {
+    let a = u64x2::from_slice(simd, &[u64::MAX, 2147483648u64]);
+    assert_eq!((a >> 8).val, [u64::MAX >> 8, 8388608]);
+}
+
+#[simd_test]
 fn shrv_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[u32::MAX, 2147483648, 65536, 256]);
     assert_eq!(
@@ -1009,6 +1015,12 @@ fn shrv_u32x4_varied<S: Simd>(simd: S) {
 fn shl_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[0xFFFFFFFF, 0xFFFF, 0xFF, 0]);
     assert_eq!((a << 4).val, [0xFFFFFFF0, 0xFFFF0, 0xFF0, 0]);
+}
+
+#[simd_test]
+fn shl_u64x2<S: Simd>(simd: S) {
+    let a = u64x2::from_slice(simd, &[0xFFFFFFFFFFFFFFFu64, 0]);
+    assert_eq!((a << 4).val, [0xFFFFFFFFFFFFFFF0u64, 0]);
 }
 
 #[simd_test]
