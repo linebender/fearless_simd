@@ -1157,6 +1157,23 @@ fn select_mask32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn select_u64x2<S: Simd>(simd: S) {
+    let mask = mask64x2::from_slice(simd, &[0, -1]);
+    let b = u64x2::from_slice(simd, &[100000, 200000]);
+    let c = u64x2::from_slice(simd, &[1000, 2000]);
+    assert_eq!(mask.select(b, c).val, [1000, 200000]);
+}
+
+#[simd_test]
+fn select_mask64x2<S: Simd>(simd: S) {
+    let mask = mask64x2::from_slice(simd, &[-1, 0]);
+    let b = mask64x2::from_slice(simd, &[-1, 42]);
+    let c = mask64x2::from_slice(simd, &[100, -1]);
+    let result: mask64x2<_> = mask.select(b, c);
+    assert_eq!(result.val, [-1, -1]);
+}
+
+#[simd_test]
 fn widen_u8x16<S: Simd>(simd: S) {
     let a = u8x16::from_slice(
         simd,
