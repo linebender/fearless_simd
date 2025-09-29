@@ -7,7 +7,7 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use fearless_simd::{Level, Select, Simd, SimdInto, f32x4, simd_dispatch};
+use fearless_simd::{Level, Select, Simd, SimdInto, dispatch, f32x4};
 
 // This block shows how to use safe wrappers for compile-time enforcement
 // of using valid SIMD intrinsics.
@@ -50,7 +50,7 @@ fn copy_alpha<S: Simd>(a: f32x4<S>, b: f32x4<S>) -> f32x4<S> {
 }
 
 #[inline(always)]
-fn to_srgb_impl<S: Simd>(simd: S, rgba: [f32; 4]) -> [f32; 4] {
+fn to_srgb<S: Simd>(simd: S, rgba: [f32; 4]) -> [f32; 4] {
     let v: f32x4<S> = rgba.simd_into(simd);
     let vabs = v.abs();
     let x = vabs - 5.35862651e-04;
@@ -67,10 +67,12 @@ fn to_srgb_impl<S: Simd>(simd: S, rgba: [f32; 4]) -> [f32; 4] {
     result.into()
 }
 
-simd_dispatch!(fn to_srgb(level, rgba: [f32; 4]) -> [f32; 4] = to_srgb_impl);
-
 fn main() {
     let level = Level::new();
     let rgba = [0.1, -0.2, 0.001, 0.4];
-    println!("{:?}", to_srgb(level, rgba));
+    let srgb = dispatch!(level, {
+        #[inline(always)]
+        |simd| to_srgb(simd, rgba)
+    });
+    println!("{srgb:?}");
 }
