@@ -27,8 +27,7 @@ This release has an [MSRV][] of 1.86.
 - `SimdFrom` splatting is available on native-width vectors. ([#84][] by [@Ralith][])
 - Left shift by u32. ([#86][] by [@Ralith][])
 - Unary negation of signed integers. ([#91][] by [@Ralith][])
-- A simpler `dispatch` macro to replace `simd_dispatch` ([#96][] by
-  [@Ralith][])
+- A simpler `dispatch` macro to replace `simd_dispatch`. ([#96][], [#99][] by [@Ralith][], [@DJMcNab][])
 
 ## Fixed
 
@@ -62,6 +61,7 @@ This is the initial release.
 No changelog was kept for this release.
 
 [@Ralith]: https://github.com/Ralith
+[@DJMcNab]: https://github.com/DJMcNab
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
 [#76]: https://github.com/linebender/fearless_simd/pull/76
@@ -77,6 +77,7 @@ No changelog was kept for this release.
 [#91]: https://github.com/linebender/fearless_simd/pull/91
 [#93]: https://github.com/linebender/fearless_simd/pull/93
 [#96]: https://github.com/linebender/fearless_simd/pull/96
+[#99]: https://github.com/linebender/fearless_simd/pull/99
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0
