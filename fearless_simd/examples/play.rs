@@ -48,10 +48,7 @@ fn do_something_on_neon(_level: Level) -> f32 {
 fn main() {
     let level = Level::new();
     let x = level.dispatch(Foo);
-    let y = dispatch!(level, {
-        #[inline(always)]
-        |simd| foo(simd, 42.0)
-    });
+    let y = dispatch!(level, simd => foo(simd, 42.0));
     let z = do_something_on_neon(level);
 
     println!("level = {level:?}, x = {x}, y = {y}, z = {z}");

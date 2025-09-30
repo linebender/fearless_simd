@@ -22,9 +22,7 @@ fn main() {
     let level = Level::new();
     let inp = [0.1, -0.2, 0.001, 0.4, 1., 2., 3., 4.];
     let mut out = [0.; 8];
-    dispatch!(level, {
-        #[inline(always)]
-        |simd| sigmoid(simd, &inp, &mut out)
-    });
+    dispatch!(level, simd => sigmoid(simd, &inp, &mut out));
+
     println!("{out:?}");
 }

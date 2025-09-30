@@ -64,7 +64,10 @@ use fearless_simd::{Level, Simd, dispatch};
 #[inline(always)]
 fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { /* ... */ }
 
-dispatch!(Level::new(), { #[inline(always)] |simd| sigmoid(simd, &[/*...*/], &mut [/*...*/]) });
+// The stored level, which is constructed once for your application.
+let level = Level::new();
+
+dispatch!(Level::new(), simd => sigmoid(simd, &[/*...*/], &mut [/*...*/]));
 ```
 
 A few things to note:
