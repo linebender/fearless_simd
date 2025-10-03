@@ -70,9 +70,6 @@ fn to_srgb<S: Simd>(simd: S, rgba: [f32; 4]) -> [f32; 4] {
 fn main() {
     let level = Level::new();
     let rgba = [0.1, -0.2, 0.001, 0.4];
-    let srgb = dispatch!(level, {
-        #[inline(always)]
-        |simd| to_srgb(simd, rgba)
-    });
+    let srgb = dispatch!(level, simd=> to_srgb(simd, rgba));
     println!("{srgb:?}");
 }

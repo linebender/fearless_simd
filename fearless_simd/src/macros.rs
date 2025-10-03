@@ -114,25 +114,33 @@ macro_rules! simd_dispatch {
     };
 }
 
-/// Invoke a function with SIMD level `level`, with target-feature-specific code generation.
+/// Access the applicable [`Simd`] for a given `level`, and perform an operation using it.
 ///
-/// The first parameter to the macro is the [`Level`]. Prefer to construct a [`Level`] once and pass
-/// it around rather than frequently calling [`Level::new()`].
+/// This macro is the root of how any explicitly written SIMD functions in this crate are
+/// called from a non-SIMD context.
 ///
-/// To guarantee target-feature-specific code generation, the supplied function should be marked
-/// `#[inline(always)]`. As of this writing, a literal closure must be enclosed in curly braces when
-/// passed to this macro for an attribute to parse.
+/// The first parameter to the macro is the [`Level`].
+/// You should prefer to construct a [`Level`] once and pass it around, rather than
+/// frequently calling [`Level::new()`].
+/// This is because `Level::new` has to detect which target features are available, which can be slow.
 ///
-/// # Examples
+/// The code of the operation will be repeated literally several times in the output, so you should prefer
+/// to keep this code small (as it will be type-checked, etc. for each supported SIMD level on your target).
+/// In most cases, it should be a single call to a function which is generic over `Simd` implementations,
+/// as seen in [the examples](#examples).
+/// For clarity, it will only be executed once per execution of `dispatch`.
 ///
-/// ```
-/// use fearless_simd::{Level, Simd, dispatch};
+/// To guarantee target-feature-specific code generation, any functions called within the operation should
+/// be `#[inline(always)]`.
 ///
-/// #[inline(always)]
-/// fn work<S: Simd>(simd: S) { /* ... */ }
+/// Note that as an implementation detail of this macro, the operation will be executed inside a closure.
+/// This is what enables the target features to be enabled for the code inside the operation.
+/// A consequence of this is that early `return` and `?` will not work as expected.
+/// Note that in cases where you use `dispatch` to call a single function (which we expect to be the
+/// majority of cases), you can use `?` on the return value of dispatch instead.
+/// To emulate early return, you can use [`ControlFlow`](core::ops::ControlFlow) instead.
 ///
-/// dispatch!(Level::new(), work);
-/// ```
+/// # Example
 ///
 /// ```
 /// use fearless_simd::{Level, Simd, dispatch};
@@ -140,50 +148,75 @@ macro_rules! simd_dispatch {
 /// #[inline(always)]
 /// fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { /* ... */ }
 ///
-/// dispatch!(Level::new(), { #[inline(always)] |simd| sigmoid(simd, &[/*...*/], &mut [/*...*/]) });
+/// let level = Level::new();
+///
+/// dispatch!(level, simd => sigmoid(simd, &[/*...*/], &mut [/*...*/]));
 /// ```
 ///
 /// [`Level`]: crate::Level
 /// [`Level::new()`]: crate::Level::new
+/// [`Simd`]: crate::Simd
 #[macro_export]
 macro_rules! dispatch {
-    ($level:expr, $fn:expr) => {{
+    ($level:expr, $simd:pat => $op:expr) => {{
+        /// Convert the `Simd` value into an `impl Simd`, which enforces that
+        /// it is correctly handled.
         #[inline(always)]
         fn launder<S: $crate::Simd>(x: S) -> impl $crate::Simd {
             x
         }
 
         match $level {
-            $crate::Level::Fallback(fb) => ($fn)(launder(fb)),
+            $crate::Level::Fallback(fb) => {
+                let $simd = launder(fb);
+                // This vectorize call does nothing, but it is reasonable to be consistent here.
+                fb.vectorize(
+                    #[inline(always)]
+                    || $op,
+                )
+            }
             #[cfg(target_arch = "aarch64")]
-            $crate::Level::Neon(neon) => neon.vectorize(
-                #[inline(always)]
-                || $fn(launder(neon)),
-            ),
+            $crate::Level::Neon(neon) => {
+                let $simd = launder(neon);
+                neon.vectorize(
+                    #[inline(always)]
+                    || $op,
+                )
+            }
             #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-            $crate::Level::WasmSimd128(wasm) => wasm.vectorize(
-                #[inline(always)]
-                || $fn(launder(wasm)),
-            ),
+            $crate::Level::WasmSimd128(wasm) => {
+                let $simd = launder(wasm);
+                wasm.vectorize(
+                    #[inline(always)]
+                    || $op,
+                )
+            }
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            $crate::Level::Sse4_2(sse4_2) => sse4_2.vectorize(
-                #[inline(always)]
-                || $fn(launder(sse4_2)),
-            ),
+            $crate::Level::Sse4_2(sse4_2) => {
+                let $simd = launder(sse4_2);
+                sse4_2.vectorize(
+                    #[inline(always)]
+                    || $op,
+                )
+            }
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            $crate::Level::Avx2(avx2) => avx2.vectorize(
-                #[inline(always)]
-                || $fn(launder(avx2)),
-            ),
+            $crate::Level::Avx2(avx2) => {
+                let $simd = launder(avx2);
+                avx2.vectorize(
+                    #[inline(always)]
+                    || $op,
+                )
+            }
             _ => unreachable!(),
         }
     }};
 }
 
 #[cfg(test)]
-#[allow(
+// This expect also validates that we haven't missed any levels!
+#[expect(
     unreachable_patterns,
-    reason = "`Level` is non-exhaustive, but rustc ignores that for code in the same crate"
+    reason = "Level is non_exhaustive, but you must be exhaustive within the same crate."
 )]
 mod tests {
     use crate::{Level, Simd};
@@ -193,7 +226,7 @@ mod tests {
         fn generic<S: Simd, T>(_: S, x: T) -> T {
             x
         }
-        dispatch!(Level::new(), |simd| generic::<_, ()>(simd, ()));
+        dispatch!(Level::new(), simd => generic::<_, ()>(simd, ()));
     }
 
     #[allow(dead_code, reason = "Compile test")]
@@ -201,11 +234,11 @@ mod tests {
         fn make_fn<S: Simd>() -> impl FnOnce(S) {
             |_| ()
         }
-        dispatch!(Level::new(), make_fn());
+        dispatch!(Level::new(), simd => (make_fn())(simd));
     }
 
     #[test]
     fn dispatch_output() {
-        assert_eq!(42, dispatch!(Level::new(), |_| 42));
+        assert_eq!(42, dispatch!(Level::new(), _simd => 42));
     }
 }
