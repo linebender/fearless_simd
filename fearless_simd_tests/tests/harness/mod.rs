@@ -704,6 +704,20 @@ fn zip_high_u32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn zip_low_u64x2<S: Simd>(simd: S) {
+    let a = u64x2::from_slice(simd, &[0, 1]);
+    let b = u64x2::from_slice(simd, &[4, 5]);
+    assert_eq!(simd.zip_low_u64x2(a, b).val, [0, 4]);
+}
+
+#[simd_test]
+fn zip_high_u64x2<S: Simd>(simd: S) {
+    let a = u64x2::from_slice(simd, &[0, 1]);
+    let b = u64x2::from_slice(simd, &[4, 5]);
+    assert_eq!(simd.zip_high_u64x2(a, b).val, [1, 5]);
+}
+
+#[simd_test]
 fn unzip_low_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
     let b = f32x4::from_slice(simd, &[5.0, 6.0, 7.0, 8.0]);
@@ -872,6 +886,34 @@ fn unzip_high_u32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn unzip_low_i64x2<S: Simd>(simd: S) {
+    let a = i64x2::from_slice(simd, &[1, 2]);
+    let b = i64x2::from_slice(simd, &[3, 4]);
+    assert_eq!(simd.unzip_low_i64x2(a, b).val, [1, 3]);
+}
+
+#[simd_test]
+fn unzip_high_i64x2<S: Simd>(simd: S) {
+    let a = i64x2::from_slice(simd, &[1, 2]);
+    let b = i64x2::from_slice(simd, &[3, 4]);
+    assert_eq!(simd.unzip_high_i64x2(a, b).val, [2, 4]);
+}
+
+#[simd_test]
+fn unzip_low_u64x2<S: Simd>(simd: S) {
+    let a = u64x2::from_slice(simd, &[1, 2]);
+    let b = u64x2::from_slice(simd, &[3, 4]);
+    assert_eq!(simd.unzip_low_u64x2(a, b).val, [1, 3]);
+}
+
+#[simd_test]
+fn unzip_high_u64x2<S: Simd>(simd: S) {
+    let a = u64x2::from_slice(simd, &[1, 2]);
+    let b = u64x2::from_slice(simd, &[3, 4]);
+    assert_eq!(simd.unzip_high_u64x2(a, b).val, [2, 4]);
+}
+
+#[simd_test]
 fn unzip_low_f64x2<S: Simd>(simd: S) {
     let a = f64x2::from_slice(simd, &[1.0, 2.0]);
     let b = f64x2::from_slice(simd, &[3.0, 4.0]);
@@ -945,6 +987,12 @@ fn shr_u32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn shr_u64x2<S: Simd>(simd: S) {
+    let a = u64x2::from_slice(simd, &[u64::MAX, 2147483648u64]);
+    assert_eq!((a >> 8).val, [u64::MAX >> 8, 8388608]);
+}
+
+#[simd_test]
 fn shrv_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[u32::MAX, 2147483648, 65536, 256]);
     assert_eq!(
@@ -967,6 +1015,12 @@ fn shrv_u32x4_varied<S: Simd>(simd: S) {
 fn shl_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[0xFFFFFFFF, 0xFFFF, 0xFF, 0]);
     assert_eq!((a << 4).val, [0xFFFFFFF0, 0xFFFF0, 0xFF0, 0]);
+}
+
+#[simd_test]
+fn shl_u64x2<S: Simd>(simd: S) {
+    let a = u64x2::from_slice(simd, &[0xFFFFFFFFFFFFFFFu64, 0]);
+    assert_eq!((a << 4).val, [0xFFFFFFFFFFFFFFF0u64, 0]);
 }
 
 #[simd_test]
@@ -1100,6 +1154,23 @@ fn select_mask32x4<S: Simd>(simd: S) {
     let c = mask32x4::from_slice(simd, &[0, 0, -1, -1]);
     let result: mask32x4<_> = mask.select(b, c);
     assert_eq!(result.val, [-1, 0, 0, -1]);
+}
+
+#[simd_test]
+fn select_u64x2<S: Simd>(simd: S) {
+    let mask = mask64x2::from_slice(simd, &[0, -1]);
+    let b = u64x2::from_slice(simd, &[100000, 200000]);
+    let c = u64x2::from_slice(simd, &[1000, 2000]);
+    assert_eq!(mask.select(b, c).val, [1000, 200000]);
+}
+
+#[simd_test]
+fn select_mask64x2<S: Simd>(simd: S) {
+    let mask = mask64x2::from_slice(simd, &[-1, 0]);
+    let b = mask64x2::from_slice(simd, &[-1, 42]);
+    let c = mask64x2::from_slice(simd, &[100, -1]);
+    let result: mask64x2<_> = mask.select(b, c);
+    assert_eq!(result.val, [-1, -1]);
 }
 
 #[simd_test]
@@ -1307,6 +1378,86 @@ fn simd_ge_i8x16<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn simd_ge_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[0, -45]);
+    let mask = vals.simd_ge(i64x2::splat(simd, -1));
+
+    assert_eq!(mask.val, [-1, 0]);
+}
+
+#[simd_test]
+fn simd_ge_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_ge(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [0, -1]);
+}
+
+#[simd_test]
+fn simd_le_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[0, -45]);
+    let mask = vals.simd_le(i64x2::splat(simd, -1));
+
+    assert_eq!(mask.val, [0, -1]);
+}
+
+#[simd_test]
+fn simd_le_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_le(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [-1, -1]);
+}
+
+#[simd_test]
+fn simd_lt_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_lt(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [-1, 0]);
+}
+
+#[simd_test]
+fn simd_lt_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[0, -45]);
+    let mask = vals.simd_lt(i64x2::splat(simd, 0));
+
+    assert_eq!(mask.val, [0, -1]);
+}
+
+#[simd_test]
+fn simd_gt_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_gt(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [0, 0]);
+}
+
+#[simd_test]
+fn simd_gt_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[0, 45]);
+    let mask = vals.simd_gt(i64x2::splat(simd, 44));
+
+    assert_eq!(mask.val, [0, -1]);
+}
+
+#[simd_test]
+fn simd_eq_u64x2<S: Simd>(simd: S) {
+    let vals = u64x2::from_slice(simd, &[45, 45]);
+    let mask = vals.simd_eq(u64x2::splat(simd, 45));
+
+    assert_eq!(mask.val, [-1, -1]);
+}
+
+#[simd_test]
+fn simd_eq_i64x2<S: Simd>(simd: S) {
+    let vals = i64x2::from_slice(simd, &[-3, -3]);
+    let mask = vals.simd_eq(i64x2::splat(simd, -3));
+
+    assert_eq!(mask.val, [-1, -1]);
+}
+
+#[simd_test]
 fn select_native_width_vectors<S: Simd>(simd: S) {
     // Test with native f32 vectors
     let a_f32 = S::f32s::from_slice(simd, &vec![1.0f32; S::f32s::N]);
@@ -1352,6 +1503,20 @@ fn select_native_width_vectors<S: Simd>(simd: S) {
     let b_i16 = S::i16s::from_slice(simd, &vec![-50i16; S::i16s::N]);
     let result_i16 = mask_u16.select(a_i16, b_i16);
     assert_eq!(result_i16.as_slice(), vec![50i16; S::i16s::N]);
+
+    // Test with native i64 vectors
+    let a_i64 = S::i64s::from_slice(simd, &vec![50i64; S::i64s::N]);
+    let b_i64 = S::i64s::from_slice(simd, &vec![-50i64; S::i64s::N]);
+    let mask_i64 = S::mask64s::from_slice(simd, &vec![-1i64; S::mask64s::N]);
+    let result_i64 = mask_i64.select(a_i64, b_i64);
+    assert_eq!(result_i64.as_slice(), vec![50i64; S::i64s::N]);
+
+    // Test with native u64 vectors
+    let a_u64 = S::u64s::from_slice(simd, &vec![100u64; S::u64s::N]);
+    let b_u64 = S::u64s::from_slice(simd, &vec![200u64; S::u64s::N]);
+    let mask_u64 = S::mask64s::from_slice(simd, &vec![-1i64; S::mask64s::N]);
+    let result_u64 = mask_u64.select(a_u64, b_u64);
+    assert_eq!(result_u64.as_slice(), vec![100u64; S::u64s::N]);
 }
 
 #[simd_test]
