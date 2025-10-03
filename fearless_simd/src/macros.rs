@@ -133,6 +133,13 @@ macro_rules! simd_dispatch {
 /// To guarantee target-feature-specific code generation, any functions called within the operation should
 /// be `#[inline(always)]`.
 ///
+/// Note that as an implementation detail of this macro, the operation will be executed inside a closure.
+/// This is what enables the target features to be enabled for the code inside the operation.
+/// A consequence of this is that early `return` and `?` will not work as expected.
+/// Note that in cases where you use `dispatch` to call a single function (which we expect to be the
+/// majority of cases), you can use `?` on the return value of dispatch instead.
+/// To emulate early return, you can use [`ControlFlow`](core::ops::ControlFlow) instead.
+///
 /// # Example
 ///
 /// ```
