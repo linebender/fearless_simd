@@ -213,7 +213,7 @@ macro_rules! dispatch {
 }
 
 #[cfg(test)]
-// This expect now also validates that we haven't missed any levels!
+// This expect also validates that we haven't missed any levels!
 #[expect(
     unreachable_patterns,
     reason = "Level is non_exhaustive, but you must be exhaustive within the same crate."
