@@ -170,7 +170,8 @@ macro_rules! dispatch {
             $crate::Level::Fallback(fb) => {
                 let $simd = launder(fb);
                 // This vectorize call does nothing, but it is reasonable to be consistent here.
-                fb.vectorize(
+                $crate::Simd::vectorize(
+                    fb,
                     #[inline(always)]
                     || $op,
                 )
@@ -178,7 +179,8 @@ macro_rules! dispatch {
             #[cfg(target_arch = "aarch64")]
             $crate::Level::Neon(neon) => {
                 let $simd = launder(neon);
-                neon.vectorize(
+                $crate::Simd::vectorize(
+                    neon,
                     #[inline(always)]
                     || $op,
                 )
@@ -186,7 +188,8 @@ macro_rules! dispatch {
             #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
             $crate::Level::WasmSimd128(wasm) => {
                 let $simd = launder(wasm);
-                wasm.vectorize(
+                $crate::Simd::vectorize(
+                    wasm,
                     #[inline(always)]
                     || $op,
                 )
@@ -194,7 +197,8 @@ macro_rules! dispatch {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             $crate::Level::Sse4_2(sse4_2) => {
                 let $simd = launder(sse4_2);
-                sse4_2.vectorize(
+                $crate::Simd::vectorize(
+                    sse4_2,
                     #[inline(always)]
                     || $op,
                 )
@@ -202,7 +206,8 @@ macro_rules! dispatch {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             $crate::Level::Avx2(avx2) => {
                 let $simd = launder(avx2);
-                avx2.vectorize(
+                $crate::Simd::vectorize(
+                    avx2,
                     #[inline(always)]
                     || $op,
                 )
@@ -240,5 +245,14 @@ mod tests {
     #[test]
     fn dispatch_output() {
         assert_eq!(42, dispatch!(Level::new(), _simd => 42));
+    }
+
+    mod no_import_simd {
+        /// We should be able to use [`dispatch`] in a scope which doesn't import anything.
+        #[test]
+        fn dispatch_with_no_imports() {
+            let res = dispatch!(crate::Level::new(), _ => 1 + 2);
+            assert_eq!(res, 3);
+        }
     }
 }
