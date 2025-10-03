@@ -40,7 +40,7 @@
 /// fn sigmoid(level: Level, x: &[f32], out: &mut [f32]) { /* ... */ }
 /// ```
 #[macro_export]
-#[deprecated = "use dispatch!(level, function) instead"]
+#[deprecated = "use dispatch!(level, simd => operation) instead"]
 macro_rules! simd_dispatch {
     (
         $( #[$meta:meta] )* $vis:vis
