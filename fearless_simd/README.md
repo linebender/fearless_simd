@@ -87,7 +87,6 @@ in the macro to dispatch to the most optimal variant of the supplied function fo
 Fearless SIMD relies heavily on Rust's inlining support to create functions which have the
 given target features enabled.
 As such, most functions which you write when using Fearless SIMD should have the `#[inline(always)]` attribute.
-This is required because in LLVM, functions with different target features cannot.
 
 <!--
 # Kernels vs not kernels
