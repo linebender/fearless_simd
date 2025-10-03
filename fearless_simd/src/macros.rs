@@ -133,18 +133,7 @@ macro_rules! simd_dispatch {
 /// To guarantee target-feature-specific code generation, any functions called within the operation should
 /// be `#[inline(always)]`.
 ///
-/// # Examples
-///
-/// ```
-/// use fearless_simd::{Level, Simd, dispatch};
-///
-/// #[inline(always)]
-/// fn work<S: Simd>(simd: S) { /* ... */ }
-/// // The SIMD level for this run, created once in your application/library's lifecycle.
-/// let level = Level::new();
-///
-/// dispatch!(level, simd => work(simd));
-/// ```
+/// # Example
 ///
 /// ```
 /// use fearless_simd::{Level, Simd, dispatch};

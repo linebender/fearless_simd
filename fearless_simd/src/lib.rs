@@ -26,10 +26,10 @@
 //! #[inline(always)]
 //! fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { /* ... */ }
 //!
-//! // The stored level, which is constructed once for your application.
+//! // The stored level, which you should only construct once in your application.
 //! let level = Level::new();
 //!
-//! dispatch!(Level::new(), simd => sigmoid(simd, &[/*...*/], &mut [/*...*/]));
+//! dispatch!(level, simd => sigmoid(simd, &[/*...*/], &mut [/*...*/]));
 //! ```
 //!
 //! A few things to note:
