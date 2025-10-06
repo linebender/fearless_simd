@@ -329,49 +329,7 @@ impl Level {
     /// [enabled]: https://doc.rust-lang.org/reference/attributes/codegen.html#the-target_feature-attribute
     #[inline]
     pub fn dispatch<W: WithSimd>(self, f: W) -> W::Output {
-        #[cfg(target_arch = "aarch64")]
-        #[target_feature(enable = "neon")]
-        #[inline]
-        fn dispatch_neon<W: WithSimd>(f: W, neon: Neon) -> W::Output {
-            f.with_simd(neon)
-        }
-
-        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-        #[inline]
-        fn dispatch_simd128<W: WithSimd>(f: W, simd128: WasmSimd128) -> W::Output {
-            f.with_simd(simd128)
-        }
-
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        #[target_feature(enable = "sse4.2")]
-        #[inline]
-        fn dispatch_sse4_2<W: WithSimd>(f: W, sse4_2: Sse4_2) -> W::Output {
-            f.with_simd(sse4_2)
-        }
-
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        #[target_feature(enable = "avx2,fma")]
-        #[inline]
-        fn dispatch_avx2<W: WithSimd>(f: W, avx2: Avx2) -> W::Output {
-            f.with_simd(avx2)
-        }
-
-        #[inline]
-        fn dispatch_fallback<W: WithSimd>(f: W, fallback: Fallback) -> W::Output {
-            f.with_simd(fallback)
-        }
-
-        match self {
-            #[cfg(target_arch = "aarch64")]
-            Level::Neon(neon) => unsafe { dispatch_neon(f, neon) },
-            #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-            Level::WasmSimd128(simd128) => dispatch_simd128(f, simd128),
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            Level::Sse4_2(sse4_2) => unsafe { dispatch_sse4_2(f, sse4_2) },
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            Level::Avx2(avx2) => unsafe { dispatch_avx2(f, avx2) },
-            Level::Fallback(fallback) => dispatch_fallback(f, fallback),
-        }
+        dispatch!(self, simd => f.with_simd(simd))
     }
 }
 
