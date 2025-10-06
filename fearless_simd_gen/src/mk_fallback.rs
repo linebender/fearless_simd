@@ -410,7 +410,7 @@ fn mk_simd_impl() -> TokenStream {
                 #[cfg(feature = "force_support_fallback")]
                 return Level::#level_tok(self);
                 #[cfg(not(feature = "force_support_fallback"))]
-                Level::baseline();
+                Level::baseline()
             }
 
             #[inline]
