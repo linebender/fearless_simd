@@ -56,7 +56,6 @@ impl Simd for Sse4_2 {
         return Level::Sse4_2(self);
         #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
         {
-            // TODO: Do we want to log here?
             Level::baseline()
         }
     }

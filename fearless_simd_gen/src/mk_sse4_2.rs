@@ -115,7 +115,12 @@ fn mk_simd_impl() -> TokenStream {
             type mask32s = mask32x4<Self>;
             #[inline(always)]
             fn level(self) -> Level {
-                Level::#level_tok(self)
+                #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
+                return Level::#level_tok(self);
+                #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+                {
+                    Level::baseline()
+                }
             }
 
             #[inline]
