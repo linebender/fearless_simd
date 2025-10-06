@@ -44,7 +44,7 @@ This release has an [MSRV][] of 1.86.
   std. ([#88][] by [@Ralith][])
   Previously, `madd` was `a + b * c`, and `msub` was `a - b * c`.
   Therefore, if you previously had `a.madd(b, c)`, that's now written as `b.madd(c, a)`.
-  And if you had `a.msub(b, c)`, that's now written `b.madd(-c, a)` or `-(b.msub(c, a))`.
+  And if you had `a.msub(b, c)`, that's now written `b.madd(-c, a)`.
 - Constructors for static SIMD levels are now `const` ([#93][] by [@Ralith][])
 
 ## [0.2.0][] (2025-08-26)
