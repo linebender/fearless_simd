@@ -226,8 +226,6 @@ impl Level {
             // WASM always either has the SIMD feature compiled in or not.
             #[cfg(target_feature = "simd128")]
             return Level::WasmSimd128(WasmSimd128::new_unchecked());
-            #[cfg(not(target_feature = "simd128"))]
-            return Level::fallback();
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
@@ -416,7 +414,7 @@ impl Level {
         #[cfg(target_arch = "wasm32")]
         {
             #[cfg(target_feature = "simd128")]
-            return unsafe { Level::WasmSimd128(WasmSimd128::new_unchecked()) };
+            return Level::WasmSimd128(WasmSimd128::new_unchecked());
             #[cfg(not(target_feature = "simd128"))]
             return Level::Fallback(Fallback::new());
         }
