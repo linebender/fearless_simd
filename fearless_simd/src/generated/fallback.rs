@@ -83,7 +83,7 @@ impl Simd for Fallback {
     type mask32s = mask32x4<Self>;
     #[inline(always)]
     fn level(self) -> Level {
-        Level::Fallback(self)
+        Level::baseline()
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {

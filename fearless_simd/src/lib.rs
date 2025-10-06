@@ -149,7 +149,25 @@ pub enum Level {
     /// Scalar fallback level, i.e. no supported SIMD features are to be used.
     ///
     /// This can be created with [`Level::fallback`].
-    // TODO: Allow not compiling this in (probably only on web, but maybe elsewhere?)
+    // We only want to compile the fallback implementation if:
+    // - We're on a supported architecture, but don't statically support the lowest alternative level; OR
+    // - We're on an unsupported architecture; OR
+    // - The fallback is forcibly enabled
+    #[cfg(any(
+        all(target_arch = "aarch64", not(target_feature = "neon")),
+        all(
+            any(target_arch = "x86", target_arch = "x86_64"),
+            not(target_feature = "sse4.2")
+        ),
+        all(target_arch = "wasm32", not(target_feature = "simd128")),
+        not(any(
+            target_arch = "x86",
+            target_arch = "x86_64",
+            target_arch = "aarch64",
+            target_arch = "wasm32"
+        )),
+        feature = "force_support_fallback"
+    ))]
     Fallback(Fallback),
     /// The Neon instruction set on 64 bit ARM.
     #[cfg(target_arch = "aarch64")]
@@ -158,7 +176,11 @@ pub enum Level {
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     WasmSimd128(WasmSimd128),
     /// The SSE4.2 instruction set on (32 and 64 bit) x86.
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    // We don't need to support this if the compilation target definitely supports something better.
+    #[cfg(all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        not(all(target_feature = "avx2", target_feature = "fma"))
+    ))]
     Sse4_2(Sse4_2),
     /// The AVX2 and FMA instruction set on (32 and 64 bit) x86.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -214,11 +236,34 @@ impl Level {
             {
                 return unsafe { Level::Avx2(Avx2::new_unchecked()) };
             } else if std::arch::is_x86_feature_detected!("sse4.2") {
+                #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
                 return unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) };
             }
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        Self::fallback()
+        #[cfg(any(
+            all(target_arch = "aarch64", not(target_feature = "neon")),
+            all(
+                any(target_arch = "x86", target_arch = "x86_64"),
+                not(target_feature = "sse4.2")
+            ),
+            all(target_arch = "wasm32", not(target_feature = "simd128")),
+            not(any(
+                target_arch = "x86",
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+                target_arch = "wasm32"
+            )),
+        ))]
+        {
+            return Level::Fallback(Fallback::new());
+        }
+        #[allow(
+            unreachable_code,
+            reason = "`is_x86_feature_detected` or equivalents will have returned `true`, or Fallback was used."
+        )]
+        {
+            unreachable!()
+        }
     }
 
     /// Get the target feature level suitable for this run.
@@ -246,6 +291,10 @@ impl Level {
     #[cfg(target_arch = "aarch64")]
     #[inline]
     pub fn as_neon(self) -> Option<Neon> {
+        #[allow(
+            unreachable_patterns,
+            reason = "On machines which statically support `neon`, there is only one variant."
+        )]
         match self {
             Level::Neon(neon) => Some(neon),
             _ => None,
@@ -263,6 +312,10 @@ impl Level {
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[inline]
     pub fn as_wasm_simd128(self) -> Option<WasmSimd128> {
+        #[allow(
+            unreachable_patterns,
+            reason = "On machines which statically support `simd128`, there is only one variant."
+        )]
         match self {
             Level::WasmSimd128(simd128) => Some(simd128),
             _ => None,
@@ -281,6 +334,8 @@ impl Level {
     #[inline]
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
         match self {
+            // TODO: Level::Avx2(avx2) => Some(...)
+            #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
             Level::Sse4_2(sse42) => Some(sse42),
             _ => None,
         }
@@ -297,9 +352,73 @@ impl Level {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[inline]
     pub fn as_avx2(self) -> Option<Avx2> {
+        #[allow(
+            unreachable_patterns,
+            reason = "On machines which statically support `avx2`, there is only one variant."
+        )]
         match self {
             Level::Avx2(avx2) => Some(avx2),
             _ => None,
+        }
+    }
+
+    /// Get the weakest statically supported SIMD level.
+    ///
+    /// That is, if your compilation run ambiently declares that a target feature is enabled,
+    /// this method will take that into account.
+    /// In most cases, you should use [`Level::new`] or [`Level::try_detect`].
+    /// This method is mainly useful for libraries, where:
+    ///
+    /// 1) Your crate features requests that you not use the standard library, i.e. doesn't enable
+    ///    your `"std"` crate feature reason (so you can't use [`Level::new`] and
+    ///    [`Level::try_detect`] returns `None`); AND
+    /// 2) Your caller does not provide a [`Level`]; AND
+    /// 3) The library doesn't want to panic when it can't find a SIMD level.
+    ///
+    /// Note that in these cases, the library should clearly inform the integrator
+    /// that it is using a fallback and so not getting optimal performance (e.g. by panicking if
+    /// `debug_assertions` are enabled, and emitting a log with the "error" level otherwise).
+    /// The messages given should also provide actionable fixes, such as pointing to the
+    /// entry-point which provides a `Level`, or your `"std"` feature.
+    ///
+    /// Note that this is unaffected by the `force-support-fallback` feature.
+    /// Instead, you should use [`Level::fallback`] if you require the fallback level.
+    pub const fn baseline() -> Self {
+        // TODO: How do we possibly test that this method works in all cases?
+        #[cfg(not(any(
+            target_arch = "x86",
+            target_arch = "x86_64",
+            target_arch = "aarch64",
+            target_arch = "wasm32"
+        )))]
+        {
+            return Level::Fallback(Fallback::new());
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            #[cfg(target_feature = "neon")]
+            return unsafe { Level::Neon(Neon::new_unchecked()) };
+            #[cfg(not(target_feature = "neon"))]
+            return Level::Fallback(Fallback::new());
+        }
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+            return unsafe { Level::Avx2(Avx2::new_unchecked()) };
+            #[cfg(all(
+                target_feature = "sse4.2",
+                not(all(target_feature = "avx2", target_feature = "fma"))
+            ))]
+            return unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) };
+            #[cfg(not(target_feature = "sse4.2"))]
+            return Level::Fallback(Fallback::new());
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            #[cfg(target_feature = "simd128")]
+            return unsafe { Level::WasmSimd128(WasmSimd128::new_unchecked()) };
+            #[cfg(not(target_feature = "simd128"))]
+            return Level::Fallback(Fallback::new());
         }
     }
 
@@ -307,6 +426,7 @@ impl Level {
     ///
     /// This is primarily intended for tests; most users should prefer [`Level::new`].
     #[inline]
+    #[cfg(feature = "force_support_fallback")]
     pub const fn fallback() -> Self {
         Self::Fallback(Fallback::new())
     }
@@ -328,6 +448,10 @@ impl Level {
     ///
     /// [enabled]: https://doc.rust-lang.org/reference/attributes/codegen.html#the-target_feature-attribute
     #[inline]
+    #[expect(
+        unreachable_patterns,
+        reason = "Level is `non_exhaustive`, but we are in the crate it's defined."
+    )]
     pub fn dispatch<W: WithSimd>(self, f: W) -> W::Output {
         dispatch!(self, simd => f.with_simd(simd))
     }

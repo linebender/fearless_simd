@@ -30,6 +30,10 @@ libm = ["dep:libm"]
 # beyond the basic SIMD operations abstracted on all platforms
 safe_wrappers = []
 
+# Force the "fallback" SIMD level to be supported
+# This is primarily used for tests
+force_support_fallback = []
+
 [lints]
 workspace = true
 

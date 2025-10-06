@@ -47,24 +47,19 @@
 /// [`Simd`]: crate::Simd
 #[macro_export]
 macro_rules! dispatch {
-    ($level:expr, $simd:pat => $op:expr) => {{
+    // This falls through to the next branch, but with `forced_fallback_arm` turned into a boolean literal
+    // indicating whether or not the `force_support_fallback` crate feature is enabled.
+    ($level:expr, $simd:pat => $op:expr) => {{ $crate::internal_unstable_dispatch_inner!($level, $simd => $op) }};
+    (@impl $level:expr, $simd:pat => $op:expr; $forced_fallback_arm: literal) => {{
         /// Convert the `Simd` value into an `impl Simd`, which enforces that
         /// it is correctly handled.
+        // TODO: Just make into a `pub` function in fearless_simd itself?
         #[inline(always)]
         fn launder<S: $crate::Simd>(x: S) -> impl $crate::Simd {
             x
         }
 
         match $level {
-            $crate::Level::Fallback(fb) => {
-                let $simd = launder(fb);
-                // This vectorize call does nothing, but it is reasonable to be consistent here.
-                $crate::Simd::vectorize(
-                    fb,
-                    #[inline(always)]
-                    || $op,
-                )
-            }
             #[cfg(target_arch = "aarch64")]
             $crate::Level::Neon(neon) => {
                 let $simd = launder(neon);
@@ -83,7 +78,10 @@ macro_rules! dispatch {
                     || $op,
                 )
             }
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            #[cfg(all(
+                any(target_arch = "x86", target_arch = "x86_64"),
+                not(all(target_feature = "avx2", target_feature = "fma"))
+            ))]
             $crate::Level::Sse4_2(sse4_2) => {
                 let $simd = launder(sse4_2);
                 $crate::Simd::vectorize(
@@ -101,9 +99,60 @@ macro_rules! dispatch {
                     || $op,
                 )
             }
+            #[cfg(any(
+                all(target_arch = "aarch64", not(target_feature = "neon")),
+                all(
+                    any(target_arch = "x86", target_arch = "x86_64"),
+                    not(target_feature = "sse4.2")
+                ),
+                all(target_arch = "wasm32", not(target_feature = "simd128")),
+                not(any(
+                    target_arch = "x86",
+                    target_arch = "x86_64",
+                    target_arch = "aarch64",
+                    target_arch = "wasm32"
+                )),
+                $forced_fallback_arm
+            ))]
+            $crate::Level::Fallback(fb) => {
+                let $simd = launder(fb);
+                // This vectorize call does nothing, but it is reasonable to be consistent here.
+                $crate::Simd::vectorize(
+                    fb,
+                    #[inline(always)]
+                    || $op,
+                )
+            }
             _ => unreachable!(),
         }
     }};
+}
+
+// This macro turns whether the `force_support_fallback` macro is enabled into a boolean literal
+// in `dispatch`, which allows it to be used correctly cross-crate.
+// This trickery is required because macros are expanded in the context of the calling crate, including for
+// evaluating `cfg`s.
+
+/// Implementation detail of [`crate::dispatch`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(feature = "force_support_fallback")]
+macro_rules! internal_unstable_dispatch_inner {
+    ($level:expr, $simd:pat => $op:expr) => {
+        $crate::dispatch!(
+            @impl $level, $simd => $op; true
+        )
+    };
+}
+
+/// Implementation detail of [`crate::dispatch`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(not(feature = "force_support_fallback"))]
+macro_rules! internal_unstable_dispatch_inner {
+    ($level:expr, $simd:pat => $op:expr) => {
+        $crate::dispatch!(@impl $level, $simd => $op; false)
+    };
 }
 
 #[cfg(test)]
