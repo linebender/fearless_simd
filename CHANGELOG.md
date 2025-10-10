@@ -8,16 +8,16 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 # Changelog
 
-The latest published Fearless SIMD release is [0.2.0](#020-2025-08-26) which was released on 2025-08-26.
-You can find its changes [documented below](#020-2025-08-26).
+The latest published Fearless SIMD release is [0.3.0](#020-2025-10-10) which was released on 2025-10-10.
+You can find its changes [documented below](#020-2025-10-10).
 
 ## [Unreleased]
 
-## [0.2.0][] (2025-08-26)
-
 This release has an [MSRV][] of 1.86.
 
-## [0.3.0][] (2025-10-09)
+## [0.3.0][] (2025-10-10)
+
+This release has an [MSRV][] of 1.86.
 
 ### Added
 
@@ -80,7 +80,8 @@ No changelog was kept for this release.
 [#91]: https://github.com/linebender/fearless_simd/pull/91
 [#93]: https://github.com/linebender/fearless_simd/pull/93
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0
 [0.1.1]: https://github.com/linebender/fearless_simd/compare/d683506b50721d35745cfc098527e007f1cb3425...e54304c66fc3e42d9604ddc7775b3345b589ce1a
 [0.1.0]: https://github.com/linebender/fearless_simd/commit/d683506b50721d35745cfc098527e007f1cb3425
