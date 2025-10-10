@@ -19,8 +19,7 @@ This release has an [MSRV][] of 1.86.
 
 ## [0.3.0][] (2025-10-09)
 
-
-## Added
+### Added
 
 - `SimdBase::witness` to fetch the `Simd` implementation associated with a
   generic vector. ([#76][] by [@Ralith][])
@@ -34,7 +33,7 @@ This release has an [MSRV][] of 1.86.
 - Unary negation of signed integers. ([#91][] by [@Ralith][])
 
 
-## Fixed
+### Fixed
 
 - `Simd` now requires consistent mask types for native-width
   vectors. ([#75][] by [@Ralith][])
@@ -42,7 +41,7 @@ This release has an [MSRV][] of 1.86.
   enabling `Bytes::bitcast` in generic code. ([#81][] by [@Ralith][])
 - Scalar fallback now uses wrapping integer addition. ([#85][] by [@Ralith][])
 
-## Changed
+### Changed
 
 - Breaking: `a.madd(b, c)` and `a.msub(b, c)` now correspond to `a *
   b + c` and `a * b - c` for consistency with `mul_add` in
