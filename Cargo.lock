@@ -127,7 +127,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "fearless_simd"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bytemuck",
  "libm",
@@ -144,7 +144,7 @@ dependencies = [
 
 [[package]]
 name = "fearless_simd_gen"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "clap",
  "proc-macro2",
