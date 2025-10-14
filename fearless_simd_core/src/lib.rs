@@ -35,7 +35,7 @@ extern crate std;
 /// To construct a value of a type implementing this trait, you must have proven that each
 /// target feature in `FEATURES` is available.
 pub unsafe trait TargetFeatureToken: Copy {
-    /// The set of target features which are enabled for this run, if
+    /// The set of target features which the current CPU has, if
     /// you have a value of this type.
     const FEATURES: &[&str];
 
@@ -78,7 +78,7 @@ pub unsafe trait TargetFeatureToken: Copy {
 /// For reference, the implementation used to implement [`vectorize`](TargetFeatureToken::vectorize) for `"sse"` is:
 ///
 /// ```rust,ignore
-/// trampoline!([Self = self] => "sse", <(R)> fn<(R)>(f: impl FnOnce() -> R = f) -> R { f() })
+/// trampoline!([Sse = self] => "sse", <(R)> fn<(R)>(f: impl FnOnce() -> R = f) -> R { f() })
 /// ```
 ///
 /// There is also support for where clauses after the return type.
@@ -178,12 +178,15 @@ macro_rules! trampoline {
             // We validate that we actually have a token of each claimed type.
             let _: $token_type = $token;
         )+
-        const {
+        // We use a const item rather than a const block to ensure that.
+        // This does mean that you can no longer use tokens "generically", but it's hard to think of
+        // cases where that would be usable anyway.
+        const _: () = {
             // And that the claimed types justify enabling the enabled target features.
             $crate::trampoline::is_feature_subset($to_enable, [$(<$token_type as $crate::TargetFeatureToken>::FEATURES),+])
                 // TODO: Better failure message here (i.e. at least concatting the set of requested features)
                 .unwrap();
-        }
+        };
 
         $(
             // Soundness: We use `arg_value` outside of the macro body to ensure it doesn't
