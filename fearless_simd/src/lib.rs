@@ -360,14 +360,14 @@ impl Level {
         }
     }
 
-    /// Get the weakest statically supported SIMD level.
+    /// Get the strongest statically supported SIMD level.
     ///
     /// That is, if your compilation run ambiently declares that a target feature is enabled,
     /// this method will take that into account.
     /// In most cases, you should use [`Level::new`] or [`Level::try_detect`].
     /// This method is mainly useful for libraries, where:
     ///
-    /// 1) Your crate features requests that you not use the standard library, i.e. doesn't enable
+    /// 1) Your crate features request that you not use the standard library, i.e. doesn't enable
     ///    your `"std"` crate feature reason (so you can't use [`Level::new`] and
     ///    [`Level::try_detect`] returns `None`); AND
     /// 2) Your caller does not provide a [`Level`]; AND
@@ -422,7 +422,7 @@ impl Level {
 
     /// Create a scalar fallback level, which uses no SIMD instructions.
     ///
-    /// This is primarily intended for tests; most users should prefer [`Level::new`].
+    /// This is primarily intended for tests; most users should prefer [`Level::new`] or [`Level::baseline`].
     #[inline]
     #[cfg(feature = "force_support_fallback")]
     pub const fn fallback() -> Self {
