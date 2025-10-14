@@ -60,9 +60,9 @@ checksum = "793db76d6187cd04dff33004d8e6c9cc4e05cd330500379d2394209271b4aeee"
 
 [[package]]
 name = "bytemuck"
-version = "1.23.1"
+version = "1.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c76a5792e44e4abe34d3abf15636779261d45a7450612059293d1d2cfc63422"
+checksum = "1fbdf580320f38b612e485521afda1ee26d10cc9884efaaa750d383e13e3c5f4"
 
 [[package]]
 name = "cc"
@@ -132,6 +132,17 @@ dependencies = [
  "bytemuck",
  "libm",
 ]
+
+[[package]]
+name = "fearless_simd_core"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+]
+
+[[package]]
+name = "fearless_simd_core_gen"
+version = "0.1.0"
 
 [[package]]
 name = "fearless_simd_dev_macros"

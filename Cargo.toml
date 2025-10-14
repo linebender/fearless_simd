@@ -2,6 +2,8 @@
 resolver = "2"
 members = [
   "fearless_simd",
+  "fearless_simd_core",
+  "fearless_simd_core/gen",
   "fearless_simd_dev_macros",
   "fearless_simd_gen",
   "fearless_simd_tests",

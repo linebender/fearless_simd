@@ -1,0 +1,15 @@
+//! Target feature tokens for the x86 and x86-64 CPU families.
+//!
+//! The general compuotation CPU features associated with each [microarchitecture level] can
+//! be found in their corresponding modules:
+//!
+//! - [`v1`] for x86-64-v1.
+//! - [`v2`] for x86-64-v2.
+//! - [`v3`] for x86-64-v3.
+//! - [`v4`] for x86-64-v4.
+//!
+//! Tokens for target features which not associated with these levels can be found in this module.
+//!
+//! [microarchitecture level]: https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
+
+pub mod v1;
