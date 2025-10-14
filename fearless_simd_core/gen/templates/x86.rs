@@ -62,16 +62,16 @@ impl FEATURE_STRUCT_NAME {
     }
 
     #[target_feature(enable = "{FEATURE_ID}")]
-    /// Create a new token for the "{FEATURE_ID}" target feature is enabled.
+    /// Create a new token for the "{FEATURE_ID}" target feature.
     ///
     /// This method is useful to get a new token if you have an external proof that
-    /// {FEATURE_ID} is available. This could happen if you are in a target feature
+    /// {FEATURE_DOCS_NAME} is available. This could happen if you are in a target feature
     /// function called by an external library user.
     ///
     /// # Safety
     ///
     /// No conditions other than those inherited from the target feature attribute,
-    /// i.e. that the "{FEATURE_DOCS_NAME}" target feature is available.
+    /// i.e. that the "{FEATURE_ID}" target feature is available.
     ///
     /// [implicitly enables]: https://doc.rust-lang.org/beta/reference/attributes/codegen.html?highlight=implicitly%20enabled#r-attributes.codegen.target_feature.safety-restrictions
     pub fn new() -> Self {

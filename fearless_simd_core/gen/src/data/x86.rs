@@ -4,7 +4,6 @@ macro_rules! f {
     ($(#[doc = $doc_addition: literal])*
         struct $module: ident:: $struct_name: ident($display_name: literal): $feature_name: literal + [$($implicitly_enabled: literal),*]
         fn $example_function_name: ident
-        $($additional_impls: tt)*
     ) => {
         Feature {
             struct_name: stringify!($struct_name),
@@ -13,7 +12,6 @@ macro_rules! f {
             extra_docs: concat!($($doc_addition, "\n",)*),
             example_function_name: stringify!($example_function_name),
             feature_docs_name: $display_name,
-            additional_impls: stringify!($($additional_impls)*),
             module: stringify!($module)
         }
     }
@@ -285,7 +283,7 @@ pub(crate) const X86_FEATURES: &[Feature] = &[
         /// ["rdseed"] --- Read random seed
         ///
         /// ["rdseed"]: https://en.wikipedia.org/wiki/RdRand
-        struct crypto::Rdseed("`rdseed"): "rdseed" + []
+        struct crypto::Rdseed("`rdseed`"): "rdseed" + []
         fn uses_rdseed
     ),
     f!(

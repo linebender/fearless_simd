@@ -104,9 +104,6 @@ struct Feature {
     example_function_name: &'static str,
     /// The "display name" for the feature, used inside the docs.
     feature_docs_name: &'static str,
-    /// Extra code added at the end.
-    /// Used for implicitly enabled features.
-    additional_impls: &'static str,
     /// The module (if any) this feature will belong to.
     ///
     /// (Note that imports into the module are checked to exist, but not automatically inserted).
