@@ -8,14 +8,18 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 # Changelog
 
-The latest published Fearless SIMD release is [0.2.0](#020-2025-08-26) which was released on 2025-08-26.
-You can find its changes [documented below](#020-2025-08-26).
+The latest published Fearless SIMD release is [0.3.0](#020-2025-10-10) which was released on 2025-10-10.
+You can find its changes [documented below](#020-2025-10-10).
 
 ## [Unreleased]
 
 This release has an [MSRV][] of 1.86.
 
-## Added
+## [0.3.0][] (2025-10-10)
+
+This release has an [MSRV][] of 1.86.
+
+### Added
 
 - `SimdBase::witness` to fetch the `Simd` implementation associated with a
   generic vector. ([#76][] by [@Ralith][])
@@ -29,7 +33,7 @@ This release has an [MSRV][] of 1.86.
 - Unary negation of signed integers. ([#91][] by [@Ralith][])
 - A simpler `dispatch` macro to replace `simd_dispatch`. ([#96][], [#99][] by [@Ralith][], [@DJMcNab][])
 
-## Fixed
+### Fixed
 
 - `Simd` now requires consistent mask types for native-width
   vectors. ([#75][] by [@Ralith][])
@@ -37,7 +41,7 @@ This release has an [MSRV][] of 1.86.
   enabling `Bytes::bitcast` in generic code. ([#81][] by [@Ralith][])
 - Scalar fallback now uses wrapping integer addition. ([#85][] by [@Ralith][])
 
-## Changed
+### Changed
 
 - Breaking: `a.madd(b, c)` and `a.msub(b, c)` now correspond to `a *
   b + c` and `a * b - c` for consistency with `mul_add` in
@@ -82,7 +86,8 @@ No changelog was kept for this release.
 [#96]: https://github.com/linebender/fearless_simd/pull/96
 [#99]: https://github.com/linebender/fearless_simd/pull/99
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0
 [0.1.1]: https://github.com/linebender/fearless_simd/compare/d683506b50721d35745cfc098527e007f1cb3425...e54304c66fc3e42d9604ddc7775b3345b589ce1a
 [0.1.0]: https://github.com/linebender/fearless_simd/commit/d683506b50721d35745cfc098527e007f1cb3425
