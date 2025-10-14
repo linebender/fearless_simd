@@ -1,6 +1,6 @@
 mod data;
 
-use std::fmt::{Write, format};
+use std::fmt::Write;
 use std::fs;
 use std::{
     cell::RefCell,
@@ -29,8 +29,16 @@ fn generate_for_arch(
         for line in feature.feature.extra_docs.lines() {
             writeln!(&mut new_docs, "///{line}").unwrap();
         }
-        let enabled_feature_docs = format!("`{}`", feature.children.join("`, `"));
-        let enabled_feature_str_list = format!(r#""{}""#, feature.children.join(r#"", ""#));
+        let enabled_feature_str_list = format!(
+            r#""{}", {}"#,
+            feature.feature.feature_name,
+            feature
+                .children
+                .iter()
+                .map(|it| format!(r#""{it}""#))
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
         let mut from_impls = String::new();
         for child in &feature.children {
             let from_feature = features
@@ -43,13 +51,13 @@ fn generate_for_arch(
             );
             write!(
                 from_impls,
-                r#"\n\
-                impl From<FEATURE_STRUCT_NAME> for {type_path} {{
-                    fn from(value: Self) -> {type_path} {{
-                        trampoline!([Self = value] => "{{FEATURE_ID}}", fn() -> {type_path} {{ {{type_path}}::new() }})
-                    }}
-                }}\n
-                "#
+                "\n\
+impl From<FEATURE_STRUCT_NAME> for {type_path} {{
+    fn from(value: FEATURE_STRUCT_NAME) -> Self {{
+        // This also serves as a correctness check of the implicitly enabled features.
+        trampoline!([FEATURE_STRUCT_NAME = value] => \"{{FEATURE_ID}}\", fn() -> {type_path} {{ {type_path}::new() }})
+    }}
+}}\n"
             ).unwrap();
         }
         let mut result = format!(
@@ -60,18 +68,20 @@ fn generate_for_arch(
         // We replace the from impls first, as they use template variables from the rest of this.
         result = result.replace("/*{FROM_IMPLS}*/", &from_impls);
         result = result.replace("{FEATURE_DOCS_NAME}", feature.feature.feature_docs_name);
-        result = result.replace("/// {NEW_DOCS}", &new_docs);
+        result = result.replace("/// {NEW_DOCS}\n", &new_docs);
         result = result.replace("{FEATURE_ID}", feature.feature.feature_name);
-        result = result.replace("{ENABLED_FEATURES_DOCS_LIST}", &enabled_feature_docs);
         result = result.replace(
             "{EXAMPLE_FUNCTION_NAME}",
             feature.feature.example_function_name,
         );
         result = result.replace("FEATURE_STRUCT_NAME", feature.feature.struct_name);
-        result = result.replace("{ENABLED_FEATURES_STR_LIST}", &enabled_feature_str_list);
+        result = result.replace(
+            r#""{ENABLED_FEATURES_STR_LIST}""#,
+            &enabled_feature_str_list,
+        );
         let module_dir = arch_dir.join(feature.feature.module);
         create_dir_all(&module_dir)?;
-        let mut file = module_dir.join(feature.feature.feature_name);
+        let mut file = module_dir.join(feature.feature.feature_name.replace(".", "_"));
         file.set_extension("rs");
         fs::write(file, result)?;
     }

@@ -8,12 +8,9 @@ use core::fmt::Debug;
 ///
 /// A token indicating that the current CPU has the `{FEATURE_ID}` target feature.
 ///
-/// This feature also enables {ENABLED_FEATURES_DOCS_LIST};
-/// the tokens for these features can be created using [`From`] implementations.
-///
 /// # Example
 ///
-/// This can be used to [`trampoline!`] into:
+/// This can be used to [`trampoline!`] into functions like:
 ///
 /// ```rust
 /// #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -35,16 +32,17 @@ impl Debug for FEATURE_STRUCT_NAME {
     }
 }
 
-unsafe impl TargetFeatureToken for Sse {
-    const FEATURES: &[&str] = &[{ ENABLED_FEATURES_STR_LIST }];
+unsafe impl TargetFeatureToken for FEATURE_STRUCT_NAME {
+    const FEATURES: &[&str] = &["{ENABLED_FEATURES_STR_LIST}"];
 
     #[inline(always)]
     fn vectorize<R>(self, f: impl FnOnce() -> R) -> R {
-        trampoline!([Self = self] => "{FEATURE_ID}", <(R)> fn<(R)>(f: impl FnOnce() -> R = f) -> R { f() })
+        // Because we want this constant to be eagerly evaluated.
+        trampoline!([FEATURE_STRUCT_NAME = self] => "{FEATURE_ID}", <(R)> fn<(R)>(f: impl FnOnce() -> R = f) -> R { f() })
     }
 }
 
-impl Sse {
+impl FEATURE_STRUCT_NAME {
     #[cfg(feature = "std")]
     /// Create a new token if the `"{FEATURE_ID}"` target feature is detected as enabled.
     ///
