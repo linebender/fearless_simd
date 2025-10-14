@@ -12,4 +12,12 @@
 //!
 //! [microarchitecture level]: https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
 
+pub mod adx;
+pub mod avx;
+pub mod avx512;
+pub mod crypto;
+pub mod discontinued;
+pub mod sse;
 pub mod v1;
+pub mod v2;
+pub mod v3;

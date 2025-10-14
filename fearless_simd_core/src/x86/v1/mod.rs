@@ -2,14 +2,11 @@
 //!
 //! This is the baseline for x86-64 support.
 
-mod sse;
-pub use sse::Sse;
-
-mod fxsr;
-pub use fxsr::Fxsr;
+pub use crate::x86::sse::Fxsr;
+pub use crate::x86::sse::Sse;
 
 /// A token that the current CPU is on the x86-64-v1 microarchitecture level.
-// TODO:  (This is currently incomplete)
+// TODO: (This is currently incomplete)
 pub struct V1 {
     pub sse: Sse,
     pub fxsr: Fxsr,
