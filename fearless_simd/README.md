@@ -115,6 +115,7 @@ The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/fe
 - `libm`: Use floating point implementations from [libm].
 - `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
   beyond the basic SIMD operations abstracted on all platforms.
+- `force_support_fallback`: Force scalar fallback, to be supported, even if your compilation target has a better baseline.
 
 At least one of `std` and `libm` is required; `std` overrides `libm`.
 

@@ -15,6 +15,19 @@ You can find its changes [documented below](#020-2025-10-10).
 
 This release has an [MSRV][] of 1.86.
 
+### Changed
+
+- Breaking change: `Level::fallback` has been removed, replaced with `Level::baseline`. ([#105][] by [@DJMcNab][])
+  This corresponds with a change to avoid compiling in support for the fallback level on compilation targets which don't
+  require it; this is most impactful for binary size on WASM, Apple Silicon Macs or Android.
+  A consequence of this is that the available variants on `Level` are now dependent on the target features you are compiling with.
+  The fallback level can be restored with the `force_support_fallback` cargo feature. We don't expect this to be necessary outside
+  of tests.
+
+### Removed
+
+- Breaking change: The (deprecated) `simd_dispatch!` macro. ([#105][] by [@DJMcNab][])
+
 ## [0.3.0][] (2025-10-10)
 
 This release has an [MSRV][] of 1.86.
@@ -85,6 +98,7 @@ No changelog was kept for this release.
 [#93]: https://github.com/linebender/fearless_simd/pull/93
 [#96]: https://github.com/linebender/fearless_simd/pull/96
 [#99]: https://github.com/linebender/fearless_simd/pull/99
+[#105]: https://github.com/linebender/fearless_simd/pull/105
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0

@@ -77,6 +77,7 @@
 //! - `libm`: Use floating point implementations from [libm].
 //! - `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
 //!   beyond the basic SIMD operations abstracted on all platforms.
+//! - `force_support_fallback`: Force scalar fallback, to be supported, even if your compilation target has a better baseline.
 //!
 //! At least one of `std` and `libm` is required; `std` overrides `libm`.
 //!
@@ -423,6 +424,10 @@ impl Level {
     /// Create a scalar fallback level, which uses no SIMD instructions.
     ///
     /// This is primarily intended for tests; most users should prefer [`Level::new`] or [`Level::baseline`].
+    ///
+    /// Note that enabling the scalar fallback does *not* mean that the fallback branch will not
+    /// contain SIMD instructions. This is because the "ambient" compilation environment has SIMD
+    /// instructions available, which may be utilised by LLVM to auto-vectorise that path.
     #[inline]
     #[cfg(feature = "force_support_fallback")]
     pub const fn fallback() -> Self {
