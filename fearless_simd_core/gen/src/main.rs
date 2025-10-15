@@ -150,7 +150,7 @@ fn generate_x86_level(
 
     let level_struct_name = level.to_uppercase();
     // The target_feature(enable = "...") string.
-    let lcd_contents = lcd.join(", ");
+    let lcd_contents = lcd.join(",");
     // The fields of the new struct.
     let lcd_field_definitions = lcd
         .iter()
@@ -159,11 +159,13 @@ fn generate_x86_level(
                 .iter()
                 .find(|it| it.feature.feature_name == *feature)
                 .unwrap();
-            let type_path = format!(
-                "crate::x86::{}::{}",
-                normalized.feature.module, normalized.feature.struct_name
-            );
-            format!("{feature}: {type_path},\n")
+            let type_path = format!("crate::x86::{level}::{}", normalized.feature.struct_name);
+            let feature = feature.replace(".", "_");
+            format!(
+                "/// The contained proof that {} is available.\n\
+            pub {feature}: {type_path},\n",
+                normalized.feature.feature_docs_name
+            )
         })
         .collect::<String>();
     // The enabled FEATURES.
@@ -180,14 +182,12 @@ fn generate_x86_level(
                 .iter()
                 .find(|it| it.feature.feature_name == *feature)
                 .unwrap();
-            let type_path = format!(
-                "crate::x86::{}::{}",
-                normalized.feature.module, normalized.feature.struct_name
-            );
+            let type_path = format!("crate::x86::{level}::{}", normalized.feature.struct_name);
+            let feature = feature.replace(".", "_");
             format!("{type_path} = self.{feature}")
         })
         .collect::<Vec<_>>()
-        .join(",");
+        .join(", ");
     // The version of the struct initializer in `try_new`.
     let struct_initializer_try_new = lcd
         .iter()
@@ -196,10 +196,8 @@ fn generate_x86_level(
                 .iter()
                 .find(|it| it.feature.feature_name == *feature)
                 .unwrap();
-            let type_path = format!(
-                "crate::x86::{}::{}",
-                normalized.feature.module, normalized.feature.struct_name
-            );
+            let type_path = format!("crate::x86::{level}::{}", normalized.feature.struct_name);
+            let feature = feature.replace(".", "_");
             // We rely on rustfmt to get the tab spacing right.
             format!("\t{feature}: {type_path}::try_new()?,\n")
         })
@@ -212,10 +210,8 @@ fn generate_x86_level(
                 .iter()
                 .find(|it| it.feature.feature_name == *feature)
                 .unwrap();
-            let type_path = format!(
-                "crate::x86::{}::{}",
-                normalized.feature.module, normalized.feature.struct_name
-            );
+            let type_path = format!("crate::x86::{level}::{}", normalized.feature.struct_name);
+            let feature = feature.replace(".", "_");
             format!("\t{feature}: {type_path}::new(),\n")
         })
         .collect::<String>();
@@ -226,10 +222,7 @@ fn generate_x86_level(
             .iter()
             .find(|it| it.feature.feature_name == *child)
             .unwrap();
-        let type_path = format!(
-            "crate::x86::{}::{}",
-            from_feature.feature.module, from_feature.feature.struct_name
-        );
+        let type_path = format!("crate::x86::{level}::{}", from_feature.feature.struct_name);
         write!(
                 from_impls,
                 "\n\
@@ -249,6 +242,9 @@ impl From<LEVEL_STRUCT_NAME> for {type_path} {{
     );
     // We replace the from impls first, as they use template variables from the rest of this.
     result = result.replace("/*{FROM_IMPLS}*/", &from_impls);
+    result = result.replace("LEVEL_STRUCT_NAME", &level_struct_name);
+    result = result.replace("{LEVEL_ID}", level);
+    result = result.replace("{LEVEL_FEATURE_LCD_CONTENTS}", &lcd_contents);
     result = result.replace(
         "/*{LEVEL_FEATURE_LCD_FIELD_DEFINITIONS}*/",
         &lcd_field_definitions,

@@ -37,12 +37,15 @@ impl Debug for Bmi1 {
     }
 }
 
+// Safety: This token can only be constructed if you have proof that all the requisite
+// target feature is enabled.
 unsafe impl TargetFeatureToken for Bmi1 {
     const FEATURES: &[&str] = &["bmi1"];
 
     #[inline(always)]
     fn vectorize<R>(self, f: impl FnOnce() -> R) -> R {
-        // Because we want this constant to be eagerly evaluated.
+        // Because we need the safety check to be eagerly evaluated, it uses an constant item.
+        // This means we can't use `Self = self` here, unfortunately.
         trampoline!([Bmi1 = self] => "bmi1", <(R)> fn<(R)>(f: impl FnOnce() -> R = f) -> R { f() })
     }
 }

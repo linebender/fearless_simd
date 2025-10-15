@@ -18,6 +18,9 @@ pub mod avx512;
 pub mod crypto;
 pub mod discontinued;
 pub mod sse;
+pub mod xsave;
+
 pub mod v1;
 pub mod v2;
 pub mod v3;
+pub mod v4;

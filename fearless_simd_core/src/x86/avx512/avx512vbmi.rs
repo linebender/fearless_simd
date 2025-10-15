@@ -37,6 +37,8 @@ impl Debug for Avx512vbmi {
     }
 }
 
+// Safety: This token can only be constructed if you have proof that all the requisite
+// target feature is enabled.
 unsafe impl TargetFeatureToken for Avx512vbmi {
     const FEATURES: &[&str] = &[
         "avx512vbmi",
@@ -56,7 +58,8 @@ unsafe impl TargetFeatureToken for Avx512vbmi {
 
     #[inline(always)]
     fn vectorize<R>(self, f: impl FnOnce() -> R) -> R {
-        // Because we want this constant to be eagerly evaluated.
+        // Because we need the safety check to be eagerly evaluated, it uses an constant item.
+        // This means we can't use `Self = self` here, unfortunately.
         trampoline!([Avx512vbmi = self] => "avx512vbmi", <(R)> fn<(R)>(f: impl FnOnce() -> R = f) -> R { f() })
     }
 }
