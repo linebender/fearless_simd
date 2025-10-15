@@ -422,5 +422,29 @@ pub(crate) const X86_FEATURES: &[Feature] = &[
     ),
 ];
 
-#[test]
-fn all_features_included() {}
+// All taken from <https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels>
+
+pub(crate) const X86_LEVEL_TEMPLATE: &str = include_str!("../../templates/x86_level.rs");
+
+/// The target features required in the x86-64-v1 level.
+// Rust doesn't have target features for "cmov", "cmpxchg8b", "fpu", "sce", and "mmx".
+// The first four are all assumed, and the final is not implemented because
+// it's practically impossible to use correctly (and there's no reason to).
+pub(crate) const X86_V1: &[&str] = &["fxsr", "sse", "sse2"];
+/// The target features required in the x86-64-v1 level, in addition to those already in [`V1`].
+pub(crate) const X86_V2: &[&str] = &[
+    "sse3",
+    "ssse3",
+    "sse4.1",
+    "sse4.2",
+    "popcnt",
+    "cmpxchg16b",
+    // The lahfahf target feature is currently in Rust beta.
+    // "lahfsahf",
+];
+/// The target features required in the x86-64-v3 level, excluding those already in [`V2`].
+pub(crate) const X86_V3: &[&str] = &[
+    "avx", "avx2", "bmi1", "bmi2", "f16c", "fma", "lzcnt", "movbe", "xsave",
+];
+/// The target features required in the x86-64-v4 level, excluding those already in [`V3`].
+pub(crate) const X86_V4: &[&str] = &["avx512f", "avx512bw", "avx512cd", "avx512dq", "avx512vl"];

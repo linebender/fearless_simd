@@ -1,2 +1,4 @@
 mod x86;
-pub(crate) use x86::{X86_FEATURES, X86_TEMPLATE};
+pub(crate) use x86::{
+    X86_FEATURES, X86_LEVEL_TEMPLATE, X86_TEMPLATE, X86_V1, X86_V2, X86_V3, X86_V4,
+};

@@ -1,7 +1,9 @@
 mod data;
 
+use std::collections::HashSet;
 use std::fmt::Write;
 use std::fs;
+use std::hash::RandomState;
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -10,21 +12,34 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::data::X86_LEVEL_TEMPLATE;
+
 fn main() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let src_dir = manifest_dir.ancestors().nth(1).unwrap().join("src");
-    generate_for_arch(&src_dir, "x86", data::X86_TEMPLATE, data::X86_FEATURES).unwrap();
+    {
+        let x86_features = normalize_features(data::X86_FEATURES);
+        generate_for_arch(&src_dir, "x86", data::X86_TEMPLATE, &x86_features).unwrap();
+        let mut features: Vec<&'static str> = Vec::new();
+        features.extend(data::X86_V1);
+        generate_x86_level(&src_dir, "v1", &x86_features, &features).unwrap();
+        features.extend(data::X86_V2);
+        generate_x86_level(&src_dir, "v2", &x86_features, &features).unwrap();
+        features.extend(data::X86_V3);
+        generate_x86_level(&src_dir, "v3", &x86_features, &features).unwrap();
+        features.extend(data::X86_V4);
+        generate_x86_level(&src_dir, "v4", &x86_features, &features).unwrap();
+    }
 }
 
 fn generate_for_arch(
     root_dir: &Path,
     arch_module_name: &str,
     template: &str,
-    features: &'static [Feature],
+    features: &[NormalizedFeature],
 ) -> io::Result<()> {
     let arch_dir = root_dir.join(arch_module_name);
-    let features = normalize_features(features);
-    for feature in &features {
+    for feature in features {
         let mut new_docs = String::new();
         for line in feature.feature.extra_docs.lines() {
             writeln!(&mut new_docs, "///{line}").unwrap();
@@ -79,12 +94,182 @@ impl From<FEATURE_STRUCT_NAME> for {type_path} {{
             r#""{ENABLED_FEATURES_STR_LIST}""#,
             &enabled_feature_str_list,
         );
+
         let module_dir = arch_dir.join(feature.feature.module);
         create_dir_all(&module_dir)?;
         let mut file = module_dir.join(feature.feature.feature_name.replace(".", "_"));
         file.set_extension("rs");
         fs::write(file, result)?;
     }
+    Ok(())
+}
+
+/// Generate the code for an X86 microarchitecture level.
+fn generate_x86_level(
+    root_dir: &Path,
+    level: &'static str,
+    all_features: &[NormalizedFeature],
+    required_features: &[&'static str],
+) -> io::Result<()> {
+    // Precalculate the sets of features we need to support.
+    // Intermediate value for
+    let mut superset = HashSet::new();
+    for feature in required_features {
+        superset.insert(*feature);
+        let normalized = all_features
+            .iter()
+            .find(|it| it.feature.feature_name == *feature)
+            .unwrap();
+        superset.extend(&normalized.children);
+    }
+
+    // Every single target feature supported on this level, including those implied.
+    // (In all likelihood, this is the same as `required_features`, but I'd rather validate that manually)
+    let mut superset = superset.into_iter().collect::<Vec<_>>();
+    superset.sort();
+    let mut lcd = HashSet::<_, RandomState>::from_iter(superset.iter().copied());
+    // We make the assumption that features are a tree, that is, there's no case where `A->B` and `B->A`.
+    // However, even if that didn't hold, we at least use a consistent ordering here.
+    // We test from the superset to be safe; this should be equivalent to using `required_features`, though.
+    for feature in &superset {
+        let normalized = all_features
+            .iter()
+            .find(|it| it.feature.feature_name == *feature)
+            .unwrap();
+        for feature in &normalized.children {
+            // If the feature is a child of another required feature, we know we don't need it for this version.
+            // We don't care whether or not it was actually removed.
+            lcd.remove(*feature);
+        }
+    }
+    // The set of features which are strictly required.
+    // This is used to create the target feature string, so that it can be as short as possible.
+    let mut lcd = lcd.into_iter().collect::<Vec<_>>();
+    lcd.sort();
+    // Now that we have lcd and superset, we can preprocess what we need for the actual file.
+
+    let level_struct_name = level.to_uppercase();
+    // The target_feature(enable = "...") string.
+    let lcd_contents = lcd.join(", ");
+    // The fields of the new struct.
+    let lcd_field_definitions = lcd
+        .iter()
+        .map(|feature| {
+            let normalized = all_features
+                .iter()
+                .find(|it| it.feature.feature_name == *feature)
+                .unwrap();
+            let type_path = format!(
+                "crate::x86::{}::{}",
+                normalized.feature.module, normalized.feature.struct_name
+            );
+            format!("{feature}: {type_path},\n")
+        })
+        .collect::<String>();
+    // The enabled FEATURES.
+    let superset_list = superset
+        .iter()
+        .map(|it| format!(r#""{it}""#))
+        .collect::<Vec<_>>()
+        .join(", ");
+    // First argument to `trampoline!`
+    let lcd_trampoline = lcd
+        .iter()
+        .map(|feature| {
+            let normalized = all_features
+                .iter()
+                .find(|it| it.feature.feature_name == *feature)
+                .unwrap();
+            let type_path = format!(
+                "crate::x86::{}::{}",
+                normalized.feature.module, normalized.feature.struct_name
+            );
+            format!("{type_path} = self.{feature}")
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    // The version of the struct initializer in `try_new`.
+    let struct_initializer_try_new = lcd
+        .iter()
+        .map(|feature| {
+            let normalized = all_features
+                .iter()
+                .find(|it| it.feature.feature_name == *feature)
+                .unwrap();
+            let type_path = format!(
+                "crate::x86::{}::{}",
+                normalized.feature.module, normalized.feature.struct_name
+            );
+            // We rely on rustfmt to get the tab spacing right.
+            format!("\t{feature}: {type_path}::try_new()?,\n")
+        })
+        .collect::<String>();
+    // The version of the struct initializer in `new`.
+    let struct_initializer_new = lcd
+        .iter()
+        .map(|feature| {
+            let normalized = all_features
+                .iter()
+                .find(|it| it.feature.feature_name == *feature)
+                .unwrap();
+            let type_path = format!(
+                "crate::x86::{}::{}",
+                normalized.feature.module, normalized.feature.struct_name
+            );
+            format!("\t{feature}: {type_path}::new(),\n")
+        })
+        .collect::<String>();
+
+    let mut from_impls = String::new();
+    for child in &superset {
+        let from_feature = all_features
+            .iter()
+            .find(|it| it.feature.feature_name == *child)
+            .unwrap();
+        let type_path = format!(
+            "crate::x86::{}::{}",
+            from_feature.feature.module, from_feature.feature.struct_name
+        );
+        write!(
+                from_impls,
+                "\n\
+impl From<LEVEL_STRUCT_NAME> for {type_path} {{
+    fn from(value: LEVEL_STRUCT_NAME) -> Self {{
+        // This serves as a correctness check of the implicitly enabled features.
+        trampoline!([LEVEL_STRUCT_NAME = value] => \"{{LEVEL_FEATURE_LCD_CONTENTS}}\", fn() -> {type_path} {{ {type_path}::new() }})
+    }}
+}}\n"
+            ).unwrap();
+    }
+
+    let mut result = format!(
+        "// This file is automatically generated by `fearless_simd_core_gen`.\n\
+        // Its template can be found in `fearless_simd_core/gen/templates`.\n\n\
+        {X86_LEVEL_TEMPLATE}"
+    );
+    // We replace the from impls first, as they use template variables from the rest of this.
+    result = result.replace("/*{FROM_IMPLS}*/", &from_impls);
+    result = result.replace(
+        "/*{LEVEL_FEATURE_LCD_FIELD_DEFINITIONS}*/",
+        &lcd_field_definitions,
+    );
+    result = result.replace(r#""{LEVEL_FEATURE_SUPERSET_LIST}""#, &superset_list);
+    result = result.replace("{LEVEL_FEATURE_LCD_TRAMPOLINE}", &lcd_trampoline);
+
+    result = result.replace(
+        "/*{LEVEL_FEATURE_STRUCT_INITIALIZER_LCD_TRY_NEW}*/",
+        &struct_initializer_try_new,
+    );
+    result = result.replace(
+        "/*{LEVEL_FEATURE_STRUCT_INITIALIZER_LCD_NEW}*/",
+        &struct_initializer_new,
+    );
+
+    let arch_dir = root_dir.join("x86");
+    let module_dir = arch_dir.join(level);
+    create_dir_all(&module_dir)?;
+    let output_path = module_dir.join("level.rs");
+    fs::write(output_path, result)?;
     Ok(())
 }
 

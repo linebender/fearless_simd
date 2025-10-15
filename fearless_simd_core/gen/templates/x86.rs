@@ -32,12 +32,15 @@ impl Debug for FEATURE_STRUCT_NAME {
     }
 }
 
+// Safety: This token can only be constructed if you have proof that all the requisite
+// target feature is enabled.
 unsafe impl TargetFeatureToken for FEATURE_STRUCT_NAME {
     const FEATURES: &[&str] = &["{ENABLED_FEATURES_STR_LIST}"];
 
     #[inline(always)]
     fn vectorize<R>(self, f: impl FnOnce() -> R) -> R {
-        // Because we want this constant to be eagerly evaluated.
+        // Because we need the safety check to be eagerly evaluated, it uses an constant item.
+        // This means we can't use `Self = self` here, unfortunately.
         trampoline!([FEATURE_STRUCT_NAME = self] => "{FEATURE_ID}", <(R)> fn<(R)>(f: impl FnOnce() -> R = f) -> R { f() })
     }
 }
