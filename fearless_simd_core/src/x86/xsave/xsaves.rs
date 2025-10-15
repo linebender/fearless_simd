@@ -40,7 +40,7 @@ impl Debug for Xsaves {
 // Safety: This token can only be constructed if you have proof that all the requisite
 // target feature is enabled.
 unsafe impl TargetFeatureToken for Xsaves {
-    const FEATURES: &[&str] = &["xsaves", ];
+    const FEATURES: &[&str] = &["xsaves"];
 
     #[inline(always)]
     fn vectorize<R>(self, f: impl FnOnce() -> R) -> R {
@@ -86,7 +86,6 @@ impl Xsaves {
         Self { _private: () }
     }
 }
-
 
 const _: () = {
     assert!(

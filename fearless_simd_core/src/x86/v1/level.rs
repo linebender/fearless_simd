@@ -89,6 +89,7 @@ impl V1 {
         }
     }
 }
+// TODO: From impls to convert into lower x86 versions.
 
 impl From<V1> for crate::x86::v1::Fxsr {
     fn from(value: V1) -> Self {

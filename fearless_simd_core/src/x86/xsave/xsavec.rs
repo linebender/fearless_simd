@@ -40,7 +40,7 @@ impl Debug for Xsavec {
 // Safety: This token can only be constructed if you have proof that all the requisite
 // target feature is enabled.
 unsafe impl TargetFeatureToken for Xsavec {
-    const FEATURES: &[&str] = &["xsavec", ];
+    const FEATURES: &[&str] = &["xsavec"];
 
     #[inline(always)]
     fn vectorize<R>(self, f: impl FnOnce() -> R) -> R {
@@ -86,7 +86,6 @@ impl Xsavec {
         Self { _private: () }
     }
 }
-
 
 const _: () = {
     assert!(
