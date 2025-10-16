@@ -15,6 +15,7 @@ license = "Apache-2.0 OR MIT"
 repository = "https://github.com/linebender/fearless_simd"
 # Keep in sync with RUST_MIN_VER in .github/workflows/ci.yml, with the relevant README.md files
 # and with the MSRV in the `Unreleased` section of CHANGELOG.md.
+# When increasing past 1.91, also uncomment the `discontinued::tbm` and `sse::sse4a` modules/imports in Fearless SIMD Core.
 rust-version = "1.89"
 
 [workspace.lints]

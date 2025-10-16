@@ -17,6 +17,10 @@ pub use sse3::Sse3;
 mod ssse3;
 pub use ssse3::SupplementalSse3;
 
+// These will be stabilised in 1.91.
+// mod sse4a;
+// pub use sse4a::Sse4a;
+
 mod sse4_1;
 pub use sse4_1::Sse4_1;
 

@@ -349,14 +349,13 @@ pub(crate) const X86_FEATURES: &[Feature] = &[
         struct sse::Sse4_2("SSE4.2"): "sse4.2" + ["sse4.1"]
         fn uses_sse4
     ),
-    // // TODO: This only exists from 1.91 and above (current beta)
-    // f!(
-    //     /// [SSE4a] --- Streaming<abbr title="Single Instruction Multiple Data">SIMD</abbr>Extensions 4a
-
-    //     /// [SSE4a]: https://en.wikipedia.org/wiki/SSE4#SSE4a
-    //     struct Sse4a("SSE4a"): "sse4a" + ["sse3"]
-    //     fn uses_sse4a
-    // ),
+    f!(
+        /// [SSE4a] --- Streaming<abbr title="Single Instruction Multiple Data">SIMD</abbr>Extensions 4a
+        ///
+        /// [SSE4a]: https://en.wikipedia.org/wiki/SSE4#SSE4a
+        struct sse::Sse4a("SSE4a"): "sse4a" + ["sse3"]
+        fn uses_sse4a
+    ),
     f!(
         /// [SSSE3] --- Supplemental Streaming<abbr title="Single Instruction Multiple Data">SIMD</abbr>Extensions 3
         ///
