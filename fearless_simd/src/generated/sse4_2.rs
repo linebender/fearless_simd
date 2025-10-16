@@ -52,7 +52,12 @@ impl Simd for Sse4_2 {
     type mask32s = mask32x4<Self>;
     #[inline(always)]
     fn level(self) -> Level {
-        Level::Sse4_2(self)
+        #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
+        return Level::Sse4_2(self);
+        #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+        {
+            Level::baseline()
+        }
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {

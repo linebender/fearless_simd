@@ -407,7 +407,10 @@ fn mk_simd_impl() -> TokenStream {
             type mask32s = mask32x4<Self>;
             #[inline(always)]
             fn level(self) -> Level {
-                Level::#level_tok(self)
+                #[cfg(feature = "force_support_fallback")]
+                return Level::#level_tok(self);
+                #[cfg(not(feature = "force_support_fallback"))]
+                Level::baseline()
             }
 
             #[inline]

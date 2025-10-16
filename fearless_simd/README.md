@@ -115,6 +115,7 @@ The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/fe
 - `libm`: Use floating point implementations from [libm].
 - `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
   beyond the basic SIMD operations abstracted on all platforms.
+- `force_support_fallback`: Force scalar fallback, to be supported, even if your compilation target has a better baseline.
 
 At least one of `std` and `libm` is required; `std` overrides `libm`.
 
@@ -124,7 +125,7 @@ At least one of `std` and `libm` is required; `std` overrides `libm`.
 
 ## Minimum supported Rust Version (MSRV)
 
-This version of Fearless SIMD has been verified to compile with **Rust 1.86** and later.
+This version of Fearless SIMD has been verified to compile with **Rust 1.88** and later.
 
 Future versions of Fearless SIMD might increase the Rust version requirement.
 It will not be treated as a breaking change and as such can even happen with small patch releases.
