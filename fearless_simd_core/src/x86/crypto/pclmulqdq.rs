@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["pclmulqdq"] --- Packed carry-less multiplication quadword
+/// [`pclmulqdq`] --- Packed carry-less multiplication quadword
 ///
-/// ["pclmulqdq"]: https://www.felixcloutier.com/x86/pclmulqdq
+/// [`pclmulqdq`]: https://www.felixcloutier.com/x86/pclmulqdq
 ///
 /// A token indicating that the current CPU has the `pclmulqdq` target feature.
 ///

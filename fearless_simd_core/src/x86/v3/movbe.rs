@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["movbe"] --- Move data after swapping bytes
+/// [`movbe`] --- Move data after swapping bytes
 ///
-/// ["movbe"]: https://www.felixcloutier.com/x86/movbe
+/// [`movbe`]: https://www.felixcloutier.com/x86/movbe
 ///
 /// A token indicating that the current CPU has the `movbe` target feature.
 ///

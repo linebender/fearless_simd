@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["lzcnt"] --- Leading zeros count
+/// [`lzcnt`] --- Leading zeros count
 ///
-/// ["lzcnt"]: https://www.felixcloutier.com/x86/lzcnt
+/// [`lzcnt`]: https://www.felixcloutier.com/x86/lzcnt
 ///
 /// A token indicating that the current CPU has the `lzcnt` target feature.
 ///

@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["xsavec"] --- Save processor extended states with compaction
+/// [`xsavec`] --- Save processor extended states with compaction
 ///
-/// ["xsavec"]: https://www.felixcloutier.com/x86/xsavec
+/// [`xsavec`]: https://www.felixcloutier.com/x86/xsavec
 ///
 /// A token indicating that the current CPU has the `xsavec` target feature.
 ///

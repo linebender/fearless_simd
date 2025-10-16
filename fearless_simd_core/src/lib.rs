@@ -18,8 +18,8 @@
 //!
 //! # Examples
 //!
-//! At the time of writing, it is not possible to turn scalar values into SIMD vector types safely using
-//! only the standard library.
+//! At the time of writing, it is not possible to turn scalar values into <abbr title="Single InstructionMultiple Data">SIMD</abbr>
+//! vector types safely using only the standard library.
 //! These examples use [bytemuck](https://crates.io/crates/bytemuck) for this.
 //!
 //! <!-- TODO -->

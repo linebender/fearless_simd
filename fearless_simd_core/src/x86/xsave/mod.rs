@@ -1,3 +1,5 @@
+//! Target features relating to saving processor state, as used to implement operating systems.
+
 #[expect(
     clippy::module_inception,
     reason = "The inner module is automatically generated."

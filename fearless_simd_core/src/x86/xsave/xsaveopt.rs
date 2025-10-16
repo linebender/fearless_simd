@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["xsaveopt"] --- Save processor extended states optimized
+/// [`xsaveopt`] --- Save processor extended states optimized
 ///
-/// ["xsaveopt"]: https://www.felixcloutier.com/x86/xsaveopt
+/// [`xsaveopt`]: https://www.felixcloutier.com/x86/xsaveopt
 ///
 /// A token indicating that the current CPU has the `xsaveopt` target feature.
 ///

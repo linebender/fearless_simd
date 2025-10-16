@@ -108,6 +108,7 @@ impl From<Sse4a> for crate::x86::sse::Sse3 {
     }
 }
 
+
 const _: () = {
     assert!(
         core::mem::size_of::<Sse4a>() == 0,

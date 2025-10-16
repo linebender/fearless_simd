@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["rdseed"] --- Read random seed
+/// [`rdseed`] --- Read random seed
 ///
-/// ["rdseed"]: https://en.wikipedia.org/wiki/RdRand
+/// [`rdseed`]: https://en.wikipedia.org/wiki/RdRand
 ///
 /// A token indicating that the current CPU has the `rdseed` target feature.
 ///

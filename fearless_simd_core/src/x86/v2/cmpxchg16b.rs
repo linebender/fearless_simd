@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["cmpxchg16b"] --- Compares and exchange 16 bytes (128 bits) of data atomically
+/// [`cmpxchg16b`] --- Compares and exchange 16 bytes (128 bits) of data atomically
 ///
-/// ["cmpxchg16b"]: https://www.felixcloutier.com/x86/cmpxchg8b:cmpxchg16b
+/// [`cmpxchg16b`]: https://www.felixcloutier.com/x86/cmpxchg8b:cmpxchg16b
 ///
 /// A token indicating that the current CPU has the `cmpxchg16b` target feature.
 ///

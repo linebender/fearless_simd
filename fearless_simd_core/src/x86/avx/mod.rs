@@ -1,3 +1,10 @@
+//! Target features related to the Advanced Vector Extensions target features (before AVX-512).
+//!
+//! These are most commonly used through the [x86-64-v3](crate::x86::V3) microarchitecture level.
+//!
+//! These support SIMD registers of up to 256 bits.
+//! For the 512 bit extension, see [`avx512`](crate::x86::avx512).
+
 #[expect(
     clippy::module_inception,
     reason = "The inner module is automatically generated."

@@ -202,9 +202,9 @@ pub(crate) const X86_FEATURES: &[Feature] = &[
         fn uses_bmi2
     ),
     f!(
-        /// ["cmpxchg16b"] --- Compares and exchange 16 bytes (128 bits) of data atomically
+        /// [`cmpxchg16b`] --- Compares and exchange 16 bytes (128 bits) of data atomically
         ///
-        /// ["cmpxchg16b"]: https://www.felixcloutier.com/x86/cmpxchg8b:cmpxchg16b
+        /// [`cmpxchg16b`]: https://www.felixcloutier.com/x86/cmpxchg8b:cmpxchg16b
         struct v2::Cmpxchg16b("`cmpxchg16b`"): "cmpxchg16b" + []
         fn uses_cmpxchg16b
     ),
@@ -223,10 +223,10 @@ pub(crate) const X86_FEATURES: &[Feature] = &[
         fn uses_fma
     ),
     f!(
-        /// ["fxsave"] and ["fxrstor"] --- Save and restore x87 FPU, MMX Technology, and SSE State
+        /// [`fxsave`] and [`fxrstor`] --- Save and restore x87 FPU, MMX Technology, and SSE State
         ///
-        /// ["fxsave"]: https://www.felixcloutier.com/x86/fxsave,
-        /// ["fxrstor"]: https://www.felixcloutier.com/x86/fxrstor,
+        /// [`fxsave`]: https://www.felixcloutier.com/x86/fxsave,
+        /// [`fxrstor`]: https://www.felixcloutier.com/x86/fxrstor,
         struct sse::Fxsr("`fxsave + fxrstor`"): "fxsr" + []
         fn uses_fxsr
     ),
@@ -245,44 +245,44 @@ pub(crate) const X86_FEATURES: &[Feature] = &[
         fn uses_keylocker
     ),
     f!(
-        /// ["lzcnt"] --- Leading zeros count
+        /// [`lzcnt`] --- Leading zeros count
         ///
-        /// ["lzcnt"]: https://www.felixcloutier.com/x86/lzcnt
+        /// [`lzcnt`]: https://www.felixcloutier.com/x86/lzcnt
         struct v3::Lzcnt("`lzcnt`"): "lzcnt" + []
         fn uses_lzcnt
     ),
     f!(
-        /// ["movbe"] --- Move data after swapping bytes
+        /// [`movbe`] --- Move data after swapping bytes
         ///
-        /// ["movbe"]: https://www.felixcloutier.com/x86/movbe
+        /// [`movbe`]: https://www.felixcloutier.com/x86/movbe
         struct v3::Movbe("`movbe`"): "movbe" + []
         fn uses_movbe
     ),
     f!(
-        /// ["pclmulqdq"] --- Packed carry-less multiplication quadword
+        /// [`pclmulqdq`] --- Packed carry-less multiplication quadword
         ///
-        /// ["pclmulqdq"]: https://www.felixcloutier.com/x86/pclmulqdq
+        /// [`pclmulqdq`]: https://www.felixcloutier.com/x86/pclmulqdq
         struct crypto::Pclmulqdq("`pclmulqdq`"): "pclmulqdq" + ["sse2"]
         fn uses_pclmulqdq
     ),
     f!(
-        /// ["popcnt"] --- Count of bits set to 1
+        /// [`popcnt`] --- Count of bits set to 1
         ///
-        /// ["popcnt"]: https://www.felixcloutier.com/x86/popcnt
+        /// [`popcnt`]: https://www.felixcloutier.com/x86/popcnt
         struct v2::Popcnt("`popcnt`"): "popcnt" + []
         fn uses_popcnt
     ),
     f!(
-        /// ["rdrand"] --- Read random number
+        /// [`rdrand`] --- Read random number
         ///
-        /// ["rdrand"]: https://en.wikipedia.org/wiki/RdRand
+        /// [`rdrand`]: https://en.wikipedia.org/wiki/RdRand
         struct crypto::Rdrand("`rdrand`"): "rdrand" + []
         fn uses_rdrand
     ),
     f!(
-        /// ["rdseed"] --- Read random seed
+        /// [`rdseed`] --- Read random seed
         ///
-        /// ["rdseed"]: https://en.wikipedia.org/wiki/RdRand
+        /// [`rdseed`]: https://en.wikipedia.org/wiki/RdRand
         struct crypto::Rdseed("`rdseed`"): "rdseed" + []
         fn uses_rdseed
     ),
@@ -394,28 +394,28 @@ pub(crate) const X86_FEATURES: &[Feature] = &[
     f!(
         /// [`xsave`] --- Save processor extended states
         ///
-        /// ["xsave"]: https://www.felixcloutier.com/x86/xsave
+        /// [`xsave`]: https://www.felixcloutier.com/x86/xsave
         struct xsave::Xsave("`xsave`"): "xsave" + []
         fn uses_xsave
     ),
     f!(
-        /// ["xsavec"] --- Save processor extended states with compaction
+        /// [`xsavec`] --- Save processor extended states with compaction
         ///
-        /// ["xsavec"]: https://www.felixcloutier.com/x86/xsavec
+        /// [`xsavec`]: https://www.felixcloutier.com/x86/xsavec
         struct xsave::Xsavec("`xsavec`"): "xsavec" + []
         fn uses_xsavec
     ),
     f!(
-        /// ["xsaveopt"] --- Save processor extended states optimized
+        /// [`xsaveopt`] --- Save processor extended states optimized
         ///
-        /// ["xsaveopt"]: https://www.felixcloutier.com/x86/xsaveopt
+        /// [`xsaveopt`]: https://www.felixcloutier.com/x86/xsaveopt
         struct xsave::Xsaveopt("`xsaveopt`"): "xsaveopt" + []
         fn uses_xsaveopt
     ),
     f!(
-        /// ["xsaves"] --- Save processor extended states supervisor
+        /// [`xsaves`] --- Save processor extended states supervisor
         ///
-        /// ["xsaves"]: https://www.felixcloutier.com/x86/xsaves
+        /// [`xsaves`]: https://www.felixcloutier.com/x86/xsaves
         struct xsave::Xsaves("`xsaves`"): "xsaves" + []
         fn uses_xsaves
     ),

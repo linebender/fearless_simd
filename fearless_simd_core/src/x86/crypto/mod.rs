@@ -1,3 +1,7 @@
+//! Cryptogryphy related target features, including hashing, random number generation, and encryption.
+//!
+//! These are not generally part of the standardised microarchitecture levels.
+
 mod aes;
 pub use aes::Aes;
 

@@ -1,4 +1,4 @@
-//! The "adx" target feature.
+//! The "adx" target feature, used for arbitrary precision integer addition.
 
 #[expect(
     clippy::module_inception,

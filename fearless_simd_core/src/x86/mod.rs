@@ -1,14 +1,21 @@
 //! Target feature tokens for the x86 and x86-64 CPU families.
 //!
-//! The general compuotation CPU features associated with each [microarchitecture level] can
-//! be found in their corresponding modules:
+//! The general computation [microarchitecture level]s each have a level in this module.
+//! These levels are useful for most users of this crate, as they provide useful categories
+//! of supported instructions.
 //!
-//! - [`v1`] for x86-64-v1.
-//! - [`v2`] for x86-64-v2.
-//! - [`v3`] for x86-64-v3.
-//! - [`v4`] for x86-64-v4.
+//! - [`V1`] for x86-64-v1.
+//! - [`V2`] for x86-64-v2.
+//! - [`V3`] for x86-64-v3.
+//! - [`V4`] for x86-64-v4.
 //!
-//! Tokens for target features which not associated with these levels can be found in this module.
+//! We don't yet provide a way to select the best of these for the current CPU,
+//! but that is planned.
+//!
+//! Tokens for individual target features, including those not associated with these levels,
+//! can be found in the modules under this feature.
+//! These are less likely to be directly useful for most users, but are provided for use
+//! cases which require them (probably especially those under [`crypto`]).
 //!
 //! [microarchitecture level]: https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
 

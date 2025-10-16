@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["xsaves"] --- Save processor extended states supervisor
+/// [`xsaves`] --- Save processor extended states supervisor
 ///
-/// ["xsaves"]: https://www.felixcloutier.com/x86/xsaves
+/// [`xsaves`]: https://www.felixcloutier.com/x86/xsaves
 ///
 /// A token indicating that the current CPU has the `xsaves` target feature.
 ///

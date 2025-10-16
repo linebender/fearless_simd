@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["rdrand"] --- Read random number
+/// [`rdrand`] --- Read random number
 ///
-/// ["rdrand"]: https://en.wikipedia.org/wiki/RdRand
+/// [`rdrand`]: https://en.wikipedia.org/wiki/RdRand
 ///
 /// A token indicating that the current CPU has the `rdrand` target feature.
 ///

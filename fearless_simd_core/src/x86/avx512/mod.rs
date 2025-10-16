@@ -1,3 +1,9 @@
+//! Target features related to the 512-bit extensions to [AVX](crate::x86::avx).
+//!
+//! Many of these are part of the [x86-64-v4](crate::x86::V4) microarchitecture level.
+//!
+//! These support SIMD registers of up to 512 bits.
+
 mod avx512bf16;
 pub use avx512bf16::Avx512bf16;
 

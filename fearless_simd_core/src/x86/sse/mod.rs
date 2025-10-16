@@ -1,3 +1,12 @@
+//! Target features related to Streaming SIMD Extensions.
+//!
+//! These are the predecessors to the [AVX](crate::x86::avx) instructions.
+//!
+//! These are most commonly used through the [x86-64-v2](crate::x86::V2) microarchitecture level.
+//! Some of these features are also included in [x86-64-v1](crate::x86::V1).
+//!
+//! These support SIMD registers of up to 128 bits.
+
 mod fxsr;
 pub use fxsr::Fxsr;
 

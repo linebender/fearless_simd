@@ -9,7 +9,7 @@ use core::fmt::Debug;
 
 /// [`xsave`] --- Save processor extended states
 ///
-/// ["xsave"]: https://www.felixcloutier.com/x86/xsave
+/// [`xsave`]: https://www.felixcloutier.com/x86/xsave
 ///
 /// A token indicating that the current CPU has the `xsave` target feature.
 ///

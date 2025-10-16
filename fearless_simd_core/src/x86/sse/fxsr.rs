@@ -7,10 +7,10 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["fxsave"] and ["fxrstor"] --- Save and restore x87 FPU, MMX Technology, and SSE State
+/// [`fxsave`] and [`fxrstor`] --- Save and restore x87 FPU, MMX Technology, and SSE State
 ///
-/// ["fxsave"]: https://www.felixcloutier.com/x86/fxsave,
-/// ["fxrstor"]: https://www.felixcloutier.com/x86/fxrstor,
+/// [`fxsave`]: https://www.felixcloutier.com/x86/fxsave,
+/// [`fxrstor`]: https://www.felixcloutier.com/x86/fxrstor,
 ///
 /// A token indicating that the current CPU has the `fxsr` target feature.
 ///

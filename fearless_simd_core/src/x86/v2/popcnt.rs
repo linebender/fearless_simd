@@ -7,9 +7,9 @@ use crate::{TargetFeatureToken, trampoline};
 
 use core::fmt::Debug;
 
-/// ["popcnt"] --- Count of bits set to 1
+/// [`popcnt`] --- Count of bits set to 1
 ///
-/// ["popcnt"]: https://www.felixcloutier.com/x86/popcnt
+/// [`popcnt`]: https://www.felixcloutier.com/x86/popcnt
 ///
 /// A token indicating that the current CPU has the `popcnt` target feature.
 ///
