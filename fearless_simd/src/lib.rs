@@ -339,6 +339,10 @@ impl Level {
             Level::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
             #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
             Level::Sse4_2(sse42) => Some(sse42),
+            #[allow(
+                unreachable_patterns,
+                reason = "This arm is reachable on baseline x86/x86_64."
+            )]
             _ => None,
         }
     }
