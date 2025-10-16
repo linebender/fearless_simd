@@ -192,6 +192,13 @@ jobs:
       - name: run code generator
         run: cargo run --bin fearless_simd_gen
 
+      - name: run core code generator
+        run: cargo run --bin fearless_simd_core_gen
+      
+      - name: Reformat (Fearless SIMD Core)
+        # The code generator for Fearless SIMD Core does not do this. 
+        run: cargo fmt -p fearless_simd_core
+
       - name: check for uncommitted changes
         run: git diff --exit-code
 
