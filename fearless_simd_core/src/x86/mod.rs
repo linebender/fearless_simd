@@ -1,3 +1,6 @@
+// Copyright 2025 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 //! Target feature tokens for the x86 and x86-64 CPU families.
 //!
 //! The general computation [microarchitecture level]s each have a level in this module.

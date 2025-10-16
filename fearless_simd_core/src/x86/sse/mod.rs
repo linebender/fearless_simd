@@ -1,3 +1,6 @@
+// Copyright 2025 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 //! Target features related to Streaming SIMD Extensions.
 //!
 //! These are the predecessors to the [AVX](crate::x86::avx) instructions.

@@ -1,3 +1,6 @@
+// Copyright 2025 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 //! Discontinued x86-64 target features.
 //!
 //! That is target features which were present on some CPUs, but later CPU families from the

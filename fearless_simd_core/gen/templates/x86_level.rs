@@ -1,3 +1,8 @@
+// Copyright 2025 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
+// {AUTOGEN_COMMENT}
+
 //! The x86-64-{LEVEL_ID} microarchitecture level.
 
 use crate::{TargetFeatureToken, trampoline};

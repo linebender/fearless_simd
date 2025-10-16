@@ -1,3 +1,6 @@
+// Copyright 2025 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 //! Target features related to the 512-bit extensions to [AVX](crate::x86::avx).
 //!
 //! Many of these are part of the [x86-64-v4](crate::x86::V4) microarchitecture level.

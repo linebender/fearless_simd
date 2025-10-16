@@ -1,3 +1,6 @@
+// Copyright 2025 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 //! Support for the safety checks in [`trampoline!`](crate::trampoline!).
 //!
 //! Methods to compute whether a each feature in a target feature string (e.g. "sse2,fma")

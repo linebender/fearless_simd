@@ -1,3 +1,6 @@
+// Copyright 2025 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 //! Target features enabled in the `x86-64-v1` [microarchitecture level](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) on x86 and x86-64.
 //!
 //! This can usually be treated as the baseline for x86-64 support; all of the target features in this module are enabled by
