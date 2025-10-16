@@ -431,7 +431,7 @@ pub(crate) const X86_LEVEL_TEMPLATE: &str = include_str!("../../templates/x86_le
 // The first four are all assumed, and the final is not implemented because
 // it's practically impossible to use correctly (and there's no reason to).
 pub(crate) const X86_V1: &[&str] = &["fxsr", "sse", "sse2"];
-/// The target features required in the x86-64-v1 level, in addition to those already in [`V1`].
+/// The target features required in the x86-64-v1 level, in addition to those already in [`X86_V1`].
 pub(crate) const X86_V2: &[&str] = &[
     "sse3",
     "ssse3",
@@ -442,9 +442,9 @@ pub(crate) const X86_V2: &[&str] = &[
     // The lahfahf target feature is currently in Rust beta.
     // "lahfsahf",
 ];
-/// The target features required in the x86-64-v3 level, excluding those already in [`V2`].
+/// The target features required in the x86-64-v3 level, excluding those already in [`X86_V2`].
 pub(crate) const X86_V3: &[&str] = &[
     "avx", "avx2", "bmi1", "bmi2", "f16c", "fma", "lzcnt", "movbe", "xsave",
 ];
-/// The target features required in the x86-64-v4 level, excluding those already in [`V3`].
+/// The target features required in the x86-64-v4 level, excluding those already in [`X86_V3`].
 pub(crate) const X86_V4: &[&str] = &["avx512f", "avx512bw", "avx512cd", "avx512dq", "avx512vl"];

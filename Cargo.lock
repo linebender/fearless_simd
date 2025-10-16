@@ -135,14 +135,14 @@ dependencies = [
 
 [[package]]
 name = "fearless_simd_core"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "bytemuck",
 ]
 
 [[package]]
 name = "fearless_simd_core_gen"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "fearless_simd_dev_macros"
