@@ -78,6 +78,7 @@ macro_rules! dispatch {
                     || $op,
                 )
             }
+            // This fallthrough logic is documented at the definition site of `Level`.
             #[cfg(all(
                 any(target_arch = "x86", target_arch = "x86_64"),
                 not(all(target_feature = "avx2", target_feature = "fma"))

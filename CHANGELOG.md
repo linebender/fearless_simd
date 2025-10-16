@@ -30,7 +30,7 @@ This release has an [MSRV][] of 1.88.
 
 ## [0.3.0][] (2025-10-10)
 
-This release has an [MSRV][] of 1.88.
+This release has an [MSRV][] of 1.86.
 
 ### Added
 

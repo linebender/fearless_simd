@@ -333,7 +333,10 @@ impl Level {
     #[inline]
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
         match self {
-            // TODO: Level::Avx2(avx2) => Some(...)
+            // Safety: The Avx2 struct represents the `avx2` and `fma` target features being enabled.
+            // The `avx2` target feature *also* implicitly enables the "sse4.2" target feature, which is
+            // the only target feature required to make our Sse4_2 token.
+            Level::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
             #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
             Level::Sse4_2(sse42) => Some(sse42),
             _ => None,
@@ -384,6 +387,7 @@ impl Level {
     /// Instead, you should use [`Level::fallback`] if you require the fallback level.
     pub const fn baseline() -> Self {
         // TODO: How do we possibly test that this method works in all cases?
+        // Note that you can use the `check_targets.sh` script to at least ensure that it compiles in all reasonable cases.
         #[cfg(not(any(
             target_arch = "x86",
             target_arch = "x86_64",
