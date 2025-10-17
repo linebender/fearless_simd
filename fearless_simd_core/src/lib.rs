@@ -94,9 +94,9 @@ pub unsafe trait TargetFeatureToken: Copy {
     ///
     /// `f` must be marked `#[inline(always)]` for this to work.
     ///
-    /// Note that this does *not* enable the target features on the Rust side (e.g. for calling).
+    /// Note that this does *not* enable the target features on the Rust side (i.e. for calling intrinsics safely).
     /// To do so, you should instead use [`trampoline!`] directly - this is a convenience wrapper around `trampoline`
-    /// for cases where the dispatch of simd values is handled elsewhere.
+    /// for cases where either autovectorisation is sufficient, or dispatch to simd intrinsics is handled elsewhere.
     fn vectorize<R>(self, f: impl FnOnce() -> R) -> R;
 }
 
