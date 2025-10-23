@@ -124,6 +124,15 @@ macro_rules! dispatch {
                     || $op,
                 )
             }
+            $crate::Level::Scalar(s) => {
+                let $simd = launder(s);
+                // This vectorize call does nothing, but it is reasonable to be consistent here.
+                $crate::Simd::vectorize(
+                    s,
+                    #[inline(always)]
+                    || $op,
+                )
+            }
             _ => unreachable!(),
         }
     }};

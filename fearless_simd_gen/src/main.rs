@@ -18,6 +18,7 @@ mod mk_avx2;
 mod mk_fallback;
 mod mk_neon;
 mod mk_ops;
+mod mk_scalar;
 mod mk_simd_trait;
 mod mk_simd_types;
 mod mk_sse4_2;
@@ -36,6 +37,7 @@ enum Module {
     Fallback,
     Sse4_2,
     Avx2,
+    Scalar,
 }
 
 #[derive(Parser)]
@@ -66,6 +68,7 @@ impl Module {
             Module::Fallback => mk_fallback::mk_fallback_impl(),
             Module::Sse4_2 => mk_sse4_2::mk_sse4_2_impl(),
             Module::Avx2 => mk_avx2::mk_avx2_impl(),
+            Module::Scalar => mk_scalar::mk_scalar_impl(),
         }
     }
 
@@ -105,6 +108,7 @@ impl Module {
             Module::Wasm => "wasm",
             Module::Sse4_2 => "sse4_2",
             Module::Avx2 => "avx2",
+            Module::Scalar => "scalar",
         }
     }
 }
@@ -118,6 +122,7 @@ const MODULES: &[Module] = &[
     Module::Wasm,
     Module::Sse4_2,
     Module::Avx2,
+    Module::Scalar,
 ];
 
 const FILE_BASE: &str = "./fearless_simd/src/generated";
