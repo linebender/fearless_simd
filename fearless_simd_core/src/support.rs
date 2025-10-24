@@ -236,7 +236,7 @@ mod tests {
 
         // We succeed if the empty target feature is allowed; any case where this is relevant will always
         // be validated away by rustc anyway, as there is no target with the target feature `""`.
-        // As such, there's no harm in being flexible here.
+        // As such, there's no harm in being flexible here.git
         expect_success("", [&[""]]);
         expect_success(",,,,,,", [&[""]]);
     }

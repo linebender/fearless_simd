@@ -110,7 +110,6 @@ impl V2 {
         }
     }
 }
-// TODO: From impls to convert into lower x86 versions.
 
 impl From<V2> for crate::x86::v2::Cmpxchg16b {
     fn from(value: V2) -> Self {

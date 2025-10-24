@@ -22,11 +22,10 @@ macro_rules! f {
 
 pub(crate) const X86_TEMPLATE: &str = include_str!("../../templates/x86.rs");
 
-// Data taken from: https://doc.rust-lang.org/reference/attributes/codegen.html#r-attributes.codegen.target_feature.x86
+// Data adapted from: https://doc.rust-lang.org/reference/attributes/codegen.html#r-attributes.codegen.target_feature.x86
 // (specifically, at https://github.com/rust-lang/reference/blob/1d930e1d5a27e114b4d22a50b0b6cd3771b92e31/src/attributes/codegen.md#x86-or-x86_64)
-// TODO: Do we need to add their license attribution to our license?
 // TODO: Check set against https://doc.rust-lang.org/stable/std/macro.is_x86_feature_detected.html
-// In particular, we're missing lahfsahf
+// In particular, we seem to be missing lahfsahf (not stable?)
 pub(crate) const X86_FEATURES: &[Feature] = &[
     f!(
         /// [ADX] --- Multi-Precision Add-Carry Instruction Extensions

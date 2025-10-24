@@ -65,7 +65,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![no_std]
 
-// TODO: Do we want both an `x86` and `x86_64` module?
 #[cfg(any(target_arch = "x86", target_arch = "x86_64", doc))]
 pub mod x86;
 

@@ -59,7 +59,6 @@ impl FEATURE_STRUCT_NAME {
     // TODO: Consider a manual override feature/env var?
     pub fn try_new() -> Option<Self> {
         // Feature flag required to make docs compile.
-        // TODO: Extract into a (private) crate::x86::is_x86_feature_detected?
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         if std::arch::is_x86_feature_detected!("{FEATURE_ID}") {
             // Safety: The required CPU feature was detected.

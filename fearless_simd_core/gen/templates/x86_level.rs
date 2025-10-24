@@ -86,7 +86,6 @@ impl LEVEL_STRUCT_NAME {
         }
     }
 }
-// TODO: From impls to convert into lower x86 versions.
 
 /*{FROM_IMPLS}*/
 
