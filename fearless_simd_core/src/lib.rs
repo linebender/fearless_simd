@@ -11,30 +11,32 @@
 //! other `#[target_feature]` functions.
 //! As such, once you have used the [`trampoline!`] macro, you can call any intrinsic in [`core::arch`].
 //!
-//! This crate also has modules which contain tokens for each Rust target features.
-//! These allow safely validating that a target feature is available, and obtaining a token.
+//! This crate also has modules which contain a token for each Rust target feature.
+//! These each have a `try_new` constructor, which validates whether the corresponding
+//! target feature is available, then creates a token if it is.
 //! These are grouped by architecture:
 //!
 //! - [`x86`] contains the tokens for both the x86 and x86-64 targets.
-//!   It also contains tokens for each x86-64 microarchitecture level, see [`x86::V1`] for details.
+//!   It also contains a token for each x86-64 microarchitecture level, see [`x86::V1`] for details.
 //! <!-- TODO: Other architectures -->
 //!
 //! # Examples
 //!
-//! At the time of writing, it is not possible to turn scalar values into <abbr title="Single InstructionMultiple Data">SIMD</abbr>
+//! At the time of writing, it is not possible to turn scalar values into <abbr title="Single Instruction Multiple Data">SIMD</abbr>
 //! vector types safely using only the standard library.
 //! These examples use [bytemuck](https://crates.io/crates/bytemuck) for this.
 //!
-//! <!-- TODO -->
+//! Note: These examples are currently pending.
+//! <!-- TODO: Merge the initial PR, so as to not get the examples bogged down -->
 //!
 //! Note that for `aarch64`'s neon, you will want to enable bytemuck's `aarch64_simd` feature.
 //! This is also the case for WASM with `wasm_simd`, but note that this crate
 //! [isn't needed on WASM][attributes.codegen.target_feature.wasm], as it is safe to
-//! call `#[target_features]` on that platform.
+//! call `#[target_feature]` functions on that platform.
 //!
 //! # Crate Feature Flags
 //!
-//! <!-- TODO -->
+//! <!-- TODO: We currently only have the "std" feature, which does nothing. -->
 //!
 //! # Implementation
 //!
@@ -67,18 +69,18 @@
 #[cfg(any(target_arch = "x86", target_arch = "x86_64", doc))]
 pub mod x86;
 
-pub mod trampoline;
+pub mod support;
 
 #[cfg(feature = "std")]
 extern crate std;
 
-/// Token that a set of target feature is available.
+/// Token which proves that a set of target feature is available.
 ///
 /// Note that this trait is only meaningful when there are values of this type.
 /// That is, to enable the target features in `FEATURES`, you *must* have a value
 /// of this type.
 ///
-/// Values which implement this trait are used in the second argument to [`trampoline!`],
+/// Values which implement this trait are used in the first argument to [`trampoline!`],
 /// which is a safe abstraction over enabling target features.
 ///
 /// # Safety
@@ -104,43 +106,58 @@ pub unsafe trait TargetFeatureToken: Copy {
 ///
 /// This is effectively a stable implementation of the "Struct Target Features" Rust feature,
 /// which at the time of writing is neither in stable or nightly Rust.
-/// This macro can be used to make SIMD dispatch safe in addition to make explicit SIMD, both safely.
+/// This macro can be used to make both SIMD dispatch and explicit SIMD safe.
 ///
 /// # Reference
 ///
-/// These reference examples presume that you have (values in brackets are the "variables"):
+/// These reference examples presume that you have the following.
+/// The parts of the examples referring to each prerequisite are provided in the brackets:
 ///
-/// - An expression (`token`) of a type (`Token`) which is `TargetFeatureToken` for some target features (`"f1,f2,f3"`);
-/// - A function (signature `fn uses_simd(val: [f32; 4]) -> [f32; 4]`) which is safe but enables a subset of those target features (`"f1,f2"`);
+/// - An expression (`token`) of a type (`Token`) which implements `TargetFeatureToken` for some target features (`"f1,f2,f3"`);
+/// - A function (signature `fn uses_simd(val: [f32; 4]) -> [f32; 4]`) which is safe but enables a subset
+///   of those target features (annotated `#[target_feature(enable = "f1,f2")]`);
 /// - Local values of types corresponding to the argument types (`a` of type `[f32; 4]`)
 ///
 /// ```rust,ignore
-/// trampoline!(Token = token => "f1,f2", uses_simd(a: [f32; 4]) -> [f32; 4])
+/// trampoline!(Token = token => "f1,f2,f3", uses_simd(a: [f32; 4]) -> [f32; 4])
+/// // Or equivalently, as `uses_simd` doesn't require `f3`:
+/// trampoline!(Token = token => "f1,f2", uses_simd(a: [f32; 4]) -> [f32; 4]);
 /// ```
 ///
-/// Multiple tokens are also supported by providing them in a sequence in square brackets:
+/// Multiple tokens are also supported by providing them in a sequence in square brackets.
+/// The target feature string must be a subset of the total features made available by the tokens:
 ///
 /// ```rust,ignore
 /// trampoline!([Token = token, Sse = my_sse] => "f1,f2,sse", uses_simd(a: [f32; 4]) -> [f32; 4])
 /// ```
 ///
+/// This is fully validated for safety, so the following example would fail to compile:
+///
+/// ```rust,ignore,compile_fail
+/// // ERROR: call to function `uses_simd` with `#[target_feature]` is unsafe and requires unsafe block
+/// // in order for the call to be safe, the context requires the following additional target feature: f2
+/// trampoline!(Token = token => "f1", uses_simd(a: [f32; 4]) -> [f32; 4]);
+/// ```
+///
 /// A more advanced syntax is available if you need to use generics.
-/// That syntax is explained in comments around the macro's definition, which can be seen above.
+/// That syntax is explained in comments around the macro's definition.
 /// For reference, the implementation used to implement [`vectorize`](TargetFeatureToken::vectorize) for `"sse"` is:
 ///
 /// ```rust,ignore
 /// trampoline!([Sse = self] => "sse", <(R)> fn<(R)>(f: impl FnOnce() -> R = f) -> R { f() })
 /// ```
 ///
-/// There is also support for where clauses after the return type.
+/// There is also support for a where clause, after the return type.
 ///
 /// # Motivation
 ///
-/// In Fearless SIMD, this macro has two primary use cases:
+/// In Fearless SIMD, this macro is used in three ways primary use cases:
 ///
-/// 1) To dispatch to a specialised SIMD implementation of a function using target specific
-///    instructions which will be more efficient than generic version written using the portable subset.
+/// 1) By end-users, to dispatch to a specialised SIMD implementation of a function using target specific
+///    instructions, which will be more efficient than generic version written using the portable subset.
 /// 2) To implement the portable subset of SIMD operations.
+/// 3) To implement the `dispatch!` macro and `Simd::vectorize`, which allows SIMD intrinsics to
+///    be correctly inlined when writing portable SIMD code.
 ///
 /// To expand on use case 1, when using Fearless SIMD you will often be writing functions which are
 /// instantiated for multiple different SIMD levels (using generics).
@@ -175,12 +192,6 @@ pub unsafe trait TargetFeatureToken: Copy {
 ///
 /// trampoline!(Token = token => "f1,f2", uses_simd(a: [f32; 4]) -> [f32; 4])
 /// ```
-///
-/// Note that a function only operating on 128 bytes is probably too small for checking
-/// whether a token exists just for it is worthwhile.
-/// However, if you have amorphised the cost of that check between many function calls,
-/// the `trampoline!` macro itself compiles down to a function call.
-/// (This would be the case when this macro is being used to implement the portable subset of SIMD operations)
 ///
 // TODO: We could write an example for each of ARM, x86, and conditionally compile it in?
 /// Note that our examples are all ignored as there is no target feature which is available on every platform,
@@ -229,12 +240,14 @@ macro_rules! trampoline {
             // We validate that we actually have a token of each claimed type.
             let _: $token_type = $token;
         )+
-        // We use a const item rather than a const block to ensure that.
-        // This does mean that you can no longer use tokens "generically", but it's hard to think of
-        // cases where that would be usable anyway.
+        // We use a const item rather than a const block to ensure that the const evaluation happens eagerly,
+        // ensuring that we don't create functions which look valid but actually will always fail when actually codegenned.
+        // This does mean that you can't use tokens "generically", but it's hard to think of cases where that
+        // would be usable anyway. For any case where that is valid, you can always manually create the
+        // "subsetted" token/tokens beforehand using the `From` impls.
         const _: () = {
             // And that the claimed types justify enabling the enabled target features.
-            $crate::trampoline::is_feature_subset($to_enable, [$(<$token_type as $crate::TargetFeatureToken>::FEATURES),+])
+            $crate::support::is_feature_subset($to_enable, [$(<$token_type as $crate::TargetFeatureToken>::FEATURES),+])
                 // TODO: Better failure message here (i.e. at least concatting the set of requested features)
                 .unwrap();
         };
@@ -319,13 +332,13 @@ mod example_expansion {
                 { sse_mul_f32s(a, b) }
             }
             let _: Sse = sse;
-            const {
-                crate::trampoline::is_feature_subset(
+            const _: () = {
+                crate::support::is_feature_subset(
                     "sse",
                     [<Sse as crate::TargetFeatureToken>::FEATURES],
                 )
                 .unwrap();
-            }
+            };
             #[allow(clippy::redundant_locals, reason = "Required for consistency/safety.")]
             let a = a;
             #[allow(clippy::redundant_locals, reason = "Required for consistency/safety.")]

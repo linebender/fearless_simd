@@ -45,7 +45,7 @@ impl SubsetResult {
 }
 
 /// Determine whether the features in the target feature string `required` are a subset of the features in `permitted`.
-/// See the module level docs [self].
+/// See [the module level docs][self].
 ///
 /// We require static lifetimes as this is primarily internal to the macro.
 pub const fn is_feature_subset<const N: usize>(
@@ -62,7 +62,7 @@ pub const fn is_feature_subset<const N: usize>(
         }
         // `comma_idx` is now the index of the comma, e.g. if the string was "sse,", idx would be 3
         // This is the feature we need to validate exists in permitted.
-        let (to_find, remaining_required) = &required_bytes.split_at(comma_idx);
+        let (to_find, remaining_required) = required_bytes.split_at(comma_idx);
         if let [comma, rest @ ..] = remaining_required {
             if *comma != b',' {
                 panic!("Internal failure of expected behaviour.");
@@ -199,6 +199,8 @@ mod tests {
         expect_failure("c,a,b", [&["a", "b"]], "c");
         expect_success("a,b", [&["a", "b", "c"]]);
         expect_failure("a,b", [&["a", "c"]], "b");
+        expect_success("a,b,a,a", [&["a", "b", "c"]]);
+        expect_success("a,b,c", [&["c"], &["b"], &["a"]]);
 
         // Check it correctly catches more than single item failures
         expect_success("a1,a2,a3", [&["a1", "a2", "a3"]]);
@@ -221,9 +223,22 @@ mod tests {
     }
 
     #[test]
+    fn incorrect_token() {
+        // The permitted list here only allows features which are the literal `a1,a2`
+        // This is completely impossible to pass, but it's worth checking
+        expect_any_failure("a1,a2", [&["a1,a2"]]);
+    }
+
+    #[test]
     fn empty_feature() {
         expect_failure("a,b,", [&["a", "b"]], "");
         expect_failure("", [&["a", "b"]], "");
+
+        // We succeed if the empty target feature is allowed; any case where this is relevant will always
+        // be validated away by rustc anyway, as there is no target with the target feature `""`.
+        // As such, there's no harm in being flexible here.
+        expect_success("", [&[""]]);
+        expect_success(",,,,,,", [&[""]]);
     }
 
     #[test]
