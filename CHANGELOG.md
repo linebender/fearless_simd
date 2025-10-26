@@ -15,6 +15,10 @@ You can find its changes [documented below](#030-2025-10-14).
 
 This release has an [MSRV][] of 1.88.
 
+### Added
+
+- All vector types now implement `Index` and `IndexMut`. ([#112][] by [@Ralith][])
+
 ### Changed
 
 - Breaking change: `Level::fallback` has been removed, replaced with `Level::baseline`. ([#105][] by [@DJMcNab][])

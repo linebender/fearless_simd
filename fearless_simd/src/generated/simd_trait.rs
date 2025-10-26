@@ -921,7 +921,14 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
 }
 pub trait SimdBase<Element: SimdElement, S: Simd>:
-    Copy + Sync + Send + 'static + crate::Bytes + SimdFrom<Element, S>
+    Copy
+    + Sync
+    + Send
+    + 'static
+    + crate::Bytes
+    + SimdFrom<Element, S>
+    + core::ops::Index<usize>
+    + core::ops::IndexMut<usize>
 {
     const N: usize;
     #[doc = r" A SIMD vector mask with the same number of elements."]
