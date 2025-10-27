@@ -60,13 +60,15 @@
 //! You can read [this Zulip conversation](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433)
 //! for some train of thought explanation.
 //!
-//! <!-- TODO: This is a really subtle point, and does need there to be a well-written explanation available. -->
-//!
 //! <!--
+//! TODO: Also have concrete examples of each of these.
+//!
+//! TODO: This is a really subtle point, and we do need there to be a well-written explanation available.
+//! E.g. We might want names for these, e.g.:
+//!
 //! # Kernels vs not kernels
 //!
 //! TODO: Talk about writing versions of functions which can be called in other `S: Simd` functions.
-//! I think this pattern can also have a macro.
 //! -->
 //!
 //! # Webassembly
