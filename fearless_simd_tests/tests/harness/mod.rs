@@ -1370,3 +1370,15 @@ fn wrapping_add_u32<S: Simd>(simd: S) {
         &vec![0; S::u32s::N]
     );
 }
+
+#[simd_test]
+fn index_consistency<S: Simd>(simd: S) {
+    // We'll call index methods by name to avoid confusing clippy.
+    use std::ops::{Index, IndexMut};
+
+    let mut v = u32x4::from_slice(simd, &[0, 1, 2, 3]);
+    for i in 0..4 {
+        assert_eq!(i, *v.index(i) as usize);
+        assert_eq!(i, *v.index_mut(i) as usize);
+    }
+}

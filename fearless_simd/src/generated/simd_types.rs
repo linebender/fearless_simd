@@ -44,6 +44,19 @@ impl<S: Simd> SimdFrom<f32, S> for f32x4<S> {
         simd.splat_f32x4(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for f32x4<S> {
+    type Output = f32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for f32x4<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<f32x4<S>> for mask32x4<S> {
     #[inline(always)]
     fn select(self, if_true: f32x4<S>, if_false: f32x4<S>) -> f32x4<S> {
@@ -367,6 +380,19 @@ impl<S: Simd> SimdFrom<i8, S> for i8x16<S> {
         simd.splat_i8x16(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for i8x16<S> {
+    type Output = i8;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for i8x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<i8x16<S>> for mask8x16<S> {
     #[inline(always)]
     fn select(self, if_true: i8x16<S>, if_false: i8x16<S>) -> i8x16<S> {
@@ -614,6 +640,19 @@ impl<S: Simd> SimdFrom<u8, S> for u8x16<S> {
         simd.splat_u8x16(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for u8x16<S> {
+    type Output = u8;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for u8x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<u8x16<S>> for mask8x16<S> {
     #[inline(always)]
     fn select(self, if_true: u8x16<S>, if_false: u8x16<S>) -> u8x16<S> {
@@ -853,6 +892,19 @@ impl<S: Simd> SimdFrom<i8, S> for mask8x16<S> {
         simd.splat_mask8x16(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask8x16<S> {
+    type Output = i8;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask8x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask8x16<S>> for mask8x16<S> {
     #[inline(always)]
     fn select(self, if_true: mask8x16<S>, if_false: mask8x16<S>) -> mask8x16<S> {
@@ -990,6 +1042,19 @@ impl<S: Simd> SimdFrom<i16, S> for i16x8<S> {
     #[inline(always)]
     fn simd_from(value: i16, simd: S) -> Self {
         simd.splat_i16x8(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for i16x8<S> {
+    type Output = i16;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for i16x8<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<i16x8<S>> for mask16x8<S> {
@@ -1231,6 +1296,19 @@ impl<S: Simd> SimdFrom<u16, S> for u16x8<S> {
         simd.splat_u16x8(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for u16x8<S> {
+    type Output = u16;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for u16x8<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<u16x8<S>> for mask16x8<S> {
     #[inline(always)]
     fn select(self, if_true: u16x8<S>, if_false: u16x8<S>) -> u16x8<S> {
@@ -1466,6 +1544,19 @@ impl<S: Simd> SimdFrom<i16, S> for mask16x8<S> {
         simd.splat_mask16x8(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask16x8<S> {
+    type Output = i16;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask16x8<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask16x8<S>> for mask16x8<S> {
     #[inline(always)]
     fn select(self, if_true: mask16x8<S>, if_false: mask16x8<S>) -> mask16x8<S> {
@@ -1594,6 +1685,19 @@ impl<S: Simd> SimdFrom<i32, S> for i32x4<S> {
     #[inline(always)]
     fn simd_from(value: i32, simd: S) -> Self {
         simd.splat_i32x4(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for i32x4<S> {
+    type Output = i32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for i32x4<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<i32x4<S>> for mask32x4<S> {
@@ -1835,6 +1939,19 @@ impl<S: Simd> SimdFrom<u32, S> for u32x4<S> {
         simd.splat_u32x4(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for u32x4<S> {
+    type Output = u32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for u32x4<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<u32x4<S>> for mask32x4<S> {
     #[inline(always)]
     fn select(self, if_true: u32x4<S>, if_false: u32x4<S>) -> u32x4<S> {
@@ -2066,6 +2183,19 @@ impl<S: Simd> SimdFrom<i32, S> for mask32x4<S> {
         simd.splat_mask32x4(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask32x4<S> {
+    type Output = i32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask32x4<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask32x4<S>> for mask32x4<S> {
     #[inline(always)]
     fn select(self, if_true: mask32x4<S>, if_false: mask32x4<S>) -> mask32x4<S> {
@@ -2194,6 +2324,19 @@ impl<S: Simd> SimdFrom<f64, S> for f64x2<S> {
     #[inline(always)]
     fn simd_from(value: f64, simd: S) -> Self {
         simd.splat_f64x2(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for f64x2<S> {
+    type Output = f64;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for f64x2<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<f64x2<S>> for mask64x2<S> {
@@ -2472,6 +2615,19 @@ impl<S: Simd> SimdFrom<i64, S> for mask64x2<S> {
         simd.splat_mask64x2(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask64x2<S> {
+    type Output = i64;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask64x2<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask64x2<S>> for mask64x2<S> {
     #[inline(always)]
     fn select(self, if_true: mask64x2<S>, if_false: mask64x2<S>) -> mask64x2<S> {
@@ -2609,6 +2765,19 @@ impl<S: Simd> SimdFrom<f32, S> for f32x8<S> {
     #[inline(always)]
     fn simd_from(value: f32, simd: S) -> Self {
         simd.splat_f32x8(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for f32x8<S> {
+    type Output = f32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for f32x8<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<f32x8<S>> for mask32x8<S> {
@@ -2950,6 +3119,19 @@ impl<S: Simd> SimdFrom<i8, S> for i8x32<S> {
         simd.splat_i8x32(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for i8x32<S> {
+    type Output = i8;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for i8x32<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<i8x32<S>> for mask8x32<S> {
     #[inline(always)]
     fn select(self, if_true: i8x32<S>, if_false: i8x32<S>) -> i8x32<S> {
@@ -3213,6 +3395,19 @@ impl<S: Simd> SimdFrom<u8, S> for u8x32<S> {
         simd.splat_u8x32(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for u8x32<S> {
+    type Output = u8;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for u8x32<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<u8x32<S>> for mask8x32<S> {
     #[inline(always)]
     fn select(self, if_true: u8x32<S>, if_false: u8x32<S>) -> u8x32<S> {
@@ -3468,6 +3663,19 @@ impl<S: Simd> SimdFrom<i8, S> for mask8x32<S> {
         simd.splat_mask8x32(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask8x32<S> {
+    type Output = i8;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask8x32<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask8x32<S>> for mask8x32<S> {
     #[inline(always)]
     fn select(self, if_true: mask8x32<S>, if_false: mask8x32<S>) -> mask8x32<S> {
@@ -3613,6 +3821,19 @@ impl<S: Simd> SimdFrom<i16, S> for i16x16<S> {
     #[inline(always)]
     fn simd_from(value: i16, simd: S) -> Self {
         simd.splat_i16x16(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for i16x16<S> {
+    type Output = i16;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for i16x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<i16x16<S>> for mask16x16<S> {
@@ -3862,6 +4083,19 @@ impl<S: Simd> SimdFrom<u16, S> for u16x16<S> {
         simd.splat_u16x16(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for u16x16<S> {
+    type Output = u16;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for u16x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<u16x16<S>> for mask16x16<S> {
     #[inline(always)]
     fn select(self, if_true: u16x16<S>, if_false: u16x16<S>) -> u16x16<S> {
@@ -4105,6 +4339,19 @@ impl<S: Simd> SimdFrom<i16, S> for mask16x16<S> {
         simd.splat_mask16x16(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask16x16<S> {
+    type Output = i16;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask16x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask16x16<S>> for mask16x16<S> {
     #[inline(always)]
     fn select(self, if_true: mask16x16<S>, if_false: mask16x16<S>) -> mask16x16<S> {
@@ -4242,6 +4489,19 @@ impl<S: Simd> SimdFrom<i32, S> for i32x8<S> {
     #[inline(always)]
     fn simd_from(value: i32, simd: S) -> Self {
         simd.splat_i32x8(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for i32x8<S> {
+    type Output = i32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for i32x8<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<i32x8<S>> for mask32x8<S> {
@@ -4492,6 +4752,19 @@ impl<S: Simd> SimdFrom<u32, S> for u32x8<S> {
         simd.splat_u32x8(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for u32x8<S> {
+    type Output = u32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for u32x8<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<u32x8<S>> for mask32x8<S> {
     #[inline(always)]
     fn select(self, if_true: u32x8<S>, if_false: u32x8<S>) -> u32x8<S> {
@@ -4732,6 +5005,19 @@ impl<S: Simd> SimdFrom<i32, S> for mask32x8<S> {
         simd.splat_mask32x8(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask32x8<S> {
+    type Output = i32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask32x8<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask32x8<S>> for mask32x8<S> {
     #[inline(always)]
     fn select(self, if_true: mask32x8<S>, if_false: mask32x8<S>) -> mask32x8<S> {
@@ -4860,6 +5146,19 @@ impl<S: Simd> SimdFrom<f64, S> for f64x4<S> {
     #[inline(always)]
     fn simd_from(value: f64, simd: S) -> Self {
         simd.splat_f64x4(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for f64x4<S> {
+    type Output = f64;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for f64x4<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<f64x4<S>> for mask64x4<S> {
@@ -5138,6 +5437,19 @@ impl<S: Simd> SimdFrom<i64, S> for mask64x4<S> {
         simd.splat_mask64x4(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask64x4<S> {
+    type Output = i64;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask64x4<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask64x4<S>> for mask64x4<S> {
     #[inline(always)]
     fn select(self, if_true: mask64x4<S>, if_false: mask64x4<S>) -> mask64x4<S> {
@@ -5283,6 +5595,19 @@ impl<S: Simd> SimdFrom<f32, S> for f32x16<S> {
     #[inline(always)]
     fn simd_from(value: f32, simd: S) -> Self {
         simd.splat_f32x16(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for f32x16<S> {
+    type Output = f32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for f32x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<f32x16<S>> for mask32x16<S> {
@@ -5653,6 +5978,19 @@ impl<S: Simd> SimdFrom<i8, S> for i8x64<S> {
         simd.splat_i8x64(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for i8x64<S> {
+    type Output = i8;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for i8x64<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<i8x64<S>> for mask8x64<S> {
     #[inline(always)]
     fn select(self, if_true: i8x64<S>, if_false: i8x64<S>) -> i8x64<S> {
@@ -5945,6 +6283,19 @@ impl<S: Simd> SimdFrom<u8, S> for u8x64<S> {
         simd.splat_u8x64(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for u8x64<S> {
+    type Output = u8;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for u8x64<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<u8x64<S>> for mask8x64<S> {
     #[inline(always)]
     fn select(self, if_true: u8x64<S>, if_false: u8x64<S>) -> u8x64<S> {
@@ -6229,6 +6580,19 @@ impl<S: Simd> SimdFrom<i8, S> for mask8x64<S> {
         simd.splat_mask8x64(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask8x64<S> {
+    type Output = i8;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask8x64<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask8x64<S>> for mask8x64<S> {
     #[inline(always)]
     fn select(self, if_true: mask8x64<S>, if_false: mask8x64<S>) -> mask8x64<S> {
@@ -6387,6 +6751,19 @@ impl<S: Simd> SimdFrom<i16, S> for i16x32<S> {
     #[inline(always)]
     fn simd_from(value: i16, simd: S) -> Self {
         simd.splat_i16x32(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for i16x32<S> {
+    type Output = i16;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for i16x32<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<i16x32<S>> for mask16x32<S> {
@@ -6649,6 +7026,19 @@ impl<S: Simd> SimdFrom<u16, S> for u16x32<S> {
         simd.splat_u16x32(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for u16x32<S> {
+    type Output = u16;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for u16x32<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<u16x32<S>> for mask16x32<S> {
     #[inline(always)]
     fn select(self, if_true: u16x32<S>, if_false: u16x32<S>) -> u16x32<S> {
@@ -6905,6 +7295,19 @@ impl<S: Simd> SimdFrom<i16, S> for mask16x32<S> {
         simd.splat_mask16x32(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask16x32<S> {
+    type Output = i16;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask16x32<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask16x32<S>> for mask16x32<S> {
     #[inline(always)]
     fn select(self, if_true: mask16x32<S>, if_false: mask16x32<S>) -> mask16x32<S> {
@@ -7047,6 +7450,19 @@ impl<S: Simd> SimdFrom<i32, S> for i32x16<S> {
     #[inline(always)]
     fn simd_from(value: i32, simd: S) -> Self {
         simd.splat_i32x16(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for i32x16<S> {
+    type Output = i32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for i32x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<i32x16<S>> for mask32x16<S> {
@@ -7302,6 +7718,19 @@ impl<S: Simd> SimdFrom<u32, S> for u32x16<S> {
         simd.splat_u32x16(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for u32x16<S> {
+    type Output = u32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for u32x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<u32x16<S>> for mask32x16<S> {
     #[inline(always)]
     fn select(self, if_true: u32x16<S>, if_false: u32x16<S>) -> u32x16<S> {
@@ -7547,6 +7976,19 @@ impl<S: Simd> SimdFrom<i32, S> for mask32x16<S> {
         simd.splat_mask32x16(value)
     }
 }
+impl<S: Simd> core::ops::Index<usize> for mask32x16<S> {
+    type Output = i32;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask32x16<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
+    }
+}
 impl<S: Simd> Select<mask32x16<S>> for mask32x16<S> {
     #[inline(always)]
     fn select(self, if_true: mask32x16<S>, if_false: mask32x16<S>) -> mask32x16<S> {
@@ -7681,6 +8123,19 @@ impl<S: Simd> SimdFrom<f64, S> for f64x8<S> {
     #[inline(always)]
     fn simd_from(value: f64, simd: S) -> Self {
         simd.splat_f64x8(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for f64x8<S> {
+    type Output = f64;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for f64x8<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<f64x8<S>> for mask64x8<S> {
@@ -7963,6 +8418,19 @@ impl<S: Simd> SimdFrom<i64, S> for mask64x8<S> {
     #[inline(always)]
     fn simd_from(value: i64, simd: S) -> Self {
         simd.splat_mask64x8(value)
+    }
+}
+impl<S: Simd> core::ops::Index<usize> for mask64x8<S> {
+    type Output = i64;
+    #[inline(always)]
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.val[i]
+    }
+}
+impl<S: Simd> core::ops::IndexMut<usize> for mask64x8<S> {
+    #[inline(always)]
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.val[i]
     }
 }
 impl<S: Simd> Select<mask64x8<S>> for mask64x8<S> {

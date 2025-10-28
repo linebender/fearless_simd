@@ -69,6 +69,7 @@ fn mk_simd_base() -> TokenStream {
         pub trait SimdBase<Element: SimdElement, S: Simd>:
             Copy + Sync + Send + 'static
             + crate::Bytes + SimdFrom<Element, S>
+            + core::ops::Index<usize> + core::ops::IndexMut<usize>
         {
             const N: usize;
             /// A SIMD vector mask with the same number of elements.

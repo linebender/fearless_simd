@@ -36,6 +36,21 @@ pub fn mk_simd_types() -> TokenStream {
                         simd.#splat(value)
                     }
                 }
+
+                impl<S: Simd> core::ops::Index<usize> for #name<S> {
+                    type Output = #rust_scalar;
+                    #[inline(always)]
+                    fn index(&self, i: usize) -> &Self::Output {
+                        &self.val[i]
+                    }
+                }
+
+                impl<S: Simd> core::ops::IndexMut<usize> for #name<S> {
+                    #[inline(always)]
+                    fn index_mut (&mut self, i: usize) -> &mut Self::Output {
+                        &mut self.val[i]
+                    }
+                }
             }
         };
         let impl_block = simd_impl(ty);
