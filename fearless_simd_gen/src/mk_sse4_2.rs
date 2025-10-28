@@ -110,9 +110,12 @@ fn mk_simd_impl() -> TokenStream {
             type i16s = i16x8<Self>;
             type u32s = u32x4<Self>;
             type i32s = i32x4<Self>;
+            type u64s = u64x2<Self>;
+            type i64s = i64x2<Self>;
             type mask8s = mask8x16<Self>;
             type mask16s = mask16x8<Self>;
             type mask32s = mask32x4<Self>;
+            type mask64s = mask64x2<Self>;
             #[inline(always)]
             fn level(self) -> Level {
                 #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
@@ -263,6 +266,10 @@ pub(crate) fn handle_compare(
 
             let max_min_expr = arch.expr(max_min, vec_ty, &args);
             quote! { #eq_intrinsic(#max_min_expr, a.into()) }
+        } else if matches!(method, "simd_eq") && vec_ty.scalar_bits == 64 {
+            let eq =
+                simple_sign_unaware_intrinsic("cmpeq", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+            quote! { #eq(a.into(), b.into()) }
         } else if vec_ty.scalar == ScalarType::Unsigned {
             // SSE4.2 only has signed GT/LT, but not unsigned.
             let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
@@ -270,6 +277,7 @@ pub(crate) fn handle_compare(
                 8 => quote! { 0x80u8 },
                 16 => quote! { 0x8000u16 },
                 32 => quote! { 0x80000000u32 },
+                64 => quote! { 0x8000000000000000u64 },
                 _ => unimplemented!(),
             };
             let gt =
@@ -287,10 +295,29 @@ pub(crate) fn handle_compare(
 
                 #gt(#args)
             }
+        } else if vec_ty.scalar_bits == 64 {
+            let intrinsic_name = if matches!(method, "simd_eq") {
+                "cmpeq"
+            } else {
+                "cmpgt"
+            };
+
+            let cmp = simple_intrinsic(intrinsic_name, vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+            // SSE4.2 only has signed GT for i64
+            let args = if method == "simd_lt" {
+                quote! { b.into(), a.into() }
+            } else {
+                quote! { a.into(), b.into() }
+            };
+
+            quote! {
+                #cmp(#args)
+            }
         } else {
             arch.expr(method, vec_ty, &args)
         }
     } else {
+        // Floating point comparison
         arch.expr(method, vec_ty, &args)
     };
 
@@ -601,6 +628,16 @@ pub(crate) fn handle_unzip(
         quote! { unsafe { #intrinsic::<#mask>(a.into(), b.into()).simd_into(self) } }
     } else {
         match vec_ty.scalar_bits {
+            64 => {
+                let op = if select_even { "lo" } else { "hi" };
+                let intrinsic = format_ident!("_mm_unpack{op}_epi64");
+
+                quote! {
+                    unsafe {
+                        #intrinsic(a.into(), b.into()).simd_into(self)
+                    }
+                }
+            }
             32 => {
                 let op = if select_even { "lo" } else { "hi" };
 
