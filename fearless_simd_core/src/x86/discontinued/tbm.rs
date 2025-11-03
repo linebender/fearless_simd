@@ -42,7 +42,7 @@ impl Debug for Tbm {
 // Safety: This token can only be constructed if you have proof that all the requisite
 // target feature is enabled.
 unsafe impl TargetFeatureToken for Tbm {
-    const FEATURES: &[&str] = &["tbm", ];
+    const FEATURES: &[&str] = &["tbm"];
 
     #[inline(always)]
     fn vectorize<R>(self, f: impl FnOnce() -> R) -> R {
@@ -87,7 +87,6 @@ impl Tbm {
         Self { _private: () }
     }
 }
-
 
 const _: () = {
     assert!(

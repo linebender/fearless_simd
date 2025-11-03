@@ -8,6 +8,5 @@
 //!
 //! For more information, see <https://en.wikipedia.org/wiki/List_of_discontinued_x86_instructions>
 
-// These will be stabilised in 1.91.
-// mod tbm;
-// pub use tbm::Tbm;
+mod tbm;
+pub use tbm::Tbm;
