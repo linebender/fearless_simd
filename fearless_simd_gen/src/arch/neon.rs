@@ -6,7 +6,6 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use crate::arch::Arch;
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -46,8 +45,8 @@ fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-impl Arch for Neon {
-    fn arch_ty(&self, ty: &VecType) -> TokenStream {
+impl Neon {
+    pub(crate) fn arch_ty(&self, ty: &VecType) -> TokenStream {
         let scalar = match ty.scalar {
             ScalarType::Float => "float",
             ScalarType::Unsigned => "uint",
@@ -65,7 +64,7 @@ impl Arch for Neon {
     }
 
     // expects args and return value in arch dialect
-    fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
+    pub(crate) fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
         // There is no logical NOT for 64-bit, so we need this workaround.
         if op == "not" && ty.scalar_bits == 64 && ty.scalar == ScalarType::Mask {
             return quote! { vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))) };

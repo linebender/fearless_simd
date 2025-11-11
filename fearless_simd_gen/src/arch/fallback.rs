@@ -7,7 +7,6 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use crate::arch::Arch;
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -73,8 +72,8 @@ pub fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
 
 pub struct Fallback;
 
-impl Arch for Fallback {
-    fn arch_ty(&self, ty: &VecType) -> TokenStream {
+impl Fallback {
+    pub(crate) fn arch_ty(&self, ty: &VecType) -> TokenStream {
         let scalar = match ty.scalar {
             ScalarType::Float => "f",
             ScalarType::Unsigned => "u",
@@ -85,7 +84,7 @@ impl Arch for Fallback {
         quote! { #ident }
     }
 
-    fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
+    pub(crate) fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
         if let Some(translated) = translate_op(op, ty.scalar == ScalarType::Float) {
             let intrinsic = simple_intrinsic(translated, ty);
             quote! { #intrinsic ( #( #args ),* ) }

@@ -1,7 +1,6 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use crate::arch::Arch;
 use crate::arch::x86::{
     X86, cast_ident, coarse_type, extend_intrinsic, intrinsic_ident, pack_intrinsic,
     set1_intrinsic, simple_intrinsic,
@@ -87,7 +86,7 @@ fn mk_simd_impl() -> TokenStream {
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty, X86, vec_ty.n_bits());
+            let method = make_method(method, sig, vec_ty, vec_ty.n_bits());
 
             methods.push(method);
         }
@@ -159,13 +158,7 @@ fn mk_type_impl() -> TokenStream {
     }
 }
 
-fn make_method(
-    method: &str,
-    sig: OpSig,
-    vec_ty: &VecType,
-    arch: impl Arch,
-    ty_bits: usize,
-) -> TokenStream {
+fn make_method(method: &str, sig: OpSig, vec_ty: &VecType, ty_bits: usize) -> TokenStream {
     let scalar_bits = vec_ty.scalar_bits;
     let ty_name = vec_ty.rust_name();
     let method_name = format!("{method}_{ty_name}");
@@ -183,12 +176,12 @@ fn make_method(
 
     match sig {
         OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty, scalar_bits, ty_bits),
-        OpSig::Compare => handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch),
-        OpSig::Unary => mk_sse4_2::handle_unary(method_sig, method, vec_ty, arch),
+        OpSig::Compare => handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits),
+        OpSig::Unary => mk_sse4_2::handle_unary(method_sig, method, vec_ty),
         OpSig::WidenNarrow(t) => {
             handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
         }
-        OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty, arch),
+        OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty),
         OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty, scalar_bits, ty_bits),
         OpSig::Ternary => match method {
             "madd" => {
@@ -281,7 +274,6 @@ pub(crate) fn handle_compare(
     vec_ty: &VecType,
     scalar_bits: usize,
     ty_bits: usize,
-    arch: impl Arch,
 ) -> TokenStream {
     if vec_ty.scalar == ScalarType::Float {
         // For AVX2 and up, Intel gives us a generic comparison intrinsic that takes a predicate. There are 32,
@@ -305,7 +297,7 @@ pub(crate) fn handle_compare(
             }
         }
     } else {
-        mk_sse4_2::handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch)
+        mk_sse4_2::handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits)
     }
 }
 

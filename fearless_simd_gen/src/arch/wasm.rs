@@ -8,7 +8,6 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use crate::arch::Arch;
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -61,8 +60,8 @@ fn v128_intrinsic(name: &str) -> TokenStream {
     quote! { #combined_ident }
 }
 
-impl Arch for Wasm {
-    fn arch_ty(&self, ty: &VecType) -> TokenStream {
+impl Wasm {
+    pub(crate) fn arch_ty(&self, ty: &VecType) -> TokenStream {
         let scalar = match ty.scalar {
             ScalarType::Float => "f",
             ScalarType::Unsigned => "u",
@@ -74,7 +73,7 @@ impl Arch for Wasm {
     }
 
     // expects args and return value in arch dialect
-    fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
+    pub(crate) fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
         if let Some(translated) = translate_op(op) {
             let intrinsic = match translated {
                 "not" => v128_intrinsic(translated),

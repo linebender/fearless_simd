@@ -1,7 +1,6 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use crate::arch::Arch;
 use crate::arch::x86::{
     X86, cast_ident, coarse_type, cvt_intrinsic, extend_intrinsic, intrinsic_ident, op_suffix,
     pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
@@ -87,7 +86,7 @@ fn mk_simd_impl() -> TokenStream {
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty, X86, 128);
+            let method = make_method(method, sig, vec_ty, 128);
 
             methods.push(method);
         }
@@ -163,13 +162,7 @@ fn mk_type_impl() -> TokenStream {
     }
 }
 
-fn make_method(
-    method: &str,
-    sig: OpSig,
-    vec_ty: &VecType,
-    arch: impl Arch,
-    ty_bits: usize,
-) -> TokenStream {
+fn make_method(method: &str, sig: OpSig, vec_ty: &VecType, ty_bits: usize) -> TokenStream {
     let scalar_bits = vec_ty.scalar_bits;
     let ty_name = vec_ty.rust_name();
     let method_name = format!("{method}_{ty_name}");
@@ -187,12 +180,12 @@ fn make_method(
 
     match sig {
         OpSig::Splat => handle_splat(method_sig, vec_ty, scalar_bits, ty_bits),
-        OpSig::Compare => handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch),
-        OpSig::Unary => handle_unary(method_sig, method, vec_ty, arch),
+        OpSig::Compare => handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits),
+        OpSig::Unary => handle_unary(method_sig, method, vec_ty),
         OpSig::WidenNarrow(t) => {
             handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
         }
-        OpSig::Binary => handle_binary(method_sig, method, vec_ty, arch),
+        OpSig::Binary => handle_binary(method_sig, method, vec_ty),
         OpSig::Shift => handle_shift(method_sig, method, vec_ty, scalar_bits, ty_bits),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
         OpSig::Select => handle_select(method_sig, vec_ty, scalar_bits),
@@ -239,7 +232,6 @@ pub(crate) fn handle_compare(
     vec_ty: &VecType,
     scalar_bits: usize,
     ty_bits: usize,
-    arch: impl Arch,
 ) -> TokenStream {
     let args = [quote! { a.into() }, quote! { b.into() }];
 
@@ -261,7 +253,7 @@ pub(crate) fn handle_compare(
                     ty_bits,
                 );
 
-                let max_min_expr = arch.expr(max_min, vec_ty, &args);
+                let max_min_expr = X86.expr(max_min, vec_ty, &args);
                 quote! { #eq_intrinsic(#max_min_expr, a.into()) }
             }
             "simd_lt" | "simd_gt" => {
@@ -306,11 +298,11 @@ pub(crate) fn handle_compare(
                     }
                 }
             }
-            "simd_eq" => arch.expr(method, vec_ty, &args),
+            "simd_eq" => X86.expr(method, vec_ty, &args),
             _ => unreachable!(),
         }
     } else {
-        let expr = arch.expr(method, vec_ty, &args);
+        let expr = X86.expr(method, vec_ty, &args);
         let ident = cast_ident(ScalarType::Float, ScalarType::Mask, scalar_bits, ty_bits);
         quote! { #ident(#expr) }
     };
@@ -322,12 +314,7 @@ pub(crate) fn handle_compare(
     }
 }
 
-pub(crate) fn handle_unary(
-    method_sig: TokenStream,
-    method: &str,
-    vec_ty: &VecType,
-    arch: impl Arch,
-) -> TokenStream {
+pub(crate) fn handle_unary(method_sig: TokenStream, method: &str, vec_ty: &VecType) -> TokenStream {
     match method {
         "fract" => {
             quote! {
@@ -345,7 +332,7 @@ pub(crate) fn handle_unary(
         }
         _ => {
             let args = [quote! { a.into() }];
-            let expr = arch.expr(method, vec_ty, &args);
+            let expr = X86.expr(method, vec_ty, &args);
             quote! {
                 #method_sig {
                     unsafe { #expr.simd_into(self) }
@@ -419,7 +406,6 @@ pub(crate) fn handle_binary(
     method_sig: TokenStream,
     method: &str,
     vec_ty: &VecType,
-    arch: impl Arch,
 ) -> TokenStream {
     if method == "mul" && vec_ty.scalar_bits == 8 {
         // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
@@ -441,7 +427,7 @@ pub(crate) fn handle_binary(
         }
     } else {
         let args = [quote! { a.into() }, quote! { b.into() }];
-        let expr = arch.expr(method, vec_ty, &args);
+        let expr = X86.expr(method, vec_ty, &args);
         quote! {
             #method_sig {
                 unsafe { #expr.simd_into(self) }

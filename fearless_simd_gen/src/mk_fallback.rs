@@ -6,8 +6,7 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use crate::arch::fallback::Fallback;
-use crate::arch::{Arch, fallback};
+use crate::arch::fallback::{self, Fallback};
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};

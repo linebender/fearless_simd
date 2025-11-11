@@ -6,7 +6,6 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use crate::arch::Arch;
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -39,8 +38,8 @@ pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-impl Arch for X86 {
-    fn arch_ty(&self, ty: &VecType) -> TokenStream {
+impl X86 {
+    pub(crate) fn arch_ty(&self, ty: &VecType) -> TokenStream {
         let suffix = match (ty.scalar, ty.scalar_bits) {
             (ScalarType::Float, 32) => "",
             (ScalarType::Float, 64) => "d",
@@ -52,7 +51,7 @@ impl Arch for X86 {
         quote! { #ident }
     }
 
-    fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
+    pub(crate) fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
         if let Some(op_name) = translate_op(op) {
             let sign_aware = matches!(op, "max" | "min");
 

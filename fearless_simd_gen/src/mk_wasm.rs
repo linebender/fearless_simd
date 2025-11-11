@@ -13,7 +13,7 @@ use quote::{format_ident, quote};
 use crate::generic::scalar_binary;
 use crate::ops::valid_reinterpret;
 use crate::{
-    arch::{Arch, wasm::Wasm},
+    arch::wasm::Wasm,
     generic::{generic_combine, generic_op, generic_split},
     ops::{OpSig, TyFlavor, ops_for_type},
     types::{SIMD_TYPES, ScalarType, type_imports},

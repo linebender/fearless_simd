@@ -5,12 +5,3 @@ pub(crate) mod fallback;
 pub(crate) mod neon;
 pub(crate) mod wasm;
 pub(crate) mod x86;
-
-use proc_macro2::TokenStream;
-
-use crate::types::VecType;
-
-pub(crate) trait Arch {
-    fn arch_ty(&self, ty: &VecType) -> TokenStream;
-    fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream;
-}

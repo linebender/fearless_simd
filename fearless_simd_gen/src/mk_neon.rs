@@ -14,7 +14,6 @@ use crate::arch::neon::split_intrinsic;
 use crate::ops::{reinterpret_ty, valid_reinterpret};
 use crate::types::ScalarType;
 use crate::{
-    arch::Arch,
     arch::neon::{Neon, cvt_intrinsic, simple_intrinsic},
     generic::{generic_combine, generic_op, generic_split},
     ops::{OpSig, TyFlavor, ops_for_type},
