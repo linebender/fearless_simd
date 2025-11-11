@@ -181,10 +181,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            let mask = _mm_castsi128_ps(a.into());
-            _mm_or_ps(_mm_and_ps(mask, b.into()), _mm_andnot_ps(mask, c.into())).simd_into(self)
-        }
+        unsafe { _mm_blendv_ps(c.into(), b.into(), _mm_castsi128_ps(a.into())).simd_into(self) }
     }
     #[inline(always)]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self> {
@@ -268,8 +265,8 @@ impl Simd for Sse4_2 {
         unsafe {
             let val = a.into();
             let shift_count = _mm_cvtsi32_si128(shift as i32);
-            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
-            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
+            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
+            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let lo_shifted = _mm_sra_epi16(lo_16, shift_count);
             let hi_shifted = _mm_sra_epi16(hi_16, shift_count);
             _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
@@ -284,8 +281,8 @@ impl Simd for Sse4_2 {
         unsafe {
             let val = a.into();
             let shift_count = _mm_cvtsi32_si128(shift as i32);
-            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
-            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
+            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
+            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
             let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
             _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
@@ -297,7 +294,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_lt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        unsafe { _mm_cmplt_epi8(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_cmpgt_epi8(b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -322,7 +319,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14);
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
@@ -331,21 +328,15 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15);
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+            _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -442,12 +433,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        unsafe {
-            let sign_bit = _mm_set1_epi8(0x80u8 as _);
-            let a_signed = _mm_xor_si128(a.into(), sign_bit);
-            let b_signed = _mm_xor_si128(b.into(), sign_bit);
-            _mm_cmpgt_epi8(a_signed, b_signed).simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -486,7 +472,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14);
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
@@ -495,21 +481,15 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15);
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+            _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -569,13 +549,7 @@ impl Simd for Sse4_2 {
         b: mask8x16<Self>,
         c: mask8x16<Self>,
     ) -> mask8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -638,7 +612,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_lt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        unsafe { _mm_cmplt_epi16(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_cmpgt_epi16(b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -663,7 +637,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13);
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
@@ -672,21 +646,15 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15);
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+            _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -767,12 +735,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        unsafe {
-            let sign_bit = _mm_set1_epi16(0x8000u16 as _);
-            let a_signed = _mm_xor_si128(a.into(), sign_bit);
-            let b_signed = _mm_xor_si128(b.into(), sign_bit);
-            _mm_cmpgt_epi16(a_signed, b_signed).simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -811,7 +774,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13);
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
@@ -820,21 +783,15 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15);
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+            _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -892,13 +849,7 @@ impl Simd for Sse4_2 {
         b: mask16x8<Self>,
         c: mask16x8<Self>,
     ) -> mask16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -961,7 +912,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_lt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_cmplt_epi32(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_cmpgt_epi32(b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -1001,13 +952,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1092,12 +1037,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        unsafe {
-            let sign_bit = _mm_set1_epi32(0x80000000u32 as _);
-            let a_signed = _mm_xor_si128(a.into(), sign_bit);
-            let b_signed = _mm_xor_si128(b.into(), sign_bit);
-            _mm_cmpgt_epi32(a_signed, b_signed).simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
@@ -1151,13 +1091,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1212,13 +1146,7 @@ impl Simd for Sse4_2 {
         b: mask32x4<Self>,
         c: mask32x4<Self>,
     ) -> mask32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -1344,10 +1272,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        unsafe {
-            let mask = _mm_castsi128_pd(a.into());
-            _mm_or_pd(_mm_and_pd(mask, b.into()), _mm_andnot_pd(mask, c.into())).simd_into(self)
-        }
+        unsafe { _mm_blendv_pd(c.into(), b.into(), _mm_castsi128_pd(a.into())).simd_into(self) }
     }
     #[inline(always)]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self> {
@@ -1390,13 +1315,7 @@ impl Simd for Sse4_2 {
         b: mask64x2<Self>,
         c: mask64x2<Self>,
     ) -> mask64x2<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {

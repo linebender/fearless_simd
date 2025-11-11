@@ -26,16 +26,15 @@ pub(crate) fn op_suffix(mut ty: ScalarType, bits: usize, sign_aware: bool) -> &'
     }
 }
 
-pub(crate) fn set0_intrinsic(vec_ty: VecType) -> Ident {
+/// Intrinsic name for the "int, float, or double" type (not as fine-grained as [`op_suffix`]).
+pub(crate) fn coarse_type(vec_ty: VecType) -> &'static str {
     use ScalarType::*;
-    let suffix = match (vec_ty.scalar, vec_ty.n_bits()) {
+    match (vec_ty.scalar, vec_ty.n_bits()) {
         (Int | Unsigned | Mask, 128) => "si128",
         (Int | Unsigned | Mask, 256) => "si256",
         (Int | Unsigned | Mask, 512) => "si512",
         _ => op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false),
-    };
-
-    intrinsic_ident("setzero", suffix, vec_ty.n_bits())
+    }
 }
 
 pub(crate) fn set1_intrinsic(ty: ScalarType, bits: usize, ty_bits: usize) -> Ident {
@@ -116,4 +115,30 @@ pub(crate) fn intrinsic_ident(name: &str, suffix: &str, ty_bits: usize) -> Ident
     };
 
     format_ident!("_mm{prefix}_{name}_{suffix}")
+}
+
+pub(crate) fn cast_ident(
+    src_scalar_ty: ScalarType,
+    dst_scalar_ty: ScalarType,
+    scalar_bits: usize,
+    ty_bits: usize,
+) -> Ident {
+    let prefix = match ty_bits {
+        128 => "",
+        256 => "256",
+        512 => "512",
+        _ => unreachable!(),
+    };
+    let src_name = coarse_type(VecType::new(
+        src_scalar_ty,
+        scalar_bits,
+        ty_bits / scalar_bits,
+    ));
+    let dst_name = coarse_type(VecType::new(
+        dst_scalar_ty,
+        scalar_bits,
+        ty_bits / scalar_bits,
+    ));
+
+    format_ident!("_mm{prefix}_cast{src_name}_{dst_name}")
 }

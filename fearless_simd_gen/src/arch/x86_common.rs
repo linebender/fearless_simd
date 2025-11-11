@@ -3,7 +3,7 @@
 
 use crate::types::{ScalarType, VecType};
 use crate::x86_common::{
-    intrinsic_ident, op_suffix, set0_intrinsic, set1_intrinsic, simple_intrinsic,
+    coarse_type, intrinsic_ident, op_suffix, set1_intrinsic, simple_intrinsic,
 };
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -29,6 +29,7 @@ pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
         "min" => "min",
         "max_precise" => "max",
         "min_precise" => "min",
+        "select" => "blendv",
         _ => return None,
     })
 }
@@ -50,7 +51,8 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
         let sign_aware = matches!(op, "max" | "min");
 
         let suffix = match op_name {
-            "and" | "or" | "xor" => "si128",
+            "and" | "or" | "xor" => coarse_type(*ty),
+            "blendv" if ty.scalar != ScalarType::Float => "epi8",
             _ => op_suffix(ty.scalar, ty.scalar_bits, sign_aware),
         };
         let intrinsic = intrinsic_ident(op_name, suffix, ty.n_bits());
@@ -72,7 +74,7 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                     }
                 }
                 ScalarType::Int => {
-                    let set0 = set0_intrinsic(*ty);
+                    let set0 = intrinsic_ident("setzero", coarse_type(*ty), ty.n_bits());
                     let sub = simple_intrinsic("sub", ty.scalar, ty.scalar_bits, ty.n_bits());
                     let arg = &args[0];
                     quote! {

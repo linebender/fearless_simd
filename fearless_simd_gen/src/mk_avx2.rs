@@ -7,8 +7,8 @@ use crate::arch::sse4_2::Sse4_2;
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
 use crate::mk_sse4_2;
 use crate::ops::{OpSig, TyFlavor, ops_for_type};
-use crate::types::{SIMD_TYPES, VecType, type_imports};
-use crate::x86_common::simple_intrinsic;
+use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
+use crate::x86_common::{cast_ident, simple_intrinsic};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
@@ -82,20 +82,17 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for (method, sig) in ops_for_type(vec_ty, true) {
-            // TODO: Right now, we are basically adding the same methods as for SSE4.2 (except for
-            // FMA). In the future, we'll obviously want to use AVX2 intrinsics for 256 bit.
-            let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
-                || vec_ty.n_bits() > 256;
+            let too_wide = vec_ty.n_bits() > 256;
 
-            let b2 = !matches!(method, "load_interleaved_128")
-                && !matches!(method, "store_interleaved_128");
+            let acceptable_wide_op = matches!(method, "load_interleaved_128")
+                || matches!(method, "store_interleaved_128");
 
-            if b1 && b2 {
+            if too_wide && !acceptable_wide_op {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty, Sse4_2, 128);
+            let method = make_method(method, sig, vec_ty, Sse4_2, vec_ty.n_bits());
 
             methods.push(method);
         }
@@ -191,12 +188,14 @@ fn make_method(
 
     match sig {
         OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty, scalar_bits, ty_bits),
-        OpSig::Compare => {
-            mk_sse4_2::handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch)
-        }
+        OpSig::Compare => handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch),
         OpSig::Unary => mk_sse4_2::handle_unary(method_sig, method, vec_ty, arch),
         OpSig::WidenNarrow(t) => {
-            mk_sse4_2::handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
+            if vec_ty.n_bits() > 128 && method == "widen" {
+                generic_op(method, sig, vec_ty)
+            } else {
+                mk_sse4_2::handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
+            }
         }
         OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty, arch),
         OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty, scalar_bits, ty_bits),
@@ -240,5 +239,39 @@ fn make_method(
         OpSig::StoreInterleaved(_, _) => {
             mk_sse4_2::handle_store_interleaved(method_sig, &method_ident)
         }
+    }
+}
+
+pub(crate) fn handle_compare(
+    method_sig: TokenStream,
+    method: &str,
+    vec_ty: &VecType,
+    scalar_bits: usize,
+    ty_bits: usize,
+    arch: impl Arch,
+) -> TokenStream {
+    if vec_ty.scalar == ScalarType::Float {
+        // For AVX2 and up, Intel gives us a generic comparison intrinsic that takes a predicate. There are 32,
+        // of which only a few are useful and the rest will violate IEEE754 and/or raise a SIGFPE on NaN.
+        //
+        // https://www.felixcloutier.com/x86/cmppd#tbl-3-1
+        let order_predicate = match method {
+            "simd_eq" => 0x00,
+            "simd_lt" => 0x11,
+            "simd_le" => 0x12,
+            "simd_ge" => 0x1D,
+            "simd_gt" => 0x1E,
+            _ => unreachable!(),
+        };
+        let intrinsic = simple_intrinsic("cmp", vec_ty.scalar, scalar_bits, ty_bits);
+        let cast = cast_ident(ScalarType::Float, ScalarType::Mask, scalar_bits, ty_bits);
+
+        quote! {
+            #method_sig {
+                unsafe { #cast(#intrinsic::<#order_predicate>(a.into(), b.into())).simd_into(self) }
+            }
+        }
+    } else {
+        mk_sse4_2::handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch)
     }
 }

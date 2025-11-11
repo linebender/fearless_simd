@@ -104,23 +104,23 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmpeq_ps(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmp_ps::<0i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmplt_ps(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmp_ps::<17i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmple_ps(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmp_ps::<18i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmpge_ps(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmp_ps::<29i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmpgt_ps(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmp_ps::<30i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -176,10 +176,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            let mask = _mm_castsi128_ps(a.into());
-            _mm_or_ps(_mm_and_ps(mask, b.into()), _mm_andnot_ps(mask, c.into())).simd_into(self)
-        }
+        unsafe { _mm_blendv_ps(c.into(), b.into(), _mm_castsi128_ps(a.into())).simd_into(self) }
     }
     #[inline(always)]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self> {
@@ -263,8 +260,8 @@ impl Simd for Avx2 {
         unsafe {
             let val = a.into();
             let shift_count = _mm_cvtsi32_si128(shift as i32);
-            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
-            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
+            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
+            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let lo_shifted = _mm_sra_epi16(lo_16, shift_count);
             let hi_shifted = _mm_sra_epi16(hi_16, shift_count);
             _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
@@ -279,8 +276,8 @@ impl Simd for Avx2 {
         unsafe {
             let val = a.into();
             let shift_count = _mm_cvtsi32_si128(shift as i32);
-            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
-            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmplt_epi8(val, _mm_setzero_si128()));
+            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
+            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
             let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
             _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
@@ -292,7 +289,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_lt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        unsafe { _mm_cmplt_epi8(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_cmpgt_epi8(b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -317,7 +314,7 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn unzip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14);
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
@@ -326,21 +323,15 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn unzip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15);
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+            _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -437,12 +428,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        unsafe {
-            let sign_bit = _mm_set1_epi8(0x80u8 as _);
-            let a_signed = _mm_xor_si128(a.into(), sign_bit);
-            let b_signed = _mm_xor_si128(b.into(), sign_bit);
-            _mm_cmpgt_epi8(a_signed, b_signed).simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -481,7 +467,7 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn unzip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14);
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
@@ -490,21 +476,15 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn unzip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15);
+            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+            _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -564,13 +544,7 @@ impl Simd for Avx2 {
         b: mask8x16<Self>,
         c: mask8x16<Self>,
     ) -> mask8x16<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -633,7 +607,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_lt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        unsafe { _mm_cmplt_epi16(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_cmpgt_epi16(b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -658,7 +632,7 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn unzip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13);
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
@@ -667,21 +641,15 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15);
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+            _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -762,12 +730,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        unsafe {
-            let sign_bit = _mm_set1_epi16(0x8000u16 as _);
-            let a_signed = _mm_xor_si128(a.into(), sign_bit);
-            let b_signed = _mm_xor_si128(b.into(), sign_bit);
-            _mm_cmpgt_epi16(a_signed, b_signed).simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -806,7 +769,7 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn unzip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13);
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpacklo_epi64(t1, t2).simd_into(self)
@@ -815,21 +778,15 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         unsafe {
-            let mask = _mm_setr_epi8(2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15);
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
             let t1 = _mm_shuffle_epi8(a.into(), mask);
             let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
+            _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
     }
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -887,13 +844,7 @@ impl Simd for Avx2 {
         b: mask16x8<Self>,
         c: mask16x8<Self>,
     ) -> mask16x8<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -956,7 +907,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_lt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_cmplt_epi32(a.into(), b.into()).simd_into(self) }
+        unsafe { _mm_cmpgt_epi32(b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -996,13 +947,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1087,12 +1032,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        unsafe {
-            let sign_bit = _mm_set1_epi32(0x80000000u32 as _);
-            let a_signed = _mm_xor_si128(a.into(), sign_bit);
-            let b_signed = _mm_xor_si128(b.into(), sign_bit);
-            _mm_cmpgt_epi32(a_signed, b_signed).simd_into(self)
-        }
+        unsafe { _mm_cmpeq_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
@@ -1146,13 +1086,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1207,13 +1141,7 @@ impl Simd for Avx2 {
         b: mask32x4<Self>,
         c: mask32x4<Self>,
     ) -> mask32x4<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -1267,23 +1195,23 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmpeq_pd(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmp_pd::<0i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmplt_pd(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmp_pd::<17i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmple_pd(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmp_pd::<18i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmpge_pd(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmp_pd::<29i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmpgt_pd(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmp_pd::<30i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -1339,10 +1267,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        unsafe {
-            let mask = _mm_castsi128_pd(a.into());
-            _mm_or_pd(_mm_and_pd(mask, b.into()), _mm_andnot_pd(mask, c.into())).simd_into(self)
-        }
+        unsafe { _mm_blendv_pd(c.into(), b.into(), _mm_castsi128_pd(a.into())).simd_into(self) }
     }
     #[inline(always)]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self> {
@@ -1385,13 +1310,7 @@ impl Simd for Avx2 {
         b: mask64x2<Self>,
         c: mask64x2<Self>,
     ) -> mask64x2<Self> {
-        unsafe {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into()),
-            )
-            .simd_into(self)
-        }
+        unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -1405,174 +1324,141 @@ impl Simd for Avx2 {
         result.simd_into(self)
     }
     #[inline(always)]
-    fn splat_f32x8(self, a: f32) -> f32x8<Self> {
-        let half = self.splat_f32x4(a);
-        self.combine_f32x4(half, half)
+    fn splat_f32x8(self, val: f32) -> f32x8<Self> {
+        unsafe { _mm256_set1_ps(val).simd_into(self) }
     }
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f32x4(self.abs_f32x4(a0), self.abs_f32x4(a1))
+        unsafe { _mm256_andnot_ps(_mm256_set1_ps(-0.0), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f32x4(self.neg_f32x4(a0), self.neg_f32x4(a1))
+        unsafe { _mm256_xor_ps(a.into(), _mm256_set1_ps(-0.0)).simd_into(self) }
     }
     #[inline(always)]
     fn sqrt_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f32x4(self.sqrt_f32x4(a0), self.sqrt_f32x4(a1))
+        unsafe { _mm256_sqrt_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.add_f32x4(a0, b0), self.add_f32x4(a1, b1))
+        unsafe { _mm256_add_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.sub_f32x4(a0, b0), self.sub_f32x4(a1, b1))
+        unsafe { _mm256_sub_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.mul_f32x4(a0, b0), self.mul_f32x4(a1, b1))
+        unsafe { _mm256_mul_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn div_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.div_f32x4(a0, b0), self.div_f32x4(a1, b1))
+        unsafe { _mm256_div_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn copysign_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.copysign_f32x4(a0, b0), self.copysign_f32x4(a1, b1))
+        unsafe {
+            let mask = _mm256_set1_ps(-0.0);
+            _mm256_or_ps(
+                _mm256_and_ps(mask, b.into()),
+                _mm256_andnot_ps(mask, a.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_mask32x4(self.simd_eq_f32x4(a0, b0), self.simd_eq_f32x4(a1, b1))
+        unsafe { _mm256_castps_si256(_mm256_cmp_ps::<0i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_mask32x4(self.simd_lt_f32x4(a0, b0), self.simd_lt_f32x4(a1, b1))
+        unsafe { _mm256_castps_si256(_mm256_cmp_ps::<17i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_mask32x4(self.simd_le_f32x4(a0, b0), self.simd_le_f32x4(a1, b1))
+        unsafe { _mm256_castps_si256(_mm256_cmp_ps::<18i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_mask32x4(self.simd_ge_f32x4(a0, b0), self.simd_ge_f32x4(a1, b1))
+        unsafe { _mm256_castps_si256(_mm256_cmp_ps::<29i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_mask32x4(self.simd_gt_f32x4(a0, b0), self.simd_gt_f32x4(a1, b1))
+        unsafe { _mm256_castps_si256(_mm256_cmp_ps::<30i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, _) = self.split_f32x8(a);
-        let (b0, _) = self.split_f32x8(b);
-        self.combine_f32x4(self.zip_low_f32x4(a0, b0), self.zip_high_f32x4(a0, b0))
+        unsafe {
+            let lo = _mm256_unpacklo_ps(a.into(), b.into());
+            let hi = _mm256_unpackhi_ps(a.into(), b.into());
+            _mm256_permute2f128_ps::<0b0010_0000>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (_, a1) = self.split_f32x8(a);
-        let (_, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.zip_low_f32x4(a1, b1), self.zip_high_f32x4(a1, b1))
+        unsafe {
+            let lo = _mm256_unpacklo_ps(a.into(), b.into());
+            let hi = _mm256_unpackhi_ps(a.into(), b.into());
+            _mm256_permute2f128_ps::<0b0011_0001>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.unzip_low_f32x4(a0, a1), self.unzip_low_f32x4(b0, b1))
+        unsafe {
+            let t1 = _mm256_permutevar8x32_ps(a.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            let t2 = _mm256_permutevar8x32_ps(b.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            _mm256_permute2f128_ps::<0b0010_0000>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.unzip_high_f32x4(a0, a1), self.unzip_high_f32x4(b0, b1))
+        unsafe {
+            let t1 = _mm256_permutevar8x32_ps(a.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            let t2 = _mm256_permutevar8x32_ps(b.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            _mm256_permute2f128_ps::<0b0011_0001>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.max_f32x4(a0, b0), self.max_f32x4(a1, b1))
+        unsafe { _mm256_max_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(
-            self.max_precise_f32x4(a0, b0),
-            self.max_precise_f32x4(a1, b1),
-        )
+        unsafe { _mm256_max_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
+        unsafe { _mm256_min_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(
-            self.min_precise_f32x4(a0, b0),
-            self.min_precise_f32x4(a1, b1),
-        )
+        unsafe { _mm256_min_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn madd_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        let (c0, c1) = self.split_f32x8(c);
-        self.combine_f32x4(self.madd_f32x4(a0, b0, c0), self.madd_f32x4(a1, b1, c1))
+        unsafe { _mm256_fmadd_ps(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn msub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        let (c0, c1) = self.split_f32x8(c);
-        self.combine_f32x4(self.msub_f32x4(a0, b0, c0), self.msub_f32x4(a1, b1, c1))
+        unsafe { _mm256_fmsub_ps(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f32x4(self.floor_f32x4(a0), self.floor_f32x4(a1))
+        unsafe { _mm256_floor_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn fract_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f32x4(self.fract_f32x4(a0), self.fract_f32x4(a1))
+        a - a.trunc()
     }
     #[inline(always)]
     fn trunc_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f32x4(self.trunc_f32x4(a0), self.trunc_f32x4(a1))
+        unsafe { _mm256_round_ps(a.into(), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC).simd_into(self) }
     }
     #[inline(always)]
     fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        let (c0, c1) = self.split_f32x8(c);
-        self.combine_f32x4(self.select_f32x4(a0, b0, c0), self.select_f32x4(a1, b1, c1))
+        unsafe {
+            _mm256_blendv_ps(c.into(), b.into(), _mm256_castsi256_ps(a.into())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self> {
@@ -1591,177 +1477,185 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f64x2(
-            self.reinterpret_f64_f32x4(a0),
-            self.reinterpret_f64_f32x4(a1),
-        )
+        f64x4 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn reinterpret_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_i32x4(
-            self.reinterpret_i32_f32x4(a0),
-            self.reinterpret_i32_f32x4(a1),
-        )
+        i32x8 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_f32x4(a0), self.reinterpret_u8_f32x4(a1))
+        u8x32 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_f32x4(a0),
-            self.reinterpret_u32_f32x4(a1),
-        )
+        u32x8 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_u32x4(self.cvt_u32_f32x4(a0), self.cvt_u32_f32x4(a1))
+        unsafe {
+            _mm256_cvtps_epi32(_mm256_max_ps(
+                _mm256_floor_ps(a.into()),
+                _mm256_set1_ps(0.0),
+            ))
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_i32x4(self.cvt_i32_f32x4(a0), self.cvt_i32_f32x4(a1))
+        unsafe { _mm256_cvtps_epi32(a.trunc().into()).simd_into(self) }
     }
     #[inline(always)]
-    fn splat_i8x32(self, a: i8) -> i8x32<Self> {
-        let half = self.splat_i8x16(a);
-        self.combine_i8x16(half, half)
+    fn splat_i8x32(self, val: i8) -> i8x32<Self> {
+        unsafe { _mm256_set1_epi8(val).simd_into(self) }
     }
     #[inline(always)]
     fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.not_i8x16(a0), self.not_i8x16(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.add_i8x16(a0, b0), self.add_i8x16(a1, b1))
+        unsafe { _mm256_add_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.sub_i8x16(a0, b0), self.sub_i8x16(a1, b1))
+        unsafe { _mm256_sub_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.mul_i8x16(a0, b0), self.mul_i8x16(a1, b1))
+        todo!()
     }
     #[inline(always)]
     fn and_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.and_i8x16(a0, b0), self.and_i8x16(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.or_i8x16(a0, b0), self.or_i8x16(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.xor_i8x16(a0, b0), self.xor_i8x16(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_i8x32(self, a: i8x32<Self>, b: u32) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.shr_i8x16(a0, b), self.shr_i8x16(a1, b))
+    fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self> {
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let lo_16 = _mm256_unpacklo_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
+            let hi_16 = _mm256_unpackhi_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
+            let lo_shifted = _mm256_sra_epi16(lo_16, shift_count);
+            let hi_shifted = _mm256_sra_epi16(hi_16, shift_count);
+            _mm256_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.shrv_i8x16(a0, b0), self.shrv_i8x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a.val[i], b.val[i])).simd_into(self)
     }
     #[inline(always)]
-    fn shl_i8x32(self, a: i8x32<Self>, b: u32) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.shl_i8x16(a0, b), self.shl_i8x16(a1, b))
+    fn shl_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self> {
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let lo_16 = _mm256_unpacklo_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
+            let hi_16 = _mm256_unpackhi_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
+            let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
+            let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
+            _mm256_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_mask8x16(self.simd_eq_i8x16(a0, b0), self.simd_eq_i8x16(a1, b1))
+        unsafe { _mm256_cmpeq_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_mask8x16(self.simd_lt_i8x16(a0, b0), self.simd_lt_i8x16(a1, b1))
+        unsafe { _mm256_cmpgt_epi8(b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_mask8x16(self.simd_le_i8x16(a0, b0), self.simd_le_i8x16(a1, b1))
+        unsafe { _mm256_cmpeq_epi8(_mm256_min_epi8(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_mask8x16(self.simd_ge_i8x16(a0, b0), self.simd_ge_i8x16(a1, b1))
+        unsafe { _mm256_cmpeq_epi8(_mm256_max_epi8(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_mask8x16(self.simd_gt_i8x16(a0, b0), self.simd_gt_i8x16(a1, b1))
+        unsafe { _mm256_cmpgt_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, _) = self.split_i8x32(a);
-        let (b0, _) = self.split_i8x32(b);
-        self.combine_i8x16(self.zip_low_i8x16(a0, b0), self.zip_high_i8x16(a0, b0))
+        unsafe {
+            let lo = _mm256_unpacklo_epi8(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi8(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (_, a1) = self.split_i8x32(a);
-        let (_, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.zip_low_i8x16(a1, b1), self.zip_high_i8x16(a1, b1))
+        unsafe {
+            let lo = _mm256_unpacklo_epi8(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi8(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.unzip_low_i8x16(a0, a1), self.unzip_low_i8x16(b0, b1))
+        unsafe {
+            let mask = _mm256_setr_epi8(
+                0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14, 1,
+                3, 5, 7, 9, 11, 13, 15,
+            );
+            let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
+            let packed = _mm256_permute2x128_si256::<0b0010_0000>(
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled),
+            );
+            packed.simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.unzip_high_i8x16(a0, a1), self.unzip_high_i8x16(b0, b1))
+        unsafe {
+            let mask = _mm256_setr_epi8(
+                0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14, 1,
+                3, 5, 7, 9, 11, 13, 15,
+            );
+            let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
+            let packed = _mm256_permute2x128_si256::<0b0011_0001>(
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled),
+            );
+            packed.simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_i8x32(self, a: mask8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        let (c0, c1) = self.split_i8x32(c);
-        self.combine_i8x16(self.select_i8x16(a0, b0, c0), self.select_i8x16(a1, b1, c1))
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.min_i8x16(a0, b0), self.min_i8x16(a1, b1))
+        unsafe { _mm256_min_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        let (b0, b1) = self.split_i8x32(b);
-        self.combine_i8x16(self.max_i8x16(a0, b0), self.max_i8x16(a1, b1))
+        unsafe { _mm256_max_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self> {
@@ -1780,156 +1674,171 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.neg_i8x16(a0), self.neg_i8x16(a1))
+        unsafe { _mm256_sub_epi8(_mm256_setzero_si256(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_u8x16(self.reinterpret_u8_i8x16(a0), self.reinterpret_u8_i8x16(a1))
+        u8x32 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i8x16(a0),
-            self.reinterpret_u32_i8x16(a1),
-        )
+        u32x8 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
-    fn splat_u8x32(self, a: u8) -> u8x32<Self> {
-        let half = self.splat_u8x16(a);
-        self.combine_u8x16(half, half)
+    fn splat_u8x32(self, val: u8) -> u8x32<Self> {
+        unsafe { _mm256_set1_epi8(val as _).simd_into(self) }
     }
     #[inline(always)]
     fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.not_u8x16(a0), self.not_u8x16(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.add_u8x16(a0, b0), self.add_u8x16(a1, b1))
+        unsafe { _mm256_add_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.sub_u8x16(a0, b0), self.sub_u8x16(a1, b1))
+        unsafe { _mm256_sub_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.mul_u8x16(a0, b0), self.mul_u8x16(a1, b1))
+        todo!()
     }
     #[inline(always)]
     fn and_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.and_u8x16(a0, b0), self.and_u8x16(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.or_u8x16(a0, b0), self.or_u8x16(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.xor_u8x16(a0, b0), self.xor_u8x16(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_u8x32(self, a: u8x32<Self>, b: u32) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.shr_u8x16(a0, b), self.shr_u8x16(a1, b))
+    fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self> {
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
+            let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
+            let lo_shifted = _mm256_srl_epi16(lo_16, shift_count);
+            let hi_shifted = _mm256_srl_epi16(hi_16, shift_count);
+            _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.shrv_u8x16(a0, b0), self.shrv_u8x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a.val[i], b.val[i])).simd_into(self)
     }
     #[inline(always)]
-    fn shl_u8x32(self, a: u8x32<Self>, b: u32) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.shl_u8x16(a0, b), self.shl_u8x16(a1, b))
+    fn shl_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self> {
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
+            let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
+            let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
+            let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
+            _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_mask8x16(self.simd_eq_u8x16(a0, b0), self.simd_eq_u8x16(a1, b1))
+        unsafe { _mm256_cmpeq_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_mask8x16(self.simd_lt_u8x16(a0, b0), self.simd_lt_u8x16(a1, b1))
+        unsafe {
+            let sign_bit = _mm256_set1_epi8(0x80u8 as _);
+            let a_signed = _mm256_xor_si256(a.into(), sign_bit);
+            let b_signed = _mm256_xor_si256(b.into(), sign_bit);
+            _mm256_cmpgt_epi8(b_signed, a_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_mask8x16(self.simd_le_u8x16(a0, b0), self.simd_le_u8x16(a1, b1))
+        unsafe { _mm256_cmpeq_epi8(_mm256_min_epu8(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_mask8x16(self.simd_ge_u8x16(a0, b0), self.simd_ge_u8x16(a1, b1))
+        unsafe { _mm256_cmpeq_epi8(_mm256_max_epu8(a.into(), b.into()), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_mask8x16(self.simd_gt_u8x16(a0, b0), self.simd_gt_u8x16(a1, b1))
+        unsafe {
+            let sign_bit = _mm256_set1_epi8(0x80u8 as _);
+            let a_signed = _mm256_xor_si256(a.into(), sign_bit);
+            let b_signed = _mm256_xor_si256(b.into(), sign_bit);
+            _mm256_cmpgt_epi8(a_signed, b_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, _) = self.split_u8x32(a);
-        let (b0, _) = self.split_u8x32(b);
-        self.combine_u8x16(self.zip_low_u8x16(a0, b0), self.zip_high_u8x16(a0, b0))
+        unsafe {
+            let lo = _mm256_unpacklo_epi8(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi8(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (_, a1) = self.split_u8x32(a);
-        let (_, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.zip_low_u8x16(a1, b1), self.zip_high_u8x16(a1, b1))
+        unsafe {
+            let lo = _mm256_unpacklo_epi8(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi8(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.unzip_low_u8x16(a0, a1), self.unzip_low_u8x16(b0, b1))
+        unsafe {
+            let mask = _mm256_setr_epi8(
+                0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14, 1,
+                3, 5, 7, 9, 11, 13, 15,
+            );
+            let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
+            let packed = _mm256_permute2x128_si256::<0b0010_0000>(
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled),
+            );
+            packed.simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.unzip_high_u8x16(a0, a1), self.unzip_high_u8x16(b0, b1))
+        unsafe {
+            let mask = _mm256_setr_epi8(
+                0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14, 1,
+                3, 5, 7, 9, 11, 13, 15,
+            );
+            let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
+            let packed = _mm256_permute2x128_si256::<0b0011_0001>(
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled),
+            );
+            packed.simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_u8x32(self, a: mask8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        let (c0, c1) = self.split_u8x32(c);
-        self.combine_u8x16(self.select_u8x16(a0, b0, c0), self.select_u8x16(a1, b1, c1))
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.min_u8x16(a0, b0), self.min_u8x16(a1, b1))
+        unsafe { _mm256_min_epu8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        let (b0, b1) = self.split_u8x32(b);
-        self.combine_u8x16(self.max_u8x16(a0, b0), self.max_u8x16(a1, b1))
+        unsafe { _mm256_max_epu8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
@@ -1953,39 +1862,30 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u8x16(a0),
-            self.reinterpret_u32_u8x16(a1),
-        )
+        u32x8 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
-    fn splat_mask8x32(self, a: i8) -> mask8x32<Self> {
-        let half = self.splat_mask8x16(a);
-        self.combine_mask8x16(half, half)
+    fn splat_mask8x32(self, val: i8) -> mask8x32<Self> {
+        unsafe { _mm256_set1_epi8(val).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        self.combine_mask8x16(self.not_mask8x16(a0), self.not_mask8x16(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        self.combine_mask8x16(self.and_mask8x16(a0, b0), self.and_mask8x16(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        self.combine_mask8x16(self.or_mask8x16(a0, b0), self.or_mask8x16(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        self.combine_mask8x16(self.xor_mask8x16(a0, b0), self.xor_mask8x16(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_mask8x32(
@@ -1994,19 +1894,11 @@ impl Simd for Avx2 {
         b: mask8x32<Self>,
         c: mask8x32<Self>,
     ) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        let (c0, c1) = self.split_mask8x32(c);
-        self.combine_mask8x16(
-            self.select_mask8x16(a0, b0, c0),
-            self.select_mask8x16(a1, b1, c1),
-        )
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        self.combine_mask8x16(self.simd_eq_mask8x16(a0, b0), self.simd_eq_mask8x16(a1, b1))
+        unsafe { _mm256_cmpeq_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self> {
@@ -2024,139 +1916,132 @@ impl Simd for Avx2 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn splat_i16x16(self, a: i16) -> i16x16<Self> {
-        let half = self.splat_i16x8(a);
-        self.combine_i16x8(half, half)
+    fn splat_i16x16(self, val: i16) -> i16x16<Self> {
+        unsafe { _mm256_set1_epi16(val).simd_into(self) }
     }
     #[inline(always)]
     fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.not_i16x8(a0), self.not_i16x8(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.add_i16x8(a0, b0), self.add_i16x8(a1, b1))
+        unsafe { _mm256_add_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.sub_i16x8(a0, b0), self.sub_i16x8(a1, b1))
+        unsafe { _mm256_sub_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.mul_i16x8(a0, b0), self.mul_i16x8(a1, b1))
+        unsafe { _mm256_mullo_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.and_i16x8(a0, b0), self.and_i16x8(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.or_i16x8(a0, b0), self.or_i16x8(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.xor_i16x8(a0, b0), self.xor_i16x8(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_i16x16(self, a: i16x16<Self>, b: u32) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.shr_i16x8(a0, b), self.shr_i16x8(a1, b))
+    fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self> {
+        unsafe { _mm256_sra_epi16(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.shrv_i16x8(a0, b0), self.shrv_i16x8(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a.val[i], b.val[i])).simd_into(self)
     }
     #[inline(always)]
-    fn shl_i16x16(self, a: i16x16<Self>, b: u32) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.shl_i16x8(a0, b), self.shl_i16x8(a1, b))
+    fn shl_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self> {
+        unsafe { _mm256_sll_epi16(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_mask16x8(self.simd_eq_i16x8(a0, b0), self.simd_eq_i16x8(a1, b1))
+        unsafe { _mm256_cmpeq_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_mask16x8(self.simd_lt_i16x8(a0, b0), self.simd_lt_i16x8(a1, b1))
+        unsafe { _mm256_cmpgt_epi16(b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_mask16x8(self.simd_le_i16x8(a0, b0), self.simd_le_i16x8(a1, b1))
+        unsafe {
+            _mm256_cmpeq_epi16(_mm256_min_epi16(a.into(), b.into()), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_mask16x8(self.simd_ge_i16x8(a0, b0), self.simd_ge_i16x8(a1, b1))
+        unsafe {
+            _mm256_cmpeq_epi16(_mm256_max_epi16(a.into(), b.into()), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_mask16x8(self.simd_gt_i16x8(a0, b0), self.simd_gt_i16x8(a1, b1))
+        unsafe { _mm256_cmpgt_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, _) = self.split_i16x16(a);
-        let (b0, _) = self.split_i16x16(b);
-        self.combine_i16x8(self.zip_low_i16x8(a0, b0), self.zip_high_i16x8(a0, b0))
+        unsafe {
+            let lo = _mm256_unpacklo_epi16(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi16(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (_, a1) = self.split_i16x16(a);
-        let (_, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.zip_low_i16x8(a1, b1), self.zip_high_i16x8(a1, b1))
+        unsafe {
+            let lo = _mm256_unpacklo_epi16(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi16(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.unzip_low_i16x8(a0, a1), self.unzip_low_i16x8(b0, b1))
+        unsafe {
+            let mask = _mm256_setr_epi8(
+                0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12, 13, 2,
+                3, 6, 7, 10, 11, 14, 15,
+            );
+            let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
+            let packed = _mm256_permute2x128_si256::<0b0010_0000>(
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled),
+            );
+            packed.simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.unzip_high_i16x8(a0, a1), self.unzip_high_i16x8(b0, b1))
+        unsafe {
+            let mask = _mm256_setr_epi8(
+                0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12, 13, 2,
+                3, 6, 7, 10, 11, 14, 15,
+            );
+            let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
+            let packed = _mm256_permute2x128_si256::<0b0011_0001>(
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled),
+            );
+            packed.simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_i16x16(self, a: mask16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        let (c0, c1) = self.split_i16x16(c);
-        self.combine_i16x8(self.select_i16x8(a0, b0, c0), self.select_i16x8(a1, b1, c1))
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.min_i16x8(a0, b0), self.min_i16x8(a1, b1))
+        unsafe { _mm256_min_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i16x8(self.max_i16x8(a0, b0), self.max_i16x8(a1, b1))
+        unsafe { _mm256_max_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self> {
@@ -2175,156 +2060,159 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
+        unsafe { _mm256_sub_epi16(_mm256_setzero_si256(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_u8x16(self.reinterpret_u8_i16x8(a0), self.reinterpret_u8_i16x8(a1))
+        u8x32 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i16x8(a0),
-            self.reinterpret_u32_i16x8(a1),
-        )
+        u32x8 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
-    fn splat_u16x16(self, a: u16) -> u16x16<Self> {
-        let half = self.splat_u16x8(a);
-        self.combine_u16x8(half, half)
+    fn splat_u16x16(self, val: u16) -> u16x16<Self> {
+        unsafe { _mm256_set1_epi16(val as _).simd_into(self) }
     }
     #[inline(always)]
     fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u16x8(self.not_u16x8(a0), self.not_u16x8(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.add_u16x8(a0, b0), self.add_u16x8(a1, b1))
+        unsafe { _mm256_add_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.sub_u16x8(a0, b0), self.sub_u16x8(a1, b1))
+        unsafe { _mm256_sub_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.mul_u16x8(a0, b0), self.mul_u16x8(a1, b1))
+        unsafe { _mm256_mullo_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.and_u16x8(a0, b0), self.and_u16x8(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.or_u16x8(a0, b0), self.or_u16x8(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.xor_u16x8(a0, b0), self.xor_u16x8(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_u16x16(self, a: u16x16<Self>, b: u32) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u16x8(self.shr_u16x8(a0, b), self.shr_u16x8(a1, b))
+    fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self> {
+        unsafe { _mm256_srl_epi16(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.shrv_u16x8(a0, b0), self.shrv_u16x8(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a.val[i], b.val[i])).simd_into(self)
     }
     #[inline(always)]
-    fn shl_u16x16(self, a: u16x16<Self>, b: u32) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u16x8(self.shl_u16x8(a0, b), self.shl_u16x8(a1, b))
+    fn shl_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self> {
+        unsafe { _mm256_sll_epi16(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_mask16x8(self.simd_eq_u16x8(a0, b0), self.simd_eq_u16x8(a1, b1))
+        unsafe { _mm256_cmpeq_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_mask16x8(self.simd_lt_u16x8(a0, b0), self.simd_lt_u16x8(a1, b1))
+        unsafe {
+            let sign_bit = _mm256_set1_epi16(0x8000u16 as _);
+            let a_signed = _mm256_xor_si256(a.into(), sign_bit);
+            let b_signed = _mm256_xor_si256(b.into(), sign_bit);
+            _mm256_cmpgt_epi16(b_signed, a_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_mask16x8(self.simd_le_u16x8(a0, b0), self.simd_le_u16x8(a1, b1))
+        unsafe {
+            _mm256_cmpeq_epi16(_mm256_min_epu16(a.into(), b.into()), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_mask16x8(self.simd_ge_u16x8(a0, b0), self.simd_ge_u16x8(a1, b1))
+        unsafe {
+            _mm256_cmpeq_epi16(_mm256_max_epu16(a.into(), b.into()), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_mask16x8(self.simd_gt_u16x8(a0, b0), self.simd_gt_u16x8(a1, b1))
+        unsafe {
+            let sign_bit = _mm256_set1_epi16(0x8000u16 as _);
+            let a_signed = _mm256_xor_si256(a.into(), sign_bit);
+            let b_signed = _mm256_xor_si256(b.into(), sign_bit);
+            _mm256_cmpgt_epi16(a_signed, b_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, _) = self.split_u16x16(a);
-        let (b0, _) = self.split_u16x16(b);
-        self.combine_u16x8(self.zip_low_u16x8(a0, b0), self.zip_high_u16x8(a0, b0))
+        unsafe {
+            let lo = _mm256_unpacklo_epi16(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi16(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (_, a1) = self.split_u16x16(a);
-        let (_, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.zip_low_u16x8(a1, b1), self.zip_high_u16x8(a1, b1))
+        unsafe {
+            let lo = _mm256_unpacklo_epi16(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi16(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.unzip_low_u16x8(a0, a1), self.unzip_low_u16x8(b0, b1))
+        unsafe {
+            let mask = _mm256_setr_epi8(
+                0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12, 13, 2,
+                3, 6, 7, 10, 11, 14, 15,
+            );
+            let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
+            let packed = _mm256_permute2x128_si256::<0b0010_0000>(
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled),
+            );
+            packed.simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.unzip_high_u16x8(a0, a1), self.unzip_high_u16x8(b0, b1))
+        unsafe {
+            let mask = _mm256_setr_epi8(
+                0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12, 13, 2,
+                3, 6, 7, 10, 11, 14, 15,
+            );
+            let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
+            let packed = _mm256_permute2x128_si256::<0b0011_0001>(
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
+                _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled),
+            );
+            packed.simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_u16x16(self, a: mask16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        let (c0, c1) = self.split_u16x16(c);
-        self.combine_u16x8(self.select_u16x8(a0, b0, c0), self.select_u16x8(a1, b1, c1))
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.min_u16x8(a0, b0), self.min_u16x8(a1, b1))
+        unsafe { _mm256_min_epu16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u16x8(self.max_u16x8(a0, b0), self.max_u16x8(a1, b1))
+        unsafe { _mm256_max_epu16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self> {
@@ -2354,44 +2242,37 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u8x16(self.reinterpret_u8_u16x8(a0), self.reinterpret_u8_u16x8(a1))
+        u8x32 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u16x8(a0),
-            self.reinterpret_u32_u16x8(a1),
-        )
+        u32x8 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
-    fn splat_mask16x16(self, a: i16) -> mask16x16<Self> {
-        let half = self.splat_mask16x8(a);
-        self.combine_mask16x8(half, half)
+    fn splat_mask16x16(self, val: i16) -> mask16x16<Self> {
+        unsafe { _mm256_set1_epi16(val).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        self.combine_mask16x8(self.not_mask16x8(a0), self.not_mask16x8(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        self.combine_mask16x8(self.and_mask16x8(a0, b0), self.and_mask16x8(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        self.combine_mask16x8(self.or_mask16x8(a0, b0), self.or_mask16x8(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        self.combine_mask16x8(self.xor_mask16x8(a0, b0), self.xor_mask16x8(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_mask16x16(
@@ -2400,19 +2281,11 @@ impl Simd for Avx2 {
         b: mask16x16<Self>,
         c: mask16x16<Self>,
     ) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        let (c0, c1) = self.split_mask16x16(c);
-        self.combine_mask16x8(
-            self.select_mask16x8(a0, b0, c0),
-            self.select_mask16x8(a1, b1, c1),
-        )
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        self.combine_mask16x8(self.simd_eq_mask16x8(a0, b0), self.simd_eq_mask16x8(a1, b1))
+        unsafe { _mm256_cmpeq_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self> {
@@ -2430,139 +2303,120 @@ impl Simd for Avx2 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn splat_i32x8(self, a: i32) -> i32x8<Self> {
-        let half = self.splat_i32x4(a);
-        self.combine_i32x4(half, half)
+    fn splat_i32x8(self, val: i32) -> i32x8<Self> {
+        unsafe { _mm256_set1_epi32(val).simd_into(self) }
     }
     #[inline(always)]
     fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.not_i32x4(a0), self.not_i32x4(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.add_i32x4(a0, b0), self.add_i32x4(a1, b1))
+        unsafe { _mm256_add_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.sub_i32x4(a0, b0), self.sub_i32x4(a1, b1))
+        unsafe { _mm256_sub_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.mul_i32x4(a0, b0), self.mul_i32x4(a1, b1))
+        unsafe { _mm256_mullo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.and_i32x4(a0, b0), self.and_i32x4(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.or_i32x4(a0, b0), self.or_i32x4(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.xor_i32x4(a0, b0), self.xor_i32x4(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_i32x8(self, a: i32x8<Self>, b: u32) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.shr_i32x4(a0, b), self.shr_i32x4(a1, b))
+    fn shr_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self> {
+        unsafe { _mm256_sra_epi32(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.shrv_i32x4(a0, b0), self.shrv_i32x4(a1, b1))
+        unsafe { _mm256_srav_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shl_i32x8(self, a: i32x8<Self>, b: u32) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.shl_i32x4(a0, b), self.shl_i32x4(a1, b))
+    fn shl_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self> {
+        unsafe { _mm256_sll_epi32(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_mask32x4(self.simd_eq_i32x4(a0, b0), self.simd_eq_i32x4(a1, b1))
+        unsafe { _mm256_cmpeq_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_mask32x4(self.simd_lt_i32x4(a0, b0), self.simd_lt_i32x4(a1, b1))
+        unsafe { _mm256_cmpgt_epi32(b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_mask32x4(self.simd_le_i32x4(a0, b0), self.simd_le_i32x4(a1, b1))
+        unsafe {
+            _mm256_cmpeq_epi32(_mm256_min_epi32(a.into(), b.into()), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_mask32x4(self.simd_ge_i32x4(a0, b0), self.simd_ge_i32x4(a1, b1))
+        unsafe {
+            _mm256_cmpeq_epi32(_mm256_max_epi32(a.into(), b.into()), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_mask32x4(self.simd_gt_i32x4(a0, b0), self.simd_gt_i32x4(a1, b1))
+        unsafe { _mm256_cmpgt_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, _) = self.split_i32x8(a);
-        let (b0, _) = self.split_i32x8(b);
-        self.combine_i32x4(self.zip_low_i32x4(a0, b0), self.zip_high_i32x4(a0, b0))
+        unsafe {
+            let lo = _mm256_unpacklo_epi32(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi32(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (_, a1) = self.split_i32x8(a);
-        let (_, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.zip_low_i32x4(a1, b1), self.zip_high_i32x4(a1, b1))
+        unsafe {
+            let lo = _mm256_unpacklo_epi32(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi32(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.unzip_low_i32x4(a0, a1), self.unzip_low_i32x4(b0, b1))
+        unsafe {
+            let t1 =
+                _mm256_permutevar8x32_epi32(a.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            let t2 =
+                _mm256_permutevar8x32_epi32(b.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.unzip_high_i32x4(a0, a1), self.unzip_high_i32x4(b0, b1))
+        unsafe {
+            let t1 =
+                _mm256_permutevar8x32_epi32(a.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            let t2 =
+                _mm256_permutevar8x32_epi32(b.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_i32x8(self, a: mask32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        let (c0, c1) = self.split_i32x8(c);
-        self.combine_i32x4(self.select_i32x4(a0, b0, c0), self.select_i32x4(a1, b1, c1))
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.min_i32x4(a0, b0), self.min_i32x4(a1, b1))
+        unsafe { _mm256_min_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i32x4(self.max_i32x4(a0, b0), self.max_i32x4(a1, b1))
+        unsafe { _mm256_max_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self> {
@@ -2581,161 +2435,151 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.neg_i32x4(a0), self.neg_i32x4(a1))
+        unsafe { _mm256_sub_epi32(_mm256_setzero_si256(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_i32x4(a0), self.reinterpret_u8_i32x4(a1))
+        u8x32 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn reinterpret_u32_i32x8(self, a: i32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i32x4(a0),
-            self.reinterpret_u32_i32x4(a1),
-        )
+        u32x8 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_f32x4(self.cvt_f32_i32x4(a0), self.cvt_f32_i32x4(a1))
+        unsafe { _mm256_cvtepi32_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn splat_u32x8(self, a: u32) -> u32x8<Self> {
-        let half = self.splat_u32x4(a);
-        self.combine_u32x4(half, half)
+    fn splat_u32x8(self, val: u32) -> u32x8<Self> {
+        unsafe { _mm256_set1_epi32(val as _).simd_into(self) }
     }
     #[inline(always)]
     fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u32x4(self.not_u32x4(a0), self.not_u32x4(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.add_u32x4(a0, b0), self.add_u32x4(a1, b1))
+        unsafe { _mm256_add_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.sub_u32x4(a0, b0), self.sub_u32x4(a1, b1))
+        unsafe { _mm256_sub_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.mul_u32x4(a0, b0), self.mul_u32x4(a1, b1))
+        unsafe { _mm256_mullo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.and_u32x4(a0, b0), self.and_u32x4(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.or_u32x4(a0, b0), self.or_u32x4(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.xor_u32x4(a0, b0), self.xor_u32x4(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shr_u32x8(self, a: u32x8<Self>, b: u32) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u32x4(self.shr_u32x4(a0, b), self.shr_u32x4(a1, b))
+    fn shr_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self> {
+        unsafe { _mm256_srl_epi32(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.shrv_u32x4(a0, b0), self.shrv_u32x4(a1, b1))
+        unsafe { _mm256_srlv_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn shl_u32x8(self, a: u32x8<Self>, b: u32) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u32x4(self.shl_u32x4(a0, b), self.shl_u32x4(a1, b))
+    fn shl_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self> {
+        unsafe { _mm256_sll_epi32(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_mask32x4(self.simd_eq_u32x4(a0, b0), self.simd_eq_u32x4(a1, b1))
+        unsafe { _mm256_cmpeq_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_mask32x4(self.simd_lt_u32x4(a0, b0), self.simd_lt_u32x4(a1, b1))
+        unsafe {
+            let sign_bit = _mm256_set1_epi32(0x80000000u32 as _);
+            let a_signed = _mm256_xor_si256(a.into(), sign_bit);
+            let b_signed = _mm256_xor_si256(b.into(), sign_bit);
+            _mm256_cmpgt_epi32(b_signed, a_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_mask32x4(self.simd_le_u32x4(a0, b0), self.simd_le_u32x4(a1, b1))
+        unsafe {
+            _mm256_cmpeq_epi32(_mm256_min_epu32(a.into(), b.into()), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_mask32x4(self.simd_ge_u32x4(a0, b0), self.simd_ge_u32x4(a1, b1))
+        unsafe {
+            _mm256_cmpeq_epi32(_mm256_max_epu32(a.into(), b.into()), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_mask32x4(self.simd_gt_u32x4(a0, b0), self.simd_gt_u32x4(a1, b1))
+        unsafe {
+            let sign_bit = _mm256_set1_epi32(0x80000000u32 as _);
+            let a_signed = _mm256_xor_si256(a.into(), sign_bit);
+            let b_signed = _mm256_xor_si256(b.into(), sign_bit);
+            _mm256_cmpgt_epi32(a_signed, b_signed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, _) = self.split_u32x8(a);
-        let (b0, _) = self.split_u32x8(b);
-        self.combine_u32x4(self.zip_low_u32x4(a0, b0), self.zip_high_u32x4(a0, b0))
+        unsafe {
+            let lo = _mm256_unpacklo_epi32(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi32(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (_, a1) = self.split_u32x8(a);
-        let (_, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.zip_low_u32x4(a1, b1), self.zip_high_u32x4(a1, b1))
+        unsafe {
+            let lo = _mm256_unpacklo_epi32(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi32(a.into(), b.into());
+            _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.unzip_low_u32x4(a0, a1), self.unzip_low_u32x4(b0, b1))
+        unsafe {
+            let t1 =
+                _mm256_permutevar8x32_epi32(a.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            let t2 =
+                _mm256_permutevar8x32_epi32(b.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.unzip_high_u32x4(a0, a1), self.unzip_high_u32x4(b0, b1))
+        unsafe {
+            let t1 =
+                _mm256_permutevar8x32_epi32(a.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            let t2 =
+                _mm256_permutevar8x32_epi32(b.into(), _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7));
+            _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_u32x8(self, a: mask32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        let (c0, c1) = self.split_u32x8(c);
-        self.combine_u32x4(self.select_u32x4(a0, b0, c0), self.select_u32x4(a1, b1, c1))
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.min_u32x4(a0, b0), self.min_u32x4(a1, b1))
+        unsafe { _mm256_min_epu32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u32x4(self.max_u32x4(a0, b0), self.max_u32x4(a1, b1))
+        unsafe { _mm256_max_epu32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self> {
@@ -2754,41 +2598,34 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_u32x4(a0), self.reinterpret_u8_u32x4(a1))
+        u8x32 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_f32x4(self.cvt_f32_u32x4(a0), self.cvt_f32_u32x4(a1))
+        unsafe { _mm256_cvtepi32_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn splat_mask32x8(self, a: i32) -> mask32x8<Self> {
-        let half = self.splat_mask32x4(a);
-        self.combine_mask32x4(half, half)
+    fn splat_mask32x8(self, val: i32) -> mask32x8<Self> {
+        unsafe { _mm256_set1_epi32(val).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        self.combine_mask32x4(self.not_mask32x4(a0), self.not_mask32x4(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        self.combine_mask32x4(self.and_mask32x4(a0, b0), self.and_mask32x4(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        self.combine_mask32x4(self.or_mask32x4(a0, b0), self.or_mask32x4(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        self.combine_mask32x4(self.xor_mask32x4(a0, b0), self.xor_mask32x4(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_mask32x8(
@@ -2797,19 +2634,11 @@ impl Simd for Avx2 {
         b: mask32x8<Self>,
         c: mask32x8<Self>,
     ) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        let (c0, c1) = self.split_mask32x8(c);
-        self.combine_mask32x4(
-            self.select_mask32x4(a0, b0, c0),
-            self.select_mask32x4(a1, b1, c1),
-        )
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        self.combine_mask32x4(self.simd_eq_mask32x4(a0, b0), self.simd_eq_mask32x4(a1, b1))
+        unsafe { _mm256_cmpeq_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self> {
@@ -2827,174 +2656,141 @@ impl Simd for Avx2 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn splat_f64x4(self, a: f64) -> f64x4<Self> {
-        let half = self.splat_f64x2(a);
-        self.combine_f64x2(half, half)
+    fn splat_f64x4(self, val: f64) -> f64x4<Self> {
+        unsafe { _mm256_set1_pd(val).simd_into(self) }
     }
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f64x2(self.abs_f64x2(a0), self.abs_f64x2(a1))
+        unsafe { _mm256_andnot_pd(_mm256_set1_pd(-0.0), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f64x2(self.neg_f64x2(a0), self.neg_f64x2(a1))
+        unsafe { _mm256_xor_pd(a.into(), _mm256_set1_pd(-0.0)).simd_into(self) }
     }
     #[inline(always)]
     fn sqrt_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f64x2(self.sqrt_f64x2(a0), self.sqrt_f64x2(a1))
+        unsafe { _mm256_sqrt_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.add_f64x2(a0, b0), self.add_f64x2(a1, b1))
+        unsafe { _mm256_add_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.sub_f64x2(a0, b0), self.sub_f64x2(a1, b1))
+        unsafe { _mm256_sub_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.mul_f64x2(a0, b0), self.mul_f64x2(a1, b1))
+        unsafe { _mm256_mul_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn div_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.div_f64x2(a0, b0), self.div_f64x2(a1, b1))
+        unsafe { _mm256_div_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn copysign_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.copysign_f64x2(a0, b0), self.copysign_f64x2(a1, b1))
+        unsafe {
+            let mask = _mm256_set1_pd(-0.0);
+            _mm256_or_pd(
+                _mm256_and_pd(mask, b.into()),
+                _mm256_andnot_pd(mask, a.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_mask64x2(self.simd_eq_f64x2(a0, b0), self.simd_eq_f64x2(a1, b1))
+        unsafe { _mm256_castpd_si256(_mm256_cmp_pd::<0i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_mask64x2(self.simd_lt_f64x2(a0, b0), self.simd_lt_f64x2(a1, b1))
+        unsafe { _mm256_castpd_si256(_mm256_cmp_pd::<17i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_mask64x2(self.simd_le_f64x2(a0, b0), self.simd_le_f64x2(a1, b1))
+        unsafe { _mm256_castpd_si256(_mm256_cmp_pd::<18i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_mask64x2(self.simd_ge_f64x2(a0, b0), self.simd_ge_f64x2(a1, b1))
+        unsafe { _mm256_castpd_si256(_mm256_cmp_pd::<29i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_mask64x2(self.simd_gt_f64x2(a0, b0), self.simd_gt_f64x2(a1, b1))
+        unsafe { _mm256_castpd_si256(_mm256_cmp_pd::<30i32>(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, _) = self.split_f64x4(a);
-        let (b0, _) = self.split_f64x4(b);
-        self.combine_f64x2(self.zip_low_f64x2(a0, b0), self.zip_high_f64x2(a0, b0))
+        unsafe {
+            let lo = _mm256_unpacklo_pd(a.into(), b.into());
+            let hi = _mm256_unpackhi_pd(a.into(), b.into());
+            _mm256_permute2f128_pd::<0b0010_0000>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (_, a1) = self.split_f64x4(a);
-        let (_, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.zip_low_f64x2(a1, b1), self.zip_high_f64x2(a1, b1))
+        unsafe {
+            let lo = _mm256_unpacklo_pd(a.into(), b.into());
+            let hi = _mm256_unpackhi_pd(a.into(), b.into());
+            _mm256_permute2f128_pd::<0b0011_0001>(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.unzip_low_f64x2(a0, a1), self.unzip_low_f64x2(b0, b1))
+        unsafe {
+            let t1 = _mm256_permute4x64_pd::<0b11_01_10_00>(a.into());
+            let t2 = _mm256_permute4x64_pd::<0b11_01_10_00>(b.into());
+            _mm256_permute2f128_pd::<0b0010_0000>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.unzip_high_f64x2(a0, a1), self.unzip_high_f64x2(b0, b1))
+        unsafe {
+            let t1 = _mm256_permute4x64_pd::<0b11_01_10_00>(a.into());
+            let t2 = _mm256_permute4x64_pd::<0b11_01_10_00>(b.into());
+            _mm256_permute2f128_pd::<0b0011_0001>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.max_f64x2(a0, b0), self.max_f64x2(a1, b1))
+        unsafe { _mm256_max_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(
-            self.max_precise_f64x2(a0, b0),
-            self.max_precise_f64x2(a1, b1),
-        )
+        unsafe { _mm256_max_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
+        unsafe { _mm256_min_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(
-            self.min_precise_f64x2(a0, b0),
-            self.min_precise_f64x2(a1, b1),
-        )
+        unsafe { _mm256_min_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn madd_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        let (c0, c1) = self.split_f64x4(c);
-        self.combine_f64x2(self.madd_f64x2(a0, b0, c0), self.madd_f64x2(a1, b1, c1))
+        unsafe { _mm256_fmadd_pd(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn msub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        let (c0, c1) = self.split_f64x4(c);
-        self.combine_f64x2(self.msub_f64x2(a0, b0, c0), self.msub_f64x2(a1, b1, c1))
+        unsafe { _mm256_fmsub_pd(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f64x2(self.floor_f64x2(a0), self.floor_f64x2(a1))
+        unsafe { _mm256_floor_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn fract_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f64x2(self.fract_f64x2(a0), self.fract_f64x2(a1))
+        a - a.trunc()
     }
     #[inline(always)]
     fn trunc_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f64x2(self.trunc_f64x2(a0), self.trunc_f64x2(a1))
+        unsafe { _mm256_round_pd(a.into(), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC).simd_into(self) }
     }
     #[inline(always)]
     fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        let (c0, c1) = self.split_f64x4(c);
-        self.combine_f64x2(self.select_f64x2(a0, b0, c0), self.select_f64x2(a1, b1, c1))
+        unsafe {
+            _mm256_blendv_pd(c.into(), b.into(), _mm256_castsi256_pd(a.into())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self> {
@@ -3013,39 +2809,30 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f32x4(
-            self.reinterpret_f32_f64x2(a0),
-            self.reinterpret_f32_f64x2(a1),
-        )
+        f32x8 {
+            val: bytemuck::cast(a.val),
+            simd: a.simd,
+        }
     }
     #[inline(always)]
-    fn splat_mask64x4(self, a: i64) -> mask64x4<Self> {
-        let half = self.splat_mask64x2(a);
-        self.combine_mask64x2(half, half)
+    fn splat_mask64x4(self, val: i64) -> mask64x4<Self> {
+        unsafe { _mm256_set1_epi64x(val).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        self.combine_mask64x2(self.not_mask64x2(a0), self.not_mask64x2(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        self.combine_mask64x2(self.and_mask64x2(a0, b0), self.and_mask64x2(a1, b1))
+        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        self.combine_mask64x2(self.or_mask64x2(a0, b0), self.or_mask64x2(a1, b1))
+        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        self.combine_mask64x2(self.xor_mask64x2(a0, b0), self.xor_mask64x2(a1, b1))
+        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_mask64x4(
@@ -3054,19 +2841,11 @@ impl Simd for Avx2 {
         b: mask64x4<Self>,
         c: mask64x4<Self>,
     ) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        let (c0, c1) = self.split_mask64x4(c);
-        self.combine_mask64x2(
-            self.select_mask64x2(a0, b0, c0),
-            self.select_mask64x2(a1, b1, c1),
-        )
+        unsafe { _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        self.combine_mask64x2(self.simd_eq_mask64x2(a0, b0), self.simd_eq_mask64x2(a1, b1))
+        unsafe { _mm256_cmpeq_epi64(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self> {
