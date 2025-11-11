@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::avx2::Avx2;
-use crate::arch::sse4_2::Sse4_2;
+use crate::arch::x86::{X86, cast_ident, simple_intrinsic};
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
 use crate::mk_sse4_2;
 use crate::ops::{OpSig, TyFlavor, ops_for_type};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
-use crate::x86_common::{cast_ident, simple_intrinsic};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
@@ -92,7 +90,7 @@ fn mk_simd_impl() -> TokenStream {
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty, Sse4_2, vec_ty.n_bits());
+            let method = make_method(method, sig, vec_ty, X86, vec_ty.n_bits());
 
             methods.push(method);
         }
@@ -140,7 +138,7 @@ fn mk_type_impl() -> TokenStream {
             continue;
         }
         let simd = ty.rust();
-        let arch = Avx2.arch_ty(ty);
+        let arch = X86.arch_ty(ty);
         result.push(quote! {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]

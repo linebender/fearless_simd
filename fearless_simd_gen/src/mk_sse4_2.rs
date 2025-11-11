@@ -2,15 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::sse4_2::Sse4_2;
-use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
-use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
-use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
-use crate::x86_common::{
-    cast_ident, coarse_type, cvt_intrinsic, extend_intrinsic, intrinsic_ident, op_suffix,
+use crate::arch::x86::{
+    X86, cast_ident, coarse_type, cvt_intrinsic, extend_intrinsic, intrinsic_ident, op_suffix,
     pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
     unpack_intrinsic,
 };
+use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
+use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
+use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
@@ -95,7 +94,7 @@ fn mk_simd_impl() -> TokenStream {
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty, Sse4_2, 128);
+            let method = make_method(method, sig, vec_ty, X86, 128);
 
             methods.push(method);
         }
@@ -147,7 +146,7 @@ fn mk_type_impl() -> TokenStream {
             continue;
         }
         let simd = ty.rust();
-        let arch = Sse4_2.arch_ty(ty);
+        let arch = X86.arch_ty(ty);
         result.push(quote! {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]
@@ -540,7 +539,7 @@ pub(crate) fn handle_ternary(
                 quote! { c.into() },
             ];
 
-            let expr = Sse4_2.expr(method, vec_ty, &args);
+            let expr = X86.expr(method, vec_ty, &args);
             quote! {
                 #method_sig {
                    #expr.simd_into(self)
@@ -572,7 +571,7 @@ pub(crate) fn handle_select(
             _ => quote! { a.into() },
         },
     ];
-    let expr = Sse4_2.expr("select", vec_ty, &args);
+    let expr = X86.expr("select", vec_ty, &args);
 
     quote! {
         #method_sig {
