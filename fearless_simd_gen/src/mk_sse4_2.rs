@@ -79,10 +79,10 @@ fn mk_simd_impl() -> TokenStream {
             let too_wide = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
 
-            let acceptable_wide_op = !matches!(method, "load_interleaved_128")
-                && !matches!(method, "store_interleaved_128");
+            let acceptable_wide_op = matches!(method, "load_interleaved_128")
+                || matches!(method, "store_interleaved_128");
 
-            if too_wide && acceptable_wide_op {
+            if too_wide && !acceptable_wide_op {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
