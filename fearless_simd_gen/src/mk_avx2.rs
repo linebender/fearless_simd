@@ -183,8 +183,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => match method {
             "madd" => {
-                let intrinsic =
-                    simple_intrinsic("fmadd", vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
+                let intrinsic = simple_intrinsic("fmadd", vec_ty);
                 quote! {
                     #method_sig {
                         unsafe { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) }
@@ -192,8 +191,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
                 }
             }
             "msub" => {
-                let intrinsic =
-                    simple_intrinsic("fmsub", vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
+                let intrinsic = simple_intrinsic("fmsub", vec_ty);
                 quote! {
                     #method_sig {
                         unsafe { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) }
@@ -282,7 +280,7 @@ pub(crate) fn handle_compare(
             "simd_gt" => 0x1E,
             _ => unreachable!(),
         };
-        let intrinsic = simple_intrinsic("cmp", vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
+        let intrinsic = simple_intrinsic("cmp", vec_ty);
         let cast = cast_ident(
             ScalarType::Float,
             ScalarType::Mask,
@@ -374,7 +372,11 @@ pub(crate) fn handle_widen_narrow(
                     }
                 }
                 (256, 512) => {
-                    let mask = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, t.n_bits());
+                    let mask = set1_intrinsic(&VecType::new(
+                        vec_ty.scalar,
+                        vec_ty.scalar_bits,
+                        vec_ty.len / 2,
+                    ));
                     let pack = pack_intrinsic(
                         vec_ty.scalar_bits,
                         matches!(vec_ty.scalar, ScalarType::Int),

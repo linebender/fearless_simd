@@ -71,16 +71,15 @@ impl X86 {
                 }
                 "neg" => match ty.scalar {
                     ScalarType::Float => {
-                        let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
-                        let xor =
-                            simple_intrinsic("xor", ScalarType::Float, ty.scalar_bits, ty.n_bits());
+                        let set1 = set1_intrinsic(ty);
+                        let xor = simple_intrinsic("xor", ty);
                         quote! {
                             #( #xor(#args, #set1(-0.0)) )*
                         }
                     }
                     ScalarType::Int => {
                         let set0 = intrinsic_ident("setzero", coarse_type(*ty), ty.n_bits());
-                        let sub = simple_intrinsic("sub", ty.scalar, ty.scalar_bits, ty.n_bits());
+                        let sub = simple_intrinsic("sub", ty);
                         let arg = &args[0];
                         quote! {
                             #sub(#set0(), #arg)
@@ -89,9 +88,8 @@ impl X86 {
                     _ => unreachable!(),
                 },
                 "abs" => {
-                    let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
-                    let andnot =
-                        simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits, ty.n_bits());
+                    let set1 = set1_intrinsic(ty);
+                    let andnot = simple_intrinsic("andnot", ty);
                     quote! {
                         #( #andnot(#set1(-0.0), #args) )*
                     }
@@ -99,12 +97,10 @@ impl X86 {
                 "copysign" => {
                     let a = &args[0];
                     let b = &args[1];
-                    let set1 = set1_intrinsic(ty.scalar, ty.scalar_bits, ty.n_bits());
-                    let and =
-                        simple_intrinsic("and", ScalarType::Float, ty.scalar_bits, ty.n_bits());
-                    let andnot =
-                        simple_intrinsic("andnot", ScalarType::Float, ty.scalar_bits, ty.n_bits());
-                    let or = simple_intrinsic("or", ScalarType::Float, ty.scalar_bits, ty.n_bits());
+                    let set1 = set1_intrinsic(ty);
+                    let and = simple_intrinsic("and", ty);
+                    let andnot = simple_intrinsic("andnot", ty);
+                    let or = simple_intrinsic("or", ty);
                     quote! {
                         let mask = #set1(-0.0);
                         #or(#and(mask, #b), #andnot(mask, #a))
@@ -167,31 +163,26 @@ pub(crate) fn coarse_type(vec_ty: VecType) -> &'static str {
     }
 }
 
-pub(crate) fn set1_intrinsic(ty: ScalarType, bits: usize, ty_bits: usize) -> Ident {
+pub(crate) fn set1_intrinsic(vec_ty: &VecType) -> Ident {
     use ScalarType::*;
-    let suffix = match (ty, bits) {
+    let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
         (Int | Unsigned | Mask, 64) => "epi64x",
-        _ => op_suffix(ty, bits, false),
+        (scalar, bits) => op_suffix(scalar, bits, false),
     };
 
-    intrinsic_ident("set1", suffix, ty_bits)
+    intrinsic_ident("set1", suffix, vec_ty.n_bits())
 }
 
-pub(crate) fn simple_intrinsic(name: &str, ty: ScalarType, bits: usize, ty_bits: usize) -> Ident {
-    let suffix = op_suffix(ty, bits, true);
+pub(crate) fn simple_intrinsic(name: &str, vec_ty: &VecType) -> Ident {
+    let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true);
 
-    intrinsic_ident(name, suffix, ty_bits)
+    intrinsic_ident(name, suffix, vec_ty.n_bits())
 }
 
-pub(crate) fn simple_sign_unaware_intrinsic(
-    name: &str,
-    ty: ScalarType,
-    bits: usize,
-    ty_bits: usize,
-) -> Ident {
-    let suffix = op_suffix(ty, bits, false);
+pub(crate) fn simple_sign_unaware_intrinsic(name: &str, vec_ty: &VecType) -> Ident {
+    let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
 
-    intrinsic_ident(name, suffix, ty_bits)
+    intrinsic_ident(name, suffix, vec_ty.n_bits())
 }
 
 pub(crate) fn extend_intrinsic(

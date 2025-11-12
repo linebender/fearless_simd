@@ -204,7 +204,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
 }
 
 pub(crate) fn handle_splat(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let intrinsic = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
+    let intrinsic = set1_intrinsic(vec_ty);
     let cast = match vec_ty.scalar {
         ScalarType::Unsigned => quote!(as _),
         _ => quote!(),
@@ -234,27 +234,17 @@ pub(crate) fn handle_compare(
                     _ => unreachable!(),
                 };
 
-                let eq_intrinsic = simple_sign_unaware_intrinsic(
-                    "cmpeq",
-                    vec_ty.scalar,
-                    vec_ty.scalar_bits,
-                    vec_ty.n_bits(),
-                );
+                let eq_intrinsic = simple_sign_unaware_intrinsic("cmpeq", vec_ty);
 
                 let max_min_expr = X86.expr(max_min, vec_ty, &args);
                 quote! { #eq_intrinsic(#max_min_expr, a.into()) }
             }
             "simd_lt" | "simd_gt" => {
-                let gt = simple_sign_unaware_intrinsic(
-                    "cmpgt",
-                    vec_ty.scalar,
-                    vec_ty.scalar_bits,
-                    vec_ty.n_bits(),
-                );
+                let gt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
 
                 if vec_ty.scalar == ScalarType::Unsigned {
                     // SSE4.2 only has signed GT/LT, but not unsigned.
-                    let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
+                    let set = set1_intrinsic(vec_ty);
                     let sign = match vec_ty.scalar_bits {
                         8 => quote! { 0x80u8 },
                         16 => quote! { 0x8000u16 },
@@ -372,7 +362,11 @@ pub(crate) fn handle_widen_narrow(
             }
         }
         "narrow" => {
-            let mask = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, t.n_bits());
+            let mask = set1_intrinsic(&VecType::new(
+                vec_ty.scalar,
+                vec_ty.scalar_bits,
+                vec_ty.len / 2,
+            ));
             let pack = pack_intrinsic(
                 vec_ty.scalar_bits,
                 matches!(vec_ty.scalar, ScalarType::Int),
@@ -778,11 +772,9 @@ pub(crate) fn handle_cvt(
     );
 
     let expr = if vec_ty.scalar == ScalarType::Float {
-        let floor_intrinsic =
-            simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
-        let max_intrinsic =
-            simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
-        let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits());
+        let floor_intrinsic = simple_intrinsic("floor", vec_ty);
+        let max_intrinsic = simple_intrinsic("max", vec_ty);
+        let set = set1_intrinsic(vec_ty);
 
         if target_scalar == ScalarType::Unsigned {
             quote! { #max_intrinsic(#floor_intrinsic(a.into()), #set(0.0)) }
