@@ -56,7 +56,7 @@ impl X86 {
             let sign_aware = matches!(op, "max" | "min");
 
             let suffix = match op_name {
-                "and" | "or" | "xor" => coarse_type(*ty),
+                "and" | "or" | "xor" => coarse_type(ty),
                 "blendv" if ty.scalar != ScalarType::Float => "epi8",
                 _ => op_suffix(ty.scalar, ty.scalar_bits, sign_aware),
             };
@@ -78,7 +78,7 @@ impl X86 {
                         }
                     }
                     ScalarType::Int => {
-                        let set0 = intrinsic_ident("setzero", coarse_type(*ty), ty.n_bits());
+                        let set0 = intrinsic_ident("setzero", coarse_type(ty), ty.n_bits());
                         let sub = simple_intrinsic("sub", ty);
                         let arg = &args[0];
                         quote! {
@@ -153,7 +153,7 @@ pub(crate) fn op_suffix(mut ty: ScalarType, bits: usize, sign_aware: bool) -> &'
 }
 
 /// Intrinsic name for the "int, float, or double" type (not as fine-grained as [`op_suffix`]).
-pub(crate) fn coarse_type(vec_ty: VecType) -> &'static str {
+pub(crate) fn coarse_type(vec_ty: &VecType) -> &'static str {
     use ScalarType::*;
     match (vec_ty.scalar, vec_ty.n_bits()) {
         (Int | Unsigned | Mask, 128) => "si128",
@@ -197,7 +197,7 @@ pub(crate) fn extend_intrinsic(
     intrinsic_ident(&format!("cvt{from_suffix}"), to_suffix, ty_bits)
 }
 
-pub(crate) fn cvt_intrinsic(from: VecType, to: VecType) -> Ident {
+pub(crate) fn cvt_intrinsic(from: &VecType, to: &VecType) -> Ident {
     let from_suffix = op_suffix(from.scalar, from.scalar_bits, false);
     let to_suffix = op_suffix(to.scalar, to.scalar_bits, false);
 
@@ -250,12 +250,12 @@ pub(crate) fn cast_ident(
         512 => "512",
         _ => unreachable!(),
     };
-    let src_name = coarse_type(VecType::new(
+    let src_name = coarse_type(&VecType::new(
         src_scalar_ty,
         scalar_bits,
         ty_bits / scalar_bits,
     ));
-    let dst_name = coarse_type(VecType::new(
+    let dst_name = coarse_type(&VecType::new(
         dst_scalar_ty,
         scalar_bits,
         ty_bits / scalar_bits,

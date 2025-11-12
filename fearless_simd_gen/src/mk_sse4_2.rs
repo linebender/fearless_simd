@@ -251,7 +251,7 @@ pub(crate) fn handle_compare(
                         32 => quote! { 0x80000000u32 },
                         _ => unimplemented!(),
                     };
-                    let xor_op = intrinsic_ident("xor", coarse_type(*vec_ty), vec_ty.n_bits());
+                    let xor_op = intrinsic_ident("xor", coarse_type(vec_ty), vec_ty.n_bits());
                     let args = if method == "simd_lt" {
                         quote! { b_signed, a_signed }
                     } else {
@@ -401,8 +401,8 @@ pub(crate) fn handle_binary(
         // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
         let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
         let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
-        let and = intrinsic_ident("and", coarse_type(*vec_ty), vec_ty.n_bits());
-        let or = intrinsic_ident("or", coarse_type(*vec_ty), vec_ty.n_bits());
+        let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
+        let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
         let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
         let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
         quote! {
@@ -444,7 +444,7 @@ pub(crate) fn handle_shift(method_sig: TokenStream, method: &str, vec_ty: &VecTy
         let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
         let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
 
-        let set0 = intrinsic_ident("setzero", coarse_type(*vec_ty), ty_bits);
+        let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
         let extend_expr = |expr| match vec_ty.scalar {
             ScalarType::Unsigned => quote! {
                 #expr(val, #set0())
@@ -578,7 +578,7 @@ pub(crate) fn handle_zip(method_sig: TokenStream, vec_ty: &VecType, zip1: bool) 
                     ScalarType::Float => "permute2f128",
                     _ => "permute2x128",
                 },
-                coarse_type(*vec_ty),
+                coarse_type(vec_ty),
                 256,
             );
 
@@ -695,7 +695,7 @@ pub(crate) fn handle_unzip(
                     ScalarType::Float => "permute2f128",
                     _ => "permute2x128",
                 },
-                coarse_type(*vec_ty),
+                coarse_type(vec_ty),
                 256,
             );
             let high_shuffle_immediate = if select_even {
@@ -767,8 +767,8 @@ pub(crate) fn handle_cvt(
     // IMPORTANT TODO: for f32 to u32, we are currently converting it to i32 instead
     // of u32. We need to properly polyfill this.
     let cvt_intrinsic = cvt_intrinsic(
-        *vec_ty,
-        VecType::new(target_scalar, target_scalar_bits, vec_ty.len),
+        vec_ty,
+        &VecType::new(target_scalar, target_scalar_bits, vec_ty.len),
     );
 
     let expr = if vec_ty.scalar == ScalarType::Float {

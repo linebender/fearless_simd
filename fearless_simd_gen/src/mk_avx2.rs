@@ -226,7 +226,7 @@ pub(crate) fn handle_split(method_sig: TokenStream, vec_ty: &VecType) -> TokenSt
             ScalarType::Float => "extractf128",
             _ => "extracti128",
         };
-        let extract_intrinsic = intrinsic_ident(extract_op, coarse_type(*vec_ty), 256);
+        let extract_intrinsic = intrinsic_ident(extract_op, coarse_type(vec_ty), 256);
         quote! {
             #method_sig {
                 unsafe {
