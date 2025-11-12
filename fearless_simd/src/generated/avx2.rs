@@ -180,10 +180,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self> {
-        let mut result = [0.0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val);
-        result[4usize..8usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
@@ -343,10 +340,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self> {
-        let mut result = [0; 32usize];
-        result[0..16usize].copy_from_slice(&a.val);
-        result[16usize..32usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
@@ -496,10 +490,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
-        let mut result = [0; 32usize];
-        result[0..16usize].copy_from_slice(&a.val);
-        result[16usize..32usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
@@ -552,10 +543,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self> {
-        let mut result = [0; 32usize];
-        result[0..16usize].copy_from_slice(&a.val);
-        result[16usize..32usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
@@ -661,10 +649,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self> {
-        let mut result = [0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val);
-        result[8usize..16usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
@@ -798,10 +783,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self> {
-        let mut result = [0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val);
-        result[8usize..16usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
@@ -852,10 +834,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self> {
-        let mut result = [0; 16usize];
-        result[0..8usize].copy_from_slice(&a.val);
-        result[8usize..16usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
@@ -959,10 +938,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self> {
-        let mut result = [0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val);
-        result[4usize..8usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
@@ -1098,10 +1074,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self> {
-        let mut result = [0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val);
-        result[4usize..8usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
@@ -1149,10 +1122,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self> {
-        let mut result = [0; 8usize];
-        result[0..4usize].copy_from_slice(&a.val);
-        result[4usize..8usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
@@ -1271,10 +1241,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self> {
-        let mut result = [0.0; 4usize];
-        result[0..2usize].copy_from_slice(&a.val);
-        result[2usize..4usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128d(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self> {
@@ -1318,10 +1285,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self> {
-        let mut result = [0; 4usize];
-        result[0..2usize].copy_from_slice(&a.val);
-        result[2usize..4usize].copy_from_slice(&b.val);
-        result.simd_into(self)
+        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_f32x8(self, val: f32) -> f32x8<Self> {
@@ -1469,11 +1433,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_f32x8(self, a: f32x8<Self>) -> (f32x4<Self>, f32x4<Self>) {
-        let mut b0 = [0.0; 4usize];
-        let mut b1 = [0.0; 4usize];
-        b0.copy_from_slice(&a.val[0..4usize]);
-        b1.copy_from_slice(&a.val[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extractf128_ps::<0>(a.into()).simd_into(self),
+                _mm256_extractf128_ps::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
@@ -1666,11 +1631,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_i8x32(self, a: i8x32<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        let mut b0 = [0; 16usize];
-        let mut b1 = [0; 16usize];
-        b0.copy_from_slice(&a.val[0..16usize]);
-        b1.copy_from_slice(&a.val[16usize..32usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
@@ -1849,11 +1815,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_u8x32(self, a: u8x32<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        let mut b0 = [0; 16usize];
-        let mut b1 = [0; 16usize];
-        b0.copy_from_slice(&a.val[0..16usize]);
-        b1.copy_from_slice(&a.val[16usize..32usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
@@ -1909,11 +1876,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_mask8x32(self, a: mask8x32<Self>) -> (mask8x16<Self>, mask8x16<Self>) {
-        let mut b0 = [0; 16usize];
-        let mut b1 = [0; 16usize];
-        b0.copy_from_slice(&a.val[0..16usize]);
-        b1.copy_from_slice(&a.val[16usize..32usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn splat_i16x16(self, val: i16) -> i16x16<Self> {
@@ -2052,11 +2020,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_i16x16(self, a: i16x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        let mut b0 = [0; 8usize];
-        let mut b1 = [0; 8usize];
-        b0.copy_from_slice(&a.val[0..8usize]);
-        b1.copy_from_slice(&a.val[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
@@ -2223,11 +2192,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_u16x16(self, a: u16x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        let mut b0 = [0; 8usize];
-        let mut b1 = [0; 8usize];
-        b0.copy_from_slice(&a.val[0..8usize]);
-        b1.copy_from_slice(&a.val[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
@@ -2296,11 +2266,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_mask16x16(self, a: mask16x16<Self>) -> (mask16x8<Self>, mask16x8<Self>) {
-        let mut b0 = [0; 8usize];
-        let mut b1 = [0; 8usize];
-        b0.copy_from_slice(&a.val[0..8usize]);
-        b1.copy_from_slice(&a.val[8usize..16usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn splat_i32x8(self, val: i32) -> i32x8<Self> {
@@ -2427,11 +2398,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_i32x8(self, a: i32x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        let mut b0 = [0; 4usize];
-        let mut b1 = [0; 4usize];
-        b0.copy_from_slice(&a.val[0..4usize]);
-        b1.copy_from_slice(&a.val[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
@@ -2590,11 +2562,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_u32x8(self, a: u32x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        let mut b0 = [0; 4usize];
-        let mut b1 = [0; 4usize];
-        b0.copy_from_slice(&a.val[0..4usize]);
-        b1.copy_from_slice(&a.val[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
@@ -2649,11 +2622,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_mask32x8(self, a: mask32x8<Self>) -> (mask32x4<Self>, mask32x4<Self>) {
-        let mut b0 = [0; 4usize];
-        let mut b1 = [0; 4usize];
-        b0.copy_from_slice(&a.val[0..4usize]);
-        b1.copy_from_slice(&a.val[4usize..8usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn splat_f64x4(self, val: f64) -> f64x4<Self> {
@@ -2801,11 +2775,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
-        let mut b0 = [0.0; 2usize];
-        let mut b1 = [0.0; 2usize];
-        b0.copy_from_slice(&a.val[0..2usize]);
-        b1.copy_from_slice(&a.val[2usize..4usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extractf128_pd::<0>(a.into()).simd_into(self),
+                _mm256_extractf128_pd::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
@@ -2856,11 +2831,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn split_mask64x4(self, a: mask64x4<Self>) -> (mask64x2<Self>, mask64x2<Self>) {
-        let mut b0 = [0; 2usize];
-        let mut b1 = [0; 2usize];
-        b0.copy_from_slice(&a.val[0..2usize]);
-        b1.copy_from_slice(&a.val[2usize..4usize]);
-        (b0.simd_into(self), b1.simd_into(self))
+        unsafe {
+            (
+                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
+                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn splat_f32x16(self, a: f32) -> f32x16<Self> {

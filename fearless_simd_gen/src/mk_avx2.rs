@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::x86::{X86, cast_ident, simple_intrinsic};
+use crate::arch::x86::{X86, cast_ident, coarse_type, intrinsic_ident, simple_intrinsic};
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
 use crate::mk_sse4_2;
 use crate::ops::{OpSig, TyFlavor, ops_for_type};
@@ -219,8 +219,8 @@ fn make_method(
             _ => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
         },
         OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty, scalar_bits),
-        OpSig::Combine => generic_combine(vec_ty),
-        OpSig::Split => generic_split(vec_ty),
+        OpSig::Combine => handle_combine(method_sig, vec_ty),
+        OpSig::Split => handle_split(method_sig, vec_ty),
         OpSig::Zip(zip1) => mk_sse4_2::handle_zip(method_sig, vec_ty, scalar_bits, zip1),
         OpSig::Unzip(select_even) => {
             mk_sse4_2::handle_unzip(method_sig, vec_ty, scalar_bits, select_even)
@@ -237,6 +237,48 @@ fn make_method(
         OpSig::StoreInterleaved(_, _) => {
             mk_sse4_2::handle_store_interleaved(method_sig, &method_ident)
         }
+    }
+}
+
+pub(crate) fn handle_split(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    if vec_ty.n_bits() == 256 {
+        let extract_op = match vec_ty.scalar {
+            ScalarType::Float => "extractf128",
+            _ => "extracti128",
+        };
+        let extract_intrinsic = intrinsic_ident(extract_op, coarse_type(*vec_ty), 256);
+        quote! {
+            #method_sig {
+                unsafe {
+                    (
+                        #extract_intrinsic::<0>(a.into()).simd_into(self),
+                        #extract_intrinsic::<1>(a.into()).simd_into(self),
+                    )
+                }
+            }
+        }
+    } else {
+        generic_split(vec_ty)
+    }
+}
+
+pub(crate) fn handle_combine(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    if vec_ty.n_bits() == 128 {
+        let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
+            (ScalarType::Float, 32) => "m128",
+            (ScalarType::Float, 64) => "m128d",
+            _ => "m128i",
+        };
+        let set_intrinsic = intrinsic_ident("setr", suffix, 256);
+        quote! {
+            #method_sig {
+                unsafe {
+                    #set_intrinsic(a.into(), b.into()).simd_into(self)
+                }
+            }
+        }
+    } else {
+        generic_combine(vec_ty)
     }
 }
 
