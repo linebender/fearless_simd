@@ -494,12 +494,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
-        unsafe {
-            let raw = a.into();
-            let high = _mm_cvtepu8_epi16(raw).simd_into(self);
-            let low = _mm_cvtepu8_epi16(_mm_srli_si128::<8>(raw)).simd_into(self);
-            self.combine_u16x8(high, low)
-        }
+        unsafe { _mm256_cvtepu8_epi16(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self> {
@@ -1824,8 +1819,12 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u16x16(self.widen_u8x16(a0), self.widen_u8x16(a1))
+        unsafe {
+            let (a0, a1) = self.split_u8x32(a);
+            let high = _mm256_cvtepu8_epi16(a0.into()).simd_into(self);
+            let low = _mm256_cvtepu8_epi16(a1.into()).simd_into(self);
+            self.combine_u16x16(high, low)
+        }
     }
     #[inline(always)]
     fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self> {
@@ -2201,13 +2200,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
-        let (a, b) = self.split_u16x16(a);
         unsafe {
-            let mask = _mm_set1_epi16(0xFF);
-            let lo_masked = _mm_and_si128(a.into(), mask);
-            let hi_masked = _mm_and_si128(b.into(), mask);
-            let result = _mm_packus_epi16(lo_masked, hi_masked);
-            result.simd_into(self)
+            let mask = _mm256_setr_epi8(
+                0, 2, 4, 6, 8, 10, 12, 14, -1, -1, -1, -1, -1, -1, -1, -1, 0, 2, 4, 6, 8, 10, 12,
+                14, -1, -1, -1, -1, -1, -1, -1, -1,
+            );
+            let shuffled = _mm256_shuffle_epi8(a.into(), mask);
+            let packed = _mm256_permute4x64_epi64::<0b11_01_10_00>(shuffled);
+            _mm256_castsi256_si128(packed).simd_into(self)
         }
     }
     #[inline(always)]
@@ -3781,8 +3781,16 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
+        let (a, b) = self.split_u16x32(a);
+        unsafe {
+            let mask = _mm256_set1_epi16(0xFF);
+            let lo_masked = _mm256_and_si256(a.into(), mask);
+            let hi_masked = _mm256_and_si256(b.into(), mask);
+            let result = _mm256_permute4x64_epi64::<0b_11_01_10_00>(_mm256_packus_epi16(
+                lo_masked, hi_masked,
+            ));
+            result.simd_into(self)
+        }
     }
     #[inline(always)]
     fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {

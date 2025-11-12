@@ -83,13 +83,13 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for (method, sig) in ops_for_type(vec_ty, true) {
-            let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
+            let too_wide = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
 
-            let b2 = !matches!(method, "load_interleaved_128")
+            let acceptable_wide_op = !matches!(method, "load_interleaved_128")
                 && !matches!(method, "store_interleaved_128");
 
-            if b1 && b2 {
+            if too_wide && acceptable_wide_op {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
