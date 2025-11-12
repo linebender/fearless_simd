@@ -1953,6 +1953,237 @@ fn combine_u32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn combine_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    let b = f32x8::from_slice(simd, &[9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);
+    assert_eq!(
+        a.combine(b).val,
+        [
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0
+        ]
+    );
+}
+
+#[simd_test]
+fn combine_i8x32<S: Simd>(simd: S) {
+    let a = i8x32::from_slice(
+        simd,
+        &[
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            25, 26, 27, 28, 29, 30, 31, 32,
+        ],
+    );
+    let b = i8x32::from_slice(
+        simd,
+        &[
+            33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+            55, 56, 57, 58, 59, 60, 61, 62, 63, 64,
+        ],
+    );
+    assert_eq!(
+        a.combine(b).val,
+        [
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,
+            47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64
+        ]
+    );
+}
+
+#[simd_test]
+fn combine_u8x32<S: Simd>(simd: S) {
+    let a = u8x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    let b = u8x32::from_slice(
+        simd,
+        &[
+            32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+            54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        ],
+    );
+    assert_eq!(
+        a.combine(b).val,
+        [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+            46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+        ]
+    );
+}
+
+#[simd_test]
+fn combine_i16x16<S: Simd>(simd: S) {
+    let a = i16x16::from_slice(
+        simd,
+        &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    );
+    let b = i16x16::from_slice(
+        simd,
+        &[
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+        ],
+    );
+    assert_eq!(
+        a.combine(b).val,
+        [
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            25, 26, 27, 28, 29, 30, 31, 32
+        ]
+    );
+}
+
+#[simd_test]
+fn combine_u16x16<S: Simd>(simd: S) {
+    let a = u16x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let b = u16x16::from_slice(
+        simd,
+        &[
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    assert_eq!(
+        a.combine(b).val,
+        [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31
+        ]
+    );
+}
+
+#[simd_test]
+fn combine_i32x8<S: Simd>(simd: S) {
+    let a = i32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
+    let b = i32x8::from_slice(simd, &[9, 10, 11, 12, 13, 14, 15, 16]);
+    assert_eq!(
+        a.combine(b).val,
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    );
+}
+
+#[simd_test]
+fn combine_u32x8<S: Simd>(simd: S) {
+    let a = u32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    let b = u32x8::from_slice(simd, &[8, 9, 10, 11, 12, 13, 14, 15]);
+    assert_eq!(
+        a.combine(b).val,
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    );
+}
+
+#[simd_test]
+fn combine_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
+    let b = f64x4::from_slice(simd, &[5.0, 6.0, 7.0, 8.0]);
+    assert_eq!(a.combine(b).val, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+}
+
+#[simd_test]
+fn split_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    let (lo, hi) = simd.split_f32x8(a);
+    assert_eq!(lo.val, [1.0, 2.0, 3.0, 4.0]);
+    assert_eq!(hi.val, [5.0, 6.0, 7.0, 8.0]);
+}
+
+#[simd_test]
+fn split_i8x32<S: Simd>(simd: S) {
+    let a = i8x32::from_slice(
+        simd,
+        &[
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            25, 26, 27, 28, 29, 30, 31, 32,
+        ],
+    );
+    let (lo, hi) = simd.split_i8x32(a);
+    assert_eq!(
+        lo.val,
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    );
+    assert_eq!(
+        hi.val,
+        [
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+        ]
+    );
+}
+
+#[simd_test]
+fn split_u8x32<S: Simd>(simd: S) {
+    let a = u8x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    let (lo, hi) = simd.split_u8x32(a);
+    assert_eq!(
+        lo.val,
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    );
+    assert_eq!(
+        hi.val,
+        [
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+        ]
+    );
+}
+
+#[simd_test]
+fn split_i16x16<S: Simd>(simd: S) {
+    let a = i16x16::from_slice(
+        simd,
+        &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    );
+    let (lo, hi) = simd.split_i16x16(a);
+    assert_eq!(lo.val, [1, 2, 3, 4, 5, 6, 7, 8]);
+    assert_eq!(hi.val, [9, 10, 11, 12, 13, 14, 15, 16]);
+}
+
+#[simd_test]
+fn split_u16x16<S: Simd>(simd: S) {
+    let a = u16x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let (lo, hi) = simd.split_u16x16(a);
+    assert_eq!(lo.val, [0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(hi.val, [8, 9, 10, 11, 12, 13, 14, 15]);
+}
+
+#[simd_test]
+fn split_i32x8<S: Simd>(simd: S) {
+    let a = i32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
+    let (lo, hi) = simd.split_i32x8(a);
+    assert_eq!(lo.val, [1, 2, 3, 4]);
+    assert_eq!(hi.val, [5, 6, 7, 8]);
+}
+
+#[simd_test]
+fn split_u32x8<S: Simd>(simd: S) {
+    let a = u32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    let (lo, hi) = simd.split_u32x8(a);
+    assert_eq!(lo.val, [0, 1, 2, 3]);
+    assert_eq!(hi.val, [4, 5, 6, 7]);
+}
+
+#[simd_test]
+fn split_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
+    let (lo, hi) = simd.split_f64x4(a);
+    assert_eq!(lo.val, [1.0, 2.0]);
+    assert_eq!(hi.val, [3.0, 4.0]);
+}
+
+#[simd_test]
 fn select_f32x4<S: Simd>(simd: S) {
     let mask = mask32x4::from_slice(simd, &[-1, 0, -1, 0]);
     let b = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
