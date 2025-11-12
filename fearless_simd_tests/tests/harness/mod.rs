@@ -2448,6 +2448,46 @@ fn trunc_f64x2<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn mul_u8x16<S: Simd>(simd: S) {
+    let a = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 50, 60, 100],
+    );
+    let b = u8x16::from_slice(
+        simd,
+        &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 2],
+    );
+
+    assert_eq!(
+        (a * b).val,
+        [
+            0, 2, 6, 12, 20, 30, 70, 120, 180, 250, 74, 164, 8, 188, 132, 200
+        ]
+    );
+}
+
+#[simd_test]
+fn mul_i8x16<S: Simd>(simd: S) {
+    let a = i8x16::from_slice(
+        simd,
+        &[
+            0, 1, -2, 3, -4, 5, 10, -15, 20, -25, 30, 35, -40, 50, -60, 100,
+        ],
+    );
+    let b = i8x16::from_slice(
+        simd,
+        &[1, 2, 3, -4, 5, -6, 7, 8, 9, 10, -11, 12, 13, -14, 15, 2],
+    );
+
+    assert_eq!(
+        (a * b).val,
+        [
+            0, 2, -6, -12, -20, -30, 70, -120, -76, 6, -74, -92, -8, 68, 124, -56
+        ]
+    );
+}
+
+#[simd_test]
 fn mul_u16x8<S: Simd>(simd: S) {
     let a = u16x8::from_slice(simd, &[0, 5, 10, 30, 500, 0, 0, 0]);
     let b = u16x8::from_slice(simd, &[5, 8, 13, 21, 230, 0, 0, 0]);

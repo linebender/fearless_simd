@@ -33,13 +33,6 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
     let ty_impl = mk_type_impl();
 
     quote! {
-        // Until we have implemented all functions.
-        #![expect(
-            unused_variables,
-            clippy::todo,
-            reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-        )]
-
         #[cfg(target_arch = "x86")]
         use core::arch::x86::*;
         #[cfg(target_arch = "x86_64")]

@@ -33,13 +33,6 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
     let ty_impl = mk_type_impl();
 
     quote! {
-        // Until we have implemented all functions.
-        #![expect(
-            unused_variables,
-            clippy::todo,
-            reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-        )]
-
         #[cfg(target_arch = "x86")]
         use core::arch::x86::*;
         #[cfg(target_arch = "x86_64")]
@@ -429,9 +422,21 @@ pub(crate) fn handle_binary(
     arch: impl Arch,
 ) -> TokenStream {
     if method == "mul" && vec_ty.scalar_bits == 8 {
+        // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
+        let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
+        let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
+        let and = intrinsic_ident("and", coarse_type(*vec_ty), vec_ty.n_bits());
+        let or = intrinsic_ident("or", coarse_type(*vec_ty), vec_ty.n_bits());
+        let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
+        let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
         quote! {
             #method_sig {
-                todo!()
+                unsafe {
+                    let dst_even = #mullo(a.into(), b.into());
+                    let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
+
+                    #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(self)
+                }
             }
         }
     } else {
