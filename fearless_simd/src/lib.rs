@@ -207,28 +207,23 @@ pub enum Level {
 impl Level {
     /// Detect the available features on the current CPU, and returns the best level.
     ///
-    /// If no SIMD instruction set is available, a scalar fallback will be used instead.
+    /// If no SIMD instruction set supported by Fearless SIMD is available,
+    /// a scalar fallback will be used instead.
     ///
     /// This function requires the standard library, to use the
     /// [`is_x86_feature_detected`](std::arch::is_x86_feature_detected)
     /// or [`is_aarch64_feature_detected`](std::arch::is_aarch64_feature_detected).
     /// On wasm32, this requirement does not apply, so the standard library isn't required.
     ///
-    /// Note that in most cases, this function should only be called by end-user applications.
-    /// Libraries should instead accept a `Level` argument, probably as they are
-    /// creating their data structures, then storing the level for any computations.
-    /// Libraries which wish to abstract away SIMD usage for their common-case clients,
-    /// should make their non-`Level` entrypoint match this function's `cfg`; to instead
-    /// handle this at runtime, they can use [`try_detect`](Self::try_detect),
-    /// handling the `None` case as they deem fit (probably panicking).
-    /// This strategy avoids users of the library inadvertently using the fallback level,
-    /// even if the requisite target features are available.
+    /// Libraries which wish to support `no_std` should currently prefer [`try_detect`](Self::try_detect),
+    /// which will do a best-effort search for target features without using the standard library
+    /// (unless this crate's `std` feature is enabled, in which case it will just call `Level::new()`).
+    /// The usage pattern (included how to handle a failure) are documented.
     ///
-    /// If you are on an embedded device where these macros are not supported,
-    /// you should construct the relevant variants yourself, using whatever
-    /// way your specific chip supports accessing the current level.
+    /// For end-user applications or libraries which already depend on the standard library,
+    /// this method is likely to be much cleaner.
     ///
-    /// This value should be passed to [`dispatch!()`].
+    /// The return value should be stored, then passed to [`dispatch!()`] when needed.
     #[cfg(any(feature = "std", target_arch = "wasm32"))]
     #[must_use]
     pub fn new() -> Self {
@@ -281,15 +276,70 @@ impl Level {
 
     /// Get the target feature level suitable for this run.
     ///
-    /// Should be used in libraries if they wish to handle the case where
-    /// target features cannot be detected at runtime.
-    /// Most users should prefer [`new`](Self::new).
-    /// This is discussed in more detail in `new`'s documentation.
+    /// This will either be the same as calling `new` if it's supported, or will do a best-effort search for
+    /// target features without using the standard library.
+    ///
+    /// Our expectation is that this method's failing is unlikely to block usage, as most clients will be
+    /// able to just enable `std`, or our best-effort detection will work for them.
+    /// As such, we currently recommend calling this with something like:
+    ///
+    /// ```rust,no_run
+    /// # use fearless_simd::Level;
+    /// let level = Level::try_detect().expect("[LIBRARY_NAME] currently requires the standard library for your platform, to find the best SIMD level.\n\
+    ///     Please enable [LIBRARY_NAME]'s `std` feature to resolve this.\n\
+    ///     If this is not possible in your use case, please open an issue at [ISSUE_URL] explaining why.");
+    /// ```
+    ///
+    /// If you get such an issue, you should alert the Fearless SIMD authors to this (either through
+    /// an issue or on the Linebender Zulip), and we can help develop the patterns to resolve this.
+    /// Obviously, this is effectively sweeping your `no_std` SIMD support under a rug, but we are choosing
+    /// to defer creating a solution[^1] until it becomes clear that there is an actual need for it.
+    ///
+    /// Note that it might be tempting to use `Level::try_detect().unwrap_or(Level::baseline())`.
+    /// However, this will lead to a silent failure to SIMD optimise, even if a higher level is supported.
+    /// This would create a poor user experience, as your library may not achieve its
+    /// advertised performance characteristics.
+    /// It may be that to unblock users on truly `no_std` devices, you can make this fallback case a
+    /// (non-default) option.
+    ///
+    /// The return value should be stored, then passed to [`dispatch!()`] when needed.
+    ///
+    /// [^1]: This will likely involve the end-user creating the `Level` they wish to use manually,
+    /// using whatever way their specific chip supports accessing the current level.
+    /// This would then be passed to your library.
+    /// However, this proposed solution has not been validated in any library, and has the
+    /// downside that it requires exporting Fearless SIMD publicly.
+    /// We don't want to recommend this, unless one of your clients affirmatively confirms
+    /// they require it, due to our current lack of stability.
     #[allow(clippy::allow_attributes, reason = "Only needed in some cfgs.")]
     #[allow(unreachable_code, reason = "Fallback unreachable in some cfgs.")]
     pub fn try_detect() -> Option<Self> {
         #[cfg(any(feature = "std", target_arch = "wasm32"))]
         return Some(Self::new());
+        // If we know at compile time that the highest supported level for this architecture is available,
+        // then we use that.
+        // That is, if it's possible that a better level is possible, but we can't detect it,
+        // we return None, and let the application handle that case as they may.
+        #[cfg(not(any(
+            target_arch = "x86",
+            target_arch = "x86_64",
+            target_arch = "aarch64",
+            target_arch = "wasm32"
+        )))]
+        {
+            return Some(Level::Fallback(Fallback::new()));
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            #[cfg(target_feature = "neon")]
+            return unsafe { Some(Level::Neon(Neon::new_unchecked())) };
+        }
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+            return unsafe { Some(Level::Avx2(Avx2::new_unchecked())) };
+            // TODO: Optionally support `core_detect` (or pretty much equivalently, manual CPUID usage?)
+        }
         None
     }
 
