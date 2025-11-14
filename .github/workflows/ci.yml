@@ -254,14 +254,16 @@ jobs:
           tool: cargo-nextest,wasmtime-cli
 
       - name: cargo nextest
-        run: cargo nextest run --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
-          --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
-          --config 'target.wasm32-wasip1.runner = "wasmtime"'
+        run: |
+          cargo nextest run --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+            --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
+            --config 'target.wasm32-wasip1.runner = "wasmtime"'
 
       - name: cargo test --doc
-        run: cargo test --doc --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
-          --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
-          --config 'target.wasm32-wasip1.runner = "wasmtime"'
+        run: |
+          cargo test --doc --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+            --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
+            --config 'target.wasm32-wasip1.runner = "wasmtime"'
 
 
   check-msrv:
