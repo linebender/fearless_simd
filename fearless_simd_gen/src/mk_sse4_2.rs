@@ -7,7 +7,7 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
-use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
+use crate::ops::{OpSig, TyFlavor, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -285,6 +285,7 @@ pub(crate) fn handle_compare(
             ScalarType::Float,
             ScalarType::Mask,
             vec_ty.scalar_bits,
+            vec_ty.scalar_bits,
             vec_ty.n_bits(),
         );
         quote! { #ident(#expr) }
@@ -535,6 +536,7 @@ pub(crate) fn handle_select(method_sig: TokenStream, vec_ty: &VecType) -> TokenS
                 let ident = cast_ident(
                     ScalarType::Mask,
                     ScalarType::Float,
+                    vec_ty.scalar_bits,
                     vec_ty.scalar_bits,
                     vec_ty.n_bits(),
                 );
@@ -798,19 +800,34 @@ pub(crate) fn handle_reinterpret(
     scalar: ScalarType,
     scalar_bits: usize,
 ) -> TokenStream {
-    if valid_reinterpret(vec_ty, scalar, scalar_bits) {
-        let to_ty = reinterpret_ty(vec_ty, scalar, scalar_bits).rust();
+    let dst_ty = VecType::new(scalar, scalar_bits, vec_ty.n_bits() / scalar_bits);
+    assert!(
+        valid_reinterpret(vec_ty, scalar, scalar_bits),
+        "{vec_ty:?} must be reinterpretable as {dst_ty:?}"
+    );
 
+    if coarse_type(vec_ty) == coarse_type(&dst_ty) {
+        let arch_ty = x86::arch_ty(vec_ty);
         quote! {
             #method_sig {
-                #to_ty {
-                    val: bytemuck::cast(a.val),
-                    simd: a.simd,
-                }
+                #arch_ty::from(a).simd_into(self)
             }
         }
     } else {
-        quote! {}
+        let ident = cast_ident(
+            vec_ty.scalar,
+            scalar,
+            vec_ty.scalar_bits,
+            scalar_bits,
+            vec_ty.n_bits(),
+        );
+        quote! {
+            #method_sig {
+                unsafe {
+                    #ident(a.into()).simd_into(self)
+                }
+            }
+        }
     }
 }
 

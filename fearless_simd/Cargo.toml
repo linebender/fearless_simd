@@ -38,5 +38,4 @@ force_support_fallback = []
 workspace = true
 
 [dependencies]
-bytemuck = "1.23.0"
 libm = { version = "0.2.15", optional = true }

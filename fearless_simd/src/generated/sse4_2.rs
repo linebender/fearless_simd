@@ -187,31 +187,19 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
-        f64x2 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        unsafe { _mm_castps_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        i32x4 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        unsafe { _mm_castps_si128(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        unsafe { _mm_castps_si128(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        u32x4 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        unsafe { _mm_castps_si128(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
@@ -363,17 +351,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self> {
-        u32x4 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
@@ -530,10 +512,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self> {
-        u32x4 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_mask8x16(self, val: i8) -> mask8x16<Self> {
@@ -690,17 +669,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self> {
-        u32x4 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
@@ -823,17 +796,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
-        u32x4 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: i16) -> mask16x8<Self> {
@@ -988,17 +955,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self> {
-        u32x4 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
@@ -1123,10 +1084,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -1296,10 +1254,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self> {
-        f32x4 {
-            val: bytemuck::cast(a.val),
-            simd: a.simd,
-        }
+        unsafe { _mm_castpd_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: i64) -> mask64x2<Self> {

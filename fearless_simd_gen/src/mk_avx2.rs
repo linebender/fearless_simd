@@ -285,6 +285,7 @@ pub(crate) fn handle_compare(
             ScalarType::Float,
             ScalarType::Mask,
             vec_ty.scalar_bits,
+            vec_ty.scalar_bits,
             vec_ty.n_bits(),
         );
 
