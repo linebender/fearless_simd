@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    X86, cast_ident, coarse_type, cvt_intrinsic, extend_intrinsic, intrinsic_ident, op_suffix,
+    self, cast_ident, coarse_type, cvt_intrinsic, extend_intrinsic, intrinsic_ident, op_suffix,
     pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
     unpack_intrinsic,
 };
@@ -138,7 +138,7 @@ fn mk_type_impl() -> TokenStream {
             continue;
         }
         let simd = ty.rust();
-        let arch = X86.arch_ty(ty);
+        let arch = x86::arch_ty(ty);
         result.push(quote! {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]
@@ -236,7 +236,7 @@ pub(crate) fn handle_compare(
 
                 let eq_intrinsic = simple_sign_unaware_intrinsic("cmpeq", vec_ty);
 
-                let max_min_expr = X86.expr(max_min, vec_ty, &args);
+                let max_min_expr = x86::expr(max_min, vec_ty, &args);
                 quote! { #eq_intrinsic(#max_min_expr, a.into()) }
             }
             "simd_lt" | "simd_gt" => {
@@ -276,11 +276,11 @@ pub(crate) fn handle_compare(
                     }
                 }
             }
-            "simd_eq" => X86.expr(method, vec_ty, &args),
+            "simd_eq" => x86::expr(method, vec_ty, &args),
             _ => unreachable!(),
         }
     } else {
-        let expr = X86.expr(method, vec_ty, &args);
+        let expr = x86::expr(method, vec_ty, &args);
         let ident = cast_ident(
             ScalarType::Float,
             ScalarType::Mask,
@@ -315,7 +315,7 @@ pub(crate) fn handle_unary(method_sig: TokenStream, method: &str, vec_ty: &VecTy
         }
         _ => {
             let args = [quote! { a.into() }];
-            let expr = X86.expr(method, vec_ty, &args);
+            let expr = x86::expr(method, vec_ty, &args);
             quote! {
                 #method_sig {
                     unsafe { #expr.simd_into(self) }
@@ -417,7 +417,7 @@ pub(crate) fn handle_binary(
         }
     } else {
         let args = [quote! { a.into() }, quote! { b.into() }];
-        let expr = X86.expr(method, vec_ty, &args);
+        let expr = x86::expr(method, vec_ty, &args);
         quote! {
             #method_sig {
                 unsafe { #expr.simd_into(self) }
@@ -515,7 +515,7 @@ pub(crate) fn handle_ternary(
                 quote! { c.into() },
             ];
 
-            let expr = X86.expr(method, vec_ty, &args);
+            let expr = x86::expr(method, vec_ty, &args);
             quote! {
                 #method_sig {
                    #expr.simd_into(self)
@@ -543,7 +543,7 @@ pub(crate) fn handle_select(method_sig: TokenStream, vec_ty: &VecType) -> TokenS
             _ => quote! { a.into() },
         },
     ];
-    let expr = X86.expr("select", vec_ty, &args);
+    let expr = x86::expr("select", vec_ty, &args);
 
     quote! {
         #method_sig {

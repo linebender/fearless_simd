@@ -10,8 +10,6 @@ use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
-pub struct Neon;
-
 fn translate_op(op: &str) -> Option<&'static str> {
     Some(match op {
         "abs" => "vabs",
@@ -45,54 +43,52 @@ fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-impl Neon {
-    pub(crate) fn arch_ty(&self, ty: &VecType) -> TokenStream {
-        let scalar = match ty.scalar {
-            ScalarType::Float => "float",
-            ScalarType::Unsigned => "uint",
-            ScalarType::Int | ScalarType::Mask => "int",
-        };
-        let name = if ty.n_bits() == 256 {
-            format!("{}{}x{}x2_t", scalar, ty.scalar_bits, ty.len / 2)
-        } else if ty.n_bits() == 512 {
-            format!("{}{}x{}x4_t", scalar, ty.scalar_bits, ty.len / 4)
-        } else {
-            format!("{}{}x{}_t", scalar, ty.scalar_bits, ty.len)
-        };
-        let ident = Ident::new(&name, Span::call_site());
-        quote! { #ident }
+pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
+    let scalar = match ty.scalar {
+        ScalarType::Float => "float",
+        ScalarType::Unsigned => "uint",
+        ScalarType::Int | ScalarType::Mask => "int",
+    };
+    let name = if ty.n_bits() == 256 {
+        format!("{}{}x{}x2_t", scalar, ty.scalar_bits, ty.len / 2)
+    } else if ty.n_bits() == 512 {
+        format!("{}{}x{}x4_t", scalar, ty.scalar_bits, ty.len / 4)
+    } else {
+        format!("{}{}x{}_t", scalar, ty.scalar_bits, ty.len)
+    };
+    let ident = Ident::new(&name, Span::call_site());
+    quote! { #ident }
+}
+
+// expects args and return value in arch dialect
+pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
+    // There is no logical NOT for 64-bit, so we need this workaround.
+    if op == "not" && ty.scalar_bits == 64 && ty.scalar == ScalarType::Mask {
+        return quote! { vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))) };
     }
 
-    // expects args and return value in arch dialect
-    pub(crate) fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
-        // There is no logical NOT for 64-bit, so we need this workaround.
-        if op == "not" && ty.scalar_bits == 64 && ty.scalar == ScalarType::Mask {
-            return quote! { vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))) };
+    if let Some(xlat) = translate_op(op) {
+        let intrinsic = simple_intrinsic(xlat, ty);
+        return quote! { #intrinsic ( #( #args ),* ) };
+    }
+    match op {
+        "splat" => {
+            let intrinsic = split_intrinsic("vdup", "n", ty);
+            quote! { #intrinsic ( #( #args ),* ) }
         }
+        "fract" => {
+            let to = VecType::new(ScalarType::Int, ty.scalar_bits, ty.len);
+            let c1 = cvt_intrinsic("vcvt", &to, ty);
+            let c2 = cvt_intrinsic("vcvt", ty, &to);
+            let sub = simple_intrinsic("vsub", ty);
+            quote! {
+                let c1 = #c1(a.into());
+                let c2 = #c2(c1);
 
-        if let Some(xlat) = translate_op(op) {
-            let intrinsic = simple_intrinsic(xlat, ty);
-            return quote! { #intrinsic ( #( #args ),* ) };
-        }
-        match op {
-            "splat" => {
-                let intrinsic = split_intrinsic("vdup", "n", ty);
-                quote! { #intrinsic ( #( #args ),* ) }
+                #sub(a.into(), c2)
             }
-            "fract" => {
-                let to = VecType::new(ScalarType::Int, ty.scalar_bits, ty.len);
-                let c1 = cvt_intrinsic("vcvt", &to, ty);
-                let c2 = cvt_intrinsic("vcvt", ty, &to);
-                let sub = simple_intrinsic("vsub", ty);
-                quote! {
-                    let c1 = #c1(a.into());
-                    let c2 = #c2(c1);
-
-                    #sub(a.into(), c2)
-                }
-            }
-            _ => unimplemented!("missing {op}"),
         }
+        _ => unimplemented!("missing {op}"),
     }
 }
 

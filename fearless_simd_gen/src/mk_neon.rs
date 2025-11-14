@@ -14,7 +14,7 @@ use crate::arch::neon::split_intrinsic;
 use crate::ops::{reinterpret_ty, valid_reinterpret};
 use crate::types::ScalarType;
 use crate::{
-    arch::neon::{Neon, cvt_intrinsic, simple_intrinsic},
+    arch::neon::{self, cvt_intrinsic, simple_intrinsic},
     generic::{generic_combine, generic_op, generic_split},
     ops::{OpSig, TyFlavor, ops_for_type},
     types::{SIMD_TYPES, VecType, type_imports},
@@ -103,7 +103,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
             let method = match sig {
                 OpSig::Splat => {
-                    let expr = Neon.expr(method, vec_ty, &[quote! { val }]);
+                    let expr = neon::expr(method, vec_ty, &[quote! { val }]);
                     quote! {
                         #method_sig {
                             unsafe {
@@ -121,7 +121,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     } else {
                         quote! { shift as #scalar }
                     };
-                    let expr = Neon.expr(
+                    let expr = neon::expr(
                         method,
                         vec_ty,
                         &[quote! { a.into() }, quote! { #dup_intrinsic ( #shift ) }],
@@ -137,7 +137,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 OpSig::Unary => {
                     let args = [quote! { a.into() }];
 
-                    let expr = Neon.expr(method, vec_ty, &args);
+                    let expr = neon::expr(method, vec_ty, &args);
 
                     quote! {
                         #method_sig {
@@ -190,7 +190,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let target_scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
 
                     if method == "narrow" {
-                        let arch = Neon.arch_ty(vec_ty);
+                        let arch = neon::arch_ty(vec_ty);
 
                         let id1 =
                             Ident::new(&format!("vmovn_{}", vec_scalar_ty), Span::call_site());
@@ -211,7 +211,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             }
                         }
                     } else {
-                        let arch = Neon.arch_ty(&target_ty);
+                        let arch = neon::arch_ty(&target_ty);
                         let id1 =
                             Ident::new(&format!("vmovl_{}", vec_scalar_ty), Span::call_site());
                         let id2 =
@@ -258,7 +258,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         let unsigned_ty =
                             VecType::new(ScalarType::Unsigned, vec_ty.scalar_bits, vec_ty.len);
                         let sign_mask =
-                            Neon.expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
+                            neon::expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
                         let vbsl = simple_intrinsic("vbsl", vec_ty);
 
                         quote! {
@@ -270,7 +270,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             }
                         }
                     } else {
-                        let expr = Neon.expr(method, vec_ty, &args);
+                        let expr = neon::expr(method, vec_ty, &args);
                         quote! {
                             #method_sig {
                                 unsafe {
@@ -294,7 +294,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         ],
                     };
 
-                    let mut expr = Neon.expr(method, vec_ty, &args);
+                    let mut expr = neon::expr(method, vec_ty, &args);
                     if method == "msub" {
                         // -(c - a * b) = (a * b - c)
                         let neg = simple_intrinsic("vneg", vec_ty);
@@ -310,7 +310,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Compare => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
-                    let expr = Neon.expr(method, vec_ty, &args);
+                    let expr = neon::expr(method, vec_ty, &args);
                     let opt_q = crate::arch::neon::opt_q(vec_ty);
                     let reinterpret_str =
                         format!("vreinterpret{opt_q}_s{scalar_bits}_u{scalar_bits}");
@@ -440,7 +440,7 @@ fn mk_type_impl() -> TokenStream {
             continue;
         }
         let simd = ty.rust();
-        let arch = Neon.arch_ty(ty);
+        let arch = neon::arch_ty(ty);
         result.push(quote! {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]

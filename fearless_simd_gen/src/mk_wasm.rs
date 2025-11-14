@@ -13,7 +13,7 @@ use quote::{format_ident, quote};
 use crate::generic::scalar_binary;
 use crate::ops::valid_reinterpret;
 use crate::{
-    arch::wasm::Wasm,
+    arch::wasm,
     generic::{generic_combine, generic_op, generic_split},
     ops::{OpSig, TyFlavor, ops_for_type},
     types::{SIMD_TYPES, ScalarType, type_imports},
@@ -66,7 +66,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
             };
             let m = match sig {
                 OpSig::Splat => {
-                    let expr = Wasm.expr(method, vec_ty, &[quote! { val }]);
+                    let expr = wasm::expr(method, vec_ty, &[quote! { val }]);
                     quote! {
                         #method_sig {
                             #expr.simd_into(self)
@@ -86,7 +86,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             a.sub(a.trunc())
                         }
                     } else {
-                        let expr = Wasm.expr(method, vec_ty, &args);
+                        let expr = wasm::expr(method, vec_ty, &args);
                         quote! { #expr.simd_into(self) }
                     };
 
@@ -145,7 +145,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             // that `max(NaN, x)` and `min(NaN, x)` result in `x`. This matches
                             // `_mm_max_ps` and `_mm_min_ps` semantics on x86.
                             let swapped_args = [quote! { b.into() }, quote! { a.into() }];
-                            let expr: TokenStream = Wasm.expr(method, vec_ty, &swapped_args);
+                            let expr: TokenStream = wasm::expr(method, vec_ty, &swapped_args);
                             quote! {
                                 #method_sig {
                                     #expr.simd_into(self)
@@ -153,7 +153,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             }
                         }
                         _ => {
-                            let expr = Wasm.expr(method, vec_ty, &args);
+                            let expr = wasm::expr(method, vec_ty, &args);
                             quote! {
                                 #method_sig {
                                     #expr.simd_into(self)
@@ -182,7 +182,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Compare => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
-                    let expr = Wasm.expr(method, vec_ty, &args);
+                    let expr = wasm::expr(method, vec_ty, &args);
                     quote! {
                         #method_sig {
                             #expr.simd_into(self)

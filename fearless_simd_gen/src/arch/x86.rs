@@ -1,16 +1,9 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
-
-pub struct X86;
 
 pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
     Some(match op {
@@ -38,95 +31,93 @@ pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-impl X86 {
-    pub(crate) fn arch_ty(&self, ty: &VecType) -> TokenStream {
-        let suffix = match (ty.scalar, ty.scalar_bits) {
-            (ScalarType::Float, 32) => "",
-            (ScalarType::Float, 64) => "d",
-            (ScalarType::Float, _) => unimplemented!(),
-            (ScalarType::Unsigned | ScalarType::Int | ScalarType::Mask, _) => "i",
+pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
+    let suffix = match (ty.scalar, ty.scalar_bits) {
+        (ScalarType::Float, 32) => "",
+        (ScalarType::Float, 64) => "d",
+        (ScalarType::Float, _) => unimplemented!(),
+        (ScalarType::Unsigned | ScalarType::Int | ScalarType::Mask, _) => "i",
+    };
+    let name = format!("__m{}{}", ty.scalar_bits * ty.len, suffix);
+    let ident = Ident::new(&name, Span::call_site());
+    quote! { #ident }
+}
+
+pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
+    if let Some(op_name) = translate_op(op) {
+        let sign_aware = matches!(op, "max" | "min");
+
+        let suffix = match op_name {
+            "and" | "or" | "xor" => coarse_type(ty),
+            "blendv" if ty.scalar != ScalarType::Float => "epi8",
+            _ => op_suffix(ty.scalar, ty.scalar_bits, sign_aware),
         };
-        let name = format!("__m{}{}", ty.scalar_bits * ty.len, suffix);
-        let ident = Ident::new(&name, Span::call_site());
-        quote! { #ident }
-    }
-
-    pub(crate) fn expr(&self, op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
-        if let Some(op_name) = translate_op(op) {
-            let sign_aware = matches!(op, "max" | "min");
-
-            let suffix = match op_name {
-                "and" | "or" | "xor" => coarse_type(ty),
-                "blendv" if ty.scalar != ScalarType::Float => "epi8",
-                _ => op_suffix(ty.scalar, ty.scalar_bits, sign_aware),
-            };
-            let intrinsic = intrinsic_ident(op_name, suffix, ty.n_bits());
-            quote! { #intrinsic ( #( #args ),* ) }
-        } else {
-            let suffix = op_suffix(ty.scalar, ty.scalar_bits, true);
-            match op {
-                "trunc" => {
-                    let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
-                    quote! { #intrinsic ( #( #args, )* _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC) }
-                }
-                "neg" => match ty.scalar {
-                    ScalarType::Float => {
-                        let set1 = set1_intrinsic(ty);
-                        let xor = simple_intrinsic("xor", ty);
-                        quote! {
-                            #( #xor(#args, #set1(-0.0)) )*
-                        }
-                    }
-                    ScalarType::Int => {
-                        let set0 = intrinsic_ident("setzero", coarse_type(ty), ty.n_bits());
-                        let sub = simple_intrinsic("sub", ty);
-                        let arg = &args[0];
-                        quote! {
-                            #sub(#set0(), #arg)
-                        }
-                    }
-                    _ => unreachable!(),
-                },
-                "abs" => {
-                    let set1 = set1_intrinsic(ty);
-                    let andnot = simple_intrinsic("andnot", ty);
-                    quote! {
-                        #( #andnot(#set1(-0.0), #args) )*
-                    }
-                }
-                "copysign" => {
-                    let a = &args[0];
-                    let b = &args[1];
-                    let set1 = set1_intrinsic(ty);
-                    let and = simple_intrinsic("and", ty);
-                    let andnot = simple_intrinsic("andnot", ty);
-                    let or = simple_intrinsic("or", ty);
-                    quote! {
-                        let mask = #set1(-0.0);
-                        #or(#and(mask, #b), #andnot(mask, #a))
-                    }
-                }
-                "mul" => {
-                    let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
-                    let intrinsic = if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
-                        intrinsic_ident("mullo", suffix, ty.n_bits())
-                    } else {
-                        intrinsic_ident("mul", suffix, ty.n_bits())
-                    };
-
-                    quote! { #intrinsic ( #( #args ),* ) }
-                }
-                "shrv" if ty.scalar_bits > 16 => {
-                    let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
-                    let name = match ty.scalar {
-                        ScalarType::Int => "srav",
-                        _ => "srlv",
-                    };
-                    let intrinsic = intrinsic_ident(name, suffix, ty.n_bits());
-                    quote! { #intrinsic ( #( #args ),* ) }
-                }
-                _ => unimplemented!("{}", op),
+        let intrinsic = intrinsic_ident(op_name, suffix, ty.n_bits());
+        quote! { #intrinsic ( #( #args ),* ) }
+    } else {
+        let suffix = op_suffix(ty.scalar, ty.scalar_bits, true);
+        match op {
+            "trunc" => {
+                let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
+                quote! { #intrinsic ( #( #args, )* _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC) }
             }
+            "neg" => match ty.scalar {
+                ScalarType::Float => {
+                    let set1 = set1_intrinsic(ty);
+                    let xor = simple_intrinsic("xor", ty);
+                    quote! {
+                        #( #xor(#args, #set1(-0.0)) )*
+                    }
+                }
+                ScalarType::Int => {
+                    let set0 = intrinsic_ident("setzero", coarse_type(ty), ty.n_bits());
+                    let sub = simple_intrinsic("sub", ty);
+                    let arg = &args[0];
+                    quote! {
+                        #sub(#set0(), #arg)
+                    }
+                }
+                _ => unreachable!(),
+            },
+            "abs" => {
+                let set1 = set1_intrinsic(ty);
+                let andnot = simple_intrinsic("andnot", ty);
+                quote! {
+                    #( #andnot(#set1(-0.0), #args) )*
+                }
+            }
+            "copysign" => {
+                let a = &args[0];
+                let b = &args[1];
+                let set1 = set1_intrinsic(ty);
+                let and = simple_intrinsic("and", ty);
+                let andnot = simple_intrinsic("andnot", ty);
+                let or = simple_intrinsic("or", ty);
+                quote! {
+                    let mask = #set1(-0.0);
+                    #or(#and(mask, #b), #andnot(mask, #a))
+                }
+            }
+            "mul" => {
+                let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
+                let intrinsic = if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
+                    intrinsic_ident("mullo", suffix, ty.n_bits())
+                } else {
+                    intrinsic_ident("mul", suffix, ty.n_bits())
+                };
+
+                quote! { #intrinsic ( #( #args ),* ) }
+            }
+            "shrv" if ty.scalar_bits > 16 => {
+                let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
+                let name = match ty.scalar {
+                    ScalarType::Int => "srav",
+                    _ => "srlv",
+                };
+                let intrinsic = intrinsic_ident(name, suffix, ty.n_bits());
+                quote! { #intrinsic ( #( #args ),* ) }
+            }
+            _ => unimplemented!("{}", op),
         }
     }
 }

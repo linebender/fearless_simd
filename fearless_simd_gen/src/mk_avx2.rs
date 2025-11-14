@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    X86, cast_ident, coarse_type, extend_intrinsic, intrinsic_ident, pack_intrinsic,
+    self, cast_ident, coarse_type, extend_intrinsic, intrinsic_ident, pack_intrinsic,
     set1_intrinsic, simple_intrinsic,
 };
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
@@ -134,7 +134,7 @@ fn mk_type_impl() -> TokenStream {
             continue;
         }
         let simd = ty.rust();
-        let arch = X86.arch_ty(ty);
+        let arch = x86::arch_ty(ty);
         result.push(quote! {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]
