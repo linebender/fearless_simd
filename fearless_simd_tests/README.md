@@ -24,5 +24,8 @@ cargo install --locked --features simd wasmi_cli
 Run WebAssembly tests with:
 
 ```sh
-cargo test --target wasm32-wasip1 --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' --config 'target.wasm32-wasip1.runner = "wasmtime"' # or "wasmi_cli" if you installed that
+cargo test --target wasm32-wasip1 \
+    --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
+    --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128"' \
+    --config 'target.wasm32-wasip1.runner = "wasmtime"' # or "wasmi_cli" if you installed that
 ```

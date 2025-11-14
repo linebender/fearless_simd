@@ -31,7 +31,7 @@
 ///
 /// # Example
 ///
-/// ```rust,ignore
+/// ```rust
 /// use fearless_simd::{Level, Simd, dispatch};
 ///
 /// #[inline(always)]
