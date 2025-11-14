@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::sse4_2::Sse4_2;
+use crate::arch::x86::{
+    X86, cast_ident, coarse_type, cvt_intrinsic, extend_intrinsic, intrinsic_ident, op_suffix,
+    pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
+    unpack_intrinsic,
+};
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
 use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
-use crate::x86_common::{
-    cvt_intrinsic, extend_intrinsic, op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic,
-    simple_sign_unaware_intrinsic, unpack_intrinsic,
-};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
@@ -33,13 +33,6 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
     let ty_impl = mk_type_impl();
 
     quote! {
-        // Until we have implemented all functions.
-        #![expect(
-            unused_variables,
-            clippy::todo,
-            reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-        )]
-
         #[cfg(target_arch = "x86")]
         use core::arch::x86::*;
         #[cfg(target_arch = "x86_64")]
@@ -83,18 +76,18 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for (method, sig) in ops_for_type(vec_ty, true) {
-            let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
+            let too_wide = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
 
-            let b2 = !matches!(method, "load_interleaved_128")
-                && !matches!(method, "store_interleaved_128");
+            let acceptable_wide_op = matches!(method, "load_interleaved_128")
+                || matches!(method, "store_interleaved_128");
 
-            if b1 && b2 {
+            if too_wide && !acceptable_wide_op {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty, Sse4_2, 128);
+            let method = make_method(method, sig, vec_ty, X86, 128);
 
             methods.push(method);
         }
@@ -146,7 +139,7 @@ fn mk_type_impl() -> TokenStream {
             continue;
         }
         let simd = ty.rust();
-        let arch = Sse4_2.arch_ty(ty);
+        let arch = X86.arch_ty(ty);
         result.push(quote! {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]
@@ -250,55 +243,77 @@ pub(crate) fn handle_compare(
 ) -> TokenStream {
     let args = [quote! { a.into() }, quote! { b.into() }];
 
-    let mut expr = if vec_ty.scalar != ScalarType::Float {
-        if matches!(method, "simd_le" | "simd_ge") {
-            let max_min = match method {
-                "simd_le" => "min",
-                "simd_ge" => "max",
-                _ => unreachable!(),
-            };
+    let expr = if vec_ty.scalar != ScalarType::Float {
+        match method {
+            "simd_le" | "simd_ge" => {
+                let max_min = match method {
+                    "simd_le" => "min",
+                    "simd_ge" => "max",
+                    _ => unreachable!(),
+                };
 
-            let eq_intrinsic =
-                simple_sign_unaware_intrinsic("cmpeq", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+                // TODO: in some places, we use vec_ty.scalar bits, and in other places, we use the scalar_bits argument.
+                // AFAIK, these never differ.
+                let eq_intrinsic = simple_sign_unaware_intrinsic(
+                    "cmpeq",
+                    vec_ty.scalar,
+                    vec_ty.scalar_bits,
+                    ty_bits,
+                );
 
-            let max_min_expr = arch.expr(max_min, vec_ty, &args);
-            quote! { #eq_intrinsic(#max_min_expr, a.into()) }
-        } else if vec_ty.scalar == ScalarType::Unsigned {
-            // SSE4.2 only has signed GT/LT, but not unsigned.
-            let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
-            let sign = match vec_ty.scalar_bits {
-                8 => quote! { 0x80u8 },
-                16 => quote! { 0x8000u16 },
-                32 => quote! { 0x80000000u32 },
-                _ => unimplemented!(),
-            };
-            let gt =
-                simple_sign_unaware_intrinsic("cmpgt", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
-            let args = if method == "simd_lt" {
-                quote! { b_signed, a_signed }
-            } else {
-                quote! { a_signed, b_signed }
-            };
-
-            quote! {
-                let sign_bit = #set(#sign as _);
-                let a_signed = _mm_xor_si128(a.into(), sign_bit);
-                let b_signed = _mm_xor_si128(b.into(), sign_bit);
-
-                #gt(#args)
+                let max_min_expr = arch.expr(max_min, vec_ty, &args);
+                quote! { #eq_intrinsic(#max_min_expr, a.into()) }
             }
-        } else {
-            arch.expr(method, vec_ty, &args)
+            "simd_lt" | "simd_gt" => {
+                let gt = simple_sign_unaware_intrinsic(
+                    "cmpgt",
+                    vec_ty.scalar,
+                    vec_ty.scalar_bits,
+                    ty_bits,
+                );
+
+                if vec_ty.scalar == ScalarType::Unsigned {
+                    // SSE4.2 only has signed GT/LT, but not unsigned.
+                    let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+                    let sign = match vec_ty.scalar_bits {
+                        8 => quote! { 0x80u8 },
+                        16 => quote! { 0x8000u16 },
+                        32 => quote! { 0x80000000u32 },
+                        _ => unimplemented!(),
+                    };
+                    let xor_op = intrinsic_ident("xor", coarse_type(*vec_ty), ty_bits);
+                    let args = if method == "simd_lt" {
+                        quote! { b_signed, a_signed }
+                    } else {
+                        quote! { a_signed, b_signed }
+                    };
+
+                    quote! {
+                        let sign_bit = #set(#sign as _);
+                        let a_signed = #xor_op(a.into(), sign_bit);
+                        let b_signed = #xor_op(b.into(), sign_bit);
+
+                        #gt(#args)
+                    }
+                } else {
+                    let args = if method == "simd_lt" {
+                        quote! { b.into(), a.into() }
+                    } else {
+                        quote! { a.into(), b.into() }
+                    };
+                    quote! {
+                        #gt(#args)
+                    }
+                }
+            }
+            "simd_eq" => arch.expr(method, vec_ty, &args),
+            _ => unreachable!(),
         }
     } else {
-        arch.expr(method, vec_ty, &args)
+        let expr = arch.expr(method, vec_ty, &args);
+        let ident = cast_ident(ScalarType::Float, ScalarType::Mask, scalar_bits, ty_bits);
+        quote! { #ident(#expr) }
     };
-
-    if vec_ty.scalar == ScalarType::Float {
-        let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
-        let ident = format_ident!("_mm_cast{suffix}_si128");
-        expr = quote! { #ident(#expr) }
-    }
 
     quote! {
         #method_sig {
@@ -374,11 +389,11 @@ pub(crate) fn handle_widen_narrow(
             }
         }
         "narrow" => {
-            let mask = set1_intrinsic(vec_ty.scalar, scalar_bits, ty_bits);
+            let mask = set1_intrinsic(vec_ty.scalar, scalar_bits, t.n_bits());
             let pack = pack_intrinsic(
                 scalar_bits,
                 matches!(vec_ty.scalar, ScalarType::Int),
-                ty_bits,
+                t.n_bits(),
             );
             let split = format_ident!("split_{}", vec_ty.rust_name());
             quote! {
@@ -407,9 +422,21 @@ pub(crate) fn handle_binary(
     arch: impl Arch,
 ) -> TokenStream {
     if method == "mul" && vec_ty.scalar_bits == 8 {
+        // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
+        let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
+        let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
+        let and = intrinsic_ident("and", coarse_type(*vec_ty), vec_ty.n_bits());
+        let or = intrinsic_ident("or", coarse_type(*vec_ty), vec_ty.n_bits());
+        let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
+        let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
         quote! {
             #method_sig {
-                todo!()
+                unsafe {
+                    let dst_even = #mullo(a.into(), b.into());
+                    let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
+
+                    #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(self)
+                }
             }
         }
     } else {
@@ -437,7 +464,7 @@ pub(crate) fn handle_shift(
         _ => unreachable!(),
     };
     let suffix = op_suffix(vec_ty.scalar, scalar_bits.max(16), false);
-    let shift_intrinsic = format_ident!("_mm_{op}_{suffix}");
+    let shift_intrinsic = intrinsic_ident(op, suffix, ty_bits);
 
     if scalar_bits == 8 {
         // SSE doesn't have shifting for 8-bit, so we first convert into
@@ -446,13 +473,17 @@ pub(crate) fn handle_shift(
         let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
         let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
 
+        let set0 = intrinsic_ident("setzero", coarse_type(*vec_ty), ty_bits);
         let extend_expr = |expr| match vec_ty.scalar {
             ScalarType::Unsigned => quote! {
-                #expr(val, _mm_setzero_si128())
+                #expr(val, #set0())
             },
-            ScalarType::Int => quote! {
-                 #expr(val, _mm_cmplt_epi8(val, _mm_setzero_si128()))
-            },
+            ScalarType::Int => {
+                let cmp_intrinsic = intrinsic_ident("cmpgt", "epi8", ty_bits);
+                quote! {
+                    #expr(val, #cmp_intrinsic(#set0(), val))
+                }
+            }
             _ => unimplemented!(),
         };
 
@@ -513,7 +544,7 @@ pub(crate) fn handle_ternary(
                 quote! { c.into() },
             ];
 
-            let expr = Sse4_2.expr(method, vec_ty, &args);
+            let expr = X86.expr(method, vec_ty, &args);
             quote! {
                 #method_sig {
                    #expr.simd_into(self)
@@ -528,36 +559,28 @@ pub(crate) fn handle_select(
     vec_ty: &VecType,
     scalar_bits: usize,
 ) -> TokenStream {
-    let expr = if vec_ty.scalar == ScalarType::Float {
-        let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
-        let (i1, i2, i3, i4) = (
-            format_ident!("_mm_castsi128_{suffix}"),
-            format_ident!("_mm_or_{suffix}"),
-            format_ident!("_mm_and_{suffix}"),
-            format_ident!("_mm_andnot_{suffix}"),
-        );
-        quote! {
-            let mask = #i1(a.into());
-
-            #i2(
-                #i3(mask, b.into()),
-                #i4(mask, c.into())
-            )
-        }
-    } else {
-        quote! {
-            _mm_or_si128(
-                _mm_and_si128(a.into(), b.into()),
-                _mm_andnot_si128(a.into(), c.into())
-            )
-        }
-    };
+    // Our select ops' argument order is mask, a, b; Intel's intrinsics are b, a, mask
+    let args = [
+        quote! { c.into() },
+        quote! { b.into() },
+        match vec_ty.scalar {
+            ScalarType::Float => {
+                let ident = cast_ident(
+                    ScalarType::Mask,
+                    ScalarType::Float,
+                    scalar_bits,
+                    vec_ty.n_bits(),
+                );
+                quote! { #ident(a.into()) }
+            }
+            _ => quote! { a.into() },
+        },
+    ];
+    let expr = X86.expr("select", vec_ty, &args);
 
     quote! {
         #method_sig {
-           unsafe {
-                 #expr.simd_into(self)
-            }
+            unsafe { #expr.simd_into(self) }
         }
     }
 }
@@ -568,14 +591,50 @@ pub(crate) fn handle_zip(
     scalar_bits: usize,
     zip1: bool,
 ) -> TokenStream {
-    let op = if zip1 { "lo" } else { "hi" };
+    let expr = match vec_ty.n_bits() {
+        128 => {
+            let op = if zip1 { "unpacklo" } else { "unpackhi" };
 
-    let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
-    let intrinsic = format_ident!("_mm_unpack{op}_{suffix}");
+            let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+            let unpack_intrinsic = intrinsic_ident(op, suffix, vec_ty.n_bits());
+            quote! {
+                unsafe {  #unpack_intrinsic(a.into(), b.into()).simd_into(self) }
+            }
+        }
+        256 => {
+            let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+            let lo = intrinsic_ident("unpacklo", suffix, vec_ty.n_bits());
+            let hi = intrinsic_ident("unpackhi", suffix, vec_ty.n_bits());
+            let shuffle_immediate = if zip1 {
+                quote! { 0b0010_0000 }
+            } else {
+                quote! { 0b0011_0001 }
+            };
+
+            let shuffle = intrinsic_ident(
+                match vec_ty.scalar {
+                    ScalarType::Float => "permute2f128",
+                    _ => "permute2x128",
+                },
+                coarse_type(*vec_ty),
+                256,
+            );
+
+            quote! {
+                unsafe {
+                    let lo = #lo(a.into(), b.into());
+                    let hi = #hi(a.into(), b.into());
+
+                    #shuffle::<#shuffle_immediate>(lo, hi).simd_into(self)
+                }
+            }
+        }
+        _ => unreachable!(),
+    };
 
     quote! {
         #method_sig {
-           unsafe {  #intrinsic(a.into(), b.into()).simd_into(self) }
+            #expr
         }
     }
 }
@@ -586,63 +645,149 @@ pub(crate) fn handle_unzip(
     scalar_bits: usize,
     select_even: bool,
 ) -> TokenStream {
-    let expr = if vec_ty.scalar == ScalarType::Float {
-        let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
-        let intrinsic = format_ident!("_mm_shuffle_{suffix}");
+    let expr = match (vec_ty.scalar, vec_ty.n_bits(), scalar_bits) {
+        (ScalarType::Float, 128, _) => {
+            // 128-bit shuffle of floats or doubles; there are built-in SSE intrinsics for this
+            let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+            let intrinsic = intrinsic_ident("shuffle", suffix, vec_ty.n_bits());
 
-        let mask = match (vec_ty.scalar_bits, select_even) {
-            (32, true) => quote! { 0b10_00_10_00 },
-            (32, false) => quote! { 0b11_01_11_01 },
-            (64, true) => quote! { 0b00 },
-            (64, false) => quote! { 0b11 },
-            _ => unimplemented!(),
-        };
+            let mask = match (vec_ty.scalar_bits, select_even) {
+                (32, true) => quote! { 0b10_00_10_00 },
+                (32, false) => quote! { 0b11_01_11_01 },
+                (64, true) => quote! { 0b00 },
+                (64, false) => quote! { 0b11 },
+                _ => unimplemented!(),
+            };
 
-        quote! { unsafe { #intrinsic::<#mask>(a.into(), b.into()).simd_into(self) } }
-    } else {
-        match vec_ty.scalar_bits {
-            32 => {
-                let op = if select_even { "lo" } else { "hi" };
-
-                let intrinsic = format_ident!("_mm_unpack{op}_epi64");
-
-                quote! {
-                      unsafe {
-                          let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
-                          let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
-                          #intrinsic(t1, t2).simd_into(self)
-                    }
-                }
-            }
-            16 | 8 => {
-                let mask = match (scalar_bits, select_even) {
-                    (8, true) => {
-                        quote! { 0, 2, 4, 6, 8, 10, 12, 14, 0, 2, 4, 6, 8, 10, 12, 14  }
-                    }
-                    (8, false) => {
-                        quote! { 1, 3, 5, 7, 9, 11, 13, 15, 1, 3, 5, 7, 9, 11, 13, 15  }
-                    }
-                    (16, true) => {
-                        quote! { 0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 4, 5, 8, 9, 12, 13 }
-                    }
-                    (16, false) => {
-                        quote! {  2, 3, 6, 7, 10, 11, 14, 15, 2, 3, 6, 7, 10, 11, 14, 15 }
-                    }
-                    _ => unreachable!(),
-                };
-
-                quote! {
-                    unsafe {
-                        let mask = _mm_setr_epi8(#mask);
-
-                        let t1 = _mm_shuffle_epi8(a.into(), mask);
-                        let t2 = _mm_shuffle_epi8(b.into(), mask);
-                        _mm_unpacklo_epi64(t1, t2).simd_into(self)
-                    }
-                }
-            }
-            _ => quote! { todo!() },
+            quote! { unsafe { #intrinsic::<#mask>(a.into(), b.into()).simd_into(self) } }
         }
+        (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 32) => {
+            // 128-bit shuffle of 32-bit integers; unlike with floats, there is no single shuffle instruction that
+            // combines two vectors
+            let op = if select_even { "unpacklo" } else { "unpackhi" };
+            let intrinsic = intrinsic_ident(op, "epi64", vec_ty.n_bits());
+
+            quote! {
+                    unsafe {
+                        let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+                        let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
+                        #intrinsic(t1, t2).simd_into(self)
+                }
+            }
+        }
+        (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 16 | 8) => {
+            // Separate out the even-indexed and odd-indexed elements
+            let mask = match scalar_bits {
+                8 => {
+                    quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 }
+                }
+                16 => {
+                    quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 }
+                }
+                _ => unreachable!(),
+            };
+            let mask_reg = match vec_ty.n_bits() {
+                128 => quote! { _mm_setr_epi8(#mask) },
+                256 => quote! { _mm256_setr_epi8(#mask, #mask) },
+                _ => unreachable!(),
+            };
+            let shuffle_epi8 = intrinsic_ident("shuffle", "epi8", vec_ty.n_bits());
+
+            // Select either the low or high half of each one
+            let op = if select_even { "unpacklo" } else { "unpackhi" };
+            let unpack_epi64 = intrinsic_ident(op, "epi64", vec_ty.n_bits());
+
+            quote! {
+                unsafe {
+                    let mask = #mask_reg;
+
+                    let t1 = #shuffle_epi8(a.into(), mask);
+                    let t2 = #shuffle_epi8(b.into(), mask);
+                    #unpack_epi64(t1, t2).simd_into(self)
+                }
+            }
+        }
+        (_, 256, 64 | 32) => {
+            // First we perform a lane-crossing shuffle to move the even-indexed elements of each input to the lower
+            // half, and the odd-indexed ones to the upper half.
+            // e.g. [0, 1, 2, 3, 4, 5, 6, 7] becomes [0, 2, 4, 6, 1, 3, 5, 7]).
+            let low_shuffle_kind = match scalar_bits {
+                32 => "permutevar8x32",
+                64 => "permute4x64",
+                _ => unreachable!(),
+            };
+            let low_shuffle_suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+            let low_shuffle_intrinsic = intrinsic_ident(low_shuffle_kind, low_shuffle_suffix, 256);
+            let low_shuffle = |input_name: TokenStream| match scalar_bits {
+                32 => {
+                    quote! { #low_shuffle_intrinsic(#input_name, _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7)) }
+                }
+                64 => quote! { #low_shuffle_intrinsic::<0b11_01_10_00>(#input_name) },
+                _ => unreachable!(),
+            };
+            let shuf_t1 = low_shuffle(quote! { a.into() });
+            let shuf_t2 = low_shuffle(quote! { b.into() });
+
+            // Then we combine the lower or upper halves.
+            let high_shuffle = intrinsic_ident(
+                match vec_ty.scalar {
+                    ScalarType::Float => "permute2f128",
+                    _ => "permute2x128",
+                },
+                coarse_type(*vec_ty),
+                256,
+            );
+            let high_shuffle_immediate = if select_even {
+                quote! { 0b0010_0000 }
+            } else {
+                quote! { 0b0011_0001 }
+            };
+
+            quote! {
+                unsafe {
+                    let t1 = #shuf_t1;
+                    let t2 = #shuf_t2;
+
+                    #high_shuffle::<#high_shuffle_immediate>(t1, t2).simd_into(self)
+                }
+            }
+        }
+        (_, 256, 16 | 8) => {
+            // Separate out the even-indexed and odd-indexed elements within each 128-bit lane
+            let mask = match scalar_bits {
+                8 => {
+                    quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 }
+                }
+                16 => {
+                    quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 }
+                }
+                _ => unreachable!(),
+            };
+
+            // We then permute the even-indexed and odd-indexed blocks across lanes, and finally do a 2x128 permute to
+            // select either the even- or odd-indexed elements
+            let high_shuffle_immediate = if select_even {
+                quote! { 0b0010_0000 }
+            } else {
+                quote! { 0b0011_0001 }
+            };
+
+            quote! {
+                unsafe {
+                    let mask = _mm256_setr_epi8(#mask, #mask);
+                    let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
+                    let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
+
+                    let packed = _mm256_permute2x128_si256::<#high_shuffle_immediate>(
+                        _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
+                        _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled)
+                    );
+
+                    packed.simd_into(self)
+                }
+            }
+        }
+        _ => unimplemented!(),
     };
 
     quote! {

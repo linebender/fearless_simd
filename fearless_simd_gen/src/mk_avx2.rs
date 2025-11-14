@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::Arch;
-use crate::arch::avx2::Avx2;
-use crate::arch::sse4_2::Sse4_2;
+use crate::arch::x86::{
+    X86, cast_ident, coarse_type, extend_intrinsic, intrinsic_ident, pack_intrinsic,
+    set1_intrinsic, simple_intrinsic,
+};
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
 use crate::mk_sse4_2;
 use crate::ops::{OpSig, TyFlavor, ops_for_type};
-use crate::types::{SIMD_TYPES, VecType, type_imports};
-use crate::x86_common::simple_intrinsic;
+use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 
 #[derive(Clone, Copy)]
 pub(crate) struct Level;
@@ -32,13 +33,6 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
     let ty_impl = mk_type_impl();
 
     quote! {
-        // Until we have implemented all functions.
-        #![expect(
-            unused_variables,
-            clippy::todo,
-            reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-        )]
-
         #[cfg(target_arch = "x86")]
         use core::arch::x86::*;
         #[cfg(target_arch = "x86_64")]
@@ -82,20 +76,18 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for (method, sig) in ops_for_type(vec_ty, true) {
-            // TODO: Right now, we are basically adding the same methods as for SSE4.2 (except for
-            // FMA). In the future, we'll obviously want to use AVX2 intrinsics for 256 bit.
-            let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
-                || vec_ty.n_bits() > 256;
+            let too_wide = (vec_ty.n_bits() > 256 && !matches!(method, "split" | "narrow"))
+                || vec_ty.n_bits() > 512;
 
-            let b2 = !matches!(method, "load_interleaved_128")
-                && !matches!(method, "store_interleaved_128");
+            let acceptable_wide_op = matches!(method, "load_interleaved_128")
+                || matches!(method, "store_interleaved_128");
 
-            if b1 && b2 {
+            if too_wide && !acceptable_wide_op {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty, Sse4_2, 128);
+            let method = make_method(method, sig, vec_ty, X86, vec_ty.n_bits());
 
             methods.push(method);
         }
@@ -143,7 +135,7 @@ fn mk_type_impl() -> TokenStream {
             continue;
         }
         let simd = ty.rust();
-        let arch = Avx2.arch_ty(ty);
+        let arch = X86.arch_ty(ty);
         result.push(quote! {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]
@@ -191,12 +183,10 @@ fn make_method(
 
     match sig {
         OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty, scalar_bits, ty_bits),
-        OpSig::Compare => {
-            mk_sse4_2::handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch)
-        }
+        OpSig::Compare => handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch),
         OpSig::Unary => mk_sse4_2::handle_unary(method_sig, method, vec_ty, arch),
         OpSig::WidenNarrow(t) => {
-            mk_sse4_2::handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
+            handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
         }
         OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty, arch),
         OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty, scalar_bits, ty_bits),
@@ -222,8 +212,8 @@ fn make_method(
             _ => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
         },
         OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty, scalar_bits),
-        OpSig::Combine => generic_combine(vec_ty),
-        OpSig::Split => generic_split(vec_ty),
+        OpSig::Combine => handle_combine(method_sig, vec_ty),
+        OpSig::Split => handle_split(method_sig, vec_ty),
         OpSig::Zip(zip1) => mk_sse4_2::handle_zip(method_sig, vec_ty, scalar_bits, zip1),
         OpSig::Unzip(select_even) => {
             mk_sse4_2::handle_unzip(method_sig, vec_ty, scalar_bits, select_even)
@@ -239,6 +229,185 @@ fn make_method(
         }
         OpSig::StoreInterleaved(_, _) => {
             mk_sse4_2::handle_store_interleaved(method_sig, &method_ident)
+        }
+    }
+}
+
+pub(crate) fn handle_split(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    if vec_ty.n_bits() == 256 {
+        let extract_op = match vec_ty.scalar {
+            ScalarType::Float => "extractf128",
+            _ => "extracti128",
+        };
+        let extract_intrinsic = intrinsic_ident(extract_op, coarse_type(*vec_ty), 256);
+        quote! {
+            #method_sig {
+                unsafe {
+                    (
+                        #extract_intrinsic::<0>(a.into()).simd_into(self),
+                        #extract_intrinsic::<1>(a.into()).simd_into(self),
+                    )
+                }
+            }
+        }
+    } else {
+        generic_split(vec_ty)
+    }
+}
+
+pub(crate) fn handle_combine(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    if vec_ty.n_bits() == 128 {
+        let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
+            (ScalarType::Float, 32) => "m128",
+            (ScalarType::Float, 64) => "m128d",
+            _ => "m128i",
+        };
+        let set_intrinsic = intrinsic_ident("setr", suffix, 256);
+        quote! {
+            #method_sig {
+                unsafe {
+                    #set_intrinsic(a.into(), b.into()).simd_into(self)
+                }
+            }
+        }
+    } else {
+        generic_combine(vec_ty)
+    }
+}
+
+pub(crate) fn handle_compare(
+    method_sig: TokenStream,
+    method: &str,
+    vec_ty: &VecType,
+    scalar_bits: usize,
+    ty_bits: usize,
+    arch: impl Arch,
+) -> TokenStream {
+    if vec_ty.scalar == ScalarType::Float {
+        // For AVX2 and up, Intel gives us a generic comparison intrinsic that takes a predicate. There are 32,
+        // of which only a few are useful and the rest will violate IEEE754 and/or raise a SIGFPE on NaN.
+        //
+        // https://www.felixcloutier.com/x86/cmppd#tbl-3-1
+        let order_predicate = match method {
+            "simd_eq" => 0x00,
+            "simd_lt" => 0x11,
+            "simd_le" => 0x12,
+            "simd_ge" => 0x1D,
+            "simd_gt" => 0x1E,
+            _ => unreachable!(),
+        };
+        let intrinsic = simple_intrinsic("cmp", vec_ty.scalar, scalar_bits, ty_bits);
+        let cast = cast_ident(ScalarType::Float, ScalarType::Mask, scalar_bits, ty_bits);
+
+        quote! {
+            #method_sig {
+                unsafe { #cast(#intrinsic::<#order_predicate>(a.into(), b.into())).simd_into(self) }
+            }
+        }
+    } else {
+        mk_sse4_2::handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch)
+    }
+}
+
+pub(crate) fn handle_widen_narrow(
+    method_sig: TokenStream,
+    method: &str,
+    vec_ty: &VecType,
+    scalar_bits: usize,
+    ty_bits: usize,
+    t: VecType,
+) -> TokenStream {
+    let expr = match method {
+        "widen" => {
+            let dst_width = t.n_bits();
+            match (dst_width, ty_bits) {
+                (256, 128) => {
+                    let extend =
+                        extend_intrinsic(vec_ty.scalar, scalar_bits, t.scalar_bits, dst_width);
+                    quote! {
+                        unsafe {
+                            #extend(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                (512, 256) => {
+                    let extend =
+                        extend_intrinsic(vec_ty.scalar, scalar_bits, t.scalar_bits, ty_bits);
+                    let combine = format_ident!(
+                        "combine_{}",
+                        VecType {
+                            len: vec_ty.len / 2,
+                            scalar_bits: scalar_bits * 2,
+                            ..*vec_ty
+                        }
+                        .rust_name()
+                    );
+                    let split = format_ident!("split_{}", vec_ty.rust_name());
+                    quote! {
+                        unsafe {
+                            let (a0, a1) = self.#split(a);
+                            let high = #extend(a0.into()).simd_into(self);
+                            let low = #extend(a1.into()).simd_into(self);
+                            self.#combine(high, low)
+                        }
+                    }
+                }
+                _ => unimplemented!(),
+            }
+        }
+        "narrow" => {
+            let dst_width = t.n_bits();
+            match (dst_width, ty_bits) {
+                (128, 256) => {
+                    let mask = match t.scalar_bits {
+                        8 => {
+                            quote! { 0, 2, 4, 6, 8, 10, 12, 14, -1, -1, -1, -1, -1, -1, -1, -1 }
+                        }
+                        _ => unimplemented!(),
+                    };
+                    quote! {
+                        unsafe {
+                            let mask = _mm256_setr_epi8(#mask, #mask);
+
+                            let shuffled = _mm256_shuffle_epi8(a.into(), mask);
+                            let packed = _mm256_permute4x64_epi64::<0b11_01_10_00>(shuffled);
+
+                            _mm256_castsi256_si128(packed).simd_into(self)
+                        }
+                    }
+                }
+                (256, 512) => {
+                    let mask = set1_intrinsic(vec_ty.scalar, scalar_bits, t.n_bits());
+                    let pack = pack_intrinsic(
+                        scalar_bits,
+                        matches!(vec_ty.scalar, ScalarType::Int),
+                        t.n_bits(),
+                    );
+                    let split = format_ident!("split_{}", vec_ty.rust_name());
+                    quote! {
+                        let (a, b) = self.#split(a);
+                        unsafe {
+                            // Note that AVX2 only has an intrinsic for saturating cast,
+                            // but not wrapping.
+                            let mask = #mask(0xFF);
+                            let lo_masked = _mm256_and_si256(a.into(), mask);
+                            let hi_masked = _mm256_and_si256(b.into(), mask);
+                            // The 256-bit version of packus_epi16 operates lane-wise, so we need to arrange things
+                            // properly afterwards.
+                            let result = _mm256_permute4x64_epi64::<0b_11_01_10_00>(#pack(lo_masked, hi_masked));
+                            result.simd_into(self)
+                        }
+                    }
+                }
+                _ => unimplemented!(),
+            }
+        }
+        _ => unreachable!(),
+    };
+
+    quote! {
+        #method_sig {
+            #expr
         }
     }
 }

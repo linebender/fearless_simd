@@ -207,29 +207,28 @@ fn simd_impl(ty: &VecType) -> TokenStream {
                 | OpSig::Cvt(_, _)
                 | OpSig::Reinterpret(_, _)
                 | OpSig::Shift
-        ) {
-            if let Some(args) = sig.vec_trait_args() {
-                let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
-                let call_args = match sig {
-                    OpSig::Unary | OpSig::Cvt(_, _) | OpSig::Reinterpret(_, _) => quote! { self },
-                    OpSig::Binary | OpSig::Compare | OpSig::Combine => {
-                        quote! { self, rhs.simd_into(self.simd) }
-                    }
-                    OpSig::Shift => {
-                        quote! { self, shift }
-                    }
-                    OpSig::Ternary => {
-                        quote! { self, op1.simd_into(self.simd), op2.simd_into(self.simd) }
-                    }
-                    _ => quote! { todo!() },
-                };
-                methods.push(quote! {
-                    #[inline(always)]
-                    pub fn #method_name(#args) -> #ret_ty {
-                        self.simd.#trait_method(#call_args)
-                    }
-                });
-            }
+        ) && let Some(args) = sig.vec_trait_args()
+        {
+            let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
+            let call_args = match sig {
+                OpSig::Unary | OpSig::Cvt(_, _) | OpSig::Reinterpret(_, _) => quote! { self },
+                OpSig::Binary | OpSig::Compare | OpSig::Combine => {
+                    quote! { self, rhs.simd_into(self.simd) }
+                }
+                OpSig::Shift => {
+                    quote! { self, shift }
+                }
+                OpSig::Ternary => {
+                    quote! { self, op1.simd_into(self.simd), op2.simd_into(self.simd) }
+                }
+                _ => quote! { todo!() },
+            };
+            methods.push(quote! {
+                #[inline(always)]
+                pub fn #method_name(#args) -> #ret_ty {
+                    self.simd.#trait_method(#call_args)
+                }
+            });
         }
     }
     let vec_impl = simd_vec_impl(ty);

@@ -24,7 +24,6 @@ mod mk_sse4_2;
 mod mk_wasm;
 mod ops;
 mod types;
-mod x86_common;
 
 #[derive(Clone, Copy, ValueEnum, Debug)]
 enum Module {

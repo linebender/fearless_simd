@@ -3,11 +3,8 @@
 
 pub(crate) mod fallback;
 pub(crate) mod neon;
-
-pub(crate) mod avx2;
-pub(crate) mod sse4_2;
 pub(crate) mod wasm;
-pub(crate) mod x86_common;
+pub(crate) mod x86;
 
 use proc_macro2::TokenStream;
 

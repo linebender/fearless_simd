@@ -18,6 +18,13 @@ This release has an [MSRV][] of 1.88.
 ### Added
 
 - All vector types now implement `Index` and `IndexMut`. ([#112][] by [@Ralith][])
+- 256-bit vector types now use native AVX2 intrinsics on supported platforms. ([#115][] by [@valadaptive][])
+- 8-bit integer multiplication is now implemented on x86. ([#115][] by [@valadaptive][])
+
+### Fixed
+
+- Integer equality comparisons now function properly on x86. Previously, they performed "greater than" comparisons.
+  ([#115][] by [@valadaptive][])
 
 ### Changed
 
@@ -27,6 +34,7 @@ This release has an [MSRV][] of 1.88.
   A consequence of this is that the available variants on `Level` are now dependent on the target features you are compiling with.
   The fallback level can be restored with the `force_support_fallback` cargo feature. We don't expect this to be necessary outside
   of tests.
+- Code generation for `select` and `unzip` operations on x86 has been improved. ([#115][] by [@valadaptive][])
 
 ### Removed
 
@@ -86,6 +94,7 @@ No changelog was kept for this release.
 
 [@Ralith]: https://github.com/Ralith
 [@DJMcNab]: https://github.com/DJMcNab
+[@valadaptive]: https://github.com/valadaptive
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
 [#76]: https://github.com/linebender/fearless_simd/pull/76
@@ -103,6 +112,7 @@ No changelog was kept for this release.
 [#96]: https://github.com/linebender/fearless_simd/pull/96
 [#99]: https://github.com/linebender/fearless_simd/pull/99
 [#105]: https://github.com/linebender/fearless_simd/pull/105
+[#115]: https://github.com/linebender/fearless_simd/pull/115
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
