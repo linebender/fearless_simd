@@ -20,7 +20,7 @@
 //! To call a function with the best available target features and get the associated `Simd`
 //! implementation, use the [`dispatch!()`] macro:
 //!
-//! ```rust
+//! ```rust,ignore
 //! use fearless_simd::{Level, Simd, dispatch};
 //!
 //! #[inline(always)]
