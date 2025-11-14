@@ -248,10 +248,10 @@ jobs:
         with:
           save-if: ${{ github.event_name != 'merge_group' }}
 
-      - name: install wasmtime
+      - name: install cargo-nextest and wasmtime
         uses: taiki-e/install-action@v2
         with:
-          tool: wasmtime-cli
+          tool: cargo-nextest,wasmtime-cli
 
       - name: cargo nextest
         run: cargo nextest run --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
