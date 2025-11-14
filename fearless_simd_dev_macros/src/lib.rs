@@ -41,7 +41,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
     let include_avx2 = false;
     // Note that we cannot feature-gate this with `target_arch`. If we run
-    // `wasm-pack test --headless --chrome`, then the `target_arch` will still be set to
+    // `cargo test --target wasm32-wasip1`, then the `target_arch` will still be set to
     // the operating system you are running on. Because of this, we instead add the `target_arch`
     // feature gate to the actual test.
     let include_wasm = !exclude_wasm(&input_fn_name.to_string());
@@ -49,7 +49,6 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     let fallback_snippet = if include_fallback {
         quote! {
             #[test]
-            #[cfg_attr(all(target_arch = "wasm32", target_feature = "simd128"), wasm_bindgen_test::wasm_bindgen_test)]
             fn #fallback_name() {
                 let fallback = fearless_simd::Fallback::new();
                 #input_fn_name(fallback);
@@ -101,7 +100,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     let wasm_snippet = if include_wasm {
         quote! {
             #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-            #[wasm_bindgen_test::wasm_bindgen_test]
+            #[test]
             fn #wasm_name() {
                 let wasm = unsafe { fearless_simd::wasm32::WasmSimd128::new_unchecked() };
                 #input_fn_name(wasm);

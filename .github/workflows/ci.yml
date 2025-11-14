@@ -241,22 +241,37 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_STABLE_VER }}
-          targets: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown,wasm32-wasip1
 
       - name: restore cache
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.event_name != 'merge_group' }}
 
-      - name: install wasm-pack
+      - name: install cargo-nextest and wasmtime
         uses: taiki-e/install-action@v2
         with:
-          tool: wasm-pack
+          tool: cargo-nextest,wasmtime-cli
 
-      - name: Run fearless_simd_tests on Chrome
-        run: RUSTFLAGS=-Ctarget-feature=+simd128 wasm-pack test --headless --chrome
-        working-directory: fearless_simd_tests
-  
+      # We test using wasm32-wasip1, but want to make sure that wasm32-unknown-unknown still builds
+      - name: cargo build (wasm32-unknown-unknown)
+        run: |
+          cargo build --target wasm32-unknown-unknown \
+            --config 'target.wasm32-unknown-unknown.rustflags = "-Ctarget-feature=+simd128"'
+
+      - name: cargo nextest
+        run: |
+          cargo nextest run --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+            --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
+            --config 'target.wasm32-wasip1.runner = "wasmtime"'
+
+      - name: cargo test --doc
+        run: |
+          cargo test --doc --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+            --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
+            --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128"' \
+            --config 'target.wasm32-wasip1.runner = "wasmtime"'
+
 
   check-msrv:
     name: cargo check (msrv)
