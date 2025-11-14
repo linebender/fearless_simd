@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 #![expect(
-    unreachable_pub,
     clippy::missing_assert_message,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
@@ -20,7 +19,7 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub enum Level {
+pub(crate) enum Level {
     WasmSimd128,
 }
 
@@ -550,7 +549,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
     }
 }
 
-pub fn mk_wasm128_impl(level: Level) -> TokenStream {
+pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
     let imports = type_imports();
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();

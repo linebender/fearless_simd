@@ -3,7 +3,6 @@
 
 #![expect(
     clippy::match_single_binding,
-    unreachable_pub,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
@@ -63,7 +62,7 @@ pub(crate) fn translate_op(op: &str, is_float: bool) -> Option<&'static str> {
     })
 }
 
-pub fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
+pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
     let ty_prefix = arch_ty(ty);
     let ident = Ident::new(name, Span::call_site());
 

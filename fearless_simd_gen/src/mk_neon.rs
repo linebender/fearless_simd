@@ -3,7 +3,6 @@
 
 #![expect(
     clippy::uninlined_format_args,
-    unreachable_pub,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
@@ -21,7 +20,7 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub enum Level {
+pub(crate) enum Level {
     Neon,
     // TODO: Fp16,
 }
@@ -39,7 +38,7 @@ impl Level {
     }
 }
 
-pub fn mk_neon_impl(level: Level) -> TokenStream {
+pub(crate) fn mk_neon_impl(level: Level) -> TokenStream {
     let imports = type_imports();
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();

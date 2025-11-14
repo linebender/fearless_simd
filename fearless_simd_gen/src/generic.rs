@@ -1,11 +1,6 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
@@ -16,7 +11,7 @@ use crate::{
 };
 
 /// Implementation of combine based on `copy_from_slice`
-pub fn generic_combine(ty: &VecType) -> TokenStream {
+pub(crate) fn generic_combine(ty: &VecType) -> TokenStream {
     let ty_rust = ty.rust();
     let n = ty.len;
     let n2 = n * 2;
@@ -38,7 +33,7 @@ pub fn generic_combine(ty: &VecType) -> TokenStream {
 }
 
 /// Implementation of split based on `copy_from_slice`
-pub fn generic_split(ty: &VecType) -> TokenStream {
+pub(crate) fn generic_split(ty: &VecType) -> TokenStream {
     let ty_rust = ty.rust();
     let n = ty.len;
     let nhalf = n / 2;
@@ -63,7 +58,7 @@ pub fn generic_split(ty: &VecType) -> TokenStream {
 /// Implementation based on split/combine
 ///
 /// Only suitable for lane-wise and block-wise operations
-pub fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
+pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
     let ty_rust = ty.rust();
     let name = Ident::new(&format!("{op}_{}", ty.rust_name()), Span::call_site());
     let split = Ident::new(&format!("split_{}", ty.rust_name()), Span::call_site());
@@ -271,7 +266,7 @@ pub fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
     }
 }
 
-pub fn scalar_binary(name: &Ident, f: TokenStream, ty: &VecType) -> TokenStream {
+pub(crate) fn scalar_binary(name: &Ident, f: TokenStream, ty: &VecType) -> TokenStream {
     let ty_rust = ty.rust();
     quote! {
         #[inline(always)]

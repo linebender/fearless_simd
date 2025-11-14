@@ -1,11 +1,6 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use crate::arch::fallback;
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
@@ -14,7 +9,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
 #[derive(Clone, Copy)]
-pub struct Level;
+pub(crate) struct Level;
 
 impl Level {
     fn name(self) -> &'static str {
@@ -27,7 +22,7 @@ impl Level {
     }
 }
 
-pub fn mk_fallback_impl() -> TokenStream {
+pub(crate) fn mk_fallback_impl() -> TokenStream {
     let imports = type_imports();
     let simd_impl = mk_simd_impl();
 

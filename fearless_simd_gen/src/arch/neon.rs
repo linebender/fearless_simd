@@ -1,11 +1,6 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -101,7 +96,7 @@ fn neon_array_type(ty: &VecType) -> (&'static str, &'static str, usize) {
     (opt_q(ty), scalar_c, ty.scalar_bits)
 }
 
-pub fn opt_q(ty: &VecType) -> &'static str {
+pub(crate) fn opt_q(ty: &VecType) -> &'static str {
     match ty.n_bits() {
         64 => "",
         128 => "q",
@@ -109,7 +104,7 @@ pub fn opt_q(ty: &VecType) -> &'static str {
     }
 }
 
-pub fn simple_intrinsic(name: &str, ty: &VecType) -> Ident {
+pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> Ident {
     let (opt_q, scalar_c, size) = neon_array_type(ty);
     Ident::new(
         &format!("{name}{opt_q}_{scalar_c}{size}"),
@@ -117,7 +112,7 @@ pub fn simple_intrinsic(name: &str, ty: &VecType) -> Ident {
     )
 }
 
-pub fn split_intrinsic(name: &str, name2: &str, ty: &VecType) -> Ident {
+pub(crate) fn split_intrinsic(name: &str, name2: &str, ty: &VecType) -> Ident {
     let (opt_q, scalar_c, size) = neon_array_type(ty);
     Ident::new(
         &format!("{name}{opt_q}_{name2}_{scalar_c}{size}"),
@@ -125,7 +120,7 @@ pub fn split_intrinsic(name: &str, name2: &str, ty: &VecType) -> Ident {
     )
 }
 
-pub fn cvt_intrinsic(name: &str, to_ty: &VecType, from_ty: &VecType) -> Ident {
+pub(crate) fn cvt_intrinsic(name: &str, to_ty: &VecType, from_ty: &VecType) -> Ident {
     let (opt_q, from_scalar_c, from_size) = neon_array_type(from_ty);
     let (_opt_q, to_scalar_c, to_size) = neon_array_type(to_ty);
     Ident::new(
