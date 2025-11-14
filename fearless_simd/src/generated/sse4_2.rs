@@ -36,6 +36,7 @@ impl Sse4_2 {
 impl Seal for Sse4_2 {}
 impl Simd for Sse4_2 {
     type f32s = f32x4<Self>;
+    type f64s = f64x2<Self>;
     type u8s = u8x16<Self>;
     type i8s = i8x16<Self>;
     type u16s = u16x8<Self>;
@@ -45,6 +46,7 @@ impl Simd for Sse4_2 {
     type mask8s = mask8x16<Self>;
     type mask16s = mask16x8<Self>;
     type mask32s = mask32x4<Self>;
+    type mask64s = mask64x2<Self>;
     #[inline(always)]
     fn level(self) -> Level {
         #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]

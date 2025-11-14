@@ -97,6 +97,7 @@ fn mk_simd_impl() -> TokenStream {
     quote! {
         impl Simd for #level_tok {
             type f32s = f32x8<Self>;
+            type f64s = f64x4<Self>;
             type u8s = u8x32<Self>;
             type i8s = i8x32<Self>;
             type u16s = u16x16<Self>;
@@ -106,6 +107,7 @@ fn mk_simd_impl() -> TokenStream {
             type mask8s = mask8x32<Self>;
             type mask16s = mask16x16<Self>;
             type mask32s = mask32x8<Self>;
+            type mask64s = mask64x4<Self>;
             #[inline(always)]
             fn level(self) -> Level {
                 Level::#level_tok(self)

@@ -23,6 +23,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
             Bytes = <Self::u32s as Bytes>::Bytes,
         > + SimdCvtFloat<Self::u32s>
         + SimdCvtFloat<Self::i32s>;
+    type f64s: SimdFloat<f64, Self, Block = f64x2<Self>, Mask = Self::mask64s>;
     type u8s: SimdInt<u8, Self, Block = u8x16<Self>, Mask = Self::mask8s>;
     type i8s: SimdInt<
             i8,
@@ -62,6 +63,9 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
         + Select<Self::u32s>
         + Select<Self::i32s>
         + Select<Self::mask32s>;
+    type mask64s: SimdMask<i64, Self, Block = mask64x2<Self>>
+        + Select<Self::f64s>
+        + Select<Self::mask64s>;
     fn level(self) -> Level;
     #[doc = r" Call function with CPU features enabled."]
     #[doc = r""]
