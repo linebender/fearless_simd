@@ -241,7 +241,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_STABLE_VER }}
-          targets: wasm32-wasip1
+          targets: wasm32-unknown-unknown,wasm32-wasip1
 
       - name: restore cache
         uses: Swatinem/rust-cache@v2
@@ -252,6 +252,12 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest,wasmtime-cli
+
+      # We test using wasm32-wasip1, but want to make sure that wasm32-unknown-unknown still builds
+      - name: cargo build (wasm32-unknown-unknown)
+        run: |
+          cargo build --target wasm32-unknown-unknown \
+            --config 'target.wasm32-unknown-unknown.rustflags = "-Ctarget-feature=+simd128"'
 
       - name: cargo nextest
         run: |
