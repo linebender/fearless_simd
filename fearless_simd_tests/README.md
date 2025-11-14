@@ -9,11 +9,20 @@ This is a development-only crate for testing `fearless_simd`.
 
 ### Testing WebAssembly +simd128
 
-Run browser tests with:
+To run the WebAssembly tests, first install a WebAssembly runtime such as [wasmtime](https://docs.wasmtime.dev/introduction.html):
 
 ```sh
-RUSTFLAGS=-Ctarget-feature=+simd128 wasm-pack test --headless --chrome
+cargo install --locked wasmtime-cli
 ```
 
-Currently these tests only enforce that WASM SIMD and the fallback scalar implementations match when
-run in the browser.
+Or [wasmi](https://github.com/wasmi-labs/wasmi):
+
+```sh
+cargo install --locked --features simd wasmi_cli
+```
+
+Run WebAssembly tests with:
+
+```sh
+cargo test --target wasm32-wasip1 --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' --config 'target.wasm32-wasip1.runner = "wasmtime"' # or "wasmi_cli" if you installed that
+```

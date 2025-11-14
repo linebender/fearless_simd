@@ -241,22 +241,22 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_STABLE_VER }}
-          targets: wasm32-unknown-unknown
+          targets: wasm32-wasip1
 
       - name: restore cache
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.event_name != 'merge_group' }}
 
-      - name: install wasm-pack
+      - name: install wasmtime
         uses: taiki-e/install-action@v2
         with:
-          tool: wasm-pack
+          tool: wasmtime-cli
 
-      - name: Run fearless_simd_tests on Chrome
-        run: RUSTFLAGS=-Ctarget-feature=+simd128 wasm-pack test --headless --chrome
+      - name: Run fearless_simd_tests in wasmtime
+        run: cargo test --target wasm32-wasip1 --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' --config 'target.wasm32-wasip1.runner = "wasmtime"'
         working-directory: fearless_simd_tests
-  
+
 
   check-msrv:
     name: cargo check (msrv)

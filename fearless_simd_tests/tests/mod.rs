@@ -10,9 +10,6 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-#[cfg(target_arch = "wasm32")]
-wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-
 mod harness;
 
 #[simd_test]
