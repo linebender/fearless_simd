@@ -35,16 +35,16 @@ impl Avx2 {
 }
 impl Seal for Avx2 {}
 impl Simd for Avx2 {
-    type f32s = f32x4<Self>;
-    type u8s = u8x16<Self>;
-    type i8s = i8x16<Self>;
-    type u16s = u16x8<Self>;
-    type i16s = i16x8<Self>;
-    type u32s = u32x4<Self>;
-    type i32s = i32x4<Self>;
-    type mask8s = mask8x16<Self>;
-    type mask16s = mask16x8<Self>;
-    type mask32s = mask32x4<Self>;
+    type f32s = f32x8<Self>;
+    type u8s = u8x32<Self>;
+    type i8s = i8x32<Self>;
+    type u16s = u16x16<Self>;
+    type i16s = i16x16<Self>;
+    type u32s = u32x8<Self>;
+    type i32s = i32x8<Self>;
+    type mask8s = mask8x32<Self>;
+    type mask16s = mask16x16<Self>;
+    type mask32s = mask32x8<Self>;
     #[inline(always)]
     fn level(self) -> Level {
         Level::Avx2(self)

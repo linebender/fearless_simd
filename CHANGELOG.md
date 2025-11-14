@@ -35,6 +35,8 @@ This release has an [MSRV][] of 1.88.
   The fallback level can be restored with the `force_support_fallback` cargo feature. We don't expect this to be necessary outside
   of tests.
 - Code generation for `select` and `unzip` operations on x86 has been improved. ([#115][] by [@valadaptive][])
+- Breaking change: The native-width associated types (`f32s`, `u8s`, etc.) for the `Avx2` struct have been widened from 128-bit
+  types (like `f32x4`) to 256-bit types (like `f32x8`). ([#123][] by [@valadaptive][])
 
 ### Removed
 
@@ -113,6 +115,7 @@ No changelog was kept for this release.
 [#99]: https://github.com/linebender/fearless_simd/pull/99
 [#105]: https://github.com/linebender/fearless_simd/pull/105
 [#115]: https://github.com/linebender/fearless_simd/pull/115
+[#123]: https://github.com/linebender/fearless_simd/pull/123
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
