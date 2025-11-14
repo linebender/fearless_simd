@@ -1,0 +1,20 @@
+[package]
+name = "fearless_simd_core"
+version = "0.3.0"
+description = "Safely run custom #[target_feature] functions"
+keywords = ["simd", "target_feature"]
+categories = ["hardware-support"]
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dev-dependencies]
+bytemuck = { version = "1.24.0", features = ["must_cast"] }
+
+[lints]
+workspace = true
+
+[features]
+default = ["std"]
+std = []

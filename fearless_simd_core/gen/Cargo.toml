@@ -1,0 +1,11 @@
+[package]
+name = "fearless_simd_core_gen"
+description = "Internal code generator for the Fearless SIMD Core crate."
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+publish = false
+
+[dependencies]

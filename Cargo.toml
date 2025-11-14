@@ -2,6 +2,8 @@
 resolver = "2"
 members = [
   "fearless_simd",
+  "fearless_simd_core",
+  "fearless_simd_core/gen",
   "fearless_simd_dev_macros",
   "fearless_simd_gen",
   "fearless_simd_tests",
@@ -13,7 +15,7 @@ license = "Apache-2.0 OR MIT"
 repository = "https://github.com/linebender/fearless_simd"
 # Keep in sync with RUST_MIN_VER in .github/workflows/ci.yml, with the relevant README.md files
 # and with the MSRV in the `Unreleased` section of CHANGELOG.md.
-rust-version = "1.88"
+rust-version = "1.91"
 
 [workspace.lints]
 
