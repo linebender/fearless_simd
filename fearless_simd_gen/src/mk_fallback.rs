@@ -1,13 +1,7 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
-use crate::arch::fallback::Fallback;
-use crate::arch::{Arch, fallback};
+use crate::arch::fallback;
 use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::ops::{OpSig, TyFlavor, ops_for_type, reinterpret_ty, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
@@ -15,7 +9,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
 #[derive(Clone, Copy)]
-pub struct Level;
+pub(crate) struct Level;
 
 impl Level {
     fn name(self) -> &'static str {
@@ -28,7 +22,7 @@ impl Level {
     }
 }
 
-pub fn mk_fallback_impl() -> TokenStream {
+pub(crate) fn mk_fallback_impl() -> TokenStream {
     let imports = type_imports();
     let simd_impl = mk_simd_impl();
 
@@ -145,7 +139,7 @@ fn mk_simd_impl() -> TokenStream {
                         (0..vec_ty.len)
                             .map(|idx| {
                                 let args = [quote! { a[#idx] }];
-                                let expr = Fallback.expr(method, vec_ty, &args);
+                                let expr = fallback::expr(method, vec_ty, &args);
                                 quote! { #expr }
                             })
                             .collect::<Vec<_>>(),
@@ -190,7 +184,7 @@ fn mk_simd_impl() -> TokenStream {
                                 };
 
                                 let args = [quote! { a[#idx] }, quote! { #b }];
-                                let expr = Fallback.expr(method, vec_ty, &args);
+                                let expr = fallback::expr(method, vec_ty, &args);
                                 quote! { #expr }
                             })
                             .collect::<Vec<_>>(),
@@ -203,12 +197,12 @@ fn mk_simd_impl() -> TokenStream {
                     }
                 }
                 OpSig::Shift => {
-                    let arch_ty = Fallback.arch_ty(vec_ty);
+                    let arch_ty = fallback::arch_ty(vec_ty);
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx| {
                                 let args = [quote! { a[#idx] }, quote! { shift as #arch_ty }];
-                                let expr = Fallback.expr(method, vec_ty, &args);
+                                let expr = fallback::expr(method, vec_ty, &args);
                                 quote! { #expr }
                             })
                             .collect::<Vec<_>>(),
@@ -243,7 +237,7 @@ fn mk_simd_impl() -> TokenStream {
                             quote! { c.into() },
                         ];
 
-                        let expr = Fallback.expr(method, vec_ty, &args);
+                        let expr = fallback::expr(method, vec_ty, &args);
                         quote! {
                             #method_sig {
                                #expr.simd_into(self)
@@ -257,7 +251,7 @@ fn mk_simd_impl() -> TokenStream {
                         (0..vec_ty.len)
                             .map(|idx: usize| {
                                 let args = [quote! { &a[#idx] }, quote! { &b[#idx] }];
-                                let expr = Fallback.expr(method, vec_ty, &args);
+                                let expr = fallback::expr(method, vec_ty, &args);
                                 let mask_ty = mask_type.scalar.rust(scalar_bits);
                                 quote! { -(#expr as #mask_ty) }
                             })

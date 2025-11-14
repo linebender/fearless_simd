@@ -1,11 +1,6 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
@@ -14,7 +9,7 @@ use crate::{
     types::{SIMD_TYPES, ScalarType, VecType},
 };
 
-pub fn mk_simd_types() -> TokenStream {
+pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
         use crate::{Bytes, Select, Simd, SimdFrom, SimdInto, SimdCvtFloat, SimdCvtTruncate};
     };

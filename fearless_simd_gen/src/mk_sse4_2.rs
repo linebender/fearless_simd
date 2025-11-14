@@ -1,9 +1,8 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use crate::arch::Arch;
 use crate::arch::x86::{
-    X86, cast_ident, coarse_type, cvt_intrinsic, extend_intrinsic, intrinsic_ident, op_suffix,
+    self, cast_ident, coarse_type, cvt_intrinsic, extend_intrinsic, intrinsic_ident, op_suffix,
     pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
     unpack_intrinsic,
 };
@@ -87,7 +86,7 @@ fn mk_simd_impl() -> TokenStream {
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty, X86, 128);
+            let method = make_method(method, sig, vec_ty);
 
             methods.push(method);
         }
@@ -139,7 +138,7 @@ fn mk_type_impl() -> TokenStream {
             continue;
         }
         let simd = ty.rust();
-        let arch = X86.arch_ty(ty);
+        let arch = x86::arch_ty(ty);
         result.push(quote! {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]
@@ -163,14 +162,7 @@ fn mk_type_impl() -> TokenStream {
     }
 }
 
-fn make_method(
-    method: &str,
-    sig: OpSig,
-    vec_ty: &VecType,
-    arch: impl Arch,
-    ty_bits: usize,
-) -> TokenStream {
-    let scalar_bits = vec_ty.scalar_bits;
+fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
     let ty_name = vec_ty.rust_name();
     let method_name = format!("{method}_{ty_name}");
     let method_ident = Ident::new(&method_name, Span::call_site());
@@ -186,22 +178,20 @@ fn make_method(
     }
 
     match sig {
-        OpSig::Splat => handle_splat(method_sig, vec_ty, scalar_bits, ty_bits),
-        OpSig::Compare => handle_compare(method_sig, method, vec_ty, scalar_bits, ty_bits, arch),
-        OpSig::Unary => handle_unary(method_sig, method, vec_ty, arch),
-        OpSig::WidenNarrow(t) => {
-            handle_widen_narrow(method_sig, method, vec_ty, scalar_bits, ty_bits, t)
-        }
-        OpSig::Binary => handle_binary(method_sig, method, vec_ty, arch),
-        OpSig::Shift => handle_shift(method_sig, method, vec_ty, scalar_bits, ty_bits),
+        OpSig::Splat => handle_splat(method_sig, vec_ty),
+        OpSig::Compare => handle_compare(method_sig, method, vec_ty),
+        OpSig::Unary => handle_unary(method_sig, method, vec_ty),
+        OpSig::WidenNarrow(t) => handle_widen_narrow(method_sig, method, vec_ty, t),
+        OpSig::Binary => handle_binary(method_sig, method, vec_ty),
+        OpSig::Shift => handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
-        OpSig::Select => handle_select(method_sig, vec_ty, scalar_bits),
+        OpSig::Select => handle_select(method_sig, vec_ty),
         OpSig::Combine => generic_combine(vec_ty),
         OpSig::Split => generic_split(vec_ty),
-        OpSig::Zip(zip1) => handle_zip(method_sig, vec_ty, scalar_bits, zip1),
-        OpSig::Unzip(select_even) => handle_unzip(method_sig, vec_ty, scalar_bits, select_even),
+        OpSig::Zip(zip1) => handle_zip(method_sig, vec_ty, zip1),
+        OpSig::Unzip(select_even) => handle_unzip(method_sig, vec_ty, select_even),
         OpSig::Cvt(scalar, target_scalar_bits) => {
-            handle_cvt(method_sig, vec_ty, ty_bits, scalar, target_scalar_bits)
+            handle_cvt(method_sig, vec_ty, scalar, target_scalar_bits)
         }
         OpSig::Reinterpret(scalar, target_scalar_bits) => {
             handle_reinterpret(method_sig, vec_ty, scalar, target_scalar_bits)
@@ -213,13 +203,8 @@ fn make_method(
     }
 }
 
-pub(crate) fn handle_splat(
-    method_sig: TokenStream,
-    vec_ty: &VecType,
-    scalar_bits: usize,
-    ty_bits: usize,
-) -> TokenStream {
-    let intrinsic = set1_intrinsic(vec_ty.scalar, scalar_bits, ty_bits);
+pub(crate) fn handle_splat(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let intrinsic = set1_intrinsic(vec_ty);
     let cast = match vec_ty.scalar {
         ScalarType::Unsigned => quote!(as _),
         _ => quote!(),
@@ -237,9 +222,6 @@ pub(crate) fn handle_compare(
     method_sig: TokenStream,
     method: &str,
     vec_ty: &VecType,
-    scalar_bits: usize,
-    ty_bits: usize,
-    arch: impl Arch,
 ) -> TokenStream {
     let args = [quote! { a.into() }, quote! { b.into() }];
 
@@ -252,36 +234,24 @@ pub(crate) fn handle_compare(
                     _ => unreachable!(),
                 };
 
-                // TODO: in some places, we use vec_ty.scalar bits, and in other places, we use the scalar_bits argument.
-                // AFAIK, these never differ.
-                let eq_intrinsic = simple_sign_unaware_intrinsic(
-                    "cmpeq",
-                    vec_ty.scalar,
-                    vec_ty.scalar_bits,
-                    ty_bits,
-                );
+                let eq_intrinsic = simple_sign_unaware_intrinsic("cmpeq", vec_ty);
 
-                let max_min_expr = arch.expr(max_min, vec_ty, &args);
+                let max_min_expr = x86::expr(max_min, vec_ty, &args);
                 quote! { #eq_intrinsic(#max_min_expr, a.into()) }
             }
             "simd_lt" | "simd_gt" => {
-                let gt = simple_sign_unaware_intrinsic(
-                    "cmpgt",
-                    vec_ty.scalar,
-                    vec_ty.scalar_bits,
-                    ty_bits,
-                );
+                let gt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
 
                 if vec_ty.scalar == ScalarType::Unsigned {
                     // SSE4.2 only has signed GT/LT, but not unsigned.
-                    let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+                    let set = set1_intrinsic(vec_ty);
                     let sign = match vec_ty.scalar_bits {
                         8 => quote! { 0x80u8 },
                         16 => quote! { 0x8000u16 },
                         32 => quote! { 0x80000000u32 },
                         _ => unimplemented!(),
                     };
-                    let xor_op = intrinsic_ident("xor", coarse_type(*vec_ty), ty_bits);
+                    let xor_op = intrinsic_ident("xor", coarse_type(vec_ty), vec_ty.n_bits());
                     let args = if method == "simd_lt" {
                         quote! { b_signed, a_signed }
                     } else {
@@ -306,12 +276,17 @@ pub(crate) fn handle_compare(
                     }
                 }
             }
-            "simd_eq" => arch.expr(method, vec_ty, &args),
+            "simd_eq" => x86::expr(method, vec_ty, &args),
             _ => unreachable!(),
         }
     } else {
-        let expr = arch.expr(method, vec_ty, &args);
-        let ident = cast_ident(ScalarType::Float, ScalarType::Mask, scalar_bits, ty_bits);
+        let expr = x86::expr(method, vec_ty, &args);
+        let ident = cast_ident(
+            ScalarType::Float,
+            ScalarType::Mask,
+            vec_ty.scalar_bits,
+            vec_ty.n_bits(),
+        );
         quote! { #ident(#expr) }
     };
 
@@ -322,12 +297,7 @@ pub(crate) fn handle_compare(
     }
 }
 
-pub(crate) fn handle_unary(
-    method_sig: TokenStream,
-    method: &str,
-    vec_ty: &VecType,
-    arch: impl Arch,
-) -> TokenStream {
+pub(crate) fn handle_unary(method_sig: TokenStream, method: &str, vec_ty: &VecType) -> TokenStream {
     match method {
         "fract" => {
             quote! {
@@ -345,7 +315,7 @@ pub(crate) fn handle_unary(
         }
         _ => {
             let args = [quote! { a.into() }];
-            let expr = arch.expr(method, vec_ty, &args);
+            let expr = x86::expr(method, vec_ty, &args);
             quote! {
                 #method_sig {
                     unsafe { #expr.simd_into(self) }
@@ -359,18 +329,21 @@ pub(crate) fn handle_widen_narrow(
     method_sig: TokenStream,
     method: &str,
     vec_ty: &VecType,
-    scalar_bits: usize,
-    ty_bits: usize,
     t: VecType,
 ) -> TokenStream {
     match method {
         "widen" => {
-            let extend = extend_intrinsic(vec_ty.scalar, scalar_bits, t.scalar_bits, ty_bits);
+            let extend = extend_intrinsic(
+                vec_ty.scalar,
+                vec_ty.scalar_bits,
+                t.scalar_bits,
+                vec_ty.n_bits(),
+            );
             let combine = format_ident!(
                 "combine_{}",
                 VecType {
                     len: vec_ty.len / 2,
-                    scalar_bits: scalar_bits * 2,
+                    scalar_bits: vec_ty.scalar_bits * 2,
                     ..*vec_ty
                 }
                 .rust_name()
@@ -389,9 +362,13 @@ pub(crate) fn handle_widen_narrow(
             }
         }
         "narrow" => {
-            let mask = set1_intrinsic(vec_ty.scalar, scalar_bits, t.n_bits());
+            let mask = set1_intrinsic(&VecType::new(
+                vec_ty.scalar,
+                vec_ty.scalar_bits,
+                vec_ty.len / 2,
+            ));
             let pack = pack_intrinsic(
-                scalar_bits,
+                vec_ty.scalar_bits,
                 matches!(vec_ty.scalar, ScalarType::Int),
                 t.n_bits(),
             );
@@ -419,14 +396,13 @@ pub(crate) fn handle_binary(
     method_sig: TokenStream,
     method: &str,
     vec_ty: &VecType,
-    arch: impl Arch,
 ) -> TokenStream {
     if method == "mul" && vec_ty.scalar_bits == 8 {
         // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
         let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
         let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
-        let and = intrinsic_ident("and", coarse_type(*vec_ty), vec_ty.n_bits());
-        let or = intrinsic_ident("or", coarse_type(*vec_ty), vec_ty.n_bits());
+        let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
+        let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
         let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
         let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
         quote! {
@@ -441,7 +417,7 @@ pub(crate) fn handle_binary(
         }
     } else {
         let args = [quote! { a.into() }, quote! { b.into() }];
-        let expr = arch.expr(method, vec_ty, &args);
+        let expr = x86::expr(method, vec_ty, &args);
         quote! {
             #method_sig {
                 unsafe { #expr.simd_into(self) }
@@ -450,30 +426,25 @@ pub(crate) fn handle_binary(
     }
 }
 
-pub(crate) fn handle_shift(
-    method_sig: TokenStream,
-    method: &str,
-    vec_ty: &VecType,
-    scalar_bits: usize,
-    ty_bits: usize,
-) -> TokenStream {
+pub(crate) fn handle_shift(method_sig: TokenStream, method: &str, vec_ty: &VecType) -> TokenStream {
     let op = match (method, vec_ty.scalar) {
         ("shr", ScalarType::Unsigned) => "srl",
         ("shr", ScalarType::Int) => "sra",
         ("shl", _) => "sll",
         _ => unreachable!(),
     };
-    let suffix = op_suffix(vec_ty.scalar, scalar_bits.max(16), false);
+    let ty_bits = vec_ty.n_bits();
+    let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits.max(16), false);
     let shift_intrinsic = intrinsic_ident(op, suffix, ty_bits);
 
-    if scalar_bits == 8 {
+    if vec_ty.scalar_bits == 8 {
         // SSE doesn't have shifting for 8-bit, so we first convert into
         // 16 bit, shift, and then back to 8-bit
 
         let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
         let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
 
-        let set0 = intrinsic_ident("setzero", coarse_type(*vec_ty), ty_bits);
+        let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
         let extend_expr = |expr| match vec_ty.scalar {
             ScalarType::Unsigned => quote! {
                 #expr(val, #set0())
@@ -544,7 +515,7 @@ pub(crate) fn handle_ternary(
                 quote! { c.into() },
             ];
 
-            let expr = X86.expr(method, vec_ty, &args);
+            let expr = x86::expr(method, vec_ty, &args);
             quote! {
                 #method_sig {
                    #expr.simd_into(self)
@@ -554,11 +525,7 @@ pub(crate) fn handle_ternary(
     }
 }
 
-pub(crate) fn handle_select(
-    method_sig: TokenStream,
-    vec_ty: &VecType,
-    scalar_bits: usize,
-) -> TokenStream {
+pub(crate) fn handle_select(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     // Our select ops' argument order is mask, a, b; Intel's intrinsics are b, a, mask
     let args = [
         quote! { c.into() },
@@ -568,7 +535,7 @@ pub(crate) fn handle_select(
                 let ident = cast_ident(
                     ScalarType::Mask,
                     ScalarType::Float,
-                    scalar_bits,
+                    vec_ty.scalar_bits,
                     vec_ty.n_bits(),
                 );
                 quote! { #ident(a.into()) }
@@ -576,7 +543,7 @@ pub(crate) fn handle_select(
             _ => quote! { a.into() },
         },
     ];
-    let expr = X86.expr("select", vec_ty, &args);
+    let expr = x86::expr("select", vec_ty, &args);
 
     quote! {
         #method_sig {
@@ -585,24 +552,19 @@ pub(crate) fn handle_select(
     }
 }
 
-pub(crate) fn handle_zip(
-    method_sig: TokenStream,
-    vec_ty: &VecType,
-    scalar_bits: usize,
-    zip1: bool,
-) -> TokenStream {
+pub(crate) fn handle_zip(method_sig: TokenStream, vec_ty: &VecType, zip1: bool) -> TokenStream {
     let expr = match vec_ty.n_bits() {
         128 => {
             let op = if zip1 { "unpacklo" } else { "unpackhi" };
 
-            let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+            let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
             let unpack_intrinsic = intrinsic_ident(op, suffix, vec_ty.n_bits());
             quote! {
                 unsafe {  #unpack_intrinsic(a.into(), b.into()).simd_into(self) }
             }
         }
         256 => {
-            let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+            let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
             let lo = intrinsic_ident("unpacklo", suffix, vec_ty.n_bits());
             let hi = intrinsic_ident("unpackhi", suffix, vec_ty.n_bits());
             let shuffle_immediate = if zip1 {
@@ -616,7 +578,7 @@ pub(crate) fn handle_zip(
                     ScalarType::Float => "permute2f128",
                     _ => "permute2x128",
                 },
-                coarse_type(*vec_ty),
+                coarse_type(vec_ty),
                 256,
             );
 
@@ -642,13 +604,12 @@ pub(crate) fn handle_zip(
 pub(crate) fn handle_unzip(
     method_sig: TokenStream,
     vec_ty: &VecType,
-    scalar_bits: usize,
     select_even: bool,
 ) -> TokenStream {
-    let expr = match (vec_ty.scalar, vec_ty.n_bits(), scalar_bits) {
+    let expr = match (vec_ty.scalar, vec_ty.n_bits(), vec_ty.scalar_bits) {
         (ScalarType::Float, 128, _) => {
             // 128-bit shuffle of floats or doubles; there are built-in SSE intrinsics for this
-            let suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+            let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
             let intrinsic = intrinsic_ident("shuffle", suffix, vec_ty.n_bits());
 
             let mask = match (vec_ty.scalar_bits, select_even) {
@@ -677,7 +638,7 @@ pub(crate) fn handle_unzip(
         }
         (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 16 | 8) => {
             // Separate out the even-indexed and odd-indexed elements
-            let mask = match scalar_bits {
+            let mask = match vec_ty.scalar_bits {
                 8 => {
                     quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 }
                 }
@@ -711,14 +672,14 @@ pub(crate) fn handle_unzip(
             // First we perform a lane-crossing shuffle to move the even-indexed elements of each input to the lower
             // half, and the odd-indexed ones to the upper half.
             // e.g. [0, 1, 2, 3, 4, 5, 6, 7] becomes [0, 2, 4, 6, 1, 3, 5, 7]).
-            let low_shuffle_kind = match scalar_bits {
+            let low_shuffle_kind = match vec_ty.scalar_bits {
                 32 => "permutevar8x32",
                 64 => "permute4x64",
                 _ => unreachable!(),
             };
-            let low_shuffle_suffix = op_suffix(vec_ty.scalar, scalar_bits, false);
+            let low_shuffle_suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
             let low_shuffle_intrinsic = intrinsic_ident(low_shuffle_kind, low_shuffle_suffix, 256);
-            let low_shuffle = |input_name: TokenStream| match scalar_bits {
+            let low_shuffle = |input_name: TokenStream| match vec_ty.scalar_bits {
                 32 => {
                     quote! { #low_shuffle_intrinsic(#input_name, _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7)) }
                 }
@@ -734,7 +695,7 @@ pub(crate) fn handle_unzip(
                     ScalarType::Float => "permute2f128",
                     _ => "permute2x128",
                 },
-                coarse_type(*vec_ty),
+                coarse_type(vec_ty),
                 256,
             );
             let high_shuffle_immediate = if select_even {
@@ -754,7 +715,7 @@ pub(crate) fn handle_unzip(
         }
         (_, 256, 16 | 8) => {
             // Separate out the even-indexed and odd-indexed elements within each 128-bit lane
-            let mask = match scalar_bits {
+            let mask = match vec_ty.scalar_bits {
                 8 => {
                     quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 }
                 }
@@ -800,20 +761,22 @@ pub(crate) fn handle_unzip(
 pub(crate) fn handle_cvt(
     method_sig: TokenStream,
     vec_ty: &VecType,
-    ty_bits: usize,
-    scalar: ScalarType,
-    scalar_bits: usize,
+    target_scalar: ScalarType,
+    target_scalar_bits: usize,
 ) -> TokenStream {
     // IMPORTANT TODO: for f32 to u32, we are currently converting it to i32 instead
     // of u32. We need to properly polyfill this.
-    let cvt_intrinsic = cvt_intrinsic(*vec_ty, VecType::new(scalar, scalar_bits, vec_ty.len));
+    let cvt_intrinsic = cvt_intrinsic(
+        vec_ty,
+        &VecType::new(target_scalar, target_scalar_bits, vec_ty.len),
+    );
 
     let expr = if vec_ty.scalar == ScalarType::Float {
-        let floor_intrinsic = simple_intrinsic("floor", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
-        let max_intrinsic = simple_intrinsic("max", vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
-        let set = set1_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, ty_bits);
+        let floor_intrinsic = simple_intrinsic("floor", vec_ty);
+        let max_intrinsic = simple_intrinsic("max", vec_ty);
+        let set = set1_intrinsic(vec_ty);
 
-        if scalar == ScalarType::Unsigned {
+        if target_scalar == ScalarType::Unsigned {
             quote! { #max_intrinsic(#floor_intrinsic(a.into()), #set(0.0)) }
         } else {
             quote! { a.trunc().into() }

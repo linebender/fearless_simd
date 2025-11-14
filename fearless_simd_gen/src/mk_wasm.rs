@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 #![expect(
-    unreachable_pub,
     clippy::missing_assert_message,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
@@ -13,14 +12,14 @@ use quote::{format_ident, quote};
 use crate::generic::scalar_binary;
 use crate::ops::valid_reinterpret;
 use crate::{
-    arch::{Arch, wasm::Wasm},
+    arch::wasm,
     generic::{generic_combine, generic_op, generic_split},
     ops::{OpSig, TyFlavor, ops_for_type},
     types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
 #[derive(Clone, Copy)]
-pub enum Level {
+pub(crate) enum Level {
     WasmSimd128,
 }
 
@@ -66,7 +65,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
             };
             let m = match sig {
                 OpSig::Splat => {
-                    let expr = Wasm.expr(method, vec_ty, &[quote! { val }]);
+                    let expr = wasm::expr(method, vec_ty, &[quote! { val }]);
                     quote! {
                         #method_sig {
                             #expr.simd_into(self)
@@ -86,7 +85,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             a.sub(a.trunc())
                         }
                     } else {
-                        let expr = Wasm.expr(method, vec_ty, &args);
+                        let expr = wasm::expr(method, vec_ty, &args);
                         quote! { #expr.simd_into(self) }
                     };
 
@@ -145,7 +144,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             // that `max(NaN, x)` and `min(NaN, x)` result in `x`. This matches
                             // `_mm_max_ps` and `_mm_min_ps` semantics on x86.
                             let swapped_args = [quote! { b.into() }, quote! { a.into() }];
-                            let expr: TokenStream = Wasm.expr(method, vec_ty, &swapped_args);
+                            let expr: TokenStream = wasm::expr(method, vec_ty, &swapped_args);
                             quote! {
                                 #method_sig {
                                     #expr.simd_into(self)
@@ -153,7 +152,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             }
                         }
                         _ => {
-                            let expr = Wasm.expr(method, vec_ty, &args);
+                            let expr = wasm::expr(method, vec_ty, &args);
                             quote! {
                                 #method_sig {
                                     #expr.simd_into(self)
@@ -182,7 +181,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Compare => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
-                    let expr = Wasm.expr(method, vec_ty, &args);
+                    let expr = wasm::expr(method, vec_ty, &args);
                     quote! {
                         #method_sig {
                             #expr.simd_into(self)
@@ -550,7 +549,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
     }
 }
 
-pub fn mk_wasm128_impl(level: Level) -> TokenStream {
+pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
     let imports = type_imports();
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();

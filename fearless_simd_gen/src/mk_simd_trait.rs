@@ -1,11 +1,6 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
@@ -14,7 +9,7 @@ use crate::{
     types::{SIMD_TYPES, type_imports},
 };
 
-pub fn mk_simd_trait() -> TokenStream {
+pub(crate) fn mk_simd_trait() -> TokenStream {
     let imports = type_imports();
     let mut methods = vec![];
     // Float methods
