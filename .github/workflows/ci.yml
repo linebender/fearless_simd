@@ -253,9 +253,15 @@ jobs:
         with:
           tool: wasmtime-cli
 
-      - name: Run fearless_simd_tests in wasmtime
-        run: cargo test --target wasm32-wasip1 --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' --config 'target.wasm32-wasip1.runner = "wasmtime"'
-        working-directory: fearless_simd_tests
+      - name: cargo nextest
+        run: cargo nextest run --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+          --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
+          --config 'target.wasm32-wasip1.runner = "wasmtime"'
+
+      - name: cargo test --doc
+        run: cargo test --doc --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+          --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
+          --config 'target.wasm32-wasip1.runner = "wasmtime"'
 
 
   check-msrv:
