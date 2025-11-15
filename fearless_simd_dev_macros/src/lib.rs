@@ -23,91 +23,85 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     let avx2_name = get_ident("avx2");
     let wasm_name = get_ident("wasm");
 
-    let include_fallback = !exclude_fallback(&input_fn_name.to_string());
-    #[cfg(target_arch = "aarch64")]
-    let include_neon = std::arch::is_aarch64_feature_detected!("neon")
-        && !exclude_neon(&input_fn_name.to_string());
-    #[cfg(not(target_arch = "aarch64"))]
-    let include_neon = false;
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    let include_sse4 =
-        std::arch::is_x86_feature_detected!("sse4.2") && !exclude_sse4(&input_fn_name.to_string());
-    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-    let include_sse4 = false;
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    let include_avx2 = std::arch::is_x86_feature_detected!("avx2")
-        && std::arch::is_x86_feature_detected!("fma")
-        && !exclude_avx2(&input_fn_name.to_string());
-    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-    let include_avx2 = false;
-    // Note that we cannot feature-gate this with `target_arch`. If we run
-    // `cargo test --target wasm32-wasip1`, then the `target_arch` will still be set to
-    // the operating system you are running on. Because of this, we instead add the `target_arch`
-    // feature gate to the actual test.
-    let include_wasm = !exclude_wasm(&input_fn_name.to_string());
-
-    let fallback_snippet = if include_fallback {
-        quote! {
-            #[test]
-            fn #fallback_name() {
-                let fallback = fearless_simd::Fallback::new();
-                #input_fn_name(fallback);
-            }
+    let ignore_attr = |f: fn(&str) -> bool| {
+        let should_ignore = f(&input_fn_name.to_string());
+        if should_ignore {
+            quote! { #[ignore] }
+        } else {
+            quote! {}
         }
-    } else {
-        quote! {}
     };
 
-    let neon_snippet = if include_neon {
-        quote! {
-            #[cfg(target_arch = "aarch64")]
-            #[test]
-            fn #neon_name() {
-                let neon = unsafe { fearless_simd::aarch64::Neon::new_unchecked() };
-                #input_fn_name(neon);
-            }
+    let ignore_fallback = ignore_attr(exclude_fallback);
+    let ignore_neon = ignore_attr(exclude_neon);
+    let ignore_sse4 = ignore_attr(exclude_sse4);
+    let ignore_avx2 = ignore_attr(exclude_avx2);
+    let ignore_wasm = ignore_attr(exclude_wasm);
+
+    let fallback_snippet = quote! {
+        #[test]
+        #ignore_fallback
+        fn #fallback_name() {
+            let fallback = fearless_simd::Fallback::new();
+            #input_fn_name(fallback);
         }
-    } else {
-        quote! {}
     };
 
-    let sse4_snippet = if include_sse4 {
-        quote! {
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            #[test]
-            fn #sse4_name() {
-                let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
-                #input_fn_name(sse4);
-            }
+    // All of the architecture-specific tests need to be included every time, and #[cfg]'d out depending on the target
+    // architecture. We can't use `CARGO_CFG_TARGET_ARCH` to conditionally omit them because it's not available when
+    // proc macros are evaluated.
+
+    // There is currently no way to conditionally ignore a test at runtime (see
+    // https://internals.rust-lang.org/t/pre-rfc-skippable-tests/14611). Instead, we have to assert that these CPU
+    // features are always detected and fail the test if they aren't.
+
+    let neon_snippet = quote! {
+        #[cfg(target_arch = "aarch64")]
+        #[test]
+        #ignore_neon
+        fn #neon_name() {
+            assert!(std::arch::is_aarch64_feature_detected!("neon"));
+
+            let neon = unsafe { fearless_simd::aarch64::Neon::new_unchecked() };
+            #input_fn_name(neon);
         }
-    } else {
-        quote! {}
     };
 
-    let avx2_snippet = if include_avx2 {
-        quote! {
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            #[test]
-            fn #avx2_name() {
-                let avx2 = unsafe { fearless_simd::x86::Avx2::new_unchecked() };
-                #input_fn_name(avx2);
-            }
+    let sse4_snippet = quote! {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #[test]
+        #ignore_sse4
+        fn #sse4_name() {
+            assert!(std::arch::is_x86_feature_detected!("sse4.2"));
+
+            let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
+            #input_fn_name(sse4);
         }
-    } else {
-        quote! {}
     };
 
-    let wasm_snippet = if include_wasm {
-        quote! {
-            #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-            #[test]
-            fn #wasm_name() {
-                let wasm = unsafe { fearless_simd::wasm32::WasmSimd128::new_unchecked() };
-                #input_fn_name(wasm);
-            }
+    let avx2_snippet = quote! {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #[test]
+        #ignore_avx2
+        fn #avx2_name() {
+            assert!(
+                std::arch::is_x86_feature_detected!("avx2")
+                && std::arch::is_x86_feature_detected!("fma")
+            );
+
+            let avx2 = unsafe { fearless_simd::x86::Avx2::new_unchecked() };
+            #input_fn_name(avx2);
         }
-    } else {
-        quote! {}
+    };
+
+    let wasm_snippet = quote! {
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        #[test]
+        #ignore_wasm
+        fn #wasm_name() {
+            let wasm = unsafe { fearless_simd::wasm32::WasmSimd128::new_unchecked() };
+            #input_fn_name(wasm);
+        }
     };
 
     quote! {
@@ -125,8 +119,6 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 // You can update below functions if you want to exclude certain tests from different architectures
 // (for example because they haven't been implemented yet).
 
-#[allow(clippy::allow_attributes, reason = "Lints only apply in some cfgs.")]
-#[allow(dead_code, reason = "Used only on aarch64, but always type-checked.")]
 fn exclude_neon(_test_name: &str) -> bool {
     false
 }
@@ -135,8 +127,6 @@ fn exclude_fallback(_test_name: &str) -> bool {
     false
 }
 
-#[allow(clippy::allow_attributes, reason = "Lints only apply in some cfgs.")]
-#[allow(dead_code, reason = "Used only on x86(-64), but always type-checked.")]
 fn exclude_sse4(test_name: &str) -> bool {
     matches!(
         test_name,
@@ -145,8 +135,6 @@ fn exclude_sse4(test_name: &str) -> bool {
     ) || test_name.contains("precise")
 }
 
-#[allow(clippy::allow_attributes, reason = "Lints only apply in some cfgs.")]
-#[allow(dead_code, reason = "Used only on x86(-64), but always type-checked.")]
 fn exclude_avx2(test_name: &str) -> bool {
     matches!(
         test_name,
@@ -155,8 +143,6 @@ fn exclude_avx2(test_name: &str) -> bool {
     ) || test_name.contains("precise")
 }
 
-#[allow(clippy::allow_attributes, reason = "Lints only apply in some cfgs.")]
-#[allow(dead_code, reason = "Used only on wasm32, but always type-checked.")]
 fn exclude_wasm(test_name: &str) -> bool {
     matches!(
         test_name,
