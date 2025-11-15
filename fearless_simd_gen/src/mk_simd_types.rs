@@ -11,7 +11,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdFrom, SimdInto, SimdCvtFloat, SimdCvtTruncate};
+        use crate::{Bytes, Select, Simd, SimdFrom, SimdInto, SimdCvtFloat, SimdCvtTruncate, Scalar};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -180,7 +180,229 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             #( #cvt_impls )*
         });
     }
+
+    for ty in [ScalarType::Unsigned, ScalarType::Int, ScalarType::Float] {
+        for bits in [8, 16, 32] {
+            if ty == ScalarType::Float && ![32, 64].contains(&bits) {
+                continue;
+            }
+            result.extend(scalar_impl(ty, bits));
+        }
+    }
+    for bits in [8, 16, 32] {
+        let ty = ScalarType::Int;
+        let scalar = ty.rust(bits);
+        result.extend(quote! {
+            impl crate::SimdMask<#scalar, Scalar> for #scalar {
+                fn simd_eq(self, rhs: impl SimdInto<Self, Scalar>) -> Self::Mask {
+                    -((self == rhs.simd_into(Scalar)) as #scalar)
+                }
+            }
+        });
+    }
+
     result
+}
+
+fn scalar_impl(ty: ScalarType, bits: usize) -> TokenStream {
+    let scalar = ty.rust(bits);
+    let block_ty = VecType::new(ty, bits, 128 / bits).rust();
+    let mask = ScalarType::Int.rust(bits);
+    let bytes = ScalarType::Unsigned.rust(bits);
+    let to_bytes = match ty {
+        ScalarType::Float => quote! { self.to_bits() },
+        ScalarType::Int => quote! { self as #bytes },
+        ScalarType::Unsigned | ScalarType::Mask => quote! { self },
+    };
+    let from_bytes = match ty {
+        ScalarType::Float => quote! { #scalar::from_bits(value) },
+        ScalarType::Int => quote! { value as Self },
+        ScalarType::Unsigned | ScalarType::Mask => quote! { value },
+    };
+    let cvt_float = match (ty, bits) {
+        (ScalarType::Int | ScalarType::Unsigned, 32) => quote! {
+            impl crate::SimdCvtTruncate<f32> for #scalar {
+                fn truncate_from(x: f32) -> Self { x as Self }
+            }
+            impl crate::SimdCvtFloat<#scalar> for f32 {
+                fn float_from(x: #scalar) -> Self {
+                    x as Self
+                }
+            }
+        },
+        _ => quote!(),
+    };
+    let common = quote! {
+        #[inline(always)]
+        fn simd_eq(self, rhs: impl SimdInto<Self, Scalar>) -> Self::Mask {
+            -((self == rhs.simd_into(Scalar)) as #mask)
+        }
+        #[inline(always)]
+        fn simd_lt(self, rhs: impl SimdInto<Self, Scalar>) -> Self::Mask {
+            -((self < rhs.simd_into(Scalar)) as #mask)
+        }
+        #[inline(always)]
+        fn simd_le(self, rhs: impl SimdInto<Self, Scalar>) -> Self::Mask {
+            -((self <= rhs.simd_into(Scalar)) as #mask)
+        }
+        #[inline(always)]
+        fn simd_ge(self, rhs: impl SimdInto<Self, Scalar>) -> Self::Mask {
+            -((self >= rhs.simd_into(Scalar)) as #mask)
+        }
+        #[inline(always)]
+        fn simd_gt(self, rhs: impl SimdInto<Self, Scalar>) -> Self::Mask {
+            -((self > rhs.simd_into(Scalar)) as #mask)
+        }
+        #[inline(always)]
+        fn zip_low(self, _rhs: impl SimdInto<Self, Scalar>) -> Self {
+            self
+        }
+        #[inline(always)]
+        fn zip_high(self, _rhs: impl SimdInto<Self, Scalar>) -> Self {
+            self
+        }
+        #[inline(always)]
+        fn unzip_low(self, _rhs: impl SimdInto<Self, Scalar>) -> Self {
+            self
+        }
+        #[inline(always)]
+        fn unzip_high(self, _rhs: impl SimdInto<Self, Scalar>) -> Self {
+            self
+        }
+    };
+    let ty_impl = match ty {
+        ScalarType::Int | ScalarType::Unsigned => quote! {
+            impl crate::SimdInt<#scalar, Scalar> for #scalar {
+                #common
+
+                #[inline(always)]
+                fn min(self, rhs: impl SimdInto<Self, Scalar>) -> Self {
+                    Ord::min(self, rhs.simd_into(Scalar))
+                }
+                #[inline(always)]
+                fn max(self, rhs: impl SimdInto<Self, Scalar>) -> Self {
+                    Ord::max(self, rhs.simd_into(Scalar))
+                }
+            }
+        },
+        ScalarType::Float => quote! {
+            impl crate::SimdFloat<#scalar, Scalar> for #scalar {
+                #common
+
+                #[inline(always)]
+                fn abs(self) -> Self {
+                    #scalar::abs(self)
+                }
+                #[inline(always)]
+                fn sqrt(self) -> Self {
+                    #scalar::sqrt(self)
+                }
+                #[inline(always)]
+                fn copysign(self, rhs: impl SimdInto<Self, Scalar>) -> Self {
+                    #scalar::copysign(self, rhs.simd_into(Scalar))
+                }
+
+                #[inline(always)]
+                fn max(self, rhs: impl SimdInto<Self, Scalar>) -> Self {
+                    #scalar::max(self, rhs.simd_into(Scalar))
+                }
+                #[inline(always)]
+                fn max_precise(self, rhs: impl SimdInto<Self, Scalar>) -> Self {
+                    #scalar::max(self, rhs.simd_into(Scalar))
+                }
+                #[inline(always)]
+                fn min(self, rhs: impl SimdInto<Self, Scalar>) -> Self {
+                    #scalar::min(self, rhs.simd_into(Scalar))
+                }
+                #[inline(always)]
+                fn min_precise(self, rhs: impl SimdInto<Self, Scalar>) -> Self {
+                    #scalar::min(self, rhs.simd_into(Scalar))
+                }
+                #[inline(always)]
+                fn madd(
+                    self,
+                    op1: impl SimdInto<Self, Scalar>,
+                    op2: impl SimdInto<Self, Scalar>,
+                ) -> Self {
+                    self.mul_add(op1.simd_into(Scalar), op2.simd_into(Scalar))
+                }
+                #[inline(always)]
+                fn msub(
+                    self,
+                    op1: impl SimdInto<Self, Scalar>,
+                    op2: impl SimdInto<Self, Scalar>,
+                ) -> Self {
+                    self.mul_add(op1.simd_into(Scalar), -op2.simd_into(Scalar))
+                }
+                #[inline(always)]
+                fn floor(self) -> Self {
+                    #scalar::floor(self)
+                }
+                #[inline(always)]
+                fn fract(self) -> Self {
+                    #scalar::fract(self)
+                }
+                #[inline(always)]
+                fn trunc(self) -> Self {
+                    #scalar::trunc(self)
+                }
+            }
+        },
+        _ => quote!(),
+    };
+    quote! {
+        impl crate::Bytes for #scalar {
+            type Bytes = #bytes;
+            fn to_bytes(self) -> #bytes { #to_bytes }
+            fn from_bytes(value: #bytes) -> Self { #from_bytes }
+        }
+
+        impl crate::SimdBase<#scalar, Scalar> for #scalar {
+            const N: usize = 1;
+            type Mask = #mask;
+            type Block = #block_ty<Scalar>;
+
+            #[inline(always)]
+            fn witness(&self) -> Scalar {
+                Scalar
+            }
+
+            #[inline(always)]
+            fn as_slice(&self) -> &[#scalar] {
+                core::slice::from_ref(self)
+            }
+
+            #[inline(always)]
+            fn as_mut_slice(&mut self) -> &mut [#scalar] {
+                core::slice::from_mut(self)
+            }
+
+            #[inline(always)]
+            fn from_slice(Scalar: Scalar, slice: &[#scalar]) -> Self {
+                slice[0]
+            }
+
+            #[inline(always)]
+            fn splat(Scalar: Scalar, val: #scalar) -> Self {
+                val
+            }
+
+            #[inline(always)]
+            fn block_splat(block: Self::Block) -> Self {
+                block.as_slice()[0]
+            }
+        }
+
+        #ty_impl
+
+        impl crate::Select<#scalar> for #mask {
+            fn select(self, if_true: #scalar, if_false: #scalar) -> #scalar {
+                if self != 0 { if_true } else { if_false }
+            }
+        }
+
+        #cvt_float
+    }
 }
 
 /// Create the impl block for the type
