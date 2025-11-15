@@ -186,6 +186,16 @@ impl Simd for Sse4_2 {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> f64x4<Self> {
+        unsafe {
+            let raw = a.into();
+            let high = _mm_cvtps_pd(raw).simd_into(self);
+            let low = _mm_cvtps_pd(_mm_castsi128_ps(_mm_srli_si128::<8>(_mm_castps_si128(raw))))
+                .simd_into(self);
+            self.combine_f64x2(high, low)
+        }
+    }
+    #[inline(always)]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
         f64x2 {
             val: bytemuck::cast(a.val),
@@ -1525,6 +1535,11 @@ impl Simd for Sse4_2 {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f64x4(self.widen_f32x4(a0), self.widen_f32x4(a1))
     }
     #[inline(always)]
     fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
@@ -2949,6 +2964,15 @@ impl Simd for Sse4_2 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>) -> f32x4<Self> {
+        let (a, b) = self.split_f64x4(a);
+        unsafe {
+            let lo = _mm_cvtpd_ps(a.into());
+            let hi = _mm_cvtpd_ps(b.into());
+            _mm_movelh_ps(lo, hi).simd_into(self)
+        }
+    }
+    #[inline(always)]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f32x4(
@@ -3199,6 +3223,18 @@ impl Simd for Sse4_2 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
+        crate::Fallback::new()
+            .load_interleaved_128_f32x16(src)
+            .val
+            .simd_into(self)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
+        let fb = crate::Fallback::new();
+        fb.store_interleaved_128_f32x16(a.val.simd_into(fb), dest);
+    }
+    #[inline(always)]
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_f64x4(
@@ -3213,18 +3249,6 @@ impl Simd for Sse4_2 {
             self.reinterpret_i32_f32x8(a0),
             self.reinterpret_i32_f32x8(a1),
         )
-    }
-    #[inline(always)]
-    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        crate::Fallback::new()
-            .load_interleaved_128_f32x16(src)
-            .val
-            .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        let fb = crate::Fallback::new();
-        fb.store_interleaved_128_f32x16(a.val.simd_into(fb), dest);
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -4621,6 +4645,11 @@ impl Simd for Sse4_2 {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f32x4(self.narrow_f64x4(a0), self.narrow_f64x4(a1))
     }
     #[inline(always)]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {

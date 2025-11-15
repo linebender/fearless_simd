@@ -185,49 +185,125 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::WidenNarrow(target_ty) => {
+                    assert_eq!(
+                        vec_ty.scalar, target_ty.scalar,
+                        "widen/narrow ops are done between the same scalar type"
+                    );
+                    assert_eq!(
+                        vec_ty.len, target_ty.len,
+                        "widen/narrow ops are done preserve the vector length"
+                    );
+
                     let vec_scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
                     let target_scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
 
-                    if method == "narrow" {
-                        let arch = neon::arch_ty(vec_ty);
+                    match method {
+                        "widen" => {
+                            assert_eq!(
+                                vec_ty.scalar_bits * 2,
+                                target_ty.scalar_bits,
+                                "the destination is twice as wide as the source"
+                            );
 
-                        let id1 =
-                            Ident::new(&format!("vmovn_{}", vec_scalar_ty), Span::call_site());
-                        let id2 = Ident::new(
-                            &format!("vcombine_{}", target_scalar_ty),
-                            Span::call_site(),
-                        );
+                            let arch = neon::arch_ty(&target_ty);
 
-                        quote! {
-                            #method_sig {
-                                unsafe {
-                                    let converted: #arch = a.into();
-                                    let low = #id1(converted.0);
-                                    let high = #id1(converted.1);
+                            if vec_ty.scalar == ScalarType::Float {
+                                assert_eq!(
+                                    vec_ty.scalar_bits, 32,
+                                    "only widening from f32x4 to f64x4 is supported"
+                                );
+                                assert_eq!(
+                                    vec_ty.len, 4,
+                                    "only widening from f32x4 to f64x4 is supported"
+                                );
 
-                                    #id2(low, high).simd_into(self)
+                                quote! {
+                                    #method_sig {
+                                        unsafe {
+                                            let low = vcvt_f64_f32(vget_low_f32(a.into()));
+                                            let high = vcvt_high_f64_f32(a.into());
+
+                                            #arch(low, high).simd_into(self)
+                                        }
+                                    }
+                                }
+                            } else {
+                                let id1 = Ident::new(
+                                    &format!("vmovl_{}", vec_scalar_ty),
+                                    Span::call_site(),
+                                );
+                                let id2 = Ident::new(
+                                    &format!("vget_low_{}", vec_scalar_ty),
+                                    Span::call_site(),
+                                );
+                                let id3 = Ident::new(
+                                    &format!("vget_high_{}", vec_scalar_ty),
+                                    Span::call_site(),
+                                );
+
+                                quote! {
+                                    #method_sig {
+                                        unsafe {
+                                            let low = #id1(#id2(a.into()));
+                                            let high = #id1(#id3(a.into()));
+
+                                            #arch(low, high).simd_into(self)
+                                        }
+                                    }
                                 }
                             }
                         }
-                    } else {
-                        let arch = neon::arch_ty(&target_ty);
-                        let id1 =
-                            Ident::new(&format!("vmovl_{}", vec_scalar_ty), Span::call_site());
-                        let id2 =
-                            Ident::new(&format!("vget_low_{}", vec_scalar_ty), Span::call_site());
-                        let id3 =
-                            Ident::new(&format!("vget_high_{}", vec_scalar_ty), Span::call_site());
+                        "narrow" => {
+                            assert_eq!(
+                                vec_ty.scalar_bits / 2,
+                                target_ty.scalar_bits,
+                                "the destination is half as wide as the source"
+                            );
 
-                        quote! {
-                            #method_sig {
-                                unsafe {
-                                    let low = #id1(#id2(a.into()));
-                                    let high = #id1(#id3(a.into()));
+                            let arch = neon::arch_ty(vec_ty);
 
-                                    #arch(low, high).simd_into(self)
+                            if vec_ty.scalar == ScalarType::Float {
+                                assert_eq!(
+                                    vec_ty.scalar_bits, 64,
+                                    "only narrowing from f64x4 to f32x4 is supported"
+                                );
+                                assert_eq!(
+                                    vec_ty.len, 4,
+                                    "only narrowing from f64x4 to f32x4 is supported"
+                                );
+
+                                quote! {
+                                    #method_sig {
+                                        unsafe {
+                                            let converted: #arch = a.into();
+                                            vcvt_high_f32_f64(vcvt_f32_f64(converted.0), converted.1).simd_into(self)
+                                        }
+                                    }
+                                }
+                            } else {
+                                let id1 = Ident::new(
+                                    &format!("vmovn_{}", vec_scalar_ty),
+                                    Span::call_site(),
+                                );
+                                let id2 = Ident::new(
+                                    &format!("vcombine_{}", target_scalar_ty),
+                                    Span::call_site(),
+                                );
+
+                                quote! {
+                                    #method_sig {
+                                        unsafe {
+                                            let converted: #arch = a.into();
+                                            let low = #id1(converted.0);
+                                            let high = #id1(converted.1);
+
+                                            #id2(low, high).simd_into(self)
+                                        }
+                                    }
                                 }
                             }
                         }
+                        _ => unreachable!(),
                     }
                 }
                 OpSig::Binary => {

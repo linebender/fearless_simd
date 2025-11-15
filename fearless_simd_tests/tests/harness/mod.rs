@@ -9,6 +9,10 @@
     clippy::unseparated_literal_suffix,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
+#![expect(
+    clippy::approx_constant,
+    reason = "these constants are good test vectors"
+)]
 
 //! Tests for `fearless_simd`.
 
@@ -2376,6 +2380,71 @@ fn narrow_u16x32<S: Simd>(simd: S) {
         [
             0, 1, 127, 128, 255, 0, 44, 232, 128, 192, 224, 240, 248, 252, 254, 255, 100, 200, 255,
             0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 1, 2, 3
+        ]
+    );
+}
+
+#[simd_test]
+fn widen_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[1.0, -2.5, 3.14159, 0.0]);
+    assert_eq!(simd.widen_f32x4(a).val, [1.0, -2.5, 3.141590118408203, 0.0]);
+}
+
+#[simd_test]
+fn widen_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(
+        simd,
+        &[1.0, -2.5, 3.14159, 0.0, 100.25, -0.5, f32::MAX, f32::MIN],
+    );
+    let result = simd.widen_f32x8(a);
+    assert_eq!(
+        result.val,
+        [
+            1.0,
+            -2.5,
+            3.141590118408203,
+            0.0,
+            100.25,
+            -0.5,
+            f32::MAX as f64,
+            f32::MIN as f64
+        ]
+    );
+}
+
+#[simd_test]
+fn narrow_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[1.0, -2.5, 3.14159265358979, 0.0]);
+    assert_eq!(simd.narrow_f64x4(a).val, [1.0, -2.5, 3.1415927, 0.0]);
+}
+
+#[simd_test]
+fn narrow_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(
+        simd,
+        &[
+            1.0,
+            -2.5,
+            3.14159265358979,
+            0.0,
+            100.25,
+            -0.5,
+            f64::MAX,
+            f64::MIN,
+        ],
+    );
+    let result = simd.narrow_f64x8(a);
+    assert_eq!(
+        result.val,
+        [
+            1.0,
+            -2.5,
+            3.1415927,
+            0.0,
+            100.25,
+            -0.5,
+            f32::INFINITY,
+            f32::NEG_INFINITY
         ]
     );
 }
