@@ -325,35 +325,67 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::WidenNarrow(to_ty) => {
+                    assert_eq!(vec_ty.scalar, to_ty.scalar);
+                    assert_eq!(vec_ty.len, to_ty.len);
                     match method {
                         "widen" => {
-                            assert_eq!(vec_ty.rust_name(), "u8x16");
-                            assert_eq!(to_ty.rust_name(), "u16x16");
-                            quote! {
-                                #method_sig {
-                                    let low = u16x8_extend_low_u8x16(a.into());
-                                    let high = u16x8_extend_high_u8x16(a.into());
-                                    self.combine_u16x8(low.simd_into(self), high.simd_into(self))
+                            assert_eq!(vec_ty.scalar_bits * 2, to_ty.scalar_bits);
+
+                            match (vec_ty.scalar, vec_ty.len, vec_ty.scalar_bits) {
+                                (ScalarType::Unsigned, 16, 8) => {
+                                    quote! {
+                                        #method_sig {
+                                            let low = u16x8_extend_low_u8x16(a.into());
+                                            let high = u16x8_extend_high_u8x16(a.into());
+                                            self.combine_u16x8(low.simd_into(self), high.simd_into(self))
+                                        }
+                                    }
                                 }
+                                (ScalarType::Float, 4, 32) => {
+                                    quote! {
+                                        #method_sig {
+                                            let low = f64x2_promote_low_f32x4(a.into());
+                                            let high = f64x2_promote_low_f32x4(u64x2_shuffle::<1, 1>(a.into(), a.into()));
+                                            self.combine_f64x2(low.simd_into(self), high.simd_into(self))
+                                        }
+                                    }
+                                }
+                                _ => unimplemented!(),
                             }
                         }
                         "narrow" => {
-                            assert_eq!(vec_ty.rust_name(), "u16x16");
-                            assert_eq!(to_ty.rust_name(), "u8x16");
-                            // WASM SIMD only has saturating narrowing instructions, so we emulate
-                            // truncated narrowing by masking out the
-                            quote! {
-                                #method_sig {
-                                    let mask = u16x8_splat(0xFF);
-                                    let (low, high) = self.split_u16x16(a);
-                                    let low_masked = v128_and(low.into(), mask);
-                                    let high_masked = v128_and(high.into(), mask);
-                                    let result = u8x16_narrow_i16x8(low_masked, high_masked);
-                                    result.simd_into(self)
+                            assert_eq!(vec_ty.scalar_bits / 2, to_ty.scalar_bits);
+
+                            match (vec_ty.scalar, vec_ty.len, vec_ty.scalar_bits) {
+                                (ScalarType::Unsigned, 16, 16) => {
+                                    // WASM SIMD only has saturating narrowing instructions, so we emulate
+                                    // truncated narrowing by masking out the upper byte of each u16
+                                    quote! {
+                                        #method_sig {
+                                            let mask = u16x8_splat(0xFF);
+                                            let (low, high) = self.split_u16x16(a);
+                                            let low_masked = v128_and(low.into(), mask);
+                                            let high_masked = v128_and(high.into(), mask);
+                                            let result = u8x16_narrow_i16x8(low_masked, high_masked);
+                                            result.simd_into(self)
+                                        }
+                                    }
                                 }
+                                (ScalarType::Float, 4, 64) => {
+                                    quote! {
+                                        #method_sig {
+                                            let (low, high) = self.split_f64x4(a);
+                                            let low = f32x4_demote_f64x2_zero(low.into());
+                                            let high = f32x4_demote_f64x2_zero(high.into());
+                                            let result = u64x2_shuffle::<0, 2>(low, high);
+                                            result.simd_into(self)
+                                        }
+                                    }
+                                }
+                                _ => unimplemented!(),
                             }
                         }
-                        _ => unimplemented!(),
+                        _ => unreachable!(),
                     }
                 }
                 OpSig::LoadInterleaved(block_size, count) => {

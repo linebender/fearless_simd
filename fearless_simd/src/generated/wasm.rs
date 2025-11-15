@@ -169,6 +169,12 @@ impl Simd for WasmSimd128 {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> f64x4<Self> {
+        let low = f64x2_promote_low_f32x4(a.into());
+        let high = f64x2_promote_low_f32x4(u64x2_shuffle::<1, 1>(a.into(), a.into()));
+        self.combine_f64x2(low.simd_into(self), high.simd_into(self))
+    }
+    #[inline(always)]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
         <v128>::from(a).simd_into(self)
     }
@@ -1354,6 +1360,11 @@ impl Simd for WasmSimd128 {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f64x4(self.widen_f32x4(a0), self.widen_f32x4(a1))
     }
     #[inline(always)]
     fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
@@ -2776,6 +2787,14 @@ impl Simd for WasmSimd128 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>) -> f32x4<Self> {
+        let (low, high) = self.split_f64x4(a);
+        let low = f32x4_demote_f64x2_zero(low.into());
+        let high = f32x4_demote_f64x2_zero(high.into());
+        let result = u64x2_shuffle::<0, 2>(low, high);
+        result.simd_into(self)
+    }
+    #[inline(always)]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f32x4(
@@ -3026,22 +3045,6 @@ impl Simd for WasmSimd128 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f64x4(
-            self.reinterpret_f64_f32x8(a0),
-            self.reinterpret_f64_f32x8(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(
-            self.reinterpret_i32_f32x8(a0),
-            self.reinterpret_i32_f32x8(a1),
-        )
-    }
-    #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
         let v0: v128 = unsafe { v128_load(src[0 * 4usize..].as_ptr() as *const v128) };
         let v1: v128 = unsafe { v128_load(src[1 * 4usize..].as_ptr() as *const v128) };
@@ -3082,6 +3085,22 @@ impl Simd for WasmSimd128 {
             v128_store(dest[2 * 4usize..].as_mut_ptr() as *mut v128, out2);
             v128_store(dest[3 * 4usize..].as_mut_ptr() as *mut v128, out3);
         }
+    }
+    #[inline(always)]
+    fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f64x4(
+            self.reinterpret_f64_f32x8(a0),
+            self.reinterpret_f64_f32x8(a1),
+        )
+    }
+    #[inline(always)]
+    fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_i32x8(
+            self.reinterpret_i32_f32x8(a0),
+            self.reinterpret_i32_f32x8(a1),
+        )
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -4578,6 +4597,11 @@ impl Simd for WasmSimd128 {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f32x4(self.narrow_f64x4(a0), self.narrow_f64x4(a1))
     }
     #[inline(always)]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {

@@ -127,8 +127,23 @@ pub fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
         ops.push(("neg", OpSig::Unary));
     }
 
-    if ty.scalar == ScalarType::Float {
-        if cvt {
+    if let (ScalarType::Unsigned | ScalarType::Float, 8 | 16 | 32, 512) =
+        (ty.scalar, ty.scalar_bits, ty.n_bits())
+    {
+        ops.push(("load_interleaved_128", OpSig::LoadInterleaved(128, 4)));
+        ops.push(("store_interleaved_128", OpSig::StoreInterleaved(128, 4)));
+    }
+
+    if cvt {
+        if let Some(widened) = ty.widened() {
+            ops.push(("widen", OpSig::WidenNarrow(widened)));
+        }
+
+        if let Some(narrowed) = ty.narrowed() {
+            ops.push(("narrow", OpSig::WidenNarrow(narrowed)));
+        }
+
+        if ty.scalar == ScalarType::Float {
             if ty.scalar_bits == 64 {
                 ops.push(("reinterpret_f32", OpSig::Reinterpret(ScalarType::Float, 32)));
             } else {
@@ -138,42 +153,21 @@ pub fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
             }
         }
 
-        if ty.scalar_bits == 64 {
-            return ops;
-        }
-    }
-
-    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
-        ops.push(("load_interleaved_128", OpSig::LoadInterleaved(128, 4)));
-    }
-
-    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
-        ops.push(("store_interleaved_128", OpSig::StoreInterleaved(128, 4)));
-    }
-
-    if cvt {
-        if matches!(ty.scalar, ScalarType::Unsigned) {
-            if let Some(widened) = ty.widened() {
-                ops.push(("widen", OpSig::WidenNarrow(widened)));
+        // TODO: provide reinterpret ops for f64; it should be very straightforward
+        if !(ty.scalar == ScalarType::Float && ty.scalar_bits == 64) {
+            if valid_reinterpret(ty, ScalarType::Unsigned, 8) {
+                ops.push((
+                    "reinterpret_u8",
+                    OpSig::Reinterpret(ScalarType::Unsigned, 8),
+                ));
             }
 
-            if let Some(narrowed) = ty.narrowed() {
-                ops.push(("narrow", OpSig::WidenNarrow(narrowed)));
+            if valid_reinterpret(ty, ScalarType::Unsigned, 32) {
+                ops.push((
+                    "reinterpret_u32",
+                    OpSig::Reinterpret(ScalarType::Unsigned, 32),
+                ));
             }
-        }
-
-        if valid_reinterpret(ty, ScalarType::Unsigned, 8) {
-            ops.push((
-                "reinterpret_u8",
-                OpSig::Reinterpret(ScalarType::Unsigned, 8),
-            ));
-        }
-
-        if valid_reinterpret(ty, ScalarType::Unsigned, 32) {
-            ops.push((
-                "reinterpret_u32",
-                OpSig::Reinterpret(ScalarType::Unsigned, 32),
-            ));
         }
 
         match (ty.scalar, ty.scalar_bits) {
