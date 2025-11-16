@@ -232,7 +232,8 @@ pub(crate) fn intrinsic_ident(name: &str, suffix: &str, ty_bits: usize) -> Ident
 pub(crate) fn cast_ident(
     src_scalar_ty: ScalarType,
     dst_scalar_ty: ScalarType,
-    scalar_bits: usize,
+    src_scalar_bits: usize,
+    dst_scalar_bits: usize,
     ty_bits: usize,
 ) -> Ident {
     let prefix = match ty_bits {
@@ -243,13 +244,13 @@ pub(crate) fn cast_ident(
     };
     let src_name = coarse_type(&VecType::new(
         src_scalar_ty,
-        scalar_bits,
-        ty_bits / scalar_bits,
+        src_scalar_bits,
+        ty_bits / src_scalar_bits,
     ));
     let dst_name = coarse_type(&VecType::new(
         dst_scalar_ty,
-        scalar_bits,
-        ty_bits / scalar_bits,
+        dst_scalar_bits,
+        ty_bits / dst_scalar_bits,
     ));
 
     format_ident!("_mm{prefix}_cast{src_name}_{dst_name}")
