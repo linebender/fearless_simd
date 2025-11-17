@@ -927,8 +927,8 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     + 'static
     + crate::Bytes
     + SimdFrom<Element, S>
-    + core::ops::Index<usize>
-    + core::ops::IndexMut<usize>
+    + core::ops::Index<usize, Output = Element>
+    + core::ops::IndexMut<usize, Output = Element>
 {
     const N: usize;
     #[doc = r" A SIMD vector mask with the same number of elements."]
