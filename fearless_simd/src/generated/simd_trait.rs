@@ -1013,6 +1013,7 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     + core::ops::MulAssign
     + core::ops::Mul<Element, Output = Self>
     + core::ops::MulAssign<Element>
+    + core::ops::Not<Output = Self>
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
     + core::ops::BitAnd<Element, Output = Self>
