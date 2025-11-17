@@ -14,8 +14,8 @@ pub(crate) fn mk_ops() -> TokenStream {
     for ty in SIMD_TYPES {
         let ops = match ty.scalar {
             ScalarType::Float => &["neg", "add", "sub", "mul", "div"][..],
-            ScalarType::Int => &["neg", "add", "sub", "mul", "and", "or", "xor"],
-            ScalarType::Unsigned => &["add", "sub", "mul", "and", "or", "xor"],
+            ScalarType::Int => &["neg", "add", "sub", "mul", "and", "or", "xor", "not"],
+            ScalarType::Unsigned => &["add", "sub", "mul", "and", "or", "xor", "not"],
             ScalarType::Mask => &["and", "or", "xor", "not"],
         };
         let simd = ty.rust();
