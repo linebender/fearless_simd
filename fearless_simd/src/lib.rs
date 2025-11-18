@@ -200,6 +200,7 @@ pub enum Level {
     /// The AVX2 and FMA instruction set on (32 and 64 bit) x86.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Avx2(Avx2),
+    Scalar(Scalar),
     // If new variants are added, make sure to handle them in `Level::dispatch`
     // and `dispatch!()`
 }

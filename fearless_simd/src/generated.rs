@@ -56,6 +56,7 @@ mod fallback;
 #[cfg(target_arch = "aarch64")]
 mod neon;
 mod ops;
+mod scalar;
 mod simd_trait;
 mod simd_types;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -68,6 +69,7 @@ pub use avx2::*;
 pub use fallback::*;
 #[cfg(target_arch = "aarch64")]
 pub use neon::*;
+pub use scalar::*;
 pub use simd_trait::*;
 pub use simd_types::*;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]

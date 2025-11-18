@@ -103,6 +103,41 @@ pub(crate) fn mk_fallback_impl() -> TokenStream {
 
 fn mk_simd_impl() -> TokenStream {
     let level_tok = Level.token();
+    let methods = fallback_methods();
+
+    // Note: the `vectorize` implementation is pretty boilerplate and should probably
+    // be factored out for DRY.
+    quote! {
+        impl Simd for #level_tok {
+            type f32s = f32x4<Self>;
+            type u8s = u8x16<Self>;
+            type i8s = i8x16<Self>;
+            type u16s = u16x8<Self>;
+            type i16s = i16x8<Self>;
+            type u32s = u32x4<Self>;
+            type i32s = i32x4<Self>;
+            type mask8s = mask8x16<Self>;
+            type mask16s = mask16x8<Self>;
+            type mask32s = mask32x4<Self>;
+            #[inline(always)]
+            fn level(self) -> Level {
+                #[cfg(feature = "force_support_fallback")]
+                return Level::#level_tok(self);
+                #[cfg(not(feature = "force_support_fallback"))]
+                Level::baseline()
+            }
+
+            #[inline]
+            fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
+                f()
+            }
+
+            #( #methods )*
+        }
+    }
+}
+
+pub(crate) fn fallback_methods() -> Vec<TokenStream> {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         let scalar_bits = vec_ty.scalar_bits;
@@ -379,37 +414,7 @@ fn mk_simd_impl() -> TokenStream {
             methods.push(method);
         }
     }
-
-    // Note: the `vectorize` implementation is pretty boilerplate and should probably
-    // be factored out for DRY.
-    quote! {
-        impl Simd for #level_tok {
-            type f32s = f32x4<Self>;
-            type u8s = u8x16<Self>;
-            type i8s = i8x16<Self>;
-            type u16s = u16x8<Self>;
-            type i16s = i16x8<Self>;
-            type u32s = u32x4<Self>;
-            type i32s = i32x4<Self>;
-            type mask8s = mask8x16<Self>;
-            type mask16s = mask16x8<Self>;
-            type mask32s = mask32x4<Self>;
-            #[inline(always)]
-            fn level(self) -> Level {
-                #[cfg(feature = "force_support_fallback")]
-                return Level::#level_tok(self);
-                #[cfg(not(feature = "force_support_fallback"))]
-                Level::baseline()
-            }
-
-            #[inline]
-            fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-                f()
-            }
-
-            #( #methods )*
-        }
-    }
+    methods
 }
 
 fn interleave_indices(
