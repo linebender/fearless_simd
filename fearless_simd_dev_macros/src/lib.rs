@@ -129,19 +129,11 @@ fn exclude_fallback(_test_name: &str) -> bool {
 }
 
 fn exclude_sse4(test_name: &str) -> bool {
-    matches!(
-        test_name,
-        // works incorrectly for any values >= i32::MAX and smaller than 0.
-        "cvt_u32_f32x4" | "cvt_f32_u32x4" | "cvt_u32_f32x4_sat" | "cvt_i32_f32x4_sat",
-    ) || test_name.contains("precise")
+    test_name.contains("precise")
 }
 
 fn exclude_avx2(test_name: &str) -> bool {
-    matches!(
-        test_name,
-        // works incorrectly for any values larger than i32::MAX and smaller than 0.
-        "cvt_u32_f32x4" | "cvt_f32_u32x4" | "cvt_u32_f32x4_sat" | "cvt_i32_f32x4_sat",
-    ) || test_name.contains("precise")
+    test_name.contains("precise")
 }
 
 fn exclude_wasm(test_name: &str) -> bool {
