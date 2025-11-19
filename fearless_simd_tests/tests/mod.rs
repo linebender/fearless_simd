@@ -38,6 +38,11 @@ fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
     x.to_int()
 }
 
+#[allow(clippy::allow_attributes, reason = "Only needed in some cfgs.")]
+#[allow(
+    unused_variables,
+    reason = "The constructed `Level` is only used in some cfgs."
+)]
 #[test]
 fn supports_highest_level() {
     // When running tests locally, ensure that every SIMD level to be tested is actually supported. The tests themselves
