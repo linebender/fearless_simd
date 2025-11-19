@@ -238,6 +238,32 @@ fn cvt_u32_f32x4_rounding<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn cvt_u32_f32x4_sat<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-10.3, f32::NAN, 5e9, -5e9]);
+    assert_eq!(a.cvt_u32().val, [0, 0, u32::MAX, 0]);
+}
+
+#[simd_test]
+fn cvt_i32_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-10.3, -0.9, 13.34, 234234.8]);
+
+    assert_eq!(a.cvt_i32().val, [-10, 0, 13, 234234]);
+}
+
+#[simd_test]
+fn cvt_i32_f32x4_sat<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-10.3, f32::NAN, 5e9, -5e9]);
+
+    assert_eq!(a.cvt_i32().val, [-10, 0, i32::MAX, i32::MIN]);
+}
+
+#[simd_test]
+fn cvt_f32_i32x4<S: Simd>(simd: S) {
+    let a = i32x4::from_slice(simd, &[-1, 42, 1000000, i32::MAX]);
+    assert_eq!(a.cvt_f32().val, [-1.0, 42.0, 1000000.0, i32::MAX as f32]);
+}
+
+#[simd_test]
 fn and_i8x16<S: Simd>(simd: S) {
     let a = i8x16::from_slice(
         simd,
@@ -2508,13 +2534,6 @@ fn mul_f32x4<S: Simd>(simd: S) {
     let b = f32x4::from_slice(simd, &[-8.1, 7.9, -9.8, 3243.6]);
 
     assert_eq!((a * b).val, [83.43001, 0.0, -130.73201, 759761400.0]);
-}
-
-#[simd_test]
-fn cvt_i32_f32x4<S: Simd>(simd: S) {
-    let a = f32x4::from_slice(simd, &[-10.3, -0.9, 13.34, 234234.8]);
-
-    assert_eq!(a.cvt_i32().val, [-10, 0, 13, 234234]);
 }
 
 #[simd_test]

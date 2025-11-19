@@ -8,29 +8,8 @@
 )]
 
 use fearless_simd::*;
-use fearless_simd_dev_macros::simd_test;
 
 mod harness;
-
-#[simd_test]
-fn saturate_float_to_int<S: Simd>(simd: S) {
-    assert_eq!(
-        <[u32; 4]>::from(simd.cvt_u32_f32x4(simd.splat_f32x4(f32::INFINITY))),
-        [u32::MAX; 4]
-    );
-    assert_eq!(
-        <[u32; 4]>::from(simd.cvt_u32_f32x4(simd.splat_f32x4(-f32::INFINITY))),
-        [0; 4]
-    );
-    assert_eq!(
-        <[i32; 4]>::from(simd.cvt_i32_f32x4(simd.splat_f32x4(f32::INFINITY))),
-        [i32::MAX; 4]
-    );
-    assert_eq!(
-        <[i32; 4]>::from(simd.cvt_i32_f32x4(simd.splat_f32x4(-f32::INFINITY))),
-        [i32::MIN; 4]
-    );
-}
 
 // Ensure that we can cast between generic native-width vectors
 #[expect(dead_code, reason = "Compile only test")]
