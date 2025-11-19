@@ -188,13 +188,6 @@ pub(crate) fn extend_intrinsic(
     intrinsic_ident(&format!("cvt{from_suffix}"), to_suffix, ty_bits)
 }
 
-pub(crate) fn cvt_intrinsic(from: &VecType, to: &VecType) -> Ident {
-    let from_suffix = op_suffix(from.scalar, from.scalar_bits, false);
-    let to_suffix = op_suffix(to.scalar, to.scalar_bits, false);
-
-    intrinsic_ident(&format!("cvt{from_suffix}"), to_suffix, from.n_bits())
-}
-
 pub(crate) fn pack_intrinsic(from_bits: usize, signed: bool, ty_bits: usize) -> Ident {
     let unsigned = match signed {
         true => "",
@@ -254,4 +247,42 @@ pub(crate) fn cast_ident(
     ));
 
     format_ident!("_mm{prefix}_cast{src_name}_{dst_name}")
+}
+
+pub(crate) fn float_compare_method(method: &str, vec_ty: &VecType) -> TokenStream {
+    match vec_ty.n_bits() {
+        128 => {
+            let ident = if method == "ord" {
+                simple_intrinsic("cmpord", vec_ty)
+            } else {
+                intrinsic_ident(
+                    translate_op(method).unwrap(),
+                    op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false),
+                    vec_ty.n_bits(),
+                )
+            };
+            quote! { #ident }
+        }
+        256 => {
+            // For AVX2 and up, Intel gives us a generic comparison intrinsic that takes a predicate. There are 32,
+            // of which only a few are useful and the rest will violate IEEE754 and/or raise a SIGFPE on NaN.
+            //
+            // https://www.felixcloutier.com/x86/cmppd#tbl-3-1
+            let order_predicate = match method {
+                "simd_eq" => 0x00,
+                "simd_lt" => 0x11,
+                "simd_le" => 0x12,
+                "simd_ge" => 0x1D,
+                "simd_gt" => 0x1E,
+                "ord" => 0x07,
+                _ => unreachable!(),
+            };
+            let intrinsic = simple_intrinsic("cmp", vec_ty);
+
+            quote! {
+                #intrinsic::<#order_predicate>
+            }
+        }
+        _ => unimplemented!(),
+    }
 }
