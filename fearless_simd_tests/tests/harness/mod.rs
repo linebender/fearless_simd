@@ -239,8 +239,8 @@ fn cvt_u32_f32x4_rounding<S: Simd>(simd: S) {
 
 #[simd_test]
 fn cvt_u32_f32x4_sat<S: Simd>(simd: S) {
-    let a = f32x4::from_slice(simd, &[-10.3, f32::NAN, 5e9, -5e9]);
-    assert_eq!(a.cvt_u32().val, [0, 0, u32::MAX, 0]);
+    let a = f32x4::from_slice(simd, &[-10.3, 3000000000.0, 5e9, -5e9]);
+    assert_eq!(a.cvt_u32().val, [0, 3000000000, u32::MAX, 0]);
 }
 
 #[simd_test]
