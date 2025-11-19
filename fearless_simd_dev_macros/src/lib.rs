@@ -52,18 +52,20 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     // proc macros are evaluated.
 
     // There is currently no way to conditionally ignore a test at runtime (see
-    // https://internals.rust-lang.org/t/pre-rfc-skippable-tests/14611). Instead, we have to assert that these CPU
-    // features are always detected and fail the test if they aren't.
+    // https://internals.rust-lang.org/t/pre-rfc-skippable-tests/14611). Instead, we'll just pass the tests if the
+    // target features aren't supported. This is not ideal, since it may mislead you into thinking tests have passed
+    // when they haven't even been run, but some CI runners don't support all target features and we don't want failures
+    // as a result of that.
 
     let neon_snippet = quote! {
         #[cfg(target_arch = "aarch64")]
         #[test]
         #ignore_neon
         fn #neon_name() {
-            assert!(std::arch::is_aarch64_feature_detected!("neon"));
-
-            let neon = unsafe { fearless_simd::aarch64::Neon::new_unchecked() };
-            #input_fn_name(neon);
+            if std::arch::is_aarch64_feature_detected!("neon") {
+                let neon = unsafe { fearless_simd::aarch64::Neon::new_unchecked() };
+                #input_fn_name(neon);
+            }
         }
     };
 
@@ -72,10 +74,10 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #[test]
         #ignore_sse4
         fn #sse4_name() {
-            assert!(std::arch::is_x86_feature_detected!("sse4.2"));
-
-            let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
-            #input_fn_name(sse4);
+            if std::arch::is_x86_feature_detected!("sse4.2") {
+                let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
+                #input_fn_name(sse4);
+            }
         }
     };
 
@@ -84,13 +86,12 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #[test]
         #ignore_avx2
         fn #avx2_name() {
-            assert!(
-                std::arch::is_x86_feature_detected!("avx2")
+            if std::arch::is_x86_feature_detected!("avx2")
                 && std::arch::is_x86_feature_detected!("fma")
-            );
-
-            let avx2 = unsafe { fearless_simd::x86::Avx2::new_unchecked() };
-            #input_fn_name(avx2);
+            {
+                let avx2 = unsafe { fearless_simd::x86::Avx2::new_unchecked() };
+                #input_fn_name(avx2);
+            }
         }
     };
 
