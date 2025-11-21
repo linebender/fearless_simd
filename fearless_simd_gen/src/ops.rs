@@ -1,18 +1,13 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::types::{ScalarType, VecType};
 
 #[derive(Clone, Copy)]
-pub enum OpSig {
+pub(crate) enum OpSig {
     Splat,
     Unary,
     Binary,
@@ -36,7 +31,7 @@ pub enum OpSig {
     StoreInterleaved(u16, u16), // TODO: fma
 }
 
-pub const FLOAT_OPS: &[(&str, OpSig)] = &[
+pub(crate) const FLOAT_OPS: &[(&str, OpSig)] = &[
     ("splat", OpSig::Splat),
     ("abs", OpSig::Unary),
     ("neg", OpSig::Unary),
@@ -68,7 +63,7 @@ pub const FLOAT_OPS: &[(&str, OpSig)] = &[
     ("select", OpSig::Select),
 ];
 
-pub const INT_OPS: &[(&str, OpSig)] = &[
+pub(crate) const INT_OPS: &[(&str, OpSig)] = &[
     ("splat", OpSig::Splat),
     ("not", OpSig::Unary),
     ("add", OpSig::Binary),
@@ -95,7 +90,7 @@ pub const INT_OPS: &[(&str, OpSig)] = &[
     ("max", OpSig::Binary),
 ];
 
-pub const MASK_OPS: &[(&str, OpSig)] = &[
+pub(crate) const MASK_OPS: &[(&str, OpSig)] = &[
     ("splat", OpSig::Splat),
     ("not", OpSig::Unary),
     ("and", OpSig::Binary),
@@ -106,11 +101,11 @@ pub const MASK_OPS: &[(&str, OpSig)] = &[
 ];
 
 /// Ops covered by `core::ops`
-pub const CORE_OPS: &[&str] = &[
+pub(crate) const CORE_OPS: &[&str] = &[
     "not", "neg", "add", "sub", "mul", "div", "and", "or", "xor", "shr", "shrv", "shl",
 ];
 
-pub fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
+pub(crate) fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
     let base = match ty.scalar {
         ScalarType::Float => FLOAT_OPS,
         ScalarType::Int | ScalarType::Unsigned => INT_OPS,
@@ -191,7 +186,7 @@ pub fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub enum TyFlavor {
+pub(crate) enum TyFlavor {
     /// Types for methods in the `Simd` trait; `f32x4<Self>`
     SimdTrait,
     /// Types for methods in the vec trait; `f32x4<S>`
@@ -199,7 +194,7 @@ pub enum TyFlavor {
 }
 
 impl OpSig {
-    pub fn simd_trait_args(&self, vec_ty: &VecType) -> TokenStream {
+    pub(crate) fn simd_trait_args(&self, vec_ty: &VecType) -> TokenStream {
         let ty = vec_ty.rust();
         match self {
             Self::Splat => {
@@ -235,7 +230,7 @@ impl OpSig {
         }
     }
 
-    pub fn vec_trait_args(&self) -> Option<TokenStream> {
+    pub(crate) fn vec_trait_args(&self) -> Option<TokenStream> {
         let args = match self {
             Self::Splat | Self::LoadInterleaved(_, _) | Self::StoreInterleaved(_, _) => {
                 return None;
@@ -261,7 +256,7 @@ impl OpSig {
         Some(args)
     }
 
-    pub fn ret_ty(&self, ty: &VecType, flavor: TyFlavor) -> TokenStream {
+    pub(crate) fn ret_ty(&self, ty: &VecType, flavor: TyFlavor) -> TokenStream {
         let quant = match flavor {
             TyFlavor::SimdTrait => quote! { <Self> },
             TyFlavor::VecImpl => quote! { <S> },
