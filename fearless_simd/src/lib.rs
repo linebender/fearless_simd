@@ -109,7 +109,6 @@
 #![allow(non_camel_case_types, reason = "TODO")]
 #![expect(clippy::unused_unit, reason = "easier for code generation")]
 #![expect(
-    clippy::new_without_default,
     clippy::use_self,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
@@ -231,6 +230,10 @@ impl Level {
     /// This value should be passed to [`dispatch!()`].
     #[cfg(any(feature = "std", target_arch = "wasm32"))]
     #[must_use]
+    #[expect(
+        clippy::new_without_default,
+        reason = "The `Level::new()` function is not always available, and we also want to be explicit about when runtime feature detection happens"
+    )]
     pub fn new() -> Self {
         #[cfg(target_arch = "aarch64")]
         if std::arch::is_aarch64_feature_detected!("neon") {
