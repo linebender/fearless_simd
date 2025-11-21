@@ -26,7 +26,7 @@ pub(crate) enum Level {
 impl Level {
     fn name(self) -> &'static str {
         match self {
-            Level::WasmSimd128 => "WasmSimd128",
+            Self::WasmSimd128 => "WasmSimd128",
         }
     }
 

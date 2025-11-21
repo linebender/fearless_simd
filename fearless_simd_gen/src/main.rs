@@ -3,7 +3,6 @@
 
 #![expect(
     missing_docs,
-    clippy::use_self,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
@@ -57,14 +56,14 @@ struct Cli {
 impl Module {
     fn generate_code(self) -> TokenStream {
         match self {
-            Module::SimdTypes => mk_simd_types::mk_simd_types(),
-            Module::SimdTrait => mk_simd_trait::mk_simd_trait(),
-            Module::Ops => mk_ops::mk_ops(),
-            Module::Neon => mk_neon::mk_neon_impl(mk_neon::Level::Neon),
-            Module::Wasm => mk_wasm::mk_wasm128_impl(mk_wasm::Level::WasmSimd128),
-            Module::Fallback => mk_fallback::mk_fallback_impl(),
-            Module::Sse4_2 => mk_sse4_2::mk_sse4_2_impl(),
-            Module::Avx2 => mk_avx2::mk_avx2_impl(),
+            Self::SimdTypes => mk_simd_types::mk_simd_types(),
+            Self::SimdTrait => mk_simd_trait::mk_simd_trait(),
+            Self::Ops => mk_ops::mk_ops(),
+            Self::Neon => mk_neon::mk_neon_impl(mk_neon::Level::Neon),
+            Self::Wasm => mk_wasm::mk_wasm128_impl(mk_wasm::Level::WasmSimd128),
+            Self::Fallback => mk_fallback::mk_fallback_impl(),
+            Self::Sse4_2 => mk_sse4_2::mk_sse4_2_impl(),
+            Self::Avx2 => mk_avx2::mk_avx2_impl(),
         }
     }
 
@@ -96,14 +95,14 @@ impl Module {
 
     fn file_base(self) -> &'static str {
         match self {
-            Module::SimdTypes => "simd_types",
-            Module::SimdTrait => "simd_trait",
-            Module::Ops => "ops",
-            Module::Neon => "neon",
-            Module::Fallback => "fallback",
-            Module::Wasm => "wasm",
-            Module::Sse4_2 => "sse4_2",
-            Module::Avx2 => "avx2",
+            Self::SimdTypes => "simd_types",
+            Self::SimdTrait => "simd_trait",
+            Self::Ops => "ops",
+            Self::Neon => "neon",
+            Self::Fallback => "fallback",
+            Self::Wasm => "wasm",
+            Self::Sse4_2 => "sse4_2",
+            Self::Avx2 => "avx2",
         }
     }
 }

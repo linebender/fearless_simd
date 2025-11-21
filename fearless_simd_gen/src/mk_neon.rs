@@ -23,7 +23,7 @@ pub(crate) enum Level {
 impl Level {
     fn name(self) -> &'static str {
         match self {
-            Level::Neon => "Neon",
+            Self::Neon => "Neon",
         }
     }
 

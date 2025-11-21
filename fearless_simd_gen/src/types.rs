@@ -27,9 +27,9 @@ pub struct VecType {
 impl ScalarType {
     pub fn prefix(self) -> &'static str {
         match self {
-            ScalarType::Float => "f",
-            ScalarType::Unsigned => "u",
-            ScalarType::Int | ScalarType::Mask => "i",
+            Self::Float => "f",
+            Self::Unsigned => "u",
+            Self::Int | Self::Mask => "i",
         }
     }
 
@@ -73,7 +73,7 @@ impl VecType {
         quote! { #ident }
     }
 
-    pub fn widened(&self) -> Option<VecType> {
+    pub fn widened(&self) -> Option<Self> {
         if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
             || self.n_bits() > 256
             || self.scalar_bits != 8
@@ -85,7 +85,7 @@ impl VecType {
         Some(Self::new(self.scalar, scalar_bits, self.len))
     }
 
-    pub fn narrowed(&self) -> Option<VecType> {
+    pub fn narrowed(&self) -> Option<Self> {
         if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
             || self.n_bits() < 256
             || self.scalar_bits != 16
@@ -98,7 +98,7 @@ impl VecType {
     }
 
     pub fn mask_ty(&self) -> Self {
-        VecType::new(ScalarType::Mask, self.scalar_bits, self.len)
+        Self::new(ScalarType::Mask, self.scalar_bits, self.len)
     }
 }
 
