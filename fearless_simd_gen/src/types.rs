@@ -1,16 +1,11 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum ScalarType {
+pub(crate) enum ScalarType {
     Float,
     Unsigned,
     Int,
@@ -18,33 +13,33 @@ pub enum ScalarType {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct VecType {
+pub(crate) struct VecType {
     pub scalar: ScalarType,
     pub scalar_bits: usize,
     pub len: usize,
 }
 
 impl ScalarType {
-    pub fn prefix(self) -> &'static str {
+    pub(crate) fn prefix(self) -> &'static str {
         match self {
-            ScalarType::Float => "f",
-            ScalarType::Unsigned => "u",
-            ScalarType::Int | ScalarType::Mask => "i",
+            Self::Float => "f",
+            Self::Unsigned => "u",
+            Self::Int | Self::Mask => "i",
         }
     }
 
-    pub fn rust_name(&self, scalar_bits: usize) -> String {
+    pub(crate) fn rust_name(&self, scalar_bits: usize) -> String {
         format!("{}{}", self.prefix(), scalar_bits)
     }
 
-    pub fn rust(&self, scalar_bits: usize) -> TokenStream {
+    pub(crate) fn rust(&self, scalar_bits: usize) -> TokenStream {
         let ident = Ident::new(&self.rust_name(scalar_bits), Span::call_site());
         quote! { #ident }
     }
 }
 
 impl VecType {
-    pub const fn new(scalar: ScalarType, scalar_bits: usize, len: usize) -> Self {
+    pub(crate) const fn new(scalar: ScalarType, scalar_bits: usize, len: usize) -> Self {
         Self {
             scalar,
             scalar_bits,
@@ -52,12 +47,12 @@ impl VecType {
         }
     }
 
-    pub fn n_bits(&self) -> usize {
+    pub(crate) fn n_bits(&self) -> usize {
         self.scalar_bits * self.len
     }
 
     /// Name of the type, as in `f32x4`
-    pub fn rust_name(&self) -> String {
+    pub(crate) fn rust_name(&self) -> String {
         let scalar = match self.scalar {
             ScalarType::Float => "f",
             ScalarType::Unsigned => "u",
@@ -68,12 +63,12 @@ impl VecType {
     }
 
     /// Returns type without the `<S>`.
-    pub fn rust(&self) -> TokenStream {
+    pub(crate) fn rust(&self) -> TokenStream {
         let ident = Ident::new(&self.rust_name(), Span::call_site());
         quote! { #ident }
     }
 
-    pub fn widened(&self) -> Option<VecType> {
+    pub(crate) fn widened(&self) -> Option<Self> {
         if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
             || self.n_bits() > 256
             || self.scalar_bits != 8
@@ -85,7 +80,7 @@ impl VecType {
         Some(Self::new(self.scalar, scalar_bits, self.len))
     }
 
-    pub fn narrowed(&self) -> Option<VecType> {
+    pub(crate) fn narrowed(&self) -> Option<Self> {
         if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
             || self.n_bits() < 256
             || self.scalar_bits != 16
@@ -97,12 +92,12 @@ impl VecType {
         Some(Self::new(self.scalar, scalar_bits, self.len))
     }
 
-    pub fn mask_ty(&self) -> Self {
-        VecType::new(ScalarType::Mask, self.scalar_bits, self.len)
+    pub(crate) fn mask_ty(&self) -> Self {
+        Self::new(ScalarType::Mask, self.scalar_bits, self.len)
     }
 }
 
-pub const SIMD_TYPES: &[VecType] = &[
+pub(crate) const SIMD_TYPES: &[VecType] = &[
     // 128 bit types
     VecType::new(ScalarType::Float, 32, 4),
     VecType::new(ScalarType::Int, 8, 16),
@@ -144,7 +139,7 @@ pub const SIMD_TYPES: &[VecType] = &[
     VecType::new(ScalarType::Mask, 64, 8),
 ];
 
-pub fn type_imports() -> TokenStream {
+pub(crate) fn type_imports() -> TokenStream {
     let mut imports = vec![];
     for ty in SIMD_TYPES {
         let ident = ty.rust();

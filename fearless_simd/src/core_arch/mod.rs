@@ -5,6 +5,7 @@
 
 #![expect(
     missing_docs,
+    clippy::new_without_default,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 

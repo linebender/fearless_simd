@@ -96,7 +96,7 @@ impl SimdElement for u8 {
 }
 
 impl SimdElement for i8 {
-    type Mask = i8;
+    type Mask = Self;
 }
 
 impl SimdElement for u16 {
@@ -104,7 +104,7 @@ impl SimdElement for u16 {
 }
 
 impl SimdElement for i16 {
-    type Mask = i16;
+    type Mask = Self;
 }
 
 impl SimdElement for u32 {
@@ -112,11 +112,11 @@ impl SimdElement for u32 {
 }
 
 impl SimdElement for i32 {
-    type Mask = i32;
+    type Mask = Self;
 }
 
 impl SimdElement for i64 {
-    type Mask = i64;
+    type Mask = Self;
 }
 
 /// Construction of integer vectors from floats by truncation

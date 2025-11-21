@@ -61,6 +61,10 @@ clippy.redundant_feature_names = "warn"
 clippy.wildcard_dependencies = "warn"
 # END LINEBENDER LINT SET
 
+# This was upgraded from a "pedantic" to a "style" lint in Rust 1.88, and downgraded again in 1.89 due to
+# https://github.com/rust-lang/rust-clippy/issues/15151.
+clippy.uninlined_format_args = "allow"
+
 [workspace.dependencies]
 fearless_simd = { path = "fearless_simd" }
 fearless_simd_dev_macros = { path = "fearless_simd_dev_macros" }

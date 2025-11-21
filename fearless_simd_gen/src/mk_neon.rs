@@ -1,11 +1,6 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    clippy::uninlined_format_args,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
@@ -28,7 +23,7 @@ pub(crate) enum Level {
 impl Level {
     fn name(self) -> &'static str {
         match self {
-            Level::Neon => "Neon",
+            Self::Neon => "Neon",
         }
     }
 

@@ -1,18 +1,13 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    unreachable_pub,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::types::{ScalarType, VecType};
 
 #[derive(Clone, Copy)]
-pub enum OpSig {
+pub(crate) enum OpSig {
     Splat,
     Unary,
     Binary,
@@ -36,7 +31,7 @@ pub enum OpSig {
     StoreInterleaved(u16, u16), // TODO: fma
 }
 
-pub const FLOAT_OPS: &[(&str, OpSig)] = &[
+pub(crate) const FLOAT_OPS: &[(&str, OpSig)] = &[
     ("splat", OpSig::Splat),
     ("abs", OpSig::Unary),
     ("neg", OpSig::Unary),
@@ -68,7 +63,7 @@ pub const FLOAT_OPS: &[(&str, OpSig)] = &[
     ("select", OpSig::Select),
 ];
 
-pub const INT_OPS: &[(&str, OpSig)] = &[
+pub(crate) const INT_OPS: &[(&str, OpSig)] = &[
     ("splat", OpSig::Splat),
     ("not", OpSig::Unary),
     ("add", OpSig::Binary),
@@ -95,7 +90,7 @@ pub const INT_OPS: &[(&str, OpSig)] = &[
     ("max", OpSig::Binary),
 ];
 
-pub const MASK_OPS: &[(&str, OpSig)] = &[
+pub(crate) const MASK_OPS: &[(&str, OpSig)] = &[
     ("splat", OpSig::Splat),
     ("not", OpSig::Unary),
     ("and", OpSig::Binary),
@@ -106,11 +101,11 @@ pub const MASK_OPS: &[(&str, OpSig)] = &[
 ];
 
 /// Ops covered by `core::ops`
-pub const CORE_OPS: &[&str] = &[
+pub(crate) const CORE_OPS: &[&str] = &[
     "not", "neg", "add", "sub", "mul", "div", "and", "or", "xor", "shr", "shrv", "shl",
 ];
 
-pub fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
+pub(crate) fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
     let base = match ty.scalar {
         ScalarType::Float => FLOAT_OPS,
         ScalarType::Int | ScalarType::Unsigned => INT_OPS,
@@ -191,7 +186,7 @@ pub fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub enum TyFlavor {
+pub(crate) enum TyFlavor {
     /// Types for methods in the `Simd` trait; `f32x4<Self>`
     SimdTrait,
     /// Types for methods in the vec trait; `f32x4<S>`
@@ -199,115 +194,115 @@ pub enum TyFlavor {
 }
 
 impl OpSig {
-    pub fn simd_trait_args(&self, vec_ty: &VecType) -> TokenStream {
+    pub(crate) fn simd_trait_args(&self, vec_ty: &VecType) -> TokenStream {
         let ty = vec_ty.rust();
         match self {
-            OpSig::Splat => {
+            Self::Splat => {
                 let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
                 quote! { self, val: #scalar }
             }
-            OpSig::LoadInterleaved(block_size, i) => {
+            Self::LoadInterleaved(block_size, i) => {
                 let ty = load_interleaved_arg_ty(*block_size, *i, vec_ty);
                 quote! { self, #ty }
             }
-            OpSig::StoreInterleaved(block_size, i) => {
+            Self::StoreInterleaved(block_size, i) => {
                 let ty = store_interleaved_arg_ty(*block_size, *i, vec_ty);
                 quote! { self, #ty }
             }
-            OpSig::Unary
-            | OpSig::Split
-            | OpSig::Cvt(_, _)
-            | OpSig::Reinterpret(_, _)
-            | OpSig::WidenNarrow(_) => quote! { self, a: #ty<Self> },
-            OpSig::Binary | OpSig::Compare | OpSig::Combine | OpSig::Zip(_) | OpSig::Unzip(_) => {
+            Self::Unary
+            | Self::Split
+            | Self::Cvt(_, _)
+            | Self::Reinterpret(_, _)
+            | Self::WidenNarrow(_) => quote! { self, a: #ty<Self> },
+            Self::Binary | Self::Compare | Self::Combine | Self::Zip(_) | Self::Unzip(_) => {
                 quote! { self, a: #ty<Self>, b: #ty<Self> }
             }
-            OpSig::Shift => {
+            Self::Shift => {
                 quote! { self, a: #ty<Self>, shift: u32 }
             }
-            OpSig::Ternary => {
+            Self::Ternary => {
                 quote! { self, a: #ty<Self>, b: #ty<Self>, c: #ty<Self> }
             }
-            OpSig::Select => {
+            Self::Select => {
                 let mask_ty = vec_ty.mask_ty().rust();
                 quote! { self, a: #mask_ty<Self>, b: #ty<Self>, c: #ty<Self> }
             }
         }
     }
 
-    pub fn vec_trait_args(&self) -> Option<TokenStream> {
+    pub(crate) fn vec_trait_args(&self) -> Option<TokenStream> {
         let args = match self {
-            OpSig::Splat | OpSig::LoadInterleaved(_, _) | OpSig::StoreInterleaved(_, _) => {
+            Self::Splat | Self::LoadInterleaved(_, _) | Self::StoreInterleaved(_, _) => {
                 return None;
             }
-            OpSig::Unary | OpSig::Cvt(_, _) | OpSig::Reinterpret(_, _) | OpSig::WidenNarrow(_) => {
+            Self::Unary | Self::Cvt(_, _) | Self::Reinterpret(_, _) | Self::WidenNarrow(_) => {
                 quote! { self }
             }
-            OpSig::Binary | OpSig::Compare | OpSig::Zip(_) | OpSig::Combine | OpSig::Unzip(_) => {
+            Self::Binary | Self::Compare | Self::Zip(_) | Self::Combine | Self::Unzip(_) => {
                 quote! { self, rhs: impl SimdInto<Self, S> }
             }
-            OpSig::Shift => {
+            Self::Shift => {
                 quote! { self, shift: u32 }
             }
-            OpSig::Ternary => {
+            Self::Ternary => {
                 quote! { self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S> }
             }
             // select is currently done by trait, but maybe we'll implement for
             // masks.
-            OpSig::Select => return None,
+            Self::Select => return None,
             // These signatures involve types not in the Simd trait
-            OpSig::Split => return None,
+            Self::Split => return None,
         };
         Some(args)
     }
 
-    pub fn ret_ty(&self, ty: &VecType, flavor: TyFlavor) -> TokenStream {
+    pub(crate) fn ret_ty(&self, ty: &VecType, flavor: TyFlavor) -> TokenStream {
         let quant = match flavor {
             TyFlavor::SimdTrait => quote! { <Self> },
             TyFlavor::VecImpl => quote! { <S> },
         };
         match self {
-            OpSig::Splat
-            | OpSig::Unary
-            | OpSig::Binary
-            | OpSig::Select
-            | OpSig::Ternary
-            | OpSig::Shift
-            | OpSig::LoadInterleaved(_, _) => {
+            Self::Splat
+            | Self::Unary
+            | Self::Binary
+            | Self::Select
+            | Self::Ternary
+            | Self::Shift
+            | Self::LoadInterleaved(_, _) => {
                 let rust = ty.rust();
                 quote! { #rust #quant }
             }
-            OpSig::Compare => {
+            Self::Compare => {
                 let rust = ty.mask_ty().rust();
                 quote! { #rust #quant }
             }
-            OpSig::Combine => {
+            Self::Combine => {
                 let n2 = ty.len * 2;
                 let result = VecType::new(ty.scalar, ty.scalar_bits, n2).rust();
                 quote! { #result #quant }
             }
-            OpSig::Split => {
+            Self::Split => {
                 let len = ty.len / 2;
                 let result = VecType::new(ty.scalar, ty.scalar_bits, len).rust();
                 quote! { ( #result #quant, #result #quant ) }
             }
-            OpSig::Zip(_) | OpSig::Unzip(_) => {
+            Self::Zip(_) | Self::Unzip(_) => {
                 let rust = ty.rust();
                 quote! { #rust #quant }
             }
-            OpSig::Cvt(scalar, scalar_bits) => {
+            Self::Cvt(scalar, scalar_bits) => {
                 let result = VecType::new(*scalar, *scalar_bits, ty.len).rust();
                 quote! { #result #quant }
             }
-            OpSig::Reinterpret(scalar, scalar_bits) => {
+            Self::Reinterpret(scalar, scalar_bits) => {
                 let result = reinterpret_ty(ty, *scalar, *scalar_bits).rust();
                 quote! { #result #quant }
             }
-            OpSig::WidenNarrow(t) => {
+            Self::WidenNarrow(t) => {
                 let result = t.rust();
                 quote! { #result #quant }
             }
-            OpSig::StoreInterleaved(_, _) => quote! {()},
+            Self::StoreInterleaved(_, _) => quote! {()},
         }
     }
 }

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 #![expect(
-    clippy::excessive_precision,
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
@@ -53,12 +52,12 @@ fn copy_alpha<S: Simd>(a: f32x4<S>, b: f32x4<S>) -> f32x4<S> {
 fn to_srgb<S: Simd>(simd: S, rgba: [f32; 4]) -> [f32; 4] {
     let v: f32x4<S> = rgba.simd_into(simd);
     let vabs = v.abs();
-    let x = vabs - 5.35862651e-04;
+    let x = vabs - 5.358_626_4e-4;
     let x2 = x * x;
-    let even1 = x * -9.12795913e-01 + -2.88143143e-02;
-    let even2 = x2 * -7.29192910e-01 + even1;
-    let odd1 = x * 1.06133172e+00 + 1.40194533e+00;
-    let odd2 = x2 * 2.07758287e-01 + odd1;
+    let even1 = x * -9.127_959e-1 + -2.881_431_4e-2;
+    let even2 = x2 * -7.291_929e-1 + even1;
+    let odd1 = x * 1.061_331_7 + 1.401_945_4;
+    let odd2 = x2 * 2.077_583e-1 + odd1;
     let poly = odd2 * x.sqrt() + even2;
     let lin = vabs * 12.92;
     let z = vabs.simd_gt(0.0031308).select(poly, lin);

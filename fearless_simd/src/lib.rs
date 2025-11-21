@@ -108,11 +108,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(non_camel_case_types, reason = "TODO")]
 #![expect(clippy::unused_unit, reason = "easier for code generation")]
-#![expect(
-    clippy::new_without_default,
-    clippy::use_self,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
 #![no_std]
 
 #[cfg(feature = "std")]
@@ -231,26 +226,30 @@ impl Level {
     /// This value should be passed to [`dispatch!()`].
     #[cfg(any(feature = "std", target_arch = "wasm32"))]
     #[must_use]
+    #[expect(
+        clippy::new_without_default,
+        reason = "The `Level::new()` function is not always available, and we also want to be explicit about when runtime feature detection happens"
+    )]
     pub fn new() -> Self {
         #[cfg(target_arch = "aarch64")]
         if std::arch::is_aarch64_feature_detected!("neon") {
-            return unsafe { Level::Neon(Neon::new_unchecked()) };
+            return unsafe { Self::Neon(Neon::new_unchecked()) };
         }
         #[cfg(target_arch = "wasm32")]
         {
             // WASM always either has the SIMD feature compiled in or not.
             #[cfg(target_feature = "simd128")]
-            return Level::WasmSimd128(WasmSimd128::new_unchecked());
+            return Self::WasmSimd128(WasmSimd128::new_unchecked());
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
             if std::arch::is_x86_feature_detected!("avx2")
                 && std::arch::is_x86_feature_detected!("fma")
             {
-                return unsafe { Level::Avx2(Avx2::new_unchecked()) };
+                return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             } else if std::arch::is_x86_feature_detected!("sse4.2") {
                 #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
-                return unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) };
+                return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
             }
         }
         #[cfg(any(
@@ -268,7 +267,7 @@ impl Level {
             )),
         ))]
         {
-            return Level::Fallback(Fallback::new());
+            return Self::Fallback(Fallback::new());
         }
         #[allow(
             unreachable_code,
@@ -309,7 +308,7 @@ impl Level {
             reason = "On machines which statically support `neon`, there is only one variant."
         )]
         match self {
-            Level::Neon(neon) => Some(neon),
+            Self::Neon(neon) => Some(neon),
             _ => None,
         }
     }
@@ -330,7 +329,7 @@ impl Level {
             reason = "On machines which statically support `simd128`, there is only one variant."
         )]
         match self {
-            Level::WasmSimd128(simd128) => Some(simd128),
+            Self::WasmSimd128(simd128) => Some(simd128),
             _ => None,
         }
     }
@@ -350,9 +349,9 @@ impl Level {
             // Safety: The Avx2 struct represents the `avx2` and `fma` target features being enabled.
             // The `avx2` target feature *also* implicitly enables the "sse4.2" target feature, which is
             // the only target feature required to make our Sse4_2 token.
-            Level::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
+            Self::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
             #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
-            Level::Sse4_2(sse42) => Some(sse42),
+            Self::Sse4_2(sse42) => Some(sse42),
             #[allow(
                 unreachable_patterns,
                 reason = "This arm is reachable on baseline x86/x86_64."
@@ -377,7 +376,7 @@ impl Level {
             reason = "On machines which statically support `avx2`, there is only one variant."
         )]
         match self {
-            Level::Avx2(avx2) => Some(avx2),
+            Self::Avx2(avx2) => Some(avx2),
             _ => None,
         }
     }
@@ -413,33 +412,33 @@ impl Level {
             target_arch = "wasm32"
         )))]
         {
-            return Level::Fallback(Fallback::new());
+            return Self::Fallback(Fallback::new());
         }
         #[cfg(target_arch = "aarch64")]
         {
             #[cfg(target_feature = "neon")]
-            return unsafe { Level::Neon(Neon::new_unchecked()) };
+            return unsafe { Self::Neon(Neon::new_unchecked()) };
             #[cfg(not(target_feature = "neon"))]
-            return Level::Fallback(Fallback::new());
+            return Self::Fallback(Fallback::new());
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
             #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
-            return unsafe { Level::Avx2(Avx2::new_unchecked()) };
+            return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             #[cfg(all(
                 target_feature = "sse4.2",
                 not(all(target_feature = "avx2", target_feature = "fma"))
             ))]
-            return unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) };
+            return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
             #[cfg(not(target_feature = "sse4.2"))]
-            return Level::Fallback(Fallback::new());
+            return Self::Fallback(Fallback::new());
         }
         #[cfg(target_arch = "wasm32")]
         {
             #[cfg(target_feature = "simd128")]
-            return Level::WasmSimd128(WasmSimd128::new_unchecked());
+            return Self::WasmSimd128(WasmSimd128::new_unchecked());
             #[cfg(not(target_feature = "simd128"))]
-            return Level::Fallback(Fallback::new());
+            return Self::Fallback(Fallback::new());
         }
     }
 

@@ -5,6 +5,7 @@
     missing_docs,
     clippy::cast_possible_truncation,
     clippy::unseparated_literal_suffix,
+    clippy::use_self,
     trivial_numeric_casts,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]

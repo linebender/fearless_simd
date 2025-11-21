@@ -1,11 +1,6 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    clippy::match_single_binding,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -81,12 +76,10 @@ pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
 }
 
 pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
-    if let Some(translated) = translate_op(op, ty.scalar == ScalarType::Float) {
-        let intrinsic = simple_intrinsic(translated, ty);
-        quote! { #intrinsic ( #( #args ),* ) }
-    } else {
-        match op {
-            _ => unimplemented!("missing {op}"),
-        }
-    }
+    let Some(translated) = translate_op(op, ty.scalar == ScalarType::Float) else {
+        unimplemented!("missing {op}");
+    };
+
+    let intrinsic = simple_intrinsic(translated, ty);
+    quote! { #intrinsic ( #( #args ),* ) }
 }
