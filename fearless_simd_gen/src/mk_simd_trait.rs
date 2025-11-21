@@ -90,6 +90,10 @@ fn mk_simd_base() -> TokenStream {
             fn from_slice(simd: S, slice: &[Element]) -> Self;
             fn splat(simd: S, val: Element) -> Self;
             fn block_splat(block: Self::Block) -> Self;
+            /// Create a SIMD vector where each element is produced by
+            /// calling `f` with that element's lane index (from 0 to
+            /// [`SimdBase::N`] - 1).
+            fn from_fn(simd: S, f: impl FnMut(usize) -> Element) -> Self;
         }
     }
 }
