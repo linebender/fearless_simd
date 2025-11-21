@@ -355,8 +355,8 @@ pub(crate) fn handle_widen_narrow(
         }
         "narrow" => {
             let dst_width = t.n_bits();
-            match (dst_width, vec_ty.n_bits()) {
-                (128, 256) => {
+            match (vec_ty.scalar, dst_width, vec_ty.n_bits()) {
+                (ScalarType::Unsigned, 128, 256) => {
                     let mask = match t.scalar_bits {
                         8 => {
                             quote! { 0, 2, 4, 6, 8, 10, 12, 14, -1, -1, -1, -1, -1, -1, -1, -1 }
@@ -374,7 +374,14 @@ pub(crate) fn handle_widen_narrow(
                         }
                     }
                 }
-                (256, 512) => {
+                (ScalarType::Float, 128, 256) => {
+                    quote! {
+                        unsafe {
+                            _mm256_cvtpd_ps(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                (ScalarType::Unsigned, 256, 512) => {
                     let mask = set1_intrinsic(&VecType::new(
                         vec_ty.scalar,
                         vec_ty.scalar_bits,
@@ -398,6 +405,17 @@ pub(crate) fn handle_widen_narrow(
                             // properly afterwards.
                             let result = _mm256_permute4x64_epi64::<0b_11_01_10_00>(#pack(lo_masked, hi_masked));
                             result.simd_into(self)
+                        }
+                    }
+                }
+                (ScalarType::Float, 256, 512) => {
+                    let split = format_ident!("split_{}", vec_ty.rust_name());
+                    quote! {
+                        let (a, b) = self.#split(a);
+                        unsafe {
+                            let lo = _mm256_cvtpd_ps(a.into());
+                            let hi = _mm256_cvtpd_ps(b.into());
+                            _mm256_setr_m128(lo, hi).simd_into(self)
                         }
                     }
                 }

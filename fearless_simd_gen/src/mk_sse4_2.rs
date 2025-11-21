@@ -351,6 +351,23 @@ pub(crate) fn handle_widen_narrow(
                 }
                 .rust_name()
             );
+            let shifted = if vec_ty.scalar == ScalarType::Float {
+                let to_ints = cast_ident(
+                    ScalarType::Float,
+                    ScalarType::Int,
+                    vec_ty.scalar_bits,
+                    vec_ty.n_bits(),
+                );
+                let from_ints = cast_ident(
+                    ScalarType::Int,
+                    ScalarType::Float,
+                    vec_ty.scalar_bits,
+                    vec_ty.n_bits(),
+                );
+                quote! { #from_ints(_mm_srli_si128::<8>(#to_ints(raw))) }
+            } else {
+                quote! { _mm_srli_si128::<8>(raw) }
+            };
             quote! {
                 #method_sig {
                     unsafe {
@@ -358,37 +375,55 @@ pub(crate) fn handle_widen_narrow(
                         let high = #extend(raw).simd_into(self);
                         // Shift by 8 since we want to get the higher part into the
                         // lower position.
-                        let low = #extend(_mm_srli_si128::<8>(raw)).simd_into(self);
+                        let low = #extend(#shifted).simd_into(self);
                         self.#combine(high, low)
                     }
                 }
             }
         }
         "narrow" => {
-            let mask = set1_intrinsic(&VecType::new(
-                vec_ty.scalar,
-                vec_ty.scalar_bits,
-                vec_ty.len / 2,
-            ));
-            let pack = pack_intrinsic(
-                vec_ty.scalar_bits,
-                matches!(vec_ty.scalar, ScalarType::Int),
-                t.n_bits(),
-            );
-            let split = format_ident!("split_{}", vec_ty.rust_name());
-            quote! {
-                #method_sig {
-                    let (a, b) = self.#split(a);
-                    unsafe {
-                        // Note that SSE4.2 only has an intrinsic for saturating cast,
-                        // but not wrapping.
-                        let mask = #mask(0xFF);
-                        let lo_masked = _mm_and_si128(a.into(), mask);
-                        let hi_masked = _mm_and_si128(b.into(), mask);
-                        let result = #pack(lo_masked, hi_masked);
-                        result.simd_into(self)
+            match (vec_ty.scalar, t.n_bits(), vec_ty.n_bits()) {
+                (ScalarType::Unsigned, 128, 256) => {
+                    let mask = set1_intrinsic(&VecType::new(
+                        vec_ty.scalar,
+                        vec_ty.scalar_bits,
+                        vec_ty.len / 2,
+                    ));
+                    let pack = pack_intrinsic(
+                        vec_ty.scalar_bits,
+                        matches!(vec_ty.scalar, ScalarType::Int),
+                        t.n_bits(),
+                    );
+                    let split = format_ident!("split_{}", vec_ty.rust_name());
+                    quote! {
+                        #method_sig {
+                            let (a, b) = self.#split(a);
+                            unsafe {
+                                // Note that SSE4.2 only has an intrinsic for saturating cast,
+                                // but not wrapping.
+                                let mask = #mask(0xFF);
+                                let lo_masked = _mm_and_si128(a.into(), mask);
+                                let hi_masked = _mm_and_si128(b.into(), mask);
+                                let result = #pack(lo_masked, hi_masked);
+                                result.simd_into(self)
+                            }
+                        }
                     }
                 }
+                (ScalarType::Float, 128, 256) => {
+                    let split = format_ident!("split_{}", vec_ty.rust_name());
+                    quote! {
+                        #method_sig {
+                            let (a, b) = self.#split(a);
+                            unsafe {
+                                let lo = _mm_cvtpd_ps(a.into());
+                                let hi = _mm_cvtpd_ps(b.into());
+                                _mm_movelh_ps(lo, hi).simd_into(self)
+                            }
+                        }
+                    }
+                }
+                _ => unimplemented!(),
             }
         }
         _ => unreachable!(),

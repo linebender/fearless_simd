@@ -180,6 +180,10 @@ impl Simd for Avx2 {
         unsafe { _mm256_setr_m128(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> f64x4<Self> {
+        unsafe { _mm256_cvtps_pd(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
         unsafe { _mm_castps_pd(a.into()).simd_into(self) }
     }
@@ -1403,6 +1407,15 @@ impl Simd for Avx2 {
                 _mm256_extractf128_ps::<0>(a.into()).simd_into(self),
                 _mm256_extractf128_ps::<1>(a.into()).simd_into(self),
             )
+        }
+    }
+    #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> f64x8<Self> {
+        unsafe {
+            let (a0, a1) = self.split_f32x8(a);
+            let high = _mm256_cvtps_pd(a0.into()).simd_into(self);
+            let low = _mm256_cvtps_pd(a1.into()).simd_into(self);
+            self.combine_f64x4(high, low)
         }
     }
     #[inline(always)]
@@ -2733,6 +2746,10 @@ impl Simd for Avx2 {
         }
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>) -> f32x4<Self> {
+        unsafe { _mm256_cvtpd_ps(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
         unsafe { _mm256_castpd_ps(a.into()).simd_into(self) }
     }
@@ -2964,6 +2981,18 @@ impl Simd for Avx2 {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
+        crate::Fallback::new()
+            .load_interleaved_128_f32x16(src)
+            .val
+            .simd_into(self)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
+        let fb = crate::Fallback::new();
+        fb.store_interleaved_128_f32x16(a.val.simd_into(fb), dest);
+    }
+    #[inline(always)]
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_f64x4(
@@ -2978,18 +3007,6 @@ impl Simd for Avx2 {
             self.reinterpret_i32_f32x8(a0),
             self.reinterpret_i32_f32x8(a1),
         )
-    }
-    #[inline(always)]
-    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        crate::Fallback::new()
-            .load_interleaved_128_f32x16(src)
-            .val
-            .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        let fb = crate::Fallback::new();
-        fb.store_interleaved_128_f32x16(a.val.simd_into(fb), dest);
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -4394,6 +4411,15 @@ impl Simd for Avx2 {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>) -> f32x8<Self> {
+        let (a, b) = self.split_f64x8(a);
+        unsafe {
+            let lo = _mm256_cvtpd_ps(a.into());
+            let hi = _mm256_cvtpd_ps(b.into());
+            _mm256_setr_m128(lo, hi).simd_into(self)
+        }
     }
     #[inline(always)]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {

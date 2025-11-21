@@ -340,6 +340,16 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> f64x4<Self> {
+        [
+            a[0usize] as f64,
+            a[1usize] as f64,
+            a[2usize] as f64,
+            a[3usize] as f64,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
         a.bitcast()
     }
@@ -3208,6 +3218,11 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f64x4(self.widen_f32x4(a0), self.widen_f32x4(a1))
+    }
+    #[inline(always)]
     fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_f64x2(
@@ -4641,6 +4656,16 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>) -> f32x4<Self> {
+        [
+            a[0usize] as f32,
+            a[1usize] as f32,
+            a[2usize] as f32,
+            a[3usize] as f32,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f32x4(
@@ -4891,22 +4916,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f64x4(
-            self.reinterpret_f64_f32x8(a0),
-            self.reinterpret_f64_f32x8(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(
-            self.reinterpret_i32_f32x8(a0),
-            self.reinterpret_i32_f32x8(a1),
-        )
-    }
-    #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
         [
             src[0usize],
@@ -4935,6 +4944,22 @@ impl Simd for Fallback {
             a[13usize], a[2usize], a[6usize], a[10usize], a[14usize], a[3usize], a[7usize],
             a[11usize], a[15usize],
         ];
+    }
+    #[inline(always)]
+    fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f64x4(
+            self.reinterpret_f64_f32x8(a0),
+            self.reinterpret_f64_f32x8(a1),
+        )
+    }
+    #[inline(always)]
+    fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_i32x8(
+            self.reinterpret_i32_f32x8(a0),
+            self.reinterpret_i32_f32x8(a1),
+        )
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -6444,6 +6469,11 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f32x4(self.narrow_f64x4(a0), self.narrow_f64x4(a1))
     }
     #[inline(always)]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {

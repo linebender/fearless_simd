@@ -186,6 +186,14 @@ impl Simd for Neon {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> f64x4<Self> {
+        unsafe {
+            let low = vcvt_f64_f32(vget_low_f32(a.into()));
+            let high = vcvt_high_f64_f32(a.into());
+            float64x2x2_t(low, high).simd_into(self)
+        }
+    }
+    #[inline(always)]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
         unsafe { vreinterpretq_f64_f32(a.into()).simd_into(self) }
     }
@@ -1401,6 +1409,11 @@ impl Simd for Neon {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f64x4(self.widen_f32x4(a0), self.widen_f32x4(a1))
     }
     #[inline(always)]
     fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
@@ -2823,6 +2836,13 @@ impl Simd for Neon {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>) -> f32x4<Self> {
+        unsafe {
+            let converted: float64x2x2_t = a.into();
+            vcvt_high_f32_f64(vcvt_f32_f64(converted.0), converted.1).simd_into(self)
+        }
+    }
+    #[inline(always)]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f32x4(
@@ -3073,6 +3093,14 @@ impl Simd for Neon {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
+        unsafe { vld4q_f32(src.as_ptr()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
+        unsafe { vst4q_f32(dest.as_mut_ptr(), a.into()) }
+    }
+    #[inline(always)]
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_f64x4(
@@ -3087,14 +3115,6 @@ impl Simd for Neon {
             self.reinterpret_i32_f32x8(a0),
             self.reinterpret_i32_f32x8(a1),
         )
-    }
-    #[inline(always)]
-    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        unsafe { vld4q_f32(src.as_ptr()).simd_into(self) }
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        unsafe { vst4q_f32(dest.as_mut_ptr(), a.into()) }
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -4465,6 +4485,11 @@ impl Simd for Neon {
         b0.copy_from_slice(&a.val[0..4usize]);
         b1.copy_from_slice(&a.val[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f32x4(self.narrow_f64x4(a0), self.narrow_f64x4(a1))
     }
     #[inline(always)]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {
