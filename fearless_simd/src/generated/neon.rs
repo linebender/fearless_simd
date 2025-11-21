@@ -303,11 +303,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { vminnmq_s8(a.into(), b.into()).simd_into(self) }
+        unsafe { vminq_s8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { vmaxnmq_s8(a.into(), b.into()).simd_into(self) }
+        unsafe { vmaxq_s8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self> {
@@ -422,11 +422,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { vminnmq_u8(a.into(), b.into()).simd_into(self) }
+        unsafe { vminq_u8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { vmaxnmq_u8(a.into(), b.into()).simd_into(self) }
+        unsafe { vmaxq_u8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
@@ -581,11 +581,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { vminnmq_s16(a.into(), b.into()).simd_into(self) }
+        unsafe { vminq_s16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { vmaxnmq_s16(a.into(), b.into()).simd_into(self) }
+        unsafe { vmaxq_s16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self> {
@@ -700,11 +700,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { vminnmq_u16(a.into(), b.into()).simd_into(self) }
+        unsafe { vminq_u16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { vmaxnmq_u16(a.into(), b.into()).simd_into(self) }
+        unsafe { vmaxq_u16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self> {
@@ -855,11 +855,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { vminnmq_s32(a.into(), b.into()).simd_into(self) }
+        unsafe { vminq_s32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { vmaxnmq_s32(a.into(), b.into()).simd_into(self) }
+        unsafe { vmaxq_s32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self> {
@@ -978,11 +978,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { vminnmq_u32(a.into(), b.into()).simd_into(self) }
+        unsafe { vminq_u32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { vmaxnmq_u32(a.into(), b.into()).simd_into(self) }
+        unsafe { vmaxq_u32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self> {
