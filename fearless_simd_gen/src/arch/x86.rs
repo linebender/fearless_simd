@@ -24,8 +24,6 @@ pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
         "shr" => "shr",
         "max" => "max",
         "min" => "min",
-        "max_precise" => "max",
-        "min_precise" => "min",
         "select" => "blendv",
         _ => return None,
     })
@@ -116,6 +114,33 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                 };
                 let intrinsic = intrinsic_ident(name, suffix, ty.n_bits());
                 quote! { #intrinsic ( #( #args ),* ) }
+            }
+            "min_precise" | "max_precise" => {
+                assert_eq!(
+                    ty.scalar,
+                    ScalarType::Float,
+                    "[min/max]_precise only makes sense on floats"
+                );
+                let suffix = op_suffix(ty.scalar, ty.scalar_bits, true);
+                let intrinsic = intrinsic_ident(
+                    if op == "max_precise" { "max" } else { "min" },
+                    suffix,
+                    ty.n_bits(),
+                );
+                let cmpunord = float_compare_method("unord", ty);
+                let blend = intrinsic_ident("blendv", suffix, ty.n_bits());
+                let a = &args[0];
+                let b = &args[1];
+
+                quote! {
+                    let intermediate = #intrinsic(#a, #b);
+                    // The x86 min/max intrinsics behave like `a < b ? a : b` and `a > b ? a : b` respectively. That
+                    // means that if either `a` or `b` is NaN, they return the second argument `b`. So to implement a
+                    // min/max where we always return the non-NaN argument, we add an additional check if `b` is NaN,
+                    // and select `a` if so.
+                    let b_is_nan = #cmpunord(#b, #b);
+                    #blend(intermediate, #a, b_is_nan)
+                }
             }
             _ => unimplemented!("{}", op),
         }
@@ -252,14 +277,14 @@ pub(crate) fn cast_ident(
 pub(crate) fn float_compare_method(method: &str, vec_ty: &VecType) -> TokenStream {
     match vec_ty.n_bits() {
         128 => {
-            let ident = if method == "ord" {
-                simple_intrinsic("cmpord", vec_ty)
-            } else {
-                intrinsic_ident(
+            let ident = match method {
+                "ord" => simple_intrinsic("cmpord", vec_ty),
+                "unord" => simple_intrinsic("cmpunord", vec_ty),
+                _ => intrinsic_ident(
                     translate_op(method).unwrap(),
                     op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false),
                     vec_ty.n_bits(),
-                )
+                ),
             };
             quote! { #ident }
         }
@@ -275,6 +300,7 @@ pub(crate) fn float_compare_method(method: &str, vec_ty: &VecType) -> TokenStrea
                 "simd_ge" => 0x1D,
                 "simd_gt" => 0x1E,
                 "ord" => 0x07,
+                "unord" => 0x03,
                 _ => unreachable!(),
             };
             let intrinsic = simple_intrinsic("cmp", vec_ty);

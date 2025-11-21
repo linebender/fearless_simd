@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use crate::generic::scalar_binary;
 use crate::ops::valid_reinterpret;
 use crate::{
-    arch::wasm,
+    arch::wasm::{self, simple_intrinsic},
     generic::{generic_combine, generic_op, generic_split},
     ops::{OpSig, TyFlavor, ops_for_type},
     types::{SIMD_TYPES, ScalarType, type_imports},
@@ -134,15 +134,39 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 }
                             }
                         }
-                        "max_precise" | "min_precise" => {
-                            // For `max_precise` and `min_precise` the arguments are switched such
-                            // that `max(NaN, x)` and `min(NaN, x)` result in `x`. This matches
-                            // `_mm_max_ps` and `_mm_min_ps` semantics on x86.
-                            let swapped_args = [quote! { b.into() }, quote! { a.into() }];
-                            let expr: TokenStream = wasm::expr(method, vec_ty, &swapped_args);
+                        "max" | "min" if vec_ty.scalar == ScalarType::Float => {
+                            // We switch the arguments here for the correct semantics. For WebAssembly, `pmin` and
+                            // `pmax` return the *first* operand if either operand is NaN. Our semantics for the
+                            // non-precise min/max guarantee that we return the *second* operand if either operand is
+                            // NaN.
+                            let intrinsic: TokenStream = simple_intrinsic(
+                                if method == "max" { "pmax" } else { "pmin" },
+                                vec_ty,
+                            );
                             quote! {
                                 #method_sig {
-                                    #expr.simd_into(self)
+                                    #intrinsic(b.into(), a.into()).simd_into(self)
+                                }
+                            }
+                        }
+                        "max_precise" | "min_precise" => {
+                            let intrinsic: TokenStream = simple_intrinsic(
+                                if method == "max_precise" {
+                                    "pmax"
+                                } else {
+                                    "pmin"
+                                },
+                                vec_ty,
+                            );
+                            let compare_ne: TokenStream = simple_intrinsic("ne", vec_ty);
+                            quote! {
+                                #method_sig {
+                                    let intermediate = #intrinsic(b.into(), a.into());
+
+                                    // See the x86 min_precise/max_precise code in `arch::x86` for more info on how this
+                                    // works.
+                                    let b_is_nan = #compare_ne(b.into(), b.into());
+                                    v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
                                 }
                             }
                         }

@@ -145,16 +145,24 @@ impl Simd for Sse4_2 {
         unsafe { _mm_max_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_max_ps(a.into(), b.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         unsafe { _mm_min_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        unsafe {
+            let intermediate = _mm_max_ps(a.into(), b.into());
+            let b_is_nan = _mm_cmpunord_ps(b.into(), b.into());
+            _mm_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
+    }
+    #[inline(always)]
     fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_min_ps(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let intermediate = _mm_min_ps(a.into(), b.into());
+            let b_is_nan = _mm_cmpunord_ps(b.into(), b.into());
+            _mm_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
     }
     #[inline(always)]
     fn madd_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -1253,16 +1261,24 @@ impl Simd for Sse4_2 {
         unsafe { _mm_max_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_max_pd(a.into(), b.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         unsafe { _mm_min_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        unsafe {
+            let intermediate = _mm_max_pd(a.into(), b.into());
+            let b_is_nan = _mm_cmpunord_pd(b.into(), b.into());
+            _mm_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
+    }
+    #[inline(always)]
     fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_min_pd(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let intermediate = _mm_min_pd(a.into(), b.into());
+            let b_is_nan = _mm_cmpunord_pd(b.into(), b.into());
+            _mm_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
     }
     #[inline(always)]
     fn madd_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -1450,6 +1466,12 @@ impl Simd for Sse4_2 {
         self.combine_f32x4(self.max_f32x4(a0, b0), self.max_f32x4(a1, b1))
     }
     #[inline(always)]
+    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         let (b0, b1) = self.split_f32x8(b);
@@ -1457,12 +1479,6 @@ impl Simd for Sse4_2 {
             self.max_precise_f32x4(a0, b0),
             self.max_precise_f32x4(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -2872,6 +2888,12 @@ impl Simd for Sse4_2 {
         self.combine_f64x2(self.max_f64x2(a0, b0), self.max_f64x2(a1, b1))
     }
     #[inline(always)]
+    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
         let (b0, b1) = self.split_f64x4(b);
@@ -2879,12 +2901,6 @@ impl Simd for Sse4_2 {
             self.max_precise_f64x2(a0, b0),
             self.max_precise_f64x2(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -3129,6 +3145,12 @@ impl Simd for Sse4_2 {
         self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
     }
     #[inline(always)]
+    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         let (b0, b1) = self.split_f32x16(b);
@@ -3136,12 +3158,6 @@ impl Simd for Sse4_2 {
             self.max_precise_f32x8(a0, b0),
             self.max_precise_f32x8(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -4691,6 +4707,12 @@ impl Simd for Sse4_2 {
         self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
     }
     #[inline(always)]
+    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         let (b0, b1) = self.split_f64x8(b);
@@ -4698,12 +4720,6 @@ impl Simd for Sse4_2 {
             self.max_precise_f64x4(a0, b0),
             self.max_precise_f64x4(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
