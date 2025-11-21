@@ -6,7 +6,6 @@
 // Feel free to send a PR that solves one or more of these.
 #![expect(
     clippy::missing_assert_message,
-    clippy::unseparated_literal_suffix,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
@@ -711,7 +710,7 @@ fn store_interleaved_128_f32x16<S: Simd>(simd: S) {
         15.0,
     ];
     let a = f32x16::from_slice(simd, &input);
-    let mut dest = [0.0f32; 16];
+    let mut dest = [0.0_f32; 16];
     simd.store_interleaved_128_f32x16(a, &mut dest);
 
     let expected = [
@@ -750,7 +749,7 @@ fn store_interleaved_128_u8x64<S: Simd>(simd: S) {
         48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
     ];
     let a = u8x64::from_slice(simd, &input);
-    let mut dest = [0u8; 64];
+    let mut dest = [0_u8; 64];
     simd.store_interleaved_128_u8x64(a, &mut dest);
 
     let expected = [
@@ -769,7 +768,7 @@ fn store_interleaved_128_u16x32<S: Simd>(simd: S) {
         205, 206, 207, 300, 301, 302, 303, 304, 305, 306, 307,
     ];
     let a = u16x32::from_slice(simd, &input);
-    let mut dest = [0u16; 32];
+    let mut dest = [0_u16; 32];
     simd.store_interleaved_128_u16x32(a, &mut dest);
 
     let expected = [
@@ -801,7 +800,7 @@ fn store_interleaved_128_u32x16<S: Simd>(simd: S) {
         u32::MAX - 1,
     ];
     let a = u32x16::from_slice(simd, &input);
-    let mut dest = [0u32; 16];
+    let mut dest = [0_u32; 16];
     simd.store_interleaved_128_u32x16(a, &mut dest);
 
     let expected = [
@@ -2615,49 +2614,49 @@ fn simd_ge_i8x16<S: Simd>(simd: S) {
 #[simd_test]
 fn select_native_width_vectors<S: Simd>(simd: S) {
     // Test with native f32 vectors
-    let a_f32 = S::f32s::from_slice(simd, &vec![1.0f32; S::f32s::N]);
-    let b_f32 = S::f32s::from_slice(simd, &vec![2.0f32; S::f32s::N]);
-    let mask_f32 = S::mask32s::from_slice(simd, &vec![-1i32; S::mask32s::N]);
+    let a_f32 = S::f32s::from_slice(simd, &vec![1.0_f32; S::f32s::N]);
+    let b_f32 = S::f32s::from_slice(simd, &vec![2.0_f32; S::f32s::N]);
+    let mask_f32 = S::mask32s::from_slice(simd, &vec![-1_i32; S::mask32s::N]);
     let result_f32 = mask_f32.select(a_f32, b_f32);
-    assert_eq!(result_f32.as_slice(), vec![1.0f32; S::f32s::N]);
+    assert_eq!(result_f32.as_slice(), vec![1.0_f32; S::f32s::N]);
 
     // Test with native u32 vectors
-    let a_u32 = S::u32s::from_slice(simd, &vec![10u32; S::u32s::N]);
-    let b_u32 = S::u32s::from_slice(simd, &vec![20u32; S::u32s::N]);
+    let a_u32 = S::u32s::from_slice(simd, &vec![10_u32; S::u32s::N]);
+    let b_u32 = S::u32s::from_slice(simd, &vec![20_u32; S::u32s::N]);
     let result_u32 = mask_f32.select(a_u32, b_u32);
-    assert_eq!(result_u32.as_slice(), vec![10u32; S::u32s::N]);
+    assert_eq!(result_u32.as_slice(), vec![10_u32; S::u32s::N]);
 
     // Test with native i32 vectors
-    let a_i32 = S::i32s::from_slice(simd, &vec![100i32; S::i32s::N]);
-    let b_i32 = S::i32s::from_slice(simd, &vec![-100i32; S::i32s::N]);
+    let a_i32 = S::i32s::from_slice(simd, &vec![100_i32; S::i32s::N]);
+    let b_i32 = S::i32s::from_slice(simd, &vec![-100_i32; S::i32s::N]);
     let result_i32 = mask_f32.select(a_i32, b_i32);
-    assert_eq!(result_i32.as_slice(), vec![100i32; S::i32s::N]);
+    assert_eq!(result_i32.as_slice(), vec![100_i32; S::i32s::N]);
 
     // Test with native u8 vectors
-    let a_u8 = S::u8s::from_slice(simd, &vec![1u8; S::u8s::N]);
-    let b_u8 = S::u8s::from_slice(simd, &vec![2u8; S::u8s::N]);
-    let mask_u8 = S::mask8s::from_slice(simd, &vec![0i8; S::u8s::N]);
+    let a_u8 = S::u8s::from_slice(simd, &vec![1_u8; S::u8s::N]);
+    let b_u8 = S::u8s::from_slice(simd, &vec![2_u8; S::u8s::N]);
+    let mask_u8 = S::mask8s::from_slice(simd, &vec![0_i8; S::u8s::N]);
     let result_u8 = mask_u8.select(a_u8, b_u8);
-    assert_eq!(result_u8.as_slice(), vec![2u8; S::u8s::N]);
+    assert_eq!(result_u8.as_slice(), vec![2_u8; S::u8s::N]);
 
     // Test with native i8 vectors
-    let a_i8 = S::i8s::from_slice(simd, &vec![10i8; S::i8s::N]);
-    let b_i8 = S::i8s::from_slice(simd, &vec![-10i8; S::i8s::N]);
+    let a_i8 = S::i8s::from_slice(simd, &vec![10_i8; S::i8s::N]);
+    let b_i8 = S::i8s::from_slice(simd, &vec![-10_i8; S::i8s::N]);
     let result_i8 = mask_u8.select(a_i8, b_i8);
-    assert_eq!(result_i8.as_slice(), vec![-10i8; S::i8s::N]);
+    assert_eq!(result_i8.as_slice(), vec![-10_i8; S::i8s::N]);
 
     // Test with native u16 vectors
-    let a_u16 = S::u16s::from_slice(simd, &vec![100u16; S::u16s::N]);
-    let b_u16 = S::u16s::from_slice(simd, &vec![200u16; S::u16s::N]);
-    let mask_u16 = S::mask16s::from_slice(simd, &vec![-1i16; S::mask16s::N]);
+    let a_u16 = S::u16s::from_slice(simd, &vec![100_u16; S::u16s::N]);
+    let b_u16 = S::u16s::from_slice(simd, &vec![200_u16; S::u16s::N]);
+    let mask_u16 = S::mask16s::from_slice(simd, &vec![-1_i16; S::mask16s::N]);
     let result_u16 = mask_u16.select(a_u16, b_u16);
-    assert_eq!(result_u16.as_slice(), vec![100u16; S::u16s::N]);
+    assert_eq!(result_u16.as_slice(), vec![100_u16; S::u16s::N]);
 
     // Test with native i16 vectors
-    let a_i16 = S::i16s::from_slice(simd, &vec![50i16; S::i16s::N]);
-    let b_i16 = S::i16s::from_slice(simd, &vec![-50i16; S::i16s::N]);
+    let a_i16 = S::i16s::from_slice(simd, &vec![50_i16; S::i16s::N]);
+    let b_i16 = S::i16s::from_slice(simd, &vec![-50_i16; S::i16s::N]);
     let result_i16 = mask_u16.select(a_i16, b_i16);
-    assert_eq!(result_i16.as_slice(), vec![50i16; S::i16s::N]);
+    assert_eq!(result_i16.as_slice(), vec![50_i16; S::i16s::N]);
 }
 
 #[simd_test]
