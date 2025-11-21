@@ -124,6 +124,20 @@ fn min_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn max_f32x4_with_nan<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[2.0, f32::NAN, 0.0, f32::NAN]);
+    let b = f32x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
+    assert_eq!(a.max(b).val, [2.0, -2.0, 7.0, 3.0]);
+}
+
+#[simd_test]
+fn min_f32x4_with_nan<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[2.0, f32::NAN, 0.0, f32::NAN]);
+    let b = f32x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
+    assert_eq!(a.min(b).val, [1.0, -2.0, 0.0, 3.0]);
+}
+
+#[simd_test]
 fn max_precise_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[2.0, -3.0, 0.0, 0.5]);
     let b = f32x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
@@ -235,6 +249,32 @@ fn cvt_f32_u32x4<S: Simd>(simd: S) {
 fn cvt_u32_f32x4_rounding<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[0.0, 0.49, 0.51, 0.99]);
     assert_eq!(a.cvt_u32().val, [0, 0, 0, 0]);
+}
+
+#[simd_test]
+fn cvt_u32_f32x4_sat<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-10.3, 3000000000.0, 5e9, -5e9]);
+    assert_eq!(a.cvt_u32().val, [0, 3000000000, u32::MAX, 0]);
+}
+
+#[simd_test]
+fn cvt_i32_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-10.3, -0.9, 13.34, 234234.8]);
+
+    assert_eq!(a.cvt_i32().val, [-10, 0, 13, 234234]);
+}
+
+#[simd_test]
+fn cvt_i32_f32x4_sat<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[-10.3, f32::NAN, 5e9, -5e9]);
+
+    assert_eq!(a.cvt_i32().val, [-10, 0, i32::MAX, i32::MIN]);
+}
+
+#[simd_test]
+fn cvt_f32_i32x4<S: Simd>(simd: S) {
+    let a = i32x4::from_slice(simd, &[-1, 42, 1000000, i32::MAX]);
+    assert_eq!(a.cvt_f32().val, [-1.0, 42.0, 1000000.0, i32::MAX as f32]);
 }
 
 #[simd_test]
@@ -2508,13 +2548,6 @@ fn mul_f32x4<S: Simd>(simd: S) {
     let b = f32x4::from_slice(simd, &[-8.1, 7.9, -9.8, 3243.6]);
 
     assert_eq!((a * b).val, [83.43001, 0.0, -130.73201, 759761400.0]);
-}
-
-#[simd_test]
-fn cvt_i32_f32x4<S: Simd>(simd: S) {
-    let a = f32x4::from_slice(simd, &[-10.3, -0.9, 13.34, 234234.8]);
-
-    assert_eq!(a.cvt_i32().val, [-10, 0, 13, 234234]);
 }
 
 #[simd_test]

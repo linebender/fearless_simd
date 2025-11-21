@@ -255,22 +255,22 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        [
-            f32::max(a[0usize], b[0usize]),
-            f32::max(a[1usize], b[1usize]),
-            f32::max(a[2usize], b[2usize]),
-            f32::max(a[3usize], b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         [
             f32::min(a[0usize], b[0usize]),
             f32::min(a[1usize], b[1usize]),
             f32::min(a[2usize], b[2usize]),
             f32::min(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::max(a[0usize], b[0usize]),
+            f32::max(a[1usize], b[1usize]),
+            f32::max(a[2usize], b[2usize]),
+            f32::max(a[3usize], b[3usize]),
         ]
         .simd_into(self)
     }
@@ -2900,18 +2900,18 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        [
-            f64::max(a[0usize], b[0usize]),
-            f64::max(a[1usize], b[1usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         [
             f64::min(a[0usize], b[0usize]),
             f64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::max(a[0usize], b[0usize]),
+            f64::max(a[1usize], b[1usize]),
         ]
         .simd_into(self)
     }
@@ -3133,6 +3133,12 @@ impl Simd for Fallback {
         self.combine_f32x4(self.max_f32x4(a0, b0), self.max_f32x4(a1, b1))
     }
     #[inline(always)]
+    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         let (b0, b1) = self.split_f32x8(b);
@@ -3140,12 +3146,6 @@ impl Simd for Fallback {
             self.max_precise_f32x4(a0, b0),
             self.max_precise_f32x4(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -4566,6 +4566,12 @@ impl Simd for Fallback {
         self.combine_f64x2(self.max_f64x2(a0, b0), self.max_f64x2(a1, b1))
     }
     #[inline(always)]
+    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
         let (b0, b1) = self.split_f64x4(b);
@@ -4573,12 +4579,6 @@ impl Simd for Fallback {
             self.max_precise_f64x2(a0, b0),
             self.max_precise_f64x2(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -4823,6 +4823,12 @@ impl Simd for Fallback {
         self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
     }
     #[inline(always)]
+    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         let (b0, b1) = self.split_f32x16(b);
@@ -4830,12 +4836,6 @@ impl Simd for Fallback {
             self.max_precise_f32x8(a0, b0),
             self.max_precise_f32x8(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -6378,6 +6378,12 @@ impl Simd for Fallback {
         self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
     }
     #[inline(always)]
+    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         let (b0, b1) = self.split_f64x8(b);
@@ -6385,12 +6391,6 @@ impl Simd for Fallback {
             self.max_precise_f64x4(a0, b0),
             self.max_precise_f64x4(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {

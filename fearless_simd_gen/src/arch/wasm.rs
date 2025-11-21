@@ -29,15 +29,13 @@ fn translate_op(op: &str) -> Option<&'static str> {
         "shrv" => "shr",
         "max" => "max",
         "min" => "min",
-        "max_precise" => "pmax",
-        "min_precise" => "pmin",
         "splat" => "splat",
         // TODO: Only target-feature "relaxed-simd" has "relaxed_madd".
         _ => return None,
     })
 }
 
-fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
+pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
     let ty_prefix = arch_ty(ty);
     let ident = Ident::new(name, Span::call_site());
     let combined_ident = Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site());

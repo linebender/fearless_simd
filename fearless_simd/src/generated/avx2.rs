@@ -101,23 +101,23 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmp_ps::<0i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmpeq_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmp_ps::<17i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmplt_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmp_ps::<18i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmple_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmp_ps::<29i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmpge_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        unsafe { _mm_castps_si128(_mm_cmp_ps::<30i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castps_si128(_mm_cmpgt_ps(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -140,16 +140,24 @@ impl Simd for Avx2 {
         unsafe { _mm_max_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_max_ps(a.into(), b.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         unsafe { _mm_min_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        unsafe {
+            let intermediate = _mm_max_ps(a.into(), b.into());
+            let b_is_nan = _mm_cmpunord_ps(b.into(), b.into());
+            _mm_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
+    }
+    #[inline(always)]
     fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_min_ps(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let intermediate = _mm_min_ps(a.into(), b.into());
+            let b_is_nan = _mm_cmpunord_ps(b.into(), b.into());
+            _mm_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
     }
     #[inline(always)]
     fn madd_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -198,12 +206,43 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         unsafe {
-            _mm_cvtps_epi32(_mm_max_ps(_mm_floor_ps(a.into()), _mm_set1_ps(0.0))).simd_into(self)
+            let a = _mm_max_ps(a.into(), _mm_setzero_ps());
+            let mut converted = _mm_cvttps_epi32(a);
+            let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
+            let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
+            if !all_in_range {
+                let exceeds_unsigned_range =
+                    _mm_castps_si128(_mm_cmplt_ps(_mm_set1_ps(4294967040.0), a));
+                let excess = _mm_sub_ps(a, _mm_set1_ps(2147483648.0));
+                let excess_converted = _mm_cvttps_epi32(_mm_andnot_ps(in_range, excess));
+                converted = _mm_add_epi32(converted, excess_converted);
+                converted = _mm_blendv_epi8(
+                    converted,
+                    _mm_set1_epi32(u32::MAX as i32),
+                    exceeds_unsigned_range,
+                );
+            }
+            converted.simd_into(self)
         }
     }
     #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_cvtps_epi32(a.trunc().into()).simd_into(self) }
+        unsafe {
+            let a = a.into();
+            let mut converted = _mm_cvttps_epi32(a);
+            let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
+            let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
+            if !all_in_range {
+                converted = _mm_blendv_epi8(
+                    _mm_set1_epi32(i32::MAX),
+                    converted,
+                    _mm_castps_si128(in_range),
+                );
+                let is_not_nan = _mm_castps_si128(_mm_cmpord_ps(a, a));
+                converted = _mm_and_si128(converted, is_not_nan);
+            }
+            converted.simd_into(self)
+        }
     }
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
@@ -1053,7 +1092,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_cvtepi32_ps(a.into()).simd_into(self) }
+        unsafe {
+            let a = a.into();
+            let lo = _mm_blend_epi16::<0xAA>(a, _mm_set1_epi32(0x4B000000));
+            let hi = _mm_blend_epi16::<0xAA>(_mm_srli_epi32::<16>(a), _mm_set1_epi32(0x53000000));
+            let fhi = _mm_sub_ps(
+                _mm_castsi128_ps(hi),
+                _mm_set1_ps(f32::from_bits(0x53000080)),
+            );
+            let result = _mm_add_ps(_mm_castsi128_ps(lo), fhi);
+            result.simd_into(self)
+        }
     }
     #[inline(always)]
     fn splat_mask32x4(self, val: i32) -> mask32x4<Self> {
@@ -1133,23 +1182,23 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmp_pd::<0i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmpeq_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_lt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmp_pd::<17i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmplt_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_le_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmp_pd::<18i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmple_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmp_pd::<29i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmpge_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        unsafe { _mm_castpd_si128(_mm_cmp_pd::<30i32>(a.into(), b.into())).simd_into(self) }
+        unsafe { _mm_castpd_si128(_mm_cmpgt_pd(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -1172,16 +1221,24 @@ impl Simd for Avx2 {
         unsafe { _mm_max_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_max_pd(a.into(), b.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         unsafe { _mm_min_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        unsafe {
+            let intermediate = _mm_max_pd(a.into(), b.into());
+            let b_is_nan = _mm_cmpunord_pd(b.into(), b.into());
+            _mm_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
+    }
+    #[inline(always)]
     fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_min_pd(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let intermediate = _mm_min_pd(a.into(), b.into());
+            let b_is_nan = _mm_cmpunord_pd(b.into(), b.into());
+            _mm_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
     }
     #[inline(always)]
     fn madd_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -1352,16 +1409,24 @@ impl Simd for Avx2 {
         unsafe { _mm256_max_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_max_ps(a.into(), b.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
         unsafe { _mm256_min_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        unsafe {
+            let intermediate = _mm256_max_ps(a.into(), b.into());
+            let b_is_nan = _mm256_cmp_ps::<3i32>(b.into(), b.into());
+            _mm256_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
+    }
+    #[inline(always)]
     fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_min_ps(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let intermediate = _mm256_min_ps(a.into(), b.into());
+            let b_is_nan = _mm256_cmp_ps::<3i32>(b.into(), b.into());
+            _mm256_blendv_ps(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
     }
     #[inline(always)]
     fn madd_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
@@ -1424,16 +1489,43 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
         unsafe {
-            _mm256_cvtps_epi32(_mm256_max_ps(
-                _mm256_floor_ps(a.into()),
-                _mm256_set1_ps(0.0),
-            ))
-            .simd_into(self)
+            let a = _mm256_max_ps(a.into(), _mm256_setzero_ps());
+            let mut converted = _mm256_cvttps_epi32(a);
+            let in_range = _mm256_cmp_ps::<17i32>(a, _mm256_set1_ps(2147483648.0));
+            let all_in_range = _mm256_movemask_ps(in_range) == 0b11111111;
+            if !all_in_range {
+                let exceeds_unsigned_range =
+                    _mm256_castps_si256(_mm256_cmp_ps::<17i32>(_mm256_set1_ps(4294967040.0), a));
+                let excess = _mm256_sub_ps(a, _mm256_set1_ps(2147483648.0));
+                let excess_converted = _mm256_cvttps_epi32(_mm256_andnot_ps(in_range, excess));
+                converted = _mm256_add_epi32(converted, excess_converted);
+                converted = _mm256_blendv_epi8(
+                    converted,
+                    _mm256_set1_epi32(u32::MAX as i32),
+                    exceeds_unsigned_range,
+                );
+            }
+            converted.simd_into(self)
         }
     }
     #[inline(always)]
     fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_cvtps_epi32(a.trunc().into()).simd_into(self) }
+        unsafe {
+            let a = a.into();
+            let mut converted = _mm256_cvttps_epi32(a);
+            let in_range = _mm256_cmp_ps::<17i32>(a, _mm256_set1_ps(2147483648.0));
+            let all_in_range = _mm256_movemask_ps(in_range) == 0b11111111;
+            if !all_in_range {
+                converted = _mm256_blendv_epi8(
+                    _mm256_set1_epi32(i32::MAX),
+                    converted,
+                    _mm256_castps_si256(in_range),
+                );
+                let is_not_nan = _mm256_castps_si256(_mm256_cmp_ps::<7i32>(a, a));
+                converted = _mm256_and_si256(converted, is_not_nan);
+            }
+            converted.simd_into(self)
+        }
     }
     #[inline(always)]
     fn splat_i8x32(self, val: i8) -> i8x32<Self> {
@@ -2528,7 +2620,20 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_cvtepi32_ps(a.into()).simd_into(self) }
+        unsafe {
+            let a = a.into();
+            let lo = _mm256_blend_epi16::<0xAA>(a, _mm256_set1_epi32(0x4B000000));
+            let hi = _mm256_blend_epi16::<0xAA>(
+                _mm256_srli_epi32::<16>(a),
+                _mm256_set1_epi32(0x53000000),
+            );
+            let fhi = _mm256_sub_ps(
+                _mm256_castsi256_ps(hi),
+                _mm256_set1_ps(f32::from_bits(0x53000080)),
+            );
+            let result = _mm256_add_ps(_mm256_castsi256_ps(lo), fhi);
+            result.simd_into(self)
+        }
     }
     #[inline(always)]
     fn splat_mask32x8(self, val: i32) -> mask32x8<Self> {
@@ -2679,16 +2784,24 @@ impl Simd for Avx2 {
         unsafe { _mm256_max_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_max_pd(a.into(), b.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
         unsafe { _mm256_min_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        unsafe {
+            let intermediate = _mm256_max_pd(a.into(), b.into());
+            let b_is_nan = _mm256_cmp_pd::<3i32>(b.into(), b.into());
+            _mm256_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
+    }
+    #[inline(always)]
     fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_min_pd(a.into(), b.into()).simd_into(self) }
+        unsafe {
+            let intermediate = _mm256_min_pd(a.into(), b.into());
+            let b_is_nan = _mm256_cmp_pd::<3i32>(b.into(), b.into());
+            _mm256_blendv_pd(intermediate, a.into(), b_is_nan).simd_into(self)
+        }
     }
     #[inline(always)]
     fn madd_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
@@ -2896,6 +3009,12 @@ impl Simd for Avx2 {
         self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
     }
     #[inline(always)]
+    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         let (b0, b1) = self.split_f32x16(b);
@@ -2903,12 +3022,6 @@ impl Simd for Avx2 {
             self.max_precise_f32x8(a0, b0),
             self.max_precise_f32x8(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -4328,6 +4441,12 @@ impl Simd for Avx2 {
         self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
     }
     #[inline(always)]
+    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         let (b0, b1) = self.split_f64x8(b);
@@ -4335,12 +4454,6 @@ impl Simd for Avx2 {
             self.max_precise_f64x4(a0, b0),
             self.max_precise_f64x4(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
