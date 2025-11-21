@@ -338,6 +338,14 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
                 #block_splat_body
             }
 
+            #[inline(always)]
+            fn from_fn(simd: S, f: impl FnMut(usize) -> #scalar) -> Self {
+                Self {
+                    val: core::array::from_fn(f),
+                    simd,
+                }
+            }
+
         }
         impl<S: Simd> crate::#vec_trait_id<#scalar, S> for #name<S> {
             #( #methods )*
