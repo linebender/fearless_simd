@@ -198,10 +198,12 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Reinterpret(scalar, target_scalar_bits) => {
             handle_reinterpret(method_sig, vec_ty, scalar, target_scalar_bits)
         }
-        OpSig::LoadInterleaved(block_size, _) => {
-            handle_load_interleaved(method_sig, &method_ident, vec_ty, block_size)
+        OpSig::LoadInterleaved(block_size, count) => {
+            handle_load_interleaved(method_sig, vec_ty, block_size, count)
         }
-        OpSig::StoreInterleaved(_, _) => handle_store_interleaved(method_sig, &method_ident),
+        OpSig::StoreInterleaved(block_size, count) => {
+            handle_store_interleaved(method_sig, vec_ty, block_size, count)
+        }
     }
 }
 
@@ -835,42 +837,124 @@ pub(crate) fn handle_reinterpret(
 
 pub(crate) fn handle_load_interleaved(
     method_sig: TokenStream,
-    method_ident: &Ident,
     vec_ty: &VecType,
     block_size: u16,
+    count: u16,
 ) -> TokenStream {
-    // Implementing interleaved loading/storing for 32-bit is still quite doable, It's unclear
-    // how hard it would be for u16/u8. For now we only implement it for u32 since this is needed
-    // in packing in vello_cpu, where performance is very critical.
-    let expr =
-        if block_size == 128 && vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 32 {
+    assert_eq!(
+        block_size, 128,
+        "only 128-bit blocks are currently supported"
+    );
+    assert_eq!(count, 4, "only count of 4 is currently supported");
+    let expr = match vec_ty.scalar_bits {
+        32 | 16 | 8 => {
+            let block_ty =
+                VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
+            let load_unaligned =
+                intrinsic_ident("loadu", coarse_type(&block_ty), block_ty.n_bits());
+            let vec_32 = VecType::new(block_ty.scalar, 32, block_ty.n_bits() / 32);
+            let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
+            let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
+            let vec_64 = VecType::new(block_ty.scalar, 64, block_ty.n_bits() / 64);
+            let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
+            let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
+
+            let vec_combined =
+                VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
+            let combine_half = Ident::new(
+                &format!("combine_{}", block_ty.rust_name()),
+                Span::call_site(),
+            );
+            let combine_full = Ident::new(
+                &format!("combine_{}", vec_combined.rust_name()),
+                Span::call_site(),
+            );
+            let block_len = block_size as usize / vec_ty.scalar_bits;
+
+            let init_shuffle = match vec_ty.scalar_bits {
+                16 => Some(quote! {
+                    let mask = _mm_setr_epi8(
+                        0, 1, 8, 9,
+                        2, 3, 10, 11,
+                        4, 5, 12, 13,
+                        6, 7, 14, 15,
+                    );
+                    let v0 = _mm_shuffle_epi8(v0, mask);
+                    let v1 = _mm_shuffle_epi8(v1, mask);
+                    let v2 = _mm_shuffle_epi8(v2, mask);
+                    let v3 = _mm_shuffle_epi8(v3, mask);
+                }),
+                8 => Some(quote! {
+                    let mask = _mm_setr_epi8(
+                        0, 4, 8, 12,
+                        1, 5, 9, 13,
+                        2, 6, 10, 14,
+                        3, 7, 11, 15,
+                    );
+                    let v0 = _mm_shuffle_epi8(v0, mask);
+                    let v1 = _mm_shuffle_epi8(v1, mask);
+                    let v2 = _mm_shuffle_epi8(v2, mask);
+                    let v3 = _mm_shuffle_epi8(v3, mask);
+                }),
+                _ => None,
+            };
+
+            let final_unpack = if vec_ty.scalar == ScalarType::Float && vec_ty.scalar_bits == 32 {
+                let cast_32 = cast_ident(
+                    ScalarType::Float,
+                    ScalarType::Float,
+                    64,
+                    32,
+                    block_ty.n_bits(),
+                );
+                let cast_64 = cast_ident(
+                    ScalarType::Float,
+                    ScalarType::Float,
+                    32,
+                    64,
+                    block_ty.n_bits(),
+                );
+
+                quote! {
+                    let out0 = #cast_32(#unpacklo_64(#cast_64(tmp0), #cast_64(tmp2))); // [0,4,8,12]
+                    let out1 = #cast_32(#unpackhi_64(#cast_64(tmp0), #cast_64(tmp2))); // [1,5,9,13]
+                    let out2 = #cast_32(#unpacklo_64(#cast_64(tmp1), #cast_64(tmp3))); // [2,6,10,14]
+                    let out3 = #cast_32(#unpackhi_64(#cast_64(tmp1), #cast_64(tmp3))); // [3,7,11,15]
+                }
+            } else {
+                quote! {
+                    let out0 = #unpacklo_64(tmp0, tmp2); // [0,4,8,12]
+                    let out1 = #unpackhi_64(tmp0, tmp2); // [1,5,9,13]
+                    let out2 = #unpacklo_64(tmp1, tmp3); // [2,6,10,14]
+                    let out3 = #unpackhi_64(tmp1, tmp3); // [3,7,11,15]
+                }
+            };
+
             quote! {
                 unsafe {
-                    // TODO: Once we support u64, we could do all of this using just zip + unzip
-                    let v0 = _mm_loadu_si128(src.as_ptr().add(0) as *const __m128i);
-                    let v1 = _mm_loadu_si128(src.as_ptr().add(4) as *const __m128i);
-                    let v2 = _mm_loadu_si128(src.as_ptr().add(8) as *const __m128i);
-                    let v3 = _mm_loadu_si128(src.as_ptr().add(12) as *const __m128i);
+                    let v0 = #load_unaligned(src.as_ptr() as *const _);
+                    let v1 = #load_unaligned(src.as_ptr().add(#block_len) as *const _);
+                    let v2 = #load_unaligned(src.as_ptr().add(2 * #block_len) as *const _);
+                    let v3 = #load_unaligned(src.as_ptr().add(3 * #block_len) as *const _);
 
-                    let tmp0 = _mm_unpacklo_epi32(v0, v1); // [0,4,1,5]
-                    let tmp1 = _mm_unpackhi_epi32(v0, v1); // [2,6,3,7]
-                    let tmp2 = _mm_unpacklo_epi32(v2, v3); // [8,12,9,13]
-                    let tmp3 = _mm_unpackhi_epi32(v2, v3); // [10,14,11,15]
+                    #init_shuffle
 
-                    let out0 = _mm_unpacklo_epi64(tmp0, tmp2); // [0,4,8,12]
-                    let out1 = _mm_unpackhi_epi64(tmp0, tmp2); // [1,5,9,13]
-                    let out2 = _mm_unpacklo_epi64(tmp1, tmp3); // [2,6,10,14]
-                    let out3 = _mm_unpackhi_epi64(tmp1, tmp3); // [3,7,11,15]
+                    let tmp0 = #unpacklo_32(v0, v1); // [0,4,1,5]
+                    let tmp1 = #unpackhi_32(v0, v1); // [2,6,3,7]
+                    let tmp2 = #unpacklo_32(v2, v3); // [8,12,9,13]
+                    let tmp3 = #unpackhi_32(v2, v3); // [10,14,11,15]
 
-                    self.combine_u32x8(
-                        self.combine_u32x4(out0.simd_into(self), out1.simd_into(self)),
-                        self.combine_u32x4(out2.simd_into(self), out3.simd_into(self)),
+                    #final_unpack
+
+                    self.#combine_full(
+                        self.#combine_half(out0.simd_into(self), out1.simd_into(self)),
+                        self.#combine_half(out2.simd_into(self), out3.simd_into(self)),
                     )
                 }
             }
-        } else {
-            quote! { crate::Fallback::new().#method_ident(src).val.simd_into(self) }
-        };
+        }
+        _ => unimplemented!(),
+    };
 
     quote! {
         #method_sig {
@@ -881,12 +965,129 @@ pub(crate) fn handle_load_interleaved(
 
 pub(crate) fn handle_store_interleaved(
     method_sig: TokenStream,
-    method_ident: &Ident,
+    vec_ty: &VecType,
+    block_size: u16,
+    count: u16,
 ) -> TokenStream {
+    assert_eq!(
+        block_size, 128,
+        "only 128-bit blocks are currently supported"
+    );
+    assert_eq!(count, 4, "only count of 4 is currently supported");
+    let expr = match vec_ty.scalar_bits {
+        32 | 16 | 8 => {
+            let block_ty =
+                VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
+            let store_unaligned =
+                intrinsic_ident("storeu", coarse_type(&block_ty), block_ty.n_bits());
+            let vec_32 = VecType::new(block_ty.scalar, 32, block_ty.n_bits() / 32);
+            let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
+            let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
+            let vec_64 = VecType::new(block_ty.scalar, 64, block_ty.n_bits() / 64);
+            let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
+            let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
+
+            let vec_combined =
+                VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
+            let split_half = Ident::new(
+                &format!("split_{}", vec_combined.rust_name()),
+                Span::call_site(),
+            );
+            let split_full =
+                Ident::new(&format!("split_{}", vec_ty.rust_name()), Span::call_site());
+            let block_len = block_size as usize / vec_ty.scalar_bits;
+
+            let post_shuffle = match vec_ty.scalar_bits {
+                16 => Some(quote! {
+                    let mask = _mm_setr_epi8(
+                        0, 1, 4, 5,
+                        8, 9, 12, 13,
+                        2, 3, 6, 7,
+                        10, 11, 14, 15,
+                    );
+                    let out0 = _mm_shuffle_epi8(out0, mask);
+                    let out1 = _mm_shuffle_epi8(out1, mask);
+                    let out2 = _mm_shuffle_epi8(out2, mask);
+                    let out3 = _mm_shuffle_epi8(out3, mask);
+                }),
+                8 => Some(quote! {
+                    let mask = _mm_setr_epi8(
+                        0, 4, 8, 12,
+                        1, 5, 9, 13,
+                        2, 6, 10, 14,
+                        3, 7, 11, 15,
+                    );
+                    let out0 = _mm_shuffle_epi8(out0, mask);
+                    let out1 = _mm_shuffle_epi8(out1, mask);
+                    let out2 = _mm_shuffle_epi8(out2, mask);
+                    let out3 = _mm_shuffle_epi8(out3, mask);
+                }),
+                _ => None,
+            };
+
+            let final_unpack = if vec_ty.scalar == ScalarType::Float && vec_ty.scalar_bits == 32 {
+                let cast_32 = cast_ident(
+                    ScalarType::Float,
+                    ScalarType::Float,
+                    64,
+                    32,
+                    block_ty.n_bits(),
+                );
+                let cast_64 = cast_ident(
+                    ScalarType::Float,
+                    ScalarType::Float,
+                    32,
+                    64,
+                    block_ty.n_bits(),
+                );
+
+                quote! {
+                    let out0 = #cast_32(#unpacklo_64(#cast_64(tmp0), #cast_64(tmp2))); // [0,4,8,12]
+                    let out1 = #cast_32(#unpackhi_64(#cast_64(tmp0), #cast_64(tmp2))); // [1,5,9,13]
+                    let out2 = #cast_32(#unpacklo_64(#cast_64(tmp1), #cast_64(tmp3))); // [2,6,10,14]
+                    let out3 = #cast_32(#unpackhi_64(#cast_64(tmp1), #cast_64(tmp3))); // [3,7,11,15]
+                }
+            } else {
+                quote! {
+                    let out0 = #unpacklo_64(tmp0, tmp2); // [0,4,8,12]
+                    let out1 = #unpackhi_64(tmp0, tmp2); // [1,5,9,13]
+                    let out2 = #unpacklo_64(tmp1, tmp3); // [2,6,10,14]
+                    let out3 = #unpackhi_64(tmp1, tmp3); // [3,7,11,15]
+                }
+            };
+
+            quote! {
+                let (v01, v23) = self.#split_full(a);
+                let (v0, v1) = self.#split_half(v01);
+                let (v2, v3) = self.#split_half(v23);
+                let v0 = v0.into();
+                let v1 = v1.into();
+                let v2 = v2.into();
+                let v3 = v3.into();
+
+                unsafe {
+                    let tmp0 = #unpacklo_32(v0, v1); // [0,4,1,5]
+                    let tmp1 = #unpackhi_32(v0, v1); // [2,6,3,7]
+                    let tmp2 = #unpacklo_32(v2, v3); // [8,12,9,13]
+                    let tmp3 = #unpackhi_32(v2, v3); // [10,14,11,15]
+
+                    #final_unpack
+
+                    #post_shuffle
+
+                    #store_unaligned(dest.as_mut_ptr() as *mut _, out0);
+                    #store_unaligned(dest.as_mut_ptr().add(#block_len) as *mut _, out1);
+                    #store_unaligned(dest.as_mut_ptr().add(2 * #block_len) as *mut _, out2);
+                    #store_unaligned(dest.as_mut_ptr().add(3 * #block_len) as *mut _, out3);
+                }
+            }
+        }
+        _ => unimplemented!(),
+    };
+
     quote! {
         #method_sig {
-            let fb = crate::Fallback::new();
-            fb.#method_ident(a.val.simd_into(fb), dest);
+            #expr
         }
     }
 }

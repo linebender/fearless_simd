@@ -213,11 +213,11 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Reinterpret(scalar, target_scalar_bits) => {
             mk_sse4_2::handle_reinterpret(method_sig, vec_ty, scalar, target_scalar_bits)
         }
-        OpSig::LoadInterleaved(block_size, _) => {
-            mk_sse4_2::handle_load_interleaved(method_sig, &method_ident, vec_ty, block_size)
+        OpSig::LoadInterleaved(block_size, count) => {
+            mk_sse4_2::handle_load_interleaved(method_sig, vec_ty, block_size, count)
         }
-        OpSig::StoreInterleaved(_, _) => {
-            mk_sse4_2::handle_store_interleaved(method_sig, &method_ident)
+        OpSig::StoreInterleaved(block_size, count) => {
+            mk_sse4_2::handle_store_interleaved(method_sig, vec_ty, block_size, count)
         }
     }
 }
