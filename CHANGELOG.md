@@ -21,6 +21,7 @@ This release has an [MSRV][] of 1.88.
 - 256-bit vector types now use native AVX2 intrinsics on supported platforms. ([#115][] by [@valadaptive][])
 - 8-bit integer multiplication is now implemented on x86. ([#115][] by [@valadaptive][])
 - New native-width associated types: `f64s` and `mask64s`. ([#125][] by [@valadaptive][])
+- The `from_fn` method on vector types. ([#137][] by [@valadaptive][])
 
 ### Fixed
 
@@ -118,6 +119,7 @@ No changelog was kept for this release.
 [#115]: https://github.com/linebender/fearless_simd/pull/115
 [#123]: https://github.com/linebender/fearless_simd/pull/123
 [#125]: https://github.com/linebender/fearless_simd/pull/125
+[#137]: https://github.com/linebender/fearless_simd/pull/137
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
