@@ -546,19 +546,19 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn any_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        i8x16_bitmask(a.into()) != 0
+        v128_any_true(a.into())
     }
     #[inline(always)]
     fn all_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        i8x16_bitmask(a.into()) == 0xffff
+        i8x16_all_true(a.into())
     }
     #[inline(always)]
     fn any_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        i8x16_bitmask(a.into()) != 0xffff
+        !i8x16_all_true(a.into())
     }
     #[inline(always)]
     fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        i8x16_bitmask(a.into()) == 0
+        !v128_any_true(a.into())
     }
     #[inline(always)]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self> {
@@ -843,19 +843,19 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        i16x8_bitmask(a.into()) != 0
+        v128_any_true(a.into())
     }
     #[inline(always)]
     fn all_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        i16x8_bitmask(a.into()) == 0xff
+        i16x8_all_true(a.into())
     }
     #[inline(always)]
     fn any_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        i16x8_bitmask(a.into()) != 0xff
+        !i16x8_all_true(a.into())
     }
     #[inline(always)]
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        i16x8_bitmask(a.into()) == 0
+        !v128_any_true(a.into())
     }
     #[inline(always)]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self> {
@@ -1144,19 +1144,19 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        i32x4_bitmask(a.into()) != 0
+        v128_any_true(a.into())
     }
     #[inline(always)]
     fn all_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        i32x4_bitmask(a.into()) == 0b1111
+        i32x4_all_true(a.into())
     }
     #[inline(always)]
     fn any_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        i32x4_bitmask(a.into()) != 0b1111
+        !i32x4_all_true(a.into())
     }
     #[inline(always)]
     fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        i32x4_bitmask(a.into()) == 0
+        !v128_any_true(a.into())
     }
     #[inline(always)]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self> {
@@ -1379,19 +1379,19 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        i64x2_bitmask(a.into()) != 0
+        v128_any_true(a.into())
     }
     #[inline(always)]
     fn all_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        i64x2_bitmask(a.into()) == 0b11
+        i64x2_all_true(a.into())
     }
     #[inline(always)]
     fn any_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        i64x2_bitmask(a.into()) != 0b11
+        !i64x2_all_true(a.into())
     }
     #[inline(always)]
     fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        i64x2_bitmask(a.into()) == 0
+        !v128_any_true(a.into())
     }
     #[inline(always)]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self> {

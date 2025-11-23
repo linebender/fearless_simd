@@ -719,16 +719,6 @@ fn any_true_mask8x16<S: Simd>(simd: S) {
 
     let one_neg = mask8x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0]);
     assert!(simd.any_true_mask8x16(one_neg));
-
-    let high_bit_set =
-        mask8x16::from_slice(simd, &[0, 0, 0, -128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    assert!(simd.any_true_mask8x16(high_bit_set));
-
-    let no_high_bit = mask8x16::from_slice(
-        simd,
-        &[1, 2, 3, 127, 64, 32, 16, 8, 4, 2, 1, 0, 100, 50, 25, 12],
-    );
-    assert!(!simd.any_true_mask8x16(no_high_bit));
 }
 
 #[simd_test]
@@ -751,20 +741,6 @@ fn all_true_mask8x16<S: Simd>(simd: S) {
         ],
     );
     assert!(!simd.all_true_mask8x16(one_pos));
-
-    let all_high_bit = mask8x16::from_slice(
-        simd,
-        &[
-            -1, -2, -3, -128, -64, -32, -16, -8, -4, -2, -1, -100, -50, -25, -12, -127,
-        ],
-    );
-    assert!(simd.all_true_mask8x16(all_high_bit));
-
-    let mixed = mask8x16::from_slice(
-        simd,
-        &[-1, -2, -3, -4, -5, -6, -7, -8, 1, 2, 3, 4, 5, 6, 7, 8],
-    );
-    assert!(!simd.all_true_mask8x16(mixed));
 }
 
 #[simd_test]
@@ -787,22 +763,6 @@ fn any_false_mask8x16<S: Simd>(simd: S) {
         ],
     );
     assert!(simd.any_false_mask8x16(one_pos));
-
-    let mostly_neg = mask8x16::from_slice(
-        simd,
-        &[
-            -1, -2, -3, -128, -64, -32, -16, -8, -4, -2, -1, -100, 127, -25, -12, -127,
-        ],
-    );
-    assert!(simd.any_false_mask8x16(mostly_neg));
-
-    let all_high_bit = mask8x16::from_slice(
-        simd,
-        &[
-            -1, -2, -3, -128, -64, -32, -16, -8, -4, -2, -1, -100, -50, -25, -12, -127,
-        ],
-    );
-    assert!(!simd.any_false_mask8x16(all_high_bit));
 }
 
 #[simd_test]
@@ -820,18 +780,6 @@ fn all_false_mask8x16<S: Simd>(simd: S) {
 
     let one_neg = mask8x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0]);
     assert!(!simd.all_false_mask8x16(one_neg));
-
-    let all_pos = mask8x16::from_slice(
-        simd,
-        &[1, 2, 3, 127, 64, 32, 16, 8, 4, 2, 1, 0, 100, 50, 25, 12],
-    );
-    assert!(simd.all_false_mask8x16(all_pos));
-
-    let mixed = mask8x16::from_slice(
-        simd,
-        &[1, 2, 3, 4, 5, 6, 7, 8, -1, -2, -3, -4, -5, -6, -7, -8],
-    );
-    assert!(!simd.all_false_mask8x16(mixed));
 }
 
 #[simd_test]
@@ -2521,12 +2469,6 @@ fn any_true_mask16x8<S: Simd>(simd: S) {
 
     let one_neg = mask16x8::from_slice(simd, &[0, 0, 0, -1, 0, 0, 0, 0]);
     assert!(simd.any_true_mask16x8(one_neg));
-
-    let high_bit_set = mask16x8::from_slice(simd, &[0, 0, -32768, 0, 0, 0, 0, 0]);
-    assert!(simd.any_true_mask16x8(high_bit_set));
-
-    let no_high_bit = mask16x8::from_slice(simd, &[1, 2, 3, 32767, 16384, 8192, 4096, 1024]);
-    assert!(!simd.any_true_mask16x8(no_high_bit));
 }
 
 #[simd_test]
@@ -2539,13 +2481,6 @@ fn all_true_mask16x8<S: Simd>(simd: S) {
 
     let one_pos = mask16x8::from_slice(simd, &[-1, -1, -1, 0, -1, -1, -1, -1]);
     assert!(!simd.all_true_mask16x8(one_pos));
-
-    let all_high_bit =
-        mask16x8::from_slice(simd, &[-1, -2, -32768, -16384, -8192, -4096, -2048, -1024]);
-    assert!(simd.all_true_mask16x8(all_high_bit));
-
-    let mixed = mask16x8::from_slice(simd, &[-1, -2, -3, -4, 1, 2, 3, 4]);
-    assert!(!simd.all_true_mask16x8(mixed));
 }
 
 #[simd_test]
@@ -2558,14 +2493,6 @@ fn any_false_mask16x8<S: Simd>(simd: S) {
 
     let one_pos = mask16x8::from_slice(simd, &[-1, -1, -1, 0, -1, -1, -1, -1]);
     assert!(simd.any_false_mask16x8(one_pos));
-
-    let mostly_neg =
-        mask16x8::from_slice(simd, &[-1, -2, -32768, 32767, -8192, -4096, -2048, -1024]);
-    assert!(simd.any_false_mask16x8(mostly_neg));
-
-    let all_high_bit =
-        mask16x8::from_slice(simd, &[-1, -2, -32768, -16384, -8192, -4096, -2048, -1024]);
-    assert!(!simd.any_false_mask16x8(all_high_bit));
 }
 
 #[simd_test]
@@ -2578,12 +2505,6 @@ fn all_false_mask16x8<S: Simd>(simd: S) {
 
     let one_neg = mask16x8::from_slice(simd, &[0, 0, 0, -1, 0, 0, 0, 0]);
     assert!(!simd.all_false_mask16x8(one_neg));
-
-    let all_pos = mask16x8::from_slice(simd, &[1, 2, 3, 32767, 16384, 8192, 4096, 1024]);
-    assert!(simd.all_false_mask16x8(all_pos));
-
-    let mixed = mask16x8::from_slice(simd, &[1, 2, 3, 4, -1, -2, -3, -4]);
-    assert!(!simd.all_false_mask16x8(mixed));
 }
 
 #[simd_test]
@@ -2621,12 +2542,6 @@ fn any_true_mask32x4<S: Simd>(simd: S) {
 
     let one_neg = mask32x4::from_slice(simd, &[0, -1, 0, 0]);
     assert!(simd.any_true_mask32x4(one_neg));
-
-    let high_bit_set = mask32x4::from_slice(simd, &[0, i32::MIN, 0, 0]);
-    assert!(simd.any_true_mask32x4(high_bit_set));
-
-    let no_high_bit = mask32x4::from_slice(simd, &[1, 2, i32::MAX, 1073741824]);
-    assert!(!simd.any_true_mask32x4(no_high_bit));
 }
 
 #[simd_test]
@@ -2639,12 +2554,6 @@ fn all_true_mask32x4<S: Simd>(simd: S) {
 
     let one_pos = mask32x4::from_slice(simd, &[-1, 0, -1, -1]);
     assert!(!simd.all_true_mask32x4(one_pos));
-
-    let all_high_bit = mask32x4::from_slice(simd, &[-1, -2, i32::MIN, -1073741824]);
-    assert!(simd.all_true_mask32x4(all_high_bit));
-
-    let mixed = mask32x4::from_slice(simd, &[-1, -2, 1, 2]);
-    assert!(!simd.all_true_mask32x4(mixed));
 }
 
 #[simd_test]
@@ -2657,12 +2566,6 @@ fn any_false_mask32x4<S: Simd>(simd: S) {
 
     let one_pos = mask32x4::from_slice(simd, &[-1, 0, -1, -1]);
     assert!(simd.any_false_mask32x4(one_pos));
-
-    let mostly_neg = mask32x4::from_slice(simd, &[-1, -2, i32::MAX, -1073741824]);
-    assert!(simd.any_false_mask32x4(mostly_neg));
-
-    let all_high_bit = mask32x4::from_slice(simd, &[-1, -2, i32::MIN, -1073741824]);
-    assert!(!simd.any_false_mask32x4(all_high_bit));
 }
 
 #[simd_test]
@@ -2675,12 +2578,6 @@ fn all_false_mask32x4<S: Simd>(simd: S) {
 
     let one_neg = mask32x4::from_slice(simd, &[0, -1, 0, 0]);
     assert!(!simd.all_false_mask32x4(one_neg));
-
-    let all_pos = mask32x4::from_slice(simd, &[1, 2, i32::MAX, 1073741824]);
-    assert!(simd.all_false_mask32x4(all_pos));
-
-    let mixed = mask32x4::from_slice(simd, &[1, 2, -1, -2]);
-    assert!(!simd.all_false_mask32x4(mixed));
 }
 
 #[simd_test]
@@ -2844,12 +2741,6 @@ fn any_true_mask64x2<S: Simd>(simd: S) {
 
     let one_neg = mask64x2::from_slice(simd, &[-1, 0]);
     assert!(simd.any_true_mask64x2(one_neg));
-
-    let high_bit_set = mask64x2::from_slice(simd, &[i64::MIN, 0]);
-    assert!(simd.any_true_mask64x2(high_bit_set));
-
-    let no_high_bit = mask64x2::from_slice(simd, &[1, i64::MAX]);
-    assert!(!simd.any_true_mask64x2(no_high_bit));
 }
 
 #[simd_test]
@@ -2862,12 +2753,6 @@ fn all_true_mask64x2<S: Simd>(simd: S) {
 
     let one_pos = mask64x2::from_slice(simd, &[-1, 0]);
     assert!(!simd.all_true_mask64x2(one_pos));
-
-    let all_high_bit = mask64x2::from_slice(simd, &[-1, i64::MIN]);
-    assert!(simd.all_true_mask64x2(all_high_bit));
-
-    let mixed = mask64x2::from_slice(simd, &[-1, 1]);
-    assert!(!simd.all_true_mask64x2(mixed));
 }
 
 #[simd_test]
@@ -2880,12 +2765,6 @@ fn any_false_mask64x2<S: Simd>(simd: S) {
 
     let one_pos = mask64x2::from_slice(simd, &[-1, 0]);
     assert!(simd.any_false_mask64x2(one_pos));
-
-    let mostly_neg = mask64x2::from_slice(simd, &[i64::MAX, -2]);
-    assert!(simd.any_false_mask64x2(mostly_neg));
-
-    let all_high_bit = mask64x2::from_slice(simd, &[-1, i64::MIN]);
-    assert!(!simd.any_false_mask64x2(all_high_bit));
 }
 
 #[simd_test]
@@ -2898,12 +2777,6 @@ fn all_false_mask64x2<S: Simd>(simd: S) {
 
     let one_neg = mask64x2::from_slice(simd, &[-1, 0]);
     assert!(!simd.all_false_mask64x2(one_neg));
-
-    let all_pos = mask64x2::from_slice(simd, &[1, i64::MAX]);
-    assert!(simd.all_false_mask64x2(all_pos));
-
-    let mixed = mask64x2::from_slice(simd, &[1, -1]);
-    assert!(!simd.all_false_mask64x2(mixed));
 }
 
 #[simd_test]

@@ -1007,18 +1007,10 @@ pub(crate) fn handle_mask_reduce(
         8 | 16 => {
             let bits_ty = VecType::new(ScalarType::Int, 8, vec_ty.n_bits() / 8);
             let movemask = simple_intrinsic("movemask", &bits_ty);
-            let movemask = if vec_ty.scalar_bits == 16 {
-                // We only want to test the high bit of each 16-bit value, so we shift out the low 8 bits
-                let srli = simple_intrinsic("srli", &vec_ty);
-                quote! { #movemask(#srli::<8>(a.into())) }
-            } else {
-                quote! { #movemask(a.into()) }
-            };
-            let all_ones = match (vec_ty.scalar_bits, vec_ty.len) {
-                (8, 16) => quote! { 0xffff },
-                (8, 32) => quote! { 0xffffffff },
-                (16, 8) => quote! { 0x5555 },
-                (16, 16) => quote! { 0x55555555 },
+            let movemask = quote! { #movemask(a.into()) };
+            let all_ones = match vec_ty.n_bits() {
+                128 => quote! { 0xffff },
+                256 => quote! { 0xffffffff },
                 _ => unimplemented!(),
             };
 

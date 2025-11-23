@@ -883,19 +883,19 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        unsafe { _mm_movemask_epi8(_mm_srli_epi16::<8>(a.into())) as u32 != 0 }
+        unsafe { _mm_movemask_epi8(a.into()) as u32 != 0 }
     }
     #[inline(always)]
     fn all_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        unsafe { _mm_movemask_epi8(_mm_srli_epi16::<8>(a.into())) as u32 == 0x5555 }
+        unsafe { _mm_movemask_epi8(a.into()) as u32 == 0xffff }
     }
     #[inline(always)]
     fn any_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        unsafe { _mm_movemask_epi8(_mm_srli_epi16::<8>(a.into())) as u32 != 0x5555 }
+        unsafe { _mm_movemask_epi8(a.into()) as u32 != 0xffff }
     }
     #[inline(always)]
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        unsafe { _mm_movemask_epi8(_mm_srli_epi16::<8>(a.into())) as u32 == 0 }
+        unsafe { _mm_movemask_epi8(a.into()) as u32 == 0 }
     }
     #[inline(always)]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self> {
@@ -2443,19 +2443,19 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn any_true_mask16x16(self, a: mask16x16<Self>) -> bool {
-        unsafe { _mm256_movemask_epi8(_mm256_srli_epi16::<8>(a.into())) as u32 != 0 }
+        unsafe { _mm256_movemask_epi8(a.into()) as u32 != 0 }
     }
     #[inline(always)]
     fn all_true_mask16x16(self, a: mask16x16<Self>) -> bool {
-        unsafe { _mm256_movemask_epi8(_mm256_srli_epi16::<8>(a.into())) as u32 == 0x55555555 }
+        unsafe { _mm256_movemask_epi8(a.into()) as u32 == 0xffffffff }
     }
     #[inline(always)]
     fn any_false_mask16x16(self, a: mask16x16<Self>) -> bool {
-        unsafe { _mm256_movemask_epi8(_mm256_srli_epi16::<8>(a.into())) as u32 != 0x55555555 }
+        unsafe { _mm256_movemask_epi8(a.into()) as u32 != 0xffffffff }
     }
     #[inline(always)]
     fn all_false_mask16x16(self, a: mask16x16<Self>) -> bool {
-        unsafe { _mm256_movemask_epi8(_mm256_srli_epi16::<8>(a.into())) as u32 == 0 }
+        unsafe { _mm256_movemask_epi8(a.into()) as u32 == 0 }
     }
     #[inline(always)]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self> {

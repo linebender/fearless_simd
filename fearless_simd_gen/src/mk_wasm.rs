@@ -439,24 +439,18 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     quantifier,
                     condition,
                 } => {
-                    let all_ones = match vec_ty.scalar_bits {
-                        8 => quote! { 0xffff },
-                        16 => quote! { 0xff },
-                        32 => quote! { 0b1111 },
-                        64 => quote! { 0b11 },
-                        _ => unreachable!(),
+                    let (intrinsic, negate) = match (quantifier, condition) {
+                        (Quantifier::Any, true) => (quote! { v128_any_true }, None),
+                        (Quantifier::Any, false) => {
+                            (simple_intrinsic("all_true", vec_ty), Some(quote! { ! }))
+                        }
+                        (Quantifier::All, true) => (simple_intrinsic("all_true", vec_ty), None),
+                        (Quantifier::All, false) => (quote! { v128_any_true }, Some(quote! { ! })),
                     };
-                    let op = match (quantifier, condition) {
-                        (Quantifier::Any, true) => quote! { != 0 },
-                        (Quantifier::Any, false) => quote! { != #all_ones },
-                        (Quantifier::All, true) => quote! { == #all_ones },
-                        (Quantifier::All, false) => quote! { == 0 },
-                    };
-                    let bitmask = simple_intrinsic("bitmask", vec_ty);
 
                     quote! {
                         #method_sig {
-                            #bitmask(a.into()) #op
+                            #negate #intrinsic(a.into())
                         }
                     }
                 }

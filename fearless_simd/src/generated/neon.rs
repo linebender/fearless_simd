@@ -490,19 +490,19 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn any_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        unsafe { vminvq_s8(a.into()) < 0 }
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s8(a.into())) != 0 }
     }
     #[inline(always)]
     fn all_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        unsafe { vmaxvq_s8(a.into()) < 0 }
+        unsafe { vminvq_u32(vreinterpretq_u32_s8(a.into())) == 0xffffffff }
     }
     #[inline(always)]
     fn any_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        unsafe { vmaxvq_s8(a.into()) >= 0 }
+        unsafe { vminvq_u32(vreinterpretq_u32_s8(a.into())) != 0xffffffff }
     }
     #[inline(always)]
     fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        unsafe { vminvq_s8(a.into()) >= 0 }
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s8(a.into())) == 0 }
     }
     #[inline(always)]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self> {
@@ -780,19 +780,19 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        unsafe { vminvq_s16(a.into()) < 0 }
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s16(a.into())) != 0 }
     }
     #[inline(always)]
     fn all_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        unsafe { vmaxvq_s16(a.into()) < 0 }
+        unsafe { vminvq_u32(vreinterpretq_u32_s16(a.into())) == 0xffffffff }
     }
     #[inline(always)]
     fn any_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        unsafe { vmaxvq_s16(a.into()) >= 0 }
+        unsafe { vminvq_u32(vreinterpretq_u32_s16(a.into())) != 0xffffffff }
     }
     #[inline(always)]
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        unsafe { vminvq_s16(a.into()) >= 0 }
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s16(a.into())) == 0 }
     }
     #[inline(always)]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self> {
@@ -1074,19 +1074,19 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        unsafe { vminvq_s32(a.into()) < 0 }
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s32(a.into())) != 0 }
     }
     #[inline(always)]
     fn all_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        unsafe { vmaxvq_s32(a.into()) < 0 }
+        unsafe { vminvq_u32(vreinterpretq_u32_s32(a.into())) == 0xffffffff }
     }
     #[inline(always)]
     fn any_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        unsafe { vmaxvq_s32(a.into()) >= 0 }
+        unsafe { vminvq_u32(vreinterpretq_u32_s32(a.into())) != 0xffffffff }
     }
     #[inline(always)]
     fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        unsafe { vminvq_s32(a.into()) >= 0 }
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s32(a.into())) == 0 }
     }
     #[inline(always)]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self> {
@@ -1276,31 +1276,19 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        unsafe {
-            let signs = vreinterpret_u64_s32(vshrn_n_s64::<32>(a.into()));
-            (vget_lane_u64::<0>(signs) & 0x8000000080000000u64) != 0
-        }
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s64(a.into())) != 0 }
     }
     #[inline(always)]
     fn all_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        unsafe {
-            let signs = vreinterpret_u64_s32(vshrn_n_s64::<32>(a.into()));
-            (vget_lane_u64::<0>(signs) & 0x8000000080000000u64) == 0x8000000080000000u64
-        }
+        unsafe { vminvq_u32(vreinterpretq_u32_s64(a.into())) == 0xffffffff }
     }
     #[inline(always)]
     fn any_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        unsafe {
-            let signs = vreinterpret_u64_s32(vshrn_n_s64::<32>(a.into()));
-            (vget_lane_u64::<0>(signs) & 0x8000000080000000u64) != 0x8000000080000000u64
-        }
+        unsafe { vminvq_u32(vreinterpretq_u32_s64(a.into())) != 0xffffffff }
     }
     #[inline(always)]
     fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        unsafe {
-            let signs = vreinterpret_u64_s32(vshrn_n_s64::<32>(a.into()));
-            (vget_lane_u64::<0>(signs) & 0x8000000080000000u64) == 0
-        }
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s64(a.into())) == 0 }
     }
     #[inline(always)]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self> {
