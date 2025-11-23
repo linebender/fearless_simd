@@ -383,9 +383,9 @@ fn mk_simd_impl() -> TokenStream {
                 } => {
                     let indices = (0..vec_ty.len).map(|idx| quote! { #idx });
                     let check = if condition {
-                        quote! { < }
+                        quote! { != }
                     } else {
-                        quote! { >= }
+                        quote! { == }
                     };
 
                     let expr = match quantifier {

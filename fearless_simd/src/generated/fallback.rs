@@ -1568,79 +1568,79 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn any_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        a[0usize] < 0
-            || a[1usize] < 0
-            || a[2usize] < 0
-            || a[3usize] < 0
-            || a[4usize] < 0
-            || a[5usize] < 0
-            || a[6usize] < 0
-            || a[7usize] < 0
-            || a[8usize] < 0
-            || a[9usize] < 0
-            || a[10usize] < 0
-            || a[11usize] < 0
-            || a[12usize] < 0
-            || a[13usize] < 0
-            || a[14usize] < 0
-            || a[15usize] < 0
+        a[0usize] != 0
+            || a[1usize] != 0
+            || a[2usize] != 0
+            || a[3usize] != 0
+            || a[4usize] != 0
+            || a[5usize] != 0
+            || a[6usize] != 0
+            || a[7usize] != 0
+            || a[8usize] != 0
+            || a[9usize] != 0
+            || a[10usize] != 0
+            || a[11usize] != 0
+            || a[12usize] != 0
+            || a[13usize] != 0
+            || a[14usize] != 0
+            || a[15usize] != 0
     }
     #[inline(always)]
     fn all_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        a[0usize] < 0
-            && a[1usize] < 0
-            && a[2usize] < 0
-            && a[3usize] < 0
-            && a[4usize] < 0
-            && a[5usize] < 0
-            && a[6usize] < 0
-            && a[7usize] < 0
-            && a[8usize] < 0
-            && a[9usize] < 0
-            && a[10usize] < 0
-            && a[11usize] < 0
-            && a[12usize] < 0
-            && a[13usize] < 0
-            && a[14usize] < 0
-            && a[15usize] < 0
+        a[0usize] != 0
+            && a[1usize] != 0
+            && a[2usize] != 0
+            && a[3usize] != 0
+            && a[4usize] != 0
+            && a[5usize] != 0
+            && a[6usize] != 0
+            && a[7usize] != 0
+            && a[8usize] != 0
+            && a[9usize] != 0
+            && a[10usize] != 0
+            && a[11usize] != 0
+            && a[12usize] != 0
+            && a[13usize] != 0
+            && a[14usize] != 0
+            && a[15usize] != 0
     }
     #[inline(always)]
     fn any_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        a[0usize] >= 0
-            || a[1usize] >= 0
-            || a[2usize] >= 0
-            || a[3usize] >= 0
-            || a[4usize] >= 0
-            || a[5usize] >= 0
-            || a[6usize] >= 0
-            || a[7usize] >= 0
-            || a[8usize] >= 0
-            || a[9usize] >= 0
-            || a[10usize] >= 0
-            || a[11usize] >= 0
-            || a[12usize] >= 0
-            || a[13usize] >= 0
-            || a[14usize] >= 0
-            || a[15usize] >= 0
+        a[0usize] == 0
+            || a[1usize] == 0
+            || a[2usize] == 0
+            || a[3usize] == 0
+            || a[4usize] == 0
+            || a[5usize] == 0
+            || a[6usize] == 0
+            || a[7usize] == 0
+            || a[8usize] == 0
+            || a[9usize] == 0
+            || a[10usize] == 0
+            || a[11usize] == 0
+            || a[12usize] == 0
+            || a[13usize] == 0
+            || a[14usize] == 0
+            || a[15usize] == 0
     }
     #[inline(always)]
     fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        a[0usize] >= 0
-            && a[1usize] >= 0
-            && a[2usize] >= 0
-            && a[3usize] >= 0
-            && a[4usize] >= 0
-            && a[5usize] >= 0
-            && a[6usize] >= 0
-            && a[7usize] >= 0
-            && a[8usize] >= 0
-            && a[9usize] >= 0
-            && a[10usize] >= 0
-            && a[11usize] >= 0
-            && a[12usize] >= 0
-            && a[13usize] >= 0
-            && a[14usize] >= 0
-            && a[15usize] >= 0
+        a[0usize] == 0
+            && a[1usize] == 0
+            && a[2usize] == 0
+            && a[3usize] == 0
+            && a[4usize] == 0
+            && a[5usize] == 0
+            && a[6usize] == 0
+            && a[7usize] == 0
+            && a[8usize] == 0
+            && a[9usize] == 0
+            && a[10usize] == 0
+            && a[11usize] == 0
+            && a[12usize] == 0
+            && a[13usize] == 0
+            && a[14usize] == 0
+            && a[15usize] == 0
     }
     #[inline(always)]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self> {
@@ -2356,47 +2356,47 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        a[0usize] < 0
-            || a[1usize] < 0
-            || a[2usize] < 0
-            || a[3usize] < 0
-            || a[4usize] < 0
-            || a[5usize] < 0
-            || a[6usize] < 0
-            || a[7usize] < 0
+        a[0usize] != 0
+            || a[1usize] != 0
+            || a[2usize] != 0
+            || a[3usize] != 0
+            || a[4usize] != 0
+            || a[5usize] != 0
+            || a[6usize] != 0
+            || a[7usize] != 0
     }
     #[inline(always)]
     fn all_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        a[0usize] < 0
-            && a[1usize] < 0
-            && a[2usize] < 0
-            && a[3usize] < 0
-            && a[4usize] < 0
-            && a[5usize] < 0
-            && a[6usize] < 0
-            && a[7usize] < 0
+        a[0usize] != 0
+            && a[1usize] != 0
+            && a[2usize] != 0
+            && a[3usize] != 0
+            && a[4usize] != 0
+            && a[5usize] != 0
+            && a[6usize] != 0
+            && a[7usize] != 0
     }
     #[inline(always)]
     fn any_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        a[0usize] >= 0
-            || a[1usize] >= 0
-            || a[2usize] >= 0
-            || a[3usize] >= 0
-            || a[4usize] >= 0
-            || a[5usize] >= 0
-            || a[6usize] >= 0
-            || a[7usize] >= 0
+        a[0usize] == 0
+            || a[1usize] == 0
+            || a[2usize] == 0
+            || a[3usize] == 0
+            || a[4usize] == 0
+            || a[5usize] == 0
+            || a[6usize] == 0
+            || a[7usize] == 0
     }
     #[inline(always)]
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        a[0usize] >= 0
-            && a[1usize] >= 0
-            && a[2usize] >= 0
-            && a[3usize] >= 0
-            && a[4usize] >= 0
-            && a[5usize] >= 0
-            && a[6usize] >= 0
-            && a[7usize] >= 0
+        a[0usize] == 0
+            && a[1usize] == 0
+            && a[2usize] == 0
+            && a[3usize] == 0
+            && a[4usize] == 0
+            && a[5usize] == 0
+            && a[6usize] == 0
+            && a[7usize] == 0
     }
     #[inline(always)]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self> {
@@ -2932,19 +2932,19 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        a[0usize] < 0 || a[1usize] < 0 || a[2usize] < 0 || a[3usize] < 0
+        a[0usize] != 0 || a[1usize] != 0 || a[2usize] != 0 || a[3usize] != 0
     }
     #[inline(always)]
     fn all_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        a[0usize] < 0 && a[1usize] < 0 && a[2usize] < 0 && a[3usize] < 0
+        a[0usize] != 0 && a[1usize] != 0 && a[2usize] != 0 && a[3usize] != 0
     }
     #[inline(always)]
     fn any_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        a[0usize] >= 0 || a[1usize] >= 0 || a[2usize] >= 0 || a[3usize] >= 0
+        a[0usize] == 0 || a[1usize] == 0 || a[2usize] == 0 || a[3usize] == 0
     }
     #[inline(always)]
     fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        a[0usize] >= 0 && a[1usize] >= 0 && a[2usize] >= 0 && a[3usize] >= 0
+        a[0usize] == 0 && a[1usize] == 0 && a[2usize] == 0 && a[3usize] == 0
     }
     #[inline(always)]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self> {
@@ -3203,19 +3203,19 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        a[0usize] < 0 || a[1usize] < 0
+        a[0usize] != 0 || a[1usize] != 0
     }
     #[inline(always)]
     fn all_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        a[0usize] < 0 && a[1usize] < 0
+        a[0usize] != 0 && a[1usize] != 0
     }
     #[inline(always)]
     fn any_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        a[0usize] >= 0 || a[1usize] >= 0
+        a[0usize] == 0 || a[1usize] == 0
     }
     #[inline(always)]
     fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        a[0usize] >= 0 && a[1usize] >= 0
+        a[0usize] == 0 && a[1usize] == 0
     }
     #[inline(always)]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self> {
