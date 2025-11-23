@@ -37,7 +37,7 @@ fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
+pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
     let ty_prefix = arch_ty(ty);
     let ident = Ident::new(name, Span::call_site());
     let combined_ident = Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site());

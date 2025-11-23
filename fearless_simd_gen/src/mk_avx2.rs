@@ -213,6 +213,9 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Reinterpret(scalar, target_scalar_bits) => {
             mk_sse4_2::handle_reinterpret(method_sig, vec_ty, scalar, target_scalar_bits)
         }
+        OpSig::MaskReduce(quantifier, condition) => {
+            mk_sse4_2::handle_mask_reduce(method_sig, vec_ty, quantifier, condition)
+        }
         OpSig::LoadInterleaved(block_size, count) => {
             mk_sse4_2::handle_load_interleaved(method_sig, vec_ty, block_size, count)
         }

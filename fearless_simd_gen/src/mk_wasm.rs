@@ -4,8 +4,9 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
+use crate::arch::wasm::simple_intrinsic;
 use crate::generic::scalar_binary;
-use crate::ops::valid_reinterpret;
+use crate::ops::{Quantifier, valid_reinterpret};
 use crate::{
     arch::wasm,
     generic::{generic_combine, generic_op, generic_split},
@@ -366,6 +367,28 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             }
                         }
                         _ => unimplemented!(),
+                    }
+                }
+                OpSig::MaskReduce(quantifier, condition) => {
+                    let all_ones = match vec_ty.scalar_bits {
+                        8 => quote! { 0xffff },
+                        16 => quote! { 0xff },
+                        32 => quote! { 0b1111 },
+                        64 => quote! { 0b11 },
+                        _ => unreachable!(),
+                    };
+                    let op = match (quantifier, condition) {
+                        (Quantifier::Any, true) => quote! { != 0 },
+                        (Quantifier::Any, false) => quote! { != #all_ones },
+                        (Quantifier::All, true) => quote! { == #all_ones },
+                        (Quantifier::All, false) => quote! { == 0 },
+                    };
+                    let bitmask = simple_intrinsic("bitmask", vec_ty);
+
+                    quote! {
+                        #method_sig {
+                            #bitmask(a.into()) #op
+                        }
                     }
                 }
                 OpSig::LoadInterleaved(block_size, count) => {
