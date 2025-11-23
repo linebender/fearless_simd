@@ -406,6 +406,51 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         quote! {}
                     }
                 }
+                OpSig::MaskReduce {
+                    quantifier,
+                    condition,
+                } => {
+                    if vec_ty.scalar_bits == 64 {
+                        let (mask, comparison) = match (quantifier, condition) {
+                            (crate::ops::Quantifier::Any, true) => (quote! { 0 }, quote! { != }), // any sign bit set
+                            (crate::ops::Quantifier::Any, false) => {
+                                (quote! { 0x8000000080000000u64 }, quote! { != })
+                            } // any sign bit unset
+                            (crate::ops::Quantifier::All, true) => {
+                                (quote! { 0x8000000080000000u64 }, quote! { == })
+                            } // all sign bits set
+                            (crate::ops::Quantifier::All, false) => (quote! { 0 }, quote! { == }), // all sign bits unset
+                        };
+
+                        quote! {
+                            #method_sig {
+                                unsafe {
+                                    let signs = vreinterpret_u64_s32(vshrn_n_s64::<32>(a.into()));
+                                    (vget_lane_u64::<0>(signs) & 0x8000000080000000u64) #comparison #mask
+                                }
+                            }
+                        }
+                    } else {
+                        // For this operation, we treat the MSB / sign bit as the only mask bit. To reduce the mask items,
+                        // we can take the signed horizontal minimum or maximum, then do a signed comparison to 0. The
+                        // minimum maps to "any MSB is one", and the maximum maps to "any MSB is zero".
+                        let (reduction, comparison) = match (quantifier, condition) {
+                            (crate::ops::Quantifier::Any, true) => ("vminv", quote! { < }),
+                            (crate::ops::Quantifier::Any, false) => ("vmaxv", quote! { >= }),
+                            (crate::ops::Quantifier::All, true) => ("vmaxv", quote! { < }),
+                            (crate::ops::Quantifier::All, false) => ("vminv", quote! { >= }),
+                        };
+
+                        let min_max = simple_intrinsic(reduction, &vec_ty);
+                        quote! {
+                            #method_sig {
+                                unsafe {
+                                    #min_max(a.into()) #comparison 0
+                                }
+                            }
+                        }
+                    }
+                }
             };
             methods.push(method);
         }

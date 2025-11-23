@@ -7,7 +7,7 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{generic_combine, generic_op, generic_op_name, generic_split, scalar_binary};
-use crate::ops::{Op, OpSig, ops_for_type, valid_reinterpret};
+use crate::ops::{Op, OpSig, Quantifier, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -202,6 +202,10 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
             target_ty,
             scalar_bits,
         } => handle_reinterpret(method_sig, vec_ty, target_ty, scalar_bits),
+        OpSig::MaskReduce {
+            quantifier,
+            condition,
+        } => handle_mask_reduce(method_sig, vec_ty, quantifier, condition),
         OpSig::LoadInterleaved {
             block_size,
             block_count,
@@ -962,6 +966,78 @@ pub(crate) fn handle_reinterpret(
                 unsafe {
                     #ident(a.into()).simd_into(self)
                 }
+            }
+        }
+    }
+}
+
+pub(crate) fn handle_mask_reduce(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    quantifier: Quantifier,
+    condition: bool,
+) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "mask reduce ops only operate on masks"
+    );
+
+    let (movemask, all_ones) = match vec_ty.scalar_bits {
+        32 | 64 => {
+            let float_ty = VecType::new(ScalarType::Float, vec_ty.scalar_bits, vec_ty.len);
+            let movemask = simple_intrinsic("movemask", &float_ty);
+            let cast = cast_ident(
+                ScalarType::Mask,
+                ScalarType::Float,
+                vec_ty.scalar_bits,
+                vec_ty.scalar_bits,
+                vec_ty.n_bits(),
+            );
+            let movemask = quote! { #movemask(#cast(a.into())) };
+            let all_ones = match vec_ty.len {
+                2 => quote! { 0b11 },
+                4 => quote! { 0b1111 },
+                8 => quote! { 0b11111111 },
+                _ => unimplemented!(),
+            };
+
+            (movemask, all_ones)
+        }
+        8 | 16 => {
+            let bits_ty = VecType::new(ScalarType::Int, 8, vec_ty.n_bits() / 8);
+            let movemask = simple_intrinsic("movemask", &bits_ty);
+            let movemask = if vec_ty.scalar_bits == 16 {
+                // We only want to test the high bit of each 16-bit value, so we shift out the low 8 bits
+                let srli = simple_intrinsic("srli", &vec_ty);
+                quote! { #movemask(#srli::<8>(a.into())) }
+            } else {
+                quote! { #movemask(a.into()) }
+            };
+            let all_ones = match (vec_ty.scalar_bits, vec_ty.len) {
+                (8, 16) => quote! { 0xffff },
+                (8, 32) => quote! { 0xffffffff },
+                (16, 8) => quote! { 0x5555 },
+                (16, 16) => quote! { 0x55555555 },
+                _ => unimplemented!(),
+            };
+
+            (movemask, all_ones)
+        }
+        _ => unreachable!(),
+    };
+
+    let op = match (quantifier, condition) {
+        (Quantifier::Any, true) => quote! { != 0 },
+        (Quantifier::Any, false) => quote! { != #all_ones },
+        (Quantifier::All, true) => quote! { == #all_ones },
+        (Quantifier::All, false) => quote! { == 0 },
+    };
+
+    quote! {
+        #method_sig {
+            unsafe {
+                #movemask as u32 #op
             }
         }
     }

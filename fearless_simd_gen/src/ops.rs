@@ -6,6 +6,21 @@ use quote::{format_ident, quote};
 
 use crate::types::{ScalarType, VecType};
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Quantifier {
+    Any,
+    All,
+}
+
+impl Quantifier {
+    pub(crate) fn bool_op(&self) -> TokenStream {
+        match self {
+            Self::Any => quote! { || },
+            Self::All => quote! { && },
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
     /// Takes a single argument of the underlying SIMD element type, and returns the corresponding vector type.
@@ -47,6 +62,11 @@ pub(crate) enum OpSig {
     /// Takes an argument of a vector type and another u32 argument (the shift amount), and returns that same vector
     /// type.
     Shift,
+    /// Takes an argument of a mask vector type, and returns a boolean.
+    MaskReduce {
+        quantifier: Quantifier,
+        condition: bool,
+    },
     /// Takes an argument of an array of a certain scalar type, with the length (`block_size` * `block_count`) / [scalar
     /// type's byte size]. Returns a vector type of that scalar type and length.
     ///
@@ -206,6 +226,38 @@ const MASK_OPS: &[Op] = &[
     Op::new("not", OpKind::Overloaded(CoreOpTrait::Not), OpSig::Unary),
     Op::new("select", OpKind::VecTraitMethod, OpSig::Select),
     Op::new("simd_eq", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new(
+        "any_true",
+        OpKind::VecTraitMethod,
+        OpSig::MaskReduce {
+            quantifier: Quantifier::Any,
+            condition: true,
+        },
+    ),
+    Op::new(
+        "all_true",
+        OpKind::VecTraitMethod,
+        OpSig::MaskReduce {
+            quantifier: Quantifier::All,
+            condition: true,
+        },
+    ),
+    Op::new(
+        "any_false",
+        OpKind::VecTraitMethod,
+        OpSig::MaskReduce {
+            quantifier: Quantifier::Any,
+            condition: false,
+        },
+    ),
+    Op::new(
+        "all_false",
+        OpKind::VecTraitMethod,
+        OpSig::MaskReduce {
+            quantifier: Quantifier::All,
+            condition: false,
+        },
+    ),
 ];
 
 pub(crate) fn vec_trait_ops_for(scalar: ScalarType) -> Vec<Op> {
@@ -526,7 +578,8 @@ impl OpSig {
             | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
-            | Self::WidenNarrow { .. } => quote! { self, a: #ty<Self> },
+            | Self::WidenNarrow { .. }
+            | Self::MaskReduce { .. } => quote! { self, a: #ty<Self> },
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -555,7 +608,8 @@ impl OpSig {
             Self::Unary
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
-            | Self::WidenNarrow { .. } => {
+            | Self::WidenNarrow { .. }
+            | Self::MaskReduce { .. } => {
                 quote! { self }
             }
             Self::Binary | Self::Compare | Self::Zip { .. } | Self::Unzip { .. } => {
@@ -578,7 +632,7 @@ impl OpSig {
 
     pub(crate) fn forwarding_call_args(&self) -> Option<TokenStream> {
         let args = match self {
-            Self::Unary => quote! { self },
+            Self::Unary | Self::MaskReduce { .. } => quote! { self },
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -649,6 +703,7 @@ impl OpSig {
                 let result = target_ty.rust();
                 quote! { #result #quant }
             }
+            Self::MaskReduce { .. } => quote! { bool },
             Self::StoreInterleaved { .. } => quote! {()},
         }
     }
@@ -656,6 +711,7 @@ impl OpSig {
     pub(crate) fn trait_ret_ty(&self) -> TokenStream {
         match self {
             Self::Compare => quote! { Self::Mask },
+            Self::MaskReduce { .. } => quote! { bool },
             _ => quote! { Self },
         }
     }

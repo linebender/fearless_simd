@@ -377,6 +377,32 @@ fn mk_simd_impl() -> TokenStream {
                         quote! {}
                     }
                 }
+                OpSig::MaskReduce {
+                    quantifier,
+                    condition,
+                } => {
+                    let indices = (0..vec_ty.len).map(|idx| quote! { #idx });
+                    let check = if condition {
+                        quote! { < }
+                    } else {
+                        quote! { >= }
+                    };
+
+                    let expr = match quantifier {
+                        crate::ops::Quantifier::Any => {
+                            quote! { #(a[#indices] #check 0)||* }
+                        }
+                        crate::ops::Quantifier::All => {
+                            quote! { #(a[#indices] #check 0)&&* }
+                        }
+                    };
+
+                    quote! {
+                        #method_sig {
+                            #expr
+                        }
+                    }
+                }
                 OpSig::LoadInterleaved {
                     block_size,
                     block_count,
