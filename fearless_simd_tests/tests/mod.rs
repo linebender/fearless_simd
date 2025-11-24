@@ -3,7 +3,6 @@
 
 #![expect(
     missing_docs,
-    clippy::missing_assert_message,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
@@ -11,26 +10,6 @@ use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
 mod harness;
-
-#[simd_test]
-fn saturate_float_to_int<S: Simd>(simd: S) {
-    assert_eq!(
-        <[u32; 4]>::from(simd.cvt_u32_f32x4(simd.splat_f32x4(f32::INFINITY))),
-        [u32::MAX; 4]
-    );
-    assert_eq!(
-        <[u32; 4]>::from(simd.cvt_u32_f32x4(simd.splat_f32x4(-f32::INFINITY))),
-        [0; 4]
-    );
-    assert_eq!(
-        <[i32; 4]>::from(simd.cvt_i32_f32x4(simd.splat_f32x4(f32::INFINITY))),
-        [i32::MAX; 4]
-    );
-    assert_eq!(
-        <[i32; 4]>::from(simd.cvt_i32_f32x4(simd.splat_f32x4(-f32::INFINITY))),
-        [i32::MIN; 4]
-    );
-}
 
 // Ensure that we can cast between generic native-width vectors
 #[expect(dead_code, reason = "Compile only test")]
@@ -79,5 +58,101 @@ fn supports_highest_level() {
     assert!(
         level.as_wasm_simd128().is_some(),
         "This environment does not support WASM SIMD128. This should never happen, since it should always be supported if the `simd128` feature is enabled."
+    );
+}
+
+#[simd_test]
+#[ignore]
+fn test_f32_to_i32_exhaustive<S: Simd>(simd: S) {
+    // The vectorize call doesn't affect the outcome of the test, but does make it complete far more quickly
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "that's the exact behavior we're testing"
+    )]
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            for i in (0..u32::MAX).step_by(4) {
+                let floats = f32x4::from_fn(simd, |n| f32::from_bits(n as u32 + i));
+                let ints = floats.cvt_i32().val;
+                let ints_ref = floats.val.map(|f| f as i32);
+                assert_eq!(
+                    ints, ints_ref,
+                    "f32x4::cvt_i32() returns the same results as Rust's `as i32`"
+                );
+            }
+        },
+    );
+}
+
+#[simd_test]
+#[ignore]
+fn test_f32_to_u32_exhaustive<S: Simd>(simd: S) {
+    // The vectorize call doesn't affect the outcome of the test, but does make it complete far more quickly
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "that's the exact behavior we're testing"
+    )]
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            for i in (0..u32::MAX).step_by(4) {
+                let floats = f32x4::from_fn(simd, |n| f32::from_bits(n as u32 + i));
+                let ints = floats.cvt_u32().val;
+                let ints_ref = floats.val.map(|f| f as u32);
+                assert_eq!(
+                    ints, ints_ref,
+                    "f32x4::cvt_u32() returns the same results as Rust's `as u32`"
+                );
+            }
+        },
+    );
+}
+
+#[simd_test]
+#[ignore]
+fn test_i32_to_f32_exhaustive<S: Simd>(simd: S) {
+    // The vectorize call doesn't affect the outcome of the test, but does make it complete far more quickly
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "that's the exact behavior we're testing"
+    )]
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            for i in (0..u32::MAX).step_by(4) {
+                let ints = i32x4::from_fn(simd, |n| (n as u32 + i) as i32);
+                let floats = ints.cvt_f32().val;
+                let floats_ref = ints.val.map(|i| i as f32);
+                assert_eq!(
+                    floats, floats_ref,
+                    "i32x4::cvt_f32() returns the same results as Rust's `as f32`"
+                );
+            }
+        },
+    );
+}
+
+#[simd_test]
+#[ignore]
+fn test_u32_to_f32_exhaustive<S: Simd>(simd: S) {
+    // The vectorize call doesn't affect the outcome of the test, but does make it complete far more quickly
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "that's the exact behavior we're testing"
+    )]
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            for i in (0..u32::MAX).step_by(4) {
+                let ints = u32x4::from_fn(simd, |n| n as u32 + i);
+                let floats = ints.cvt_f32().val;
+                let floats_ref = ints.val.map(|i| i as f32);
+                assert_eq!(
+                    floats, floats_ref,
+                    "u32x4::cvt_f32() returns the same results as Rust's `as f32`"
+                );
+            }
+        },
     );
 }

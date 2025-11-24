@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    self, cast_ident, coarse_type, extend_intrinsic, intrinsic_ident, pack_intrinsic,
-    set1_intrinsic, simple_intrinsic,
+    self, coarse_type, extend_intrinsic, intrinsic_ident, pack_intrinsic, set1_intrinsic,
+    simple_intrinsic,
 };
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
 use crate::mk_sse4_2;
@@ -178,7 +178,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
 
     match sig {
         OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty),
-        OpSig::Compare => handle_compare(method_sig, method, vec_ty),
+        OpSig::Compare => mk_sse4_2::handle_compare(method_sig, method, vec_ty),
         OpSig::Unary => mk_sse4_2::handle_unary(method_sig, method, vec_ty),
         OpSig::WidenNarrow(t) => handle_widen_narrow(method_sig, method, vec_ty, t),
         OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty),
@@ -261,43 +261,6 @@ pub(crate) fn handle_combine(method_sig: TokenStream, vec_ty: &VecType) -> Token
         }
     } else {
         generic_combine(vec_ty)
-    }
-}
-
-pub(crate) fn handle_compare(
-    method_sig: TokenStream,
-    method: &str,
-    vec_ty: &VecType,
-) -> TokenStream {
-    if vec_ty.scalar == ScalarType::Float {
-        // For AVX2 and up, Intel gives us a generic comparison intrinsic that takes a predicate. There are 32,
-        // of which only a few are useful and the rest will violate IEEE754 and/or raise a SIGFPE on NaN.
-        //
-        // https://www.felixcloutier.com/x86/cmppd#tbl-3-1
-        let order_predicate = match method {
-            "simd_eq" => 0x00,
-            "simd_lt" => 0x11,
-            "simd_le" => 0x12,
-            "simd_ge" => 0x1D,
-            "simd_gt" => 0x1E,
-            _ => unreachable!(),
-        };
-        let intrinsic = simple_intrinsic("cmp", vec_ty);
-        let cast = cast_ident(
-            ScalarType::Float,
-            ScalarType::Mask,
-            vec_ty.scalar_bits,
-            vec_ty.scalar_bits,
-            vec_ty.n_bits(),
-        );
-
-        quote! {
-            #method_sig {
-                unsafe { #cast(#intrinsic::<#order_predicate>(a.into(), b.into())).simd_into(self) }
-            }
-        }
-    } else {
-        mk_sse4_2::handle_compare(method_sig, method, vec_ty)
     }
 }
 

@@ -24,7 +24,11 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     let wasm_name = get_ident("wasm");
 
     let ignore_attr = |f: fn(&str) -> bool| {
-        let should_ignore = f(&input_fn_name.to_string());
+        let should_ignore = input_fn
+            .attrs
+            .iter()
+            .any(|attr| attr.path().is_ident("ignore"))
+            || f(&input_fn_name.to_string());
         if should_ignore {
             quote! { #[ignore] }
         } else {
@@ -129,19 +133,11 @@ fn exclude_fallback(_test_name: &str) -> bool {
 }
 
 fn exclude_sse4(test_name: &str) -> bool {
-    matches!(
-        test_name,
-        // works incorrectly for any values larger than i32::MAX and smaller than 0.
-        "cvt_u32_f32x4" | "cvt_f32_u32x4" | "saturate_float_to_int",
-    ) || test_name.contains("precise")
+    test_name.contains("precise")
 }
 
 fn exclude_avx2(test_name: &str) -> bool {
-    matches!(
-        test_name,
-        // works incorrectly for any values larger than i32::MAX and smaller than 0.
-        "cvt_u32_f32x4" | "cvt_f32_u32x4" | "saturate_float_to_int",
-    ) || test_name.contains("precise")
+    test_name.contains("precise")
 }
 
 fn exclude_wasm(test_name: &str) -> bool {
