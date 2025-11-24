@@ -259,10 +259,21 @@ jobs:
           cargo build --target wasm32-unknown-unknown \
             --config 'target.wasm32-unknown-unknown.rustflags = "-Ctarget-feature=+simd128"'
 
+      - name: cargo build (wasm32-unknown-unknown w/ relaxed-simd)
+        run: |
+          cargo build --target wasm32-unknown-unknown \
+            --config 'target.wasm32-unknown-unknown.rustflags = "-Ctarget-feature=+simd128,+relaxed-simd"'
+
       - name: cargo nextest
         run: |
           cargo nextest run --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
             --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
+            --config 'target.wasm32-wasip1.runner = "wasmtime"'
+
+      - name: cargo nextest (w/ relaxed-simd)
+        run: |
+          cargo nextest run --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+            --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
             --config 'target.wasm32-wasip1.runner = "wasmtime"'
 
       - name: cargo test --doc
@@ -270,6 +281,13 @@ jobs:
           cargo test --doc --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
             --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
             --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128"' \
+            --config 'target.wasm32-wasip1.runner = "wasmtime"'
+
+      - name: cargo test --doc (w/ relaxed-simd)
+        run: |
+          cargo test --doc --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+            --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
+            --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
             --config 'target.wasm32-wasip1.runner = "wasmtime"'
 
 
