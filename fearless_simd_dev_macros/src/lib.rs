@@ -24,7 +24,11 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     let wasm_name = get_ident("wasm");
 
     let ignore_attr = |f: fn(&str) -> bool| {
-        let should_ignore = f(&input_fn_name.to_string());
+        let should_ignore = input_fn
+            .attrs
+            .iter()
+            .any(|attr| attr.path().is_ident("ignore"))
+            || f(&input_fn_name.to_string());
         if should_ignore {
             quote! { #[ignore] }
         } else {
