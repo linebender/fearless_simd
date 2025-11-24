@@ -3214,15 +3214,48 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        crate::Fallback::new()
-            .load_interleaved_128_f32x16(src)
-            .val
-            .simd_into(self)
+        unsafe {
+            let v0 = _mm_loadu_ps(src.as_ptr() as *const _);
+            let v1 = _mm_loadu_ps(src.as_ptr().add(4usize) as *const _);
+            let v2 = _mm_loadu_ps(src.as_ptr().add(2 * 4usize) as *const _);
+            let v3 = _mm_loadu_ps(src.as_ptr().add(3 * 4usize) as *const _);
+            let tmp0 = _mm_unpacklo_ps(v0, v1);
+            let tmp1 = _mm_unpackhi_ps(v0, v1);
+            let tmp2 = _mm_unpacklo_ps(v2, v3);
+            let tmp3 = _mm_unpackhi_ps(v2, v3);
+            let out0 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
+            let out1 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
+            let out2 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
+            let out3 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
+            self.combine_f32x8(
+                self.combine_f32x4(out0.simd_into(self), out1.simd_into(self)),
+                self.combine_f32x4(out2.simd_into(self), out3.simd_into(self)),
+            )
+        }
     }
     #[inline(always)]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        let fb = crate::Fallback::new();
-        fb.store_interleaved_128_f32x16(a.val.simd_into(fb), dest);
+        let (v01, v23) = self.split_f32x16(a);
+        let (v0, v1) = self.split_f32x8(v01);
+        let (v2, v3) = self.split_f32x8(v23);
+        let v0 = v0.into();
+        let v1 = v1.into();
+        let v2 = v2.into();
+        let v3 = v3.into();
+        unsafe {
+            let tmp0 = _mm_unpacklo_ps(v0, v1);
+            let tmp1 = _mm_unpackhi_ps(v0, v1);
+            let tmp2 = _mm_unpacklo_ps(v2, v3);
+            let tmp3 = _mm_unpackhi_ps(v2, v3);
+            let out0 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
+            let out1 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
+            let out2 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
+            let out3 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
+            _mm_storeu_ps(dest.as_mut_ptr() as *mut _, out0);
+            _mm_storeu_ps(dest.as_mut_ptr().add(4usize) as *mut _, out1);
+            _mm_storeu_ps(dest.as_mut_ptr().add(2 * 4usize) as *mut _, out2);
+            _mm_storeu_ps(dest.as_mut_ptr().add(3 * 4usize) as *mut _, out3);
+        }
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -3553,15 +3586,58 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        crate::Fallback::new()
-            .load_interleaved_128_u8x64(src)
-            .val
-            .simd_into(self)
+        unsafe {
+            let v0 = _mm_loadu_si128(src.as_ptr() as *const _);
+            let v1 = _mm_loadu_si128(src.as_ptr().add(16usize) as *const _);
+            let v2 = _mm_loadu_si128(src.as_ptr().add(2 * 16usize) as *const _);
+            let v3 = _mm_loadu_si128(src.as_ptr().add(3 * 16usize) as *const _);
+            let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
+            let v0 = _mm_shuffle_epi8(v0, mask);
+            let v1 = _mm_shuffle_epi8(v1, mask);
+            let v2 = _mm_shuffle_epi8(v2, mask);
+            let v3 = _mm_shuffle_epi8(v3, mask);
+            let tmp0 = _mm_unpacklo_epi32(v0, v1);
+            let tmp1 = _mm_unpackhi_epi32(v0, v1);
+            let tmp2 = _mm_unpacklo_epi32(v2, v3);
+            let tmp3 = _mm_unpackhi_epi32(v2, v3);
+            let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+            let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+            let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+            let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+            self.combine_u8x32(
+                self.combine_u8x16(out0.simd_into(self), out1.simd_into(self)),
+                self.combine_u8x16(out2.simd_into(self), out3.simd_into(self)),
+            )
+        }
     }
     #[inline(always)]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        let fb = crate::Fallback::new();
-        fb.store_interleaved_128_u8x64(a.val.simd_into(fb), dest);
+        let (v01, v23) = self.split_u8x64(a);
+        let (v0, v1) = self.split_u8x32(v01);
+        let (v2, v3) = self.split_u8x32(v23);
+        let v0 = v0.into();
+        let v1 = v1.into();
+        let v2 = v2.into();
+        let v3 = v3.into();
+        unsafe {
+            let tmp0 = _mm_unpacklo_epi32(v0, v1);
+            let tmp1 = _mm_unpackhi_epi32(v0, v1);
+            let tmp2 = _mm_unpacklo_epi32(v2, v3);
+            let tmp3 = _mm_unpackhi_epi32(v2, v3);
+            let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+            let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+            let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+            let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+            let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
+            let out0 = _mm_shuffle_epi8(out0, mask);
+            let out1 = _mm_shuffle_epi8(out1, mask);
+            let out2 = _mm_shuffle_epi8(out2, mask);
+            let out3 = _mm_shuffle_epi8(out3, mask);
+            _mm_storeu_si128(dest.as_mut_ptr() as *mut _, out0);
+            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, out1);
+            _mm_storeu_si128(dest.as_mut_ptr().add(2 * 16usize) as *mut _, out2);
+            _mm_storeu_si128(dest.as_mut_ptr().add(3 * 16usize) as *mut _, out3);
+        }
     }
     #[inline(always)]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
@@ -3949,15 +4025,58 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        crate::Fallback::new()
-            .load_interleaved_128_u16x32(src)
-            .val
-            .simd_into(self)
+        unsafe {
+            let v0 = _mm_loadu_si128(src.as_ptr() as *const _);
+            let v1 = _mm_loadu_si128(src.as_ptr().add(8usize) as *const _);
+            let v2 = _mm_loadu_si128(src.as_ptr().add(2 * 8usize) as *const _);
+            let v3 = _mm_loadu_si128(src.as_ptr().add(3 * 8usize) as *const _);
+            let mask = _mm_setr_epi8(0, 1, 8, 9, 2, 3, 10, 11, 4, 5, 12, 13, 6, 7, 14, 15);
+            let v0 = _mm_shuffle_epi8(v0, mask);
+            let v1 = _mm_shuffle_epi8(v1, mask);
+            let v2 = _mm_shuffle_epi8(v2, mask);
+            let v3 = _mm_shuffle_epi8(v3, mask);
+            let tmp0 = _mm_unpacklo_epi32(v0, v1);
+            let tmp1 = _mm_unpackhi_epi32(v0, v1);
+            let tmp2 = _mm_unpacklo_epi32(v2, v3);
+            let tmp3 = _mm_unpackhi_epi32(v2, v3);
+            let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+            let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+            let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+            let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+            self.combine_u16x16(
+                self.combine_u16x8(out0.simd_into(self), out1.simd_into(self)),
+                self.combine_u16x8(out2.simd_into(self), out3.simd_into(self)),
+            )
+        }
     }
     #[inline(always)]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        let fb = crate::Fallback::new();
-        fb.store_interleaved_128_u16x32(a.val.simd_into(fb), dest);
+        let (v01, v23) = self.split_u16x32(a);
+        let (v0, v1) = self.split_u16x16(v01);
+        let (v2, v3) = self.split_u16x16(v23);
+        let v0 = v0.into();
+        let v1 = v1.into();
+        let v2 = v2.into();
+        let v3 = v3.into();
+        unsafe {
+            let tmp0 = _mm_unpacklo_epi32(v0, v1);
+            let tmp1 = _mm_unpackhi_epi32(v0, v1);
+            let tmp2 = _mm_unpacklo_epi32(v2, v3);
+            let tmp3 = _mm_unpackhi_epi32(v2, v3);
+            let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+            let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+            let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+            let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+            let out0 = _mm_shuffle_epi8(out0, mask);
+            let out1 = _mm_shuffle_epi8(out1, mask);
+            let out2 = _mm_shuffle_epi8(out2, mask);
+            let out3 = _mm_shuffle_epi8(out3, mask);
+            _mm_storeu_si128(dest.as_mut_ptr() as *mut _, out0);
+            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, out1);
+            _mm_storeu_si128(dest.as_mut_ptr().add(2 * 8usize) as *mut _, out2);
+            _mm_storeu_si128(dest.as_mut_ptr().add(3 * 8usize) as *mut _, out3);
+        }
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
@@ -4352,10 +4471,10 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
         unsafe {
-            let v0 = _mm_loadu_si128(src.as_ptr().add(0) as *const __m128i);
-            let v1 = _mm_loadu_si128(src.as_ptr().add(4) as *const __m128i);
-            let v2 = _mm_loadu_si128(src.as_ptr().add(8) as *const __m128i);
-            let v3 = _mm_loadu_si128(src.as_ptr().add(12) as *const __m128i);
+            let v0 = _mm_loadu_si128(src.as_ptr() as *const _);
+            let v1 = _mm_loadu_si128(src.as_ptr().add(4usize) as *const _);
+            let v2 = _mm_loadu_si128(src.as_ptr().add(2 * 4usize) as *const _);
+            let v3 = _mm_loadu_si128(src.as_ptr().add(3 * 4usize) as *const _);
             let tmp0 = _mm_unpacklo_epi32(v0, v1);
             let tmp1 = _mm_unpackhi_epi32(v0, v1);
             let tmp2 = _mm_unpacklo_epi32(v2, v3);
@@ -4372,8 +4491,27 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        let fb = crate::Fallback::new();
-        fb.store_interleaved_128_u32x16(a.val.simd_into(fb), dest);
+        let (v01, v23) = self.split_u32x16(a);
+        let (v0, v1) = self.split_u32x8(v01);
+        let (v2, v3) = self.split_u32x8(v23);
+        let v0 = v0.into();
+        let v1 = v1.into();
+        let v2 = v2.into();
+        let v3 = v3.into();
+        unsafe {
+            let tmp0 = _mm_unpacklo_epi32(v0, v1);
+            let tmp1 = _mm_unpackhi_epi32(v0, v1);
+            let tmp2 = _mm_unpacklo_epi32(v2, v3);
+            let tmp3 = _mm_unpackhi_epi32(v2, v3);
+            let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+            let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+            let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+            let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+            _mm_storeu_si128(dest.as_mut_ptr() as *mut _, out0);
+            _mm_storeu_si128(dest.as_mut_ptr().add(4usize) as *mut _, out1);
+            _mm_storeu_si128(dest.as_mut_ptr().add(2 * 4usize) as *mut _, out2);
+            _mm_storeu_si128(dest.as_mut_ptr().add(3 * 4usize) as *mut _, out3);
+        }
     }
     #[inline(always)]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
