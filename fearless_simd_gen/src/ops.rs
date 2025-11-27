@@ -61,6 +61,8 @@ pub(crate) const FLOAT_OPS: &[(&str, OpSig)] = &[
     ("madd", OpSig::Ternary),
     ("msub", OpSig::Ternary),
     ("floor", OpSig::Unary),
+    ("ceil", OpSig::Unary),
+    ("round_ties_even", OpSig::Unary),
     ("fract", OpSig::Unary),
     ("trunc", OpSig::Unary),
     // TODO: simd_ne, but this requires additional implementation work on Neon

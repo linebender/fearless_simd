@@ -158,6 +158,14 @@ impl<S: Simd> f32x4<S> {
         self.simd.floor_f32x4(self)
     }
     #[inline(always)]
+    pub fn ceil(self) -> f32x4<S> {
+        self.simd.ceil_f32x4(self)
+    }
+    #[inline(always)]
+    pub fn round_ties_even(self) -> f32x4<S> {
+        self.simd.round_ties_even_f32x4(self)
+    }
+    #[inline(always)]
     pub fn fract(self) -> f32x4<S> {
         self.simd.fract_f32x4(self)
     }
@@ -310,6 +318,14 @@ impl<S: Simd> crate::SimdFloat<f32, S> for f32x4<S> {
     #[inline(always)]
     fn floor(self) -> f32x4<S> {
         self.simd.floor_f32x4(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f32x4<S> {
+        self.simd.ceil_f32x4(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f32x4<S> {
+        self.simd.round_ties_even_f32x4(self)
     }
     #[inline(always)]
     fn fract(self) -> f32x4<S> {
@@ -2510,6 +2526,14 @@ impl<S: Simd> f64x2<S> {
         self.simd.floor_f64x2(self)
     }
     #[inline(always)]
+    pub fn ceil(self) -> f64x2<S> {
+        self.simd.ceil_f64x2(self)
+    }
+    #[inline(always)]
+    pub fn round_ties_even(self) -> f64x2<S> {
+        self.simd.round_ties_even_f64x2(self)
+    }
+    #[inline(always)]
     pub fn fract(self) -> f64x2<S> {
         self.simd.fract_f64x2(self)
     }
@@ -2642,6 +2666,14 @@ impl<S: Simd> crate::SimdFloat<f64, S> for f64x2<S> {
     #[inline(always)]
     fn floor(self) -> f64x2<S> {
         self.simd.floor_f64x2(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f64x2<S> {
+        self.simd.ceil_f64x2(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f64x2<S> {
+        self.simd.round_ties_even_f64x2(self)
     }
     #[inline(always)]
     fn fract(self) -> f64x2<S> {
@@ -2965,6 +2997,14 @@ impl<S: Simd> f32x8<S> {
         self.simd.floor_f32x8(self)
     }
     #[inline(always)]
+    pub fn ceil(self) -> f32x8<S> {
+        self.simd.ceil_f32x8(self)
+    }
+    #[inline(always)]
+    pub fn round_ties_even(self) -> f32x8<S> {
+        self.simd.round_ties_even_f32x8(self)
+    }
+    #[inline(always)]
     pub fn fract(self) -> f32x8<S> {
         self.simd.fract_f32x8(self)
     }
@@ -3117,6 +3157,14 @@ impl<S: Simd> crate::SimdFloat<f32, S> for f32x8<S> {
     #[inline(always)]
     fn floor(self) -> f32x8<S> {
         self.simd.floor_f32x8(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f32x8<S> {
+        self.simd.ceil_f32x8(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f32x8<S> {
+        self.simd.round_ties_even_f32x8(self)
     }
     #[inline(always)]
     fn fract(self) -> f32x8<S> {
@@ -5416,6 +5464,14 @@ impl<S: Simd> f64x4<S> {
         self.simd.floor_f64x4(self)
     }
     #[inline(always)]
+    pub fn ceil(self) -> f64x4<S> {
+        self.simd.ceil_f64x4(self)
+    }
+    #[inline(always)]
+    pub fn round_ties_even(self) -> f64x4<S> {
+        self.simd.round_ties_even_f64x4(self)
+    }
+    #[inline(always)]
     pub fn fract(self) -> f64x4<S> {
         self.simd.fract_f64x4(self)
     }
@@ -5548,6 +5604,14 @@ impl<S: Simd> crate::SimdFloat<f64, S> for f64x4<S> {
     #[inline(always)]
     fn floor(self) -> f64x4<S> {
         self.simd.floor_f64x4(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f64x4<S> {
+        self.simd.ceil_f64x4(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f64x4<S> {
+        self.simd.round_ties_even_f64x4(self)
     }
     #[inline(always)]
     fn fract(self) -> f64x4<S> {
@@ -5879,6 +5943,14 @@ impl<S: Simd> f32x16<S> {
         self.simd.floor_f32x16(self)
     }
     #[inline(always)]
+    pub fn ceil(self) -> f32x16<S> {
+        self.simd.ceil_f32x16(self)
+    }
+    #[inline(always)]
+    pub fn round_ties_even(self) -> f32x16<S> {
+        self.simd.round_ties_even_f32x16(self)
+    }
+    #[inline(always)]
     pub fn fract(self) -> f32x16<S> {
         self.simd.fract_f32x16(self)
     }
@@ -6028,6 +6100,14 @@ impl<S: Simd> crate::SimdFloat<f32, S> for f32x16<S> {
     #[inline(always)]
     fn floor(self) -> f32x16<S> {
         self.simd.floor_f32x16(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f32x16<S> {
+        self.simd.ceil_f32x16(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f32x16<S> {
+        self.simd.round_ties_even_f32x16(self)
     }
     #[inline(always)]
     fn fract(self) -> f32x16<S> {
@@ -8477,6 +8557,14 @@ impl<S: Simd> f64x8<S> {
         self.simd.floor_f64x8(self)
     }
     #[inline(always)]
+    pub fn ceil(self) -> f64x8<S> {
+        self.simd.ceil_f64x8(self)
+    }
+    #[inline(always)]
+    pub fn round_ties_even(self) -> f64x8<S> {
+        self.simd.round_ties_even_f64x8(self)
+    }
+    #[inline(always)]
     pub fn fract(self) -> f64x8<S> {
         self.simd.fract_f64x8(self)
     }
@@ -8606,6 +8694,14 @@ impl<S: Simd> crate::SimdFloat<f64, S> for f64x8<S> {
     #[inline(always)]
     fn floor(self) -> f64x8<S> {
         self.simd.floor_f64x8(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f64x8<S> {
+        self.simd.ceil_f64x8(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f64x8<S> {
+        self.simd.round_ties_even_f64x8(self)
     }
     #[inline(always)]
     fn fract(self) -> f64x8<S> {

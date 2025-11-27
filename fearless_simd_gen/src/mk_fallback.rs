@@ -35,16 +35,25 @@ pub(crate) fn mk_fallback_impl() -> TokenStream {
         #[cfg(all(feature = "libm", not(feature = "std")))]
         trait FloatExt {
             fn floor(self) -> Self;
+            fn ceil(self) -> Self;
+            fn round_ties_even(self) -> Self;
             fn fract(self) -> Self;
             fn sqrt(self) -> Self;
             fn trunc(self) -> Self;
         }
-
         #[cfg(all(feature = "libm", not(feature = "std")))]
         impl FloatExt for f32 {
             #[inline(always)]
             fn floor(self) -> f32 {
                 libm::floorf(self)
+            }
+            #[inline(always)]
+            fn ceil(self) -> f32 {
+                libm::ceilf(self)
+            }
+            #[inline(always)]
+            fn round_ties_even(self) -> f32 {
+                libm::rintf(self)
             }
             #[inline(always)]
             fn sqrt(self) -> f32 {
@@ -65,6 +74,14 @@ pub(crate) fn mk_fallback_impl() -> TokenStream {
             #[inline(always)]
             fn floor(self) -> f64 {
                 libm::floor(self)
+            }
+            #[inline(always)]
+            fn ceil(self) -> f64 {
+                libm::ceil(self)
+            }
+            #[inline(always)]
+            fn round_ties_even(self) -> f64 {
+                libm::rint(self)
             }
             #[inline(always)]
             fn sqrt(self) -> f64 {

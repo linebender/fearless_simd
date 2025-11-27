@@ -14,6 +14,8 @@ use core::ops::*;
 #[cfg(all(feature = "libm", not(feature = "std")))]
 trait FloatExt {
     fn floor(self) -> Self;
+    fn ceil(self) -> Self;
+    fn round_ties_even(self) -> Self;
     fn fract(self) -> Self;
     fn sqrt(self) -> Self;
     fn trunc(self) -> Self;
@@ -23,6 +25,14 @@ impl FloatExt for f32 {
     #[inline(always)]
     fn floor(self) -> f32 {
         libm::floorf(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f32 {
+        libm::ceilf(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f32 {
+        libm::rintf(self)
     }
     #[inline(always)]
     fn sqrt(self) -> f32 {
@@ -42,6 +52,14 @@ impl FloatExt for f64 {
     #[inline(always)]
     fn floor(self) -> f64 {
         libm::floor(self)
+    }
+    #[inline(always)]
+    fn ceil(self) -> f64 {
+        libm::ceil(self)
+    }
+    #[inline(always)]
+    fn round_ties_even(self) -> f64 {
+        libm::rint(self)
     }
     #[inline(always)]
     fn sqrt(self) -> f64 {
@@ -299,6 +317,26 @@ impl Simd for Fallback {
             f32::floor(a[1usize]),
             f32::floor(a[2usize]),
             f32::floor(a[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn ceil_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::ceil(a[0usize]),
+            f32::ceil(a[1usize]),
+            f32::ceil(a[2usize]),
+            f32::ceil(a[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn round_ties_even_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::round_ties_even(a[0usize]),
+            f32::round_ties_even(a[1usize]),
+            f32::round_ties_even(a[2usize]),
+            f32::round_ties_even(a[3usize]),
         ]
         .simd_into(self)
     }
@@ -2936,6 +2974,18 @@ impl Simd for Fallback {
         [f64::floor(a[0usize]), f64::floor(a[1usize])].simd_into(self)
     }
     #[inline(always)]
+    fn ceil_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        [f64::ceil(a[0usize]), f64::ceil(a[1usize])].simd_into(self)
+    }
+    #[inline(always)]
+    fn round_ties_even_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        [
+            f64::round_ties_even(a[0usize]),
+            f64::round_ties_even(a[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         [f64::fract(a[0usize]), f64::fract(a[1usize])].simd_into(self)
     }
@@ -3174,6 +3224,19 @@ impl Simd for Fallback {
     fn floor_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_f32x4(self.floor_f32x4(a0), self.floor_f32x4(a1))
+    }
+    #[inline(always)]
+    fn ceil_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(self.ceil_f32x4(a0), self.ceil_f32x4(a1))
+    }
+    #[inline(always)]
+    fn round_ties_even_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(
+            self.round_ties_even_f32x4(a0),
+            self.round_ties_even_f32x4(a1),
+        )
     }
     #[inline(always)]
     fn fract_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -4609,6 +4672,19 @@ impl Simd for Fallback {
         self.combine_f64x2(self.floor_f64x2(a0), self.floor_f64x2(a1))
     }
     #[inline(always)]
+    fn ceil_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(self.ceil_f64x2(a0), self.ceil_f64x2(a1))
+    }
+    #[inline(always)]
+    fn round_ties_even_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(
+            self.round_ties_even_f64x2(a0),
+            self.round_ties_even_f64x2(a1),
+        )
+    }
+    #[inline(always)]
     fn fract_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f64x2(self.fract_f64x2(a0), self.fract_f64x2(a1))
@@ -4864,6 +4940,19 @@ impl Simd for Fallback {
     fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_f32x8(self.floor_f32x8(a0), self.floor_f32x8(a1))
+    }
+    #[inline(always)]
+    fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(self.ceil_f32x8(a0), self.ceil_f32x8(a1))
+    }
+    #[inline(always)]
+    fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(
+            self.round_ties_even_f32x8(a0),
+            self.round_ties_even_f32x8(a1),
+        )
     }
     #[inline(always)]
     fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -6419,6 +6508,19 @@ impl Simd for Fallback {
     fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         self.combine_f64x4(self.floor_f64x4(a0), self.floor_f64x4(a1))
+    }
+    #[inline(always)]
+    fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(self.ceil_f64x4(a0), self.ceil_f64x4(a1))
+    }
+    #[inline(always)]
+    fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(
+            self.round_ties_even_f64x4(a0),
+            self.round_ties_even_f64x4(a1),
+        )
     }
     #[inline(always)]
     fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {

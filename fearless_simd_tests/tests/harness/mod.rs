@@ -176,6 +176,20 @@ fn floor_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn ceil_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[2.1, -3.2, -2.7, 0.5]);
+    assert_eq!(a.ceil().val, [3.0, -3.0, -2.0, 1.0]);
+}
+
+#[simd_test]
+fn round_ties_even_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[2.3, -3.2, 2.7, -3.6]);
+    assert_eq!(a.round_ties_even().val, [2.0, -3.0, 3.0, -4.0]);
+    let b = f32x4::from_slice(simd, &[-3.5, -2.5, 1.5, 0.5]);
+    assert_eq!(b.round_ties_even().val, [-4.0, -2.0, 2.0, 0.0]);
+}
+
+#[simd_test]
 fn fract_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[1.7, -2.3, 3.9, -4.1]);
     assert_eq!(
@@ -2503,6 +2517,26 @@ fn madd_f64x2<S: Simd>(simd: S) {
 fn floor_f64x2<S: Simd>(simd: S) {
     let a = f64x2::from_slice(simd, &[1.7, -2.3]);
     assert_eq!(a.floor().val, [1.0, -3.0]);
+}
+
+#[simd_test]
+fn ceil_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[2.1, -3.2]);
+    assert_eq!(a.ceil().val, [3.0, -3.0]);
+    let b = f64x2::from_slice(simd, &[-2.7, 0.5]);
+    assert_eq!(b.ceil().val, [-2.0, 1.0]);
+}
+
+#[simd_test]
+fn round_ties_even_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[2.3, -3.2]);
+    assert_eq!(a.round_ties_even().val, [2.0, -3.0]);
+    let b = f64x2::from_slice(simd, &[2.7, -3.6]);
+    assert_eq!(b.round_ties_even().val, [3.0, -4.0]);
+    let c = f64x2::from_slice(simd, &[-3.5, -2.5]);
+    assert_eq!(c.round_ties_even().val, [-4.0, -2.0]);
+    let d = f64x2::from_slice(simd, &[1.5, 0.5]);
+    assert_eq!(d.round_ties_even().val, [2.0, 0.0]);
 }
 
 #[simd_test]
