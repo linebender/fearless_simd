@@ -123,10 +123,22 @@ impl Simd for WasmSimd128 {
     fn unzip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         u32x4_shuffle::<1, 3, 5, 7>(a.into(), b.into()).simd_into(self)
     }
+    #[cfg(target_feature = "relaxed-simd")]
+    #[inline(always)]
+    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        f32x4_relaxed_max(a.into(), b.into()).simd_into(self)
+    }
+    #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         f32x4_max(a.into(), b.into()).simd_into(self)
     }
+    #[cfg(target_feature = "relaxed-simd")]
+    #[inline(always)]
+    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        f32x4_relaxed_min(a.into(), b.into()).simd_into(self)
+    }
+    #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         f32x4_min(a.into(), b.into()).simd_into(self)
@@ -1172,10 +1184,22 @@ impl Simd for WasmSimd128 {
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         u64x2_shuffle::<1, 3>(a.into(), b.into()).simd_into(self)
     }
+    #[cfg(target_feature = "relaxed-simd")]
+    #[inline(always)]
+    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        f64x2_relaxed_max(a.into(), b.into()).simd_into(self)
+    }
+    #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         f64x2_max(a.into(), b.into()).simd_into(self)
     }
+    #[cfg(target_feature = "relaxed-simd")]
+    #[inline(always)]
+    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        f64x2_relaxed_min(a.into(), b.into()).simd_into(self)
+    }
+    #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         f64x2_min(a.into(), b.into()).simd_into(self)

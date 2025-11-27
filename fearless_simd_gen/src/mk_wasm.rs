@@ -155,6 +155,30 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 }
                             }
                         }
+                        "max" | "min" if vec_ty.scalar == ScalarType::Float => {
+                            let expr = wasm::expr(method, vec_ty, &args);
+                            let relaxed_intrinsic = simple_intrinsic(
+                                if method == "max" {
+                                    "relaxed_max"
+                                } else {
+                                    "relaxed_min"
+                                },
+                                vec_ty,
+                            );
+                            let relaxed_expr = quote! { #relaxed_intrinsic ( #( #args ),* ) };
+
+                            quote! {
+                                #[cfg(target_feature = "relaxed-simd")]
+                                #method_sig {
+                                    #relaxed_expr.simd_into(self)
+                                }
+
+                                #[cfg(not(target_feature = "relaxed-simd"))]
+                                #method_sig {
+                                    #expr.simd_into(self)
+                                }
+                            }
+                        }
                         _ => {
                             let expr = wasm::expr(method, vec_ty, &args);
                             quote! {
