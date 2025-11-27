@@ -96,6 +96,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn madd_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     fn msub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    fn ceil_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    fn round_ties_even_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
@@ -330,6 +332,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn madd_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     fn msub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    fn ceil_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    fn round_ties_even_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
@@ -373,6 +377,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn madd_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
     fn msub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
     fn floor_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    fn ceil_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    fn round_ties_even_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     fn fract_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     fn trunc_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
@@ -618,6 +624,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn madd_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
     fn msub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
     fn floor_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    fn ceil_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    fn round_ties_even_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     fn fract_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     fn trunc_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
@@ -663,6 +671,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn madd_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
     fn msub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
     fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
@@ -905,6 +915,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn madd_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
     fn msub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
     fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
@@ -1004,6 +1016,8 @@ pub trait SimdFloat<Element: SimdElement, S: Simd>:
     fn madd(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
     fn msub(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
     fn floor(self) -> Self;
+    fn ceil(self) -> Self;
+    fn round_ties_even(self) -> Self;
     fn fract(self) -> Self;
     fn trunc(self) -> Self;
 }

@@ -10,6 +10,8 @@ fn translate_op(op: &str) -> Option<&'static str> {
         "abs" => "abs",
         "neg" => "neg",
         "floor" => "floor",
+        "ceil" => "ceil",
+        "round_ties_even" => "nearest",
         "trunc" => "trunc",
         "sqrt" => "sqrt",
         "add" => "add",

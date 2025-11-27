@@ -11,6 +11,8 @@ pub(crate) fn translate_op(op: &str, is_float: bool) -> Option<&'static str> {
         "copysign" => "copysign",
         "neg" => "neg",
         "floor" => "floor",
+        "ceil" => "ceil",
+        "round_ties_even" => "round_ties_even",
         "fract" => "fract",
         "trunc" => "trunc",
         "sqrt" => "sqrt",

@@ -7,7 +7,6 @@ use quote::{format_ident, quote};
 
 pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
     Some(match op {
-        "floor" => "floor",
         "sqrt" => "sqrt",
         "add" => "add",
         "sub" => "sub",
@@ -57,9 +56,16 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
     } else {
         let suffix = op_suffix(ty.scalar, ty.scalar_bits, true);
         match op {
-            "trunc" => {
+            "floor" | "ceil" | "round_ties_even" | "trunc" => {
                 let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
-                quote! { #intrinsic ( #( #args, )* _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC) }
+                let rounding_mode = match op {
+                    "floor" => quote! { _MM_FROUND_TO_NEG_INF },
+                    "ceil" => quote! { _MM_FROUND_TO_POS_INF },
+                    "round_ties_even" => quote! { _MM_FROUND_TO_NEAREST_INT },
+                    "trunc" => quote! { _MM_FROUND_TO_ZERO },
+                    _ => unreachable!(),
+                };
+                quote! { #intrinsic ( #( #args, )* #rounding_mode | _MM_FROUND_NO_EXC) }
             }
             "neg" => match ty.scalar {
                 ScalarType::Float => {
