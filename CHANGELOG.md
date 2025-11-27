@@ -21,12 +21,17 @@ This release has an [MSRV][] of 1.88.
 - 256-bit vector types now use native AVX2 intrinsics on supported platforms. ([#115][] by [@valadaptive][])
 - 8-bit integer multiplication is now implemented on x86. ([#115][] by [@valadaptive][])
 - New native-width associated types: `f64s` and `mask64s`. ([#125][] by [@valadaptive][])
+- The bitwise "not" operation on integer vector types. ([#130][] by [@valadaptive][])
 - The `from_fn` method on vector types. ([#137][] by [@valadaptive][])
+- The `load_interleaved` and `store_interleaved` operations now use native intrinsics on x86, instead of using the fallback implementations. ([#140][] by [@valadaptive][])
+- The `ceil` and `round_ties_even` operations on floating-point vector types. (Rust's `round` operation rounds away from zero in the case of ties. Many architectures do not natively implement that behavior, so it's omitted.) ([#145][] by [@valadaptive][])
 
 ### Fixed
 
 - Integer equality comparisons now function properly on x86. Previously, they performed "greater than" comparisons.
   ([#115][] by [@valadaptive][])
+- All float-to-integer and integer-to-float conversions are implemented properly on x86. They should now handle all values correctly, including NaN. ([#134][] by [@valadaptive][])
+- The floating-point `min_precise` and `max_precise` operations now behave the same way on x86 and WebAssembly as they do on AArch64, returning the non-NaN operand if one operand is NaN and the other is not. Previously, they returned the second operand if either was NaN. ([#136][] by [@valadaptive][])
 
 ### Changed
 
@@ -116,10 +121,16 @@ No changelog was kept for this release.
 [#96]: https://github.com/linebender/fearless_simd/pull/96
 [#99]: https://github.com/linebender/fearless_simd/pull/99
 [#105]: https://github.com/linebender/fearless_simd/pull/105
+[#112]: https://github.com/linebender/fearless_simd/pull/112
 [#115]: https://github.com/linebender/fearless_simd/pull/115
 [#123]: https://github.com/linebender/fearless_simd/pull/123
 [#125]: https://github.com/linebender/fearless_simd/pull/125
+[#130]: https://github.com/linebender/fearless_simd/pull/130
+[#134]: https://github.com/linebender/fearless_simd/pull/134
+[#136]: https://github.com/linebender/fearless_simd/pull/136
 [#137]: https://github.com/linebender/fearless_simd/pull/137
+[#140]: https://github.com/linebender/fearless_simd/pull/140
+[#145]: https://github.com/linebender/fearless_simd/pull/145
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
