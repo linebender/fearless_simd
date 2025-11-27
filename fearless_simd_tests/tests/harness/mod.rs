@@ -124,20 +124,6 @@ fn min_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
-fn max_f32x4_with_nan<S: Simd>(simd: S) {
-    let a = f32x4::from_slice(simd, &[2.0, f32::NAN, 0.0, f32::NAN]);
-    let b = f32x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
-    assert_eq!(a.max(b).val, [2.0, -2.0, 7.0, 3.0]);
-}
-
-#[simd_test]
-fn min_f32x4_with_nan<S: Simd>(simd: S) {
-    let a = f32x4::from_slice(simd, &[2.0, f32::NAN, 0.0, f32::NAN]);
-    let b = f32x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
-    assert_eq!(a.min(b).val, [1.0, -2.0, 0.0, 3.0]);
-}
-
-#[simd_test]
 fn max_precise_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[2.0, -3.0, 0.0, 0.5]);
     let b = f32x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);

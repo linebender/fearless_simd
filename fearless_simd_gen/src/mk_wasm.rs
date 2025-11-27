@@ -134,21 +134,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 }
                             }
                         }
-                        "max" | "min" if vec_ty.scalar == ScalarType::Float => {
-                            // We switch the arguments here for the correct semantics. For WebAssembly, `pmin` and
-                            // `pmax` return the *first* operand if either operand is NaN. Our semantics for the
-                            // non-precise min/max guarantee that we return the *second* operand if either operand is
-                            // NaN.
-                            let intrinsic: TokenStream = simple_intrinsic(
-                                if method == "max" { "pmax" } else { "pmin" },
-                                vec_ty,
-                            );
-                            quote! {
-                                #method_sig {
-                                    #intrinsic(b.into(), a.into()).simd_into(self)
-                                }
-                            }
-                        }
                         "max_precise" | "min_precise" => {
                             let intrinsic: TokenStream = simple_intrinsic(
                                 if method == "max_precise" {

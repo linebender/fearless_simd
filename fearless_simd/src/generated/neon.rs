@@ -136,11 +136,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { vmaxnmq_f32(a.into(), b.into()).simd_into(self) }
+        unsafe { vmaxq_f32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { vminnmq_f32(a.into(), b.into()).simd_into(self) }
+        unsafe { vminq_f32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -1124,11 +1124,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { vmaxnmq_f64(a.into(), b.into()).simd_into(self) }
+        unsafe { vmaxq_f64(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { vminnmq_f64(a.into(), b.into()).simd_into(self) }
+        unsafe { vminq_f64(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {

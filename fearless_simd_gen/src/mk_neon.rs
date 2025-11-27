@@ -263,21 +263,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 #vbsl(sign_mask, b.into(), a.into()).simd_into(self)
                             }
                         }
-                        "min" | "max" | "min_precise" | "max_precise"
-                            if vec_ty.scalar == ScalarType::Float =>
-                        {
-                            let intrinsic = simple_intrinsic(
-                                if method == "max" || method == "max_precise" {
-                                    "vmaxnm"
-                                } else {
-                                    "vminnm"
-                                },
-                                vec_ty,
-                            );
-                            quote! {
-                                #intrinsic(a.into(), b.into()).simd_into(self)
-                            }
-                        }
                         _ => {
                             let args = [quote! { a.into() }, quote! { b.into() }];
                             let expr = neon::expr(method, vec_ty, &args);
