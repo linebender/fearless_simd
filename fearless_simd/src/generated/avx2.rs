@@ -161,16 +161,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_round_ps(a.into(), _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC).simd_into(self) }
+        unsafe {
+            _mm_round_ps::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn ceil_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_round_ps(a.into(), _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC).simd_into(self) }
+        unsafe {
+            _mm_round_ps::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn round_ties_even_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         unsafe {
-            _mm_round_ps(a.into(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC).simd_into(self)
+            _mm_round_ps::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
         }
     }
     #[inline(always)]
@@ -179,7 +184,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_round_ps(a.into(), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC).simd_into(self) }
+        unsafe {
+            _mm_round_ps::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -1244,16 +1251,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_round_pd(a.into(), _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC).simd_into(self) }
+        unsafe {
+            _mm_round_pd::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn ceil_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_round_pd(a.into(), _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC).simd_into(self) }
+        unsafe {
+            _mm_round_pd::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn round_ties_even_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         unsafe {
-            _mm_round_pd(a.into(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC).simd_into(self)
+            _mm_round_pd::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
         }
     }
     #[inline(always)]
@@ -1262,7 +1274,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_round_pd(a.into(), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC).simd_into(self) }
+        unsafe {
+            _mm_round_pd::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -1435,19 +1449,22 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn floor_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         unsafe {
-            _mm256_round_ps(a.into(), _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC).simd_into(self)
+            _mm256_round_ps::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
         }
     }
     #[inline(always)]
     fn ceil_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         unsafe {
-            _mm256_round_ps(a.into(), _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC).simd_into(self)
+            _mm256_round_ps::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
         }
     }
     #[inline(always)]
     fn round_ties_even_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         unsafe {
-            _mm256_round_ps(a.into(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC).simd_into(self)
+            _mm256_round_ps::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
         }
     }
     #[inline(always)]
@@ -1456,7 +1473,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn trunc_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_round_ps(a.into(), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC).simd_into(self) }
+        unsafe {
+            _mm256_round_ps::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
@@ -2816,19 +2835,22 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn floor_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
         unsafe {
-            _mm256_round_pd(a.into(), _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC).simd_into(self)
+            _mm256_round_pd::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
         }
     }
     #[inline(always)]
     fn ceil_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
         unsafe {
-            _mm256_round_pd(a.into(), _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC).simd_into(self)
+            _mm256_round_pd::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
         }
     }
     #[inline(always)]
     fn round_ties_even_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
         unsafe {
-            _mm256_round_pd(a.into(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC).simd_into(self)
+            _mm256_round_pd::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
         }
     }
     #[inline(always)]
@@ -2837,7 +2859,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn trunc_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_round_pd(a.into(), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC).simd_into(self) }
+        unsafe {
+            _mm256_round_pd::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {

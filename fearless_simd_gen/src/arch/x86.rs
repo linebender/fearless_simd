@@ -65,7 +65,7 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                     "trunc" => quote! { _MM_FROUND_TO_ZERO },
                     _ => unreachable!(),
                 };
-                quote! { #intrinsic ( #( #args, )* #rounding_mode | _MM_FROUND_NO_EXC) }
+                quote! { #intrinsic::<{#rounding_mode | _MM_FROUND_NO_EXC}>( #( #args, )* ) }
             }
             "neg" => match ty.scalar {
                 ScalarType::Float => {
