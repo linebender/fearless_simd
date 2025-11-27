@@ -128,16 +128,20 @@ impl Simd for WasmSimd128 {
         f32x4_max(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
-    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        f32x4_pmax(b.into(), a.into()).simd_into(self)
-    }
-    #[inline(always)]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         f32x4_min(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        let intermediate = f32x4_pmax(b.into(), a.into());
+        let b_is_nan = f32x4_ne(b.into(), b.into());
+        v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
+    }
+    #[inline(always)]
     fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        f32x4_pmin(b.into(), a.into()).simd_into(self)
+        let intermediate = f32x4_pmin(b.into(), a.into());
+        let b_is_nan = f32x4_ne(b.into(), b.into());
+        v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
     }
     #[inline(always)]
     fn madd_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -1086,16 +1090,20 @@ impl Simd for WasmSimd128 {
         f64x2_max(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
-    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        f64x2_pmax(b.into(), a.into()).simd_into(self)
-    }
-    #[inline(always)]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         f64x2_min(a.into(), b.into()).simd_into(self)
     }
     #[inline(always)]
+    fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        let intermediate = f64x2_pmax(b.into(), a.into());
+        let b_is_nan = f64x2_ne(b.into(), b.into());
+        v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
+    }
+    #[inline(always)]
     fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        f64x2_pmin(b.into(), a.into()).simd_into(self)
+        let intermediate = f64x2_pmin(b.into(), a.into());
+        let b_is_nan = f64x2_ne(b.into(), b.into());
+        v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
     }
     #[inline(always)]
     fn madd_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -1283,6 +1291,12 @@ impl Simd for WasmSimd128 {
         self.combine_f32x4(self.max_f32x4(a0, b0), self.max_f32x4(a1, b1))
     }
     #[inline(always)]
+    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         let (b0, b1) = self.split_f32x8(b);
@@ -1290,12 +1304,6 @@ impl Simd for WasmSimd128 {
             self.max_precise_f32x4(a0, b0),
             self.max_precise_f32x4(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        let (b0, b1) = self.split_f32x8(b);
-        self.combine_f32x4(self.min_f32x4(a0, b0), self.min_f32x4(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -2703,6 +2711,12 @@ impl Simd for WasmSimd128 {
         self.combine_f64x2(self.max_f64x2(a0, b0), self.max_f64x2(a1, b1))
     }
     #[inline(always)]
+    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
         let (b0, b1) = self.split_f64x4(b);
@@ -2710,12 +2724,6 @@ impl Simd for WasmSimd128 {
             self.max_precise_f64x2(a0, b0),
             self.max_precise_f64x2(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        let (b0, b1) = self.split_f64x4(b);
-        self.combine_f64x2(self.min_f64x2(a0, b0), self.min_f64x2(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -2960,6 +2968,12 @@ impl Simd for WasmSimd128 {
         self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
     }
     #[inline(always)]
+    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         let (b0, b1) = self.split_f32x16(b);
@@ -2967,12 +2981,6 @@ impl Simd for WasmSimd128 {
             self.max_precise_f32x8(a0, b0),
             self.max_precise_f32x8(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -4514,6 +4522,12 @@ impl Simd for WasmSimd128 {
         self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
     }
     #[inline(always)]
+    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
+    }
+    #[inline(always)]
     fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         let (b0, b1) = self.split_f64x8(b);
@@ -4521,12 +4535,6 @@ impl Simd for WasmSimd128 {
             self.max_precise_f64x4(a0, b0),
             self.max_precise_f64x4(a1, b1),
         )
-    }
-    #[inline(always)]
-    fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
     }
     #[inline(always)]
     fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {

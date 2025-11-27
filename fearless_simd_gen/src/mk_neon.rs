@@ -226,7 +226,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Binary => {
-                    let args = match method {
+                    let expr = match method {
                         "shrv" => {
                             let neg = simple_intrinsic(
                                 "vneg",
@@ -235,7 +235,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                     ..*vec_ty
                                 },
                             );
-                            if vec_ty.scalar == ScalarType::Int {
+                            let args = if vec_ty.scalar == ScalarType::Int {
                                 // Signed case
                                 [quote! { a.into() }, quote! { #neg(b.into()) }]
                             } else {
@@ -243,33 +243,39 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 let bits = vec_ty.scalar_bits;
                                 let reinterpret = format_ident!("vreinterpretq_s{bits}_u{bits}");
                                 [quote! { a.into() }, quote! { #neg(#reinterpret(b.into())) }]
-                            }
-                        }
-                        _ => [quote! { a.into() }, quote! { b.into() }],
-                    };
-                    if method == "copysign" {
-                        let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
-                        let unsigned_ty =
-                            VecType::new(ScalarType::Unsigned, vec_ty.scalar_bits, vec_ty.len);
-                        let sign_mask =
-                            neon::expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
-                        let vbsl = simple_intrinsic("vbsl", vec_ty);
+                            };
 
-                        quote! {
-                            #method_sig {
-                                unsafe {
-                                    let sign_mask = #sign_mask;
-                                    #vbsl(sign_mask, b.into(), a.into()).simd_into(self)
-                                }
+                            let expr = neon::expr(method, vec_ty, &args);
+                            quote! {
+                                #expr.simd_into(self)
                             }
                         }
-                    } else {
-                        let expr = neon::expr(method, vec_ty, &args);
-                        quote! {
-                            #method_sig {
-                                unsafe {
-                                    #expr.simd_into(self)
-                                }
+                        "copysign" => {
+                            let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
+                            let unsigned_ty =
+                                VecType::new(ScalarType::Unsigned, vec_ty.scalar_bits, vec_ty.len);
+                            let sign_mask =
+                                neon::expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
+                            let vbsl = simple_intrinsic("vbsl", vec_ty);
+
+                            quote! {
+                                let sign_mask = #sign_mask;
+                                #vbsl(sign_mask, b.into(), a.into()).simd_into(self)
+                            }
+                        }
+                        _ => {
+                            let args = [quote! { a.into() }, quote! { b.into() }];
+                            let expr = neon::expr(method, vec_ty, &args);
+                            quote! {
+                                #expr.simd_into(self)
+                            }
+                        }
+                    };
+
+                    quote! {
+                        #method_sig {
+                            unsafe {
+                                #expr
                             }
                         }
                     }

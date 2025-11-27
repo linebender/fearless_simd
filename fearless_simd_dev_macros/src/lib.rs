@@ -132,17 +132,14 @@ fn exclude_fallback(_test_name: &str) -> bool {
     false
 }
 
-fn exclude_sse4(test_name: &str) -> bool {
-    test_name.contains("precise")
+fn exclude_sse4(_test_name: &str) -> bool {
+    false
 }
 
-fn exclude_avx2(test_name: &str) -> bool {
-    test_name.contains("precise")
+fn exclude_avx2(_test_name: &str) -> bool {
+    false
 }
 
-fn exclude_wasm(test_name: &str) -> bool {
-    matches!(
-        test_name,
-        "min_precise_f32x4_with_nan" | "max_precise_f32x4_with_nan"
-    )
+fn exclude_wasm(_test_name: &str) -> bool {
+    false
 }

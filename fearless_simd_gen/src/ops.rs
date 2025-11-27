@@ -50,9 +50,13 @@ pub(crate) const FLOAT_OPS: &[(&str, OpSig)] = &[
     ("zip_high", OpSig::Zip(false)),
     ("unzip_low", OpSig::Unzip(true)),
     ("unzip_high", OpSig::Unzip(false)),
+    // The non-precise max/min are *allowed*, but not required, to return NaN if either operand is NaN.
+    //
+    // TODO: document the behavior of max/min vs max_precise/min_precise once we generate documentation.
     ("max", OpSig::Binary),
-    ("max_precise", OpSig::Binary),
     ("min", OpSig::Binary),
+    // The precise max/min are guaranteed to return a non-NaN result if at most one operand is non-NaN.
+    ("max_precise", OpSig::Binary),
     ("min_precise", OpSig::Binary),
     ("madd", OpSig::Ternary),
     ("msub", OpSig::Ternary),
