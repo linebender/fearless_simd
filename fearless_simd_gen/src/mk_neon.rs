@@ -141,7 +141,11 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::LoadInterleaved(block_size, _) => {
+                OpSig::LoadInterleaved {
+                    block_size,
+                    block_count,
+                } => {
+                    assert_eq!(block_count, 4, "only count of 4 is currently supported");
                     let intrinsic = {
                         // The function expects 64-bit or 128-bit
                         let ty = VecType::new(
@@ -160,7 +164,11 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::StoreInterleaved(block_size, _) => {
+                OpSig::StoreInterleaved {
+                    block_size,
+                    block_count,
+                } => {
+                    assert_eq!(block_count, 4, "only count of 4 is currently supported");
                     let intrinsic = {
                         // The function expects 64-bit or 128-bit
                         let ty = VecType::new(
@@ -179,7 +187,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::WidenNarrow(target_ty) => {
+                OpSig::WidenNarrow { target_ty } => {
                     let vec_scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
                     let target_scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
 
@@ -339,8 +347,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Combine => generic_combine(vec_ty),
                 OpSig::Split => generic_split(vec_ty),
-                OpSig::Zip(zip1) => {
-                    let neon = if zip1 { "vzip1" } else { "vzip2" };
+                OpSig::Zip { select_low } => {
+                    let neon = if select_low { "vzip1" } else { "vzip2" };
                     let zip = simple_intrinsic(neon, vec_ty);
                     quote! {
                         #method_sig {
@@ -352,7 +360,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Unzip(select_even) => {
+                OpSig::Unzip { select_even } => {
                     let neon = if select_even { "vuzp1" } else { "vuzp2" };
                     let zip = simple_intrinsic(neon, vec_ty);
                     quote! {
@@ -365,8 +373,11 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Cvt(scalar, scalar_bits) => {
-                    let to_ty = &VecType::new(scalar, scalar_bits, vec_ty.len);
+                OpSig::Cvt {
+                    target_ty,
+                    scalar_bits,
+                } => {
+                    let to_ty = &VecType::new(target_ty, scalar_bits, vec_ty.len);
                     let neon = cvt_intrinsic("vcvt", to_ty, vec_ty);
                     quote! {
                         #method_sig {
@@ -376,9 +387,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Reinterpret(scalar, scalar_bits) => {
-                    if valid_reinterpret(vec_ty, scalar, scalar_bits) {
-                        let to_ty = reinterpret_ty(vec_ty, scalar, scalar_bits);
+                OpSig::Reinterpret {
+                    target_ty,
+                    scalar_bits,
+                } => {
+                    if valid_reinterpret(vec_ty, target_ty, scalar_bits) {
+                        let to_ty = reinterpret_ty(vec_ty, target_ty, scalar_bits);
                         let neon = cvt_intrinsic("vreinterpret", &to_ty, vec_ty);
 
                         quote! {

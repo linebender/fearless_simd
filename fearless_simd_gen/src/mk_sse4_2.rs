@@ -183,27 +183,33 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Splat => handle_splat(method_sig, vec_ty),
         OpSig::Compare => handle_compare(method_sig, method, vec_ty),
         OpSig::Unary => handle_unary(method_sig, method, vec_ty),
-        OpSig::WidenNarrow(t) => handle_widen_narrow(method_sig, method, vec_ty, t),
+        OpSig::WidenNarrow { target_ty } => {
+            handle_widen_narrow(method_sig, method, vec_ty, target_ty)
+        }
         OpSig::Binary => handle_binary(method_sig, method, vec_ty),
         OpSig::Shift => handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
         OpSig::Select => handle_select(method_sig, vec_ty),
         OpSig::Combine => generic_combine(vec_ty),
         OpSig::Split => generic_split(vec_ty),
-        OpSig::Zip(zip1) => handle_zip(method_sig, vec_ty, zip1),
-        OpSig::Unzip(select_even) => handle_unzip(method_sig, vec_ty, select_even),
-        OpSig::Cvt(scalar, target_scalar_bits) => {
-            handle_cvt(method_sig, vec_ty, scalar, target_scalar_bits)
-        }
-        OpSig::Reinterpret(scalar, target_scalar_bits) => {
-            handle_reinterpret(method_sig, vec_ty, scalar, target_scalar_bits)
-        }
-        OpSig::LoadInterleaved(block_size, count) => {
-            handle_load_interleaved(method_sig, vec_ty, block_size, count)
-        }
-        OpSig::StoreInterleaved(block_size, count) => {
-            handle_store_interleaved(method_sig, vec_ty, block_size, count)
-        }
+        OpSig::Zip { select_low } => handle_zip(method_sig, vec_ty, select_low),
+        OpSig::Unzip { select_even } => handle_unzip(method_sig, vec_ty, select_even),
+        OpSig::Cvt {
+            target_ty,
+            scalar_bits,
+        } => handle_cvt(method_sig, vec_ty, target_ty, scalar_bits),
+        OpSig::Reinterpret {
+            target_ty,
+            scalar_bits,
+        } => handle_reinterpret(method_sig, vec_ty, target_ty, scalar_bits),
+        OpSig::LoadInterleaved {
+            block_size,
+            block_count,
+        } => handle_load_interleaved(method_sig, vec_ty, block_size, block_count),
+        OpSig::StoreInterleaved {
+            block_size,
+            block_count,
+        } => handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
     }
 }
 
@@ -334,14 +340,14 @@ pub(crate) fn handle_widen_narrow(
     method_sig: TokenStream,
     method: &str,
     vec_ty: &VecType,
-    t: VecType,
+    target_ty: VecType,
 ) -> TokenStream {
     match method {
         "widen" => {
             let extend = extend_intrinsic(
                 vec_ty.scalar,
                 vec_ty.scalar_bits,
-                t.scalar_bits,
+                target_ty.scalar_bits,
                 vec_ty.n_bits(),
             );
             let combine = format_ident!(
@@ -375,7 +381,7 @@ pub(crate) fn handle_widen_narrow(
             let pack = pack_intrinsic(
                 vec_ty.scalar_bits,
                 matches!(vec_ty.scalar, ScalarType::Int),
-                t.n_bits(),
+                target_ty.n_bits(),
             );
             let split = format_ident!("split_{}", vec_ty.rust_name());
             quote! {
@@ -558,10 +564,14 @@ pub(crate) fn handle_select(method_sig: TokenStream, vec_ty: &VecType) -> TokenS
     }
 }
 
-pub(crate) fn handle_zip(method_sig: TokenStream, vec_ty: &VecType, zip1: bool) -> TokenStream {
+pub(crate) fn handle_zip(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    select_low: bool,
+) -> TokenStream {
     let expr = match vec_ty.n_bits() {
         128 => {
-            let op = if zip1 { "unpacklo" } else { "unpackhi" };
+            let op = if select_low { "unpacklo" } else { "unpackhi" };
 
             let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
             let unpack_intrinsic = intrinsic_ident(op, suffix, vec_ty.n_bits());
@@ -573,7 +583,7 @@ pub(crate) fn handle_zip(method_sig: TokenStream, vec_ty: &VecType, zip1: bool) 
             let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
             let lo = intrinsic_ident("unpacklo", suffix, vec_ty.n_bits());
             let hi = intrinsic_ident("unpackhi", suffix, vec_ty.n_bits());
-            let shuffle_immediate = if zip1 {
+            let shuffle_immediate = if select_low {
                 quote! { 0b0010_0000 }
             } else {
                 quote! { 0b0011_0001 }
@@ -922,12 +932,12 @@ pub(crate) fn handle_cvt(
 pub(crate) fn handle_reinterpret(
     method_sig: TokenStream,
     vec_ty: &VecType,
-    scalar: ScalarType,
+    target_ty: ScalarType,
     scalar_bits: usize,
 ) -> TokenStream {
-    let dst_ty = VecType::new(scalar, scalar_bits, vec_ty.n_bits() / scalar_bits);
+    let dst_ty = VecType::new(target_ty, scalar_bits, vec_ty.n_bits() / scalar_bits);
     assert!(
-        valid_reinterpret(vec_ty, scalar, scalar_bits),
+        valid_reinterpret(vec_ty, target_ty, scalar_bits),
         "{vec_ty:?} must be reinterpretable as {dst_ty:?}"
     );
 
@@ -941,7 +951,7 @@ pub(crate) fn handle_reinterpret(
     } else {
         let ident = cast_ident(
             vec_ty.scalar,
-            scalar,
+            target_ty,
             vec_ty.scalar_bits,
             scalar_bits,
             vec_ty.n_bits(),
@@ -960,13 +970,13 @@ pub(crate) fn handle_load_interleaved(
     method_sig: TokenStream,
     vec_ty: &VecType,
     block_size: u16,
-    count: u16,
+    block_count: u16,
 ) -> TokenStream {
     assert_eq!(
         block_size, 128,
         "only 128-bit blocks are currently supported"
     );
-    assert_eq!(count, 4, "only count of 4 is currently supported");
+    assert_eq!(block_count, 4, "only count of 4 is currently supported");
     let expr = match vec_ty.scalar_bits {
         32 | 16 | 8 => {
             let block_ty =
@@ -1088,13 +1098,13 @@ pub(crate) fn handle_store_interleaved(
     method_sig: TokenStream,
     vec_ty: &VecType,
     block_size: u16,
-    count: u16,
+    block_count: u16,
 ) -> TokenStream {
     assert_eq!(
         block_size, 128,
         "only 128-bit blocks are currently supported"
     );
-    assert_eq!(count, 4, "only count of 4 is currently supported");
+    assert_eq!(block_count, 4, "only count of 4 is currently supported");
     let expr = match vec_ty.scalar_bits {
         32 | 16 | 8 => {
             let block_ty =

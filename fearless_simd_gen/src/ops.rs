@@ -16,19 +16,37 @@ pub(crate) enum OpSig {
     Select,
     Combine,
     Split,
-    Zip(bool),
-    Unzip(bool),
-    Cvt(ScalarType, usize),
-    Reinterpret(ScalarType, usize),
-    WidenNarrow(VecType),
+    Zip {
+        select_low: bool,
+    },
+    Unzip {
+        select_even: bool,
+    },
+    Cvt {
+        target_ty: ScalarType,
+        scalar_bits: usize,
+    },
+    Reinterpret {
+        target_ty: ScalarType,
+        scalar_bits: usize,
+    },
+    WidenNarrow {
+        target_ty: VecType,
+    },
     // TODO: Make clear that this is right-shift
     Shift,
     // First argument is the base block size (i.e. 128), second argument
     // is how many blocks. For example, `LoadInterleaved(128, 4)` would correspond to the
     // NEON instructions `vld4q_f32`, while `LoadInterleaved(64, 4)` would correspond to
     // `vld4_f32`.
-    LoadInterleaved(u16, u16),
-    StoreInterleaved(u16, u16), // TODO: fma
+    LoadInterleaved {
+        block_size: u16,
+        block_count: u16,
+    },
+    StoreInterleaved {
+        block_size: u16,
+        block_count: u16,
+    },
 }
 
 pub(crate) const FLOAT_OPS: &[(&str, OpSig)] = &[
@@ -46,10 +64,10 @@ pub(crate) const FLOAT_OPS: &[(&str, OpSig)] = &[
     ("simd_le", OpSig::Compare),
     ("simd_ge", OpSig::Compare),
     ("simd_gt", OpSig::Compare),
-    ("zip_low", OpSig::Zip(true)),
-    ("zip_high", OpSig::Zip(false)),
-    ("unzip_low", OpSig::Unzip(true)),
-    ("unzip_high", OpSig::Unzip(false)),
+    ("zip_low", OpSig::Zip { select_low: true }),
+    ("zip_high", OpSig::Zip { select_low: false }),
+    ("unzip_low", OpSig::Unzip { select_even: true }),
+    ("unzip_high", OpSig::Unzip { select_even: false }),
     // The non-precise max/min are *allowed*, but not required, to return NaN if either operand is NaN.
     //
     // TODO: document the behavior of max/min vs max_precise/min_precise once we generate documentation.
@@ -87,10 +105,10 @@ pub(crate) const INT_OPS: &[(&str, OpSig)] = &[
     ("simd_le", OpSig::Compare),
     ("simd_ge", OpSig::Compare),
     ("simd_gt", OpSig::Compare),
-    ("zip_low", OpSig::Zip(true)),
-    ("zip_high", OpSig::Zip(false)),
-    ("unzip_low", OpSig::Unzip(true)),
-    ("unzip_high", OpSig::Unzip(false)),
+    ("zip_low", OpSig::Zip { select_low: true }),
+    ("zip_high", OpSig::Zip { select_low: false }),
+    ("unzip_low", OpSig::Unzip { select_even: true }),
+    ("unzip_high", OpSig::Unzip { select_even: false }),
     ("select", OpSig::Select),
     ("min", OpSig::Binary),
     ("max", OpSig::Binary),
@@ -131,11 +149,29 @@ pub(crate) fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
     if ty.scalar == ScalarType::Float {
         if cvt {
             if ty.scalar_bits == 64 {
-                ops.push(("reinterpret_f32", OpSig::Reinterpret(ScalarType::Float, 32)));
+                ops.push((
+                    "reinterpret_f32",
+                    OpSig::Reinterpret {
+                        target_ty: ScalarType::Float,
+                        scalar_bits: 32,
+                    },
+                ));
             } else {
-                ops.push(("reinterpret_f64", OpSig::Reinterpret(ScalarType::Float, 64)));
+                ops.push((
+                    "reinterpret_f64",
+                    OpSig::Reinterpret {
+                        target_ty: ScalarType::Float,
+                        scalar_bits: 64,
+                    },
+                ));
 
-                ops.push(("reinterpret_i32", OpSig::Reinterpret(ScalarType::Int, 32)));
+                ops.push((
+                    "reinterpret_i32",
+                    OpSig::Reinterpret {
+                        target_ty: ScalarType::Int,
+                        scalar_bits: 32,
+                    },
+                ));
             }
         }
 
@@ -145,45 +181,87 @@ pub(crate) fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
     }
 
     if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
-        ops.push(("load_interleaved_128", OpSig::LoadInterleaved(128, 4)));
+        ops.push((
+            "load_interleaved_128",
+            OpSig::LoadInterleaved {
+                block_size: 128,
+                block_count: 4,
+            },
+        ));
     }
 
     if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
-        ops.push(("store_interleaved_128", OpSig::StoreInterleaved(128, 4)));
+        ops.push((
+            "store_interleaved_128",
+            OpSig::StoreInterleaved {
+                block_size: 128,
+                block_count: 4,
+            },
+        ));
     }
 
     if cvt {
         if matches!(ty.scalar, ScalarType::Unsigned) {
-            if let Some(widened) = ty.widened() {
-                ops.push(("widen", OpSig::WidenNarrow(widened)));
+            if let Some(target_ty) = ty.widened() {
+                ops.push(("widen", OpSig::WidenNarrow { target_ty }));
             }
 
-            if let Some(narrowed) = ty.narrowed() {
-                ops.push(("narrow", OpSig::WidenNarrow(narrowed)));
+            if let Some(target_ty) = ty.narrowed() {
+                ops.push(("narrow", OpSig::WidenNarrow { target_ty }));
             }
         }
 
         if valid_reinterpret(ty, ScalarType::Unsigned, 8) {
             ops.push((
                 "reinterpret_u8",
-                OpSig::Reinterpret(ScalarType::Unsigned, 8),
+                OpSig::Reinterpret {
+                    target_ty: ScalarType::Unsigned,
+                    scalar_bits: 8,
+                },
             ));
         }
 
         if valid_reinterpret(ty, ScalarType::Unsigned, 32) {
             ops.push((
                 "reinterpret_u32",
-                OpSig::Reinterpret(ScalarType::Unsigned, 32),
+                OpSig::Reinterpret {
+                    target_ty: ScalarType::Unsigned,
+                    scalar_bits: 32,
+                },
             ));
         }
 
         match (ty.scalar, ty.scalar_bits) {
             (ScalarType::Float, 32) => {
-                ops.push(("cvt_u32", OpSig::Cvt(ScalarType::Unsigned, 32)));
-                ops.push(("cvt_i32", OpSig::Cvt(ScalarType::Int, 32)));
+                ops.push((
+                    "cvt_u32",
+                    OpSig::Cvt {
+                        target_ty: ScalarType::Unsigned,
+                        scalar_bits: 32,
+                    },
+                ));
+                ops.push((
+                    "cvt_i32",
+                    OpSig::Cvt {
+                        target_ty: ScalarType::Int,
+                        scalar_bits: 32,
+                    },
+                ));
             }
-            (ScalarType::Unsigned, 32) => ops.push(("cvt_f32", OpSig::Cvt(ScalarType::Float, 32))),
-            (ScalarType::Int, 32) => ops.push(("cvt_f32", OpSig::Cvt(ScalarType::Float, 32))),
+            (ScalarType::Unsigned, 32) => ops.push((
+                "cvt_f32",
+                OpSig::Cvt {
+                    target_ty: ScalarType::Float,
+                    scalar_bits: 32,
+                },
+            )),
+            (ScalarType::Int, 32) => ops.push((
+                "cvt_f32",
+                OpSig::Cvt {
+                    target_ty: ScalarType::Float,
+                    scalar_bits: 32,
+                },
+            )),
             _ => (),
         }
     }
@@ -207,20 +285,30 @@ impl OpSig {
                 let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
                 quote! { self, val: #scalar }
             }
-            Self::LoadInterleaved(block_size, i) => {
-                let ty = load_interleaved_arg_ty(*block_size, *i, vec_ty);
+            Self::LoadInterleaved {
+                block_size,
+                block_count,
+            } => {
+                let ty = load_interleaved_arg_ty(*block_size, *block_count, vec_ty);
                 quote! { self, #ty }
             }
-            Self::StoreInterleaved(block_size, i) => {
-                let ty = store_interleaved_arg_ty(*block_size, *i, vec_ty);
+            Self::StoreInterleaved {
+                block_size,
+                block_count,
+            } => {
+                let ty = store_interleaved_arg_ty(*block_size, *block_count, vec_ty);
                 quote! { self, #ty }
             }
             Self::Unary
             | Self::Split
-            | Self::Cvt(_, _)
-            | Self::Reinterpret(_, _)
-            | Self::WidenNarrow(_) => quote! { self, a: #ty<Self> },
-            Self::Binary | Self::Compare | Self::Combine | Self::Zip(_) | Self::Unzip(_) => {
+            | Self::Cvt { .. }
+            | Self::Reinterpret { .. }
+            | Self::WidenNarrow { .. } => quote! { self, a: #ty<Self> },
+            Self::Binary
+            | Self::Compare
+            | Self::Combine
+            | Self::Zip { .. }
+            | Self::Unzip { .. } => {
                 quote! { self, a: #ty<Self>, b: #ty<Self> }
             }
             Self::Shift => {
@@ -238,13 +326,20 @@ impl OpSig {
 
     pub(crate) fn vec_trait_args(&self) -> Option<TokenStream> {
         let args = match self {
-            Self::Splat | Self::LoadInterleaved(_, _) | Self::StoreInterleaved(_, _) => {
+            Self::Splat | Self::LoadInterleaved { .. } | Self::StoreInterleaved { .. } => {
                 return None;
             }
-            Self::Unary | Self::Cvt(_, _) | Self::Reinterpret(_, _) | Self::WidenNarrow(_) => {
+            Self::Unary
+            | Self::Cvt { .. }
+            | Self::Reinterpret { .. }
+            | Self::WidenNarrow { .. } => {
                 quote! { self }
             }
-            Self::Binary | Self::Compare | Self::Zip(_) | Self::Combine | Self::Unzip(_) => {
+            Self::Binary
+            | Self::Compare
+            | Self::Zip { .. }
+            | Self::Combine
+            | Self::Unzip { .. } => {
                 quote! { self, rhs: impl SimdInto<Self, S> }
             }
             Self::Shift => {
@@ -274,7 +369,7 @@ impl OpSig {
             | Self::Select
             | Self::Ternary
             | Self::Shift
-            | Self::LoadInterleaved(_, _) => {
+            | Self::LoadInterleaved { .. } => {
                 let rust = ty.rust();
                 quote! { #rust #quant }
             }
@@ -292,37 +387,51 @@ impl OpSig {
                 let result = VecType::new(ty.scalar, ty.scalar_bits, len).rust();
                 quote! { ( #result #quant, #result #quant ) }
             }
-            Self::Zip(_) | Self::Unzip(_) => {
+            Self::Zip { .. } | Self::Unzip { .. } => {
                 let rust = ty.rust();
                 quote! { #rust #quant }
             }
-            Self::Cvt(scalar, scalar_bits) => {
-                let result = VecType::new(*scalar, *scalar_bits, ty.len).rust();
+            Self::Cvt {
+                target_ty,
+                scalar_bits,
+            } => {
+                let result = VecType::new(*target_ty, *scalar_bits, ty.len).rust();
                 quote! { #result #quant }
             }
-            Self::Reinterpret(scalar, scalar_bits) => {
-                let result = reinterpret_ty(ty, *scalar, *scalar_bits).rust();
+            Self::Reinterpret {
+                target_ty,
+                scalar_bits,
+            } => {
+                let result = reinterpret_ty(ty, *target_ty, *scalar_bits).rust();
                 quote! { #result #quant }
             }
-            Self::WidenNarrow(t) => {
-                let result = t.rust();
+            Self::WidenNarrow { target_ty } => {
+                let result = target_ty.rust();
                 quote! { #result #quant }
             }
-            Self::StoreInterleaved(_, _) => quote! {()},
+            Self::StoreInterleaved { .. } => quote! {()},
         }
     }
 }
 
-pub(crate) fn load_interleaved_arg_ty(block_size: u16, i: u16, vec_ty: &VecType) -> TokenStream {
+pub(crate) fn load_interleaved_arg_ty(
+    block_size: u16,
+    block_count: u16,
+    vec_ty: &VecType,
+) -> TokenStream {
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let len = (block_size * i) as usize / vec_ty.scalar_bits;
+    let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
     quote! { src: &[#scalar; #len] }
 }
 
-pub(crate) fn store_interleaved_arg_ty(block_size: u16, i: u16, vec_ty: &VecType) -> TokenStream {
+pub(crate) fn store_interleaved_arg_ty(
+    block_size: u16,
+    block_count: u16,
+    vec_ty: &VecType,
+) -> TokenStream {
     let ty = vec_ty.rust();
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let len = (block_size * i) as usize / vec_ty.scalar_bits;
+    let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
     quote! { a: #ty<Self>, dest: &mut [#scalar; #len] }
 }
 

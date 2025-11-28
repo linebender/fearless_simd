@@ -180,7 +180,9 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty),
         OpSig::Compare => mk_sse4_2::handle_compare(method_sig, method, vec_ty),
         OpSig::Unary => mk_sse4_2::handle_unary(method_sig, method, vec_ty),
-        OpSig::WidenNarrow(t) => handle_widen_narrow(method_sig, method, vec_ty, t),
+        OpSig::WidenNarrow { target_ty } => {
+            handle_widen_narrow(method_sig, method, vec_ty, target_ty)
+        }
         OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty),
         OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => match method {
@@ -205,20 +207,24 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty),
         OpSig::Combine => handle_combine(method_sig, vec_ty),
         OpSig::Split => handle_split(method_sig, vec_ty),
-        OpSig::Zip(zip1) => mk_sse4_2::handle_zip(method_sig, vec_ty, zip1),
-        OpSig::Unzip(select_even) => mk_sse4_2::handle_unzip(method_sig, vec_ty, select_even),
-        OpSig::Cvt(scalar, target_scalar_bits) => {
-            mk_sse4_2::handle_cvt(method_sig, vec_ty, scalar, target_scalar_bits)
-        }
-        OpSig::Reinterpret(scalar, target_scalar_bits) => {
-            mk_sse4_2::handle_reinterpret(method_sig, vec_ty, scalar, target_scalar_bits)
-        }
-        OpSig::LoadInterleaved(block_size, count) => {
-            mk_sse4_2::handle_load_interleaved(method_sig, vec_ty, block_size, count)
-        }
-        OpSig::StoreInterleaved(block_size, count) => {
-            mk_sse4_2::handle_store_interleaved(method_sig, vec_ty, block_size, count)
-        }
+        OpSig::Zip { select_low } => mk_sse4_2::handle_zip(method_sig, vec_ty, select_low),
+        OpSig::Unzip { select_even } => mk_sse4_2::handle_unzip(method_sig, vec_ty, select_even),
+        OpSig::Cvt {
+            target_ty,
+            scalar_bits,
+        } => mk_sse4_2::handle_cvt(method_sig, vec_ty, target_ty, scalar_bits),
+        OpSig::Reinterpret {
+            target_ty,
+            scalar_bits,
+        } => mk_sse4_2::handle_reinterpret(method_sig, vec_ty, target_ty, scalar_bits),
+        OpSig::LoadInterleaved {
+            block_size,
+            block_count,
+        } => mk_sse4_2::handle_load_interleaved(method_sig, vec_ty, block_size, block_count),
+        OpSig::StoreInterleaved {
+            block_size,
+            block_count,
+        } => mk_sse4_2::handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
     }
 }
 
@@ -268,17 +274,17 @@ pub(crate) fn handle_widen_narrow(
     method_sig: TokenStream,
     method: &str,
     vec_ty: &VecType,
-    t: VecType,
+    target_ty: VecType,
 ) -> TokenStream {
     let expr = match method {
         "widen" => {
-            let dst_width = t.n_bits();
+            let dst_width = target_ty.n_bits();
             match (dst_width, vec_ty.n_bits()) {
                 (256, 128) => {
                     let extend = extend_intrinsic(
                         vec_ty.scalar,
                         vec_ty.scalar_bits,
-                        t.scalar_bits,
+                        target_ty.scalar_bits,
                         dst_width,
                     );
                     quote! {
@@ -291,7 +297,7 @@ pub(crate) fn handle_widen_narrow(
                     let extend = extend_intrinsic(
                         vec_ty.scalar,
                         vec_ty.scalar_bits,
-                        t.scalar_bits,
+                        target_ty.scalar_bits,
                         vec_ty.n_bits(),
                     );
                     let combine = format_ident!(
@@ -317,10 +323,10 @@ pub(crate) fn handle_widen_narrow(
             }
         }
         "narrow" => {
-            let dst_width = t.n_bits();
+            let dst_width = target_ty.n_bits();
             match (dst_width, vec_ty.n_bits()) {
                 (128, 256) => {
-                    let mask = match t.scalar_bits {
+                    let mask = match target_ty.scalar_bits {
                         8 => {
                             quote! { 0, 2, 4, 6, 8, 10, 12, 14, -1, -1, -1, -1, -1, -1, -1, -1 }
                         }
@@ -346,7 +352,7 @@ pub(crate) fn handle_widen_narrow(
                     let pack = pack_intrinsic(
                         vec_ty.scalar_bits,
                         matches!(vec_ty.scalar, ScalarType::Int),
-                        t.n_bits(),
+                        target_ty.n_bits(),
                     );
                     let split = format_ident!("split_{}", vec_ty.rust_name());
                     quote! {

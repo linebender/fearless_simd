@@ -168,11 +168,11 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
-                OpSig::WidenNarrow(t) => {
+                OpSig::WidenNarrow { target_ty } => {
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx| {
-                                let scalar_ty = t.scalar.rust(t.scalar_bits);
+                                let scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
                                 quote! { a[#idx] as #scalar_ty }
                             })
                             .collect::<Vec<_>>(),
@@ -298,8 +298,8 @@ fn mk_simd_impl() -> TokenStream {
                 }
                 OpSig::Combine => generic_combine(vec_ty),
                 OpSig::Split => generic_split(vec_ty),
-                OpSig::Zip(zip1) => {
-                    let indices = if zip1 {
+                OpSig::Zip { select_low } => {
+                    let indices = if select_low {
                         0..vec_ty.len / 2
                     } else {
                         (vec_ty.len / 2)..vec_ty.len
@@ -319,8 +319,8 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
-                OpSig::Unzip(unzip1) => {
-                    let indices = if unzip1 {
+                OpSig::Unzip { select_even } => {
+                    let indices = if select_even {
                         (0..vec_ty.len).step_by(2)
                     } else {
                         (1..vec_ty.len).step_by(2)
@@ -344,8 +344,11 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
-                OpSig::Cvt(scalar, scalar_bits) => {
-                    let to_ty = &VecType::new(scalar, scalar_bits, vec_ty.len);
+                OpSig::Cvt {
+                    target_ty,
+                    scalar_bits,
+                } => {
+                    let to_ty = &VecType::new(target_ty, scalar_bits, vec_ty.len);
                     let scalar = to_ty.scalar.rust(scalar_bits);
                     let items = make_list(
                         (0..vec_ty.len)
@@ -360,8 +363,11 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
-                OpSig::Reinterpret(scalar, scalar_bits) => {
-                    if valid_reinterpret(vec_ty, scalar, scalar_bits) {
+                OpSig::Reinterpret {
+                    target_ty,
+                    scalar_bits,
+                } => {
+                    if valid_reinterpret(vec_ty, target_ty, scalar_bits) {
                         quote! {
                             #method_sig {
                                 a.bitcast()
@@ -371,9 +377,13 @@ fn mk_simd_impl() -> TokenStream {
                         quote! {}
                     }
                 }
-                OpSig::LoadInterleaved(block_size, count) => {
-                    let len = (block_size * count) as usize / vec_ty.scalar_bits;
-                    let items = interleave_indices(len, count as usize, |idx| quote! { src[#idx] });
+                OpSig::LoadInterleaved {
+                    block_size,
+                    block_count,
+                } => {
+                    let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
+                    let items =
+                        interleave_indices(len, block_count as usize, |idx| quote! { src[#idx] });
 
                     quote! {
                         #method_sig {
@@ -381,10 +391,16 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
-                OpSig::StoreInterleaved(block_size, count) => {
-                    let len = (block_size * count) as usize / vec_ty.scalar_bits;
-                    let items =
-                        interleave_indices(len, len / count as usize, |idx| quote! { a[#idx] });
+                OpSig::StoreInterleaved {
+                    block_size,
+                    block_count,
+                } => {
+                    let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
+                    let items = interleave_indices(
+                        len,
+                        len / block_count as usize,
+                        |idx| quote! { a[#idx] },
+                    );
 
                     quote! {
                         #method_sig {

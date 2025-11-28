@@ -199,14 +199,14 @@ fn simd_impl(ty: &VecType) -> TokenStream {
                 | OpSig::Binary
                 | OpSig::Compare
                 | OpSig::Combine
-                | OpSig::Cvt(_, _)
-                | OpSig::Reinterpret(_, _)
+                | OpSig::Cvt { .. }
+                | OpSig::Reinterpret { .. }
                 | OpSig::Shift
         ) && let Some(args) = sig.vec_trait_args()
         {
             let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
             let call_args = match sig {
-                OpSig::Unary | OpSig::Cvt(_, _) | OpSig::Reinterpret(_, _) => quote! { self },
+                OpSig::Unary | OpSig::Cvt { .. } | OpSig::Reinterpret { .. } => quote! { self },
                 OpSig::Binary | OpSig::Compare | OpSig::Combine => {
                     quote! { self, rhs.simd_into(self.simd) }
                 }
@@ -265,8 +265,8 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
                 OpSig::Binary
                 | OpSig::Compare
                 | OpSig::Combine
-                | OpSig::Zip(_)
-                | OpSig::Unzip(_) => {
+                | OpSig::Zip { .. }
+                | OpSig::Unzip { .. } => {
                     quote! { self, rhs.simd_into(self.simd) }
                 }
                 OpSig::Ternary => {
