@@ -109,13 +109,37 @@ E.g. We might want names for these, e.g.:
 TODO: Talk about writing versions of functions which can be called in other `S: Simd` functions.
 -->
 
-# Webassembly
+# WebAssembly
 
 WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle for WASM, one with SIMD and one without,
-then select the appropriate one for your user's browser.
-TODO: Expand on this.
+then select the appropriate one for your user's browser. This can be done via [the `wasm-feature-detect`
+library](https://github.com/GoogleChromeLabs/wasm-feature-detect).
 
-## Credits
+You can compile WebAssembly with the SIMD128 feature enabled via the `RUSTFLAGS` environment variable
+(`RUSTFLAGS="-Ctarget-feature=+simd128"`), or by adding the compiler flags in your [Cargo
+config.toml](https://doc.rust-lang.org/cargo/reference/config.html):
+
+```toml
+[target.'cfg(target_arch = "wasm32")']
+rustflags = ["-Ctarget-feature=+simd128"]
+rustdocflags = ["-Ctarget-feature=+simd128"]
+```
+
+If you want to compile both SIMD and non-SIMD versions of your WebAssembly library, your best option right now is to create a shell script
+that builds it once with the `RUSTFLAGS` specified, and once without. [Cargo currently does not allow specifying compiler flags
+per-profile.](https://github.com/rust-lang/cargo/issues/10271)
+
+## Relaxed SIMD
+
+Fearless SIMD can make use of the [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
+WebAssembly instructions, if the requisite target feature is enabled. These instructions can return implementation-dependent results
+depending on what is fastest on the underlying hardware. They are only used for operations where we already give hardware-dependent results.
+
+At the time of writing, relaxed SIMD is only supported in Chrome. To make use of it, you'll need to build two versions of your library, one
+with relaxed SIMD enabled (`RUSTFLAGS="-Ctarget-feature=+simd128,+relaxed-simd"`) and one with it disabled, and then feature-detect at
+runtime.
+
+# Credits
 
 This crate was inspired by [`pulp`], [`std::simd`], among others in the Rust ecosystem, though makes many decisions differently.
 It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.

@@ -10,7 +10,7 @@ use crate::{
     arch::wasm::{self, simple_intrinsic},
     generic::{generic_combine, generic_op, generic_split},
     ops::{OpSig, TyFlavor, ops_for_type},
-    types::{SIMD_TYPES, ScalarType, type_imports},
+    types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
 
 #[derive(Clone, Copy)]
@@ -155,6 +155,30 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 }
                             }
                         }
+                        "max" | "min" if vec_ty.scalar == ScalarType::Float => {
+                            let expr = wasm::expr(method, vec_ty, &args);
+                            let relaxed_intrinsic = simple_intrinsic(
+                                if method == "max" {
+                                    "relaxed_max"
+                                } else {
+                                    "relaxed_min"
+                                },
+                                vec_ty,
+                            );
+                            let relaxed_expr = quote! { #relaxed_intrinsic ( #( #args ),* ) };
+
+                            quote! {
+                                #[cfg(target_feature = "relaxed-simd")]
+                                #method_sig {
+                                    #relaxed_expr.simd_into(self)
+                                }
+
+                                #[cfg(not(target_feature = "relaxed-simd"))]
+                                #method_sig {
+                                    #expr.simd_into(self)
+                                }
+                            }
+                        }
                         _ => {
                             let expr = wasm::expr(method, vec_ty, &args);
                             quote! {
@@ -173,8 +197,25 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             quote! {sub}
                         };
 
-                        // TODO: `relaxed-simd` has madd.
+                        let c = if method == "msub" {
+                            // WebAssembly just... forgot fused multiply-subtract? It seems the
+                            // initial proposal
+                            // (https://github.com/WebAssembly/relaxed-simd/issues/27) confused it
+                            // with negate multiply-add, and nobody ever resolved the confusion.
+                            let negate = simple_intrinsic("neg", vec_ty);
+                            quote! { #negate(c.into()) }
+                        } else {
+                            quote! { c.into() }
+                        };
+                        let relaxed_madd = simple_intrinsic("relaxed_madd", vec_ty);
+
                         quote! {
+                            #[cfg(target_feature = "relaxed-simd")]
+                            #method_sig {
+                                #relaxed_madd(a.into(), b.into(), #c).simd_into(self)
+                            }
+
+                            #[cfg(not(target_feature = "relaxed-simd"))]
                             #method_sig {
                                 a.mul(b).#first_ident(c)
                             }
@@ -193,7 +234,18 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Select => {
+                    // Rust includes unsigned versions of the lane select intrinsics, but they're
+                    // just aliases for the signed ones
+                    let lane_ty = VecType::new(ScalarType::Int, vec_ty.scalar_bits, vec_ty.len);
+                    let lane_select = simple_intrinsic("relaxed_laneselect", &lane_ty);
+
                     quote! {
+                        #[cfg(target_feature = "relaxed-simd")]
+                        #method_sig {
+                            #lane_select(b.into(), c.into(), a.into()).simd_into(self)
+                        }
+
+                        #[cfg(not(target_feature = "relaxed-simd"))]
                         #method_sig {
                             v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
                         }
