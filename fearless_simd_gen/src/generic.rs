@@ -231,6 +231,16 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
+        OpSig::MaskReduce(quantifier, _) => {
+            let combine_op = quantifier.bool_op();
+            quote! {
+                #[inline(always)]
+                fn #name(self, a: #ty_rust<Self>) -> #ret_ty {
+                    let (a0, a1) = self.#split(a);
+                    self.#do_half(a0) #combine_op self.#do_half(a1)
+                }
+            }
+        }
         OpSig::Split => generic_split(ty),
         OpSig::Combine => generic_combine(ty),
         OpSig::LoadInterleaved(block_size, count) => {

@@ -1038,6 +1038,22 @@ impl<S: Simd> crate::SimdMask<i8, S> for mask8x16<S> {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask8x16<S> {
         self.simd.simd_eq_mask8x16(self, rhs.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask8x16(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask8x16(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask8x16(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask8x16(self)
+    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(16))]
@@ -1711,6 +1727,22 @@ impl<S: Simd> crate::SimdMask<i16, S> for mask16x8<S> {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask16x8<S> {
         self.simd.simd_eq_mask16x8(self, rhs.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask16x8(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask16x8(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask16x8(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask16x8(self)
+    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(16))]
@@ -2371,6 +2403,22 @@ impl<S: Simd> crate::SimdMask<i32, S> for mask32x4<S> {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask32x4<S> {
         self.simd.simd_eq_mask32x4(self, rhs.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask32x4(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask32x4(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask32x4(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask32x4(self)
+    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(16))]
@@ -2832,6 +2880,22 @@ impl<S: Simd> crate::SimdMask<i64, S> for mask64x2<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask64x2<S> {
         self.simd.simd_eq_mask64x2(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask64x2(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask64x2(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask64x2(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask64x2(self)
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -3925,6 +3989,22 @@ impl<S: Simd> crate::SimdMask<i8, S> for mask8x32<S> {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask8x32<S> {
         self.simd.simd_eq_mask8x32(self, rhs.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask8x32(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask8x32(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask8x32(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask8x32(self)
+    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(32))]
@@ -4622,6 +4702,22 @@ impl<S: Simd> crate::SimdMask<i16, S> for mask16x16<S> {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask16x16<S> {
         self.simd.simd_eq_mask16x16(self, rhs.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask16x16(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask16x16(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask16x16(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask16x16(self)
+    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(32))]
@@ -5309,6 +5405,22 @@ impl<S: Simd> crate::SimdMask<i32, S> for mask32x8<S> {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask32x8<S> {
         self.simd.simd_eq_mask32x8(self, rhs.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask32x8(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask32x8(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask32x8(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask32x8(self)
+    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(32))]
@@ -5770,6 +5882,22 @@ impl<S: Simd> crate::SimdMask<i64, S> for mask64x4<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask64x4<S> {
         self.simd.simd_eq_mask64x4(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask64x4(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask64x4(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask64x4(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask64x4(self)
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -6955,6 +7083,22 @@ impl<S: Simd> crate::SimdMask<i8, S> for mask8x64<S> {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask8x64<S> {
         self.simd.simd_eq_mask8x64(self, rhs.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask8x64(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask8x64(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask8x64(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask8x64(self)
+    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(64))]
@@ -7691,6 +7835,22 @@ impl<S: Simd> crate::SimdMask<i16, S> for mask16x32<S> {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask16x32<S> {
         self.simd.simd_eq_mask16x32(self, rhs.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask16x32(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask16x32(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask16x32(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask16x32(self)
+    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(64))]
@@ -8393,6 +8553,22 @@ impl<S: Simd> crate::SimdMask<i32, S> for mask32x16<S> {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask32x16<S> {
         self.simd.simd_eq_mask32x16(self, rhs.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask32x16(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask32x16(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask32x16(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask32x16(self)
+    }
 }
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(64))]
@@ -8866,5 +9042,21 @@ impl<S: Simd> crate::SimdMask<i64, S> for mask64x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> mask64x8<S> {
         self.simd.simd_eq_mask64x8(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn any_true(self) -> bool {
+        self.simd.any_true_mask64x8(self)
+    }
+    #[inline(always)]
+    fn all_true(self) -> bool {
+        self.simd.all_true_mask64x8(self)
+    }
+    #[inline(always)]
+    fn any_false(self) -> bool {
+        self.simd.any_false_mask64x8(self)
+    }
+    #[inline(always)]
+    fn all_false(self) -> bool {
+        self.simd.all_false_mask64x8(self)
     }
 }

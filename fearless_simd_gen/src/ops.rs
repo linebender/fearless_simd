@@ -6,6 +6,21 @@ use quote::quote;
 
 use crate::types::{ScalarType, VecType};
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Quantifier {
+    Any,
+    All,
+}
+
+impl Quantifier {
+    pub(crate) fn bool_op(&self) -> TokenStream {
+        match self {
+            Self::Any => quote! { || },
+            Self::All => quote! { && },
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
     Splat,
@@ -23,6 +38,7 @@ pub(crate) enum OpSig {
     WidenNarrow(VecType),
     // TODO: Make clear that this is right-shift
     Shift,
+    MaskReduce(Quantifier, bool),
     // First argument is the base block size (i.e. 128), second argument
     // is how many blocks. For example, `LoadInterleaved(128, 4)` would correspond to the
     // NEON instructions `vld4q_f32`, while `LoadInterleaved(64, 4)` would correspond to
@@ -104,6 +120,10 @@ pub(crate) const MASK_OPS: &[(&str, OpSig)] = &[
     ("xor", OpSig::Binary),
     ("select", OpSig::Select),
     ("simd_eq", OpSig::Compare),
+    ("any_true", OpSig::MaskReduce(Quantifier::Any, true)),
+    ("all_true", OpSig::MaskReduce(Quantifier::All, true)),
+    ("any_false", OpSig::MaskReduce(Quantifier::Any, false)),
+    ("all_false", OpSig::MaskReduce(Quantifier::All, false)),
 ];
 
 /// Ops covered by `core::ops`
@@ -219,7 +239,8 @@ impl OpSig {
             | Self::Split
             | Self::Cvt(_, _)
             | Self::Reinterpret(_, _)
-            | Self::WidenNarrow(_) => quote! { self, a: #ty<Self> },
+            | Self::WidenNarrow(_)
+            | Self::MaskReduce(_, _) => quote! { self, a: #ty<Self> },
             Self::Binary | Self::Compare | Self::Combine | Self::Zip(_) | Self::Unzip(_) => {
                 quote! { self, a: #ty<Self>, b: #ty<Self> }
             }
@@ -241,7 +262,11 @@ impl OpSig {
             Self::Splat | Self::LoadInterleaved(_, _) | Self::StoreInterleaved(_, _) => {
                 return None;
             }
-            Self::Unary | Self::Cvt(_, _) | Self::Reinterpret(_, _) | Self::WidenNarrow(_) => {
+            Self::Unary
+            | Self::Cvt(_, _)
+            | Self::Reinterpret(_, _)
+            | Self::WidenNarrow(_)
+            | Self::MaskReduce(_, _) => {
                 quote! { self }
             }
             Self::Binary | Self::Compare | Self::Zip(_) | Self::Combine | Self::Unzip(_) => {
@@ -308,6 +333,7 @@ impl OpSig {
                 let result = t.rust();
                 quote! { #result #quant }
             }
+            Self::MaskReduce(_, _) => quote! { bool },
             Self::StoreInterleaved(_, _) => quote! {()},
         }
     }

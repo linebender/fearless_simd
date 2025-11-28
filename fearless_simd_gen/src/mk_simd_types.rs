@@ -261,7 +261,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         if let Some(args) = sig.vec_trait_args() {
             let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
             let call_args = match sig {
-                OpSig::Unary => quote! { self },
+                OpSig::Unary | OpSig::MaskReduce(_, _) => quote! { self },
                 OpSig::Binary
                 | OpSig::Compare
                 | OpSig::Combine

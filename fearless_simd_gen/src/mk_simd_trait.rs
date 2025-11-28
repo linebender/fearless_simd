@@ -198,6 +198,7 @@ fn methods_for_vec_trait(ops: &[(&str, OpSig)]) -> Vec<TokenStream> {
             let ret_ty = match sig {
                 OpSig::Compare => quote! { Self::Mask },
                 OpSig::Zip(_) => quote! { Self },
+                OpSig::MaskReduce(_, _) => quote! { bool },
                 _ => quote! { Self },
             };
             methods.push(quote! {
