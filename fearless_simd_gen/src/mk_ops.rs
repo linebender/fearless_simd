@@ -4,7 +4,10 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::types::{CoreOpTrait, SIMD_TYPES, type_imports};
+use crate::{
+    ops::{CoreOpTrait, overloaded_ops_for},
+    types::{SIMD_TYPES, type_imports},
+};
 
 pub(crate) fn mk_ops() -> TokenStream {
     let imports = type_imports();
@@ -13,7 +16,7 @@ pub(crate) fn mk_ops() -> TokenStream {
 
     for ty in SIMD_TYPES {
         let simd = ty.rust();
-        for op in ty.scalar.core_ops() {
+        for op in overloaded_ops_for(ty.scalar) {
             let opfn = op.op_fn();
             let trait_name = op.trait_name();
             let simd_name = op.simd_name();
@@ -25,6 +28,24 @@ pub(crate) fn mk_ops() -> TokenStream {
             let opfn = Ident::new(opfn, Span::call_site());
 
             match op {
+                CoreOpTrait::ShrVectored => {
+                    impls.push(quote! {
+                        impl<S: Simd> core::ops::#trait_id for #simd<S> {
+                            type Output = Self;
+                            #[inline(always)]
+                            fn #opfn(self, rhs: Self) -> Self::Output {
+                                self.simd.#simd_fn(self, rhs)
+                            }
+                        }
+
+                        impl<S: Simd> core::ops::#trait_assign_id for #simd<S> {
+                            #[inline(always)]
+                            fn #op_assign_fn(&mut self, rhs: Self) {
+                                *self = self.simd.#simd_fn(*self, rhs);
+                            }
+                        }
+                    });
+                }
                 CoreOpTrait::Shl | CoreOpTrait::Shr => {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id<u32> for #simd<S> {
@@ -42,27 +63,6 @@ pub(crate) fn mk_ops() -> TokenStream {
                             }
                         }
                     });
-
-                    if *op == CoreOpTrait::Shr {
-                        let shift_vectored_fn = format_ident!("{simd_name}v_{}", ty.rust_name());
-
-                        impls.push(quote! {
-                            impl<S: Simd> core::ops::#trait_id for #simd<S> {
-                                type Output = Self;
-                                #[inline(always)]
-                                fn #opfn(self, rhs: Self) -> Self::Output {
-                                    self.simd.#shift_vectored_fn(self, rhs)
-                                }
-                            }
-
-                            impl<S: Simd> core::ops::#trait_assign_id for #simd<S> {
-                                #[inline(always)]
-                                fn #op_assign_fn(&mut self, rhs: Self) {
-                                    *self = self.simd.#shift_vectored_fn(*self, rhs);
-                                }
-                            }
-                        });
-                    }
                 }
                 _ if op.is_unary() => {
                     impls.push(quote! {

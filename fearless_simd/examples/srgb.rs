@@ -6,7 +6,7 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use fearless_simd::{Level, Select, Simd, SimdInto, dispatch, f32x4};
+use fearless_simd::{Level, dispatch, f32x4, prelude::*};
 
 // This block shows how to use safe wrappers for compile-time enforcement
 // of using valid SIMD intrinsics.

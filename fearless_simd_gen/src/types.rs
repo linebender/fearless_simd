@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{format_ident, quote};
+use quote::quote;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) enum ScalarType {
@@ -36,110 +36,6 @@ impl ScalarType {
         let ident = Ident::new(&self.rust_name(scalar_bits), Span::call_site());
         quote! { #ident }
     }
-
-    pub(crate) fn core_ops(&self) -> &'static [CoreOpTrait] {
-        use CoreOpTrait::*;
-        match self {
-            Self::Float => &[Neg, Add, Sub, Mul, Div],
-            Self::Int => &[Neg, Add, Sub, Mul, BitAnd, BitOr, BitXor, Not, Shl, Shr],
-            Self::Unsigned => &[Add, Sub, Mul, BitAnd, BitOr, BitXor, Not, Shl, Shr],
-            Self::Mask => &[BitAnd, BitOr, BitXor, Not],
-        }
-    }
-}
-
-/// Operations on SIMD types that correspond to `core::ops` traits for overloadable operators.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(crate) enum CoreOpTrait {
-    Neg,
-    Add,
-    Sub,
-    Mul,
-    Div,
-    BitAnd,
-    BitOr,
-    BitXor,
-    Not,
-    Shl,
-    Shr,
-}
-
-impl CoreOpTrait {
-    pub(crate) fn trait_name(&self) -> &'static str {
-        match self {
-            Self::Neg => "Neg",
-            Self::Add => "Add",
-            Self::Sub => "Sub",
-            Self::Mul => "Mul",
-            Self::Div => "Div",
-            Self::BitAnd => "BitAnd",
-            Self::BitOr => "BitOr",
-            Self::BitXor => "BitXor",
-            Self::Not => "Not",
-            Self::Shl => "Shl",
-            Self::Shr => "Shr",
-        }
-    }
-
-    pub(crate) fn op_fn(&self) -> &'static str {
-        match self {
-            Self::BitAnd => "bitand",
-            Self::BitOr => "bitor",
-            Self::BitXor => "bitxor",
-            _ => self.simd_name(),
-        }
-    }
-
-    pub(crate) fn simd_name(&self) -> &'static str {
-        match self {
-            Self::Neg => "neg",
-            Self::Add => "add",
-            Self::Sub => "sub",
-            Self::Mul => "mul",
-            Self::Div => "div",
-            Self::BitAnd => "and",
-            Self::BitOr => "or",
-            Self::BitXor => "xor",
-            Self::Not => "not",
-            Self::Shl => "shl",
-            Self::Shr => "shr",
-        }
-    }
-
-    pub(crate) fn is_unary(&self) -> bool {
-        matches!(self, Self::Neg | Self::Not)
-    }
-
-    pub(crate) fn trait_bounds(&self) -> impl Iterator<Item = TokenStream> {
-        let trait_name = Ident::new(self.trait_name(), Span::call_site());
-        let trait_name_assign = format_ident!("{trait_name}Assign");
-        match self {
-            // Shifts always use a u32 as the shift amount
-            Self::Shl => vec![
-                quote! { core::ops::#trait_name<u32, Output = Self> },
-                quote! { core::ops::#trait_name_assign<u32> },
-            ]
-            .into_iter(),
-            // Right now we provide a "vectored" right shift, but no vectored left shift
-            Self::Shr => vec![
-                quote! { core::ops::#trait_name<u32, Output = Self> },
-                quote! { core::ops::#trait_name_assign<u32> },
-                quote! { core::ops::#trait_name<Output = Self> },
-                quote! { core::ops::#trait_name_assign },
-            ]
-            .into_iter(),
-            _ if self.is_unary() => {
-                vec![quote! { core::ops::#trait_name<Output = Self> }].into_iter()
-            }
-            _ => vec![
-                quote! { core::ops::#trait_name<Output = Self> },
-                quote! { core::ops::#trait_name_assign },
-                quote! { core::ops::#trait_name<Element, Output = Self> },
-                quote! { core::ops::#trait_name_assign<Element> },
-            ]
-            .into_iter(),
-        }
-    }
 }
 
 impl VecType {
@@ -172,6 +68,10 @@ impl VecType {
         quote! { #ident }
     }
 
+    pub(crate) fn reinterpret(&self, dst_scalar: ScalarType, dst_scalar_bits: usize) -> Self {
+        Self::new(dst_scalar, dst_scalar_bits, self.n_bits() / dst_scalar_bits)
+    }
+
     pub(crate) fn widened(&self) -> Option<Self> {
         if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
             || self.n_bits() > 256
@@ -198,6 +98,22 @@ impl VecType {
 
     pub(crate) fn mask_ty(&self) -> Self {
         Self::new(ScalarType::Mask, self.scalar_bits, self.len)
+    }
+
+    pub(crate) fn split_operand(&self) -> Option<Self> {
+        if self.n_bits() <= 128 {
+            return None;
+        }
+        let n2 = self.len / 2;
+        Some(Self::new(self.scalar, self.scalar_bits, n2))
+    }
+
+    pub(crate) fn combine_operand(&self) -> Option<Self> {
+        if self.n_bits() >= 512 {
+            return None;
+        }
+        let n2 = self.len * 2;
+        Some(Self::new(self.scalar, self.scalar_bits, n2))
     }
 }
 

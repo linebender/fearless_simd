@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::arch::neon::split_intrinsic;
-use crate::ops::{reinterpret_ty, valid_reinterpret};
+use crate::ops::{Op, valid_reinterpret};
 use crate::types::ScalarType;
 use crate::{
     arch::neon::{self, cvt_intrinsic, simple_intrinsic},
@@ -75,7 +75,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
         let scalar_bits = vec_ty.scalar_bits;
         let ty_name = vec_ty.rust_name();
 
-        for (method, sig) in ops_for_type(vec_ty, true) {
+        for Op { method, sig, .. } in ops_for_type(vec_ty) {
             let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
 
@@ -345,8 +345,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Combine => generic_combine(vec_ty),
-                OpSig::Split => generic_split(vec_ty),
+                OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
+                OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
                 OpSig::Zip { select_low } => {
                     let neon = if select_low { "vzip1" } else { "vzip2" };
                     let zip = simple_intrinsic(neon, vec_ty);
@@ -392,7 +392,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     scalar_bits,
                 } => {
                     if valid_reinterpret(vec_ty, target_ty, scalar_bits) {
-                        let to_ty = reinterpret_ty(vec_ty, target_ty, scalar_bits);
+                        let to_ty = vec_ty.reinterpret(target_ty, scalar_bits);
                         let neon = cvt_intrinsic("vreinterpret", &to_ty, vec_ty);
 
                         quote! {
