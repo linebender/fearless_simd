@@ -228,7 +228,7 @@ pub(crate) fn overloaded_ops_for(scalar: ScalarType) -> Vec<CoreOpTrait> {
     };
     // We prepend the negate operation only for signed integer types.
     (scalar == ScalarType::Int)
-        .then(|| CoreOpTrait::Neg)
+        .then_some(CoreOpTrait::Neg)
         .into_iter()
         .chain(base.iter().filter_map(|op| match op.kind {
             OpKind::Overloaded(core_op) => Some(core_op),
