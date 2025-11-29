@@ -231,8 +231,8 @@ impl<S: Simd> SimdCvtFloat<i32x4<S>> for f32x4<S> {
 impl<S: Simd> crate::SimdCombine<f32, S> for f32x4<S> {
     type Combined = f32x8<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_f32x4(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_f32x4(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -419,8 +419,8 @@ impl<S: Simd> crate::SimdInt<i8, S> for i8x16<S> {
 impl<S: Simd> crate::SimdCombine<i8, S> for i8x16<S> {
     type Combined = i8x32<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_i8x16(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_i8x16(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -607,8 +607,8 @@ impl<S: Simd> crate::SimdInt<u8, S> for u8x16<S> {
 impl<S: Simd> crate::SimdCombine<u8, S> for u8x16<S> {
     type Combined = u8x32<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_u8x16(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_u8x16(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -755,8 +755,8 @@ impl<S: Simd> crate::SimdMask<i8, S> for mask8x16<S> {
 impl<S: Simd> crate::SimdCombine<i8, S> for mask8x16<S> {
     type Combined = mask8x32<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_mask8x16(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_mask8x16(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -935,8 +935,8 @@ impl<S: Simd> crate::SimdInt<i16, S> for i16x8<S> {
 impl<S: Simd> crate::SimdCombine<i16, S> for i16x8<S> {
     type Combined = i16x16<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_i16x8(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_i16x8(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -1115,8 +1115,8 @@ impl<S: Simd> crate::SimdInt<u16, S> for u16x8<S> {
 impl<S: Simd> crate::SimdCombine<u16, S> for u16x8<S> {
     type Combined = u16x16<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_u16x8(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_u16x8(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -1255,8 +1255,8 @@ impl<S: Simd> crate::SimdMask<i16, S> for mask16x8<S> {
 impl<S: Simd> crate::SimdCombine<i16, S> for mask16x8<S> {
     type Combined = mask16x16<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_mask16x8(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_mask16x8(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -1431,8 +1431,8 @@ impl<S: Simd> SimdCvtTruncate<f32x4<S>> for i32x4<S> {
 impl<S: Simd> crate::SimdCombine<i32, S> for i32x4<S> {
     type Combined = i32x8<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_i32x4(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_i32x4(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -1607,8 +1607,8 @@ impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
 impl<S: Simd> crate::SimdCombine<u32, S> for u32x4<S> {
     type Combined = u32x8<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_u32x4(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_u32x4(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -1738,8 +1738,8 @@ impl<S: Simd> crate::SimdMask<i32, S> for mask32x4<S> {
 impl<S: Simd> crate::SimdCombine<i32, S> for mask32x4<S> {
     type Combined = mask32x8<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_mask32x4(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_mask32x4(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -1959,8 +1959,8 @@ impl<S: Simd> crate::SimdFloat<f64, S> for f64x2<S> {
 impl<S: Simd> crate::SimdCombine<f64, S> for f64x2<S> {
     type Combined = f64x4<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_f64x2(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_f64x2(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -2090,8 +2090,8 @@ impl<S: Simd> crate::SimdMask<i64, S> for mask64x2<S> {
 impl<S: Simd> crate::SimdCombine<i64, S> for mask64x2<S> {
     type Combined = mask64x4<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_mask64x2(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_mask64x2(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -2337,8 +2337,8 @@ impl<S: Simd> crate::SimdSplit<f32, S> for f32x8<S> {
 impl<S: Simd> crate::SimdCombine<f32, S> for f32x8<S> {
     type Combined = f32x16<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_f32x8(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_f32x8(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -2548,8 +2548,8 @@ impl<S: Simd> crate::SimdSplit<i8, S> for i8x32<S> {
 impl<S: Simd> crate::SimdCombine<i8, S> for i8x32<S> {
     type Combined = i8x64<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_i8x32(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_i8x32(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -2759,8 +2759,8 @@ impl<S: Simd> crate::SimdSplit<u8, S> for u8x32<S> {
 impl<S: Simd> crate::SimdCombine<u8, S> for u8x32<S> {
     type Combined = u8x64<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_u8x32(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_u8x32(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -2930,8 +2930,8 @@ impl<S: Simd> crate::SimdSplit<i8, S> for mask8x32<S> {
 impl<S: Simd> crate::SimdCombine<i8, S> for mask8x32<S> {
     type Combined = mask8x64<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_mask8x32(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_mask8x32(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -3125,8 +3125,8 @@ impl<S: Simd> crate::SimdSplit<i16, S> for i16x16<S> {
 impl<S: Simd> crate::SimdCombine<i16, S> for i16x16<S> {
     type Combined = i16x32<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_i16x16(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_i16x16(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -3320,8 +3320,8 @@ impl<S: Simd> crate::SimdSplit<u16, S> for u16x16<S> {
 impl<S: Simd> crate::SimdCombine<u16, S> for u16x16<S> {
     type Combined = u16x32<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_u16x16(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_u16x16(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -3475,8 +3475,8 @@ impl<S: Simd> crate::SimdSplit<i16, S> for mask16x16<S> {
 impl<S: Simd> crate::SimdCombine<i16, S> for mask16x16<S> {
     type Combined = mask16x32<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_mask16x16(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_mask16x16(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -3667,8 +3667,8 @@ impl<S: Simd> crate::SimdSplit<i32, S> for i32x8<S> {
 impl<S: Simd> crate::SimdCombine<i32, S> for i32x8<S> {
     type Combined = i32x16<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_i32x8(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_i32x8(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -3859,8 +3859,8 @@ impl<S: Simd> crate::SimdSplit<u32, S> for u32x8<S> {
 impl<S: Simd> crate::SimdCombine<u32, S> for u32x8<S> {
     type Combined = u32x16<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_u32x8(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_u32x8(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -4006,8 +4006,8 @@ impl<S: Simd> crate::SimdSplit<i32, S> for mask32x8<S> {
 impl<S: Simd> crate::SimdCombine<i32, S> for mask32x8<S> {
     type Combined = mask32x16<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_mask32x8(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_mask32x8(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -4234,8 +4234,8 @@ impl<S: Simd> crate::SimdSplit<f64, S> for f64x4<S> {
 impl<S: Simd> crate::SimdCombine<f64, S> for f64x4<S> {
     type Combined = f64x8<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_f64x4(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_f64x4(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
@@ -4372,8 +4372,8 @@ impl<S: Simd> crate::SimdSplit<i64, S> for mask64x4<S> {
 impl<S: Simd> crate::SimdCombine<i64, S> for mask64x4<S> {
     type Combined = mask64x8<S>;
     #[inline(always)]
-    fn combine(self, rhs: Self) -> Self::Combined {
-        self.simd.combine_mask64x4(self, rhs)
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+        self.simd.combine_mask64x4(self, rhs.simd_into(self.simd))
     }
 }
 #[derive(Clone, Copy, Debug)]
