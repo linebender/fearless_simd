@@ -936,7 +936,7 @@ pub(crate) fn handle_reinterpret(
     target_ty: ScalarType,
     scalar_bits: usize,
 ) -> TokenStream {
-    let dst_ty = VecType::new(target_ty, scalar_bits, vec_ty.n_bits() / scalar_bits);
+    let dst_ty = vec_ty.reinterpret(target_ty, scalar_bits);
     assert!(
         valid_reinterpret(vec_ty, target_ty, scalar_bits),
         "{vec_ty:?} must be reinterpretable as {dst_ty:?}"

@@ -554,7 +554,7 @@ impl OpSig {
                 target_ty,
                 scalar_bits,
             } => {
-                let result = reinterpret_ty(ty, *target_ty, *scalar_bits).rust();
+                let result = ty.reinterpret(*target_ty, *scalar_bits).rust();
                 quote! { #result #quant }
             }
             Self::WidenNarrow { target_ty } => {
@@ -585,10 +585,6 @@ pub(crate) fn store_interleaved_arg_ty(
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
     quote! { a: #ty<Self>, dest: &mut [#scalar; #len] }
-}
-
-pub(crate) fn reinterpret_ty(src: &VecType, dst_scalar: ScalarType, dst_bits: usize) -> VecType {
-    VecType::new(dst_scalar, dst_bits, src.n_bits() / dst_bits)
 }
 
 pub(crate) fn valid_reinterpret(src: &VecType, dst_scalar: ScalarType, dst_bits: usize) -> bool {

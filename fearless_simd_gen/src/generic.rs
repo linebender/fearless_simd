@@ -4,7 +4,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::ops::{load_interleaved_arg_ty, reinterpret_ty, store_interleaved_arg_ty};
+use crate::ops::{load_interleaved_arg_ty, store_interleaved_arg_ty};
 use crate::{
     ops::{OpSig, TyFlavor},
     types::{ScalarType, VecType},
@@ -219,7 +219,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             target_ty,
             scalar_bits,
         } => {
-            let mut half = reinterpret_ty(ty, target_ty, scalar_bits);
+            let mut half = ty.reinterpret(target_ty, scalar_bits);
             half.len /= 2;
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
             quote! {
