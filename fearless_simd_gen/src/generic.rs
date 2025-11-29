@@ -212,10 +212,10 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             }
         }
         OpSig::Reinterpret {
-            target_ty: target,
+            target_ty,
             scalar_bits,
         } => {
-            let mut half = reinterpret_ty(ty, target, scalar_bits);
+            let mut half = reinterpret_ty(ty, target_ty, scalar_bits);
             half.len /= 2;
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
             quote! {

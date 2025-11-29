@@ -387,7 +387,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::WidenNarrow { target_ty: target } => {
+                OpSig::WidenNarrow { target_ty } => {
                     match method {
                         "widen" => {
                             assert_eq!(
@@ -396,7 +396,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 "Currently only u8x16 -> u16x16 widening is supported"
                             );
                             assert_eq!(
-                                target.rust_name(),
+                                target_ty.rust_name(),
                                 "u16x16",
                                 "Currently only u8x16 -> u16x16 widening is supported"
                             );
@@ -415,7 +415,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 "Currently only u16x16 -> u8x16 narrowing is supported"
                             );
                             assert_eq!(
-                                target.rust_name(),
+                                target_ty.rust_name(),
                                 "u8x16",
                                 "Currently only u16x16 -> u8x16 narrowing is supported"
                             );
