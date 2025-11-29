@@ -131,7 +131,7 @@ pub trait SimdCvtFloat<T> {
 
 pub trait SimdCombine<Element: SimdElement, S: Simd>: SimdBase<Element, S> {
     type Combined: SimdBase<Element, S, Block = Self::Block>;
-    fn combine(self, rhs: Self) -> Self::Combined;
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined;
 }
 
 pub trait SimdSplit<Element: SimdElement, S: Simd>: SimdBase<Element, S> {

@@ -122,8 +122,8 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     type Combined = #combined_ty_rust<S>;
 
                     #[inline(always)]
-                    fn combine(self, rhs: Self) -> Self::Combined {
-                        self.simd.#combine_method(self, rhs)
+                    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+                        self.simd.#combine_method(self, rhs.simd_into(self.simd))
                     }
                 }
             });
