@@ -49,7 +49,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 }
             }
         };
-        let impl_block = simd_impl(ty);
+        let impl_block = simd_vec_impl(ty);
         let simd_from_items = make_list(
             (0..ty.len)
                 .map(|idx| quote! { val[#idx] })
@@ -214,44 +214,6 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         });
     }
     result
-}
-
-/// Create the impl block for the type
-///
-/// This may go away, as possibly all methods will be subsumed by the `vec_impl`.
-fn simd_impl(ty: &VecType) -> TokenStream {
-    let name = ty.rust();
-    let mut methods = vec![];
-    for (method, sig) in ops_for_type(ty, true) {
-        // Eventually, we should get rid of all inherent methods. Right now, we keep the "convert" operations (used for
-        // converting between floats and integers; there's a trait for this, but type inference makes it annoying to
-        // use).
-        if matches!(sig, OpSig::Cvt { .. })
-            && let Some(args) = sig.vec_trait_args()
-        {
-            let method_name = Ident::new(method, Span::call_site());
-            let trait_method = generic_op_name(method, ty);
-            let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
-            let call_args = match sig {
-                OpSig::Cvt { .. } => quote! { self },
-                _ => unimplemented!(),
-            };
-            methods.push(quote! {
-                #[inline(always)]
-                pub fn #method_name(#args) -> #ret_ty {
-                    self.simd.#trait_method(#call_args)
-                }
-            });
-        }
-    }
-
-    let vec_impl = simd_vec_impl(ty);
-    quote! {
-        impl<S: Simd> #name<S> {
-            #( #methods )*
-        }
-        #vec_impl
-    }
 }
 
 fn simd_vec_impl(ty: &VecType) -> TokenStream {
