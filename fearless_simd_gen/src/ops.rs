@@ -4,7 +4,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::types::{ScalarType, VecType};
+use crate::types::{CoreOpTrait, ScalarType, VecType};
 
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
@@ -59,130 +59,234 @@ pub(crate) enum OpSig {
     StoreInterleaved { block_size: u16, block_count: u16 },
 }
 
-pub(crate) const FLOAT_OPS: &[(&str, OpSig)] = &[
-    ("splat", OpSig::Splat),
-    ("abs", OpSig::Unary),
-    ("neg", OpSig::Unary),
-    ("sqrt", OpSig::Unary),
-    ("add", OpSig::Binary),
-    ("sub", OpSig::Binary),
-    ("mul", OpSig::Binary),
-    ("div", OpSig::Binary),
-    ("copysign", OpSig::Binary),
-    ("simd_eq", OpSig::Compare),
-    ("simd_lt", OpSig::Compare),
-    ("simd_le", OpSig::Compare),
-    ("simd_ge", OpSig::Compare),
-    ("simd_gt", OpSig::Compare),
-    ("zip_low", OpSig::Zip { select_low: true }),
-    ("zip_high", OpSig::Zip { select_low: false }),
-    ("unzip_low", OpSig::Unzip { select_even: true }),
-    ("unzip_high", OpSig::Unzip { select_even: false }),
-    // The non-precise max/min are *allowed*, but not required, to return NaN if either operand is NaN.
-    //
-    // TODO: document the behavior of max/min vs max_precise/min_precise once we generate documentation.
-    ("max", OpSig::Binary),
-    ("min", OpSig::Binary),
-    // The precise max/min are guaranteed to return a non-NaN result if at most one operand is non-NaN.
-    ("max_precise", OpSig::Binary),
-    ("min_precise", OpSig::Binary),
-    ("madd", OpSig::Ternary),
-    ("msub", OpSig::Ternary),
-    ("floor", OpSig::Unary),
-    ("ceil", OpSig::Unary),
-    ("round_ties_even", OpSig::Unary),
-    ("fract", OpSig::Unary),
-    ("trunc", OpSig::Unary),
-    // TODO: simd_ne, but this requires additional implementation work on Neon
-    ("select", OpSig::Select),
+/// Where this operation is defined, and how it is called.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum OpKind {
+    /// This operation is implemented as a `core::ops` overloaded operation (e.g. `core::ops::Add`).
+    Overloaded(CoreOpTrait),
+    /// This operation is a method on the `SimdBase` type.
+    BaseTraitMethod,
+    /// This operation is a method on the `SimdInt`, `SimdFloat`, or `SimdMask` type.
+    VecTraitMethod,
+    /// This operation is a method on its own bespoke trait.
+    OwnTrait,
+    /// This operation is only available as a method on the `Simd` trait.
+    AssociatedOnly,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct Op {
+    pub(crate) method: &'static str,
+    pub(crate) kind: OpKind,
+    pub(crate) sig: OpSig,
+}
+
+impl Op {
+    const fn new(method: &'static str, kind: OpKind, sig: OpSig) -> Self {
+        Self { method, kind, sig }
+    }
+}
+
+const FLOAT_OPS: &[Op] = &[
+    Op::new("splat", OpKind::BaseTraitMethod, OpSig::Splat),
+    Op::new("abs", OpKind::VecTraitMethod, OpSig::Unary),
+    Op::new("neg", OpKind::Overloaded(CoreOpTrait::Neg), OpSig::Unary),
+    Op::new("sqrt", OpKind::VecTraitMethod, OpSig::Unary),
+    Op::new("add", OpKind::Overloaded(CoreOpTrait::Add), OpSig::Binary),
+    Op::new("sub", OpKind::Overloaded(CoreOpTrait::Sub), OpSig::Binary),
+    Op::new("mul", OpKind::Overloaded(CoreOpTrait::Mul), OpSig::Binary),
+    Op::new("div", OpKind::Overloaded(CoreOpTrait::Div), OpSig::Binary),
+    Op::new("copysign", OpKind::VecTraitMethod, OpSig::Binary),
+    Op::new("simd_eq", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new("simd_lt", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new("simd_le", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new("simd_ge", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new("simd_gt", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new(
+        "zip_low",
+        OpKind::VecTraitMethod,
+        OpSig::Zip { select_low: true },
+    ),
+    Op::new(
+        "zip_high",
+        OpKind::VecTraitMethod,
+        OpSig::Zip { select_low: false },
+    ),
+    Op::new(
+        "unzip_low",
+        OpKind::VecTraitMethod,
+        OpSig::Unzip { select_even: true },
+    ),
+    Op::new(
+        "unzip_high",
+        OpKind::VecTraitMethod,
+        OpSig::Unzip { select_even: false },
+    ),
+    Op::new("max", OpKind::VecTraitMethod, OpSig::Binary),
+    Op::new("min", OpKind::VecTraitMethod, OpSig::Binary),
+    Op::new("max_precise", OpKind::VecTraitMethod, OpSig::Binary),
+    Op::new("min_precise", OpKind::VecTraitMethod, OpSig::Binary),
+    Op::new("madd", OpKind::VecTraitMethod, OpSig::Ternary),
+    Op::new("msub", OpKind::VecTraitMethod, OpSig::Ternary),
+    Op::new("floor", OpKind::VecTraitMethod, OpSig::Unary),
+    Op::new("ceil", OpKind::VecTraitMethod, OpSig::Unary),
+    Op::new("round_ties_even", OpKind::VecTraitMethod, OpSig::Unary),
+    Op::new("fract", OpKind::VecTraitMethod, OpSig::Unary),
+    Op::new("trunc", OpKind::VecTraitMethod, OpSig::Unary),
+    Op::new("select", OpKind::OwnTrait, OpSig::Select),
 ];
 
-pub(crate) const INT_OPS: &[(&str, OpSig)] = &[
-    ("splat", OpSig::Splat),
-    ("not", OpSig::Unary),
-    ("add", OpSig::Binary),
-    ("sub", OpSig::Binary),
-    ("mul", OpSig::Binary),
-    ("and", OpSig::Binary),
-    ("or", OpSig::Binary),
-    ("xor", OpSig::Binary),
-    ("shr", OpSig::Shift),
-    // Shift right by vector
-    ("shrv", OpSig::Binary),
-    ("shl", OpSig::Shift),
-    ("simd_eq", OpSig::Compare),
-    ("simd_lt", OpSig::Compare),
-    ("simd_le", OpSig::Compare),
-    ("simd_ge", OpSig::Compare),
-    ("simd_gt", OpSig::Compare),
-    ("zip_low", OpSig::Zip { select_low: true }),
-    ("zip_high", OpSig::Zip { select_low: false }),
-    ("unzip_low", OpSig::Unzip { select_even: true }),
-    ("unzip_high", OpSig::Unzip { select_even: false }),
-    ("select", OpSig::Select),
-    ("min", OpSig::Binary),
-    ("max", OpSig::Binary),
+const INT_OPS: &[Op] = &[
+    Op::new("splat", OpKind::BaseTraitMethod, OpSig::Splat),
+    Op::new("add", OpKind::Overloaded(CoreOpTrait::Add), OpSig::Binary),
+    Op::new("sub", OpKind::Overloaded(CoreOpTrait::Sub), OpSig::Binary),
+    Op::new("mul", OpKind::Overloaded(CoreOpTrait::Mul), OpSig::Binary),
+    Op::new(
+        "and",
+        OpKind::Overloaded(CoreOpTrait::BitAnd),
+        OpSig::Binary,
+    ),
+    Op::new("or", OpKind::Overloaded(CoreOpTrait::BitOr), OpSig::Binary),
+    Op::new(
+        "xor",
+        OpKind::Overloaded(CoreOpTrait::BitXor),
+        OpSig::Binary,
+    ),
+    Op::new("not", OpKind::Overloaded(CoreOpTrait::Not), OpSig::Unary),
+    Op::new("shl", OpKind::Overloaded(CoreOpTrait::Shl), OpSig::Shift),
+    Op::new("shr", OpKind::Overloaded(CoreOpTrait::Shr), OpSig::Shift),
+    Op::new(
+        "shrv",
+        OpKind::Overloaded(CoreOpTrait::ShrVectored),
+        OpSig::Binary,
+    ),
+    Op::new("simd_eq", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new("simd_lt", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new("simd_le", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new("simd_ge", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new("simd_gt", OpKind::VecTraitMethod, OpSig::Compare),
+    Op::new(
+        "zip_low",
+        OpKind::VecTraitMethod,
+        OpSig::Zip { select_low: true },
+    ),
+    Op::new(
+        "zip_high",
+        OpKind::VecTraitMethod,
+        OpSig::Zip { select_low: false },
+    ),
+    Op::new(
+        "unzip_low",
+        OpKind::VecTraitMethod,
+        OpSig::Unzip { select_even: true },
+    ),
+    Op::new(
+        "unzip_high",
+        OpKind::VecTraitMethod,
+        OpSig::Unzip { select_even: false },
+    ),
+    Op::new("select", OpKind::OwnTrait, OpSig::Select),
+    Op::new("min", OpKind::VecTraitMethod, OpSig::Binary),
+    Op::new("max", OpKind::VecTraitMethod, OpSig::Binary),
 ];
 
-pub(crate) const MASK_OPS: &[(&str, OpSig)] = &[
-    ("splat", OpSig::Splat),
-    ("not", OpSig::Unary),
-    ("and", OpSig::Binary),
-    ("or", OpSig::Binary),
-    ("xor", OpSig::Binary),
-    ("select", OpSig::Select),
-    ("simd_eq", OpSig::Compare),
+const MASK_OPS: &[Op] = &[
+    Op::new("splat", OpKind::BaseTraitMethod, OpSig::Splat),
+    Op::new(
+        "and",
+        OpKind::Overloaded(CoreOpTrait::BitAnd),
+        OpSig::Binary,
+    ),
+    Op::new("or", OpKind::Overloaded(CoreOpTrait::BitOr), OpSig::Binary),
+    Op::new(
+        "xor",
+        OpKind::Overloaded(CoreOpTrait::BitXor),
+        OpSig::Binary,
+    ),
+    Op::new("not", OpKind::Overloaded(CoreOpTrait::Not), OpSig::Unary),
+    Op::new("select", OpKind::VecTraitMethod, OpSig::Select),
+    Op::new("simd_eq", OpKind::VecTraitMethod, OpSig::Compare),
 ];
 
-/// Ops covered by `core::ops`
-pub(crate) const CORE_OPS: &[&str] = &[
-    "not", "neg", "add", "sub", "mul", "div", "and", "or", "xor", "shr", "shrv", "shl",
-];
+pub(crate) fn vec_trait_ops_for(scalar: ScalarType) -> Vec<Op> {
+    let base = match scalar {
+        ScalarType::Float => FLOAT_OPS,
+        ScalarType::Int | ScalarType::Unsigned => INT_OPS,
+        ScalarType::Mask => MASK_OPS,
+    };
+    base.iter()
+        .filter(|op| matches!(op.kind, OpKind::VecTraitMethod))
+        .copied()
+        .collect()
+}
 
-pub(crate) fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
+pub(crate) fn overloaded_ops_for(scalar: ScalarType) -> Vec<CoreOpTrait> {
+    let base = match scalar {
+        ScalarType::Float => FLOAT_OPS,
+        ScalarType::Int | ScalarType::Unsigned => INT_OPS,
+        ScalarType::Mask => MASK_OPS,
+    };
+    // We prepend the negate operation only for signed integer types.
+    (scalar == ScalarType::Int)
+        .then(|| CoreOpTrait::Neg)
+        .into_iter()
+        .chain(base.iter().filter_map(|op| match op.kind {
+            OpKind::Overloaded(core_op) => Some(core_op),
+            _ => None,
+        }))
+        .collect()
+}
+
+pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
     let base = match ty.scalar {
         ScalarType::Float => FLOAT_OPS,
         ScalarType::Int | ScalarType::Unsigned => INT_OPS,
         ScalarType::Mask => MASK_OPS,
     };
     let mut ops = base.to_vec();
+
     if ty.n_bits() < 512 {
-        ops.push(("combine", OpSig::Combine));
+        ops.push(Op::new("combine", OpKind::OwnTrait, OpSig::Combine));
     }
     if ty.n_bits() > 128 {
-        ops.push(("split", OpSig::Split));
+        ops.push(Op::new("split", OpKind::OwnTrait, OpSig::Split));
     }
     if ty.scalar == ScalarType::Int {
-        ops.push(("neg", OpSig::Unary));
+        ops.push(Op::new(
+            "neg",
+            OpKind::Overloaded(CoreOpTrait::Neg),
+            OpSig::Unary,
+        ));
     }
 
     if ty.scalar == ScalarType::Float {
-        if cvt {
-            if ty.scalar_bits == 64 {
-                ops.push((
-                    "reinterpret_f32",
-                    OpSig::Reinterpret {
-                        target_ty: ScalarType::Float,
-                        scalar_bits: 32,
-                    },
-                ));
-            } else {
-                ops.push((
-                    "reinterpret_f64",
-                    OpSig::Reinterpret {
-                        target_ty: ScalarType::Float,
-                        scalar_bits: 64,
-                    },
-                ));
+        if ty.scalar_bits == 64 {
+            ops.push(Op::new(
+                "reinterpret_f32",
+                OpKind::AssociatedOnly,
+                OpSig::Reinterpret {
+                    target_ty: ScalarType::Float,
+                    scalar_bits: 32,
+                },
+            ));
+        } else {
+            ops.push(Op::new(
+                "reinterpret_f64",
+                OpKind::AssociatedOnly,
+                OpSig::Reinterpret {
+                    target_ty: ScalarType::Float,
+                    scalar_bits: 64,
+                },
+            ));
 
-                ops.push((
-                    "reinterpret_i32",
-                    OpSig::Reinterpret {
-                        target_ty: ScalarType::Int,
-                        scalar_bits: 32,
-                    },
-                ));
-            }
+            ops.push(Op::new(
+                "reinterpret_i32",
+                OpKind::AssociatedOnly,
+                OpSig::Reinterpret {
+                    target_ty: ScalarType::Int,
+                    scalar_bits: 32,
+                },
+            ));
         }
 
         if ty.scalar_bits == 64 {
@@ -191,8 +295,9 @@ pub(crate) fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
     }
 
     if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
-        ops.push((
+        ops.push(Op::new(
             "load_interleaved_128",
+            OpKind::AssociatedOnly,
             OpSig::LoadInterleaved {
                 block_size: 128,
                 block_count: 4,
@@ -201,8 +306,9 @@ pub(crate) fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
     }
 
     if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
-        ops.push((
+        ops.push(Op::new(
             "store_interleaved_128",
+            OpKind::AssociatedOnly,
             OpSig::StoreInterleaved {
                 block_size: 128,
                 block_count: 4,
@@ -210,70 +316,82 @@ pub(crate) fn ops_for_type(ty: &VecType, cvt: bool) -> Vec<(&str, OpSig)> {
         ));
     }
 
-    if cvt {
-        if matches!(ty.scalar, ScalarType::Unsigned) {
-            if let Some(target_ty) = ty.widened() {
-                ops.push(("widen", OpSig::WidenNarrow { target_ty }));
-            }
-
-            if let Some(target_ty) = ty.narrowed() {
-                ops.push(("narrow", OpSig::WidenNarrow { target_ty }));
-            }
-        }
-
-        if valid_reinterpret(ty, ScalarType::Unsigned, 8) {
-            ops.push((
-                "reinterpret_u8",
-                OpSig::Reinterpret {
-                    target_ty: ScalarType::Unsigned,
-                    scalar_bits: 8,
-                },
+    if matches!(ty.scalar, ScalarType::Unsigned) {
+        if let Some(target_ty) = ty.widened() {
+            ops.push(Op::new(
+                "widen",
+                OpKind::AssociatedOnly,
+                OpSig::WidenNarrow { target_ty },
             ));
         }
 
-        if valid_reinterpret(ty, ScalarType::Unsigned, 32) {
-            ops.push((
-                "reinterpret_u32",
-                OpSig::Reinterpret {
+        if let Some(target_ty) = ty.narrowed() {
+            ops.push(Op::new(
+                "narrow",
+                OpKind::AssociatedOnly,
+                OpSig::WidenNarrow { target_ty },
+            ));
+        }
+    }
+
+    if valid_reinterpret(ty, ScalarType::Unsigned, 8) {
+        ops.push(Op::new(
+            "reinterpret_u8",
+            OpKind::AssociatedOnly,
+            OpSig::Reinterpret {
+                target_ty: ScalarType::Unsigned,
+                scalar_bits: 8,
+            },
+        ));
+    }
+
+    if valid_reinterpret(ty, ScalarType::Unsigned, 32) {
+        ops.push(Op::new(
+            "reinterpret_u32",
+            OpKind::AssociatedOnly,
+            OpSig::Reinterpret {
+                target_ty: ScalarType::Unsigned,
+                scalar_bits: 32,
+            },
+        ));
+    }
+
+    match (ty.scalar, ty.scalar_bits) {
+        (ScalarType::Float, 32) => {
+            ops.push(Op::new(
+                "cvt_u32",
+                OpKind::OwnTrait,
+                OpSig::Cvt {
                     target_ty: ScalarType::Unsigned,
                     scalar_bits: 32,
                 },
             ));
-        }
-
-        match (ty.scalar, ty.scalar_bits) {
-            (ScalarType::Float, 32) => {
-                ops.push((
-                    "cvt_u32",
-                    OpSig::Cvt {
-                        target_ty: ScalarType::Unsigned,
-                        scalar_bits: 32,
-                    },
-                ));
-                ops.push((
-                    "cvt_i32",
-                    OpSig::Cvt {
-                        target_ty: ScalarType::Int,
-                        scalar_bits: 32,
-                    },
-                ));
-            }
-            (ScalarType::Unsigned, 32) => ops.push((
-                "cvt_f32",
+            ops.push(Op::new(
+                "cvt_i32",
+                OpKind::OwnTrait,
                 OpSig::Cvt {
-                    target_ty: ScalarType::Float,
+                    target_ty: ScalarType::Int,
                     scalar_bits: 32,
                 },
-            )),
-            (ScalarType::Int, 32) => ops.push((
-                "cvt_f32",
-                OpSig::Cvt {
-                    target_ty: ScalarType::Float,
-                    scalar_bits: 32,
-                },
-            )),
-            _ => (),
+            ));
         }
+        (ScalarType::Unsigned, 32) => ops.push(Op::new(
+            "cvt_f32",
+            OpKind::OwnTrait,
+            OpSig::Cvt {
+                target_ty: ScalarType::Float,
+                scalar_bits: 32,
+            },
+        )),
+        (ScalarType::Int, 32) => ops.push(Op::new(
+            "cvt_f32",
+            OpKind::OwnTrait,
+            OpSig::Cvt {
+                target_ty: ScalarType::Float,
+                scalar_bits: 32,
+            },
+        )),
+        _ => (),
     }
 
     ops

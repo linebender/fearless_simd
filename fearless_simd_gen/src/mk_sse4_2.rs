@@ -7,7 +7,7 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{generic_combine, generic_op, generic_op_name, generic_split, scalar_binary};
-use crate::ops::{OpSig, TyFlavor, ops_for_type, valid_reinterpret};
+use crate::ops::{Op, OpSig, TyFlavor, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -74,7 +74,7 @@ fn mk_simd_impl() -> TokenStream {
     let level_tok = Level.token();
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
-        for (method, sig) in ops_for_type(vec_ty, true) {
+        for Op { method, sig, .. } in ops_for_type(vec_ty) {
             let too_wide = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
 

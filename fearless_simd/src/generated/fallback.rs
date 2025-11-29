@@ -418,28 +418,6 @@ impl Simd for Fallback {
         [val; 16usize].simd_into(self)
     }
     #[inline(always)]
-    fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        [
-            i8::not(a[0usize]),
-            i8::not(a[1usize]),
-            i8::not(a[2usize]),
-            i8::not(a[3usize]),
-            i8::not(a[4usize]),
-            i8::not(a[5usize]),
-            i8::not(a[6usize]),
-            i8::not(a[7usize]),
-            i8::not(a[8usize]),
-            i8::not(a[9usize]),
-            i8::not(a[10usize]),
-            i8::not(a[11usize]),
-            i8::not(a[12usize]),
-            i8::not(a[13usize]),
-            i8::not(a[14usize]),
-            i8::not(a[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         [
             i8::wrapping_add(a[0usize], b[0usize]),
@@ -572,6 +550,50 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        [
+            i8::not(a[0usize]),
+            i8::not(a[1usize]),
+            i8::not(a[2usize]),
+            i8::not(a[3usize]),
+            i8::not(a[4usize]),
+            i8::not(a[5usize]),
+            i8::not(a[6usize]),
+            i8::not(a[7usize]),
+            i8::not(a[8usize]),
+            i8::not(a[9usize]),
+            i8::not(a[10usize]),
+            i8::not(a[11usize]),
+            i8::not(a[12usize]),
+            i8::not(a[13usize]),
+            i8::not(a[14usize]),
+            i8::not(a[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
+        [
+            i8::shl(a[0usize], shift as i8),
+            i8::shl(a[1usize], shift as i8),
+            i8::shl(a[2usize], shift as i8),
+            i8::shl(a[3usize], shift as i8),
+            i8::shl(a[4usize], shift as i8),
+            i8::shl(a[5usize], shift as i8),
+            i8::shl(a[6usize], shift as i8),
+            i8::shl(a[7usize], shift as i8),
+            i8::shl(a[8usize], shift as i8),
+            i8::shl(a[9usize], shift as i8),
+            i8::shl(a[10usize], shift as i8),
+            i8::shl(a[11usize], shift as i8),
+            i8::shl(a[12usize], shift as i8),
+            i8::shl(a[13usize], shift as i8),
+            i8::shl(a[14usize], shift as i8),
+            i8::shl(a[15usize], shift as i8),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         [
             i8::shr(a[0usize], shift as i8),
@@ -612,28 +634,6 @@ impl Simd for Fallback {
             i8::shr(a[13usize], &b[13usize]),
             i8::shr(a[14usize], &b[14usize]),
             i8::shr(a[15usize], &b[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
-        [
-            i8::shl(a[0usize], shift as i8),
-            i8::shl(a[1usize], shift as i8),
-            i8::shl(a[2usize], shift as i8),
-            i8::shl(a[3usize], shift as i8),
-            i8::shl(a[4usize], shift as i8),
-            i8::shl(a[5usize], shift as i8),
-            i8::shl(a[6usize], shift as i8),
-            i8::shl(a[7usize], shift as i8),
-            i8::shl(a[8usize], shift as i8),
-            i8::shl(a[9usize], shift as i8),
-            i8::shl(a[10usize], shift as i8),
-            i8::shl(a[11usize], shift as i8),
-            i8::shl(a[12usize], shift as i8),
-            i8::shl(a[13usize], shift as i8),
-            i8::shl(a[14usize], shift as i8),
-            i8::shl(a[15usize], shift as i8),
         ]
         .simd_into(self)
     }
@@ -914,28 +914,6 @@ impl Simd for Fallback {
         [val; 16usize].simd_into(self)
     }
     #[inline(always)]
-    fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        [
-            u8::not(a[0usize]),
-            u8::not(a[1usize]),
-            u8::not(a[2usize]),
-            u8::not(a[3usize]),
-            u8::not(a[4usize]),
-            u8::not(a[5usize]),
-            u8::not(a[6usize]),
-            u8::not(a[7usize]),
-            u8::not(a[8usize]),
-            u8::not(a[9usize]),
-            u8::not(a[10usize]),
-            u8::not(a[11usize]),
-            u8::not(a[12usize]),
-            u8::not(a[13usize]),
-            u8::not(a[14usize]),
-            u8::not(a[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         [
             u8::wrapping_add(a[0usize], b[0usize]),
@@ -1068,6 +1046,50 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        [
+            u8::not(a[0usize]),
+            u8::not(a[1usize]),
+            u8::not(a[2usize]),
+            u8::not(a[3usize]),
+            u8::not(a[4usize]),
+            u8::not(a[5usize]),
+            u8::not(a[6usize]),
+            u8::not(a[7usize]),
+            u8::not(a[8usize]),
+            u8::not(a[9usize]),
+            u8::not(a[10usize]),
+            u8::not(a[11usize]),
+            u8::not(a[12usize]),
+            u8::not(a[13usize]),
+            u8::not(a[14usize]),
+            u8::not(a[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
+        [
+            u8::shl(a[0usize], shift as u8),
+            u8::shl(a[1usize], shift as u8),
+            u8::shl(a[2usize], shift as u8),
+            u8::shl(a[3usize], shift as u8),
+            u8::shl(a[4usize], shift as u8),
+            u8::shl(a[5usize], shift as u8),
+            u8::shl(a[6usize], shift as u8),
+            u8::shl(a[7usize], shift as u8),
+            u8::shl(a[8usize], shift as u8),
+            u8::shl(a[9usize], shift as u8),
+            u8::shl(a[10usize], shift as u8),
+            u8::shl(a[11usize], shift as u8),
+            u8::shl(a[12usize], shift as u8),
+            u8::shl(a[13usize], shift as u8),
+            u8::shl(a[14usize], shift as u8),
+            u8::shl(a[15usize], shift as u8),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         [
             u8::shr(a[0usize], shift as u8),
@@ -1108,28 +1130,6 @@ impl Simd for Fallback {
             u8::shr(a[13usize], &b[13usize]),
             u8::shr(a[14usize], &b[14usize]),
             u8::shr(a[15usize], &b[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
-        [
-            u8::shl(a[0usize], shift as u8),
-            u8::shl(a[1usize], shift as u8),
-            u8::shl(a[2usize], shift as u8),
-            u8::shl(a[3usize], shift as u8),
-            u8::shl(a[4usize], shift as u8),
-            u8::shl(a[5usize], shift as u8),
-            u8::shl(a[6usize], shift as u8),
-            u8::shl(a[7usize], shift as u8),
-            u8::shl(a[8usize], shift as u8),
-            u8::shl(a[9usize], shift as u8),
-            u8::shl(a[10usize], shift as u8),
-            u8::shl(a[11usize], shift as u8),
-            u8::shl(a[12usize], shift as u8),
-            u8::shl(a[13usize], shift as u8),
-            u8::shl(a[14usize], shift as u8),
-            u8::shl(a[15usize], shift as u8),
         ]
         .simd_into(self)
     }
@@ -1406,28 +1406,6 @@ impl Simd for Fallback {
         [val; 16usize].simd_into(self)
     }
     #[inline(always)]
-    fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
-        [
-            i8::not(a[0usize]),
-            i8::not(a[1usize]),
-            i8::not(a[2usize]),
-            i8::not(a[3usize]),
-            i8::not(a[4usize]),
-            i8::not(a[5usize]),
-            i8::not(a[6usize]),
-            i8::not(a[7usize]),
-            i8::not(a[8usize]),
-            i8::not(a[9usize]),
-            i8::not(a[10usize]),
-            i8::not(a[11usize]),
-            i8::not(a[12usize]),
-            i8::not(a[13usize]),
-            i8::not(a[14usize]),
-            i8::not(a[15usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         [
             i8::bitand(a[0usize], &b[0usize]),
@@ -1490,6 +1468,28 @@ impl Simd for Fallback {
             i8::bitxor(a[13usize], &b[13usize]),
             i8::bitxor(a[14usize], &b[14usize]),
             i8::bitxor(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
+        [
+            i8::not(a[0usize]),
+            i8::not(a[1usize]),
+            i8::not(a[2usize]),
+            i8::not(a[3usize]),
+            i8::not(a[4usize]),
+            i8::not(a[5usize]),
+            i8::not(a[6usize]),
+            i8::not(a[7usize]),
+            i8::not(a[8usize]),
+            i8::not(a[9usize]),
+            i8::not(a[10usize]),
+            i8::not(a[11usize]),
+            i8::not(a[12usize]),
+            i8::not(a[13usize]),
+            i8::not(a[14usize]),
+            i8::not(a[15usize]),
         ]
         .simd_into(self)
     }
@@ -1578,20 +1578,6 @@ impl Simd for Fallback {
         [val; 8usize].simd_into(self)
     }
     #[inline(always)]
-    fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        [
-            i16::not(a[0usize]),
-            i16::not(a[1usize]),
-            i16::not(a[2usize]),
-            i16::not(a[3usize]),
-            i16::not(a[4usize]),
-            i16::not(a[5usize]),
-            i16::not(a[6usize]),
-            i16::not(a[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         [
             i16::wrapping_add(a[0usize], b[0usize]),
@@ -1676,6 +1662,34 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        [
+            i16::not(a[0usize]),
+            i16::not(a[1usize]),
+            i16::not(a[2usize]),
+            i16::not(a[3usize]),
+            i16::not(a[4usize]),
+            i16::not(a[5usize]),
+            i16::not(a[6usize]),
+            i16::not(a[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
+        [
+            i16::shl(a[0usize], shift as i16),
+            i16::shl(a[1usize], shift as i16),
+            i16::shl(a[2usize], shift as i16),
+            i16::shl(a[3usize], shift as i16),
+            i16::shl(a[4usize], shift as i16),
+            i16::shl(a[5usize], shift as i16),
+            i16::shl(a[6usize], shift as i16),
+            i16::shl(a[7usize], shift as i16),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
         [
             i16::shr(a[0usize], shift as i16),
@@ -1700,20 +1714,6 @@ impl Simd for Fallback {
             i16::shr(a[5usize], &b[5usize]),
             i16::shr(a[6usize], &b[6usize]),
             i16::shr(a[7usize], &b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
-        [
-            i16::shl(a[0usize], shift as i16),
-            i16::shl(a[1usize], shift as i16),
-            i16::shl(a[2usize], shift as i16),
-            i16::shl(a[3usize], shift as i16),
-            i16::shl(a[4usize], shift as i16),
-            i16::shl(a[5usize], shift as i16),
-            i16::shl(a[6usize], shift as i16),
-            i16::shl(a[7usize], shift as i16),
         ]
         .simd_into(self)
     }
@@ -1891,20 +1891,6 @@ impl Simd for Fallback {
         [val; 8usize].simd_into(self)
     }
     #[inline(always)]
-    fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        [
-            u16::not(a[0usize]),
-            u16::not(a[1usize]),
-            u16::not(a[2usize]),
-            u16::not(a[3usize]),
-            u16::not(a[4usize]),
-            u16::not(a[5usize]),
-            u16::not(a[6usize]),
-            u16::not(a[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         [
             u16::wrapping_add(a[0usize], b[0usize]),
@@ -1989,6 +1975,34 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        [
+            u16::not(a[0usize]),
+            u16::not(a[1usize]),
+            u16::not(a[2usize]),
+            u16::not(a[3usize]),
+            u16::not(a[4usize]),
+            u16::not(a[5usize]),
+            u16::not(a[6usize]),
+            u16::not(a[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
+        [
+            u16::shl(a[0usize], shift as u16),
+            u16::shl(a[1usize], shift as u16),
+            u16::shl(a[2usize], shift as u16),
+            u16::shl(a[3usize], shift as u16),
+            u16::shl(a[4usize], shift as u16),
+            u16::shl(a[5usize], shift as u16),
+            u16::shl(a[6usize], shift as u16),
+            u16::shl(a[7usize], shift as u16),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
         [
             u16::shr(a[0usize], shift as u16),
@@ -2013,20 +2027,6 @@ impl Simd for Fallback {
             u16::shr(a[5usize], &b[5usize]),
             u16::shr(a[6usize], &b[6usize]),
             u16::shr(a[7usize], &b[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
-        [
-            u16::shl(a[0usize], shift as u16),
-            u16::shl(a[1usize], shift as u16),
-            u16::shl(a[2usize], shift as u16),
-            u16::shl(a[3usize], shift as u16),
-            u16::shl(a[4usize], shift as u16),
-            u16::shl(a[5usize], shift as u16),
-            u16::shl(a[6usize], shift as u16),
-            u16::shl(a[7usize], shift as u16),
         ]
         .simd_into(self)
     }
@@ -2190,20 +2190,6 @@ impl Simd for Fallback {
         [val; 8usize].simd_into(self)
     }
     #[inline(always)]
-    fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
-        [
-            i16::not(a[0usize]),
-            i16::not(a[1usize]),
-            i16::not(a[2usize]),
-            i16::not(a[3usize]),
-            i16::not(a[4usize]),
-            i16::not(a[5usize]),
-            i16::not(a[6usize]),
-            i16::not(a[7usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         [
             i16::bitand(a[0usize], &b[0usize]),
@@ -2242,6 +2228,20 @@ impl Simd for Fallback {
             i16::bitxor(a[5usize], &b[5usize]),
             i16::bitxor(a[6usize], &b[6usize]),
             i16::bitxor(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
+        [
+            i16::not(a[0usize]),
+            i16::not(a[1usize]),
+            i16::not(a[2usize]),
+            i16::not(a[3usize]),
+            i16::not(a[4usize]),
+            i16::not(a[5usize]),
+            i16::not(a[6usize]),
+            i16::not(a[7usize]),
         ]
         .simd_into(self)
     }
@@ -2288,16 +2288,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
         [val; 4usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        [
-            i32::not(a[0usize]),
-            i32::not(a[1usize]),
-            i32::not(a[2usize]),
-            i32::not(a[3usize]),
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -2360,6 +2350,26 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        [
+            i32::not(a[0usize]),
+            i32::not(a[1usize]),
+            i32::not(a[2usize]),
+            i32::not(a[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
+        [
+            i32::shl(a[0usize], shift as i32),
+            i32::shl(a[1usize], shift as i32),
+            i32::shl(a[2usize], shift as i32),
+            i32::shl(a[3usize], shift as i32),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
         [
             i32::shr(a[0usize], shift as i32),
@@ -2376,16 +2386,6 @@ impl Simd for Fallback {
             i32::shr(a[1usize], &b[1usize]),
             i32::shr(a[2usize], &b[2usize]),
             i32::shr(a[3usize], &b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        [
-            i32::shl(a[0usize], shift as i32),
-            i32::shl(a[1usize], shift as i32),
-            i32::shl(a[2usize], shift as i32),
-            i32::shl(a[3usize], shift as i32),
         ]
         .simd_into(self)
     }
@@ -2525,16 +2525,6 @@ impl Simd for Fallback {
         [val; 4usize].simd_into(self)
     }
     #[inline(always)]
-    fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        [
-            u32::not(a[0usize]),
-            u32::not(a[1usize]),
-            u32::not(a[2usize]),
-            u32::not(a[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         [
             u32::wrapping_add(a[0usize], b[0usize]),
@@ -2595,6 +2585,26 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        [
+            u32::not(a[0usize]),
+            u32::not(a[1usize]),
+            u32::not(a[2usize]),
+            u32::not(a[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
+        [
+            u32::shl(a[0usize], shift as u32),
+            u32::shl(a[1usize], shift as u32),
+            u32::shl(a[2usize], shift as u32),
+            u32::shl(a[3usize], shift as u32),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
         [
             u32::shr(a[0usize], shift as u32),
@@ -2611,16 +2621,6 @@ impl Simd for Fallback {
             u32::shr(a[1usize], &b[1usize]),
             u32::shr(a[2usize], &b[2usize]),
             u32::shr(a[3usize], &b[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        [
-            u32::shl(a[0usize], shift as u32),
-            u32::shl(a[1usize], shift as u32),
-            u32::shl(a[2usize], shift as u32),
-            u32::shl(a[3usize], shift as u32),
         ]
         .simd_into(self)
     }
@@ -2746,16 +2746,6 @@ impl Simd for Fallback {
         [val; 4usize].simd_into(self)
     }
     #[inline(always)]
-    fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
-        [
-            i32::not(a[0usize]),
-            i32::not(a[1usize]),
-            i32::not(a[2usize]),
-            i32::not(a[3usize]),
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         [
             i32::bitand(a[0usize], &b[0usize]),
@@ -2782,6 +2772,16 @@ impl Simd for Fallback {
             i32::bitxor(a[1usize], &b[1usize]),
             i32::bitxor(a[2usize], &b[2usize]),
             i32::bitxor(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
+        [
+            i32::not(a[0usize]),
+            i32::not(a[1usize]),
+            i32::not(a[2usize]),
+            i32::not(a[3usize]),
         ]
         .simd_into(self)
     }
@@ -3017,10 +3017,6 @@ impl Simd for Fallback {
         [val; 2usize].simd_into(self)
     }
     #[inline(always)]
-    fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
-        [i64::not(a[0usize]), i64::not(a[1usize])].simd_into(self)
-    }
-    #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         [
             i64::bitand(a[0usize], &b[0usize]),
@@ -3043,6 +3039,10 @@ impl Simd for Fallback {
             i64::bitxor(a[1usize], &b[1usize]),
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
+        [i64::not(a[0usize]), i64::not(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn select_mask64x2(
@@ -3315,11 +3315,6 @@ impl Simd for Fallback {
         self.combine_i8x16(half, half)
     }
     #[inline(always)]
-    fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.not_i8x16(a0), self.not_i8x16(a1))
-    }
-    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         let (b0, b1) = self.split_i8x32(b);
@@ -3356,6 +3351,16 @@ impl Simd for Fallback {
         self.combine_i8x16(self.xor_i8x16(a0, b0), self.xor_i8x16(a1, b1))
     }
     #[inline(always)]
+    fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.not_i8x16(a0), self.not_i8x16(a1))
+    }
+    #[inline(always)]
+    fn shl_i8x32(self, a: i8x32<Self>, b: u32) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.shl_i8x16(a0, b), self.shl_i8x16(a1, b))
+    }
+    #[inline(always)]
     fn shr_i8x32(self, a: i8x32<Self>, b: u32) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         self.combine_i8x16(self.shr_i8x16(a0, b), self.shr_i8x16(a1, b))
@@ -3365,11 +3370,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_i8x32(a);
         let (b0, b1) = self.split_i8x32(b);
         self.combine_i8x16(self.shrv_i8x16(a0, b0), self.shrv_i8x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i8x32(self, a: i8x32<Self>, b: u32) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.shl_i8x16(a0, b), self.shl_i8x16(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
@@ -3483,11 +3483,6 @@ impl Simd for Fallback {
         self.combine_u8x16(half, half)
     }
     #[inline(always)]
-    fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.not_u8x16(a0), self.not_u8x16(a1))
-    }
-    #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
@@ -3524,6 +3519,16 @@ impl Simd for Fallback {
         self.combine_u8x16(self.xor_u8x16(a0, b0), self.xor_u8x16(a1, b1))
     }
     #[inline(always)]
+    fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        self.combine_u8x16(self.not_u8x16(a0), self.not_u8x16(a1))
+    }
+    #[inline(always)]
+    fn shl_u8x32(self, a: u8x32<Self>, b: u32) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        self.combine_u8x16(self.shl_u8x16(a0, b), self.shl_u8x16(a1, b))
+    }
+    #[inline(always)]
     fn shr_u8x32(self, a: u8x32<Self>, b: u32) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         self.combine_u8x16(self.shr_u8x16(a0, b), self.shr_u8x16(a1, b))
@@ -3533,11 +3538,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
         self.combine_u8x16(self.shrv_u8x16(a0, b0), self.shrv_u8x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u8x32(self, a: u8x32<Self>, b: u32) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.shl_u8x16(a0, b), self.shl_u8x16(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
@@ -3646,11 +3646,6 @@ impl Simd for Fallback {
         self.combine_mask8x16(half, half)
     }
     #[inline(always)]
-    fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        self.combine_mask8x16(self.not_mask8x16(a0), self.not_mask8x16(a1))
-    }
-    #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_mask8x32(b);
@@ -3667,6 +3662,11 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_mask8x32(b);
         self.combine_mask8x16(self.xor_mask8x16(a0, b0), self.xor_mask8x16(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.combine_mask8x16(self.not_mask8x16(a0), self.not_mask8x16(a1))
     }
     #[inline(always)]
     fn select_mask8x32(
@@ -3710,11 +3710,6 @@ impl Simd for Fallback {
         self.combine_i16x8(half, half)
     }
     #[inline(always)]
-    fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.not_i16x8(a0), self.not_i16x8(a1))
-    }
-    #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         let (a0, a1) = self.split_i16x16(a);
         let (b0, b1) = self.split_i16x16(b);
@@ -3751,6 +3746,16 @@ impl Simd for Fallback {
         self.combine_i16x8(self.xor_i16x8(a0, b0), self.xor_i16x8(a1, b1))
     }
     #[inline(always)]
+    fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.not_i16x8(a0), self.not_i16x8(a1))
+    }
+    #[inline(always)]
+    fn shl_i16x16(self, a: i16x16<Self>, b: u32) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.shl_i16x8(a0, b), self.shl_i16x8(a1, b))
+    }
+    #[inline(always)]
     fn shr_i16x16(self, a: i16x16<Self>, b: u32) -> i16x16<Self> {
         let (a0, a1) = self.split_i16x16(a);
         self.combine_i16x8(self.shr_i16x8(a0, b), self.shr_i16x8(a1, b))
@@ -3760,11 +3765,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_i16x16(a);
         let (b0, b1) = self.split_i16x16(b);
         self.combine_i16x8(self.shrv_i16x8(a0, b0), self.shrv_i16x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i16x16(self, a: i16x16<Self>, b: u32) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.shl_i16x8(a0, b), self.shl_i16x8(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
@@ -3878,11 +3878,6 @@ impl Simd for Fallback {
         self.combine_u16x8(half, half)
     }
     #[inline(always)]
-    fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u16x8(self.not_u16x8(a0), self.not_u16x8(a1))
-    }
-    #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         let (a0, a1) = self.split_u16x16(a);
         let (b0, b1) = self.split_u16x16(b);
@@ -3919,6 +3914,16 @@ impl Simd for Fallback {
         self.combine_u16x8(self.xor_u16x8(a0, b0), self.xor_u16x8(a1, b1))
     }
     #[inline(always)]
+    fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        self.combine_u16x8(self.not_u16x8(a0), self.not_u16x8(a1))
+    }
+    #[inline(always)]
+    fn shl_u16x16(self, a: u16x16<Self>, b: u32) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        self.combine_u16x8(self.shl_u16x8(a0, b), self.shl_u16x8(a1, b))
+    }
+    #[inline(always)]
     fn shr_u16x16(self, a: u16x16<Self>, b: u32) -> u16x16<Self> {
         let (a0, a1) = self.split_u16x16(a);
         self.combine_u16x8(self.shr_u16x8(a0, b), self.shr_u16x8(a1, b))
@@ -3928,11 +3933,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_u16x16(a);
         let (b0, b1) = self.split_u16x16(b);
         self.combine_u16x8(self.shrv_u16x8(a0, b0), self.shrv_u16x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u16x16(self, a: u16x16<Self>, b: u32) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u16x8(self.shl_u16x8(a0, b), self.shl_u16x8(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
@@ -4063,11 +4063,6 @@ impl Simd for Fallback {
         self.combine_mask16x8(half, half)
     }
     #[inline(always)]
-    fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        self.combine_mask16x8(self.not_mask16x8(a0), self.not_mask16x8(a1))
-    }
-    #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_mask16x16(b);
@@ -4084,6 +4079,11 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_mask16x16(b);
         self.combine_mask16x8(self.xor_mask16x8(a0, b0), self.xor_mask16x8(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.combine_mask16x8(self.not_mask16x8(a0), self.not_mask16x8(a1))
     }
     #[inline(always)]
     fn select_mask16x16(
@@ -4127,11 +4127,6 @@ impl Simd for Fallback {
         self.combine_i32x4(half, half)
     }
     #[inline(always)]
-    fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.not_i32x4(a0), self.not_i32x4(a1))
-    }
-    #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         let (b0, b1) = self.split_i32x8(b);
@@ -4168,6 +4163,16 @@ impl Simd for Fallback {
         self.combine_i32x4(self.xor_i32x4(a0, b0), self.xor_i32x4(a1, b1))
     }
     #[inline(always)]
+    fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.not_i32x4(a0), self.not_i32x4(a1))
+    }
+    #[inline(always)]
+    fn shl_i32x8(self, a: i32x8<Self>, b: u32) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.shl_i32x4(a0, b), self.shl_i32x4(a1, b))
+    }
+    #[inline(always)]
     fn shr_i32x8(self, a: i32x8<Self>, b: u32) -> i32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         self.combine_i32x4(self.shr_i32x4(a0, b), self.shr_i32x4(a1, b))
@@ -4177,11 +4182,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_i32x8(a);
         let (b0, b1) = self.split_i32x8(b);
         self.combine_i32x4(self.shrv_i32x4(a0, b0), self.shrv_i32x4(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i32x8(self, a: i32x8<Self>, b: u32) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.shl_i32x4(a0, b), self.shl_i32x4(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
@@ -4300,11 +4300,6 @@ impl Simd for Fallback {
         self.combine_u32x4(half, half)
     }
     #[inline(always)]
-    fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u32x4(self.not_u32x4(a0), self.not_u32x4(a1))
-    }
-    #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
         let (b0, b1) = self.split_u32x8(b);
@@ -4341,6 +4336,16 @@ impl Simd for Fallback {
         self.combine_u32x4(self.xor_u32x4(a0, b0), self.xor_u32x4(a1, b1))
     }
     #[inline(always)]
+    fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_u32x4(self.not_u32x4(a0), self.not_u32x4(a1))
+    }
+    #[inline(always)]
+    fn shl_u32x8(self, a: u32x8<Self>, b: u32) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_u32x4(self.shl_u32x4(a0, b), self.shl_u32x4(a1, b))
+    }
+    #[inline(always)]
     fn shr_u32x8(self, a: u32x8<Self>, b: u32) -> u32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
         self.combine_u32x4(self.shr_u32x4(a0, b), self.shr_u32x4(a1, b))
@@ -4350,11 +4355,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_u32x8(a);
         let (b0, b1) = self.split_u32x8(b);
         self.combine_u32x4(self.shrv_u32x4(a0, b0), self.shrv_u32x4(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u32x8(self, a: u32x8<Self>, b: u32) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u32x4(self.shl_u32x4(a0, b), self.shl_u32x4(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
@@ -4460,11 +4460,6 @@ impl Simd for Fallback {
         self.combine_mask32x4(half, half)
     }
     #[inline(always)]
-    fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        self.combine_mask32x4(self.not_mask32x4(a0), self.not_mask32x4(a1))
-    }
-    #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_mask32x8(b);
@@ -4481,6 +4476,11 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_mask32x8(b);
         self.combine_mask32x4(self.xor_mask32x4(a0, b0), self.xor_mask32x4(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.combine_mask32x4(self.not_mask32x4(a0), self.not_mask32x4(a1))
     }
     #[inline(always)]
     fn select_mask32x8(
@@ -4730,11 +4730,6 @@ impl Simd for Fallback {
         self.combine_mask64x2(half, half)
     }
     #[inline(always)]
-    fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        self.combine_mask64x2(self.not_mask64x2(a0), self.not_mask64x2(a1))
-    }
-    #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
         let (a0, a1) = self.split_mask64x4(a);
         let (b0, b1) = self.split_mask64x4(b);
@@ -4751,6 +4746,11 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_mask64x4(a);
         let (b0, b1) = self.split_mask64x4(b);
         self.combine_mask64x2(self.xor_mask64x2(a0, b0), self.xor_mask64x2(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.combine_mask64x2(self.not_mask64x2(a0), self.not_mask64x2(a1))
     }
     #[inline(always)]
     fn select_mask64x4(
@@ -5054,11 +5054,6 @@ impl Simd for Fallback {
         self.combine_i8x32(half, half)
     }
     #[inline(always)]
-    fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.not_i8x32(a0), self.not_i8x32(a1))
-    }
-    #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         let (b0, b1) = self.split_i8x64(b);
@@ -5095,6 +5090,16 @@ impl Simd for Fallback {
         self.combine_i8x32(self.xor_i8x32(a0, b0), self.xor_i8x32(a1, b1))
     }
     #[inline(always)]
+    fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.not_i8x32(a0), self.not_i8x32(a1))
+    }
+    #[inline(always)]
+    fn shl_i8x64(self, a: i8x64<Self>, b: u32) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.shl_i8x32(a0, b), self.shl_i8x32(a1, b))
+    }
+    #[inline(always)]
     fn shr_i8x64(self, a: i8x64<Self>, b: u32) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         self.combine_i8x32(self.shr_i8x32(a0, b), self.shr_i8x32(a1, b))
@@ -5104,11 +5109,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_i8x64(a);
         let (b0, b1) = self.split_i8x64(b);
         self.combine_i8x32(self.shrv_i8x32(a0, b0), self.shrv_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i8x64(self, a: i8x64<Self>, b: u32) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.shl_i8x32(a0, b), self.shl_i8x32(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
@@ -5215,11 +5215,6 @@ impl Simd for Fallback {
         self.combine_u8x32(half, half)
     }
     #[inline(always)]
-    fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.not_u8x32(a0), self.not_u8x32(a1))
-    }
-    #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_u8x64(a);
         let (b0, b1) = self.split_u8x64(b);
@@ -5256,6 +5251,16 @@ impl Simd for Fallback {
         self.combine_u8x32(self.xor_u8x32(a0, b0), self.xor_u8x32(a1, b1))
     }
     #[inline(always)]
+    fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        self.combine_u8x32(self.not_u8x32(a0), self.not_u8x32(a1))
+    }
+    #[inline(always)]
+    fn shl_u8x64(self, a: u8x64<Self>, b: u32) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        self.combine_u8x32(self.shl_u8x32(a0, b), self.shl_u8x32(a1, b))
+    }
+    #[inline(always)]
     fn shr_u8x64(self, a: u8x64<Self>, b: u32) -> u8x64<Self> {
         let (a0, a1) = self.split_u8x64(a);
         self.combine_u8x32(self.shr_u8x32(a0, b), self.shr_u8x32(a1, b))
@@ -5265,11 +5270,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_u8x64(a);
         let (b0, b1) = self.split_u8x64(b);
         self.combine_u8x32(self.shrv_u8x32(a0, b0), self.shrv_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u8x64(self, a: u8x64<Self>, b: u32) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.shl_u8x32(a0, b), self.shl_u8x32(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
@@ -5451,11 +5451,6 @@ impl Simd for Fallback {
         self.combine_mask8x32(half, half)
     }
     #[inline(always)]
-    fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
-    }
-    #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_mask8x64(b);
@@ -5472,6 +5467,11 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_mask8x64(b);
         self.combine_mask8x32(self.xor_mask8x32(a0, b0), self.xor_mask8x32(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
     }
     #[inline(always)]
     fn select_mask8x64(
@@ -5506,11 +5506,6 @@ impl Simd for Fallback {
     fn splat_i16x32(self, a: i16) -> i16x32<Self> {
         let half = self.splat_i16x16(a);
         self.combine_i16x16(half, half)
-    }
-    #[inline(always)]
-    fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.not_i16x16(a0), self.not_i16x16(a1))
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -5549,6 +5544,16 @@ impl Simd for Fallback {
         self.combine_i16x16(self.xor_i16x16(a0, b0), self.xor_i16x16(a1, b1))
     }
     #[inline(always)]
+    fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.not_i16x16(a0), self.not_i16x16(a1))
+    }
+    #[inline(always)]
+    fn shl_i16x32(self, a: i16x32<Self>, b: u32) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.shl_i16x16(a0, b), self.shl_i16x16(a1, b))
+    }
+    #[inline(always)]
     fn shr_i16x32(self, a: i16x32<Self>, b: u32) -> i16x32<Self> {
         let (a0, a1) = self.split_i16x32(a);
         self.combine_i16x16(self.shr_i16x16(a0, b), self.shr_i16x16(a1, b))
@@ -5558,11 +5563,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_i16x32(a);
         let (b0, b1) = self.split_i16x32(b);
         self.combine_i16x16(self.shrv_i16x16(a0, b0), self.shrv_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i16x32(self, a: i16x32<Self>, b: u32) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.shl_i16x16(a0, b), self.shl_i16x16(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
@@ -5678,11 +5678,6 @@ impl Simd for Fallback {
         self.combine_u16x16(half, half)
     }
     #[inline(always)]
-    fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.not_u16x16(a0), self.not_u16x16(a1))
-    }
-    #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         let (b0, b1) = self.split_u16x32(b);
@@ -5719,6 +5714,16 @@ impl Simd for Fallback {
         self.combine_u16x16(self.xor_u16x16(a0, b0), self.xor_u16x16(a1, b1))
     }
     #[inline(always)]
+    fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        self.combine_u16x16(self.not_u16x16(a0), self.not_u16x16(a1))
+    }
+    #[inline(always)]
+    fn shl_u16x32(self, a: u16x32<Self>, b: u32) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        self.combine_u16x16(self.shl_u16x16(a0, b), self.shl_u16x16(a1, b))
+    }
+    #[inline(always)]
     fn shr_u16x32(self, a: u16x32<Self>, b: u32) -> u16x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         self.combine_u16x16(self.shr_u16x16(a0, b), self.shr_u16x16(a1, b))
@@ -5728,11 +5733,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_u16x32(a);
         let (b0, b1) = self.split_u16x32(b);
         self.combine_u16x16(self.shrv_u16x16(a0, b0), self.shrv_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u16x32(self, a: u16x32<Self>, b: u32) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.shl_u16x16(a0, b), self.shl_u16x16(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
@@ -5896,11 +5896,6 @@ impl Simd for Fallback {
         self.combine_mask16x16(half, half)
     }
     #[inline(always)]
-    fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
-    }
-    #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_mask16x32(b);
@@ -5917,6 +5912,11 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_mask16x32(b);
         self.combine_mask16x16(self.xor_mask16x16(a0, b0), self.xor_mask16x16(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
     }
     #[inline(always)]
     fn select_mask16x32(
@@ -5956,11 +5956,6 @@ impl Simd for Fallback {
         self.combine_i32x8(half, half)
     }
     #[inline(always)]
-    fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.not_i32x8(a0), self.not_i32x8(a1))
-    }
-    #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         let (b0, b1) = self.split_i32x16(b);
@@ -5997,6 +5992,16 @@ impl Simd for Fallback {
         self.combine_i32x8(self.xor_i32x8(a0, b0), self.xor_i32x8(a1, b1))
     }
     #[inline(always)]
+    fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.not_i32x8(a0), self.not_i32x8(a1))
+    }
+    #[inline(always)]
+    fn shl_i32x16(self, a: i32x16<Self>, b: u32) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.shl_i32x8(a0, b), self.shl_i32x8(a1, b))
+    }
+    #[inline(always)]
     fn shr_i32x16(self, a: i32x16<Self>, b: u32) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_i32x8(self.shr_i32x8(a0, b), self.shr_i32x8(a1, b))
@@ -6006,11 +6011,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_i32x16(a);
         let (b0, b1) = self.split_i32x16(b);
         self.combine_i32x8(self.shrv_i32x8(a0, b0), self.shrv_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i32x16(self, a: i32x16<Self>, b: u32) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.shl_i32x8(a0, b), self.shl_i32x8(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
@@ -6122,11 +6122,6 @@ impl Simd for Fallback {
         self.combine_u32x8(half, half)
     }
     #[inline(always)]
-    fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.not_u32x8(a0), self.not_u32x8(a1))
-    }
-    #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
         let (b0, b1) = self.split_u32x16(b);
@@ -6163,6 +6158,16 @@ impl Simd for Fallback {
         self.combine_u32x8(self.xor_u32x8(a0, b0), self.xor_u32x8(a1, b1))
     }
     #[inline(always)]
+    fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_u32x8(self.not_u32x8(a0), self.not_u32x8(a1))
+    }
+    #[inline(always)]
+    fn shl_u32x16(self, a: u32x16<Self>, b: u32) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_u32x8(self.shl_u32x8(a0, b), self.shl_u32x8(a1, b))
+    }
+    #[inline(always)]
     fn shr_u32x16(self, a: u32x16<Self>, b: u32) -> u32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
         self.combine_u32x8(self.shr_u32x8(a0, b), self.shr_u32x8(a1, b))
@@ -6172,11 +6177,6 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_u32x16(a);
         let (b0, b1) = self.split_u32x16(b);
         self.combine_u32x8(self.shrv_u32x8(a0, b0), self.shrv_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u32x16(self, a: u32x16<Self>, b: u32) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.shl_u32x8(a0, b), self.shl_u32x8(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
@@ -6305,11 +6305,6 @@ impl Simd for Fallback {
         self.combine_mask32x8(half, half)
     }
     #[inline(always)]
-    fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
-    }
-    #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_mask32x16(b);
@@ -6326,6 +6321,11 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_mask32x16(b);
         self.combine_mask32x8(self.xor_mask32x8(a0, b0), self.xor_mask32x8(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
     }
     #[inline(always)]
     fn select_mask32x16(
@@ -6561,11 +6561,6 @@ impl Simd for Fallback {
         self.combine_mask64x4(half, half)
     }
     #[inline(always)]
-    fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
-    }
-    #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
         let (a0, a1) = self.split_mask64x8(a);
         let (b0, b1) = self.split_mask64x8(b);
@@ -6582,6 +6577,11 @@ impl Simd for Fallback {
         let (a0, a1) = self.split_mask64x8(a);
         let (b0, b1) = self.split_mask64x8(b);
         self.combine_mask64x4(self.xor_mask64x4(a0, b0), self.xor_mask64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
     }
     #[inline(always)]
     fn select_mask64x8(

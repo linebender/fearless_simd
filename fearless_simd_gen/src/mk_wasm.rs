@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::generic::{generic_op_name, scalar_binary};
-use crate::ops::valid_reinterpret;
+use crate::ops::{Op, valid_reinterpret};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     generic::{generic_combine, generic_op, generic_split},
@@ -39,7 +39,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
         let ty_name = vec_ty.rust_name();
         let ty = vec_ty.rust();
 
-        for (method, sig) in ops_for_type(vec_ty, true) {
+        for Op { method, sig, .. } in ops_for_type(vec_ty) {
             let b1 = vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow")
                 || vec_ty.n_bits() > 256;
             let b2 = !matches!(method, "load_interleaved_128")

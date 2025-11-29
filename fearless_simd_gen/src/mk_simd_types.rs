@@ -6,7 +6,7 @@ use quote::{format_ident, quote};
 
 use crate::{
     generic::generic_op_name,
-    ops::{CORE_OPS, TyFlavor, ops_for_type},
+    ops::{Op, TyFlavor, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, VecType},
 };
 
@@ -232,10 +232,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let vec_trait_id = Ident::new(vec_trait, Span::call_site());
     let splat = generic_op_name("splat", ty);
     let mut methods = vec![];
-    for (method, sig) in ops_for_type(ty, false) {
-        if CORE_OPS.contains(&method) {
-            continue;
-        }
+    for Op { method, sig, .. } in vec_trait_ops_for(ty.scalar) {
         let method_name = Ident::new(method, Span::call_site());
         let trait_method = generic_op_name(method, ty);
         if let Some(args) = sig.vec_trait_args() {
