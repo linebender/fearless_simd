@@ -6,7 +6,7 @@ use quote::{format_ident, quote};
 
 use crate::{
     generic::generic_op_name,
-    ops::{CORE_OPS, OpSig, TyFlavor, ops_for_type},
+    ops::{CORE_OPS, TyFlavor, ops_for_type},
     types::{SIMD_TYPES, ScalarType, VecType},
 };
 
@@ -233,27 +233,16 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let splat = generic_op_name("splat", ty);
     let mut methods = vec![];
     for (method, sig) in ops_for_type(ty, false) {
-        if CORE_OPS.contains(&method) || matches!(sig, OpSig::Combine) {
+        if CORE_OPS.contains(&method) {
             continue;
         }
         let method_name = Ident::new(method, Span::call_site());
         let trait_method = generic_op_name(method, ty);
         if let Some(args) = sig.vec_trait_args() {
             let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
-            let call_args = match sig {
-                OpSig::Unary => quote! { self },
-                OpSig::Binary
-                | OpSig::Compare
-                | OpSig::Combine
-                | OpSig::Zip { .. }
-                | OpSig::Unzip { .. } => {
-                    quote! { self, rhs.simd_into(self.simd) }
-                }
-                OpSig::Ternary => {
-                    quote! { self, op1.simd_into(self.simd), op2.simd_into(self.simd) }
-                }
-                _ => quote! { todo!() },
-            };
+            let call_args = sig
+                .forwarding_call_args()
+                .expect("this method can be forwarded to a specific Simd function");
             methods.push(quote! {
                 #[inline(always)]
                 fn #method_name(#args) -> #ret_ty {
