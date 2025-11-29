@@ -84,16 +84,6 @@ impl<S: Simd> Bytes for f32x4<S> {
         }
     }
 }
-impl<S: Simd> f32x4<S> {
-    #[inline(always)]
-    pub fn cvt_u32(self) -> u32x4<S> {
-        self.simd.cvt_u32_f32x4(self)
-    }
-    #[inline(always)]
-    pub fn cvt_i32(self) -> i32x4<S> {
-        self.simd.cvt_i32_f32x4(self)
-    }
-}
 impl<S: Simd> crate::SimdBase<f32, S> for f32x4<S> {
     const N: usize = 4;
     type Mask = mask32x4<S>;
@@ -342,7 +332,6 @@ impl<S: Simd> Bytes for i8x16<S> {
         }
     }
 }
-impl<S: Simd> i8x16<S> {}
 impl<S: Simd> crate::SimdBase<i8, S> for i8x16<S> {
     const N: usize = 16;
     type Mask = mask8x16<S>;
@@ -531,7 +520,6 @@ impl<S: Simd> Bytes for u8x16<S> {
         }
     }
 }
-impl<S: Simd> u8x16<S> {}
 impl<S: Simd> crate::SimdBase<u8, S> for u8x16<S> {
     const N: usize = 16;
     type Mask = mask8x16<S>;
@@ -720,7 +708,6 @@ impl<S: Simd> Bytes for mask8x16<S> {
         }
     }
 }
-impl<S: Simd> mask8x16<S> {}
 impl<S: Simd> crate::SimdBase<i8, S> for mask8x16<S> {
     const N: usize = 16;
     type Mask = mask8x16<S>;
@@ -861,7 +848,6 @@ impl<S: Simd> Bytes for i16x8<S> {
         }
     }
 }
-impl<S: Simd> i16x8<S> {}
 impl<S: Simd> crate::SimdBase<i16, S> for i16x8<S> {
     const N: usize = 8;
     type Mask = mask16x8<S>;
@@ -1042,7 +1028,6 @@ impl<S: Simd> Bytes for u16x8<S> {
         }
     }
 }
-impl<S: Simd> u16x8<S> {}
 impl<S: Simd> crate::SimdBase<u16, S> for u16x8<S> {
     const N: usize = 8;
     type Mask = mask16x8<S>;
@@ -1223,7 +1208,6 @@ impl<S: Simd> Bytes for mask16x8<S> {
         }
     }
 }
-impl<S: Simd> mask16x8<S> {}
 impl<S: Simd> crate::SimdBase<i16, S> for mask16x8<S> {
     const N: usize = 8;
     type Mask = mask16x8<S>;
@@ -1353,12 +1337,6 @@ impl<S: Simd> Bytes for i32x4<S> {
                 simd: value.simd,
             }
         }
-    }
-}
-impl<S: Simd> i32x4<S> {
-    #[inline(always)]
-    pub fn cvt_f32(self) -> f32x4<S> {
-        self.simd.cvt_f32_i32x4(self)
     }
 }
 impl<S: Simd> crate::SimdBase<i32, S> for i32x4<S> {
@@ -1537,12 +1515,6 @@ impl<S: Simd> Bytes for u32x4<S> {
         }
     }
 }
-impl<S: Simd> u32x4<S> {
-    #[inline(always)]
-    pub fn cvt_f32(self) -> f32x4<S> {
-        self.simd.cvt_f32_u32x4(self)
-    }
-}
 impl<S: Simd> crate::SimdBase<u32, S> for u32x4<S> {
     const N: usize = 4;
     type Mask = mask32x4<S>;
@@ -1719,7 +1691,6 @@ impl<S: Simd> Bytes for mask32x4<S> {
         }
     }
 }
-impl<S: Simd> mask32x4<S> {}
 impl<S: Simd> crate::SimdBase<i32, S> for mask32x4<S> {
     const N: usize = 4;
     type Mask = mask32x4<S>;
@@ -1851,7 +1822,6 @@ impl<S: Simd> Bytes for f64x2<S> {
         }
     }
 }
-impl<S: Simd> f64x2<S> {}
 impl<S: Simd> crate::SimdBase<f64, S> for f64x2<S> {
     const N: usize = 2;
     type Mask = mask64x2<S>;
@@ -2073,7 +2043,6 @@ impl<S: Simd> Bytes for mask64x2<S> {
         }
     }
 }
-impl<S: Simd> mask64x2<S> {}
 impl<S: Simd> crate::SimdBase<i64, S> for mask64x2<S> {
     const N: usize = 2;
     type Mask = mask64x2<S>;
@@ -2212,16 +2181,6 @@ impl<S: Simd> Bytes for f32x8<S> {
                 simd: value.simd,
             }
         }
-    }
-}
-impl<S: Simd> f32x8<S> {
-    #[inline(always)]
-    pub fn cvt_u32(self) -> u32x8<S> {
-        self.simd.cvt_u32_f32x8(self)
-    }
-    #[inline(always)]
-    pub fn cvt_i32(self) -> i32x8<S> {
-        self.simd.cvt_i32_f32x8(self)
     }
 }
 impl<S: Simd> crate::SimdBase<f32, S> for f32x8<S> {
@@ -2495,7 +2454,6 @@ impl<S: Simd> Bytes for i8x32<S> {
         }
     }
 }
-impl<S: Simd> i8x32<S> {}
 impl<S: Simd> crate::SimdBase<i8, S> for i8x32<S> {
     const N: usize = 32;
     type Mask = mask8x32<S>;
@@ -2707,7 +2665,6 @@ impl<S: Simd> Bytes for u8x32<S> {
         }
     }
 }
-impl<S: Simd> u8x32<S> {}
 impl<S: Simd> crate::SimdBase<u8, S> for u8x32<S> {
     const N: usize = 32;
     type Mask = mask8x32<S>;
@@ -2919,7 +2876,6 @@ impl<S: Simd> Bytes for mask8x32<S> {
         }
     }
 }
-impl<S: Simd> mask8x32<S> {}
 impl<S: Simd> crate::SimdBase<i8, S> for mask8x32<S> {
     const N: usize = 32;
     type Mask = mask8x32<S>;
@@ -3075,7 +3031,6 @@ impl<S: Simd> Bytes for i16x16<S> {
         }
     }
 }
-impl<S: Simd> i16x16<S> {}
 impl<S: Simd> crate::SimdBase<i16, S> for i16x16<S> {
     const N: usize = 16;
     type Mask = mask16x16<S>;
@@ -3271,7 +3226,6 @@ impl<S: Simd> Bytes for u16x16<S> {
         }
     }
 }
-impl<S: Simd> u16x16<S> {}
 impl<S: Simd> crate::SimdBase<u16, S> for u16x16<S> {
     const N: usize = 16;
     type Mask = mask16x16<S>;
@@ -3467,7 +3421,6 @@ impl<S: Simd> Bytes for mask16x16<S> {
         }
     }
 }
-impl<S: Simd> mask16x16<S> {}
 impl<S: Simd> crate::SimdBase<i16, S> for mask16x16<S> {
     const N: usize = 16;
     type Mask = mask16x16<S>;
@@ -3613,12 +3566,6 @@ impl<S: Simd> Bytes for i32x8<S> {
                 simd: value.simd,
             }
         }
-    }
-}
-impl<S: Simd> i32x8<S> {
-    #[inline(always)]
-    pub fn cvt_f32(self) -> f32x8<S> {
-        self.simd.cvt_f32_i32x8(self)
     }
 }
 impl<S: Simd> crate::SimdBase<i32, S> for i32x8<S> {
@@ -3813,12 +3760,6 @@ impl<S: Simd> Bytes for u32x8<S> {
         }
     }
 }
-impl<S: Simd> u32x8<S> {
-    #[inline(always)]
-    pub fn cvt_f32(self) -> f32x8<S> {
-        self.simd.cvt_f32_u32x8(self)
-    }
-}
 impl<S: Simd> crate::SimdBase<u32, S> for u32x8<S> {
     const N: usize = 8;
     type Mask = mask32x8<S>;
@@ -4011,7 +3952,6 @@ impl<S: Simd> Bytes for mask32x8<S> {
         }
     }
 }
-impl<S: Simd> mask32x8<S> {}
 impl<S: Simd> crate::SimdBase<i32, S> for mask32x8<S> {
     const N: usize = 8;
     type Mask = mask32x8<S>;
@@ -4150,7 +4090,6 @@ impl<S: Simd> Bytes for f64x4<S> {
         }
     }
 }
-impl<S: Simd> f64x4<S> {}
 impl<S: Simd> crate::SimdBase<f64, S> for f64x4<S> {
     const N: usize = 4;
     type Mask = mask64x4<S>;
@@ -4379,7 +4318,6 @@ impl<S: Simd> Bytes for mask64x4<S> {
         }
     }
 }
-impl<S: Simd> mask64x4<S> {}
 impl<S: Simd> crate::SimdBase<i64, S> for mask64x4<S> {
     const N: usize = 4;
     type Mask = mask64x4<S>;
@@ -4533,16 +4471,6 @@ impl<S: Simd> Bytes for f32x16<S> {
                 simd: value.simd,
             }
         }
-    }
-}
-impl<S: Simd> f32x16<S> {
-    #[inline(always)]
-    pub fn cvt_u32(self) -> u32x16<S> {
-        self.simd.cvt_u32_f32x16(self)
-    }
-    #[inline(always)]
-    pub fn cvt_i32(self) -> i32x16<S> {
-        self.simd.cvt_i32_f32x16(self)
     }
 }
 impl<S: Simd> crate::SimdBase<f32, S> for f32x16<S> {
@@ -4842,7 +4770,6 @@ impl<S: Simd> Bytes for i8x64<S> {
         }
     }
 }
-impl<S: Simd> i8x64<S> {}
 impl<S: Simd> crate::SimdBase<i8, S> for i8x64<S> {
     const N: usize = 64;
     type Mask = mask8x64<S>;
@@ -5080,7 +5007,6 @@ impl<S: Simd> Bytes for u8x64<S> {
         }
     }
 }
-impl<S: Simd> u8x64<S> {}
 impl<S: Simd> crate::SimdBase<u8, S> for u8x64<S> {
     const N: usize = 64;
     type Mask = mask8x64<S>;
@@ -5318,7 +5244,6 @@ impl<S: Simd> Bytes for mask8x64<S> {
         }
     }
 }
-impl<S: Simd> mask8x64<S> {}
 impl<S: Simd> crate::SimdBase<i8, S> for mask8x64<S> {
     const N: usize = 64;
     type Mask = mask8x64<S>;
@@ -5484,7 +5409,6 @@ impl<S: Simd> Bytes for i16x32<S> {
         }
     }
 }
-impl<S: Simd> i16x32<S> {}
 impl<S: Simd> crate::SimdBase<i16, S> for i16x32<S> {
     const N: usize = 32;
     type Mask = mask16x32<S>;
@@ -5690,7 +5614,6 @@ impl<S: Simd> Bytes for u16x32<S> {
         }
     }
 }
-impl<S: Simd> u16x32<S> {}
 impl<S: Simd> crate::SimdBase<u16, S> for u16x32<S> {
     const N: usize = 32;
     type Mask = mask16x32<S>;
@@ -5896,7 +5819,6 @@ impl<S: Simd> Bytes for mask16x32<S> {
         }
     }
 }
-impl<S: Simd> mask16x32<S> {}
 impl<S: Simd> crate::SimdBase<i16, S> for mask16x32<S> {
     const N: usize = 32;
     type Mask = mask16x32<S>;
@@ -6044,12 +5966,6 @@ impl<S: Simd> Bytes for i32x16<S> {
                 simd: value.simd,
             }
         }
-    }
-}
-impl<S: Simd> i32x16<S> {
-    #[inline(always)]
-    pub fn cvt_f32(self) -> f32x16<S> {
-        self.simd.cvt_f32_i32x16(self)
     }
 }
 impl<S: Simd> crate::SimdBase<i32, S> for i32x16<S> {
@@ -6246,12 +6162,6 @@ impl<S: Simd> Bytes for u32x16<S> {
         }
     }
 }
-impl<S: Simd> u32x16<S> {
-    #[inline(always)]
-    pub fn cvt_f32(self) -> f32x16<S> {
-        self.simd.cvt_f32_u32x16(self)
-    }
-}
 impl<S: Simd> crate::SimdBase<u32, S> for u32x16<S> {
     const N: usize = 16;
     type Mask = mask32x16<S>;
@@ -6446,7 +6356,6 @@ impl<S: Simd> Bytes for mask32x16<S> {
         }
     }
 }
-impl<S: Simd> mask32x16<S> {}
 impl<S: Simd> crate::SimdBase<i32, S> for mask32x16<S> {
     const N: usize = 16;
     type Mask = mask32x16<S>;
@@ -6588,7 +6497,6 @@ impl<S: Simd> Bytes for f64x8<S> {
         }
     }
 }
-impl<S: Simd> f64x8<S> {}
 impl<S: Simd> crate::SimdBase<f64, S> for f64x8<S> {
     const N: usize = 8;
     type Mask = mask64x8<S>;
@@ -6820,7 +6728,6 @@ impl<S: Simd> Bytes for mask64x8<S> {
         }
     }
 }
-impl<S: Simd> mask64x8<S> {}
 impl<S: Simd> crate::SimdBase<i64, S> for mask64x8<S> {
     const N: usize = 8;
     type Mask = mask64x8<S>;

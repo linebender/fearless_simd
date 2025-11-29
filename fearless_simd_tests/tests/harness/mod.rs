@@ -236,59 +236,65 @@ fn combine_f32x4<S: Simd>(simd: S) {
 #[simd_test]
 fn cvt_u32_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[-1.0, 42.7, 5e9, f32::NAN]);
-    assert_eq!(a.cvt_u32().val, [0, 42, u32::MAX, 0]);
+    assert_eq!(a.to_int::<u32x4<_>>().val, [0, 42, u32::MAX, 0]);
 }
 
 #[simd_test]
 fn cvt_f32_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[0, 42, 1000000, u32::MAX]);
-    assert_eq!(a.cvt_f32().val, [0.0, 42.0, 1000000.0, u32::MAX as f32]);
+    assert_eq!(
+        a.to_float::<f32x4<_>>().val,
+        [0.0, 42.0, 1000000.0, u32::MAX as f32]
+    );
 }
 
 #[simd_test]
 fn cvt_u32_f32x4_rounding<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[0.0, 0.49, 0.51, 0.99]);
-    assert_eq!(a.cvt_u32().val, [0, 0, 0, 0]);
+    assert_eq!(a.to_int::<u32x4<_>>().val, [0, 0, 0, 0]);
 }
 
 #[simd_test]
 fn cvt_u32_f32x4_sat<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[-10.3, 3000000000.0, 5e9, -5e9]);
-    assert_eq!(a.cvt_u32().val, [0, 3000000000, u32::MAX, 0]);
+    assert_eq!(a.to_int::<u32x4<_>>().val, [0, 3000000000, u32::MAX, 0]);
 }
 
 #[simd_test]
 fn cvt_u32_f32x4_inf<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[-10.3, f32::NAN, f32::INFINITY, f32::NEG_INFINITY]);
 
-    assert_eq!(a.cvt_u32().val, [0, 0, u32::MAX, u32::MIN]);
+    assert_eq!(a.to_int::<u32x4<_>>().val, [0, 0, u32::MAX, u32::MIN]);
 }
 
 #[simd_test]
 fn cvt_i32_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[-10.3, -0.9, 13.34, 234234.8]);
 
-    assert_eq!(a.cvt_i32().val, [-10, 0, 13, 234234]);
+    assert_eq!(a.to_int::<i32x4<_>>().val, [-10, 0, 13, 234234]);
 }
 
 #[simd_test]
 fn cvt_i32_f32x4_sat<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[-10.3, f32::NAN, 5e9, -5e9]);
 
-    assert_eq!(a.cvt_i32().val, [-10, 0, i32::MAX, i32::MIN]);
+    assert_eq!(a.to_int::<i32x4<_>>().val, [-10, 0, i32::MAX, i32::MIN]);
 }
 
 #[simd_test]
 fn cvt_i32_f32x4_inf<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[-10.3, f32::NAN, f32::INFINITY, f32::NEG_INFINITY]);
 
-    assert_eq!(a.cvt_i32().val, [-10, 0, i32::MAX, i32::MIN]);
+    assert_eq!(a.to_int::<i32x4<_>>().val, [-10, 0, i32::MAX, i32::MIN]);
 }
 
 #[simd_test]
 fn cvt_f32_i32x4<S: Simd>(simd: S) {
     let a = i32x4::from_slice(simd, &[-1, 42, 1000000, i32::MAX]);
-    assert_eq!(a.cvt_f32().val, [-1.0, 42.0, 1000000.0, i32::MAX as f32]);
+    assert_eq!(
+        a.to_float::<f32x4<_>>().val,
+        [-1.0, 42.0, 1000000.0, i32::MAX as f32]
+    );
 }
 
 #[simd_test]
