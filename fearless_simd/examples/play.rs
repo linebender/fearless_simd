@@ -6,7 +6,7 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use fearless_simd::{Level, Simd, SimdBase, SimdFloat, WithSimd, dispatch};
+use fearless_simd::{Level, dispatch, prelude::*};
 
 // The WithSimd idea is adapted from pulp but is clunky; we
 // will probably prefer the `dispatch!` macro.
