@@ -26,13 +26,9 @@ pub(crate) enum OpSig {
     /// Takes a single argument of a vector type, and returns a tuple of two vector types that are each half as wide.
     Split,
     /// Takes two arguments of a vector type, and returns that same vector type.
-    Zip {
-        select_low: bool,
-    },
+    Zip { select_low: bool },
     /// Takes two arguments of a vector type, and returns that same vector type.
-    Unzip {
-        select_even: bool,
-    },
+    Unzip { select_even: bool },
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -47,9 +43,7 @@ pub(crate) enum OpSig {
     },
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
-    WidenNarrow {
-        target_ty: VecType,
-    },
+    WidenNarrow { target_ty: VecType },
     /// Takes an argument of a vector type and another u32 argument (the shift amount), and returns that same vector
     /// type.
     Shift,
@@ -59,16 +53,10 @@ pub(crate) enum OpSig {
     /// First argument is the base block size (i.e. 128), second argument is how many blocks. For example,
     /// `LoadInterleaved(128, 4)` would correspond to the NEON instructions `vld4q_f32`, while `LoadInterleaved(64, 4)`
     /// would correspond to `vld4_f32`.
-    LoadInterleaved {
-        block_size: u16,
-        block_count: u16,
-    },
+    LoadInterleaved { block_size: u16, block_count: u16 },
     /// The inverse of [`OpSig::LoadInterleaved`]. Takes a vector argument with the length (`block_size` * `block_count`) /
     /// [scalar type's byte size], and a mutable reference to a scalar array of the same length, and returns nothing.
-    StoreInterleaved {
-        block_size: u16,
-        block_count: u16,
-    },
+    StoreInterleaved { block_size: u16, block_count: u16 },
 }
 
 pub(crate) const FLOAT_OPS: &[(&str, OpSig)] = &[
