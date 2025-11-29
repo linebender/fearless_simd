@@ -8,41 +8,63 @@ use crate::types::{ScalarType, VecType};
 
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
+    /// Takes a single argument of the underlying SIMD element type, and returns the corresponding vector type.
     Splat,
+    /// Takes a single argument of the vector type, and returns that same vector type.
     Unary,
+    /// Takes two argument of the vector type, and returns that same vector type.
     Binary,
+    /// Takes three argument of the vector type, and returns that same vector type.
     Ternary,
+    /// Takes two argument of the vector type, and returns the corresponding mask type.
     Compare,
+    /// Takes a single argument of the vector type, which must be a mask type, and two elements of another vector type
+    /// of the same scalar width and length. Returns that latter vector type.
     Select,
+    /// Takes two arguments of a vector type, and returns a vector type that's twice as wide.
     Combine,
+    /// Takes a single argument of a vector type, and returns a tuple of two vector types that are each half as wide.
     Split,
+    /// Takes two arguments of a vector type, and returns that same vector type.
     Zip {
         select_low: bool,
     },
+    /// Takes two arguments of a vector type, and returns that same vector type.
     Unzip {
         select_even: bool,
     },
+    /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
+    /// same length.
     Cvt {
         target_ty: ScalarType,
         scalar_bits: usize,
     },
+    /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
+    /// same bit width.
     Reinterpret {
         target_ty: ScalarType,
         scalar_bits: usize,
     },
+    /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
+    /// same length.
     WidenNarrow {
         target_ty: VecType,
     },
-    // TODO: Make clear that this is right-shift
+    /// Takes an argument of a vector type and another u32 argument (the shift amount), and returns that same vector
+    /// type.
     Shift,
-    // First argument is the base block size (i.e. 128), second argument
-    // is how many blocks. For example, `LoadInterleaved(128, 4)` would correspond to the
-    // NEON instructions `vld4q_f32`, while `LoadInterleaved(64, 4)` would correspond to
-    // `vld4_f32`.
+    /// Takes an argument of an array of a certain scalar type, with the length (`block_size` * `block_count`) / [scalar
+    /// type's byte size]. Returns a vector type of that scalar type and length.
+    ///
+    /// First argument is the base block size (i.e. 128), second argument is how many blocks. For example,
+    /// `LoadInterleaved(128, 4)` would correspond to the NEON instructions `vld4q_f32`, while `LoadInterleaved(64, 4)`
+    /// would correspond to `vld4_f32`.
     LoadInterleaved {
         block_size: u16,
         block_count: u16,
     },
+    /// The inverse of [`OpSig::LoadInterleaved`]. Takes a vector argument with the length (`block_size` * `block_count`) /
+    /// [scalar type's byte size], and a mutable reference to a scalar array of the same length, and returns nothing.
     StoreInterleaved {
         block_size: u16,
         block_count: u16,
