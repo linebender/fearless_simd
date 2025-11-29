@@ -345,11 +345,7 @@ impl OpSig {
             | Self::WidenNarrow { .. } => {
                 quote! { self }
             }
-            Self::Binary
-            | Self::Compare
-            | Self::Zip { .. }
-            | Self::Combine
-            | Self::Unzip { .. } => {
+            Self::Binary | Self::Compare | Self::Zip { .. } | Self::Unzip { .. } => {
                 quote! { self, rhs: impl SimdInto<Self, S> }
             }
             Self::Shift => {
@@ -362,7 +358,33 @@ impl OpSig {
             // masks.
             Self::Select => return None,
             // These signatures involve types not in the Simd trait
-            Self::Split => return None,
+            Self::Split | Self::Combine => return None,
+        };
+        Some(args)
+    }
+
+    pub(crate) fn forwarding_call_args(&self) -> Option<TokenStream> {
+        let args = match self {
+            Self::Unary => quote! { self },
+            Self::Binary
+            | Self::Compare
+            | Self::Combine
+            | Self::Zip { .. }
+            | Self::Unzip { .. } => {
+                quote! { self, rhs.simd_into(self.simd) }
+            }
+            Self::Ternary => {
+                quote! { self, op1.simd_into(self.simd), op2.simd_into(self.simd) }
+            }
+            Self::Splat
+            | Self::Select
+            | Self::Split
+            | Self::Cvt { .. }
+            | Self::Reinterpret { .. }
+            | Self::WidenNarrow { .. }
+            | Self::Shift
+            | Self::LoadInterleaved { .. }
+            | Self::StoreInterleaved { .. } => return None,
         };
         Some(args)
     }
