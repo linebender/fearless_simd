@@ -12,7 +12,6 @@
 #![cfg_attr(
     target_arch = "x86_64",
     expect(
-        clippy::should_implement_trait,
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
@@ -23,7 +22,6 @@
 #![cfg_attr(
     target_arch = "wasm32",
     expect(
-        clippy::should_implement_trait,
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
@@ -38,7 +36,6 @@
     ),
     expect(
         clippy::missing_safety_doc,
-        clippy::should_implement_trait,
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
