@@ -253,10 +253,10 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Combine => generic_combine(vec_ty),
                 OpSig::Split => generic_split(vec_ty),
-                OpSig::Zip(is_low) => {
+                OpSig::Zip { select_low } => {
                     let (indices, shuffle_fn) = match vec_ty.scalar_bits {
                         8 => {
-                            let indices = if is_low {
+                            let indices = if select_low {
                                 quote! { 0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23 }
                             } else {
                                 quote! { 8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31 }
@@ -264,7 +264,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             (indices, quote! { u8x16_shuffle })
                         }
                         16 => {
-                            let indices = if is_low {
+                            let indices = if select_low {
                                 quote! { 0, 8, 1, 9, 2, 10, 3, 11 }
                             } else {
                                 quote! { 4, 12, 5, 13, 6, 14, 7, 15 }
@@ -272,7 +272,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             (indices, quote! { u16x8_shuffle })
                         }
                         32 => {
-                            let indices = if is_low {
+                            let indices = if select_low {
                                 quote! { 0, 4, 1, 5 }
                             } else {
                                 quote! { 2, 6, 3, 7 }
@@ -280,7 +280,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             (indices, quote! { u32x4_shuffle })
                         }
                         64 => {
-                            let indices = if is_low {
+                            let indices = if select_low {
                                 quote! { 0, 2 }
                             } else {
                                 quote! { 1, 3 }
@@ -296,10 +296,10 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Unzip(is_low) => {
+                OpSig::Unzip { select_even } => {
                     let (indices, shuffle_fn) = match vec_ty.scalar_bits {
                         8 => {
-                            let indices = if is_low {
+                            let indices = if select_even {
                                 quote! { 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30 }
                             } else {
                                 quote! { 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31 }
@@ -307,7 +307,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             (indices, quote! { u8x16_shuffle })
                         }
                         16 => {
-                            let indices = if is_low {
+                            let indices = if select_even {
                                 quote! { 0, 2, 4, 6, 8, 10, 12, 14 }
                             } else {
                                 quote! { 1, 3, 5, 7, 9, 11, 13, 15 }
@@ -315,7 +315,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             (indices, quote! { u16x8_shuffle })
                         }
                         32 => {
-                            let indices = if is_low {
+                            let indices = if select_even {
                                 quote! { 0, 2, 4, 6 }
                             } else {
                                 quote! { 1, 3, 5, 7 }
@@ -323,7 +323,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             (indices, quote! { u32x4_shuffle })
                         }
                         64 => {
-                            let indices = if is_low {
+                            let indices = if select_even {
                                 quote! { 0, 2 }
                             } else {
                                 quote! { 1, 3 }
@@ -350,9 +350,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Reinterpret(scalar, scalar_bits) => {
+                OpSig::Reinterpret {
+                    target_ty,
+                    scalar_bits,
+                } => {
                     assert!(
-                        valid_reinterpret(vec_ty, scalar, scalar_bits),
+                        valid_reinterpret(vec_ty, target_ty, scalar_bits),
                         "The underlying data for WASM SIMD is a v128, so a reinterpret is just that, a reinterpretation of the v128."
                     );
 
@@ -362,11 +365,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Cvt(scalar, scalar_bits) => {
+                OpSig::Cvt {
+                    target_ty,
+                    scalar_bits,
+                } => {
                     let src_prefix = vec_ty.scalar.prefix();
-                    let dst_prefix = scalar.prefix();
+                    let dst_prefix = target_ty.prefix();
                     let len = vec_ty.len;
-                    let op = match (vec_ty.scalar, scalar) {
+                    let op = match (vec_ty.scalar, target_ty) {
                         (ScalarType::Float, ScalarType::Int | ScalarType::Unsigned) => "trunc_sat",
                         (ScalarType::Int | ScalarType::Unsigned, ScalarType::Float) => "convert",
                         _ => unimplemented!(),
@@ -381,7 +387,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::WidenNarrow(to_ty) => {
+                OpSig::WidenNarrow { target_ty } => {
                     match method {
                         "widen" => {
                             assert_eq!(
@@ -390,7 +396,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 "Currently only u8x16 -> u16x16 widening is supported"
                             );
                             assert_eq!(
-                                to_ty.rust_name(),
+                                target_ty.rust_name(),
                                 "u16x16",
                                 "Currently only u8x16 -> u16x16 widening is supported"
                             );
@@ -409,7 +415,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 "Currently only u16x16 -> u8x16 narrowing is supported"
                             );
                             assert_eq!(
-                                to_ty.rust_name(),
+                                target_ty.rust_name(),
                                 "u8x16",
                                 "Currently only u16x16 -> u8x16 narrowing is supported"
                             );
@@ -429,8 +435,11 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         _ => unimplemented!(),
                     }
                 }
-                OpSig::LoadInterleaved(block_size, count) => {
-                    assert_eq!(count, 4, "only count of 4 is crrently supported");
+                OpSig::LoadInterleaved {
+                    block_size,
+                    block_count,
+                } => {
+                    assert_eq!(block_count, 4, "only count of 4 is currently supported");
                     let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
 
                     // For WASM we need to simulate interleaving with shuffle, and we only have
@@ -507,8 +516,11 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::StoreInterleaved(block_size, count) => {
-                    assert_eq!(count, 4, "only count of 4 is currently supported");
+                OpSig::StoreInterleaved {
+                    block_size,
+                    block_count,
+                } => {
+                    assert_eq!(block_count, 4, "only count of 4 is currently supported");
                     let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
 
                     let (lower_indices, upper_indices, shuffle_fn) = match vec_ty.scalar_bits {

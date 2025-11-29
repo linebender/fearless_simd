@@ -6,7 +6,7 @@ use quote::quote;
 
 use crate::{
     ops::{CORE_OPS, FLOAT_OPS, INT_OPS, MASK_OPS, OpSig, TyFlavor, ops_for_type},
-    types::{SIMD_TYPES, type_imports},
+    types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
 pub(crate) fn mk_simd_trait() -> TokenStream {
@@ -100,25 +100,13 @@ fn mk_simd_base() -> TokenStream {
 
 fn mk_simd_float() -> TokenStream {
     let methods = methods_for_vec_trait(FLOAT_OPS);
+    let op_traits = ScalarType::Float
+        .core_ops()
+        .iter()
+        .flat_map(|op| op.trait_bounds());
     quote! {
         pub trait SimdFloat<Element: SimdElement, S: Simd>: SimdBase<Element, S>
-            + core::ops::Neg<Output = Self>
-            + core::ops::Add<Output = Self>
-            + core::ops::AddAssign
-            + core::ops::Add<Element, Output = Self>
-            + core::ops::AddAssign<Element>
-            + core::ops::Sub<Output = Self>
-            + core::ops::SubAssign
-            + core::ops::Sub<Element, Output = Self>
-            + core::ops::SubAssign<Element>
-            + core::ops::Mul<Output = Self>
-            + core::ops::MulAssign
-            + core::ops::Mul<Element, Output = Self>
-            + core::ops::MulAssign<Element>
-            + core::ops::Div<Output = Self>
-            + core::ops::DivAssign
-            + core::ops::Div<Element, Output = Self>
-            + core::ops::DivAssign<Element>
+            #(+ #op_traits)*
         {
             #[inline(always)]
             fn to_int<T: SimdCvtTruncate<Self>>(self) -> T { T::truncate_from(self) }
@@ -130,39 +118,13 @@ fn mk_simd_float() -> TokenStream {
 
 fn mk_simd_int() -> TokenStream {
     let methods = methods_for_vec_trait(INT_OPS);
+    let op_traits = ScalarType::Unsigned
+        .core_ops()
+        .iter()
+        .flat_map(|op| op.trait_bounds());
     quote! {
         pub trait SimdInt<Element: SimdElement, S: Simd>: SimdBase<Element, S>
-            + core::ops::Add<Output = Self>
-            + core::ops::AddAssign
-            + core::ops::Add<Element, Output = Self>
-            + core::ops::AddAssign<Element>
-            + core::ops::Sub<Output = Self>
-            + core::ops::SubAssign
-            + core::ops::Sub<Element, Output = Self>
-            + core::ops::SubAssign<Element>
-            + core::ops::Mul<Output = Self>
-            + core::ops::MulAssign
-            + core::ops::Mul<Element, Output = Self>
-            + core::ops::MulAssign<Element>
-            + core::ops::Not<Output = Self>
-            + core::ops::BitAnd<Output = Self>
-            + core::ops::BitAndAssign
-            + core::ops::BitAnd<Element, Output = Self>
-            + core::ops::BitAndAssign<Element>
-            + core::ops::BitOr<Output = Self>
-            + core::ops::BitOrAssign
-            + core::ops::BitOr<Element, Output = Self>
-            + core::ops::BitOrAssign<Element>
-            + core::ops::BitXor<Output = Self>
-            + core::ops::BitXorAssign
-            + core::ops::BitXor<Element, Output = Self>
-            + core::ops::BitXorAssign<Element>
-            + core::ops::Shl<u32, Output = Self>
-            + core::ops::ShlAssign<u32>
-            + core::ops::Shr<Output = Self>
-            + core::ops::ShrAssign
-            + core::ops::Shr<u32, Output = Self>
-            + core::ops::ShrAssign<u32>
+            #(+ #op_traits)*
         {
             #[inline(always)]
             fn to_float<T: SimdCvtFloat<Self>>(self) -> T { T::float_from(self) }
@@ -174,12 +136,13 @@ fn mk_simd_int() -> TokenStream {
 
 fn mk_simd_mask() -> TokenStream {
     let methods = methods_for_vec_trait(MASK_OPS);
+    let op_traits = ScalarType::Mask
+        .core_ops()
+        .iter()
+        .flat_map(|op| op.trait_bounds());
     quote! {
         pub trait SimdMask<Element: SimdElement, S: Simd>: SimdBase<Element, S>
-            + core::ops::Not<Output = Self>
-            + core::ops::BitAnd<Output = Self>
-            + core::ops::BitOr<Output = Self>
-            + core::ops::BitXor<Output = Self>
+            #(+ #op_traits)*
         {
             #( #methods )*
         }
@@ -197,7 +160,7 @@ fn methods_for_vec_trait(ops: &[(&str, OpSig)]) -> Vec<TokenStream> {
         if let Some(args) = sig.vec_trait_args() {
             let ret_ty = match sig {
                 OpSig::Compare => quote! { Self::Mask },
-                OpSig::Zip(_) => quote! { Self },
+                OpSig::Zip { .. } => quote! { Self },
                 _ => quote! { Self },
             };
             methods.push(quote! {

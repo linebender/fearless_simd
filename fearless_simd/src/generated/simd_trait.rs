@@ -1035,7 +1035,6 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     + core::ops::MulAssign
     + core::ops::Mul<Element, Output = Self>
     + core::ops::MulAssign<Element>
-    + core::ops::Not<Output = Self>
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
     + core::ops::BitAnd<Element, Output = Self>
@@ -1048,12 +1047,13 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     + core::ops::BitXorAssign
     + core::ops::BitXor<Element, Output = Self>
     + core::ops::BitXorAssign<Element>
+    + core::ops::Not<Output = Self>
     + core::ops::Shl<u32, Output = Self>
     + core::ops::ShlAssign<u32>
-    + core::ops::Shr<Output = Self>
-    + core::ops::ShrAssign
     + core::ops::Shr<u32, Output = Self>
     + core::ops::ShrAssign<u32>
+    + core::ops::Shr<Output = Self>
+    + core::ops::ShrAssign
 {
     #[inline(always)]
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
@@ -1073,10 +1073,19 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
 }
 pub trait SimdMask<Element: SimdElement, S: Simd>:
     SimdBase<Element, S>
-    + core::ops::Not<Output = Self>
     + core::ops::BitAnd<Output = Self>
+    + core::ops::BitAndAssign
+    + core::ops::BitAnd<Element, Output = Self>
+    + core::ops::BitAndAssign<Element>
     + core::ops::BitOr<Output = Self>
+    + core::ops::BitOrAssign
+    + core::ops::BitOr<Element, Output = Self>
+    + core::ops::BitOrAssign<Element>
     + core::ops::BitXor<Output = Self>
+    + core::ops::BitXorAssign
+    + core::ops::BitXor<Element, Output = Self>
+    + core::ops::BitXorAssign<Element>
+    + core::ops::Not<Output = Self>
 {
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
 }

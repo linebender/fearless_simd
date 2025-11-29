@@ -368,17 +368,17 @@ impl<S: Simd> core::ops::Shl<u32> for i8x16<S> {
         self.simd.shl_i8x16(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for i8x16<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_i8x16(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for i8x16<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i8x16(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for i8x16<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_i8x16(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for i8x16<S> {
@@ -612,17 +612,17 @@ impl<S: Simd> core::ops::Shl<u32> for u8x16<S> {
         self.simd.shl_u8x16(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for u8x16<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_u8x16(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for u8x16<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u8x16(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for u8x16<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_u8x16(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for u8x16<S> {
@@ -969,17 +969,17 @@ impl<S: Simd> core::ops::Shl<u32> for i16x8<S> {
         self.simd.shl_i16x8(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for i16x8<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_i16x8(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for i16x8<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i16x8(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for i16x8<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_i16x8(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for i16x8<S> {
@@ -1213,17 +1213,17 @@ impl<S: Simd> core::ops::Shl<u32> for u16x8<S> {
         self.simd.shl_u16x8(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for u16x8<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_u16x8(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for u16x8<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u16x8(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for u16x8<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_u16x8(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for u16x8<S> {
@@ -1570,17 +1570,17 @@ impl<S: Simd> core::ops::Shl<u32> for i32x4<S> {
         self.simd.shl_i32x4(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for i32x4<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_i32x4(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for i32x4<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i32x4(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for i32x4<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_i32x4(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for i32x4<S> {
@@ -1814,17 +1814,17 @@ impl<S: Simd> core::ops::Shl<u32> for u32x4<S> {
         self.simd.shl_u32x4(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for u32x4<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_u32x4(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for u32x4<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u32x4(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for u32x4<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_u32x4(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for u32x4<S> {
@@ -2555,17 +2555,17 @@ impl<S: Simd> core::ops::Shl<u32> for i8x32<S> {
         self.simd.shl_i8x32(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for i8x32<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_i8x32(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for i8x32<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i8x32(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for i8x32<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_i8x32(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for i8x32<S> {
@@ -2799,17 +2799,17 @@ impl<S: Simd> core::ops::Shl<u32> for u8x32<S> {
         self.simd.shl_u8x32(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for u8x32<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_u8x32(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for u8x32<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u8x32(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for u8x32<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_u8x32(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for u8x32<S> {
@@ -3156,17 +3156,17 @@ impl<S: Simd> core::ops::Shl<u32> for i16x16<S> {
         self.simd.shl_i16x16(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for i16x16<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_i16x16(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for i16x16<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i16x16(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for i16x16<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_i16x16(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for i16x16<S> {
@@ -3400,17 +3400,17 @@ impl<S: Simd> core::ops::Shl<u32> for u16x16<S> {
         self.simd.shl_u16x16(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for u16x16<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_u16x16(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for u16x16<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u16x16(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for u16x16<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_u16x16(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for u16x16<S> {
@@ -3757,17 +3757,17 @@ impl<S: Simd> core::ops::Shl<u32> for i32x8<S> {
         self.simd.shl_i32x8(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for i32x8<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_i32x8(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for i32x8<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i32x8(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for i32x8<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_i32x8(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for i32x8<S> {
@@ -4001,17 +4001,17 @@ impl<S: Simd> core::ops::Shl<u32> for u32x8<S> {
         self.simd.shl_u32x8(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for u32x8<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_u32x8(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for u32x8<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u32x8(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for u32x8<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_u32x8(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for u32x8<S> {
@@ -4742,17 +4742,17 @@ impl<S: Simd> core::ops::Shl<u32> for i8x64<S> {
         self.simd.shl_i8x64(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for i8x64<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_i8x64(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for i8x64<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i8x64(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for i8x64<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_i8x64(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for i8x64<S> {
@@ -4986,17 +4986,17 @@ impl<S: Simd> core::ops::Shl<u32> for u8x64<S> {
         self.simd.shl_u8x64(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for u8x64<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_u8x64(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for u8x64<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u8x64(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for u8x64<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_u8x64(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for u8x64<S> {
@@ -5343,17 +5343,17 @@ impl<S: Simd> core::ops::Shl<u32> for i16x32<S> {
         self.simd.shl_i16x32(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for i16x32<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_i16x32(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for i16x32<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i16x32(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for i16x32<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_i16x32(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for i16x32<S> {
@@ -5587,17 +5587,17 @@ impl<S: Simd> core::ops::Shl<u32> for u16x32<S> {
         self.simd.shl_u16x32(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for u16x32<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_u16x32(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for u16x32<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u16x32(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for u16x32<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_u16x32(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for u16x32<S> {
@@ -5944,17 +5944,17 @@ impl<S: Simd> core::ops::Shl<u32> for i32x16<S> {
         self.simd.shl_i32x16(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for i32x16<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_i32x16(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for i32x16<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i32x16(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for i32x16<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_i32x16(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for i32x16<S> {
@@ -6188,17 +6188,17 @@ impl<S: Simd> core::ops::Shl<u32> for u32x16<S> {
         self.simd.shl_u32x16(self, rhs)
     }
 }
+impl<S: Simd> core::ops::ShlAssign<u32> for u32x16<S> {
+    #[inline(always)]
+    fn shl_assign(&mut self, rhs: u32) {
+        *self = self.simd.shl_u32x16(*self, rhs);
+    }
+}
 impl<S: Simd> core::ops::Shr<u32> for u32x16<S> {
     type Output = Self;
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u32x16(self, rhs)
-    }
-}
-impl<S: Simd> core::ops::ShlAssign<u32> for u32x16<S> {
-    #[inline(always)]
-    fn shl_assign(&mut self, rhs: u32) {
-        *self = self.simd.shl_u32x16(*self, rhs);
     }
 }
 impl<S: Simd> core::ops::ShrAssign<u32> for u32x16<S> {

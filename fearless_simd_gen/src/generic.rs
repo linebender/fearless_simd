@@ -146,8 +146,8 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::Zip(zip1) => {
-            let (e1, e2, e3) = if zip1 {
+        OpSig::Zip { select_low } => {
+            let (e1, e2, e3) = if select_low {
                 (
                     quote! {
                         (a0, _)
@@ -187,7 +187,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::Unzip(_) => {
+        OpSig::Unzip { .. } => {
             quote! {
                 #[inline(always)]
                 fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #ret_ty {
@@ -197,8 +197,11 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::Cvt(scalar, scalar_bits) => {
-            let half = VecType::new(scalar, scalar_bits, ty.len / 2);
+        OpSig::Cvt {
+            target_ty,
+            scalar_bits,
+        } => {
+            let half = VecType::new(target_ty, scalar_bits, ty.len / 2);
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
             quote! {
                 #[inline(always)]
@@ -208,8 +211,11 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::Reinterpret(scalar, scalar_bits) => {
-            let mut half = reinterpret_ty(ty, scalar, scalar_bits);
+        OpSig::Reinterpret {
+            target_ty,
+            scalar_bits,
+        } => {
+            let mut half = reinterpret_ty(ty, target_ty, scalar_bits);
             half.len /= 2;
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
             quote! {
@@ -220,9 +226,12 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::WidenNarrow(mut half) => {
-            half.len /= 2;
-            let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
+        OpSig::WidenNarrow { mut target_ty } => {
+            target_ty.len /= 2;
+            let combine = Ident::new(
+                &format!("combine_{}", target_ty.rust_name()),
+                Span::call_site(),
+            );
             quote! {
                 #[inline(always)]
                 fn #name(self, a: #ty_rust<Self>) -> #ret_ty {
@@ -233,9 +242,12 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
         OpSig::Split => generic_split(ty),
         OpSig::Combine => generic_combine(ty),
-        OpSig::LoadInterleaved(block_size, count) => {
-            let arg = load_interleaved_arg_ty(block_size, count, ty);
-            let split_len = (block_size * count) as usize / (ty.scalar_bits * 2);
+        OpSig::LoadInterleaved {
+            block_size,
+            block_count,
+        } => {
+            let arg = load_interleaved_arg_ty(block_size, block_count, ty);
+            let split_len = (block_size * block_count) as usize / (ty.scalar_bits * 2);
             let delegate = format_ident!(
                 "{op}_{}",
                 VecType {
@@ -254,8 +266,11 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::StoreInterleaved(block_size, count) => {
-            let arg = store_interleaved_arg_ty(block_size, count, ty);
+        OpSig::StoreInterleaved {
+            block_size,
+            block_count,
+        } => {
+            let arg = store_interleaved_arg_ty(block_size, block_count, ty);
             quote! {
                 #[inline(always)]
                 fn #name(self, #arg) -> #ret_ty {
