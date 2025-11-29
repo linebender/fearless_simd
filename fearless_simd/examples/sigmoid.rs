@@ -6,7 +6,7 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use fearless_simd::{Level, Simd, SimdBase, SimdFloat, dispatch};
+use fearless_simd::{Level, dispatch, prelude::*};
 
 #[inline(always)]
 fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
