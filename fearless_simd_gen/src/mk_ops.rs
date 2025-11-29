@@ -5,8 +5,8 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    ops::overloaded_ops_for,
-    types::{CoreOpTrait, SIMD_TYPES, type_imports},
+    ops::{CoreOpTrait, overloaded_ops_for},
+    types::{SIMD_TYPES, type_imports},
 };
 
 pub(crate) fn mk_ops() -> TokenStream {
