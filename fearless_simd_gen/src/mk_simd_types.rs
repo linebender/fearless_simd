@@ -55,7 +55,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 .map(|idx| quote! { val[#idx] })
                 .collect::<Vec<_>>(),
         );
-        let mut cvt_impls = Vec::new();
+        let mut conditional_impls = Vec::new();
         // TODO: Relax `if` clauses once 64-bit integer or 16-bit floats vectors are implemented
         match ty.scalar {
             ScalarType::Float if ty.scalar_bits == 32 => {
@@ -70,7 +70,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                         src_ty.rust_name()
                     );
                     let src_ty = src_ty.rust();
-                    cvt_impls.push(quote! {
+                    conditional_impls.push(quote! {
                         impl<S: Simd> SimdCvtFloat<#src_ty<S>> for #name<S> {
                             fn float_from(x: #src_ty<S>) -> Self {
                                 x.simd.#method(x)
@@ -90,7 +90,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     src_ty.rust_name()
                 );
                 let src_ty = src_ty.rust();
-                cvt_impls.push(quote! {
+                conditional_impls.push(quote! {
                     impl<S: Simd> SimdCvtTruncate<#src_ty<S>> for #name<S> {
                         fn truncate_from(x: #src_ty<S>) -> Self {
                             x.simd.#method(x)
@@ -99,6 +99,38 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 });
             }
             _ => {}
+        }
+        if ty.n_bits() > 128 {
+            let n2 = ty.len / 2;
+            let split_ty = VecType::new(ty.scalar, ty.scalar_bits, n2);
+            let split_ty_rust = split_ty.rust();
+            let split_method = generic_op_name("split", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> crate::SimdSplit<#rust_scalar, S> for #name<S> {
+                    type Split = #split_ty_rust<S>;
+
+                    #[inline(always)]
+                    fn split(self) -> (Self::Split, Self::Split) {
+                        self.simd.#split_method(self)
+                    }
+                }
+            });
+        }
+        if ty.n_bits() < 512 {
+            let n2 = ty.len * 2;
+            let combine_ty = VecType::new(ty.scalar, ty.scalar_bits, n2);
+            let combine_ty_rust = combine_ty.rust();
+            let combine_method = generic_op_name("combine", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> crate::SimdCombine<#rust_scalar, S> for #name<S> {
+                    type Combined = #combine_ty_rust<S>;
+
+                    #[inline(always)]
+                    fn combine(self, rhs: Self) -> Self::Combined {
+                        self.simd.#combine_method(self, rhs)
+                    }
+                }
+            });
         }
         result.extend(quote! {
             #[derive(Clone, Copy, Debug)]
@@ -178,7 +210,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
             #impl_block
 
-            #( #cvt_impls )*
+            #( #conditional_impls )*
         });
     }
     result
@@ -191,10 +223,10 @@ fn simd_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
     let mut methods = vec![];
     for (method, sig) in ops_for_type(ty, true) {
-        // Eventually, we should get rid of all inherent methods. Right now, we keep the "combine" operations (since
-        // they are not implemented for all vector sizes) and the "convert" operations (used for converting between
-        // floats and integers; there's a trait for this, but type inference makes it annoying to use).
-        if matches!(sig, OpSig::Combine | OpSig::Cvt { .. })
+        // Eventually, we should get rid of all inherent methods. Right now, we keep the "convert" operations (used for
+        // converting between floats and integers; there's a trait for this, but type inference makes it annoying to
+        // use).
+        if matches!(sig, OpSig::Cvt { .. })
             && let Some(args) = sig.vec_trait_args()
         {
             let method_name = Ident::new(method, Span::call_site());
@@ -202,9 +234,6 @@ fn simd_impl(ty: &VecType) -> TokenStream {
             let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
             let call_args = match sig {
                 OpSig::Cvt { .. } => quote! { self },
-                OpSig::Combine => {
-                    quote! { self, rhs.simd_into(self.simd) }
-                }
                 _ => unimplemented!(),
             };
             methods.push(quote! {
