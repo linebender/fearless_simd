@@ -222,10 +222,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_s8(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        unsafe { vmvnq_s8(a.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         unsafe { vaddq_s8(a.into(), b.into()).simd_into(self) }
     }
@@ -250,16 +246,20 @@ impl Simd for Neon {
         unsafe { veorq_s8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
+        unsafe { vmvnq_s8(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
+        unsafe { vshlq_s8(a.into(), vdupq_n_s8(shift as i8)).simd_into(self) }
+    }
+    #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         unsafe { vshlq_s8(a.into(), vdupq_n_s8(-(shift as i8))).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         unsafe { vshlq_s8(a.into(), vnegq_s8(b.into())).simd_into(self) }
-    }
-    #[inline(always)]
-    fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
-        unsafe { vshlq_s8(a.into(), vdupq_n_s8(shift as i8)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -341,10 +341,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_u8(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        unsafe { vmvnq_u8(a.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         unsafe { vaddq_u8(a.into(), b.into()).simd_into(self) }
     }
@@ -369,16 +365,20 @@ impl Simd for Neon {
         unsafe { veorq_u8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
+        unsafe { vmvnq_u8(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
+        unsafe { vshlq_u8(a.into(), vdupq_n_s8(shift as i8)).simd_into(self) }
+    }
+    #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         unsafe { vshlq_u8(a.into(), vdupq_n_s8(-(shift as i8))).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         unsafe { vshlq_u8(a.into(), vnegq_s8(vreinterpretq_s8_u8(b.into()))).simd_into(self) }
-    }
-    #[inline(always)]
-    fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
-        unsafe { vshlq_u8(a.into(), vdupq_n_s8(shift as i8)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -460,10 +460,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_s8(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
-        unsafe { vmvnq_s8(a.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         unsafe { vandq_s8(a.into(), b.into()).simd_into(self) }
     }
@@ -474,6 +470,10 @@ impl Simd for Neon {
     #[inline(always)]
     fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         unsafe { veorq_s8(a.into(), b.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
+        unsafe { vmvnq_s8(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_mask8x16(
@@ -500,10 +500,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_s16(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        unsafe { vmvnq_s16(a.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         unsafe { vaddq_s16(a.into(), b.into()).simd_into(self) }
     }
@@ -528,16 +524,20 @@ impl Simd for Neon {
         unsafe { veorq_s16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
+        unsafe { vmvnq_s16(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
+        unsafe { vshlq_s16(a.into(), vdupq_n_s16(shift as i16)).simd_into(self) }
+    }
+    #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
         unsafe { vshlq_s16(a.into(), vdupq_n_s16(-(shift as i16))).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         unsafe { vshlq_s16(a.into(), vnegq_s16(b.into())).simd_into(self) }
-    }
-    #[inline(always)]
-    fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
-        unsafe { vshlq_s16(a.into(), vdupq_n_s16(shift as i16)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -619,10 +619,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_u16(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        unsafe { vmvnq_u16(a.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         unsafe { vaddq_u16(a.into(), b.into()).simd_into(self) }
     }
@@ -647,16 +643,20 @@ impl Simd for Neon {
         unsafe { veorq_u16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
+        unsafe { vmvnq_u16(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
+        unsafe { vshlq_u16(a.into(), vdupq_n_s16(shift as i16)).simd_into(self) }
+    }
+    #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
         unsafe { vshlq_u16(a.into(), vdupq_n_s16(-(shift as i16))).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         unsafe { vshlq_u16(a.into(), vnegq_s16(vreinterpretq_s16_u16(b.into()))).simd_into(self) }
-    }
-    #[inline(always)]
-    fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
-        unsafe { vshlq_u16(a.into(), vdupq_n_s16(shift as i16)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -734,10 +734,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_s16(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
-        unsafe { vmvnq_s16(a.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         unsafe { vandq_s16(a.into(), b.into()).simd_into(self) }
     }
@@ -748,6 +744,10 @@ impl Simd for Neon {
     #[inline(always)]
     fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         unsafe { veorq_s16(a.into(), b.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
+        unsafe { vmvnq_s16(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_mask16x8(
@@ -774,10 +774,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_s32(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        unsafe { vmvnq_s32(a.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         unsafe { vaddq_s32(a.into(), b.into()).simd_into(self) }
     }
@@ -802,16 +798,20 @@ impl Simd for Neon {
         unsafe { veorq_s32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
+        unsafe { vmvnq_s32(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
+        unsafe { vshlq_s32(a.into(), vdupq_n_s32(shift as i32)).simd_into(self) }
+    }
+    #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
         unsafe { vshlq_s32(a.into(), vdupq_n_s32(-(shift as i32))).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         unsafe { vshlq_s32(a.into(), vnegq_s32(b.into())).simd_into(self) }
-    }
-    #[inline(always)]
-    fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        unsafe { vshlq_s32(a.into(), vdupq_n_s32(shift as i32)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -897,10 +897,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_u32(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        unsafe { vmvnq_u32(a.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         unsafe { vaddq_u32(a.into(), b.into()).simd_into(self) }
     }
@@ -925,16 +921,20 @@ impl Simd for Neon {
         unsafe { veorq_u32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
+        unsafe { vmvnq_u32(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
+        unsafe { vshlq_u32(a.into(), vdupq_n_s32(shift as i32)).simd_into(self) }
+    }
+    #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
         unsafe { vshlq_u32(a.into(), vdupq_n_s32(-(shift as i32))).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         unsafe { vshlq_u32(a.into(), vnegq_s32(vreinterpretq_s32_u32(b.into()))).simd_into(self) }
-    }
-    #[inline(always)]
-    fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        unsafe { vshlq_u32(a.into(), vdupq_n_s32(shift as i32)).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
@@ -1012,10 +1012,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_s32(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
-        unsafe { vmvnq_s32(a.into()).simd_into(self) }
-    }
-    #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         unsafe { vandq_s32(a.into(), b.into()).simd_into(self) }
     }
@@ -1026,6 +1022,10 @@ impl Simd for Neon {
     #[inline(always)]
     fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         unsafe { veorq_s32(a.into(), b.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
+        unsafe { vmvnq_s32(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_mask32x4(
@@ -1198,10 +1198,6 @@ impl Simd for Neon {
         unsafe { vdupq_n_s64(val).simd_into(self) }
     }
     #[inline(always)]
-    fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
-        unsafe { vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))).simd_into(self) }
-    }
-    #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         unsafe { vandq_s64(a.into(), b.into()).simd_into(self) }
     }
@@ -1212,6 +1208,10 @@ impl Simd for Neon {
     #[inline(always)]
     fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         unsafe { veorq_s64(a.into(), b.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
+        unsafe { vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))).simd_into(self) }
     }
     #[inline(always)]
     fn select_mask64x2(
@@ -1476,11 +1476,6 @@ impl Simd for Neon {
         self.combine_i8x16(half, half)
     }
     #[inline(always)]
-    fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.not_i8x16(a0), self.not_i8x16(a1))
-    }
-    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         let (b0, b1) = self.split_i8x32(b);
@@ -1517,6 +1512,16 @@ impl Simd for Neon {
         self.combine_i8x16(self.xor_i8x16(a0, b0), self.xor_i8x16(a1, b1))
     }
     #[inline(always)]
+    fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.not_i8x16(a0), self.not_i8x16(a1))
+    }
+    #[inline(always)]
+    fn shl_i8x32(self, a: i8x32<Self>, b: u32) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        self.combine_i8x16(self.shl_i8x16(a0, b), self.shl_i8x16(a1, b))
+    }
+    #[inline(always)]
     fn shr_i8x32(self, a: i8x32<Self>, b: u32) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         self.combine_i8x16(self.shr_i8x16(a0, b), self.shr_i8x16(a1, b))
@@ -1526,11 +1531,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_i8x32(a);
         let (b0, b1) = self.split_i8x32(b);
         self.combine_i8x16(self.shrv_i8x16(a0, b0), self.shrv_i8x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i8x32(self, a: i8x32<Self>, b: u32) -> i8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_i8x16(self.shl_i8x16(a0, b), self.shl_i8x16(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
@@ -1644,11 +1644,6 @@ impl Simd for Neon {
         self.combine_u8x16(half, half)
     }
     #[inline(always)]
-    fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.not_u8x16(a0), self.not_u8x16(a1))
-    }
-    #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
@@ -1685,6 +1680,16 @@ impl Simd for Neon {
         self.combine_u8x16(self.xor_u8x16(a0, b0), self.xor_u8x16(a1, b1))
     }
     #[inline(always)]
+    fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        self.combine_u8x16(self.not_u8x16(a0), self.not_u8x16(a1))
+    }
+    #[inline(always)]
+    fn shl_u8x32(self, a: u8x32<Self>, b: u32) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        self.combine_u8x16(self.shl_u8x16(a0, b), self.shl_u8x16(a1, b))
+    }
+    #[inline(always)]
     fn shr_u8x32(self, a: u8x32<Self>, b: u32) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         self.combine_u8x16(self.shr_u8x16(a0, b), self.shr_u8x16(a1, b))
@@ -1694,11 +1699,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
         self.combine_u8x16(self.shrv_u8x16(a0, b0), self.shrv_u8x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u8x32(self, a: u8x32<Self>, b: u32) -> u8x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u8x16(self.shl_u8x16(a0, b), self.shl_u8x16(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
@@ -1807,11 +1807,6 @@ impl Simd for Neon {
         self.combine_mask8x16(half, half)
     }
     #[inline(always)]
-    fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        self.combine_mask8x16(self.not_mask8x16(a0), self.not_mask8x16(a1))
-    }
-    #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_mask8x32(b);
@@ -1828,6 +1823,11 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_mask8x32(b);
         self.combine_mask8x16(self.xor_mask8x16(a0, b0), self.xor_mask8x16(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.combine_mask8x16(self.not_mask8x16(a0), self.not_mask8x16(a1))
     }
     #[inline(always)]
     fn select_mask8x32(
@@ -1871,11 +1871,6 @@ impl Simd for Neon {
         self.combine_i16x8(half, half)
     }
     #[inline(always)]
-    fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.not_i16x8(a0), self.not_i16x8(a1))
-    }
-    #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         let (a0, a1) = self.split_i16x16(a);
         let (b0, b1) = self.split_i16x16(b);
@@ -1912,6 +1907,16 @@ impl Simd for Neon {
         self.combine_i16x8(self.xor_i16x8(a0, b0), self.xor_i16x8(a1, b1))
     }
     #[inline(always)]
+    fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.not_i16x8(a0), self.not_i16x8(a1))
+    }
+    #[inline(always)]
+    fn shl_i16x16(self, a: i16x16<Self>, b: u32) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        self.combine_i16x8(self.shl_i16x8(a0, b), self.shl_i16x8(a1, b))
+    }
+    #[inline(always)]
     fn shr_i16x16(self, a: i16x16<Self>, b: u32) -> i16x16<Self> {
         let (a0, a1) = self.split_i16x16(a);
         self.combine_i16x8(self.shr_i16x8(a0, b), self.shr_i16x8(a1, b))
@@ -1921,11 +1926,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_i16x16(a);
         let (b0, b1) = self.split_i16x16(b);
         self.combine_i16x8(self.shrv_i16x8(a0, b0), self.shrv_i16x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i16x16(self, a: i16x16<Self>, b: u32) -> i16x16<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_i16x8(self.shl_i16x8(a0, b), self.shl_i16x8(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
@@ -2039,11 +2039,6 @@ impl Simd for Neon {
         self.combine_u16x8(half, half)
     }
     #[inline(always)]
-    fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u16x8(self.not_u16x8(a0), self.not_u16x8(a1))
-    }
-    #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         let (a0, a1) = self.split_u16x16(a);
         let (b0, b1) = self.split_u16x16(b);
@@ -2080,6 +2075,16 @@ impl Simd for Neon {
         self.combine_u16x8(self.xor_u16x8(a0, b0), self.xor_u16x8(a1, b1))
     }
     #[inline(always)]
+    fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        self.combine_u16x8(self.not_u16x8(a0), self.not_u16x8(a1))
+    }
+    #[inline(always)]
+    fn shl_u16x16(self, a: u16x16<Self>, b: u32) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        self.combine_u16x8(self.shl_u16x8(a0, b), self.shl_u16x8(a1, b))
+    }
+    #[inline(always)]
     fn shr_u16x16(self, a: u16x16<Self>, b: u32) -> u16x16<Self> {
         let (a0, a1) = self.split_u16x16(a);
         self.combine_u16x8(self.shr_u16x8(a0, b), self.shr_u16x8(a1, b))
@@ -2089,11 +2094,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_u16x16(a);
         let (b0, b1) = self.split_u16x16(b);
         self.combine_u16x8(self.shrv_u16x8(a0, b0), self.shrv_u16x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u16x16(self, a: u16x16<Self>, b: u32) -> u16x16<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u16x8(self.shl_u16x8(a0, b), self.shl_u16x8(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
@@ -2211,11 +2211,6 @@ impl Simd for Neon {
         self.combine_mask16x8(half, half)
     }
     #[inline(always)]
-    fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        self.combine_mask16x8(self.not_mask16x8(a0), self.not_mask16x8(a1))
-    }
-    #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_mask16x16(b);
@@ -2232,6 +2227,11 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_mask16x16(b);
         self.combine_mask16x8(self.xor_mask16x8(a0, b0), self.xor_mask16x8(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.combine_mask16x8(self.not_mask16x8(a0), self.not_mask16x8(a1))
     }
     #[inline(always)]
     fn select_mask16x16(
@@ -2275,11 +2275,6 @@ impl Simd for Neon {
         self.combine_i32x4(half, half)
     }
     #[inline(always)]
-    fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.not_i32x4(a0), self.not_i32x4(a1))
-    }
-    #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         let (b0, b1) = self.split_i32x8(b);
@@ -2316,6 +2311,16 @@ impl Simd for Neon {
         self.combine_i32x4(self.xor_i32x4(a0, b0), self.xor_i32x4(a1, b1))
     }
     #[inline(always)]
+    fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.not_i32x4(a0), self.not_i32x4(a1))
+    }
+    #[inline(always)]
+    fn shl_i32x8(self, a: i32x8<Self>, b: u32) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        self.combine_i32x4(self.shl_i32x4(a0, b), self.shl_i32x4(a1, b))
+    }
+    #[inline(always)]
     fn shr_i32x8(self, a: i32x8<Self>, b: u32) -> i32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         self.combine_i32x4(self.shr_i32x4(a0, b), self.shr_i32x4(a1, b))
@@ -2325,11 +2330,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_i32x8(a);
         let (b0, b1) = self.split_i32x8(b);
         self.combine_i32x4(self.shrv_i32x4(a0, b0), self.shrv_i32x4(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i32x8(self, a: i32x8<Self>, b: u32) -> i32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_i32x4(self.shl_i32x4(a0, b), self.shl_i32x4(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
@@ -2448,11 +2448,6 @@ impl Simd for Neon {
         self.combine_u32x4(half, half)
     }
     #[inline(always)]
-    fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u32x4(self.not_u32x4(a0), self.not_u32x4(a1))
-    }
-    #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
         let (b0, b1) = self.split_u32x8(b);
@@ -2489,6 +2484,16 @@ impl Simd for Neon {
         self.combine_u32x4(self.xor_u32x4(a0, b0), self.xor_u32x4(a1, b1))
     }
     #[inline(always)]
+    fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_u32x4(self.not_u32x4(a0), self.not_u32x4(a1))
+    }
+    #[inline(always)]
+    fn shl_u32x8(self, a: u32x8<Self>, b: u32) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        self.combine_u32x4(self.shl_u32x4(a0, b), self.shl_u32x4(a1, b))
+    }
+    #[inline(always)]
     fn shr_u32x8(self, a: u32x8<Self>, b: u32) -> u32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
         self.combine_u32x4(self.shr_u32x4(a0, b), self.shr_u32x4(a1, b))
@@ -2498,11 +2503,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_u32x8(a);
         let (b0, b1) = self.split_u32x8(b);
         self.combine_u32x4(self.shrv_u32x4(a0, b0), self.shrv_u32x4(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u32x8(self, a: u32x8<Self>, b: u32) -> u32x8<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u32x4(self.shl_u32x4(a0, b), self.shl_u32x4(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
@@ -2608,11 +2608,6 @@ impl Simd for Neon {
         self.combine_mask32x4(half, half)
     }
     #[inline(always)]
-    fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        self.combine_mask32x4(self.not_mask32x4(a0), self.not_mask32x4(a1))
-    }
-    #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_mask32x8(b);
@@ -2629,6 +2624,11 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_mask32x8(b);
         self.combine_mask32x4(self.xor_mask32x4(a0, b0), self.xor_mask32x4(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.combine_mask32x4(self.not_mask32x4(a0), self.not_mask32x4(a1))
     }
     #[inline(always)]
     fn select_mask32x8(
@@ -2878,11 +2878,6 @@ impl Simd for Neon {
         self.combine_mask64x2(half, half)
     }
     #[inline(always)]
-    fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        self.combine_mask64x2(self.not_mask64x2(a0), self.not_mask64x2(a1))
-    }
-    #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
         let (a0, a1) = self.split_mask64x4(a);
         let (b0, b1) = self.split_mask64x4(b);
@@ -2899,6 +2894,11 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask64x4(a);
         let (b0, b1) = self.split_mask64x4(b);
         self.combine_mask64x2(self.xor_mask64x2(a0, b0), self.xor_mask64x2(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.combine_mask64x2(self.not_mask64x2(a0), self.not_mask64x2(a1))
     }
     #[inline(always)]
     fn select_mask64x4(
@@ -3180,11 +3180,6 @@ impl Simd for Neon {
         self.combine_i8x32(half, half)
     }
     #[inline(always)]
-    fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.not_i8x32(a0), self.not_i8x32(a1))
-    }
-    #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         let (b0, b1) = self.split_i8x64(b);
@@ -3221,6 +3216,16 @@ impl Simd for Neon {
         self.combine_i8x32(self.xor_i8x32(a0, b0), self.xor_i8x32(a1, b1))
     }
     #[inline(always)]
+    fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.not_i8x32(a0), self.not_i8x32(a1))
+    }
+    #[inline(always)]
+    fn shl_i8x64(self, a: i8x64<Self>, b: u32) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        self.combine_i8x32(self.shl_i8x32(a0, b), self.shl_i8x32(a1, b))
+    }
+    #[inline(always)]
     fn shr_i8x64(self, a: i8x64<Self>, b: u32) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         self.combine_i8x32(self.shr_i8x32(a0, b), self.shr_i8x32(a1, b))
@@ -3230,11 +3235,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_i8x64(a);
         let (b0, b1) = self.split_i8x64(b);
         self.combine_i8x32(self.shrv_i8x32(a0, b0), self.shrv_i8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i8x64(self, a: i8x64<Self>, b: u32) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.shl_i8x32(a0, b), self.shl_i8x32(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
@@ -3341,11 +3341,6 @@ impl Simd for Neon {
         self.combine_u8x32(half, half)
     }
     #[inline(always)]
-    fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.not_u8x32(a0), self.not_u8x32(a1))
-    }
-    #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_u8x64(a);
         let (b0, b1) = self.split_u8x64(b);
@@ -3382,6 +3377,16 @@ impl Simd for Neon {
         self.combine_u8x32(self.xor_u8x32(a0, b0), self.xor_u8x32(a1, b1))
     }
     #[inline(always)]
+    fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        self.combine_u8x32(self.not_u8x32(a0), self.not_u8x32(a1))
+    }
+    #[inline(always)]
+    fn shl_u8x64(self, a: u8x64<Self>, b: u32) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        self.combine_u8x32(self.shl_u8x32(a0, b), self.shl_u8x32(a1, b))
+    }
+    #[inline(always)]
     fn shr_u8x64(self, a: u8x64<Self>, b: u32) -> u8x64<Self> {
         let (a0, a1) = self.split_u8x64(a);
         self.combine_u8x32(self.shr_u8x32(a0, b), self.shr_u8x32(a1, b))
@@ -3391,11 +3396,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_u8x64(a);
         let (b0, b1) = self.split_u8x64(b);
         self.combine_u8x32(self.shrv_u8x32(a0, b0), self.shrv_u8x32(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u8x64(self, a: u8x64<Self>, b: u32) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.shl_u8x32(a0, b), self.shl_u8x32(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
@@ -3500,11 +3500,6 @@ impl Simd for Neon {
         self.combine_mask8x32(half, half)
     }
     #[inline(always)]
-    fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
-    }
-    #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_mask8x64(b);
@@ -3521,6 +3516,11 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_mask8x64(b);
         self.combine_mask8x32(self.xor_mask8x32(a0, b0), self.xor_mask8x32(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
     }
     #[inline(always)]
     fn select_mask8x64(
@@ -3555,11 +3555,6 @@ impl Simd for Neon {
     fn splat_i16x32(self, a: i16) -> i16x32<Self> {
         let half = self.splat_i16x16(a);
         self.combine_i16x16(half, half)
-    }
-    #[inline(always)]
-    fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.not_i16x16(a0), self.not_i16x16(a1))
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -3598,6 +3593,16 @@ impl Simd for Neon {
         self.combine_i16x16(self.xor_i16x16(a0, b0), self.xor_i16x16(a1, b1))
     }
     #[inline(always)]
+    fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.not_i16x16(a0), self.not_i16x16(a1))
+    }
+    #[inline(always)]
+    fn shl_i16x32(self, a: i16x32<Self>, b: u32) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        self.combine_i16x16(self.shl_i16x16(a0, b), self.shl_i16x16(a1, b))
+    }
+    #[inline(always)]
     fn shr_i16x32(self, a: i16x32<Self>, b: u32) -> i16x32<Self> {
         let (a0, a1) = self.split_i16x32(a);
         self.combine_i16x16(self.shr_i16x16(a0, b), self.shr_i16x16(a1, b))
@@ -3607,11 +3612,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_i16x32(a);
         let (b0, b1) = self.split_i16x32(b);
         self.combine_i16x16(self.shrv_i16x16(a0, b0), self.shrv_i16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i16x32(self, a: i16x32<Self>, b: u32) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.shl_i16x16(a0, b), self.shl_i16x16(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
@@ -3727,11 +3727,6 @@ impl Simd for Neon {
         self.combine_u16x16(half, half)
     }
     #[inline(always)]
-    fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.not_u16x16(a0), self.not_u16x16(a1))
-    }
-    #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         let (b0, b1) = self.split_u16x32(b);
@@ -3768,6 +3763,16 @@ impl Simd for Neon {
         self.combine_u16x16(self.xor_u16x16(a0, b0), self.xor_u16x16(a1, b1))
     }
     #[inline(always)]
+    fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        self.combine_u16x16(self.not_u16x16(a0), self.not_u16x16(a1))
+    }
+    #[inline(always)]
+    fn shl_u16x32(self, a: u16x32<Self>, b: u32) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        self.combine_u16x16(self.shl_u16x16(a0, b), self.shl_u16x16(a1, b))
+    }
+    #[inline(always)]
     fn shr_u16x32(self, a: u16x32<Self>, b: u32) -> u16x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         self.combine_u16x16(self.shr_u16x16(a0, b), self.shr_u16x16(a1, b))
@@ -3777,11 +3782,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_u16x32(a);
         let (b0, b1) = self.split_u16x32(b);
         self.combine_u16x16(self.shrv_u16x16(a0, b0), self.shrv_u16x16(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u16x32(self, a: u16x32<Self>, b: u32) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.shl_u16x16(a0, b), self.shl_u16x16(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
@@ -3905,11 +3905,6 @@ impl Simd for Neon {
         self.combine_mask16x16(half, half)
     }
     #[inline(always)]
-    fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
-    }
-    #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_mask16x32(b);
@@ -3926,6 +3921,11 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_mask16x32(b);
         self.combine_mask16x16(self.xor_mask16x16(a0, b0), self.xor_mask16x16(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
     }
     #[inline(always)]
     fn select_mask16x32(
@@ -3965,11 +3965,6 @@ impl Simd for Neon {
         self.combine_i32x8(half, half)
     }
     #[inline(always)]
-    fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.not_i32x8(a0), self.not_i32x8(a1))
-    }
-    #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         let (b0, b1) = self.split_i32x16(b);
@@ -4006,6 +4001,16 @@ impl Simd for Neon {
         self.combine_i32x8(self.xor_i32x8(a0, b0), self.xor_i32x8(a1, b1))
     }
     #[inline(always)]
+    fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.not_i32x8(a0), self.not_i32x8(a1))
+    }
+    #[inline(always)]
+    fn shl_i32x16(self, a: i32x16<Self>, b: u32) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        self.combine_i32x8(self.shl_i32x8(a0, b), self.shl_i32x8(a1, b))
+    }
+    #[inline(always)]
     fn shr_i32x16(self, a: i32x16<Self>, b: u32) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_i32x8(self.shr_i32x8(a0, b), self.shr_i32x8(a1, b))
@@ -4015,11 +4020,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_i32x16(a);
         let (b0, b1) = self.split_i32x16(b);
         self.combine_i32x8(self.shrv_i32x8(a0, b0), self.shrv_i32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_i32x16(self, a: i32x16<Self>, b: u32) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.shl_i32x8(a0, b), self.shl_i32x8(a1, b))
     }
     #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
@@ -4131,11 +4131,6 @@ impl Simd for Neon {
         self.combine_u32x8(half, half)
     }
     #[inline(always)]
-    fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.not_u32x8(a0), self.not_u32x8(a1))
-    }
-    #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
         let (b0, b1) = self.split_u32x16(b);
@@ -4172,6 +4167,16 @@ impl Simd for Neon {
         self.combine_u32x8(self.xor_u32x8(a0, b0), self.xor_u32x8(a1, b1))
     }
     #[inline(always)]
+    fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_u32x8(self.not_u32x8(a0), self.not_u32x8(a1))
+    }
+    #[inline(always)]
+    fn shl_u32x16(self, a: u32x16<Self>, b: u32) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        self.combine_u32x8(self.shl_u32x8(a0, b), self.shl_u32x8(a1, b))
+    }
+    #[inline(always)]
     fn shr_u32x16(self, a: u32x16<Self>, b: u32) -> u32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
         self.combine_u32x8(self.shr_u32x8(a0, b), self.shr_u32x8(a1, b))
@@ -4181,11 +4186,6 @@ impl Simd for Neon {
         let (a0, a1) = self.split_u32x16(a);
         let (b0, b1) = self.split_u32x16(b);
         self.combine_u32x8(self.shrv_u32x8(a0, b0), self.shrv_u32x8(a1, b1))
-    }
-    #[inline(always)]
-    fn shl_u32x16(self, a: u32x16<Self>, b: u32) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.shl_u32x8(a0, b), self.shl_u32x8(a1, b))
     }
     #[inline(always)]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
@@ -4292,11 +4292,6 @@ impl Simd for Neon {
         self.combine_mask32x8(half, half)
     }
     #[inline(always)]
-    fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
-    }
-    #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_mask32x16(b);
@@ -4313,6 +4308,11 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_mask32x16(b);
         self.combine_mask32x8(self.xor_mask32x8(a0, b0), self.xor_mask32x8(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
     }
     #[inline(always)]
     fn select_mask32x16(
@@ -4548,11 +4548,6 @@ impl Simd for Neon {
         self.combine_mask64x4(half, half)
     }
     #[inline(always)]
-    fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
-    }
-    #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
         let (a0, a1) = self.split_mask64x8(a);
         let (b0, b1) = self.split_mask64x8(b);
@@ -4569,6 +4564,11 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask64x8(a);
         let (b0, b1) = self.split_mask64x8(b);
         self.combine_mask64x4(self.xor_mask64x4(a0, b0), self.xor_mask64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
     }
     #[inline(always)]
     fn select_mask64x8(

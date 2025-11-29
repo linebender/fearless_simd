@@ -36,16 +36,6 @@ impl ScalarType {
         let ident = Ident::new(&self.rust_name(scalar_bits), Span::call_site());
         quote! { #ident }
     }
-
-    pub(crate) fn core_ops(&self) -> &'static [CoreOpTrait] {
-        use CoreOpTrait::*;
-        match self {
-            Self::Float => &[Neg, Add, Sub, Mul, Div],
-            Self::Int => &[Neg, Add, Sub, Mul, BitAnd, BitOr, BitXor, Not, Shl, Shr],
-            Self::Unsigned => &[Add, Sub, Mul, BitAnd, BitOr, BitXor, Not, Shl, Shr],
-            Self::Mask => &[BitAnd, BitOr, BitXor, Not],
-        }
-    }
 }
 
 /// Operations on SIMD types that correspond to `core::ops` traits for overloadable operators.
@@ -62,6 +52,7 @@ pub(crate) enum CoreOpTrait {
     Not,
     Shl,
     Shr,
+    ShrVectored,
 }
 
 impl CoreOpTrait {
@@ -77,7 +68,7 @@ impl CoreOpTrait {
             Self::BitXor => "BitXor",
             Self::Not => "Not",
             Self::Shl => "Shl",
-            Self::Shr => "Shr",
+            Self::Shr | Self::ShrVectored => "Shr",
         }
     }
 
@@ -86,6 +77,7 @@ impl CoreOpTrait {
             Self::BitAnd => "bitand",
             Self::BitOr => "bitor",
             Self::BitXor => "bitxor",
+            Self::ShrVectored => "shr",
             _ => self.simd_name(),
         }
     }
@@ -103,6 +95,7 @@ impl CoreOpTrait {
             Self::Not => "not",
             Self::Shl => "shl",
             Self::Shr => "shr",
+            Self::ShrVectored => "shrv",
         }
     }
 
@@ -120,10 +113,12 @@ impl CoreOpTrait {
                 quote! { core::ops::#trait_name_assign<u32> },
             ]
             .into_iter(),
-            // Right now we provide a "vectored" right shift, but no vectored left shift
             Self::Shr => vec![
                 quote! { core::ops::#trait_name<u32, Output = Self> },
                 quote! { core::ops::#trait_name_assign<u32> },
+            ]
+            .into_iter(),
+            Self::ShrVectored => vec![
                 quote! { core::ops::#trait_name<Output = Self> },
                 quote! { core::ops::#trait_name_assign },
             ]
