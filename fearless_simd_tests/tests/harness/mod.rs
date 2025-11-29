@@ -342,7 +342,7 @@ fn not_i8x16<S: Simd>(simd: S) {
         &[0, 1, 2, 3, 4, 5, 6, 7, -1, -2, -3, -4, -5, -6, -7, -8],
     );
     assert_eq!(
-        i8x16::not(a).val,
+        (!a).val,
         [-1, -2, -3, -4, -5, -6, -7, -8, 0, 1, 2, 3, 4, 5, 6, 7]
     );
 }
@@ -540,7 +540,7 @@ fn xor_u8x16<S: Simd>(simd: S) {
 fn not_u8x16<S: Simd>(simd: S) {
     let a = u8x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8]);
     assert_eq!(
-        u8x16::not(a).val,
+        (!a).val,
         [
             255, 254, 253, 252, 251, 250, 249, 248, 254, 253, 252, 251, 250, 249, 248, 247
         ]
@@ -691,7 +691,7 @@ fn xor_mask8x16<S: Simd>(simd: S) {
 fn not_mask8x16<S: Simd>(simd: S) {
     let a = mask8x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8]);
     assert_eq!(
-        mask8x16::not(a).val,
+        (!a).val,
         [
             -1, -2, -3, -4, -5, -6, -7, -8, -2, -3, -4, -5, -6, -7, -8, -9
         ]
@@ -2473,7 +2473,7 @@ fn abs_f64x2<S: Simd>(simd: S) {
 #[simd_test]
 fn neg_f64x2<S: Simd>(simd: S) {
     let a = f64x2::from_slice(simd, &[1.5, -2.5]);
-    assert_eq!(a.neg().val, [-1.5, 2.5]);
+    assert_eq!((-a).val, [-1.5, 2.5]);
 }
 
 #[simd_test]

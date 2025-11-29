@@ -55,12 +55,16 @@ pub(crate) fn generic_split(ty: &VecType) -> TokenStream {
     }
 }
 
+pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
+    Ident::new(&format!("{op}_{}", ty.rust_name()), Span::call_site())
+}
+
 /// Implementation based on split/combine
 ///
 /// Only suitable for lane-wise and block-wise operations
 pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
     let ty_rust = ty.rust();
-    let name = Ident::new(&format!("{op}_{}", ty.rust_name()), Span::call_site());
+    let name = generic_op_name(op, ty);
     let split = Ident::new(&format!("split_{}", ty.rust_name()), Span::call_site());
     let half = VecType::new(ty.scalar, ty.scalar_bits, ty.len / 2);
     let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());

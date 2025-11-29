@@ -4,7 +4,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::generic::scalar_binary;
+use crate::generic::{generic_op_name, scalar_binary};
 use crate::ops::valid_reinterpret;
 use crate::{
     arch::wasm::{self, simple_intrinsic},
@@ -76,8 +76,10 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             "only float supports fract"
                         );
 
+                        let trunc = generic_op_name("trunc", vec_ty);
+                        let sub = generic_op_name("sub", vec_ty);
                         quote! {
-                            a.sub(a.trunc())
+                            self.#sub(a, self.#trunc(a))
                         }
                     } else {
                         let expr = wasm::expr(method, vec_ty, &args);
@@ -191,11 +193,9 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Ternary => {
                     if matches!(method, "madd" | "msub") {
-                        let first_ident = if method == "madd" {
-                            quote! {add}
-                        } else {
-                            quote! {sub}
-                        };
+                        let add_sub =
+                            generic_op_name(if method == "madd" { "add" } else { "sub" }, vec_ty);
+                        let mul = generic_op_name("mul", vec_ty);
 
                         let c = if method == "msub" {
                             // WebAssembly just... forgot fused multiply-subtract? It seems the
@@ -217,7 +217,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
                             #[cfg(not(target_feature = "relaxed-simd"))]
                             #method_sig {
-                                a.mul(b).#first_ident(c)
+                                self.#add_sub(self.#mul(a, b), c)
                             }
                         }
                     } else {

@@ -6,7 +6,7 @@ use crate::arch::x86::{
     op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
     unpack_intrinsic,
 };
-use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
+use crate::generic::{generic_combine, generic_op, generic_op_name, generic_split, scalar_binary};
 use crate::ops::{OpSig, TyFlavor, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
@@ -311,9 +311,10 @@ pub(crate) fn handle_compare(
 pub(crate) fn handle_unary(method_sig: TokenStream, method: &str, vec_ty: &VecType) -> TokenStream {
     match method {
         "fract" => {
+            let trunc_op = generic_op_name("trunc", vec_ty);
             quote! {
                 #method_sig {
-                    a - a.trunc()
+                    a - self.#trunc_op(a)
                 }
             }
         }

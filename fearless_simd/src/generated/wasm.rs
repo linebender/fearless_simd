@@ -163,7 +163,7 @@ impl Simd for WasmSimd128 {
     #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn madd_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        a.mul(b).add(c)
+        self.add_f32x4(self.mul_f32x4(a, b), c)
     }
     #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
@@ -173,7 +173,7 @@ impl Simd for WasmSimd128 {
     #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn msub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        a.mul(b).sub(c)
+        self.sub_f32x4(self.mul_f32x4(a, b), c)
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -189,7 +189,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        a.sub(a.trunc())
+        self.sub_f32x4(a, self.trunc_f32x4(a))
     }
     #[inline(always)]
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -1232,7 +1232,7 @@ impl Simd for WasmSimd128 {
     #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn madd_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        a.mul(b).add(c)
+        self.add_f64x2(self.mul_f64x2(a, b), c)
     }
     #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
@@ -1242,7 +1242,7 @@ impl Simd for WasmSimd128 {
     #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn msub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        a.mul(b).sub(c)
+        self.sub_f64x2(self.mul_f64x2(a, b), c)
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -1258,7 +1258,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        a.sub(a.trunc())
+        self.sub_f64x2(a, self.trunc_f64x2(a))
     }
     #[inline(always)]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
