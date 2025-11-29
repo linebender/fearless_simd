@@ -167,6 +167,10 @@ impl VecType {
         quote! { #ident }
     }
 
+    pub(crate) fn reinterpret(&self, dst_scalar: ScalarType, dst_scalar_bits: usize) -> Self {
+        Self::new(dst_scalar, dst_scalar_bits, self.n_bits() / dst_scalar_bits)
+    }
+
     pub(crate) fn widened(&self) -> Option<Self> {
         if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
             || self.n_bits() > 256
