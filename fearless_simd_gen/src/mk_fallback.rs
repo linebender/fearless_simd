@@ -296,8 +296,8 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
-                OpSig::Combine => generic_combine(vec_ty),
-                OpSig::Split => generic_split(vec_ty),
+                OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
+                OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
                 OpSig::Zip { select_low } => {
                     let indices = if select_low {
                         0..vec_ty.len / 2

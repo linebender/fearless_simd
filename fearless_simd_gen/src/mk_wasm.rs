@@ -251,8 +251,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Combine => generic_combine(vec_ty),
-                OpSig::Split => generic_split(vec_ty),
+                OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
+                OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
                 OpSig::Zip { select_low } => {
                     let (indices, shuffle_fn) = match vec_ty.scalar_bits {
                         8 => {

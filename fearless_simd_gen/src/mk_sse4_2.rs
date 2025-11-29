@@ -190,8 +190,8 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Shift => handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
         OpSig::Select => handle_select(method_sig, vec_ty),
-        OpSig::Combine => generic_combine(vec_ty),
-        OpSig::Split => generic_split(vec_ty),
+        OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
+        OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
         OpSig::Zip { select_low } => handle_zip(method_sig, vec_ty, select_low),
         OpSig::Unzip { select_even } => handle_unzip(method_sig, vec_ty, select_even),
         OpSig::Cvt {

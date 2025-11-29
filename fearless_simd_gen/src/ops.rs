@@ -22,9 +22,9 @@ pub(crate) enum OpSig {
     /// of the same scalar width and length. Returns that latter vector type.
     Select,
     /// Takes two arguments of a vector type, and returns a vector type that's twice as wide.
-    Combine,
+    Combine { combined_ty: VecType },
     /// Takes a single argument of a vector type, and returns a tuple of two vector types that are each half as wide.
-    Split,
+    Split { half_ty: VecType },
     /// Takes two arguments of a vector type, and returns that same vector type.
     Zip { select_low: bool },
     /// Takes two arguments of a vector type, and returns that same vector type.
@@ -245,11 +245,15 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
     };
     let mut ops = base.to_vec();
 
-    if ty.n_bits() < 512 {
-        ops.push(Op::new("combine", OpKind::OwnTrait, OpSig::Combine));
+    if let Some(combined_ty) = ty.combine_operand() {
+        ops.push(Op::new(
+            "combine",
+            OpKind::OwnTrait,
+            OpSig::Combine { combined_ty },
+        ));
     }
-    if ty.n_bits() > 128 {
-        ops.push(Op::new("split", OpKind::OwnTrait, OpSig::Split));
+    if let Some(half_ty) = ty.split_operand() {
+        ops.push(Op::new("split", OpKind::OwnTrait, OpSig::Split { half_ty }));
     }
     if ty.scalar == ScalarType::Int {
         ops.push(Op::new(
@@ -428,13 +432,13 @@ impl OpSig {
                 quote! { self, #ty }
             }
             Self::Unary
-            | Self::Split
+            | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. } => quote! { self, a: #ty<Self> },
             Self::Binary
             | Self::Compare
-            | Self::Combine
+            | Self::Combine { .. }
             | Self::Zip { .. }
             | Self::Unzip { .. } => {
                 quote! { self, a: #ty<Self>, b: #ty<Self> }
@@ -476,7 +480,7 @@ impl OpSig {
             // masks.
             Self::Select => return None,
             // These signatures involve types not in the Simd trait
-            Self::Split | Self::Combine => return None,
+            Self::Split { .. } | Self::Combine { .. } => return None,
         };
         Some(args)
     }
@@ -486,7 +490,7 @@ impl OpSig {
             Self::Unary => quote! { self },
             Self::Binary
             | Self::Compare
-            | Self::Combine
+            | Self::Combine { .. }
             | Self::Zip { .. }
             | Self::Unzip { .. } => {
                 quote! { self, rhs.simd_into(self.simd) }
@@ -496,7 +500,7 @@ impl OpSig {
             }
             Self::Splat
             | Self::Select
-            | Self::Split
+            | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
@@ -527,14 +531,12 @@ impl OpSig {
                 let rust = ty.mask_ty().rust();
                 quote! { #rust #quant }
             }
-            Self::Combine => {
-                let n2 = ty.len * 2;
-                let result = VecType::new(ty.scalar, ty.scalar_bits, n2).rust();
+            Self::Combine { combined_ty } => {
+                let result = combined_ty.rust();
                 quote! { #result #quant }
             }
-            Self::Split => {
-                let len = ty.len / 2;
-                let result = VecType::new(ty.scalar, ty.scalar_bits, len).rust();
+            Self::Split { half_ty } => {
+                let result = half_ty.rust();
                 quote! { ( #result #quant, #result #quant ) }
             }
             Self::Zip { .. } | Self::Unzip { .. } => {
