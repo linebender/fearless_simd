@@ -205,8 +205,8 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
             _ => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
         },
         OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty),
-        OpSig::Combine => handle_combine(method_sig, vec_ty),
-        OpSig::Split => handle_split(method_sig, vec_ty),
+        OpSig::Combine { combined_ty } => handle_combine(method_sig, vec_ty, &combined_ty),
+        OpSig::Split { half_ty } => handle_split(method_sig, vec_ty, &half_ty),
         OpSig::Zip { select_low } => mk_sse4_2::handle_zip(method_sig, vec_ty, select_low),
         OpSig::Unzip { select_even } => mk_sse4_2::handle_unzip(method_sig, vec_ty, select_even),
         OpSig::Cvt {
@@ -228,7 +228,11 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
     }
 }
 
-pub(crate) fn handle_split(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+pub(crate) fn handle_split(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    half_ty: &VecType,
+) -> TokenStream {
     if vec_ty.n_bits() == 256 {
         let extract_op = match vec_ty.scalar {
             ScalarType::Float => "extractf128",
@@ -246,11 +250,15 @@ pub(crate) fn handle_split(method_sig: TokenStream, vec_ty: &VecType) -> TokenSt
             }
         }
     } else {
-        generic_split(vec_ty)
+        generic_split(vec_ty, half_ty)
     }
 }
 
-pub(crate) fn handle_combine(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+pub(crate) fn handle_combine(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    combined_ty: &VecType,
+) -> TokenStream {
     if vec_ty.n_bits() == 128 {
         let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
             (ScalarType::Float, 32) => "m128",
@@ -266,7 +274,7 @@ pub(crate) fn handle_combine(method_sig: TokenStream, vec_ty: &VecType) -> Token
             }
         }
     } else {
-        generic_combine(vec_ty)
+        generic_combine(vec_ty, combined_ty)
     }
 }
 

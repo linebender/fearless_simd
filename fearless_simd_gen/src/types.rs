@@ -194,6 +194,22 @@ impl VecType {
     pub(crate) fn mask_ty(&self) -> Self {
         Self::new(ScalarType::Mask, self.scalar_bits, self.len)
     }
+
+    pub(crate) fn split_operand(&self) -> Option<Self> {
+        if self.n_bits() <= 128 {
+            return None;
+        }
+        let n2 = self.len / 2;
+        Some(Self::new(self.scalar, self.scalar_bits, n2))
+    }
+
+    pub(crate) fn combine_operand(&self) -> Option<Self> {
+        if self.n_bits() >= 512 {
+            return None;
+        }
+        let n2 = self.len * 2;
+        Some(Self::new(self.scalar, self.scalar_bits, n2))
+    }
 }
 
 pub(crate) const SIMD_TYPES: &[VecType] = &[

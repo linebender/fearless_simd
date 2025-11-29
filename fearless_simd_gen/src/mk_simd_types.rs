@@ -100,14 +100,12 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             }
             _ => {}
         }
-        if ty.n_bits() > 128 {
-            let n2 = ty.len / 2;
-            let split_ty = VecType::new(ty.scalar, ty.scalar_bits, n2);
-            let split_ty_rust = split_ty.rust();
+        if let Some(half_ty) = ty.split_operand() {
+            let half_ty_rust = half_ty.rust();
             let split_method = generic_op_name("split", ty);
             conditional_impls.push(quote! {
                 impl<S: Simd> crate::SimdSplit<#rust_scalar, S> for #name<S> {
-                    type Split = #split_ty_rust<S>;
+                    type Split = #half_ty_rust<S>;
 
                     #[inline(always)]
                     fn split(self) -> (Self::Split, Self::Split) {
@@ -116,14 +114,12 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 }
             });
         }
-        if ty.n_bits() < 512 {
-            let n2 = ty.len * 2;
-            let combine_ty = VecType::new(ty.scalar, ty.scalar_bits, n2);
-            let combine_ty_rust = combine_ty.rust();
+        if let Some(combined_ty) = ty.combine_operand() {
+            let combined_ty_rust = combined_ty.rust();
             let combine_method = generic_op_name("combine", ty);
             conditional_impls.push(quote! {
                 impl<S: Simd> crate::SimdCombine<#rust_scalar, S> for #name<S> {
-                    type Combined = #combine_ty_rust<S>;
+                    type Combined = #combined_ty_rust<S>;
 
                     #[inline(always)]
                     fn combine(self, rhs: Self) -> Self::Combined {
