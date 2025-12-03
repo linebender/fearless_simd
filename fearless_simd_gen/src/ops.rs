@@ -663,6 +663,13 @@ impl OpSig {
             Self::StoreInterleaved { .. } => quote! {()},
         }
     }
+
+    pub(crate) fn trait_ret_ty(&self) -> TokenStream {
+        match self {
+            Self::Compare => quote! { Self::Mask },
+            _ => quote! { Self },
+        }
+    }
 }
 
 pub(crate) fn load_interleaved_arg_ty(

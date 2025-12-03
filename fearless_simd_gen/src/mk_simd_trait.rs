@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
 use crate::{
-    ops::{Op, OpSig, TyFlavor, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
+    ops::{Op, TyFlavor, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
@@ -148,11 +148,7 @@ fn methods_for_vec_trait(scalar: ScalarType) -> Vec<TokenStream> {
     for Op { method, sig, .. } in vec_trait_ops_for(scalar) {
         let method_name = Ident::new(method, Span::call_site());
         if let Some(args) = sig.vec_trait_args() {
-            let ret_ty = match sig {
-                OpSig::Compare => quote! { Self::Mask },
-                OpSig::Zip { .. } => quote! { Self },
-                _ => quote! { Self },
-            };
+            let ret_ty = sig.trait_ret_ty();
             methods.push(quote! {
                 fn #method_name(#args) -> #ret_ty;
             });
