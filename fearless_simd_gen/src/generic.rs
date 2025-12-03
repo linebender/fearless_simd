@@ -6,7 +6,7 @@ use quote::{format_ident, quote};
 
 use crate::ops::{load_interleaved_arg_ty, store_interleaved_arg_ty};
 use crate::{
-    ops::{OpSig, TyFlavor},
+    ops::OpSig,
     types::{ScalarType, VecType},
 };
 
@@ -69,7 +69,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
     let half = VecType::new(ty.scalar, ty.scalar_bits, ty.len / 2);
     let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
     let do_half = Ident::new(&format!("{op}_{}", half.rust_name()), Span::call_site());
-    let ret_ty = sig.ret_ty(ty, TyFlavor::SimdTrait);
+    let ret_ty = sig.simd_impl_ret_ty(ty);
     match sig {
         OpSig::Splat => {
             let scalar = ty.scalar.rust(ty.scalar_bits);

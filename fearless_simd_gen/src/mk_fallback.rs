@@ -3,7 +3,7 @@
 
 use crate::arch::fallback;
 use crate::generic::{generic_combine, generic_op, generic_split};
-use crate::ops::{Op, OpSig, TyFlavor, ops_for_type, valid_reinterpret};
+use crate::ops::{Op, OpSig, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -136,7 +136,7 @@ fn mk_simd_impl() -> TokenStream {
             }
             let method_name = format!("{method}_{ty_name}");
             let method_ident = Ident::new(&method_name, Span::call_site());
-            let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+            let ret_ty = sig.simd_impl_ret_ty(vec_ty);
             let args = sig.simd_trait_args(vec_ty);
             let method_sig = quote! {
                 #[inline(always)]

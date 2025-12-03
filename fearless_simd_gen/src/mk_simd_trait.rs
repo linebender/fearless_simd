@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
 use crate::{
-    ops::{Op, TyFlavor, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
+    ops::{Op, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
@@ -19,7 +19,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             let method_name = format!("{method}_{ty_name}");
             let method = Ident::new(&method_name, Span::call_site());
             let args = sig.simd_trait_args(vec_ty);
-            let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+            let ret_ty = sig.simd_impl_ret_ty(vec_ty);
             methods.extend(quote! {
                 fn #method(#args) -> #ret_ty;
             });

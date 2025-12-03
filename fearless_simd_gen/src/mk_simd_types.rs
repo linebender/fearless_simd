@@ -6,7 +6,7 @@ use quote::{format_ident, quote};
 
 use crate::{
     generic::generic_op_name,
-    ops::{Op, TyFlavor, vec_trait_ops_for},
+    ops::{Op, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, VecType},
 };
 
@@ -232,7 +232,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         let method_name = Ident::new(method, Span::call_site());
         let trait_method = generic_op_name(method, ty);
         if let Some(args) = sig.vec_trait_args() {
-            let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
+            let ret_ty = sig.trait_ret_ty();
             let call_args = sig
                 .forwarding_call_args()
                 .expect("this method can be forwarded to a specific Simd function");

@@ -7,7 +7,7 @@ use crate::arch::x86::{
 };
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
 use crate::mk_sse4_2;
-use crate::ops::{Op, OpSig, TyFlavor, ops_for_type};
+use crate::ops::{Op, OpSig, ops_for_type};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -165,7 +165,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
     let ty_name = vec_ty.rust_name();
     let method_name = format!("{method}_{ty_name}");
     let method_ident = Ident::new(&method_name, Span::call_site());
-    let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+    let ret_ty = sig.simd_impl_ret_ty(vec_ty);
     let args = sig.simd_trait_args(vec_ty);
     let method_sig = quote! {
         #[inline(always)]

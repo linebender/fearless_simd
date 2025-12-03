@@ -500,14 +500,6 @@ impl CoreOpTrait {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum TyFlavor {
-    /// Types for methods in the `Simd` trait; `f32x4<Self>`
-    SimdTrait,
-    /// Types for methods in the vec trait; `f32x4<S>`
-    VecImpl,
-}
-
 impl OpSig {
     pub(crate) fn simd_trait_args(&self, vec_ty: &VecType) -> TokenStream {
         let ty = vec_ty.rust();
@@ -610,11 +602,8 @@ impl OpSig {
         Some(args)
     }
 
-    pub(crate) fn ret_ty(&self, ty: &VecType, flavor: TyFlavor) -> TokenStream {
-        let quant = match flavor {
-            TyFlavor::SimdTrait => quote! { <Self> },
-            TyFlavor::VecImpl => quote! { <S> },
-        };
+    pub(crate) fn simd_impl_ret_ty(&self, ty: &VecType) -> TokenStream {
+        let quant = quote! { <Self> };
         match self {
             Self::Splat
             | Self::Unary

@@ -9,7 +9,7 @@ use crate::ops::{Op, valid_reinterpret};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     generic::{generic_combine, generic_op, generic_split},
-    ops::{OpSig, TyFlavor, ops_for_type},
+    ops::{OpSig, ops_for_type},
     types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
 
@@ -52,7 +52,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
             let method_name = format!("{method}_{ty_name}");
             let method_ident = Ident::new(&method_name, Span::call_site());
-            let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+            let ret_ty = sig.simd_impl_ret_ty(vec_ty);
             let args = sig.simd_trait_args(vec_ty);
             let method_sig = quote! {
                 #[inline(always)]
