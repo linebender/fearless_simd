@@ -25,6 +25,7 @@ This release has an [MSRV][] of 1.88.
 - The `from_fn` method on vector types. ([#137][] by [@valadaptive][])
 - The `load_interleaved` and `store_interleaved` operations now use native intrinsics on x86, instead of using the fallback implementations. ([#140][] by [@valadaptive][])
 - The `ceil` and `round_ties_even` operations on floating-point vector types. (Rust's `round` operation rounds away from zero in the case of ties. Many architectures do not natively implement that behavior, so it's omitted.) ([#145][] by [@valadaptive][])
+- A `prelude` module, which exports all the traits in the library but not the types. ([#149][] by [@valadaptive][])
 
 ### Fixed
 
@@ -44,6 +45,17 @@ This release has an [MSRV][] of 1.88.
 - Code generation for `select` and `unzip` operations on x86 has been improved. ([#115][] by [@valadaptive][])
 - Breaking change: The native-width associated types (`f32s`, `u8s`, etc.) for the `Avx2` struct have been widened from 128-bit
   types (like `f32x4`) to 256-bit types (like `f32x8`). ([#123][] by [@valadaptive][])
+- Breaking change: All the vector types' inherent methods have been removed. Any remaining functionality has been moved
+  to trait methods. ([#149][] by [@valadaptive][])
+
+  Some functionality is exposed under different names:
+  - Instead of the `reinterpret` methods, use the `bitcast` method on the `Bytes` trait. (e.g. `foo.reinterpret_i32()`
+    -> `foo.bitcast::<i32x4<_>>()`)
+  - Instead of the `cvt` methods, use the `to_int` or `to_float` convenience methods on the `SimdFloat` and `SimdInt`
+    traits (e.g. `foo.cvt_u32()` -> `foo.to_int::<u32x4<_>>()`)
+
+  Some functionality (such as `split` or `combine`) is exposed under new traits. You may use the new `prelude` module to
+  conveniently import all of the traits.
 
 ### Removed
 
@@ -131,6 +143,7 @@ No changelog was kept for this release.
 [#137]: https://github.com/linebender/fearless_simd/pull/137
 [#140]: https://github.com/linebender/fearless_simd/pull/140
 [#145]: https://github.com/linebender/fearless_simd/pull/145
+[#149]: https://github.com/linebender/fearless_simd/pull/149
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
