@@ -272,7 +272,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             );
             quote! {
                 #[inline(always)]
-                fn #name(self, #arg) -> #ret_ty {
+                fn #name(self, src: #arg) -> #ret_ty {
                     let (chunks, _) = src.as_chunks::<#split_len>();
                     unsafe {
                         core::mem::transmute([self.#delegate(&chunks[0]), self.#delegate(&chunks[1])])
@@ -287,7 +287,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             let arg = store_interleaved_arg_ty(block_size, block_count, ty);
             quote! {
                 #[inline(always)]
-                fn #name(self, #arg) -> #ret_ty {
+                fn #name(self, a: #ty_rust<Self>, dest: #arg) -> #ret_ty {
                     todo!()
                 }
             }

@@ -8,6 +8,11 @@
 use crate::{Level, Simd, SimdBase};
 
 pub trait Select<T> {
+    /// For each element of this mask, select the first operand if the element is all ones, and select the second
+    /// operand if the element is all zeroes.
+    ///
+    /// If a mask element is *not* all ones or all zeroes, the result is unspecified. It may vary depending on
+    /// architecture, feature level, the mask elements' width, the mask vector's width, or library version.
     fn select(self, if_true: T, if_false: T) -> T;
 }
 

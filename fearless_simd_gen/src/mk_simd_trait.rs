@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
 use crate::{
-    ops::{Op, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
+    ops::{Op, TyFlavor, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
@@ -15,12 +15,17 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     // Float methods
     for vec_ty in SIMD_TYPES {
         let ty_name = vec_ty.rust_name();
-        for Op { method, sig, .. } in &ops_for_type(vec_ty) {
+        for Op {
+            method, sig, doc, ..
+        } in &ops_for_type(vec_ty)
+        {
             let method_name = format!("{method}_{ty_name}");
             let method = Ident::new(&method_name, Span::call_site());
             let args = sig.simd_trait_args(vec_ty);
             let ret_ty = sig.simd_impl_ret_ty(vec_ty);
+            let doc = sig.format_docstring(doc, TyFlavor::SimdTrait);
             methods.extend(quote! {
+                #[doc = #doc]
                 fn #method(#args) -> #ret_ty;
             });
         }
@@ -101,7 +106,9 @@ fn mk_simd_base() -> TokenStream {
 fn mk_simd_float() -> TokenStream {
     let methods = methods_for_vec_trait(ScalarType::Float);
     let overloaded_ops = overloaded_ops_for(ScalarType::Float);
-    let op_traits = overloaded_ops.iter().flat_map(|op| op.trait_bounds());
+    let op_traits = overloaded_ops
+        .iter()
+        .flat_map(|(op, _, _)| op.trait_bounds());
     quote! {
         pub trait SimdFloat<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             #(+ #op_traits)*
@@ -117,7 +124,9 @@ fn mk_simd_float() -> TokenStream {
 fn mk_simd_int() -> TokenStream {
     let methods = methods_for_vec_trait(ScalarType::Unsigned);
     let overloaded_ops = overloaded_ops_for(ScalarType::Unsigned);
-    let op_traits = overloaded_ops.iter().flat_map(|op| op.trait_bounds());
+    let op_traits = overloaded_ops
+        .iter()
+        .flat_map(|(op, _, _)| op.trait_bounds());
     quote! {
         pub trait SimdInt<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             #(+ #op_traits)*
@@ -133,7 +142,9 @@ fn mk_simd_int() -> TokenStream {
 fn mk_simd_mask() -> TokenStream {
     let methods = methods_for_vec_trait(ScalarType::Mask);
     let overloaded_ops = overloaded_ops_for(ScalarType::Mask);
-    let op_traits = overloaded_ops.iter().flat_map(|op| op.trait_bounds());
+    let op_traits = overloaded_ops
+        .iter()
+        .flat_map(|(op, _, _)| op.trait_bounds());
     quote! {
         pub trait SimdMask<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             #(+ #op_traits)*
@@ -145,11 +156,16 @@ fn mk_simd_mask() -> TokenStream {
 
 fn methods_for_vec_trait(scalar: ScalarType) -> Vec<TokenStream> {
     let mut methods = vec![];
-    for Op { method, sig, .. } in vec_trait_ops_for(scalar) {
+    for Op {
+        method, sig, doc, ..
+    } in vec_trait_ops_for(scalar)
+    {
         let method_name = Ident::new(method, Span::call_site());
+        let doc = sig.format_docstring(doc, TyFlavor::VecImpl);
         if let Some(args) = sig.vec_trait_args() {
             let ret_ty = sig.trait_ret_ty();
             methods.push(quote! {
+                #[doc = #doc]
                 fn #method_name(#args) -> #ret_ty;
             });
         }
