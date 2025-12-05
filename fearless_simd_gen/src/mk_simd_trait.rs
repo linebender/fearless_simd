@@ -33,23 +33,70 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     let mut code = quote! {
         use crate::{seal::Seal, Level, SimdElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select, Bytes};
         #imports
-        /// TODO: docstring
-        // TODO: Seal
+        /// The main SIMD trait, implemented by all SIMD token types.
+        ///
+        /// Each implementor of this trait (e.g. `Avx2`, `Sse4_2`, `Neon`, `Fallback`) is a zero-sized "token" type
+        /// representing a specific SIMD instruction set. These tokens are obtained at runtime via [`Level`] and the
+        /// [`dispatch!`](crate::dispatch) macro, which selects the best available backend for the current CPU.
+        ///
+        /// This trait defines all the low-level SIMD operations (e.g. [`add_f32x4`](Simd::add_f32x4),
+        /// [`mul_u32x4`](Simd::mul_u32x4)) that are implemented by each token type using platform-specific intrinsics.
+        /// However, you typically won't call these methods directly. Instead, you'll probably be using the methods
+        /// defined on the vector types themselves.
+        ///
+        /// # Associated Types
+        ///
+        /// The trait defines associated types for the highest "native" vector width of each scalar type (e.g. `f32s`,
+        /// `u32s`). These are always at least 128 bits, but may be larger. Currently, they are 128 bits everywhere but
+        /// AVX2, where they are 256 bits.
+        ///
+        /// # Example
+        ///
+        /// ```
+        /// # use fearless_simd::{prelude::*, f32x4, dispatch, Level};
+        ///
+        /// #[inline(always)]
+        /// fn add_vectors<S: Simd>(simd: S, a: f32x4<S>, b: f32x4<S>) -> f32x4<S> {
+        ///     a + b  // Uses operator overloading, which calls simd.add_f32x4 internally
+        /// }
+        ///
+        /// let level = Level::new();
+        /// dispatch!(level, simd => {
+        ///     let a = [1.0, 2.0, 3.0, 4.0].simd_into(simd);
+        ///     let b = [5.0, 6.0, 7.0, 8.0].simd_into(simd);
+        ///     let result = add_vectors(simd, a, b);
+        ///     # assert_eq!(result.val, [6.0, 8.0, 10.0, 12.0]);
+        /// });
+        /// ```
         pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
+            /// A native-width SIMD vector of [`f32`]s.
             type f32s: SimdFloat<f32, Self, Block = f32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>;
+            /// A native-width SIMD vector of [`f64`]s.
             type f64s: SimdFloat<f64, Self, Block = f64x2<Self>, Mask = Self::mask64s>;
+            /// A native-width SIMD vector of [`u8`]s.
             type u8s: SimdInt<u8, Self, Block = u8x16<Self>, Mask = Self::mask8s>;
+            /// A native-width SIMD vector of [`i8`]s.
             type i8s: SimdInt<i8, Self, Block = i8x16<Self>, Mask = Self::mask8s, Bytes = <Self::u8s as Bytes>::Bytes> + core::ops::Neg<Output = Self::i8s>;
+            /// A native-width SIMD vector of [`u16`]s.
             type u16s: SimdInt<u16, Self, Block = u16x8<Self>, Mask = Self::mask16s>;
+            /// A native-width SIMD vector of [`i16`]s.
             type i16s: SimdInt<i16, Self, Block = i16x8<Self>, Mask = Self::mask16s, Bytes = <Self::u16s as Bytes>::Bytes> + core::ops::Neg<Output = Self::i16s>;
+            /// A native-width SIMD vector of [`u32`]s.
             type u32s: SimdInt<u32, Self, Block = u32x4<Self>, Mask = Self::mask32s> + SimdCvtTruncate<Self::f32s>;
+            /// A native-width SIMD vector of [`i32`]s.
             type i32s: SimdInt<i32, Self, Block = i32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtTruncate<Self::f32s>
                 + core::ops::Neg<Output = Self::i32s>;
+            /// A native-width SIMD mask with 8-bit lanes.
             type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
+            /// A native-width SIMD mask with 16-bit lanes.
             type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes> + Select<Self::u16s> + Select<Self::i16s> + Select<Self::mask16s>;
+            /// A native-width SIMD mask with 32-bit lanes.
             type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes>
                 + Select<Self::f32s> + Select<Self::u32s> + Select<Self::i32s> + Select<Self::mask32s>;
+            /// A native-width SIMD mask with 64-bit lanes.
             type mask64s: SimdMask<i64, Self, Block = mask64x2<Self>> + Select<Self::f64s> + Select<Self::mask64s>;
+
+            /// This SIMD token's feature level.
             fn level(self) -> Level;
 
             /// Call function with CPU features enabled.
