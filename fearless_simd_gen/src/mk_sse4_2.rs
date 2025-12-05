@@ -429,8 +429,8 @@ pub(crate) fn handle_binary(
                 }
             }
         }
-        "shlv" => scalar_binary(&method_ident, quote!(core::ops::Shl::shl), vec_ty),
-        "shrv" => scalar_binary(&method_ident, quote!(core::ops::Shr::shr), vec_ty),
+        "shlv" => scalar_binary(method_ident, quote!(core::ops::Shl::shl), vec_ty),
+        "shrv" => scalar_binary(method_ident, quote!(core::ops::Shr::shr), vec_ty),
         _ => {
             let args = [quote! { a.into() }, quote! { b.into() }];
             let expr = x86::expr(method, vec_ty, &args);
