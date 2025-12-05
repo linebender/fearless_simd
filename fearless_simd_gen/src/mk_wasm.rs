@@ -106,9 +106,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Binary if method == "shrv" => {
-                    scalar_binary(&method_ident, quote!(core::ops::Shr::shr), vec_ty)
-                }
                 OpSig::Binary => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
                     match method {
@@ -178,6 +175,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 }
                             }
                         }
+                        "shlv" => scalar_binary(&method_ident, quote!(core::ops::Shl::shl), vec_ty),
+                        "shrv" => scalar_binary(&method_ident, quote!(core::ops::Shr::shr), vec_ty),
                         _ => {
                             let expr = wasm::expr(method, vec_ty, &args);
                             quote! {

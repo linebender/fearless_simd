@@ -50,6 +50,7 @@ pub(crate) fn translate_op(op: &str, is_float: bool) -> Option<&'static str> {
         "shr" => "shr",
         "shl" => "shl",
         "shrv" => "shr",
+        "shlv" => "shl",
         // TODO: Do we need to polyfill so behavior is consistent with NEON?
         "max" => "max",
         "min" => "min",

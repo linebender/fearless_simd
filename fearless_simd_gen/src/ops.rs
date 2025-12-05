@@ -389,6 +389,14 @@ const INT_OPS: &[Op] = &[
         Bits shifted out of the left side are discarded, and zeros are shifted in on the right.",
     ),
     Op::new(
+        "shlv",
+        OpKind::Overloaded(CoreOpTrait::ShlVectored),
+        OpSig::Binary,
+        "Shift each element left by the given number of bits.\n\n\
+        Bits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\n\
+        This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation.",
+    ),
+    Op::new(
         "shr",
         OpKind::Overloaded(CoreOpTrait::Shr),
         OpSig::Shift,
@@ -828,6 +836,7 @@ pub(crate) enum CoreOpTrait {
     BitXor,
     Not,
     Shl,
+    ShlVectored,
     Shr,
     ShrVectored,
 }
@@ -844,7 +853,7 @@ impl CoreOpTrait {
             Self::BitOr => "BitOr",
             Self::BitXor => "BitXor",
             Self::Not => "Not",
-            Self::Shl => "Shl",
+            Self::Shl | Self::ShlVectored => "Shl",
             Self::Shr | Self::ShrVectored => "Shr",
         }
     }
@@ -854,6 +863,7 @@ impl CoreOpTrait {
             Self::BitAnd => "bitand",
             Self::BitOr => "bitor",
             Self::BitXor => "bitxor",
+            Self::ShlVectored => "shl",
             Self::ShrVectored => "shr",
             _ => self.simd_name(),
         }
@@ -871,6 +881,7 @@ impl CoreOpTrait {
             Self::BitXor => "xor",
             Self::Not => "not",
             Self::Shl => "shl",
+            Self::ShlVectored => "shlv",
             Self::Shr => "shr",
             Self::ShrVectored => "shrv",
         }
@@ -885,17 +896,12 @@ impl CoreOpTrait {
         let trait_name_assign = format_ident!("{trait_name}Assign");
         match self {
             // Shifts always use a u32 as the shift amount
-            Self::Shl => vec![
+            Self::Shl | Self::Shr => vec![
                 quote! { core::ops::#trait_name<u32, Output = Self> },
                 quote! { core::ops::#trait_name_assign<u32> },
             ]
             .into_iter(),
-            Self::Shr => vec![
-                quote! { core::ops::#trait_name<u32, Output = Self> },
-                quote! { core::ops::#trait_name_assign<u32> },
-            ]
-            .into_iter(),
-            Self::ShrVectored => vec![
+            Self::ShlVectored | Self::ShrVectored => vec![
                 quote! { core::ops::#trait_name<Output = Self> },
                 quote! { core::ops::#trait_name_assign },
             ]

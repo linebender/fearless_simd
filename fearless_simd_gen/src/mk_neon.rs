@@ -233,23 +233,29 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Binary => {
                     let expr = match method {
-                        "shrv" => {
-                            let neg = simple_intrinsic(
-                                "vneg",
-                                &VecType {
-                                    scalar: ScalarType::Int,
-                                    ..*vec_ty
-                                },
-                            );
-                            let args = if vec_ty.scalar == ScalarType::Int {
+                        "shlv" | "shrv" => {
+                            let mut args = if vec_ty.scalar == ScalarType::Int {
                                 // Signed case
-                                [quote! { a.into() }, quote! { #neg(b.into()) }]
+                                [quote! { a.into() }, quote! { b.into() }]
                             } else {
                                 // Unsigned case
                                 let bits = vec_ty.scalar_bits;
                                 let reinterpret = format_ident!("vreinterpretq_s{bits}_u{bits}");
-                                [quote! { a.into() }, quote! { #neg(#reinterpret(b.into())) }]
+                                [quote! { a.into() }, quote! { #reinterpret(b.into()) }]
                             };
+
+                            // For a right shift, we need to negate the shift amount
+                            if method == "shrv" {
+                                let neg = simple_intrinsic(
+                                    "vneg",
+                                    &VecType {
+                                        scalar: ScalarType::Int,
+                                        ..*vec_ty
+                                    },
+                                );
+                                let arg1 = &args[1];
+                                args[1] = quote! { #neg(#arg1) };
+                            }
 
                             let expr = neon::expr(method, vec_ty, &args);
                             quote! {
