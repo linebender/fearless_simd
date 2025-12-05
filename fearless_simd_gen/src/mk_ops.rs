@@ -102,7 +102,6 @@ pub(crate) fn mk_ops() -> TokenStream {
 
                         impl<S: Simd> core::ops::#trait_id<#scalar> for #simd<S> {
                             type Output = Self;
-                            #[doc = #doc]
                             #[inline(always)]
                             fn #opfn(self, rhs: #scalar) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs.simd_into(self.simd))
@@ -110,7 +109,6 @@ pub(crate) fn mk_ops() -> TokenStream {
                         }
 
                         impl<S: Simd> core::ops::#trait_assign_id<#scalar> for #simd<S> {
-                            #[doc = #doc]
                             #[inline(always)]
                             fn #op_assign_fn(&mut self, rhs: #scalar) {
                                 *self = self.simd.#simd_fn(*self, rhs.simd_into(self.simd));
@@ -119,7 +117,6 @@ pub(crate) fn mk_ops() -> TokenStream {
 
                         impl<S: Simd> core::ops::#trait_id<#simd<S>> for #scalar {
                             type Output = #simd<S>;
-                            #[doc = #doc]
                             #[inline(always)]
                             fn #opfn(self, rhs: #simd<S>) -> Self::Output {
                                 rhs.simd.#simd_fn(self.simd_into(rhs.simd), rhs)
