@@ -705,6 +705,84 @@ fn not_mask8x16<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn any_true_mask8x16<S: Simd>(simd: S) {
+    let all_zero = mask8x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(!simd.any_true_mask8x16(all_zero));
+
+    let all_neg = mask8x16::from_slice(
+        simd,
+        &[
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        ],
+    );
+    assert!(simd.any_true_mask8x16(all_neg));
+
+    let one_neg = mask8x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(simd.any_true_mask8x16(one_neg));
+}
+
+#[simd_test]
+fn all_true_mask8x16<S: Simd>(simd: S) {
+    let all_zero = mask8x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(!simd.all_true_mask8x16(all_zero));
+
+    let all_neg = mask8x16::from_slice(
+        simd,
+        &[
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        ],
+    );
+    assert!(simd.all_true_mask8x16(all_neg));
+
+    let one_pos = mask8x16::from_slice(
+        simd,
+        &[
+            -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1,
+        ],
+    );
+    assert!(!simd.all_true_mask8x16(one_pos));
+}
+
+#[simd_test]
+fn any_false_mask8x16<S: Simd>(simd: S) {
+    let all_zero = mask8x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(simd.any_false_mask8x16(all_zero));
+
+    let all_neg = mask8x16::from_slice(
+        simd,
+        &[
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        ],
+    );
+    assert!(!simd.any_false_mask8x16(all_neg));
+
+    let one_pos = mask8x16::from_slice(
+        simd,
+        &[
+            -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1,
+        ],
+    );
+    assert!(simd.any_false_mask8x16(one_pos));
+}
+
+#[simd_test]
+fn all_false_mask8x16<S: Simd>(simd: S) {
+    let all_zero = mask8x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(simd.all_false_mask8x16(all_zero));
+
+    let all_neg = mask8x16::from_slice(
+        simd,
+        &[
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        ],
+    );
+    assert!(!simd.all_false_mask8x16(all_neg));
+
+    let one_neg = mask8x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(!simd.all_false_mask8x16(one_neg));
+}
+
+#[simd_test]
 fn load_interleaved_128_u32x16<S: Simd>(simd: S) {
     #[rustfmt::skip]
     let data: [u32; 16] = [
@@ -2382,6 +2460,54 @@ fn select_mask16x8<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn any_true_mask16x8<S: Simd>(simd: S) {
+    let all_zero = mask16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(!simd.any_true_mask16x8(all_zero));
+
+    let all_neg = mask16x8::from_slice(simd, &[-1, -1, -1, -1, -1, -1, -1, -1]);
+    assert!(simd.any_true_mask16x8(all_neg));
+
+    let one_neg = mask16x8::from_slice(simd, &[0, 0, 0, -1, 0, 0, 0, 0]);
+    assert!(simd.any_true_mask16x8(one_neg));
+}
+
+#[simd_test]
+fn all_true_mask16x8<S: Simd>(simd: S) {
+    let all_zero = mask16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(!simd.all_true_mask16x8(all_zero));
+
+    let all_neg = mask16x8::from_slice(simd, &[-1, -1, -1, -1, -1, -1, -1, -1]);
+    assert!(simd.all_true_mask16x8(all_neg));
+
+    let one_pos = mask16x8::from_slice(simd, &[-1, -1, -1, 0, -1, -1, -1, -1]);
+    assert!(!simd.all_true_mask16x8(one_pos));
+}
+
+#[simd_test]
+fn any_false_mask16x8<S: Simd>(simd: S) {
+    let all_zero = mask16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(simd.any_false_mask16x8(all_zero));
+
+    let all_neg = mask16x8::from_slice(simd, &[-1, -1, -1, -1, -1, -1, -1, -1]);
+    assert!(!simd.any_false_mask16x8(all_neg));
+
+    let one_pos = mask16x8::from_slice(simd, &[-1, -1, -1, 0, -1, -1, -1, -1]);
+    assert!(simd.any_false_mask16x8(one_pos));
+}
+
+#[simd_test]
+fn all_false_mask16x8<S: Simd>(simd: S) {
+    let all_zero = mask16x8::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(simd.all_false_mask16x8(all_zero));
+
+    let all_neg = mask16x8::from_slice(simd, &[-1, -1, -1, -1, -1, -1, -1, -1]);
+    assert!(!simd.all_false_mask16x8(all_neg));
+
+    let one_neg = mask16x8::from_slice(simd, &[0, 0, 0, -1, 0, 0, 0, 0]);
+    assert!(!simd.all_false_mask16x8(one_neg));
+}
+
+#[simd_test]
 fn select_i32x4<S: Simd>(simd: S) {
     let mask = mask32x4::from_slice(simd, &[-1, 0, 0, -1]);
     let b = i32x4::from_slice(simd, &[10000, 20000, -30000, -40000]);
@@ -2404,6 +2530,54 @@ fn select_mask32x4<S: Simd>(simd: S) {
     let c = mask32x4::from_slice(simd, &[0, 0, -1, -1]);
     let result: mask32x4<_> = mask.select(b, c);
     assert_eq!(result.val, [-1, 0, 0, -1]);
+}
+
+#[simd_test]
+fn any_true_mask32x4<S: Simd>(simd: S) {
+    let all_zero = mask32x4::from_slice(simd, &[0, 0, 0, 0]);
+    assert!(!simd.any_true_mask32x4(all_zero));
+
+    let all_neg = mask32x4::from_slice(simd, &[-1, -1, -1, -1]);
+    assert!(simd.any_true_mask32x4(all_neg));
+
+    let one_neg = mask32x4::from_slice(simd, &[0, -1, 0, 0]);
+    assert!(simd.any_true_mask32x4(one_neg));
+}
+
+#[simd_test]
+fn all_true_mask32x4<S: Simd>(simd: S) {
+    let all_zero = mask32x4::from_slice(simd, &[0, 0, 0, 0]);
+    assert!(!simd.all_true_mask32x4(all_zero));
+
+    let all_neg = mask32x4::from_slice(simd, &[-1, -1, -1, -1]);
+    assert!(simd.all_true_mask32x4(all_neg));
+
+    let one_pos = mask32x4::from_slice(simd, &[-1, 0, -1, -1]);
+    assert!(!simd.all_true_mask32x4(one_pos));
+}
+
+#[simd_test]
+fn any_false_mask32x4<S: Simd>(simd: S) {
+    let all_zero = mask32x4::from_slice(simd, &[0, 0, 0, 0]);
+    assert!(simd.any_false_mask32x4(all_zero));
+
+    let all_neg = mask32x4::from_slice(simd, &[-1, -1, -1, -1]);
+    assert!(!simd.any_false_mask32x4(all_neg));
+
+    let one_pos = mask32x4::from_slice(simd, &[-1, 0, -1, -1]);
+    assert!(simd.any_false_mask32x4(one_pos));
+}
+
+#[simd_test]
+fn all_false_mask32x4<S: Simd>(simd: S) {
+    let all_zero = mask32x4::from_slice(simd, &[0, 0, 0, 0]);
+    assert!(simd.all_false_mask32x4(all_zero));
+
+    let all_neg = mask32x4::from_slice(simd, &[-1, -1, -1, -1]);
+    assert!(!simd.all_false_mask32x4(all_neg));
+
+    let one_neg = mask32x4::from_slice(simd, &[0, -1, 0, 0]);
+    assert!(!simd.all_false_mask32x4(one_neg));
 }
 
 #[simd_test]
@@ -2555,6 +2729,54 @@ fn fract_f64x2<S: Simd>(simd: S) {
 fn trunc_f64x2<S: Simd>(simd: S) {
     let a = f64x2::from_slice(simd, &[1.7, -2.3]);
     assert_eq!(a.trunc().val, [1.0, -2.0]);
+}
+
+#[simd_test]
+fn any_true_mask64x2<S: Simd>(simd: S) {
+    let all_zero = mask64x2::from_slice(simd, &[0, 0]);
+    assert!(!simd.any_true_mask64x2(all_zero));
+
+    let all_neg = mask64x2::from_slice(simd, &[-1, -1]);
+    assert!(simd.any_true_mask64x2(all_neg));
+
+    let one_neg = mask64x2::from_slice(simd, &[-1, 0]);
+    assert!(simd.any_true_mask64x2(one_neg));
+}
+
+#[simd_test]
+fn all_true_mask64x2<S: Simd>(simd: S) {
+    let all_zero = mask64x2::from_slice(simd, &[0, 0]);
+    assert!(!simd.all_true_mask64x2(all_zero));
+
+    let all_neg = mask64x2::from_slice(simd, &[-1, -1]);
+    assert!(simd.all_true_mask64x2(all_neg));
+
+    let one_pos = mask64x2::from_slice(simd, &[-1, 0]);
+    assert!(!simd.all_true_mask64x2(one_pos));
+}
+
+#[simd_test]
+fn any_false_mask64x2<S: Simd>(simd: S) {
+    let all_zero = mask64x2::from_slice(simd, &[0, 0]);
+    assert!(simd.any_false_mask64x2(all_zero));
+
+    let all_neg = mask64x2::from_slice(simd, &[-1, -1]);
+    assert!(!simd.any_false_mask64x2(all_neg));
+
+    let one_pos = mask64x2::from_slice(simd, &[-1, 0]);
+    assert!(simd.any_false_mask64x2(one_pos));
+}
+
+#[simd_test]
+fn all_false_mask64x2<S: Simd>(simd: S) {
+    let all_zero = mask64x2::from_slice(simd, &[0, 0]);
+    assert!(simd.all_false_mask64x2(all_zero));
+
+    let all_neg = mask64x2::from_slice(simd, &[-1, -1]);
+    assert!(!simd.all_false_mask64x2(all_neg));
+
+    let one_neg = mask64x2::from_slice(simd, &[-1, 0]);
+    assert!(!simd.all_false_mask64x2(one_neg));
 }
 
 #[simd_test]

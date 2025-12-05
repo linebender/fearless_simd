@@ -489,6 +489,22 @@ impl Simd for Neon {
         unsafe { vreinterpretq_s8_u8(vceqq_s8(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
+    fn any_true_mask8x16(self, a: mask8x16<Self>) -> bool {
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s8(a.into())) != 0 }
+    }
+    #[inline(always)]
+    fn all_true_mask8x16(self, a: mask8x16<Self>) -> bool {
+        unsafe { vminvq_u32(vreinterpretq_u32_s8(a.into())) == 0xffffffff }
+    }
+    #[inline(always)]
+    fn any_false_mask8x16(self, a: mask8x16<Self>) -> bool {
+        unsafe { vminvq_u32(vreinterpretq_u32_s8(a.into())) != 0xffffffff }
+    }
+    #[inline(always)]
+    fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool {
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s8(a.into())) == 0 }
+    }
+    #[inline(always)]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self> {
         let mut result = [0; 32usize];
         result[0..16usize].copy_from_slice(&a.val);
@@ -761,6 +777,22 @@ impl Simd for Neon {
     #[inline(always)]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         unsafe { vreinterpretq_s16_u16(vceqq_s16(a.into(), b.into())).simd_into(self) }
+    }
+    #[inline(always)]
+    fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool {
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s16(a.into())) != 0 }
+    }
+    #[inline(always)]
+    fn all_true_mask16x8(self, a: mask16x8<Self>) -> bool {
+        unsafe { vminvq_u32(vreinterpretq_u32_s16(a.into())) == 0xffffffff }
+    }
+    #[inline(always)]
+    fn any_false_mask16x8(self, a: mask16x8<Self>) -> bool {
+        unsafe { vminvq_u32(vreinterpretq_u32_s16(a.into())) != 0xffffffff }
+    }
+    #[inline(always)]
+    fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool {
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s16(a.into())) == 0 }
     }
     #[inline(always)]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self> {
@@ -1041,6 +1073,22 @@ impl Simd for Neon {
         unsafe { vreinterpretq_s32_u32(vceqq_s32(a.into(), b.into())).simd_into(self) }
     }
     #[inline(always)]
+    fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool {
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s32(a.into())) != 0 }
+    }
+    #[inline(always)]
+    fn all_true_mask32x4(self, a: mask32x4<Self>) -> bool {
+        unsafe { vminvq_u32(vreinterpretq_u32_s32(a.into())) == 0xffffffff }
+    }
+    #[inline(always)]
+    fn any_false_mask32x4(self, a: mask32x4<Self>) -> bool {
+        unsafe { vminvq_u32(vreinterpretq_u32_s32(a.into())) != 0xffffffff }
+    }
+    #[inline(always)]
+    fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool {
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s32(a.into())) == 0 }
+    }
+    #[inline(always)]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self> {
         let mut result = [0; 8usize];
         result[0..4usize].copy_from_slice(&a.val);
@@ -1225,6 +1273,22 @@ impl Simd for Neon {
     #[inline(always)]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         unsafe { vreinterpretq_s64_u64(vceqq_s64(a.into(), b.into())).simd_into(self) }
+    }
+    #[inline(always)]
+    fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool {
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s64(a.into())) != 0 }
+    }
+    #[inline(always)]
+    fn all_true_mask64x2(self, a: mask64x2<Self>) -> bool {
+        unsafe { vminvq_u32(vreinterpretq_u32_s64(a.into())) == 0xffffffff }
+    }
+    #[inline(always)]
+    fn any_false_mask64x2(self, a: mask64x2<Self>) -> bool {
+        unsafe { vminvq_u32(vreinterpretq_u32_s64(a.into())) != 0xffffffff }
+    }
+    #[inline(always)]
+    fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool {
+        unsafe { vmaxvq_u32(vreinterpretq_u32_s64(a.into())) == 0 }
     }
     #[inline(always)]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self> {
@@ -1851,6 +1915,26 @@ impl Simd for Neon {
         self.combine_mask8x16(self.simd_eq_mask8x16(a0, b0), self.simd_eq_mask8x16(a1, b1))
     }
     #[inline(always)]
+    fn any_true_mask8x32(self, a: mask8x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.any_true_mask8x16(a0) || self.any_true_mask8x16(a1)
+    }
+    #[inline(always)]
+    fn all_true_mask8x32(self, a: mask8x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.all_true_mask8x16(a0) && self.all_true_mask8x16(a1)
+    }
+    #[inline(always)]
+    fn any_false_mask8x32(self, a: mask8x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.any_false_mask8x16(a0) || self.any_false_mask8x16(a1)
+    }
+    #[inline(always)]
+    fn all_false_mask8x32(self, a: mask8x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x32(a);
+        self.all_false_mask8x16(a0) && self.all_false_mask8x16(a1)
+    }
+    #[inline(always)]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self> {
         let mut result = [0; 64usize];
         result[0..32usize].copy_from_slice(&a.val);
@@ -2255,6 +2339,26 @@ impl Simd for Neon {
         self.combine_mask16x8(self.simd_eq_mask16x8(a0, b0), self.simd_eq_mask16x8(a1, b1))
     }
     #[inline(always)]
+    fn any_true_mask16x16(self, a: mask16x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.any_true_mask16x8(a0) || self.any_true_mask16x8(a1)
+    }
+    #[inline(always)]
+    fn all_true_mask16x16(self, a: mask16x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.all_true_mask16x8(a0) && self.all_true_mask16x8(a1)
+    }
+    #[inline(always)]
+    fn any_false_mask16x16(self, a: mask16x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.any_false_mask16x8(a0) || self.any_false_mask16x8(a1)
+    }
+    #[inline(always)]
+    fn all_false_mask16x16(self, a: mask16x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x16(a);
+        self.all_false_mask16x8(a0) && self.all_false_mask16x8(a1)
+    }
+    #[inline(always)]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self> {
         let mut result = [0; 32usize];
         result[0..16usize].copy_from_slice(&a.val);
@@ -2652,6 +2756,26 @@ impl Simd for Neon {
         self.combine_mask32x4(self.simd_eq_mask32x4(a0, b0), self.simd_eq_mask32x4(a1, b1))
     }
     #[inline(always)]
+    fn any_true_mask32x8(self, a: mask32x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.any_true_mask32x4(a0) || self.any_true_mask32x4(a1)
+    }
+    #[inline(always)]
+    fn all_true_mask32x8(self, a: mask32x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.all_true_mask32x4(a0) && self.all_true_mask32x4(a1)
+    }
+    #[inline(always)]
+    fn any_false_mask32x8(self, a: mask32x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.any_false_mask32x4(a0) || self.any_false_mask32x4(a1)
+    }
+    #[inline(always)]
+    fn all_false_mask32x8(self, a: mask32x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x8(a);
+        self.all_false_mask32x4(a0) && self.all_false_mask32x4(a1)
+    }
+    #[inline(always)]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self> {
         let mut result = [0; 16usize];
         result[0..8usize].copy_from_slice(&a.val);
@@ -2920,6 +3044,26 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask64x4(a);
         let (b0, b1) = self.split_mask64x4(b);
         self.combine_mask64x2(self.simd_eq_mask64x2(a0, b0), self.simd_eq_mask64x2(a1, b1))
+    }
+    #[inline(always)]
+    fn any_true_mask64x4(self, a: mask64x4<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.any_true_mask64x2(a0) || self.any_true_mask64x2(a1)
+    }
+    #[inline(always)]
+    fn all_true_mask64x4(self, a: mask64x4<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.all_true_mask64x2(a0) && self.all_true_mask64x2(a1)
+    }
+    #[inline(always)]
+    fn any_false_mask64x4(self, a: mask64x4<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.any_false_mask64x2(a0) || self.any_false_mask64x2(a1)
+    }
+    #[inline(always)]
+    fn all_false_mask64x4(self, a: mask64x4<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x4(a);
+        self.all_false_mask64x2(a0) && self.all_false_mask64x2(a1)
     }
     #[inline(always)]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self> {
@@ -3544,6 +3688,26 @@ impl Simd for Neon {
         self.combine_mask8x32(self.simd_eq_mask8x32(a0, b0), self.simd_eq_mask8x32(a1, b1))
     }
     #[inline(always)]
+    fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.any_true_mask8x32(a0) || self.any_true_mask8x32(a1)
+    }
+    #[inline(always)]
+    fn all_true_mask8x64(self, a: mask8x64<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.all_true_mask8x32(a0) && self.all_true_mask8x32(a1)
+    }
+    #[inline(always)]
+    fn any_false_mask8x64(self, a: mask8x64<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.any_false_mask8x32(a0) || self.any_false_mask8x32(a1)
+    }
+    #[inline(always)]
+    fn all_false_mask8x64(self, a: mask8x64<Self>) -> bool {
+        let (a0, a1) = self.split_mask8x64(a);
+        self.all_false_mask8x32(a0) && self.all_false_mask8x32(a1)
+    }
+    #[inline(always)]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>) {
         let mut b0 = [0; 32usize];
         let mut b1 = [0; 32usize];
@@ -3952,6 +4116,26 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.any_true_mask16x16(a0) || self.any_true_mask16x16(a1)
+    }
+    #[inline(always)]
+    fn all_true_mask16x32(self, a: mask16x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.all_true_mask16x16(a0) && self.all_true_mask16x16(a1)
+    }
+    #[inline(always)]
+    fn any_false_mask16x32(self, a: mask16x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.any_false_mask16x16(a0) || self.any_false_mask16x16(a1)
+    }
+    #[inline(always)]
+    fn all_false_mask16x32(self, a: mask16x32<Self>) -> bool {
+        let (a0, a1) = self.split_mask16x32(a);
+        self.all_false_mask16x16(a0) && self.all_false_mask16x16(a1)
+    }
+    #[inline(always)]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
         let mut b0 = [0; 16usize];
         let mut b1 = [0; 16usize];
@@ -4336,6 +4520,26 @@ impl Simd for Neon {
         self.combine_mask32x8(self.simd_eq_mask32x8(a0, b0), self.simd_eq_mask32x8(a1, b1))
     }
     #[inline(always)]
+    fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.any_true_mask32x8(a0) || self.any_true_mask32x8(a1)
+    }
+    #[inline(always)]
+    fn all_true_mask32x16(self, a: mask32x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.all_true_mask32x8(a0) && self.all_true_mask32x8(a1)
+    }
+    #[inline(always)]
+    fn any_false_mask32x16(self, a: mask32x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.any_false_mask32x8(a0) || self.any_false_mask32x8(a1)
+    }
+    #[inline(always)]
+    fn all_false_mask32x16(self, a: mask32x16<Self>) -> bool {
+        let (a0, a1) = self.split_mask32x16(a);
+        self.all_false_mask32x8(a0) && self.all_false_mask32x8(a1)
+    }
+    #[inline(always)]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
         let mut b0 = [0; 8usize];
         let mut b1 = [0; 8usize];
@@ -4590,6 +4794,26 @@ impl Simd for Neon {
         let (a0, a1) = self.split_mask64x8(a);
         let (b0, b1) = self.split_mask64x8(b);
         self.combine_mask64x4(self.simd_eq_mask64x4(a0, b0), self.simd_eq_mask64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn any_true_mask64x8(self, a: mask64x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.any_true_mask64x4(a0) || self.any_true_mask64x4(a1)
+    }
+    #[inline(always)]
+    fn all_true_mask64x8(self, a: mask64x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.all_true_mask64x4(a0) && self.all_true_mask64x4(a1)
+    }
+    #[inline(always)]
+    fn any_false_mask64x8(self, a: mask64x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.any_false_mask64x4(a0) || self.any_false_mask64x4(a1)
+    }
+    #[inline(always)]
+    fn all_false_mask64x8(self, a: mask64x8<Self>) -> bool {
+        let (a0, a1) = self.split_mask64x8(a);
+        self.all_false_mask64x4(a0) && self.all_false_mask64x4(a1)
     }
     #[inline(always)]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {

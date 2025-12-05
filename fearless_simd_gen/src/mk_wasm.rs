@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::generic::{generic_op_name, scalar_binary};
-use crate::ops::{Op, valid_reinterpret};
+use crate::ops::{Op, Quantifier, valid_reinterpret};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     generic::{generic_combine, generic_op, generic_split},
@@ -433,6 +433,25 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             }
                         }
                         _ => unimplemented!(),
+                    }
+                }
+                OpSig::MaskReduce {
+                    quantifier,
+                    condition,
+                } => {
+                    let (intrinsic, negate) = match (quantifier, condition) {
+                        (Quantifier::Any, true) => (quote! { v128_any_true }, None),
+                        (Quantifier::Any, false) => {
+                            (simple_intrinsic("all_true", vec_ty), Some(quote! { ! }))
+                        }
+                        (Quantifier::All, true) => (simple_intrinsic("all_true", vec_ty), None),
+                        (Quantifier::All, false) => (quote! { v128_any_true }, Some(quote! { ! })),
+                    };
+
+                    quote! {
+                        #method_sig {
+                            #negate #intrinsic(a.into())
+                        }
                     }
                 }
                 OpSig::LoadInterleaved {

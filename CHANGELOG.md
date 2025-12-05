@@ -26,6 +26,7 @@ This release has an [MSRV][] of 1.88.
 - The `load_interleaved` and `store_interleaved` operations now use native intrinsics on x86, instead of using the fallback implementations. ([#140][] by [@valadaptive][])
 - The `ceil` and `round_ties_even` operations on floating-point vector types. (Rust's `round` operation rounds away from zero in the case of ties. Many architectures do not natively implement that behavior, so it's omitted.) ([#145][] by [@valadaptive][])
 - A `prelude` module, which exports all the traits in the library but not the types. ([#149][] by [@valadaptive][])
+- The `any_true`, `all_true`, `any_false`, and `all_false` methods on mask types. ([#141][] by [@valadaptive][])
 
 ### Fixed
 
@@ -142,6 +143,7 @@ No changelog was kept for this release.
 [#136]: https://github.com/linebender/fearless_simd/pull/136
 [#137]: https://github.com/linebender/fearless_simd/pull/137
 [#140]: https://github.com/linebender/fearless_simd/pull/140
+[#141]: https://github.com/linebender/fearless_simd/pull/141
 [#145]: https://github.com/linebender/fearless_simd/pull/145
 [#149]: https://github.com/linebender/fearless_simd/pull/149
 

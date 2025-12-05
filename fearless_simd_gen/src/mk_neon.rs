@@ -406,6 +406,28 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         quote! {}
                     }
                 }
+                OpSig::MaskReduce {
+                    quantifier,
+                    condition,
+                } => {
+                    let (reduction, target) = match (quantifier, condition) {
+                        (crate::ops::Quantifier::Any, true) => ("vmaxv", quote! { != 0 }),
+                        (crate::ops::Quantifier::Any, false) => ("vminv", quote! { != 0xffffffff }),
+                        (crate::ops::Quantifier::All, true) => ("vminv", quote! { == 0xffffffff }),
+                        (crate::ops::Quantifier::All, false) => ("vmaxv", quote! { == 0 }),
+                    };
+
+                    let u32_ty = VecType::new(ScalarType::Unsigned, 32, vec_ty.n_bits() / 32);
+                    let min_max = simple_intrinsic(reduction, &u32_ty);
+                    let reinterpret = format_ident!("vreinterpretq_u32_s{}", vec_ty.scalar_bits);
+                    quote! {
+                        #method_sig {
+                            unsafe {
+                                #min_max(#reinterpret(a.into())) #target
+                            }
+                        }
+                    }
+                }
             };
             methods.push(method);
         }
