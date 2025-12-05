@@ -13,8 +13,43 @@ use crate::{
     mask32x8, mask32x16, mask64x2, mask64x4, mask64x8, u8x16, u8x32, u8x64, u16x8, u16x16, u16x32,
     u32x4, u32x8, u32x16,
 };
-#[doc = r" TODO: docstring"]
+#[doc = r" The main SIMD trait, implemented by all SIMD token types."]
+#[doc = r""]
+#[doc = r#" Each implementor of this trait (e.g. `Avx2`, `Sse4_2`, `Neon`, `Fallback`) is a zero-sized "token" type"#]
+#[doc = r" representing a specific SIMD instruction set. These tokens are obtained at runtime via [`Level`] and the"]
+#[doc = r" [`dispatch!`](crate::dispatch) macro, which selects the best available backend for the current CPU."]
+#[doc = r""]
+#[doc = r" This trait defines all the low-level SIMD operations (e.g. [`add_f32x4`](Simd::add_f32x4),"]
+#[doc = r" [`mul_u32x4`](Simd::mul_u32x4)) that are implemented by each token type using platform-specific intrinsics."]
+#[doc = r" However, you typically won't call these methods directly. Instead, you'll probably be using the methods"]
+#[doc = r" defined on the vector types themselves."]
+#[doc = r""]
+#[doc = r" # Associated Types"]
+#[doc = r""]
+#[doc = r#" The trait defines associated types for the highest "native" vector width of each scalar type (e.g. `f32s`,"#]
+#[doc = r" `u32s`). These are always at least 128 bits, but may be larger. Currently, they are 128 bits everywhere but"]
+#[doc = r" AVX2, where they are 256 bits."]
+#[doc = r""]
+#[doc = r" # Example"]
+#[doc = r""]
+#[doc = r" ```"]
+#[doc = r" # use fearless_simd::{prelude::*, f32x4, dispatch, Level};"]
+#[doc = r""]
+#[doc = r" #[inline(always)]"]
+#[doc = r" fn add_vectors<S: Simd>(simd: S, a: f32x4<S>, b: f32x4<S>) -> f32x4<S> {"]
+#[doc = r"     a + b  // Uses operator overloading, which calls simd.add_f32x4 internally"]
+#[doc = r" }"]
+#[doc = r""]
+#[doc = r" let level = Level::new();"]
+#[doc = r" dispatch!(level, simd => {"]
+#[doc = r"     let a = [1.0, 2.0, 3.0, 4.0].simd_into(simd);"]
+#[doc = r"     let b = [5.0, 6.0, 7.0, 8.0].simd_into(simd);"]
+#[doc = r"     let result = add_vectors(simd, a, b);"]
+#[doc = r"     # assert_eq!(result.val, [6.0, 8.0, 10.0, 12.0]);"]
+#[doc = r" });"]
+#[doc = r" ```"]
 pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
+    #[doc = r" A native-width SIMD vector of [`f32`]s."]
     type f32s: SimdFloat<
             f32,
             Self,
@@ -23,8 +58,11 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
             Bytes = <Self::u32s as Bytes>::Bytes,
         > + SimdCvtFloat<Self::u32s>
         + SimdCvtFloat<Self::i32s>;
+    #[doc = r" A native-width SIMD vector of [`f64`]s."]
     type f64s: SimdFloat<f64, Self, Block = f64x2<Self>, Mask = Self::mask64s>;
+    #[doc = r" A native-width SIMD vector of [`u8`]s."]
     type u8s: SimdInt<u8, Self, Block = u8x16<Self>, Mask = Self::mask8s>;
+    #[doc = r" A native-width SIMD vector of [`i8`]s."]
     type i8s: SimdInt<
             i8,
             Self,
@@ -32,7 +70,9 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
             Mask = Self::mask8s,
             Bytes = <Self::u8s as Bytes>::Bytes,
         > + core::ops::Neg<Output = Self::i8s>;
+    #[doc = r" A native-width SIMD vector of [`u16`]s."]
     type u16s: SimdInt<u16, Self, Block = u16x8<Self>, Mask = Self::mask16s>;
+    #[doc = r" A native-width SIMD vector of [`i16`]s."]
     type i16s: SimdInt<
             i16,
             Self,
@@ -40,8 +80,10 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
             Mask = Self::mask16s,
             Bytes = <Self::u16s as Bytes>::Bytes,
         > + core::ops::Neg<Output = Self::i16s>;
+    #[doc = r" A native-width SIMD vector of [`u32`]s."]
     type u32s: SimdInt<u32, Self, Block = u32x4<Self>, Mask = Self::mask32s>
         + SimdCvtTruncate<Self::f32s>;
+    #[doc = r" A native-width SIMD vector of [`i32`]s."]
     type i32s: SimdInt<
             i32,
             Self,
@@ -50,940 +92,1798 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
             Bytes = <Self::u32s as Bytes>::Bytes,
         > + SimdCvtTruncate<Self::f32s>
         + core::ops::Neg<Output = Self::i32s>;
+    #[doc = r" A native-width SIMD mask with 8-bit lanes."]
     type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes>
         + Select<Self::u8s>
         + Select<Self::i8s>
         + Select<Self::mask8s>;
+    #[doc = r" A native-width SIMD mask with 16-bit lanes."]
     type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes>
         + Select<Self::u16s>
         + Select<Self::i16s>
         + Select<Self::mask16s>;
+    #[doc = r" A native-width SIMD mask with 32-bit lanes."]
     type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes>
         + Select<Self::f32s>
         + Select<Self::u32s>
         + Select<Self::i32s>
         + Select<Self::mask32s>;
+    #[doc = r" A native-width SIMD mask with 64-bit lanes."]
     type mask64s: SimdMask<i64, Self, Block = mask64x2<Self>>
         + Select<Self::f64s>
         + Select<Self::mask64s>;
+    #[doc = r" This SIMD token's feature level."]
     fn level(self) -> Level;
     #[doc = r" Call function with CPU features enabled."]
     #[doc = r""]
     #[doc = r" For performance, the provided function should be `#[inline(always)]`."]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f32x4(self, val: f32) -> f32x4<Self>;
+    #[doc = "Compute the absolute value of each element."]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Negate each element of the vector."]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Add two vectors element-wise."]
     fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Subtract two vectors element-wise."]
     fn sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Multiply two vectors element-wise."]
     fn mul_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Divide two vectors element-wise."]
     fn div_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn madd_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
     fn msub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
     fn round_ties_even_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `f64` elements.\n\nThe number of elements in the result is half that of the input."]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `i32` elements.\n\nThis is a bitwise reinterpretation only, and does not perform any conversions."]
     fn reinterpret_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x16(self, val: i8) -> i8x16<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self>;
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x16(self, val: u8) -> u8x16<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self>;
+    #[doc = "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input."]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask8x16(self, val: i8) -> mask8x16<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask8x16(
         self,
         a: mask8x16<Self>,
         b: mask8x16<Self>,
         c: mask8x16<Self>,
     ) -> mask8x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask8x16(self, a: mask8x16<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask8x16(self, a: mask8x16<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask8x16(self, a: mask8x16<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i16x8(self, val: i16) -> i16x8<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self>;
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x8(self, val: u16) -> u16x8<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask16x8(self, val: i16) -> mask16x8<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask16x8(
         self,
         a: mask16x8<Self>,
         b: mask16x8<Self>,
         c: mask16x8<Self>,
     ) -> mask16x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask16x8(self, a: mask16x8<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask16x8(self, a: mask16x8<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i32x4(self, val: i32) -> i32x4<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self>;
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self>;
+    #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u32x4(self, val: u32) -> u32x4<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self>;
+    #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask32x4(self, val: i32) -> mask32x4<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask32x4(
         self,
         a: mask32x4<Self>,
         b: mask32x4<Self>,
         c: mask32x4<Self>,
     ) -> mask32x4<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask32x4(self, a: mask32x4<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask32x4(self, a: mask32x4<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f64x2(self, val: f64) -> f64x2<Self>;
+    #[doc = "Compute the absolute value of each element."]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Negate each element of the vector."]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Add two vectors element-wise."]
     fn add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Subtract two vectors element-wise."]
     fn sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Multiply two vectors element-wise."]
     fn mul_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Divide two vectors element-wise."]
     fn div_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn madd_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
     fn msub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
     fn round_ties_even_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask64x2(self, val: i64) -> mask64x2<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask64x2(
         self,
         a: mask64x2<Self>,
         b: mask64x2<Self>,
         c: mask64x2<Self>,
     ) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask64x2(self, a: mask64x2<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask64x2(self, a: mask64x2<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f32x8(self, val: f32) -> f32x8<Self>;
+    #[doc = "Compute the absolute value of each element."]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Negate each element of the vector."]
     fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Add two vectors element-wise."]
     fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Subtract two vectors element-wise."]
     fn sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Multiply two vectors element-wise."]
     fn mul_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Divide two vectors element-wise."]
     fn div_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn madd_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
     fn msub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
     fn round_ties_even_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     fn fract_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f32x8(self, a: f32x8<Self>) -> (f32x4<Self>, f32x4<Self>);
+    #[doc = "Reinterpret the bits of this vector as a vector of `f64` elements.\n\nThe number of elements in the result is half that of the input."]
     fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `i32` elements.\n\nThis is a bitwise reinterpretation only, and does not perform any conversions."]
     fn reinterpret_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x32(self, val: i8) -> i8x32<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i8x32(self, a: mask8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i8x32(self, a: i8x32<Self>) -> (i8x16<Self>, i8x16<Self>);
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x32(self, val: u8) -> u8x32<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u8x32(self, a: mask8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x32(self, a: u8x32<Self>) -> (u8x16<Self>, u8x16<Self>);
+    #[doc = "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input."]
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask8x32(self, val: i8) -> mask8x32<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask8x32(
         self,
         a: mask8x32<Self>,
         b: mask8x32<Self>,
         c: mask8x32<Self>,
     ) -> mask8x32<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask8x32(self, a: mask8x32<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask8x32(self, a: mask8x32<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask8x32(self, a: mask8x32<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask8x32(self, a: mask8x32<Self>) -> bool;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x32(self, a: mask8x32<Self>) -> (mask8x16<Self>, mask8x16<Self>);
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i16x16(self, val: i16) -> i16x16<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i16x16(self, a: mask16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i16x16(self, a: i16x16<Self>) -> (i16x8<Self>, i16x8<Self>);
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x16(self, val: u16) -> u16x16<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u16x16(self, a: mask16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x16(self, a: u16x16<Self>) -> (u16x8<Self>, u16x8<Self>);
+    #[doc = "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input."]
     fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask16x16(self, val: i16) -> mask16x16<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask16x16(
         self,
         a: mask16x16<Self>,
         b: mask16x16<Self>,
         c: mask16x16<Self>,
     ) -> mask16x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask16x16(self, a: mask16x16<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask16x16(self, a: mask16x16<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask16x16(self, a: mask16x16<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask16x16(self, a: mask16x16<Self>) -> bool;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x16(self, a: mask16x16<Self>) -> (mask16x8<Self>, mask16x8<Self>);
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i32x8(self, val: i32) -> i32x8<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i32x8(self, a: mask32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i32x8(self, a: i32x8<Self>) -> (i32x4<Self>, i32x4<Self>);
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_i32x8(self, a: i32x8<Self>) -> u32x8<Self>;
+    #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u32x8(self, val: u32) -> u32x8<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u32x8(self, a: mask32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x8(self, a: u32x8<Self>) -> (u32x4<Self>, u32x4<Self>);
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self>;
+    #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask32x8(self, val: i32) -> mask32x8<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask32x8(
         self,
         a: mask32x8<Self>,
         b: mask32x8<Self>,
         c: mask32x8<Self>,
     ) -> mask32x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask32x8(self, a: mask32x8<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask32x8(self, a: mask32x8<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask32x8(self, a: mask32x8<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask32x8(self, a: mask32x8<Self>) -> bool;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x8(self, a: mask32x8<Self>) -> (mask32x4<Self>, mask32x4<Self>);
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f64x4(self, val: f64) -> f64x4<Self>;
+    #[doc = "Compute the absolute value of each element."]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Negate each element of the vector."]
     fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Add two vectors element-wise."]
     fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Subtract two vectors element-wise."]
     fn sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Multiply two vectors element-wise."]
     fn mul_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Divide two vectors element-wise."]
     fn div_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn madd_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
     fn msub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
     fn round_ties_even_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     fn fract_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>);
+    #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask64x4(self, val: i64) -> mask64x4<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask64x4(
         self,
         a: mask64x4<Self>,
         b: mask64x4<Self>,
         c: mask64x4<Self>,
     ) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask64x4(self, a: mask64x4<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask64x4(self, a: mask64x4<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask64x4(self, a: mask64x4<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask64x4(self, a: mask64x4<Self>) -> bool;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x4(self, a: mask64x4<Self>) -> (mask64x2<Self>, mask64x2<Self>);
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f32x16(self, val: f32) -> f32x16<Self>;
+    #[doc = "Compute the absolute value of each element."]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Negate each element of the vector."]
     fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Add two vectors element-wise."]
     fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Subtract two vectors element-wise."]
     fn sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Multiply two vectors element-wise."]
     fn mul_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Divide two vectors element-wise."]
     fn div_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn madd_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
     fn msub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
     fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>);
+    #[doc = "Reinterpret the bits of this vector as a vector of `f64` elements.\n\nThe number of elements in the result is half that of the input."]
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `i32` elements.\n\nThis is a bitwise reinterpretation only, and does not perform any conversions."]
     fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self>;
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> ();
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x64(self, val: i8) -> i8x64<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i8x64(self, a: mask8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>);
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x64(self, val: u8) -> u8x64<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u8x64(self, a: mask8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>);
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self>;
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask8x64(self, val: i8) -> mask8x64<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask8x64(
         self,
         a: mask8x64<Self>,
         b: mask8x64<Self>,
         c: mask8x64<Self>,
     ) -> mask8x64<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask8x64(self, a: mask8x64<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask8x64(self, a: mask8x64<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask8x64(self, a: mask8x64<Self>) -> bool;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>);
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i16x32(self, val: i16) -> i16x32<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i16x32(self, a: mask16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>);
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x32(self, val: u16) -> u16x32<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u16x32(self, a: mask16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>);
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self>;
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
+    #[doc = "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input."]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask16x32(self, val: i16) -> mask16x32<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask16x32(
         self,
         a: mask16x32<Self>,
         b: mask16x32<Self>,
         c: mask16x32<Self>,
     ) -> mask16x32<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask16x32(self, a: mask16x32<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask16x32(self, a: mask16x32<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask16x32(self, a: mask16x32<Self>) -> bool;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>);
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i32x16(self, val: i32) -> i32x16<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i32x16(self, a: mask32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>);
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self>;
+    #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u32x16(self, val: u32) -> u32x16<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     fn sub_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     fn mul_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
     fn and_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
     fn or_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
     fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u32x16(self, a: mask32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>);
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self>;
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> ();
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
+    #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask32x16(self, val: i32) -> mask32x16<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask32x16(
         self,
         a: mask32x16<Self>,
         b: mask32x16<Self>,
         c: mask32x16<Self>,
     ) -> mask32x16<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask32x16(self, a: mask32x16<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask32x16(self, a: mask32x16<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask32x16(self, a: mask32x16<Self>) -> bool;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>);
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f64x8(self, val: f64) -> f64x8<Self>;
+    #[doc = "Compute the absolute value of each element."]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Negate each element of the vector."]
     fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Add two vectors element-wise."]
     fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Subtract two vectors element-wise."]
     fn sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Multiply two vectors element-wise."]
     fn mul_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Divide two vectors element-wise."]
     fn div_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
     fn simd_lt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
     fn simd_le_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
     fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Compute `(a * b) + c` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn madd_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Compute `(a * b) - c` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
     fn msub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
     fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `a - a.trunc()`."]
     fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
+    #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self>;
+    #[doc = "Create a SIMD mask with all elements set to the given value."]
     fn splat_mask64x8(self, val: i64) -> mask64x8<Self>;
+    #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compute the logical OR of two masks."]
     fn or_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compute the logical XOR of two masks."]
     fn xor_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compute the logical NOT of the mask."]
     fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_mask64x8(
         self,
         a: mask64x8<Self>,
         b: mask64x8<Self>,
         c: mask64x8<Self>,
     ) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true_mask64x8(self, a: mask64x8<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true_mask64x8(self, a: mask64x8<Self>) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false_mask64x8(self, a: mask64x8<Self>) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false_mask64x8(self, a: mask64x8<Self>) -> bool;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
 }
+#[doc = r" Base functionality implemented by all SIMD vectors."]
 pub trait SimdBase<Element: SimdElement, S: Simd>:
     Copy
     + Sync
@@ -994,6 +1894,9 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     + core::ops::Index<usize, Output = Element>
     + core::ops::IndexMut<usize, Output = Element>
 {
+    #[doc = r" This vector type's lane count. This is useful when you're"]
+    #[doc = r" working with a native-width vector (e.g. [`Simd::f32s`]) and"]
+    #[doc = r" want to process data in native-width chunks."]
     const N: usize;
     #[doc = r" A SIMD vector mask with the same number of elements."]
     #[doc = r""]
@@ -1004,7 +1907,7 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     #[doc = r" One possibility to consider is that the SIMD trait grows"]
     #[doc = r" `maskAxB` associated types."]
     type Mask: SimdMask<Element::Mask, S>;
-    #[doc = r" A 128 bit SIMD vector of the same scalar type."]
+    #[doc = r" A 128-bit SIMD vector of the same scalar type."]
     type Block: SimdBase<Element, S>;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
@@ -1014,13 +1917,17 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     #[doc = r""]
     #[doc = r" The slice must be the proper width."]
     fn from_slice(simd: S, slice: &[Element]) -> Self;
+    #[doc = r" Create a SIMD vector with all elements set to the given value."]
     fn splat(simd: S, val: Element) -> Self;
+    #[doc = r" Create a SIMD vector from a 128-bit vector of the same scalar"]
+    #[doc = r" type, repeated."]
     fn block_splat(block: Self::Block) -> Self;
     #[doc = r" Create a SIMD vector where each element is produced by"]
     #[doc = r" calling `f` with that element's lane index (from 0 to"]
     #[doc = r" [`SimdBase::N`] - 1)."]
     fn from_fn(simd: S, f: impl FnMut(usize) -> Element) -> Self;
 }
+#[doc = r" Functionality implemented by floating-point SIMD vectors."]
 pub trait SimdFloat<Element: SimdElement, S: Simd>:
     SimdBase<Element, S>
     + core::ops::Neg<Output = Self>
@@ -1045,30 +1952,54 @@ pub trait SimdFloat<Element: SimdElement, S: Simd>:
     fn to_int<T: SimdCvtTruncate<Self>>(self) -> T {
         T::truncate_from(self)
     }
+    #[doc = "Compute the absolute value of each element."]
     fn abs(self) -> Self;
+    #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt(self) -> Self;
+    #[doc = "Return a vector with the magnitude of `self` and the sign of `rhs` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `self` is less than `rhs`, and all zeroes if not."]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `self` is less than or equal to `rhs`, and all zeroes if not."]
     fn simd_le(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `self` is greater than or equal to `rhs`, and all zeroes if not."]
     fn simd_ge(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `self` is greater than `rhs`, and all zeroes if not."]
     fn simd_gt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn min(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise maximum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn max_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise minimum of two vectors.\n\nIf one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\nIf one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\nIf an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\nSignaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them."]
     fn min_precise(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Compute `(self * op1) + op2` (fused multiply-add) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors."]
     fn madd(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Compute `(self * op1) - op2` (fused multiply-subtract) for each element.\n\nDepending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors."]
     fn msub(self, op1: impl SimdInto<Self, S>, op2: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the largest integer less than or equal to each element, that is, round towards negative infinity."]
     fn floor(self) -> Self;
+    #[doc = "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity."]
     fn ceil(self) -> Self;
+    #[doc = "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\nThere is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is."]
     fn round_ties_even(self) -> Self;
+    #[doc = "Return the fractional part of each element.\n\nThis is equivalent to `self - self.trunc()`."]
     fn fract(self) -> Self;
+    #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc(self) -> Self;
 }
+#[doc = r" Functionality implemented by (signed and unsigned) integer SIMD vectors."]
 pub trait SimdInt<Element: SimdElement, S: Simd>:
     SimdBase<Element, S>
     + core::ops::Add<Output = Self>
@@ -1107,18 +2038,30 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
     }
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `self` is less than `rhs`, and all zeroes if not."]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `self` is less than or equal to `rhs`, and all zeroes if not."]
     fn simd_le(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `self` is greater than or equal to `rhs`, and all zeroes if not."]
     fn simd_ge(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `self` is greater than `rhs`, and all zeroes if not."]
     fn simd_gt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
     fn zip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
     fn zip_high(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
     fn unzip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
     fn unzip_high(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise minimum of two vectors."]
     fn min(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Return the element-wise maximum of two vectors."]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
 }
+#[doc = r" Functionality implemented by SIMD masks."]
 pub trait SimdMask<Element: SimdElement, S: Simd>:
     SimdBase<Element, S>
     + core::ops::BitAnd<Output = Self>
@@ -1135,9 +2078,14 @@ pub trait SimdMask<Element: SimdElement, S: Simd>:
     + core::ops::BitXorAssign<Element>
     + core::ops::Not<Output = Self>
 {
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
+    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_true(self) -> bool;
+    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_true(self) -> bool;
+    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn any_false(self) -> bool;
+    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
     fn all_false(self) -> bool;
 }

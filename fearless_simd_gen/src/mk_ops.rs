@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    ops::{CoreOpTrait, overloaded_ops_for},
+    ops::{CoreOpTrait, OpSig, TyFlavor, overloaded_ops_for},
     types::{SIMD_TYPES, type_imports},
 };
 
@@ -16,7 +16,7 @@ pub(crate) fn mk_ops() -> TokenStream {
 
     for ty in SIMD_TYPES {
         let simd = ty.rust();
-        for op in overloaded_ops_for(ty.scalar) {
+        for (op, sig, doc) in overloaded_ops_for(ty.scalar) {
             let opfn = op.op_fn();
             let trait_name = op.trait_name();
             let simd_name = op.simd_name();
@@ -26,12 +26,14 @@ pub(crate) fn mk_ops() -> TokenStream {
             let simd_fn_name = format!("{simd_name}_{}", ty.rust_name());
             let simd_fn = Ident::new(&simd_fn_name, Span::call_site());
             let opfn = Ident::new(opfn, Span::call_site());
+            let doc = sig.format_docstring(doc, TyFlavor::VecImpl);
 
             match op {
                 CoreOpTrait::ShrVectored => {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
+                            #[doc = #doc]
                             #[inline(always)]
                             fn #opfn(self, rhs: Self) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs)
@@ -39,6 +41,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                         }
 
                         impl<S: Simd> core::ops::#trait_assign_id for #simd<S> {
+                            #[doc = #doc]
                             #[inline(always)]
                             fn #op_assign_fn(&mut self, rhs: Self) {
                                 *self = self.simd.#simd_fn(*self, rhs);
@@ -50,6 +53,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id<u32> for #simd<S> {
                             type Output = Self;
+                            #[doc = #doc]
                             #[inline(always)]
                             fn #opfn(self, rhs: u32) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs)
@@ -64,10 +68,11 @@ pub(crate) fn mk_ops() -> TokenStream {
                         }
                     });
                 }
-                _ if op.is_unary() => {
+                _ if matches!(sig, OpSig::Unary) => {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
+                            #[doc = #doc]
                             #[inline(always)]
                             fn #opfn(self) -> Self::Output {
                                 self.simd.#simd_fn(self)
@@ -80,6 +85,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
+                            #[doc = #doc]
                             #[inline(always)]
                             fn #opfn(self, rhs: Self) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs)
@@ -87,6 +93,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                         }
 
                         impl<S: Simd> core::ops::#trait_assign_id for #simd<S> {
+                            #[doc = #doc]
                             #[inline(always)]
                             fn #op_assign_fn(&mut self, rhs: Self) {
                                 *self = self.simd.#simd_fn(*self, rhs);

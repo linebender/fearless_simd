@@ -12,10 +12,11 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdFrom, SimdInto, SimdCvtFloat, SimdCvtTruncate};
+        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdCvtFloat, SimdCvtTruncate};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
+        let doc = ty.docstring();
         let align = ty.n_bits() / 8;
         let align_lit = Literal::usize_unsuffixed(align);
         let len = Literal::usize_unsuffixed(ty.len);
@@ -129,6 +130,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             });
         }
         result.extend(quote! {
+            #[doc = #doc]
             #[derive(Clone, Copy, Debug)]
             #[repr(C, align(#align_lit))]
             pub struct #name<S: Simd> {
@@ -245,7 +247,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         }
     }
     let mask_ty = ty.mask_ty().rust();
-    let block_ty = VecType::new(ty.scalar, ty.scalar_bits, 128 / ty.scalar_bits).rust();
+    let block_ty = ty.block_ty().rust();
     let block_splat_body = match ty.n_bits() {
         128 => quote! {
             block
@@ -270,7 +272,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         _ => unreachable!(),
     };
     quote! {
-        impl<S: Simd> crate::SimdBase<#scalar, S> for #name<S> {
+        impl<S: Simd> SimdBase<#scalar, S> for #name<S> {
             const N: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;

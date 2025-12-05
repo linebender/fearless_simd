@@ -1,7 +1,7 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::quote;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -100,6 +100,10 @@ impl VecType {
         Self::new(ScalarType::Mask, self.scalar_bits, self.len)
     }
 
+    pub(crate) fn block_ty(&self) -> Self {
+        Self::new(self.scalar, self.scalar_bits, 128 / self.scalar_bits)
+    }
+
     pub(crate) fn split_operand(&self) -> Option<Self> {
         if self.n_bits() <= 128 {
             return None;
@@ -114,6 +118,75 @@ impl VecType {
         }
         let n2 = self.len * 2;
         Some(Self::new(self.scalar, self.scalar_bits, n2))
+    }
+
+    pub(crate) fn docstring(&self) -> String {
+        let len = self.len;
+        if self.scalar == ScalarType::Mask {
+            let scalar_bits = self.scalar_bits;
+            format!(
+                "A SIMD mask of {len} {scalar_bits}-bit elements.\n\n\
+                When created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\".",
+            )
+        } else {
+            let scalar_name = self.scalar.rust_name(self.scalar_bits);
+            let block_ty = self.block_ty();
+            let rust_name = self.rust_name();
+
+            let (splat_example, many_example_literals): (String, Vec<String>) = match self.scalar {
+                ScalarType::Float => {
+                    let start = 1.0;
+                    let values = (0..self.len)
+                        .map(|n| Literal::f64_unsuffixed(n as f64 + start).to_string())
+                        .collect();
+                    (Literal::f64_unsuffixed(start).to_string(), values)
+                }
+                ScalarType::Unsigned | ScalarType::Int => {
+                    let start = 1;
+                    let values = (0..self.len)
+                        .map(|n| Literal::usize_unsuffixed(n + start).to_string())
+                        .collect();
+                    (Literal::usize_unsuffixed(start).to_string(), values)
+                }
+                ScalarType::Mask => unreachable!(),
+            };
+            let many_example = many_example_literals.join(", ");
+
+            let block_example = if &block_ty != self {
+                let block_example = many_example_literals[0..block_ty.len].join(", ");
+                let block_name = block_ty.rust_name();
+                format!(
+                    "
+    # use fearless_simd::{block_name};
+    // From `Self::Block`:
+    let f = {rust_name}::block_splat({block_name}::simd_from([{block_example}], simd));"
+                )
+            } else {
+                String::new()
+            };
+
+            format!(
+                "A SIMD vector of {len} [`{scalar_name}`] elements.\n\n\
+                You may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n\
+                ```rust\n\
+# use fearless_simd::{{prelude::*, {rust_name}}};
+fn construct_simd<S: Simd>(simd: S) {{
+    // From a single scalar value:
+    let a = {rust_name}::splat(simd, {splat_example});
+    let b = {rust_name}::simd_from({splat_example}, simd);
+
+    // From a slice:
+    let c = {rust_name}::from_slice(simd, &[{many_example}]);
+
+    // From an array:
+    let d = {rust_name}::simd_from([{many_example}], simd);
+
+    // From an element-wise function:
+    let e = {rust_name}::from_fn(simd, |i| i as {scalar_name});\
+    {block_example}
+}}
+```")
+        }
     }
 }
 
