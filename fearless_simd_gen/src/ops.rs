@@ -265,7 +265,7 @@ const FLOAT_OPS: &[Op] = &[
         "Return the element-wise maximum of two vectors.\n\n\
         If one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
         If one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
-        If an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-determinstic: it may be either NaN or the non-NaN operand.\n\
+        If an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\n\
         Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
     ),
     Op::new(
@@ -275,7 +275,7 @@ const FLOAT_OPS: &[Op] = &[
         "Return the element-wise minimum of two vectors.\n\n\
         If one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
         If one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
-        If an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-determinstic: it may be either NaN or the non-NaN operand.\n\
+        If an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-deterministic: it may be either NaN or the non-NaN operand.\n\
         Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
     ),
     Op::new(
