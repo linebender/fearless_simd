@@ -1883,6 +1883,7 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     #[doc = "Splits a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
 }
+#[doc = r" Base functionality implemented by all SIMD vectors."]
 pub trait SimdBase<Element: SimdElement, S: Simd>:
     Copy
     + Sync
@@ -1893,6 +1894,9 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     + core::ops::Index<usize, Output = Element>
     + core::ops::IndexMut<usize, Output = Element>
 {
+    #[doc = r" This vector type's lane count. This is useful when you're"]
+    #[doc = r" working with a native-width vector (e.g. [`Simd::f32s`]) and"]
+    #[doc = r" want to process data in native-width chunks."]
     const N: usize;
     #[doc = r" A SIMD vector mask with the same number of elements."]
     #[doc = r""]
@@ -1903,7 +1907,7 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     #[doc = r" One possibility to consider is that the SIMD trait grows"]
     #[doc = r" `maskAxB` associated types."]
     type Mask: SimdMask<Element::Mask, S>;
-    #[doc = r" A 128 bit SIMD vector of the same scalar type."]
+    #[doc = r" A 128-bit SIMD vector of the same scalar type."]
     type Block: SimdBase<Element, S>;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
@@ -1913,13 +1917,17 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     #[doc = r""]
     #[doc = r" The slice must be the proper width."]
     fn from_slice(simd: S, slice: &[Element]) -> Self;
+    #[doc = r" Create a SIMD vector with all elements set to the given value."]
     fn splat(simd: S, val: Element) -> Self;
+    #[doc = r" Create a SIMD vector from a 128-bit vector of the same scalar"]
+    #[doc = r" type, repeated."]
     fn block_splat(block: Self::Block) -> Self;
     #[doc = r" Create a SIMD vector where each element is produced by"]
     #[doc = r" calling `f` with that element's lane index (from 0 to"]
     #[doc = r" [`SimdBase::N`] - 1)."]
     fn from_fn(simd: S, f: impl FnMut(usize) -> Element) -> Self;
 }
+#[doc = r" Functionality implemented by floating-point SIMD vectors."]
 pub trait SimdFloat<Element: SimdElement, S: Simd>:
     SimdBase<Element, S>
     + core::ops::Neg<Output = Self>
@@ -1991,6 +1999,7 @@ pub trait SimdFloat<Element: SimdElement, S: Simd>:
     #[doc = "Returns the integer part of each element, rounding towards zero."]
     fn trunc(self) -> Self;
 }
+#[doc = r" Functionality implemented by (signed and unsigned) integer SIMD vectors."]
 pub trait SimdInt<Element: SimdElement, S: Simd>:
     SimdBase<Element, S>
     + core::ops::Add<Output = Self>
@@ -2052,6 +2061,7 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     #[doc = "Returns the element-wise maximum of two vectors."]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
 }
+#[doc = r" Functionality implemented by SIMD masks."]
 pub trait SimdMask<Element: SimdElement, S: Simd>:
     SimdBase<Element, S>
     + core::ops::BitAnd<Output = Self>

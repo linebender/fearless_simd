@@ -115,11 +115,15 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
 
 fn mk_simd_base() -> TokenStream {
     quote! {
+        /// Base functionality implemented by all SIMD vectors.
         pub trait SimdBase<Element: SimdElement, S: Simd>:
             Copy + Sync + Send + 'static
             + crate::Bytes + SimdFrom<Element, S>
             + core::ops::Index<usize, Output = Element> + core::ops::IndexMut<usize, Output = Element>
         {
+            /// This vector type's lane count. This is useful when you're
+            /// working with a native-width vector (e.g. [`Simd::f32s`]) and
+            /// want to process data in native-width chunks.
             const N: usize;
             /// A SIMD vector mask with the same number of elements.
             ///
@@ -130,7 +134,7 @@ fn mk_simd_base() -> TokenStream {
             /// One possibility to consider is that the SIMD trait grows
             /// `maskAxB` associated types.
             type Mask: SimdMask<Element::Mask, S>;
-            /// A 128 bit SIMD vector of the same scalar type.
+            /// A 128-bit SIMD vector of the same scalar type.
             type Block: SimdBase<Element, S>;
             /// Get the [`Simd`] implementation associated with this type.
             fn witness(&self) -> S;
@@ -140,7 +144,10 @@ fn mk_simd_base() -> TokenStream {
             ///
             /// The slice must be the proper width.
             fn from_slice(simd: S, slice: &[Element]) -> Self;
+            /// Create a SIMD vector with all elements set to the given value.
             fn splat(simd: S, val: Element) -> Self;
+            /// Create a SIMD vector from a 128-bit vector of the same scalar
+            /// type, repeated.
             fn block_splat(block: Self::Block) -> Self;
             /// Create a SIMD vector where each element is produced by
             /// calling `f` with that element's lane index (from 0 to
@@ -157,6 +164,7 @@ fn mk_simd_float() -> TokenStream {
         .iter()
         .flat_map(|(op, _, _)| op.trait_bounds());
     quote! {
+        /// Functionality implemented by floating-point SIMD vectors.
         pub trait SimdFloat<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             #(+ #op_traits)*
         {
@@ -175,6 +183,7 @@ fn mk_simd_int() -> TokenStream {
         .iter()
         .flat_map(|(op, _, _)| op.trait_bounds());
     quote! {
+        /// Functionality implemented by (signed and unsigned) integer SIMD vectors.
         pub trait SimdInt<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             #(+ #op_traits)*
         {
@@ -193,6 +202,7 @@ fn mk_simd_mask() -> TokenStream {
         .iter()
         .flat_map(|(op, _, _)| op.trait_bounds());
     quote! {
+        /// Functionality implemented by SIMD masks.
         pub trait SimdMask<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             #(+ #op_traits)*
         {

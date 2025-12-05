@@ -7,6 +7,7 @@
 )]
 use crate::{Level, Simd, SimdBase};
 
+/// Element-wise selection between two SIMD vectors using `self`.
 pub trait Select<T> {
     /// For each element of this mask, select the first operand if the element is all ones, and select the second
     /// operand if the element is all zeroes.
@@ -32,20 +33,27 @@ impl<R, F: FnOnce(Level) -> R> WithSimd for F {
     }
 }
 
+/// Conversion of SIMD types to and from raw bytes.
 pub trait Bytes: Sized {
     type Bytes;
 
+    /// Convert this type to an array of bytes.
     fn to_bytes(self) -> Self::Bytes;
 
+    /// Create an instance of this type from an array of bytes.
     fn from_bytes(value: Self::Bytes) -> Self;
 
+    /// Bitcast directly from this type to another one of the same size.
     fn bitcast<U: Bytes<Bytes = Self::Bytes>>(self) -> U {
         U::from_bytes(self.to_bytes())
     }
 }
 
 pub(crate) mod seal {
-    #[expect(unnameable_types, reason = "TODO")]
+    #[expect(
+        unnameable_types,
+        reason = "This is a sealed trait, so being unnameable is the entire point"
+    )]
     pub trait Seal {}
 }
 
@@ -84,7 +92,9 @@ impl<T, S: Simd> SimdFrom<T, S> for T {
     }
 }
 
+/// Types that can be used as elements in SIMD vectors.
 pub trait SimdElement {
+    /// The associated mask lane type. This will be a signed integer of the same size as this type.
     type Mask: SimdElement;
 }
 
@@ -134,12 +144,22 @@ pub trait SimdCvtFloat<T> {
     fn float_from(x: T) -> Self;
 }
 
+/// Concatenation of two SIMD vectors.
+///
+/// This is implemented on all vectors 256 bits and lower, producing vectors of up to 512 bits.
 pub trait SimdCombine<Element: SimdElement, S: Simd>: SimdBase<Element, S> {
     type Combined: SimdBase<Element, S, Block = Self::Block>;
+
+    /// Concatenate two vectors into a new one that's twice as long.
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined;
 }
 
+/// Splitting of one SIMD vector into two.
+///
+/// This is implemented on all vectors 256 bits and higher, producing vectors of down to 128 bits.
 pub trait SimdSplit<Element: SimdElement, S: Simd>: SimdBase<Element, S> {
     type Split: SimdBase<Element, S, Block = Self::Block>;
+
+    /// Split this vector into left and right halves.
     fn split(self) -> (Self::Split, Self::Split);
 }
