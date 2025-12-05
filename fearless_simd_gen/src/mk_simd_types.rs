@@ -5,7 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    ops::{CORE_OPS, OpSig, TyFlavor, ops_for_type},
+    generic::generic_op_name,
+    ops::{Op, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, VecType},
 };
 
@@ -48,13 +49,13 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 }
             }
         };
-        let impl_block = simd_impl(ty);
+        let impl_block = simd_vec_impl(ty);
         let simd_from_items = make_list(
             (0..ty.len)
                 .map(|idx| quote! { val[#idx] })
                 .collect::<Vec<_>>(),
         );
-        let mut cvt_impls = Vec::new();
+        let mut conditional_impls = Vec::new();
         // TODO: Relax `if` clauses once 64-bit integer or 16-bit floats vectors are implemented
         match ty.scalar {
             ScalarType::Float if ty.scalar_bits == 32 => {
@@ -69,7 +70,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                         src_ty.rust_name()
                     );
                     let src_ty = src_ty.rust();
-                    cvt_impls.push(quote! {
+                    conditional_impls.push(quote! {
                         impl<S: Simd> SimdCvtFloat<#src_ty<S>> for #name<S> {
                             fn float_from(x: #src_ty<S>) -> Self {
                                 x.simd.#method(x)
@@ -89,7 +90,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     src_ty.rust_name()
                 );
                 let src_ty = src_ty.rust();
-                cvt_impls.push(quote! {
+                conditional_impls.push(quote! {
                     impl<S: Simd> SimdCvtTruncate<#src_ty<S>> for #name<S> {
                         fn truncate_from(x: #src_ty<S>) -> Self {
                             x.simd.#method(x)
@@ -98,6 +99,34 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 });
             }
             _ => {}
+        }
+        if let Some(half_ty) = ty.split_operand() {
+            let half_ty_rust = half_ty.rust();
+            let split_method = generic_op_name("split", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> crate::SimdSplit<#rust_scalar, S> for #name<S> {
+                    type Split = #half_ty_rust<S>;
+
+                    #[inline(always)]
+                    fn split(self) -> (Self::Split, Self::Split) {
+                        self.simd.#split_method(self)
+                    }
+                }
+            });
+        }
+        if let Some(combined_ty) = ty.combine_operand() {
+            let combined_ty_rust = combined_ty.rust();
+            let combine_method = generic_op_name("combine", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> crate::SimdCombine<#rust_scalar, S> for #name<S> {
+                    type Combined = #combined_ty_rust<S>;
+
+                    #[inline(always)]
+                    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
+                        self.simd.#combine_method(self, rhs.simd_into(self.simd))
+                    }
+                }
+            });
         }
         result.extend(quote! {
             #[derive(Clone, Copy, Debug)]
@@ -177,67 +206,14 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
             #impl_block
 
-            #( #cvt_impls )*
+            #( #conditional_impls )*
         });
     }
     result
 }
 
-/// Create the impl block for the type
-///
-/// This may go away, as possibly all methods will be subsumed by the `vec_impl`.
-fn simd_impl(ty: &VecType) -> TokenStream {
-    let name = ty.rust();
-    let ty_name = ty.rust_name();
-    let mut methods = vec![];
-    for (method, sig) in ops_for_type(ty, true) {
-        let method_name = Ident::new(method, Span::call_site());
-        let trait_method = Ident::new(&format!("{method}_{ty_name}"), Span::call_site());
-        if matches!(
-            sig,
-            OpSig::Unary
-                | OpSig::Binary
-                | OpSig::Compare
-                | OpSig::Combine
-                | OpSig::Cvt { .. }
-                | OpSig::Reinterpret { .. }
-                | OpSig::Shift
-        ) && let Some(args) = sig.vec_trait_args()
-        {
-            let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
-            let call_args = match sig {
-                OpSig::Unary | OpSig::Cvt { .. } | OpSig::Reinterpret { .. } => quote! { self },
-                OpSig::Binary | OpSig::Compare | OpSig::Combine => {
-                    quote! { self, rhs.simd_into(self.simd) }
-                }
-                OpSig::Shift => {
-                    quote! { self, shift }
-                }
-                OpSig::Ternary => {
-                    quote! { self, op1.simd_into(self.simd), op2.simd_into(self.simd) }
-                }
-                _ => quote! { todo!() },
-            };
-            methods.push(quote! {
-                #[inline(always)]
-                pub fn #method_name(#args) -> #ret_ty {
-                    self.simd.#trait_method(#call_args)
-                }
-            });
-        }
-    }
-    let vec_impl = simd_vec_impl(ty);
-    quote! {
-        impl<S: Simd> #name<S> {
-            #( #methods )*
-        }
-        #vec_impl
-    }
-}
-
 fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
-    let ty_name = ty.rust_name();
     let scalar = ty.scalar.rust(ty.scalar_bits);
     let len = Literal::usize_unsuffixed(ty.len);
     let vec_trait = match ty.scalar {
@@ -250,30 +226,16 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         _ => quote! { 0 },
     };
     let vec_trait_id = Ident::new(vec_trait, Span::call_site());
-    let splat = Ident::new(&format!("splat_{}", ty.rust_name()), Span::call_site());
+    let splat = generic_op_name("splat", ty);
     let mut methods = vec![];
-    for (method, sig) in ops_for_type(ty, false) {
-        if CORE_OPS.contains(&method) || matches!(sig, OpSig::Combine) {
-            continue;
-        }
+    for Op { method, sig, .. } in vec_trait_ops_for(ty.scalar) {
         let method_name = Ident::new(method, Span::call_site());
-        let trait_method = Ident::new(&format!("{method}_{ty_name}"), Span::call_site());
+        let trait_method = generic_op_name(method, ty);
         if let Some(args) = sig.vec_trait_args() {
-            let ret_ty = sig.ret_ty(ty, TyFlavor::VecImpl);
-            let call_args = match sig {
-                OpSig::Unary => quote! { self },
-                OpSig::Binary
-                | OpSig::Compare
-                | OpSig::Combine
-                | OpSig::Zip { .. }
-                | OpSig::Unzip { .. } => {
-                    quote! { self, rhs.simd_into(self.simd) }
-                }
-                OpSig::Ternary => {
-                    quote! { self, op1.simd_into(self.simd), op2.simd_into(self.simd) }
-                }
-                _ => quote! { todo!() },
-            };
+            let ret_ty = sig.trait_ret_ty();
+            let call_args = sig
+                .forwarding_call_args()
+                .expect("this method can be forwarded to a specific Simd function");
             methods.push(quote! {
                 #[inline(always)]
                 fn #method_name(#args) -> #ret_ty {
@@ -285,19 +247,26 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let mask_ty = ty.mask_ty().rust();
     let block_ty = VecType::new(ty.scalar, ty.scalar_bits, 128 / ty.scalar_bits).rust();
     let block_splat_body = match ty.n_bits() {
-        64 => quote! {
-            block.split().0
-        },
         128 => quote! {
             block
         },
-        256 => quote! {
-            block.combine(block)
-        },
-        512 => quote! {
-            let block2 = block.combine(block);
-            block2.combine(block2)
-        },
+        256 => {
+            let n2 = ty.len / 2;
+            let combine = generic_op_name("combine", &VecType::new(ty.scalar, ty.scalar_bits, n2));
+            quote! {
+                block.simd.#combine(block, block)
+            }
+        }
+        512 => {
+            let n2 = ty.len / 2;
+            let combine2 = generic_op_name("combine", &VecType::new(ty.scalar, ty.scalar_bits, n2));
+            let n4 = ty.len / 4;
+            let combine4 = generic_op_name("combine", &VecType::new(ty.scalar, ty.scalar_bits, n4));
+            quote! {
+                let block2 = block.simd.#combine4(block, block);
+                block2.simd.#combine2(block2, block2)
+            }
+        }
         _ => unreachable!(),
     };
     quote! {

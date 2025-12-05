@@ -3,7 +3,7 @@
 
 use crate::arch::fallback;
 use crate::generic::{generic_combine, generic_op, generic_split};
-use crate::ops::{OpSig, TyFlavor, ops_for_type, valid_reinterpret};
+use crate::ops::{Op, OpSig, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -124,7 +124,7 @@ fn mk_simd_impl() -> TokenStream {
     for vec_ty in SIMD_TYPES {
         let scalar_bits = vec_ty.scalar_bits;
         let ty_name = vec_ty.rust_name();
-        for (method, sig) in ops_for_type(vec_ty, true) {
+        for Op { method, sig, .. } in ops_for_type(vec_ty) {
             let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
             let b2 = !matches!(method, "load_interleaved_128")
@@ -136,7 +136,7 @@ fn mk_simd_impl() -> TokenStream {
             }
             let method_name = format!("{method}_{ty_name}");
             let method_ident = Ident::new(&method_name, Span::call_site());
-            let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+            let ret_ty = sig.simd_impl_ret_ty(vec_ty);
             let args = sig.simd_trait_args(vec_ty);
             let method_sig = quote! {
                 #[inline(always)]
@@ -296,8 +296,8 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
-                OpSig::Combine => generic_combine(vec_ty),
-                OpSig::Split => generic_split(vec_ty),
+                OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
+                OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
                 OpSig::Zip { select_low } => {
                     let indices = if select_low {
                         0..vec_ty.len / 2

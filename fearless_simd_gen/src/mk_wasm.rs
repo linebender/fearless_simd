@@ -4,12 +4,12 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::generic::scalar_binary;
-use crate::ops::valid_reinterpret;
+use crate::generic::{generic_op_name, scalar_binary};
+use crate::ops::{Op, valid_reinterpret};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     generic::{generic_combine, generic_op, generic_split},
-    ops::{OpSig, TyFlavor, ops_for_type},
+    ops::{OpSig, ops_for_type},
     types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
 
@@ -39,7 +39,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
         let ty_name = vec_ty.rust_name();
         let ty = vec_ty.rust();
 
-        for (method, sig) in ops_for_type(vec_ty, true) {
+        for Op { method, sig, .. } in ops_for_type(vec_ty) {
             let b1 = vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow")
                 || vec_ty.n_bits() > 256;
             let b2 = !matches!(method, "load_interleaved_128")
@@ -52,7 +52,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
             let method_name = format!("{method}_{ty_name}");
             let method_ident = Ident::new(&method_name, Span::call_site());
-            let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+            let ret_ty = sig.simd_impl_ret_ty(vec_ty);
             let args = sig.simd_trait_args(vec_ty);
             let method_sig = quote! {
                 #[inline(always)]
@@ -76,8 +76,10 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             "only float supports fract"
                         );
 
+                        let trunc = generic_op_name("trunc", vec_ty);
+                        let sub = generic_op_name("sub", vec_ty);
                         quote! {
-                            a.sub(a.trunc())
+                            self.#sub(a, self.#trunc(a))
                         }
                     } else {
                         let expr = wasm::expr(method, vec_ty, &args);
@@ -191,11 +193,9 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Ternary => {
                     if matches!(method, "madd" | "msub") {
-                        let first_ident = if method == "madd" {
-                            quote! {add}
-                        } else {
-                            quote! {sub}
-                        };
+                        let add_sub =
+                            generic_op_name(if method == "madd" { "add" } else { "sub" }, vec_ty);
+                        let mul = generic_op_name("mul", vec_ty);
 
                         let c = if method == "msub" {
                             // WebAssembly just... forgot fused multiply-subtract? It seems the
@@ -217,7 +217,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
                             #[cfg(not(target_feature = "relaxed-simd"))]
                             #method_sig {
-                                a.mul(b).#first_ident(c)
+                                self.#add_sub(self.#mul(a, b), c)
                             }
                         }
                     } else {
@@ -251,8 +251,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Combine => generic_combine(vec_ty),
-                OpSig::Split => generic_split(vec_ty),
+                OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
+                OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
                 OpSig::Zip { select_low } => {
                     let (indices, shuffle_fn) = match vec_ty.scalar_bits {
                         8 => {

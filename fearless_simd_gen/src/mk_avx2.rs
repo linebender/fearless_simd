@@ -7,7 +7,7 @@ use crate::arch::x86::{
 };
 use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
 use crate::mk_sse4_2;
-use crate::ops::{OpSig, TyFlavor, ops_for_type};
+use crate::ops::{Op, OpSig, ops_for_type};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -74,7 +74,7 @@ fn mk_simd_impl() -> TokenStream {
     let level_tok = Level.token();
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
-        for (method, sig) in ops_for_type(vec_ty, true) {
+        for Op { method, sig, .. } in ops_for_type(vec_ty) {
             let too_wide = (vec_ty.n_bits() > 256 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 512;
 
@@ -165,7 +165,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
     let ty_name = vec_ty.rust_name();
     let method_name = format!("{method}_{ty_name}");
     let method_ident = Ident::new(&method_name, Span::call_site());
-    let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+    let ret_ty = sig.simd_impl_ret_ty(vec_ty);
     let args = sig.simd_trait_args(vec_ty);
     let method_sig = quote! {
         #[inline(always)]
@@ -205,8 +205,8 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
             _ => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
         },
         OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty),
-        OpSig::Combine => handle_combine(method_sig, vec_ty),
-        OpSig::Split => handle_split(method_sig, vec_ty),
+        OpSig::Combine { combined_ty } => handle_combine(method_sig, vec_ty, &combined_ty),
+        OpSig::Split { half_ty } => handle_split(method_sig, vec_ty, &half_ty),
         OpSig::Zip { select_low } => mk_sse4_2::handle_zip(method_sig, vec_ty, select_low),
         OpSig::Unzip { select_even } => mk_sse4_2::handle_unzip(method_sig, vec_ty, select_even),
         OpSig::Cvt {
@@ -228,7 +228,11 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
     }
 }
 
-pub(crate) fn handle_split(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+pub(crate) fn handle_split(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    half_ty: &VecType,
+) -> TokenStream {
     if vec_ty.n_bits() == 256 {
         let extract_op = match vec_ty.scalar {
             ScalarType::Float => "extractf128",
@@ -246,11 +250,15 @@ pub(crate) fn handle_split(method_sig: TokenStream, vec_ty: &VecType) -> TokenSt
             }
         }
     } else {
-        generic_split(vec_ty)
+        generic_split(vec_ty, half_ty)
     }
 }
 
-pub(crate) fn handle_combine(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+pub(crate) fn handle_combine(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    combined_ty: &VecType,
+) -> TokenStream {
     if vec_ty.n_bits() == 128 {
         let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
             (ScalarType::Float, 32) => "m128",
@@ -266,7 +274,7 @@ pub(crate) fn handle_combine(method_sig: TokenStream, vec_ty: &VecType) -> Token
             }
         }
     } else {
-        generic_combine(vec_ty)
+        generic_combine(vec_ty, combined_ty)
     }
 }
 

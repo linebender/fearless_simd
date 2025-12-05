@@ -6,8 +6,8 @@ use crate::arch::x86::{
     op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
     unpack_intrinsic,
 };
-use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
-use crate::ops::{OpSig, TyFlavor, ops_for_type, valid_reinterpret};
+use crate::generic::{generic_combine, generic_op, generic_op_name, generic_split, scalar_binary};
+use crate::ops::{Op, OpSig, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -74,7 +74,7 @@ fn mk_simd_impl() -> TokenStream {
     let level_tok = Level.token();
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
-        for (method, sig) in ops_for_type(vec_ty, true) {
+        for Op { method, sig, .. } in ops_for_type(vec_ty) {
             let too_wide = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
                 || vec_ty.n_bits() > 256;
 
@@ -168,7 +168,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
     let ty_name = vec_ty.rust_name();
     let method_name = format!("{method}_{ty_name}");
     let method_ident = Ident::new(&method_name, Span::call_site());
-    let ret_ty = sig.ret_ty(vec_ty, TyFlavor::SimdTrait);
+    let ret_ty = sig.simd_impl_ret_ty(vec_ty);
     let args = sig.simd_trait_args(vec_ty);
     let method_sig = quote! {
         #[inline(always)]
@@ -190,8 +190,8 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Shift => handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
         OpSig::Select => handle_select(method_sig, vec_ty),
-        OpSig::Combine => generic_combine(vec_ty),
-        OpSig::Split => generic_split(vec_ty),
+        OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
+        OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
         OpSig::Zip { select_low } => handle_zip(method_sig, vec_ty, select_low),
         OpSig::Unzip { select_even } => handle_unzip(method_sig, vec_ty, select_even),
         OpSig::Cvt {
@@ -311,9 +311,10 @@ pub(crate) fn handle_compare(
 pub(crate) fn handle_unary(method_sig: TokenStream, method: &str, vec_ty: &VecType) -> TokenStream {
     match method {
         "fract" => {
+            let trunc_op = generic_op_name("trunc", vec_ty);
             quote! {
                 #method_sig {
-                    a - a.trunc()
+                    a - self.#trunc_op(a)
                 }
             }
         }
@@ -935,7 +936,7 @@ pub(crate) fn handle_reinterpret(
     target_ty: ScalarType,
     scalar_bits: usize,
 ) -> TokenStream {
-    let dst_ty = VecType::new(target_ty, scalar_bits, vec_ty.n_bits() / scalar_bits);
+    let dst_ty = vec_ty.reinterpret(target_ty, scalar_bits);
     assert!(
         valid_reinterpret(vec_ty, target_ty, scalar_bits),
         "{vec_ty:?} must be reinterpretable as {dst_ty:?}"

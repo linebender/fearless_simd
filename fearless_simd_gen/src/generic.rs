@@ -4,18 +4,18 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::ops::{load_interleaved_arg_ty, reinterpret_ty, store_interleaved_arg_ty};
+use crate::ops::{load_interleaved_arg_ty, store_interleaved_arg_ty};
 use crate::{
-    ops::{OpSig, TyFlavor},
+    ops::OpSig,
     types::{ScalarType, VecType},
 };
 
 /// Implementation of combine based on `copy_from_slice`
-pub(crate) fn generic_combine(ty: &VecType) -> TokenStream {
-    let ty_rust = ty.rust();
+pub(crate) fn generic_combine(ty: &VecType, combined_ty: &VecType) -> TokenStream {
     let n = ty.len;
-    let n2 = n * 2;
-    let result = VecType::new(ty.scalar, ty.scalar_bits, n2).rust();
+    let n2 = combined_ty.len;
+    let ty_rust = ty.rust();
+    let result = combined_ty.rust();
     let name = Ident::new(&format!("combine_{}", ty.rust_name()), Span::call_site());
     let default = match ty.scalar {
         ScalarType::Float => quote! { 0.0 },
@@ -33,11 +33,11 @@ pub(crate) fn generic_combine(ty: &VecType) -> TokenStream {
 }
 
 /// Implementation of split based on `copy_from_slice`
-pub(crate) fn generic_split(ty: &VecType) -> TokenStream {
-    let ty_rust = ty.rust();
+pub(crate) fn generic_split(ty: &VecType, half_ty: &VecType) -> TokenStream {
     let n = ty.len;
-    let nhalf = n / 2;
-    let result = VecType::new(ty.scalar, ty.scalar_bits, nhalf).rust();
+    let nhalf = half_ty.len;
+    let ty_rust = ty.rust();
+    let result = half_ty.rust();
     let name = Ident::new(&format!("split_{}", ty.rust_name()), Span::call_site());
     let default = match ty.scalar {
         ScalarType::Float => quote! { 0.0 },
@@ -55,17 +55,21 @@ pub(crate) fn generic_split(ty: &VecType) -> TokenStream {
     }
 }
 
+pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
+    Ident::new(&format!("{op}_{}", ty.rust_name()), Span::call_site())
+}
+
 /// Implementation based on split/combine
 ///
 /// Only suitable for lane-wise and block-wise operations
 pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
     let ty_rust = ty.rust();
-    let name = Ident::new(&format!("{op}_{}", ty.rust_name()), Span::call_site());
+    let name = generic_op_name(op, ty);
     let split = Ident::new(&format!("split_{}", ty.rust_name()), Span::call_site());
     let half = VecType::new(ty.scalar, ty.scalar_bits, ty.len / 2);
     let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
     let do_half = Ident::new(&format!("{op}_{}", half.rust_name()), Span::call_site());
-    let ret_ty = sig.ret_ty(ty, TyFlavor::SimdTrait);
+    let ret_ty = sig.simd_impl_ret_ty(ty);
     match sig {
         OpSig::Splat => {
             let scalar = ty.scalar.rust(ty.scalar_bits);
@@ -215,7 +219,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             target_ty,
             scalar_bits,
         } => {
-            let mut half = reinterpret_ty(ty, target_ty, scalar_bits);
+            let mut half = ty.reinterpret(target_ty, scalar_bits);
             half.len /= 2;
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
             quote! {
@@ -240,8 +244,8 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::Split => generic_split(ty),
-        OpSig::Combine => generic_combine(ty),
+        OpSig::Split { half_ty } => generic_split(ty, &half_ty),
+        OpSig::Combine { combined_ty } => generic_combine(ty, &combined_ty),
         OpSig::LoadInterleaved {
             block_size,
             block_count,

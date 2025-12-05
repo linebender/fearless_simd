@@ -12,7 +12,6 @@
 #![cfg_attr(
     target_arch = "x86_64",
     expect(
-        clippy::should_implement_trait,
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
@@ -23,7 +22,6 @@
 #![cfg_attr(
     target_arch = "wasm32",
     expect(
-        clippy::should_implement_trait,
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
@@ -38,7 +36,6 @@
     ),
     expect(
         clippy::missing_safety_doc,
-        clippy::should_implement_trait,
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
@@ -57,7 +54,7 @@ mod fallback;
 #[cfg(target_arch = "aarch64")]
 mod neon;
 mod ops;
-mod simd_trait;
+pub(crate) mod simd_trait;
 mod simd_types;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod sse4_2;

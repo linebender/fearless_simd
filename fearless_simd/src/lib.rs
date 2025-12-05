@@ -154,6 +154,14 @@ mod traits;
 pub use generated::*;
 pub use traits::*;
 
+/// This prelude module re-exports every SIMD trait defined in this library. It's useful for accessing trait methods.
+///
+/// Only traits are exported through the prelude; types must be exported separately.
+pub mod prelude {
+    pub use crate::generated::simd_trait::*;
+    pub use crate::traits::*;
+}
+
 /// Implementations of [`Simd`] for 64 bit ARM.
 #[cfg(target_arch = "aarch64")]
 pub mod aarch64 {

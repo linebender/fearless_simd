@@ -5,7 +5,7 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-use crate::{Level, Simd};
+use crate::{Level, Simd, SimdBase};
 
 pub trait Select<T> {
     fn select(self, if_true: T, if_false: T) -> T;
@@ -127,4 +127,14 @@ pub trait SimdCvtTruncate<T> {
 /// Construction of floating point vectors from integers
 pub trait SimdCvtFloat<T> {
     fn float_from(x: T) -> Self;
+}
+
+pub trait SimdCombine<Element: SimdElement, S: Simd>: SimdBase<Element, S> {
+    type Combined: SimdBase<Element, S, Block = Self::Block>;
+    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined;
+}
+
+pub trait SimdSplit<Element: SimdElement, S: Simd>: SimdBase<Element, S> {
+    type Split: SimdBase<Element, S, Block = Self::Block>;
+    fn split(self) -> (Self::Split, Self::Split);
 }
