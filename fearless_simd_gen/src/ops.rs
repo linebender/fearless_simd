@@ -127,126 +127,126 @@ const FLOAT_OPS: &[Op] = &[
         "splat",
         OpKind::BaseTraitMethod,
         OpSig::Splat,
-        "Creates a SIMD vector with all elements set to the given value.",
+        "Create a SIMD vector with all elements set to the given value.",
     ),
     Op::new(
         "abs",
         OpKind::VecTraitMethod,
         OpSig::Unary,
-        "Computes the absolute value of each element.",
+        "Compute the absolute value of each element.",
     ),
     Op::new(
         "neg",
         OpKind::Overloaded(CoreOpTrait::Neg),
         OpSig::Unary,
-        "Negates each element of the vector.",
+        "Negate each element of the vector.",
     ),
     Op::new(
         "sqrt",
         OpKind::VecTraitMethod,
         OpSig::Unary,
-        "Computes the square root of each element.\n\n\
+        "Compute the square root of each element.\n\n\
         Negative elements other than `-0.0` will become NaN.",
     ),
     Op::new(
         "add",
         OpKind::Overloaded(CoreOpTrait::Add),
         OpSig::Binary,
-        "Adds two vectors element-wise.",
+        "Add two vectors element-wise.",
     ),
     Op::new(
         "sub",
         OpKind::Overloaded(CoreOpTrait::Sub),
         OpSig::Binary,
-        "Subtracts two vectors element-wise.",
+        "Subtract two vectors element-wise.",
     ),
     Op::new(
         "mul",
         OpKind::Overloaded(CoreOpTrait::Mul),
         OpSig::Binary,
-        "Multiplies two vectors element-wise.",
+        "Multiply two vectors element-wise.",
     ),
     Op::new(
         "div",
         OpKind::Overloaded(CoreOpTrait::Div),
         OpSig::Binary,
-        "Divides two vectors element-wise.",
+        "Divide two vectors element-wise.",
     ),
     Op::new(
         "copysign",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Returns a vector with the magnitude of `{arg0}` and the sign of `{arg1}` for each element.\n\n\
+        "Return a vector with the magnitude of `{arg0}` and the sign of `{arg1}` for each element.\n\n\
         This operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit.",
     ),
     Op::new(
         "simd_eq",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for equality.\n\n\
+        "Compare two vectors element-wise for equality.\n\n\
         Returns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not.",
     ),
     Op::new(
         "simd_lt",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for less than.\n\n\
+        "Compare two vectors element-wise for less than.\n\n\
         Returns a mask where each element is all ones if `{arg0}` is less than `{arg1}`, and all zeroes if not.",
     ),
     Op::new(
         "simd_le",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for less than or equal.\n\n\
+        "Compare two vectors element-wise for less than or equal.\n\n\
         Returns a mask where each element is all ones if `{arg0}` is less than or equal to `{arg1}`, and all zeroes if not.",
     ),
     Op::new(
         "simd_ge",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for greater than or equal.\n\n\
+        "Compare two vectors element-wise for greater than or equal.\n\n\
         Returns a mask where each element is all ones if `{arg0}` is greater than or equal to `{arg1}`, and all zeroes if not.",
     ),
     Op::new(
         "simd_gt",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for greater than.\n\n\
+        "Compare two vectors element-wise for greater than.\n\n\
         Returns a mask where each element is all ones if `{arg0}` is greater than `{arg1}`, and all zeroes if not.",
     ),
     Op::new(
         "zip_low",
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: true },
-        "Interleaves the lower half elements of two vectors.\n\n\
+        "Interleave the lower half elements of two vectors.\n\n\
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.",
     ),
     Op::new(
         "zip_high",
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: false },
-        "Interleaves the upper half elements of two vectors.\n\n\
+        "Interleave the upper half elements of two vectors.\n\n\
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.",
     ),
     Op::new(
         "unzip_low",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: true },
-        "Extracts even-indexed elements from two vectors.\n\n\
+        "Extract even-indexed elements from two vectors.\n\n\
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.",
     ),
     Op::new(
         "unzip_high",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: false },
-        "Extracts odd-indexed elements from two vectors.\n\n\
+        "Extract odd-indexed elements from two vectors.\n\n\
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.",
     ),
     Op::new(
         "max",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Returns the element-wise maximum of two vectors.\n\n\
+        "Return the element-wise maximum of two vectors.\n\n\
         If either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\n\
         If one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one.",
     ),
@@ -254,7 +254,7 @@ const FLOAT_OPS: &[Op] = &[
         "min",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Returns the element-wise minimum of two vectors.\n\n\
+        "Return the element-wise minimum of two vectors.\n\n\
         If either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\n\
         If one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one.",
     ),
@@ -262,7 +262,7 @@ const FLOAT_OPS: &[Op] = &[
         "max_precise",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Returns the element-wise maximum of two vectors.\n\n\
+        "Return the element-wise maximum of two vectors.\n\n\
         If one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
         If one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
         If an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-determinstic: it may be either NaN or the non-NaN operand.\n\
@@ -272,7 +272,7 @@ const FLOAT_OPS: &[Op] = &[
         "min_precise",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Returns the element-wise minimum of two vectors.\n\n\
+        "Return the element-wise minimum of two vectors.\n\n\
         If one operand is a quiet NaN and the other is not, this operation will choose the non-NaN operand.\n\n\
         If one operand is positive zero and the other is negative zero, the result is implementation-defined, and it could be either one.\n\n\
         If an operand is a *signaling* NaN, the result is not just implementation-defined, but fully non-determinstic: it may be either NaN or the non-NaN operand.\n\
@@ -282,52 +282,52 @@ const FLOAT_OPS: &[Op] = &[
         "madd",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
-        "Computes `({arg0} * {arg1}) + {arg2}` (fused multiply-add) for each element.\n\n\
+        "Compute `({arg0} * {arg1}) + {arg2}` (fused multiply-add) for each element.\n\n\
         Depending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors.",
     ),
     Op::new(
         "msub",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
-        "Computes `({arg0} * {arg1}) + {arg2}` (fused multiply-subtract) for each element.\n\n\
+        "Compute `({arg0} * {arg1}) + {arg2}` (fused multiply-subtract) for each element.\n\n\
         Depending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by a subtract, which will result in two rounding errors.",
     ),
     Op::new(
         "floor",
         OpKind::VecTraitMethod,
         OpSig::Unary,
-        "Returns the largest integer less than or equal to each element, that is, it rounds towards negative infinity.",
+        "Return the largest integer less than or equal to each element, that is, round towards negative infinity.",
     ),
     Op::new(
         "ceil",
         OpKind::VecTraitMethod,
         OpSig::Unary,
-        "Returns the smallest integer greater than or equal to each element, that is, it rounds towards positive infinity.",
+        "Return the smallest integer greater than or equal to each element, that is, round towards positive infinity.",
     ),
     Op::new(
         "round_ties_even",
         OpKind::VecTraitMethod,
         OpSig::Unary,
-        "Rounds each element to the nearest integer, with ties rounding to the nearest even integer.\n\n\
+        "Round each element to the nearest integer, with ties rounding to the nearest even integer.\n\n\
         There is no corresponding `round` operation. Rust's `round` operation rounds ties away from zero, a behavior it inherited from C. That behavior is not implemented across all platforms, whereas round-ties-even is.",
     ),
     Op::new(
         "fract",
         OpKind::VecTraitMethod,
         OpSig::Unary,
-        "Returns the fractional part of each element.\n\nThis is equivalent to `{arg0} - {arg0}.trunc()`.",
+        "Return the fractional part of each element.\n\nThis is equivalent to `{arg0} - {arg0}.trunc()`.",
     ),
     Op::new(
         "trunc",
         OpKind::VecTraitMethod,
         OpSig::Unary,
-        "Returns the integer part of each element, rounding towards zero.",
+        "Return the integer part of each element, rounding towards zero.",
     ),
     Op::new(
         "select",
         OpKind::OwnTrait,
         OpSig::Select,
-        "Selects elements from {arg1} and {arg2} based on the mask operand {arg0}.\n\n\
+        "Select elements from {arg1} and {arg2} based on the mask operand {arg0}.\n\n\
     This operation's behavior is unspecified if each lane of {arg0} is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information.",
     ),
 ];
@@ -337,69 +337,69 @@ const INT_OPS: &[Op] = &[
         "splat",
         OpKind::BaseTraitMethod,
         OpSig::Splat,
-        "Creates a SIMD vector with all elements set to the given value.",
+        "Create a SIMD vector with all elements set to the given value.",
     ),
     Op::new(
         "add",
         OpKind::Overloaded(CoreOpTrait::Add),
         OpSig::Binary,
-        "Adds two vectors element-wise, wrapping on overflow.",
+        "Add two vectors element-wise, wrapping on overflow.",
     ),
     Op::new(
         "sub",
         OpKind::Overloaded(CoreOpTrait::Sub),
         OpSig::Binary,
-        "Subtracts two vectors element-wise, wrapping on overflow.",
+        "Subtract two vectors element-wise, wrapping on overflow.",
     ),
     Op::new(
         "mul",
         OpKind::Overloaded(CoreOpTrait::Mul),
         OpSig::Binary,
-        "Multiplies two vectors element-wise, wrapping on overflow.",
+        "Multiply two vectors element-wise, wrapping on overflow.",
     ),
     Op::new(
         "and",
         OpKind::Overloaded(CoreOpTrait::BitAnd),
         OpSig::Binary,
-        "Computes the bitwise AND of two vectors.",
+        "Compute the bitwise AND of two vectors.",
     ),
     Op::new(
         "or",
         OpKind::Overloaded(CoreOpTrait::BitOr),
         OpSig::Binary,
-        "Computes the bitwise OR of two vectors.",
+        "Compute the bitwise OR of two vectors.",
     ),
     Op::new(
         "xor",
         OpKind::Overloaded(CoreOpTrait::BitXor),
         OpSig::Binary,
-        "Computes the bitwise XOR of two vectors.",
+        "Compute the bitwise XOR of two vectors.",
     ),
     Op::new(
         "not",
         OpKind::Overloaded(CoreOpTrait::Not),
         OpSig::Unary,
-        "Computes the bitwise NOT of the vector.",
+        "Compute the bitwise NOT of the vector.",
     ),
     Op::new(
         "shl",
         OpKind::Overloaded(CoreOpTrait::Shl),
         OpSig::Shift,
-        "Shifts each element left by the given number of bits.\n\n\
+        "Shift each element left by the given number of bits.\n\n\
         Bits shifted out of the left side are discarded, and zeros are shifted in on the right.",
     ),
     Op::new(
         "shr",
         OpKind::Overloaded(CoreOpTrait::Shr),
         OpSig::Shift,
-        "Shifts each element right by the given number of bits.\n\n\
+        "Shift each element right by the given number of bits.\n\n\
         For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.",
     ),
     Op::new(
         "shrv",
         OpKind::Overloaded(CoreOpTrait::ShrVectored),
         OpSig::Binary,
-        "Shifts each element right by the corresponding element in another vector.\n\n\
+        "Shift each element right by the corresponding element in another vector.\n\n\
         For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\n\
         This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation.",
     ),
@@ -407,83 +407,83 @@ const INT_OPS: &[Op] = &[
         "simd_eq",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for equality.\n\n\
+        "Compare two vectors element-wise for equality.\n\n\
         Returns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not.",
     ),
     Op::new(
         "simd_lt",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for less than.\n\n\
+        "Compare two vectors element-wise for less than.\n\n\
         Returns a mask where each element is all ones if `{arg0}` is less than `{arg1}`, and all zeroes if not.",
     ),
     Op::new(
         "simd_le",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for less than or equal.\n\n\
+        "Compare two vectors element-wise for less than or equal.\n\n\
         Returns a mask where each element is all ones if `{arg0}` is less than or equal to `{arg1}`, and all zeroes if not.",
     ),
     Op::new(
         "simd_ge",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for greater than or equal.\n\n\
+        "Compare two vectors element-wise for greater than or equal.\n\n\
         Returns a mask where each element is all ones if `{arg0}` is greater than or equal to `{arg1}`, and all zeroes if not.",
     ),
     Op::new(
         "simd_gt",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for greater than.\n\n\
+        "Compare two vectors element-wise for greater than.\n\n\
         Returns a mask where each element is all ones if `{arg0}` is greater than `{arg1}`, and all zeroes if not.",
     ),
     Op::new(
         "zip_low",
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: true },
-        "Interleaves the lower half elements of two vectors.\n\n\
+        "Interleave the lower half elements of two vectors.\n\n\
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.",
     ),
     Op::new(
         "zip_high",
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: false },
-        "Interleaves the upper half elements of two vectors.\n\n\
+        "Interleave the upper half elements of two vectors.\n\n\
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.",
     ),
     Op::new(
         "unzip_low",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: true },
-        "Extracts even-indexed elements from two vectors.\n\n\
+        "Extract even-indexed elements from two vectors.\n\n\
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.",
     ),
     Op::new(
         "unzip_high",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: false },
-        "Extracts odd-indexed elements from two vectors.\n\n\
+        "Extract odd-indexed elements from two vectors.\n\n\
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.",
     ),
     Op::new(
         "select",
         OpKind::OwnTrait,
         OpSig::Select,
-        "Selects elements from {arg1} and {arg2} based on the mask operand {arg0}.\n\n\
+        "Select elements from {arg1} and {arg2} based on the mask operand {arg0}.\n\n\
     This operation's behavior is unspecified if each lane of {arg0} is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information.",
     ),
     Op::new(
         "min",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Returns the element-wise minimum of two vectors.",
+        "Return the element-wise minimum of two vectors.",
     ),
     Op::new(
         "max",
         OpKind::VecTraitMethod,
         OpSig::Binary,
-        "Returns the element-wise maximum of two vectors.",
+        "Return the element-wise maximum of two vectors.",
     ),
 ];
 
@@ -502,44 +502,44 @@ const MASK_OPS: &[Op] = &[
         "splat",
         OpKind::BaseTraitMethod,
         OpSig::Splat,
-        "Creates a SIMD mask with all elements set to the given value.",
+        "Create a SIMD mask with all elements set to the given value.",
     ),
     Op::new(
         "and",
         OpKind::Overloaded(CoreOpTrait::BitAnd),
         OpSig::Binary,
-        "Computes the logical AND of two masks.",
+        "Compute the logical AND of two masks.",
     ),
     Op::new(
         "or",
         OpKind::Overloaded(CoreOpTrait::BitOr),
         OpSig::Binary,
-        "Computes the logical OR of two masks.",
+        "Compute the logical OR of two masks.",
     ),
     Op::new(
         "xor",
         OpKind::Overloaded(CoreOpTrait::BitXor),
         OpSig::Binary,
-        "Computes the logical XOR of two masks.",
+        "Compute the logical XOR of two masks.",
     ),
     Op::new(
         "not",
         OpKind::Overloaded(CoreOpTrait::Not),
         OpSig::Unary,
-        "Computes the logical NOT of the mask.",
+        "Compute the logical NOT of the mask.",
     ),
     Op::new(
         "select",
         OpKind::OwnTrait,
         OpSig::Select,
-        "Selects elements from `{arg1}` and `{arg2}` based on the mask operand `{arg0}`.\n\n\
+        "Select elements from `{arg1}` and `{arg2}` based on the mask operand `{arg0}`.\n\n\
     This operation's behavior is unspecified if each lane of {arg0} is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information.",
     ),
     Op::new(
         "simd_eq",
         OpKind::VecTraitMethod,
         OpSig::Compare,
-        "Compares two vectors element-wise for equality.\n\n\
+        "Compare two vectors element-wise for equality.\n\n\
         Returns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not.",
     ),
     Op::new(
@@ -588,7 +588,7 @@ const MASK_OPS: &[Op] = &[
         },
         concat!(
             "Returns true if all elements in this mask are false (all zeroes).\n\n\
-        This is logically equivalent to `!any_true`, but may be faster.\n\n",
+            This is logically equivalent to `!any_true`, but may be faster.\n\n",
             mask_reduce_blurb!()
         ),
     ),
@@ -610,7 +610,7 @@ const NEGATE_INT: Op = Op::new(
     "neg",
     OpKind::Overloaded(CoreOpTrait::Neg),
     OpSig::Unary,
-    "Negates each element of the vector, wrapping on overflow.",
+    "Negate each element of the vector, wrapping on overflow.",
 );
 
 pub(crate) fn overloaded_ops_for(scalar: ScalarType) -> Vec<(CoreOpTrait, OpSig, &'static str)> {
@@ -644,7 +644,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             "combine",
             OpKind::OwnTrait,
             OpSig::Combine { combined_ty },
-            "Combines two vectors into a single vector with twice the width.\n\n`{arg0}` provides the lower elements and `{arg1}` provides the upper elements.",
+            "Combine two vectors into a single vector with twice the width.\n\n`{arg0}` provides the lower elements and `{arg1}` provides the upper elements.",
         ));
     }
     if let Some(half_ty) = ty.split_operand() {
@@ -652,7 +652,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             "split",
             OpKind::OwnTrait,
             OpSig::Split { half_ty },
-            "Splits a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half).",
+            "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half).",
         ));
     }
     if ty.scalar == ScalarType::Int {
@@ -668,7 +668,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                     target_ty: ScalarType::Float,
                     scalar_bits: 32,
                 },
-                "Reinterprets the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input.",
+                "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input.",
             ));
         } else {
             ops.push(Op::new(
@@ -678,7 +678,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                     target_ty: ScalarType::Float,
                     scalar_bits: 64,
                 },
-                "Reinterprets the bits of this vector as a vector of `f64` elements.\n\nThe number of elements in the result is half that of the input.",
+                "Reinterpret the bits of this vector as a vector of `f64` elements.\n\nThe number of elements in the result is half that of the input.",
             ));
 
             ops.push(Op::new(
@@ -688,7 +688,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                     target_ty: ScalarType::Int,
                     scalar_bits: 32,
                 },
-                "Reinterprets the bits of this vector as a vector of `i32` elements.\n\n\
+                "Reinterpret the bits of this vector as a vector of `i32` elements.\n\n\
                 This is a bitwise reinterpretation only, and does not perform any conversions.",
             ));
         }
@@ -706,7 +706,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 block_size: 128,
                 block_count: 4,
             },
-            "Loads elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector.",
+            "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector.",
         ));
     }
 
@@ -718,7 +718,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 block_size: 128,
                 block_count: 4,
             },
-            "Stores elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory.",
+            "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory.",
         ));
     }
 
@@ -728,7 +728,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 "widen",
                 OpKind::AssociatedOnly,
                 OpSig::WidenNarrow { target_ty },
-                "Zero-extends each element to a wider integer type.\n\nThe number of elements in the result is half that of the input.",
+                "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input.",
             ));
         }
 
@@ -737,7 +737,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 "narrow",
                 OpKind::AssociatedOnly,
                 OpSig::WidenNarrow { target_ty },
-                "Truncates each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input.",
+                "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input.",
             ));
         }
     }
@@ -750,7 +750,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 target_ty: ScalarType::Unsigned,
                 scalar_bits: 8,
             },
-            "Reinterprets the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly.",
+            "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly.",
         ));
     }
 
@@ -762,7 +762,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 target_ty: ScalarType::Unsigned,
                 scalar_bits: 32,
             },
-            "Reinterprets the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly.",
+            "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly.",
         ));
     }
 
@@ -775,7 +775,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                     target_ty: ScalarType::Unsigned,
                     scalar_bits: 32,
                 },
-                "Converts each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
+                "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
                 Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
             ));
             ops.push(Op::new(
@@ -785,7 +785,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                     target_ty: ScalarType::Int,
                     scalar_bits: 32,
                 },
-                "Converts each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
+                "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
                 Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
             ));
         }
@@ -796,7 +796,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 target_ty: ScalarType::Float,
                 scalar_bits: 32,
             },
-            "Converts each unsigned 32-bit integer element to a floating-point value.\n\n\
+            "Convert each unsigned 32-bit integer element to a floating-point value.\n\n\
             Values that cannot be exactly represented are rounded to the nearest representable value.",
         )),
         (ScalarType::Int, 32) => ops.push(Op::new(
@@ -806,7 +806,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 target_ty: ScalarType::Float,
                 scalar_bits: 32,
             },
-            "Converts each signed 32-bit integer element to a floating-point value.\n\n\
+            "Convert each signed 32-bit integer element to a floating-point value.\n\n\
             Values that cannot be exactly represented are rounded to the nearest representable value.",
         )),
         _ => (),

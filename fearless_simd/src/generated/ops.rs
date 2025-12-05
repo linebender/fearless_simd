@@ -12,7 +12,7 @@ use crate::{
 };
 impl<S: Simd> core::ops::Neg for f32x4<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector."]
+    #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_f32x4(self)
@@ -20,14 +20,14 @@ impl<S: Simd> core::ops::Neg for f32x4<S> {
 }
 impl<S: Simd> core::ops::Add for f32x4<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for f32x4<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_f32x4(*self, rhs);
@@ -35,14 +35,14 @@ impl<S: Simd> core::ops::AddAssign for f32x4<S> {
 }
 impl<S: Simd> core::ops::Add<f32> for f32x4<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f32) -> Self::Output {
         self.simd.add_f32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<f32> for f32x4<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: f32) {
         *self = self.simd.add_f32x4(*self, rhs.simd_into(self.simd));
@@ -50,7 +50,7 @@ impl<S: Simd> core::ops::AddAssign<f32> for f32x4<S> {
 }
 impl<S: Simd> core::ops::Add<f32x4<S>> for f32 {
     type Output = f32x4<S>;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f32x4<S>) -> Self::Output {
         rhs.simd.add_f32x4(self.simd_into(rhs.simd), rhs)
@@ -58,14 +58,14 @@ impl<S: Simd> core::ops::Add<f32x4<S>> for f32 {
 }
 impl<S: Simd> core::ops::Sub for f32x4<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_f32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for f32x4<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_f32x4(*self, rhs);
@@ -73,14 +73,14 @@ impl<S: Simd> core::ops::SubAssign for f32x4<S> {
 }
 impl<S: Simd> core::ops::Sub<f32> for f32x4<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f32) -> Self::Output {
         self.simd.sub_f32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<f32> for f32x4<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: f32) {
         *self = self.simd.sub_f32x4(*self, rhs.simd_into(self.simd));
@@ -88,7 +88,7 @@ impl<S: Simd> core::ops::SubAssign<f32> for f32x4<S> {
 }
 impl<S: Simd> core::ops::Sub<f32x4<S>> for f32 {
     type Output = f32x4<S>;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f32x4<S>) -> Self::Output {
         rhs.simd.sub_f32x4(self.simd_into(rhs.simd), rhs)
@@ -96,14 +96,14 @@ impl<S: Simd> core::ops::Sub<f32x4<S>> for f32 {
 }
 impl<S: Simd> core::ops::Mul for f32x4<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_f32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for f32x4<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_f32x4(*self, rhs);
@@ -111,14 +111,14 @@ impl<S: Simd> core::ops::MulAssign for f32x4<S> {
 }
 impl<S: Simd> core::ops::Mul<f32> for f32x4<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f32) -> Self::Output {
         self.simd.mul_f32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<f32> for f32x4<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: f32) {
         *self = self.simd.mul_f32x4(*self, rhs.simd_into(self.simd));
@@ -126,7 +126,7 @@ impl<S: Simd> core::ops::MulAssign<f32> for f32x4<S> {
 }
 impl<S: Simd> core::ops::Mul<f32x4<S>> for f32 {
     type Output = f32x4<S>;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f32x4<S>) -> Self::Output {
         rhs.simd.mul_f32x4(self.simd_into(rhs.simd), rhs)
@@ -134,14 +134,14 @@ impl<S: Simd> core::ops::Mul<f32x4<S>> for f32 {
 }
 impl<S: Simd> core::ops::Div for f32x4<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: Self) -> Self::Output {
         self.simd.div_f32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::DivAssign for f32x4<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: Self) {
         *self = self.simd.div_f32x4(*self, rhs);
@@ -149,14 +149,14 @@ impl<S: Simd> core::ops::DivAssign for f32x4<S> {
 }
 impl<S: Simd> core::ops::Div<f32> for f32x4<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f32) -> Self::Output {
         self.simd.div_f32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::DivAssign<f32> for f32x4<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: f32) {
         *self = self.simd.div_f32x4(*self, rhs.simd_into(self.simd));
@@ -164,7 +164,7 @@ impl<S: Simd> core::ops::DivAssign<f32> for f32x4<S> {
 }
 impl<S: Simd> core::ops::Div<f32x4<S>> for f32 {
     type Output = f32x4<S>;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f32x4<S>) -> Self::Output {
         rhs.simd.div_f32x4(self.simd_into(rhs.simd), rhs)
@@ -172,7 +172,7 @@ impl<S: Simd> core::ops::Div<f32x4<S>> for f32 {
 }
 impl<S: Simd> core::ops::Neg for i8x16<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector, wrapping on overflow."]
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_i8x16(self)
@@ -180,14 +180,14 @@ impl<S: Simd> core::ops::Neg for i8x16<S> {
 }
 impl<S: Simd> core::ops::Add for i8x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for i8x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_i8x16(*self, rhs);
@@ -195,14 +195,14 @@ impl<S: Simd> core::ops::AddAssign for i8x16<S> {
 }
 impl<S: Simd> core::ops::Add<i8> for i8x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i8) -> Self::Output {
         self.simd.add_i8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<i8> for i8x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: i8) {
         *self = self.simd.add_i8x16(*self, rhs.simd_into(self.simd));
@@ -210,7 +210,7 @@ impl<S: Simd> core::ops::AddAssign<i8> for i8x16<S> {
 }
 impl<S: Simd> core::ops::Add<i8x16<S>> for i8 {
     type Output = i8x16<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i8x16<S>) -> Self::Output {
         rhs.simd.add_i8x16(self.simd_into(rhs.simd), rhs)
@@ -218,14 +218,14 @@ impl<S: Simd> core::ops::Add<i8x16<S>> for i8 {
 }
 impl<S: Simd> core::ops::Sub for i8x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for i8x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_i8x16(*self, rhs);
@@ -233,14 +233,14 @@ impl<S: Simd> core::ops::SubAssign for i8x16<S> {
 }
 impl<S: Simd> core::ops::Sub<i8> for i8x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i8) -> Self::Output {
         self.simd.sub_i8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<i8> for i8x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: i8) {
         *self = self.simd.sub_i8x16(*self, rhs.simd_into(self.simd));
@@ -248,7 +248,7 @@ impl<S: Simd> core::ops::SubAssign<i8> for i8x16<S> {
 }
 impl<S: Simd> core::ops::Sub<i8x16<S>> for i8 {
     type Output = i8x16<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i8x16<S>) -> Self::Output {
         rhs.simd.sub_i8x16(self.simd_into(rhs.simd), rhs)
@@ -256,14 +256,14 @@ impl<S: Simd> core::ops::Sub<i8x16<S>> for i8 {
 }
 impl<S: Simd> core::ops::Mul for i8x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for i8x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_i8x16(*self, rhs);
@@ -271,14 +271,14 @@ impl<S: Simd> core::ops::MulAssign for i8x16<S> {
 }
 impl<S: Simd> core::ops::Mul<i8> for i8x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i8) -> Self::Output {
         self.simd.mul_i8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<i8> for i8x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: i8) {
         *self = self.simd.mul_i8x16(*self, rhs.simd_into(self.simd));
@@ -286,7 +286,7 @@ impl<S: Simd> core::ops::MulAssign<i8> for i8x16<S> {
 }
 impl<S: Simd> core::ops::Mul<i8x16<S>> for i8 {
     type Output = i8x16<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i8x16<S>) -> Self::Output {
         rhs.simd.mul_i8x16(self.simd_into(rhs.simd), rhs)
@@ -294,14 +294,14 @@ impl<S: Simd> core::ops::Mul<i8x16<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitAnd for i8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for i8x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_i8x16(*self, rhs);
@@ -309,14 +309,14 @@ impl<S: Simd> core::ops::BitAndAssign for i8x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i8> for i8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i8) -> Self::Output {
         self.simd.and_i8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i8> for i8x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i8) {
         *self = self.simd.and_i8x16(*self, rhs.simd_into(self.simd));
@@ -324,7 +324,7 @@ impl<S: Simd> core::ops::BitAndAssign<i8> for i8x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i8x16<S>> for i8 {
     type Output = i8x16<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i8x16<S>) -> Self::Output {
         rhs.simd.and_i8x16(self.simd_into(rhs.simd), rhs)
@@ -332,14 +332,14 @@ impl<S: Simd> core::ops::BitAnd<i8x16<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitOr for i8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for i8x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_i8x16(*self, rhs);
@@ -347,14 +347,14 @@ impl<S: Simd> core::ops::BitOrAssign for i8x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<i8> for i8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i8) -> Self::Output {
         self.simd.or_i8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i8> for i8x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i8) {
         *self = self.simd.or_i8x16(*self, rhs.simd_into(self.simd));
@@ -362,7 +362,7 @@ impl<S: Simd> core::ops::BitOrAssign<i8> for i8x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<i8x16<S>> for i8 {
     type Output = i8x16<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i8x16<S>) -> Self::Output {
         rhs.simd.or_i8x16(self.simd_into(rhs.simd), rhs)
@@ -370,14 +370,14 @@ impl<S: Simd> core::ops::BitOr<i8x16<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitXor for i8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for i8x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_i8x16(*self, rhs);
@@ -385,14 +385,14 @@ impl<S: Simd> core::ops::BitXorAssign for i8x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<i8> for i8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i8) -> Self::Output {
         self.simd.xor_i8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i8> for i8x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i8) {
         *self = self.simd.xor_i8x16(*self, rhs.simd_into(self.simd));
@@ -400,7 +400,7 @@ impl<S: Simd> core::ops::BitXorAssign<i8> for i8x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<i8x16<S>> for i8 {
     type Output = i8x16<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i8x16<S>) -> Self::Output {
         rhs.simd.xor_i8x16(self.simd_into(rhs.simd), rhs)
@@ -408,7 +408,7 @@ impl<S: Simd> core::ops::BitXor<i8x16<S>> for i8 {
 }
 impl<S: Simd> core::ops::Not for i8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_i8x16(self)
@@ -416,7 +416,7 @@ impl<S: Simd> core::ops::Not for i8x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i8x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i8x16(self, rhs)
@@ -430,7 +430,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i8x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i8x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i8x16(self, rhs)
@@ -444,14 +444,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i8x16<S> {
 }
 impl<S: Simd> core::ops::Shr for i8x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i8x16<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i8x16(*self, rhs);
@@ -459,14 +459,14 @@ impl<S: Simd> core::ops::ShrAssign for i8x16<S> {
 }
 impl<S: Simd> core::ops::Add for u8x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for u8x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_u8x16(*self, rhs);
@@ -474,14 +474,14 @@ impl<S: Simd> core::ops::AddAssign for u8x16<S> {
 }
 impl<S: Simd> core::ops::Add<u8> for u8x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u8) -> Self::Output {
         self.simd.add_u8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<u8> for u8x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: u8) {
         *self = self.simd.add_u8x16(*self, rhs.simd_into(self.simd));
@@ -489,7 +489,7 @@ impl<S: Simd> core::ops::AddAssign<u8> for u8x16<S> {
 }
 impl<S: Simd> core::ops::Add<u8x16<S>> for u8 {
     type Output = u8x16<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u8x16<S>) -> Self::Output {
         rhs.simd.add_u8x16(self.simd_into(rhs.simd), rhs)
@@ -497,14 +497,14 @@ impl<S: Simd> core::ops::Add<u8x16<S>> for u8 {
 }
 impl<S: Simd> core::ops::Sub for u8x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for u8x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_u8x16(*self, rhs);
@@ -512,14 +512,14 @@ impl<S: Simd> core::ops::SubAssign for u8x16<S> {
 }
 impl<S: Simd> core::ops::Sub<u8> for u8x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u8) -> Self::Output {
         self.simd.sub_u8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<u8> for u8x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u8) {
         *self = self.simd.sub_u8x16(*self, rhs.simd_into(self.simd));
@@ -527,7 +527,7 @@ impl<S: Simd> core::ops::SubAssign<u8> for u8x16<S> {
 }
 impl<S: Simd> core::ops::Sub<u8x16<S>> for u8 {
     type Output = u8x16<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u8x16<S>) -> Self::Output {
         rhs.simd.sub_u8x16(self.simd_into(rhs.simd), rhs)
@@ -535,14 +535,14 @@ impl<S: Simd> core::ops::Sub<u8x16<S>> for u8 {
 }
 impl<S: Simd> core::ops::Mul for u8x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for u8x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_u8x16(*self, rhs);
@@ -550,14 +550,14 @@ impl<S: Simd> core::ops::MulAssign for u8x16<S> {
 }
 impl<S: Simd> core::ops::Mul<u8> for u8x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u8) -> Self::Output {
         self.simd.mul_u8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<u8> for u8x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: u8) {
         *self = self.simd.mul_u8x16(*self, rhs.simd_into(self.simd));
@@ -565,7 +565,7 @@ impl<S: Simd> core::ops::MulAssign<u8> for u8x16<S> {
 }
 impl<S: Simd> core::ops::Mul<u8x16<S>> for u8 {
     type Output = u8x16<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u8x16<S>) -> Self::Output {
         rhs.simd.mul_u8x16(self.simd_into(rhs.simd), rhs)
@@ -573,14 +573,14 @@ impl<S: Simd> core::ops::Mul<u8x16<S>> for u8 {
 }
 impl<S: Simd> core::ops::BitAnd for u8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for u8x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_u8x16(*self, rhs);
@@ -588,14 +588,14 @@ impl<S: Simd> core::ops::BitAndAssign for u8x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u8> for u8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u8) -> Self::Output {
         self.simd.and_u8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<u8> for u8x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: u8) {
         *self = self.simd.and_u8x16(*self, rhs.simd_into(self.simd));
@@ -603,7 +603,7 @@ impl<S: Simd> core::ops::BitAndAssign<u8> for u8x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u8x16<S>> for u8 {
     type Output = u8x16<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u8x16<S>) -> Self::Output {
         rhs.simd.and_u8x16(self.simd_into(rhs.simd), rhs)
@@ -611,14 +611,14 @@ impl<S: Simd> core::ops::BitAnd<u8x16<S>> for u8 {
 }
 impl<S: Simd> core::ops::BitOr for u8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for u8x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_u8x16(*self, rhs);
@@ -626,14 +626,14 @@ impl<S: Simd> core::ops::BitOrAssign for u8x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<u8> for u8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u8) -> Self::Output {
         self.simd.or_u8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<u8> for u8x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: u8) {
         *self = self.simd.or_u8x16(*self, rhs.simd_into(self.simd));
@@ -641,7 +641,7 @@ impl<S: Simd> core::ops::BitOrAssign<u8> for u8x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<u8x16<S>> for u8 {
     type Output = u8x16<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u8x16<S>) -> Self::Output {
         rhs.simd.or_u8x16(self.simd_into(rhs.simd), rhs)
@@ -649,14 +649,14 @@ impl<S: Simd> core::ops::BitOr<u8x16<S>> for u8 {
 }
 impl<S: Simd> core::ops::BitXor for u8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for u8x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_u8x16(*self, rhs);
@@ -664,14 +664,14 @@ impl<S: Simd> core::ops::BitXorAssign for u8x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<u8> for u8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u8) -> Self::Output {
         self.simd.xor_u8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<u8> for u8x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: u8) {
         *self = self.simd.xor_u8x16(*self, rhs.simd_into(self.simd));
@@ -679,7 +679,7 @@ impl<S: Simd> core::ops::BitXorAssign<u8> for u8x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<u8x16<S>> for u8 {
     type Output = u8x16<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u8x16<S>) -> Self::Output {
         rhs.simd.xor_u8x16(self.simd_into(rhs.simd), rhs)
@@ -687,7 +687,7 @@ impl<S: Simd> core::ops::BitXor<u8x16<S>> for u8 {
 }
 impl<S: Simd> core::ops::Not for u8x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_u8x16(self)
@@ -695,7 +695,7 @@ impl<S: Simd> core::ops::Not for u8x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u8x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u8x16(self, rhs)
@@ -709,7 +709,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u8x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u8x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u8x16(self, rhs)
@@ -723,14 +723,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u8x16<S> {
 }
 impl<S: Simd> core::ops::Shr for u8x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u8x16<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u8x16(*self, rhs);
@@ -738,14 +738,14 @@ impl<S: Simd> core::ops::ShrAssign for u8x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd for mask8x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask8x16<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask8x16(*self, rhs);
@@ -753,14 +753,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask8x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i8> for mask8x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i8) -> Self::Output {
         self.simd.and_mask8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i8> for mask8x16<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i8) {
         *self = self.simd.and_mask8x16(*self, rhs.simd_into(self.simd));
@@ -768,7 +768,7 @@ impl<S: Simd> core::ops::BitAndAssign<i8> for mask8x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask8x16<S>> for i8 {
     type Output = mask8x16<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask8x16<S>) -> Self::Output {
         rhs.simd.and_mask8x16(self.simd_into(rhs.simd), rhs)
@@ -776,14 +776,14 @@ impl<S: Simd> core::ops::BitAnd<mask8x16<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitOr for mask8x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask8x16<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask8x16(*self, rhs);
@@ -791,14 +791,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask8x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<i8> for mask8x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i8) -> Self::Output {
         self.simd.or_mask8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i8> for mask8x16<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i8) {
         *self = self.simd.or_mask8x16(*self, rhs.simd_into(self.simd));
@@ -806,7 +806,7 @@ impl<S: Simd> core::ops::BitOrAssign<i8> for mask8x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask8x16<S>> for i8 {
     type Output = mask8x16<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask8x16<S>) -> Self::Output {
         rhs.simd.or_mask8x16(self.simd_into(rhs.simd), rhs)
@@ -814,14 +814,14 @@ impl<S: Simd> core::ops::BitOr<mask8x16<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitXor for mask8x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask8x16<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask8x16(*self, rhs);
@@ -829,14 +829,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask8x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<i8> for mask8x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i8) -> Self::Output {
         self.simd.xor_mask8x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i8> for mask8x16<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i8) {
         *self = self.simd.xor_mask8x16(*self, rhs.simd_into(self.simd));
@@ -844,7 +844,7 @@ impl<S: Simd> core::ops::BitXorAssign<i8> for mask8x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask8x16<S>> for i8 {
     type Output = mask8x16<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask8x16<S>) -> Self::Output {
         rhs.simd.xor_mask8x16(self.simd_into(rhs.simd), rhs)
@@ -852,7 +852,7 @@ impl<S: Simd> core::ops::BitXor<mask8x16<S>> for i8 {
 }
 impl<S: Simd> core::ops::Not for mask8x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask8x16(self)
@@ -860,7 +860,7 @@ impl<S: Simd> core::ops::Not for mask8x16<S> {
 }
 impl<S: Simd> core::ops::Neg for i16x8<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector, wrapping on overflow."]
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_i16x8(self)
@@ -868,14 +868,14 @@ impl<S: Simd> core::ops::Neg for i16x8<S> {
 }
 impl<S: Simd> core::ops::Add for i16x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for i16x8<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_i16x8(*self, rhs);
@@ -883,14 +883,14 @@ impl<S: Simd> core::ops::AddAssign for i16x8<S> {
 }
 impl<S: Simd> core::ops::Add<i16> for i16x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i16) -> Self::Output {
         self.simd.add_i16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<i16> for i16x8<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: i16) {
         *self = self.simd.add_i16x8(*self, rhs.simd_into(self.simd));
@@ -898,7 +898,7 @@ impl<S: Simd> core::ops::AddAssign<i16> for i16x8<S> {
 }
 impl<S: Simd> core::ops::Add<i16x8<S>> for i16 {
     type Output = i16x8<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i16x8<S>) -> Self::Output {
         rhs.simd.add_i16x8(self.simd_into(rhs.simd), rhs)
@@ -906,14 +906,14 @@ impl<S: Simd> core::ops::Add<i16x8<S>> for i16 {
 }
 impl<S: Simd> core::ops::Sub for i16x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for i16x8<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_i16x8(*self, rhs);
@@ -921,14 +921,14 @@ impl<S: Simd> core::ops::SubAssign for i16x8<S> {
 }
 impl<S: Simd> core::ops::Sub<i16> for i16x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i16) -> Self::Output {
         self.simd.sub_i16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<i16> for i16x8<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: i16) {
         *self = self.simd.sub_i16x8(*self, rhs.simd_into(self.simd));
@@ -936,7 +936,7 @@ impl<S: Simd> core::ops::SubAssign<i16> for i16x8<S> {
 }
 impl<S: Simd> core::ops::Sub<i16x8<S>> for i16 {
     type Output = i16x8<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i16x8<S>) -> Self::Output {
         rhs.simd.sub_i16x8(self.simd_into(rhs.simd), rhs)
@@ -944,14 +944,14 @@ impl<S: Simd> core::ops::Sub<i16x8<S>> for i16 {
 }
 impl<S: Simd> core::ops::Mul for i16x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for i16x8<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_i16x8(*self, rhs);
@@ -959,14 +959,14 @@ impl<S: Simd> core::ops::MulAssign for i16x8<S> {
 }
 impl<S: Simd> core::ops::Mul<i16> for i16x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i16) -> Self::Output {
         self.simd.mul_i16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<i16> for i16x8<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: i16) {
         *self = self.simd.mul_i16x8(*self, rhs.simd_into(self.simd));
@@ -974,7 +974,7 @@ impl<S: Simd> core::ops::MulAssign<i16> for i16x8<S> {
 }
 impl<S: Simd> core::ops::Mul<i16x8<S>> for i16 {
     type Output = i16x8<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i16x8<S>) -> Self::Output {
         rhs.simd.mul_i16x8(self.simd_into(rhs.simd), rhs)
@@ -982,14 +982,14 @@ impl<S: Simd> core::ops::Mul<i16x8<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitAnd for i16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for i16x8<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_i16x8(*self, rhs);
@@ -997,14 +997,14 @@ impl<S: Simd> core::ops::BitAndAssign for i16x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i16> for i16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i16) -> Self::Output {
         self.simd.and_i16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i16> for i16x8<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i16) {
         *self = self.simd.and_i16x8(*self, rhs.simd_into(self.simd));
@@ -1012,7 +1012,7 @@ impl<S: Simd> core::ops::BitAndAssign<i16> for i16x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i16x8<S>> for i16 {
     type Output = i16x8<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i16x8<S>) -> Self::Output {
         rhs.simd.and_i16x8(self.simd_into(rhs.simd), rhs)
@@ -1020,14 +1020,14 @@ impl<S: Simd> core::ops::BitAnd<i16x8<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitOr for i16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for i16x8<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_i16x8(*self, rhs);
@@ -1035,14 +1035,14 @@ impl<S: Simd> core::ops::BitOrAssign for i16x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<i16> for i16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i16) -> Self::Output {
         self.simd.or_i16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i16> for i16x8<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i16) {
         *self = self.simd.or_i16x8(*self, rhs.simd_into(self.simd));
@@ -1050,7 +1050,7 @@ impl<S: Simd> core::ops::BitOrAssign<i16> for i16x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<i16x8<S>> for i16 {
     type Output = i16x8<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i16x8<S>) -> Self::Output {
         rhs.simd.or_i16x8(self.simd_into(rhs.simd), rhs)
@@ -1058,14 +1058,14 @@ impl<S: Simd> core::ops::BitOr<i16x8<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitXor for i16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for i16x8<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_i16x8(*self, rhs);
@@ -1073,14 +1073,14 @@ impl<S: Simd> core::ops::BitXorAssign for i16x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<i16> for i16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i16) -> Self::Output {
         self.simd.xor_i16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i16> for i16x8<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i16) {
         *self = self.simd.xor_i16x8(*self, rhs.simd_into(self.simd));
@@ -1088,7 +1088,7 @@ impl<S: Simd> core::ops::BitXorAssign<i16> for i16x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<i16x8<S>> for i16 {
     type Output = i16x8<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i16x8<S>) -> Self::Output {
         rhs.simd.xor_i16x8(self.simd_into(rhs.simd), rhs)
@@ -1096,7 +1096,7 @@ impl<S: Simd> core::ops::BitXor<i16x8<S>> for i16 {
 }
 impl<S: Simd> core::ops::Not for i16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_i16x8(self)
@@ -1104,7 +1104,7 @@ impl<S: Simd> core::ops::Not for i16x8<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i16x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i16x8(self, rhs)
@@ -1118,7 +1118,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i16x8<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i16x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i16x8(self, rhs)
@@ -1132,14 +1132,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i16x8<S> {
 }
 impl<S: Simd> core::ops::Shr for i16x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i16x8<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i16x8(*self, rhs);
@@ -1147,14 +1147,14 @@ impl<S: Simd> core::ops::ShrAssign for i16x8<S> {
 }
 impl<S: Simd> core::ops::Add for u16x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for u16x8<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_u16x8(*self, rhs);
@@ -1162,14 +1162,14 @@ impl<S: Simd> core::ops::AddAssign for u16x8<S> {
 }
 impl<S: Simd> core::ops::Add<u16> for u16x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u16) -> Self::Output {
         self.simd.add_u16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<u16> for u16x8<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: u16) {
         *self = self.simd.add_u16x8(*self, rhs.simd_into(self.simd));
@@ -1177,7 +1177,7 @@ impl<S: Simd> core::ops::AddAssign<u16> for u16x8<S> {
 }
 impl<S: Simd> core::ops::Add<u16x8<S>> for u16 {
     type Output = u16x8<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u16x8<S>) -> Self::Output {
         rhs.simd.add_u16x8(self.simd_into(rhs.simd), rhs)
@@ -1185,14 +1185,14 @@ impl<S: Simd> core::ops::Add<u16x8<S>> for u16 {
 }
 impl<S: Simd> core::ops::Sub for u16x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for u16x8<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_u16x8(*self, rhs);
@@ -1200,14 +1200,14 @@ impl<S: Simd> core::ops::SubAssign for u16x8<S> {
 }
 impl<S: Simd> core::ops::Sub<u16> for u16x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u16) -> Self::Output {
         self.simd.sub_u16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<u16> for u16x8<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u16) {
         *self = self.simd.sub_u16x8(*self, rhs.simd_into(self.simd));
@@ -1215,7 +1215,7 @@ impl<S: Simd> core::ops::SubAssign<u16> for u16x8<S> {
 }
 impl<S: Simd> core::ops::Sub<u16x8<S>> for u16 {
     type Output = u16x8<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u16x8<S>) -> Self::Output {
         rhs.simd.sub_u16x8(self.simd_into(rhs.simd), rhs)
@@ -1223,14 +1223,14 @@ impl<S: Simd> core::ops::Sub<u16x8<S>> for u16 {
 }
 impl<S: Simd> core::ops::Mul for u16x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for u16x8<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_u16x8(*self, rhs);
@@ -1238,14 +1238,14 @@ impl<S: Simd> core::ops::MulAssign for u16x8<S> {
 }
 impl<S: Simd> core::ops::Mul<u16> for u16x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u16) -> Self::Output {
         self.simd.mul_u16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<u16> for u16x8<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: u16) {
         *self = self.simd.mul_u16x8(*self, rhs.simd_into(self.simd));
@@ -1253,7 +1253,7 @@ impl<S: Simd> core::ops::MulAssign<u16> for u16x8<S> {
 }
 impl<S: Simd> core::ops::Mul<u16x8<S>> for u16 {
     type Output = u16x8<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u16x8<S>) -> Self::Output {
         rhs.simd.mul_u16x8(self.simd_into(rhs.simd), rhs)
@@ -1261,14 +1261,14 @@ impl<S: Simd> core::ops::Mul<u16x8<S>> for u16 {
 }
 impl<S: Simd> core::ops::BitAnd for u16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for u16x8<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_u16x8(*self, rhs);
@@ -1276,14 +1276,14 @@ impl<S: Simd> core::ops::BitAndAssign for u16x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u16> for u16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u16) -> Self::Output {
         self.simd.and_u16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<u16> for u16x8<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: u16) {
         *self = self.simd.and_u16x8(*self, rhs.simd_into(self.simd));
@@ -1291,7 +1291,7 @@ impl<S: Simd> core::ops::BitAndAssign<u16> for u16x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u16x8<S>> for u16 {
     type Output = u16x8<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u16x8<S>) -> Self::Output {
         rhs.simd.and_u16x8(self.simd_into(rhs.simd), rhs)
@@ -1299,14 +1299,14 @@ impl<S: Simd> core::ops::BitAnd<u16x8<S>> for u16 {
 }
 impl<S: Simd> core::ops::BitOr for u16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for u16x8<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_u16x8(*self, rhs);
@@ -1314,14 +1314,14 @@ impl<S: Simd> core::ops::BitOrAssign for u16x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<u16> for u16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u16) -> Self::Output {
         self.simd.or_u16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<u16> for u16x8<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: u16) {
         *self = self.simd.or_u16x8(*self, rhs.simd_into(self.simd));
@@ -1329,7 +1329,7 @@ impl<S: Simd> core::ops::BitOrAssign<u16> for u16x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<u16x8<S>> for u16 {
     type Output = u16x8<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u16x8<S>) -> Self::Output {
         rhs.simd.or_u16x8(self.simd_into(rhs.simd), rhs)
@@ -1337,14 +1337,14 @@ impl<S: Simd> core::ops::BitOr<u16x8<S>> for u16 {
 }
 impl<S: Simd> core::ops::BitXor for u16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for u16x8<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_u16x8(*self, rhs);
@@ -1352,14 +1352,14 @@ impl<S: Simd> core::ops::BitXorAssign for u16x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<u16> for u16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u16) -> Self::Output {
         self.simd.xor_u16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<u16> for u16x8<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: u16) {
         *self = self.simd.xor_u16x8(*self, rhs.simd_into(self.simd));
@@ -1367,7 +1367,7 @@ impl<S: Simd> core::ops::BitXorAssign<u16> for u16x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<u16x8<S>> for u16 {
     type Output = u16x8<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u16x8<S>) -> Self::Output {
         rhs.simd.xor_u16x8(self.simd_into(rhs.simd), rhs)
@@ -1375,7 +1375,7 @@ impl<S: Simd> core::ops::BitXor<u16x8<S>> for u16 {
 }
 impl<S: Simd> core::ops::Not for u16x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_u16x8(self)
@@ -1383,7 +1383,7 @@ impl<S: Simd> core::ops::Not for u16x8<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u16x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u16x8(self, rhs)
@@ -1397,7 +1397,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u16x8<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u16x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u16x8(self, rhs)
@@ -1411,14 +1411,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u16x8<S> {
 }
 impl<S: Simd> core::ops::Shr for u16x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u16x8<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u16x8(*self, rhs);
@@ -1426,14 +1426,14 @@ impl<S: Simd> core::ops::ShrAssign for u16x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd for mask16x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask16x8<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask16x8(*self, rhs);
@@ -1441,14 +1441,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask16x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i16> for mask16x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i16) -> Self::Output {
         self.simd.and_mask16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i16> for mask16x8<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i16) {
         *self = self.simd.and_mask16x8(*self, rhs.simd_into(self.simd));
@@ -1456,7 +1456,7 @@ impl<S: Simd> core::ops::BitAndAssign<i16> for mask16x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask16x8<S>> for i16 {
     type Output = mask16x8<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask16x8<S>) -> Self::Output {
         rhs.simd.and_mask16x8(self.simd_into(rhs.simd), rhs)
@@ -1464,14 +1464,14 @@ impl<S: Simd> core::ops::BitAnd<mask16x8<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitOr for mask16x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask16x8<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask16x8(*self, rhs);
@@ -1479,14 +1479,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask16x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<i16> for mask16x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i16) -> Self::Output {
         self.simd.or_mask16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i16> for mask16x8<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i16) {
         *self = self.simd.or_mask16x8(*self, rhs.simd_into(self.simd));
@@ -1494,7 +1494,7 @@ impl<S: Simd> core::ops::BitOrAssign<i16> for mask16x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask16x8<S>> for i16 {
     type Output = mask16x8<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask16x8<S>) -> Self::Output {
         rhs.simd.or_mask16x8(self.simd_into(rhs.simd), rhs)
@@ -1502,14 +1502,14 @@ impl<S: Simd> core::ops::BitOr<mask16x8<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitXor for mask16x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask16x8<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask16x8(*self, rhs);
@@ -1517,14 +1517,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask16x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<i16> for mask16x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i16) -> Self::Output {
         self.simd.xor_mask16x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i16> for mask16x8<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i16) {
         *self = self.simd.xor_mask16x8(*self, rhs.simd_into(self.simd));
@@ -1532,7 +1532,7 @@ impl<S: Simd> core::ops::BitXorAssign<i16> for mask16x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask16x8<S>> for i16 {
     type Output = mask16x8<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask16x8<S>) -> Self::Output {
         rhs.simd.xor_mask16x8(self.simd_into(rhs.simd), rhs)
@@ -1540,7 +1540,7 @@ impl<S: Simd> core::ops::BitXor<mask16x8<S>> for i16 {
 }
 impl<S: Simd> core::ops::Not for mask16x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask16x8(self)
@@ -1548,7 +1548,7 @@ impl<S: Simd> core::ops::Not for mask16x8<S> {
 }
 impl<S: Simd> core::ops::Neg for i32x4<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector, wrapping on overflow."]
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_i32x4(self)
@@ -1556,14 +1556,14 @@ impl<S: Simd> core::ops::Neg for i32x4<S> {
 }
 impl<S: Simd> core::ops::Add for i32x4<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for i32x4<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_i32x4(*self, rhs);
@@ -1571,14 +1571,14 @@ impl<S: Simd> core::ops::AddAssign for i32x4<S> {
 }
 impl<S: Simd> core::ops::Add<i32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i32) -> Self::Output {
         self.simd.add_i32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<i32> for i32x4<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: i32) {
         *self = self.simd.add_i32x4(*self, rhs.simd_into(self.simd));
@@ -1586,7 +1586,7 @@ impl<S: Simd> core::ops::AddAssign<i32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::Add<i32x4<S>> for i32 {
     type Output = i32x4<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i32x4<S>) -> Self::Output {
         rhs.simd.add_i32x4(self.simd_into(rhs.simd), rhs)
@@ -1594,14 +1594,14 @@ impl<S: Simd> core::ops::Add<i32x4<S>> for i32 {
 }
 impl<S: Simd> core::ops::Sub for i32x4<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for i32x4<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_i32x4(*self, rhs);
@@ -1609,14 +1609,14 @@ impl<S: Simd> core::ops::SubAssign for i32x4<S> {
 }
 impl<S: Simd> core::ops::Sub<i32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i32) -> Self::Output {
         self.simd.sub_i32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<i32> for i32x4<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: i32) {
         *self = self.simd.sub_i32x4(*self, rhs.simd_into(self.simd));
@@ -1624,7 +1624,7 @@ impl<S: Simd> core::ops::SubAssign<i32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::Sub<i32x4<S>> for i32 {
     type Output = i32x4<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i32x4<S>) -> Self::Output {
         rhs.simd.sub_i32x4(self.simd_into(rhs.simd), rhs)
@@ -1632,14 +1632,14 @@ impl<S: Simd> core::ops::Sub<i32x4<S>> for i32 {
 }
 impl<S: Simd> core::ops::Mul for i32x4<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for i32x4<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_i32x4(*self, rhs);
@@ -1647,14 +1647,14 @@ impl<S: Simd> core::ops::MulAssign for i32x4<S> {
 }
 impl<S: Simd> core::ops::Mul<i32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i32) -> Self::Output {
         self.simd.mul_i32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<i32> for i32x4<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: i32) {
         *self = self.simd.mul_i32x4(*self, rhs.simd_into(self.simd));
@@ -1662,7 +1662,7 @@ impl<S: Simd> core::ops::MulAssign<i32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::Mul<i32x4<S>> for i32 {
     type Output = i32x4<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i32x4<S>) -> Self::Output {
         rhs.simd.mul_i32x4(self.simd_into(rhs.simd), rhs)
@@ -1670,14 +1670,14 @@ impl<S: Simd> core::ops::Mul<i32x4<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitAnd for i32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for i32x4<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_i32x4(*self, rhs);
@@ -1685,14 +1685,14 @@ impl<S: Simd> core::ops::BitAndAssign for i32x4<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i32) -> Self::Output {
         self.simd.and_i32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i32> for i32x4<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i32) {
         *self = self.simd.and_i32x4(*self, rhs.simd_into(self.simd));
@@ -1700,7 +1700,7 @@ impl<S: Simd> core::ops::BitAndAssign<i32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i32x4<S>> for i32 {
     type Output = i32x4<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i32x4<S>) -> Self::Output {
         rhs.simd.and_i32x4(self.simd_into(rhs.simd), rhs)
@@ -1708,14 +1708,14 @@ impl<S: Simd> core::ops::BitAnd<i32x4<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitOr for i32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for i32x4<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_i32x4(*self, rhs);
@@ -1723,14 +1723,14 @@ impl<S: Simd> core::ops::BitOrAssign for i32x4<S> {
 }
 impl<S: Simd> core::ops::BitOr<i32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i32) -> Self::Output {
         self.simd.or_i32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i32> for i32x4<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i32) {
         *self = self.simd.or_i32x4(*self, rhs.simd_into(self.simd));
@@ -1738,7 +1738,7 @@ impl<S: Simd> core::ops::BitOrAssign<i32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::BitOr<i32x4<S>> for i32 {
     type Output = i32x4<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i32x4<S>) -> Self::Output {
         rhs.simd.or_i32x4(self.simd_into(rhs.simd), rhs)
@@ -1746,14 +1746,14 @@ impl<S: Simd> core::ops::BitOr<i32x4<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitXor for i32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for i32x4<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_i32x4(*self, rhs);
@@ -1761,14 +1761,14 @@ impl<S: Simd> core::ops::BitXorAssign for i32x4<S> {
 }
 impl<S: Simd> core::ops::BitXor<i32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i32) -> Self::Output {
         self.simd.xor_i32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i32> for i32x4<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i32) {
         *self = self.simd.xor_i32x4(*self, rhs.simd_into(self.simd));
@@ -1776,7 +1776,7 @@ impl<S: Simd> core::ops::BitXorAssign<i32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::BitXor<i32x4<S>> for i32 {
     type Output = i32x4<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i32x4<S>) -> Self::Output {
         rhs.simd.xor_i32x4(self.simd_into(rhs.simd), rhs)
@@ -1784,7 +1784,7 @@ impl<S: Simd> core::ops::BitXor<i32x4<S>> for i32 {
 }
 impl<S: Simd> core::ops::Not for i32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_i32x4(self)
@@ -1792,7 +1792,7 @@ impl<S: Simd> core::ops::Not for i32x4<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i32x4(self, rhs)
@@ -1806,7 +1806,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i32x4(self, rhs)
@@ -1820,14 +1820,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::Shr for i32x4<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i32x4<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i32x4(*self, rhs);
@@ -1835,14 +1835,14 @@ impl<S: Simd> core::ops::ShrAssign for i32x4<S> {
 }
 impl<S: Simd> core::ops::Add for u32x4<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for u32x4<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_u32x4(*self, rhs);
@@ -1850,14 +1850,14 @@ impl<S: Simd> core::ops::AddAssign for u32x4<S> {
 }
 impl<S: Simd> core::ops::Add<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u32) -> Self::Output {
         self.simd.add_u32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<u32> for u32x4<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: u32) {
         *self = self.simd.add_u32x4(*self, rhs.simd_into(self.simd));
@@ -1865,7 +1865,7 @@ impl<S: Simd> core::ops::AddAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::Add<u32x4<S>> for u32 {
     type Output = u32x4<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u32x4<S>) -> Self::Output {
         rhs.simd.add_u32x4(self.simd_into(rhs.simd), rhs)
@@ -1873,14 +1873,14 @@ impl<S: Simd> core::ops::Add<u32x4<S>> for u32 {
 }
 impl<S: Simd> core::ops::Sub for u32x4<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for u32x4<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_u32x4(*self, rhs);
@@ -1888,14 +1888,14 @@ impl<S: Simd> core::ops::SubAssign for u32x4<S> {
 }
 impl<S: Simd> core::ops::Sub<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u32) -> Self::Output {
         self.simd.sub_u32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<u32> for u32x4<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u32) {
         *self = self.simd.sub_u32x4(*self, rhs.simd_into(self.simd));
@@ -1903,7 +1903,7 @@ impl<S: Simd> core::ops::SubAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::Sub<u32x4<S>> for u32 {
     type Output = u32x4<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u32x4<S>) -> Self::Output {
         rhs.simd.sub_u32x4(self.simd_into(rhs.simd), rhs)
@@ -1911,14 +1911,14 @@ impl<S: Simd> core::ops::Sub<u32x4<S>> for u32 {
 }
 impl<S: Simd> core::ops::Mul for u32x4<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for u32x4<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_u32x4(*self, rhs);
@@ -1926,14 +1926,14 @@ impl<S: Simd> core::ops::MulAssign for u32x4<S> {
 }
 impl<S: Simd> core::ops::Mul<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u32) -> Self::Output {
         self.simd.mul_u32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<u32> for u32x4<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: u32) {
         *self = self.simd.mul_u32x4(*self, rhs.simd_into(self.simd));
@@ -1941,7 +1941,7 @@ impl<S: Simd> core::ops::MulAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::Mul<u32x4<S>> for u32 {
     type Output = u32x4<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u32x4<S>) -> Self::Output {
         rhs.simd.mul_u32x4(self.simd_into(rhs.simd), rhs)
@@ -1949,14 +1949,14 @@ impl<S: Simd> core::ops::Mul<u32x4<S>> for u32 {
 }
 impl<S: Simd> core::ops::BitAnd for u32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for u32x4<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_u32x4(*self, rhs);
@@ -1964,14 +1964,14 @@ impl<S: Simd> core::ops::BitAndAssign for u32x4<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u32) -> Self::Output {
         self.simd.and_u32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<u32> for u32x4<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: u32) {
         *self = self.simd.and_u32x4(*self, rhs.simd_into(self.simd));
@@ -1979,7 +1979,7 @@ impl<S: Simd> core::ops::BitAndAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u32x4<S>> for u32 {
     type Output = u32x4<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u32x4<S>) -> Self::Output {
         rhs.simd.and_u32x4(self.simd_into(rhs.simd), rhs)
@@ -1987,14 +1987,14 @@ impl<S: Simd> core::ops::BitAnd<u32x4<S>> for u32 {
 }
 impl<S: Simd> core::ops::BitOr for u32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for u32x4<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_u32x4(*self, rhs);
@@ -2002,14 +2002,14 @@ impl<S: Simd> core::ops::BitOrAssign for u32x4<S> {
 }
 impl<S: Simd> core::ops::BitOr<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u32) -> Self::Output {
         self.simd.or_u32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<u32> for u32x4<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: u32) {
         *self = self.simd.or_u32x4(*self, rhs.simd_into(self.simd));
@@ -2017,7 +2017,7 @@ impl<S: Simd> core::ops::BitOrAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::BitOr<u32x4<S>> for u32 {
     type Output = u32x4<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u32x4<S>) -> Self::Output {
         rhs.simd.or_u32x4(self.simd_into(rhs.simd), rhs)
@@ -2025,14 +2025,14 @@ impl<S: Simd> core::ops::BitOr<u32x4<S>> for u32 {
 }
 impl<S: Simd> core::ops::BitXor for u32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for u32x4<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_u32x4(*self, rhs);
@@ -2040,14 +2040,14 @@ impl<S: Simd> core::ops::BitXorAssign for u32x4<S> {
 }
 impl<S: Simd> core::ops::BitXor<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u32) -> Self::Output {
         self.simd.xor_u32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<u32> for u32x4<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: u32) {
         *self = self.simd.xor_u32x4(*self, rhs.simd_into(self.simd));
@@ -2055,7 +2055,7 @@ impl<S: Simd> core::ops::BitXorAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::BitXor<u32x4<S>> for u32 {
     type Output = u32x4<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u32x4<S>) -> Self::Output {
         rhs.simd.xor_u32x4(self.simd_into(rhs.simd), rhs)
@@ -2063,7 +2063,7 @@ impl<S: Simd> core::ops::BitXor<u32x4<S>> for u32 {
 }
 impl<S: Simd> core::ops::Not for u32x4<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_u32x4(self)
@@ -2071,7 +2071,7 @@ impl<S: Simd> core::ops::Not for u32x4<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u32x4(self, rhs)
@@ -2085,7 +2085,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u32x4(self, rhs)
@@ -2099,14 +2099,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::Shr for u32x4<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u32x4<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u32x4(*self, rhs);
@@ -2114,14 +2114,14 @@ impl<S: Simd> core::ops::ShrAssign for u32x4<S> {
 }
 impl<S: Simd> core::ops::BitAnd for mask32x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask32x4<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask32x4(*self, rhs);
@@ -2129,14 +2129,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask32x4<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i32> for mask32x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i32) -> Self::Output {
         self.simd.and_mask32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i32> for mask32x4<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i32) {
         *self = self.simd.and_mask32x4(*self, rhs.simd_into(self.simd));
@@ -2144,7 +2144,7 @@ impl<S: Simd> core::ops::BitAndAssign<i32> for mask32x4<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask32x4<S>> for i32 {
     type Output = mask32x4<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask32x4<S>) -> Self::Output {
         rhs.simd.and_mask32x4(self.simd_into(rhs.simd), rhs)
@@ -2152,14 +2152,14 @@ impl<S: Simd> core::ops::BitAnd<mask32x4<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitOr for mask32x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask32x4<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask32x4(*self, rhs);
@@ -2167,14 +2167,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask32x4<S> {
 }
 impl<S: Simd> core::ops::BitOr<i32> for mask32x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i32) -> Self::Output {
         self.simd.or_mask32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i32> for mask32x4<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i32) {
         *self = self.simd.or_mask32x4(*self, rhs.simd_into(self.simd));
@@ -2182,7 +2182,7 @@ impl<S: Simd> core::ops::BitOrAssign<i32> for mask32x4<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask32x4<S>> for i32 {
     type Output = mask32x4<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask32x4<S>) -> Self::Output {
         rhs.simd.or_mask32x4(self.simd_into(rhs.simd), rhs)
@@ -2190,14 +2190,14 @@ impl<S: Simd> core::ops::BitOr<mask32x4<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitXor for mask32x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask32x4<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask32x4(*self, rhs);
@@ -2205,14 +2205,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask32x4<S> {
 }
 impl<S: Simd> core::ops::BitXor<i32> for mask32x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i32) -> Self::Output {
         self.simd.xor_mask32x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i32> for mask32x4<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i32) {
         *self = self.simd.xor_mask32x4(*self, rhs.simd_into(self.simd));
@@ -2220,7 +2220,7 @@ impl<S: Simd> core::ops::BitXorAssign<i32> for mask32x4<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask32x4<S>> for i32 {
     type Output = mask32x4<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask32x4<S>) -> Self::Output {
         rhs.simd.xor_mask32x4(self.simd_into(rhs.simd), rhs)
@@ -2228,7 +2228,7 @@ impl<S: Simd> core::ops::BitXor<mask32x4<S>> for i32 {
 }
 impl<S: Simd> core::ops::Not for mask32x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask32x4(self)
@@ -2236,7 +2236,7 @@ impl<S: Simd> core::ops::Not for mask32x4<S> {
 }
 impl<S: Simd> core::ops::Neg for f64x2<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector."]
+    #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_f64x2(self)
@@ -2244,14 +2244,14 @@ impl<S: Simd> core::ops::Neg for f64x2<S> {
 }
 impl<S: Simd> core::ops::Add for f64x2<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for f64x2<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_f64x2(*self, rhs);
@@ -2259,14 +2259,14 @@ impl<S: Simd> core::ops::AddAssign for f64x2<S> {
 }
 impl<S: Simd> core::ops::Add<f64> for f64x2<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f64) -> Self::Output {
         self.simd.add_f64x2(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<f64> for f64x2<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: f64) {
         *self = self.simd.add_f64x2(*self, rhs.simd_into(self.simd));
@@ -2274,7 +2274,7 @@ impl<S: Simd> core::ops::AddAssign<f64> for f64x2<S> {
 }
 impl<S: Simd> core::ops::Add<f64x2<S>> for f64 {
     type Output = f64x2<S>;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f64x2<S>) -> Self::Output {
         rhs.simd.add_f64x2(self.simd_into(rhs.simd), rhs)
@@ -2282,14 +2282,14 @@ impl<S: Simd> core::ops::Add<f64x2<S>> for f64 {
 }
 impl<S: Simd> core::ops::Sub for f64x2<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_f64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for f64x2<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_f64x2(*self, rhs);
@@ -2297,14 +2297,14 @@ impl<S: Simd> core::ops::SubAssign for f64x2<S> {
 }
 impl<S: Simd> core::ops::Sub<f64> for f64x2<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f64) -> Self::Output {
         self.simd.sub_f64x2(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<f64> for f64x2<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: f64) {
         *self = self.simd.sub_f64x2(*self, rhs.simd_into(self.simd));
@@ -2312,7 +2312,7 @@ impl<S: Simd> core::ops::SubAssign<f64> for f64x2<S> {
 }
 impl<S: Simd> core::ops::Sub<f64x2<S>> for f64 {
     type Output = f64x2<S>;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f64x2<S>) -> Self::Output {
         rhs.simd.sub_f64x2(self.simd_into(rhs.simd), rhs)
@@ -2320,14 +2320,14 @@ impl<S: Simd> core::ops::Sub<f64x2<S>> for f64 {
 }
 impl<S: Simd> core::ops::Mul for f64x2<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_f64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for f64x2<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_f64x2(*self, rhs);
@@ -2335,14 +2335,14 @@ impl<S: Simd> core::ops::MulAssign for f64x2<S> {
 }
 impl<S: Simd> core::ops::Mul<f64> for f64x2<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f64) -> Self::Output {
         self.simd.mul_f64x2(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<f64> for f64x2<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: f64) {
         *self = self.simd.mul_f64x2(*self, rhs.simd_into(self.simd));
@@ -2350,7 +2350,7 @@ impl<S: Simd> core::ops::MulAssign<f64> for f64x2<S> {
 }
 impl<S: Simd> core::ops::Mul<f64x2<S>> for f64 {
     type Output = f64x2<S>;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f64x2<S>) -> Self::Output {
         rhs.simd.mul_f64x2(self.simd_into(rhs.simd), rhs)
@@ -2358,14 +2358,14 @@ impl<S: Simd> core::ops::Mul<f64x2<S>> for f64 {
 }
 impl<S: Simd> core::ops::Div for f64x2<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: Self) -> Self::Output {
         self.simd.div_f64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::DivAssign for f64x2<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: Self) {
         *self = self.simd.div_f64x2(*self, rhs);
@@ -2373,14 +2373,14 @@ impl<S: Simd> core::ops::DivAssign for f64x2<S> {
 }
 impl<S: Simd> core::ops::Div<f64> for f64x2<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f64) -> Self::Output {
         self.simd.div_f64x2(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::DivAssign<f64> for f64x2<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: f64) {
         *self = self.simd.div_f64x2(*self, rhs.simd_into(self.simd));
@@ -2388,7 +2388,7 @@ impl<S: Simd> core::ops::DivAssign<f64> for f64x2<S> {
 }
 impl<S: Simd> core::ops::Div<f64x2<S>> for f64 {
     type Output = f64x2<S>;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f64x2<S>) -> Self::Output {
         rhs.simd.div_f64x2(self.simd_into(rhs.simd), rhs)
@@ -2396,14 +2396,14 @@ impl<S: Simd> core::ops::Div<f64x2<S>> for f64 {
 }
 impl<S: Simd> core::ops::BitAnd for mask64x2<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask64x2<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask64x2(*self, rhs);
@@ -2411,14 +2411,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask64x2<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i64> for mask64x2<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i64) -> Self::Output {
         self.simd.and_mask64x2(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i64> for mask64x2<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i64) {
         *self = self.simd.and_mask64x2(*self, rhs.simd_into(self.simd));
@@ -2426,7 +2426,7 @@ impl<S: Simd> core::ops::BitAndAssign<i64> for mask64x2<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask64x2<S>> for i64 {
     type Output = mask64x2<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask64x2<S>) -> Self::Output {
         rhs.simd.and_mask64x2(self.simd_into(rhs.simd), rhs)
@@ -2434,14 +2434,14 @@ impl<S: Simd> core::ops::BitAnd<mask64x2<S>> for i64 {
 }
 impl<S: Simd> core::ops::BitOr for mask64x2<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask64x2<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask64x2(*self, rhs);
@@ -2449,14 +2449,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask64x2<S> {
 }
 impl<S: Simd> core::ops::BitOr<i64> for mask64x2<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i64) -> Self::Output {
         self.simd.or_mask64x2(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i64> for mask64x2<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i64) {
         *self = self.simd.or_mask64x2(*self, rhs.simd_into(self.simd));
@@ -2464,7 +2464,7 @@ impl<S: Simd> core::ops::BitOrAssign<i64> for mask64x2<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask64x2<S>> for i64 {
     type Output = mask64x2<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask64x2<S>) -> Self::Output {
         rhs.simd.or_mask64x2(self.simd_into(rhs.simd), rhs)
@@ -2472,14 +2472,14 @@ impl<S: Simd> core::ops::BitOr<mask64x2<S>> for i64 {
 }
 impl<S: Simd> core::ops::BitXor for mask64x2<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask64x2(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask64x2<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask64x2(*self, rhs);
@@ -2487,14 +2487,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask64x2<S> {
 }
 impl<S: Simd> core::ops::BitXor<i64> for mask64x2<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i64) -> Self::Output {
         self.simd.xor_mask64x2(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i64> for mask64x2<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i64) {
         *self = self.simd.xor_mask64x2(*self, rhs.simd_into(self.simd));
@@ -2502,7 +2502,7 @@ impl<S: Simd> core::ops::BitXorAssign<i64> for mask64x2<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask64x2<S>> for i64 {
     type Output = mask64x2<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask64x2<S>) -> Self::Output {
         rhs.simd.xor_mask64x2(self.simd_into(rhs.simd), rhs)
@@ -2510,7 +2510,7 @@ impl<S: Simd> core::ops::BitXor<mask64x2<S>> for i64 {
 }
 impl<S: Simd> core::ops::Not for mask64x2<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask64x2(self)
@@ -2518,7 +2518,7 @@ impl<S: Simd> core::ops::Not for mask64x2<S> {
 }
 impl<S: Simd> core::ops::Neg for f32x8<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector."]
+    #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_f32x8(self)
@@ -2526,14 +2526,14 @@ impl<S: Simd> core::ops::Neg for f32x8<S> {
 }
 impl<S: Simd> core::ops::Add for f32x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for f32x8<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_f32x8(*self, rhs);
@@ -2541,14 +2541,14 @@ impl<S: Simd> core::ops::AddAssign for f32x8<S> {
 }
 impl<S: Simd> core::ops::Add<f32> for f32x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f32) -> Self::Output {
         self.simd.add_f32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<f32> for f32x8<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: f32) {
         *self = self.simd.add_f32x8(*self, rhs.simd_into(self.simd));
@@ -2556,7 +2556,7 @@ impl<S: Simd> core::ops::AddAssign<f32> for f32x8<S> {
 }
 impl<S: Simd> core::ops::Add<f32x8<S>> for f32 {
     type Output = f32x8<S>;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f32x8<S>) -> Self::Output {
         rhs.simd.add_f32x8(self.simd_into(rhs.simd), rhs)
@@ -2564,14 +2564,14 @@ impl<S: Simd> core::ops::Add<f32x8<S>> for f32 {
 }
 impl<S: Simd> core::ops::Sub for f32x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_f32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for f32x8<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_f32x8(*self, rhs);
@@ -2579,14 +2579,14 @@ impl<S: Simd> core::ops::SubAssign for f32x8<S> {
 }
 impl<S: Simd> core::ops::Sub<f32> for f32x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f32) -> Self::Output {
         self.simd.sub_f32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<f32> for f32x8<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: f32) {
         *self = self.simd.sub_f32x8(*self, rhs.simd_into(self.simd));
@@ -2594,7 +2594,7 @@ impl<S: Simd> core::ops::SubAssign<f32> for f32x8<S> {
 }
 impl<S: Simd> core::ops::Sub<f32x8<S>> for f32 {
     type Output = f32x8<S>;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f32x8<S>) -> Self::Output {
         rhs.simd.sub_f32x8(self.simd_into(rhs.simd), rhs)
@@ -2602,14 +2602,14 @@ impl<S: Simd> core::ops::Sub<f32x8<S>> for f32 {
 }
 impl<S: Simd> core::ops::Mul for f32x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_f32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for f32x8<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_f32x8(*self, rhs);
@@ -2617,14 +2617,14 @@ impl<S: Simd> core::ops::MulAssign for f32x8<S> {
 }
 impl<S: Simd> core::ops::Mul<f32> for f32x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f32) -> Self::Output {
         self.simd.mul_f32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<f32> for f32x8<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: f32) {
         *self = self.simd.mul_f32x8(*self, rhs.simd_into(self.simd));
@@ -2632,7 +2632,7 @@ impl<S: Simd> core::ops::MulAssign<f32> for f32x8<S> {
 }
 impl<S: Simd> core::ops::Mul<f32x8<S>> for f32 {
     type Output = f32x8<S>;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f32x8<S>) -> Self::Output {
         rhs.simd.mul_f32x8(self.simd_into(rhs.simd), rhs)
@@ -2640,14 +2640,14 @@ impl<S: Simd> core::ops::Mul<f32x8<S>> for f32 {
 }
 impl<S: Simd> core::ops::Div for f32x8<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: Self) -> Self::Output {
         self.simd.div_f32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::DivAssign for f32x8<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: Self) {
         *self = self.simd.div_f32x8(*self, rhs);
@@ -2655,14 +2655,14 @@ impl<S: Simd> core::ops::DivAssign for f32x8<S> {
 }
 impl<S: Simd> core::ops::Div<f32> for f32x8<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f32) -> Self::Output {
         self.simd.div_f32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::DivAssign<f32> for f32x8<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: f32) {
         *self = self.simd.div_f32x8(*self, rhs.simd_into(self.simd));
@@ -2670,7 +2670,7 @@ impl<S: Simd> core::ops::DivAssign<f32> for f32x8<S> {
 }
 impl<S: Simd> core::ops::Div<f32x8<S>> for f32 {
     type Output = f32x8<S>;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f32x8<S>) -> Self::Output {
         rhs.simd.div_f32x8(self.simd_into(rhs.simd), rhs)
@@ -2678,7 +2678,7 @@ impl<S: Simd> core::ops::Div<f32x8<S>> for f32 {
 }
 impl<S: Simd> core::ops::Neg for i8x32<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector, wrapping on overflow."]
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_i8x32(self)
@@ -2686,14 +2686,14 @@ impl<S: Simd> core::ops::Neg for i8x32<S> {
 }
 impl<S: Simd> core::ops::Add for i8x32<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for i8x32<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_i8x32(*self, rhs);
@@ -2701,14 +2701,14 @@ impl<S: Simd> core::ops::AddAssign for i8x32<S> {
 }
 impl<S: Simd> core::ops::Add<i8> for i8x32<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i8) -> Self::Output {
         self.simd.add_i8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<i8> for i8x32<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: i8) {
         *self = self.simd.add_i8x32(*self, rhs.simd_into(self.simd));
@@ -2716,7 +2716,7 @@ impl<S: Simd> core::ops::AddAssign<i8> for i8x32<S> {
 }
 impl<S: Simd> core::ops::Add<i8x32<S>> for i8 {
     type Output = i8x32<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i8x32<S>) -> Self::Output {
         rhs.simd.add_i8x32(self.simd_into(rhs.simd), rhs)
@@ -2724,14 +2724,14 @@ impl<S: Simd> core::ops::Add<i8x32<S>> for i8 {
 }
 impl<S: Simd> core::ops::Sub for i8x32<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for i8x32<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_i8x32(*self, rhs);
@@ -2739,14 +2739,14 @@ impl<S: Simd> core::ops::SubAssign for i8x32<S> {
 }
 impl<S: Simd> core::ops::Sub<i8> for i8x32<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i8) -> Self::Output {
         self.simd.sub_i8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<i8> for i8x32<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: i8) {
         *self = self.simd.sub_i8x32(*self, rhs.simd_into(self.simd));
@@ -2754,7 +2754,7 @@ impl<S: Simd> core::ops::SubAssign<i8> for i8x32<S> {
 }
 impl<S: Simd> core::ops::Sub<i8x32<S>> for i8 {
     type Output = i8x32<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i8x32<S>) -> Self::Output {
         rhs.simd.sub_i8x32(self.simd_into(rhs.simd), rhs)
@@ -2762,14 +2762,14 @@ impl<S: Simd> core::ops::Sub<i8x32<S>> for i8 {
 }
 impl<S: Simd> core::ops::Mul for i8x32<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for i8x32<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_i8x32(*self, rhs);
@@ -2777,14 +2777,14 @@ impl<S: Simd> core::ops::MulAssign for i8x32<S> {
 }
 impl<S: Simd> core::ops::Mul<i8> for i8x32<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i8) -> Self::Output {
         self.simd.mul_i8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<i8> for i8x32<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: i8) {
         *self = self.simd.mul_i8x32(*self, rhs.simd_into(self.simd));
@@ -2792,7 +2792,7 @@ impl<S: Simd> core::ops::MulAssign<i8> for i8x32<S> {
 }
 impl<S: Simd> core::ops::Mul<i8x32<S>> for i8 {
     type Output = i8x32<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i8x32<S>) -> Self::Output {
         rhs.simd.mul_i8x32(self.simd_into(rhs.simd), rhs)
@@ -2800,14 +2800,14 @@ impl<S: Simd> core::ops::Mul<i8x32<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitAnd for i8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for i8x32<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_i8x32(*self, rhs);
@@ -2815,14 +2815,14 @@ impl<S: Simd> core::ops::BitAndAssign for i8x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i8> for i8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i8) -> Self::Output {
         self.simd.and_i8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i8> for i8x32<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i8) {
         *self = self.simd.and_i8x32(*self, rhs.simd_into(self.simd));
@@ -2830,7 +2830,7 @@ impl<S: Simd> core::ops::BitAndAssign<i8> for i8x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i8x32<S>> for i8 {
     type Output = i8x32<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i8x32<S>) -> Self::Output {
         rhs.simd.and_i8x32(self.simd_into(rhs.simd), rhs)
@@ -2838,14 +2838,14 @@ impl<S: Simd> core::ops::BitAnd<i8x32<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitOr for i8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for i8x32<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_i8x32(*self, rhs);
@@ -2853,14 +2853,14 @@ impl<S: Simd> core::ops::BitOrAssign for i8x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<i8> for i8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i8) -> Self::Output {
         self.simd.or_i8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i8> for i8x32<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i8) {
         *self = self.simd.or_i8x32(*self, rhs.simd_into(self.simd));
@@ -2868,7 +2868,7 @@ impl<S: Simd> core::ops::BitOrAssign<i8> for i8x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<i8x32<S>> for i8 {
     type Output = i8x32<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i8x32<S>) -> Self::Output {
         rhs.simd.or_i8x32(self.simd_into(rhs.simd), rhs)
@@ -2876,14 +2876,14 @@ impl<S: Simd> core::ops::BitOr<i8x32<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitXor for i8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for i8x32<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_i8x32(*self, rhs);
@@ -2891,14 +2891,14 @@ impl<S: Simd> core::ops::BitXorAssign for i8x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<i8> for i8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i8) -> Self::Output {
         self.simd.xor_i8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i8> for i8x32<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i8) {
         *self = self.simd.xor_i8x32(*self, rhs.simd_into(self.simd));
@@ -2906,7 +2906,7 @@ impl<S: Simd> core::ops::BitXorAssign<i8> for i8x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<i8x32<S>> for i8 {
     type Output = i8x32<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i8x32<S>) -> Self::Output {
         rhs.simd.xor_i8x32(self.simd_into(rhs.simd), rhs)
@@ -2914,7 +2914,7 @@ impl<S: Simd> core::ops::BitXor<i8x32<S>> for i8 {
 }
 impl<S: Simd> core::ops::Not for i8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_i8x32(self)
@@ -2922,7 +2922,7 @@ impl<S: Simd> core::ops::Not for i8x32<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i8x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i8x32(self, rhs)
@@ -2936,7 +2936,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i8x32<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i8x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i8x32(self, rhs)
@@ -2950,14 +2950,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i8x32<S> {
 }
 impl<S: Simd> core::ops::Shr for i8x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i8x32<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i8x32(*self, rhs);
@@ -2965,14 +2965,14 @@ impl<S: Simd> core::ops::ShrAssign for i8x32<S> {
 }
 impl<S: Simd> core::ops::Add for u8x32<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for u8x32<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_u8x32(*self, rhs);
@@ -2980,14 +2980,14 @@ impl<S: Simd> core::ops::AddAssign for u8x32<S> {
 }
 impl<S: Simd> core::ops::Add<u8> for u8x32<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u8) -> Self::Output {
         self.simd.add_u8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<u8> for u8x32<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: u8) {
         *self = self.simd.add_u8x32(*self, rhs.simd_into(self.simd));
@@ -2995,7 +2995,7 @@ impl<S: Simd> core::ops::AddAssign<u8> for u8x32<S> {
 }
 impl<S: Simd> core::ops::Add<u8x32<S>> for u8 {
     type Output = u8x32<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u8x32<S>) -> Self::Output {
         rhs.simd.add_u8x32(self.simd_into(rhs.simd), rhs)
@@ -3003,14 +3003,14 @@ impl<S: Simd> core::ops::Add<u8x32<S>> for u8 {
 }
 impl<S: Simd> core::ops::Sub for u8x32<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for u8x32<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_u8x32(*self, rhs);
@@ -3018,14 +3018,14 @@ impl<S: Simd> core::ops::SubAssign for u8x32<S> {
 }
 impl<S: Simd> core::ops::Sub<u8> for u8x32<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u8) -> Self::Output {
         self.simd.sub_u8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<u8> for u8x32<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u8) {
         *self = self.simd.sub_u8x32(*self, rhs.simd_into(self.simd));
@@ -3033,7 +3033,7 @@ impl<S: Simd> core::ops::SubAssign<u8> for u8x32<S> {
 }
 impl<S: Simd> core::ops::Sub<u8x32<S>> for u8 {
     type Output = u8x32<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u8x32<S>) -> Self::Output {
         rhs.simd.sub_u8x32(self.simd_into(rhs.simd), rhs)
@@ -3041,14 +3041,14 @@ impl<S: Simd> core::ops::Sub<u8x32<S>> for u8 {
 }
 impl<S: Simd> core::ops::Mul for u8x32<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for u8x32<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_u8x32(*self, rhs);
@@ -3056,14 +3056,14 @@ impl<S: Simd> core::ops::MulAssign for u8x32<S> {
 }
 impl<S: Simd> core::ops::Mul<u8> for u8x32<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u8) -> Self::Output {
         self.simd.mul_u8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<u8> for u8x32<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: u8) {
         *self = self.simd.mul_u8x32(*self, rhs.simd_into(self.simd));
@@ -3071,7 +3071,7 @@ impl<S: Simd> core::ops::MulAssign<u8> for u8x32<S> {
 }
 impl<S: Simd> core::ops::Mul<u8x32<S>> for u8 {
     type Output = u8x32<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u8x32<S>) -> Self::Output {
         rhs.simd.mul_u8x32(self.simd_into(rhs.simd), rhs)
@@ -3079,14 +3079,14 @@ impl<S: Simd> core::ops::Mul<u8x32<S>> for u8 {
 }
 impl<S: Simd> core::ops::BitAnd for u8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for u8x32<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_u8x32(*self, rhs);
@@ -3094,14 +3094,14 @@ impl<S: Simd> core::ops::BitAndAssign for u8x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u8> for u8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u8) -> Self::Output {
         self.simd.and_u8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<u8> for u8x32<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: u8) {
         *self = self.simd.and_u8x32(*self, rhs.simd_into(self.simd));
@@ -3109,7 +3109,7 @@ impl<S: Simd> core::ops::BitAndAssign<u8> for u8x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u8x32<S>> for u8 {
     type Output = u8x32<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u8x32<S>) -> Self::Output {
         rhs.simd.and_u8x32(self.simd_into(rhs.simd), rhs)
@@ -3117,14 +3117,14 @@ impl<S: Simd> core::ops::BitAnd<u8x32<S>> for u8 {
 }
 impl<S: Simd> core::ops::BitOr for u8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for u8x32<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_u8x32(*self, rhs);
@@ -3132,14 +3132,14 @@ impl<S: Simd> core::ops::BitOrAssign for u8x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<u8> for u8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u8) -> Self::Output {
         self.simd.or_u8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<u8> for u8x32<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: u8) {
         *self = self.simd.or_u8x32(*self, rhs.simd_into(self.simd));
@@ -3147,7 +3147,7 @@ impl<S: Simd> core::ops::BitOrAssign<u8> for u8x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<u8x32<S>> for u8 {
     type Output = u8x32<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u8x32<S>) -> Self::Output {
         rhs.simd.or_u8x32(self.simd_into(rhs.simd), rhs)
@@ -3155,14 +3155,14 @@ impl<S: Simd> core::ops::BitOr<u8x32<S>> for u8 {
 }
 impl<S: Simd> core::ops::BitXor for u8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for u8x32<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_u8x32(*self, rhs);
@@ -3170,14 +3170,14 @@ impl<S: Simd> core::ops::BitXorAssign for u8x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<u8> for u8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u8) -> Self::Output {
         self.simd.xor_u8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<u8> for u8x32<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: u8) {
         *self = self.simd.xor_u8x32(*self, rhs.simd_into(self.simd));
@@ -3185,7 +3185,7 @@ impl<S: Simd> core::ops::BitXorAssign<u8> for u8x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<u8x32<S>> for u8 {
     type Output = u8x32<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u8x32<S>) -> Self::Output {
         rhs.simd.xor_u8x32(self.simd_into(rhs.simd), rhs)
@@ -3193,7 +3193,7 @@ impl<S: Simd> core::ops::BitXor<u8x32<S>> for u8 {
 }
 impl<S: Simd> core::ops::Not for u8x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_u8x32(self)
@@ -3201,7 +3201,7 @@ impl<S: Simd> core::ops::Not for u8x32<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u8x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u8x32(self, rhs)
@@ -3215,7 +3215,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u8x32<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u8x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u8x32(self, rhs)
@@ -3229,14 +3229,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u8x32<S> {
 }
 impl<S: Simd> core::ops::Shr for u8x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u8x32<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u8x32(*self, rhs);
@@ -3244,14 +3244,14 @@ impl<S: Simd> core::ops::ShrAssign for u8x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd for mask8x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask8x32<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask8x32(*self, rhs);
@@ -3259,14 +3259,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask8x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i8> for mask8x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i8) -> Self::Output {
         self.simd.and_mask8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i8> for mask8x32<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i8) {
         *self = self.simd.and_mask8x32(*self, rhs.simd_into(self.simd));
@@ -3274,7 +3274,7 @@ impl<S: Simd> core::ops::BitAndAssign<i8> for mask8x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask8x32<S>> for i8 {
     type Output = mask8x32<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask8x32<S>) -> Self::Output {
         rhs.simd.and_mask8x32(self.simd_into(rhs.simd), rhs)
@@ -3282,14 +3282,14 @@ impl<S: Simd> core::ops::BitAnd<mask8x32<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitOr for mask8x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask8x32<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask8x32(*self, rhs);
@@ -3297,14 +3297,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask8x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<i8> for mask8x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i8) -> Self::Output {
         self.simd.or_mask8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i8> for mask8x32<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i8) {
         *self = self.simd.or_mask8x32(*self, rhs.simd_into(self.simd));
@@ -3312,7 +3312,7 @@ impl<S: Simd> core::ops::BitOrAssign<i8> for mask8x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask8x32<S>> for i8 {
     type Output = mask8x32<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask8x32<S>) -> Self::Output {
         rhs.simd.or_mask8x32(self.simd_into(rhs.simd), rhs)
@@ -3320,14 +3320,14 @@ impl<S: Simd> core::ops::BitOr<mask8x32<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitXor for mask8x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask8x32<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask8x32(*self, rhs);
@@ -3335,14 +3335,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask8x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<i8> for mask8x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i8) -> Self::Output {
         self.simd.xor_mask8x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i8> for mask8x32<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i8) {
         *self = self.simd.xor_mask8x32(*self, rhs.simd_into(self.simd));
@@ -3350,7 +3350,7 @@ impl<S: Simd> core::ops::BitXorAssign<i8> for mask8x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask8x32<S>> for i8 {
     type Output = mask8x32<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask8x32<S>) -> Self::Output {
         rhs.simd.xor_mask8x32(self.simd_into(rhs.simd), rhs)
@@ -3358,7 +3358,7 @@ impl<S: Simd> core::ops::BitXor<mask8x32<S>> for i8 {
 }
 impl<S: Simd> core::ops::Not for mask8x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask8x32(self)
@@ -3366,7 +3366,7 @@ impl<S: Simd> core::ops::Not for mask8x32<S> {
 }
 impl<S: Simd> core::ops::Neg for i16x16<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector, wrapping on overflow."]
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_i16x16(self)
@@ -3374,14 +3374,14 @@ impl<S: Simd> core::ops::Neg for i16x16<S> {
 }
 impl<S: Simd> core::ops::Add for i16x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for i16x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_i16x16(*self, rhs);
@@ -3389,14 +3389,14 @@ impl<S: Simd> core::ops::AddAssign for i16x16<S> {
 }
 impl<S: Simd> core::ops::Add<i16> for i16x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i16) -> Self::Output {
         self.simd.add_i16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<i16> for i16x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: i16) {
         *self = self.simd.add_i16x16(*self, rhs.simd_into(self.simd));
@@ -3404,7 +3404,7 @@ impl<S: Simd> core::ops::AddAssign<i16> for i16x16<S> {
 }
 impl<S: Simd> core::ops::Add<i16x16<S>> for i16 {
     type Output = i16x16<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i16x16<S>) -> Self::Output {
         rhs.simd.add_i16x16(self.simd_into(rhs.simd), rhs)
@@ -3412,14 +3412,14 @@ impl<S: Simd> core::ops::Add<i16x16<S>> for i16 {
 }
 impl<S: Simd> core::ops::Sub for i16x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for i16x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_i16x16(*self, rhs);
@@ -3427,14 +3427,14 @@ impl<S: Simd> core::ops::SubAssign for i16x16<S> {
 }
 impl<S: Simd> core::ops::Sub<i16> for i16x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i16) -> Self::Output {
         self.simd.sub_i16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<i16> for i16x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: i16) {
         *self = self.simd.sub_i16x16(*self, rhs.simd_into(self.simd));
@@ -3442,7 +3442,7 @@ impl<S: Simd> core::ops::SubAssign<i16> for i16x16<S> {
 }
 impl<S: Simd> core::ops::Sub<i16x16<S>> for i16 {
     type Output = i16x16<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i16x16<S>) -> Self::Output {
         rhs.simd.sub_i16x16(self.simd_into(rhs.simd), rhs)
@@ -3450,14 +3450,14 @@ impl<S: Simd> core::ops::Sub<i16x16<S>> for i16 {
 }
 impl<S: Simd> core::ops::Mul for i16x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for i16x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_i16x16(*self, rhs);
@@ -3465,14 +3465,14 @@ impl<S: Simd> core::ops::MulAssign for i16x16<S> {
 }
 impl<S: Simd> core::ops::Mul<i16> for i16x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i16) -> Self::Output {
         self.simd.mul_i16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<i16> for i16x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: i16) {
         *self = self.simd.mul_i16x16(*self, rhs.simd_into(self.simd));
@@ -3480,7 +3480,7 @@ impl<S: Simd> core::ops::MulAssign<i16> for i16x16<S> {
 }
 impl<S: Simd> core::ops::Mul<i16x16<S>> for i16 {
     type Output = i16x16<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i16x16<S>) -> Self::Output {
         rhs.simd.mul_i16x16(self.simd_into(rhs.simd), rhs)
@@ -3488,14 +3488,14 @@ impl<S: Simd> core::ops::Mul<i16x16<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitAnd for i16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for i16x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_i16x16(*self, rhs);
@@ -3503,14 +3503,14 @@ impl<S: Simd> core::ops::BitAndAssign for i16x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i16> for i16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i16) -> Self::Output {
         self.simd.and_i16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i16> for i16x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i16) {
         *self = self.simd.and_i16x16(*self, rhs.simd_into(self.simd));
@@ -3518,7 +3518,7 @@ impl<S: Simd> core::ops::BitAndAssign<i16> for i16x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i16x16<S>> for i16 {
     type Output = i16x16<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i16x16<S>) -> Self::Output {
         rhs.simd.and_i16x16(self.simd_into(rhs.simd), rhs)
@@ -3526,14 +3526,14 @@ impl<S: Simd> core::ops::BitAnd<i16x16<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitOr for i16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for i16x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_i16x16(*self, rhs);
@@ -3541,14 +3541,14 @@ impl<S: Simd> core::ops::BitOrAssign for i16x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<i16> for i16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i16) -> Self::Output {
         self.simd.or_i16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i16> for i16x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i16) {
         *self = self.simd.or_i16x16(*self, rhs.simd_into(self.simd));
@@ -3556,7 +3556,7 @@ impl<S: Simd> core::ops::BitOrAssign<i16> for i16x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<i16x16<S>> for i16 {
     type Output = i16x16<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i16x16<S>) -> Self::Output {
         rhs.simd.or_i16x16(self.simd_into(rhs.simd), rhs)
@@ -3564,14 +3564,14 @@ impl<S: Simd> core::ops::BitOr<i16x16<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitXor for i16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for i16x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_i16x16(*self, rhs);
@@ -3579,14 +3579,14 @@ impl<S: Simd> core::ops::BitXorAssign for i16x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<i16> for i16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i16) -> Self::Output {
         self.simd.xor_i16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i16> for i16x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i16) {
         *self = self.simd.xor_i16x16(*self, rhs.simd_into(self.simd));
@@ -3594,7 +3594,7 @@ impl<S: Simd> core::ops::BitXorAssign<i16> for i16x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<i16x16<S>> for i16 {
     type Output = i16x16<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i16x16<S>) -> Self::Output {
         rhs.simd.xor_i16x16(self.simd_into(rhs.simd), rhs)
@@ -3602,7 +3602,7 @@ impl<S: Simd> core::ops::BitXor<i16x16<S>> for i16 {
 }
 impl<S: Simd> core::ops::Not for i16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_i16x16(self)
@@ -3610,7 +3610,7 @@ impl<S: Simd> core::ops::Not for i16x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i16x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i16x16(self, rhs)
@@ -3624,7 +3624,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i16x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i16x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i16x16(self, rhs)
@@ -3638,14 +3638,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i16x16<S> {
 }
 impl<S: Simd> core::ops::Shr for i16x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i16x16<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i16x16(*self, rhs);
@@ -3653,14 +3653,14 @@ impl<S: Simd> core::ops::ShrAssign for i16x16<S> {
 }
 impl<S: Simd> core::ops::Add for u16x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for u16x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_u16x16(*self, rhs);
@@ -3668,14 +3668,14 @@ impl<S: Simd> core::ops::AddAssign for u16x16<S> {
 }
 impl<S: Simd> core::ops::Add<u16> for u16x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u16) -> Self::Output {
         self.simd.add_u16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<u16> for u16x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: u16) {
         *self = self.simd.add_u16x16(*self, rhs.simd_into(self.simd));
@@ -3683,7 +3683,7 @@ impl<S: Simd> core::ops::AddAssign<u16> for u16x16<S> {
 }
 impl<S: Simd> core::ops::Add<u16x16<S>> for u16 {
     type Output = u16x16<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u16x16<S>) -> Self::Output {
         rhs.simd.add_u16x16(self.simd_into(rhs.simd), rhs)
@@ -3691,14 +3691,14 @@ impl<S: Simd> core::ops::Add<u16x16<S>> for u16 {
 }
 impl<S: Simd> core::ops::Sub for u16x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for u16x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_u16x16(*self, rhs);
@@ -3706,14 +3706,14 @@ impl<S: Simd> core::ops::SubAssign for u16x16<S> {
 }
 impl<S: Simd> core::ops::Sub<u16> for u16x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u16) -> Self::Output {
         self.simd.sub_u16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<u16> for u16x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u16) {
         *self = self.simd.sub_u16x16(*self, rhs.simd_into(self.simd));
@@ -3721,7 +3721,7 @@ impl<S: Simd> core::ops::SubAssign<u16> for u16x16<S> {
 }
 impl<S: Simd> core::ops::Sub<u16x16<S>> for u16 {
     type Output = u16x16<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u16x16<S>) -> Self::Output {
         rhs.simd.sub_u16x16(self.simd_into(rhs.simd), rhs)
@@ -3729,14 +3729,14 @@ impl<S: Simd> core::ops::Sub<u16x16<S>> for u16 {
 }
 impl<S: Simd> core::ops::Mul for u16x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for u16x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_u16x16(*self, rhs);
@@ -3744,14 +3744,14 @@ impl<S: Simd> core::ops::MulAssign for u16x16<S> {
 }
 impl<S: Simd> core::ops::Mul<u16> for u16x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u16) -> Self::Output {
         self.simd.mul_u16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<u16> for u16x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: u16) {
         *self = self.simd.mul_u16x16(*self, rhs.simd_into(self.simd));
@@ -3759,7 +3759,7 @@ impl<S: Simd> core::ops::MulAssign<u16> for u16x16<S> {
 }
 impl<S: Simd> core::ops::Mul<u16x16<S>> for u16 {
     type Output = u16x16<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u16x16<S>) -> Self::Output {
         rhs.simd.mul_u16x16(self.simd_into(rhs.simd), rhs)
@@ -3767,14 +3767,14 @@ impl<S: Simd> core::ops::Mul<u16x16<S>> for u16 {
 }
 impl<S: Simd> core::ops::BitAnd for u16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for u16x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_u16x16(*self, rhs);
@@ -3782,14 +3782,14 @@ impl<S: Simd> core::ops::BitAndAssign for u16x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u16> for u16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u16) -> Self::Output {
         self.simd.and_u16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<u16> for u16x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: u16) {
         *self = self.simd.and_u16x16(*self, rhs.simd_into(self.simd));
@@ -3797,7 +3797,7 @@ impl<S: Simd> core::ops::BitAndAssign<u16> for u16x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u16x16<S>> for u16 {
     type Output = u16x16<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u16x16<S>) -> Self::Output {
         rhs.simd.and_u16x16(self.simd_into(rhs.simd), rhs)
@@ -3805,14 +3805,14 @@ impl<S: Simd> core::ops::BitAnd<u16x16<S>> for u16 {
 }
 impl<S: Simd> core::ops::BitOr for u16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for u16x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_u16x16(*self, rhs);
@@ -3820,14 +3820,14 @@ impl<S: Simd> core::ops::BitOrAssign for u16x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<u16> for u16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u16) -> Self::Output {
         self.simd.or_u16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<u16> for u16x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: u16) {
         *self = self.simd.or_u16x16(*self, rhs.simd_into(self.simd));
@@ -3835,7 +3835,7 @@ impl<S: Simd> core::ops::BitOrAssign<u16> for u16x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<u16x16<S>> for u16 {
     type Output = u16x16<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u16x16<S>) -> Self::Output {
         rhs.simd.or_u16x16(self.simd_into(rhs.simd), rhs)
@@ -3843,14 +3843,14 @@ impl<S: Simd> core::ops::BitOr<u16x16<S>> for u16 {
 }
 impl<S: Simd> core::ops::BitXor for u16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for u16x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_u16x16(*self, rhs);
@@ -3858,14 +3858,14 @@ impl<S: Simd> core::ops::BitXorAssign for u16x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<u16> for u16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u16) -> Self::Output {
         self.simd.xor_u16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<u16> for u16x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: u16) {
         *self = self.simd.xor_u16x16(*self, rhs.simd_into(self.simd));
@@ -3873,7 +3873,7 @@ impl<S: Simd> core::ops::BitXorAssign<u16> for u16x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<u16x16<S>> for u16 {
     type Output = u16x16<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u16x16<S>) -> Self::Output {
         rhs.simd.xor_u16x16(self.simd_into(rhs.simd), rhs)
@@ -3881,7 +3881,7 @@ impl<S: Simd> core::ops::BitXor<u16x16<S>> for u16 {
 }
 impl<S: Simd> core::ops::Not for u16x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_u16x16(self)
@@ -3889,7 +3889,7 @@ impl<S: Simd> core::ops::Not for u16x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u16x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u16x16(self, rhs)
@@ -3903,7 +3903,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u16x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u16x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u16x16(self, rhs)
@@ -3917,14 +3917,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u16x16<S> {
 }
 impl<S: Simd> core::ops::Shr for u16x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u16x16<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u16x16(*self, rhs);
@@ -3932,14 +3932,14 @@ impl<S: Simd> core::ops::ShrAssign for u16x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd for mask16x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask16x16<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask16x16(*self, rhs);
@@ -3947,14 +3947,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask16x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i16> for mask16x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i16) -> Self::Output {
         self.simd.and_mask16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i16> for mask16x16<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i16) {
         *self = self.simd.and_mask16x16(*self, rhs.simd_into(self.simd));
@@ -3962,7 +3962,7 @@ impl<S: Simd> core::ops::BitAndAssign<i16> for mask16x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask16x16<S>> for i16 {
     type Output = mask16x16<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask16x16<S>) -> Self::Output {
         rhs.simd.and_mask16x16(self.simd_into(rhs.simd), rhs)
@@ -3970,14 +3970,14 @@ impl<S: Simd> core::ops::BitAnd<mask16x16<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitOr for mask16x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask16x16<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask16x16(*self, rhs);
@@ -3985,14 +3985,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask16x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<i16> for mask16x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i16) -> Self::Output {
         self.simd.or_mask16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i16> for mask16x16<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i16) {
         *self = self.simd.or_mask16x16(*self, rhs.simd_into(self.simd));
@@ -4000,7 +4000,7 @@ impl<S: Simd> core::ops::BitOrAssign<i16> for mask16x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask16x16<S>> for i16 {
     type Output = mask16x16<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask16x16<S>) -> Self::Output {
         rhs.simd.or_mask16x16(self.simd_into(rhs.simd), rhs)
@@ -4008,14 +4008,14 @@ impl<S: Simd> core::ops::BitOr<mask16x16<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitXor for mask16x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask16x16<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask16x16(*self, rhs);
@@ -4023,14 +4023,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask16x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<i16> for mask16x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i16) -> Self::Output {
         self.simd.xor_mask16x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i16> for mask16x16<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i16) {
         *self = self.simd.xor_mask16x16(*self, rhs.simd_into(self.simd));
@@ -4038,7 +4038,7 @@ impl<S: Simd> core::ops::BitXorAssign<i16> for mask16x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask16x16<S>> for i16 {
     type Output = mask16x16<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask16x16<S>) -> Self::Output {
         rhs.simd.xor_mask16x16(self.simd_into(rhs.simd), rhs)
@@ -4046,7 +4046,7 @@ impl<S: Simd> core::ops::BitXor<mask16x16<S>> for i16 {
 }
 impl<S: Simd> core::ops::Not for mask16x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask16x16(self)
@@ -4054,7 +4054,7 @@ impl<S: Simd> core::ops::Not for mask16x16<S> {
 }
 impl<S: Simd> core::ops::Neg for i32x8<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector, wrapping on overflow."]
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_i32x8(self)
@@ -4062,14 +4062,14 @@ impl<S: Simd> core::ops::Neg for i32x8<S> {
 }
 impl<S: Simd> core::ops::Add for i32x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for i32x8<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_i32x8(*self, rhs);
@@ -4077,14 +4077,14 @@ impl<S: Simd> core::ops::AddAssign for i32x8<S> {
 }
 impl<S: Simd> core::ops::Add<i32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i32) -> Self::Output {
         self.simd.add_i32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<i32> for i32x8<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: i32) {
         *self = self.simd.add_i32x8(*self, rhs.simd_into(self.simd));
@@ -4092,7 +4092,7 @@ impl<S: Simd> core::ops::AddAssign<i32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::Add<i32x8<S>> for i32 {
     type Output = i32x8<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i32x8<S>) -> Self::Output {
         rhs.simd.add_i32x8(self.simd_into(rhs.simd), rhs)
@@ -4100,14 +4100,14 @@ impl<S: Simd> core::ops::Add<i32x8<S>> for i32 {
 }
 impl<S: Simd> core::ops::Sub for i32x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for i32x8<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_i32x8(*self, rhs);
@@ -4115,14 +4115,14 @@ impl<S: Simd> core::ops::SubAssign for i32x8<S> {
 }
 impl<S: Simd> core::ops::Sub<i32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i32) -> Self::Output {
         self.simd.sub_i32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<i32> for i32x8<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: i32) {
         *self = self.simd.sub_i32x8(*self, rhs.simd_into(self.simd));
@@ -4130,7 +4130,7 @@ impl<S: Simd> core::ops::SubAssign<i32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::Sub<i32x8<S>> for i32 {
     type Output = i32x8<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i32x8<S>) -> Self::Output {
         rhs.simd.sub_i32x8(self.simd_into(rhs.simd), rhs)
@@ -4138,14 +4138,14 @@ impl<S: Simd> core::ops::Sub<i32x8<S>> for i32 {
 }
 impl<S: Simd> core::ops::Mul for i32x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for i32x8<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_i32x8(*self, rhs);
@@ -4153,14 +4153,14 @@ impl<S: Simd> core::ops::MulAssign for i32x8<S> {
 }
 impl<S: Simd> core::ops::Mul<i32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i32) -> Self::Output {
         self.simd.mul_i32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<i32> for i32x8<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: i32) {
         *self = self.simd.mul_i32x8(*self, rhs.simd_into(self.simd));
@@ -4168,7 +4168,7 @@ impl<S: Simd> core::ops::MulAssign<i32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::Mul<i32x8<S>> for i32 {
     type Output = i32x8<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i32x8<S>) -> Self::Output {
         rhs.simd.mul_i32x8(self.simd_into(rhs.simd), rhs)
@@ -4176,14 +4176,14 @@ impl<S: Simd> core::ops::Mul<i32x8<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitAnd for i32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for i32x8<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_i32x8(*self, rhs);
@@ -4191,14 +4191,14 @@ impl<S: Simd> core::ops::BitAndAssign for i32x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i32) -> Self::Output {
         self.simd.and_i32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i32> for i32x8<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i32) {
         *self = self.simd.and_i32x8(*self, rhs.simd_into(self.simd));
@@ -4206,7 +4206,7 @@ impl<S: Simd> core::ops::BitAndAssign<i32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i32x8<S>> for i32 {
     type Output = i32x8<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i32x8<S>) -> Self::Output {
         rhs.simd.and_i32x8(self.simd_into(rhs.simd), rhs)
@@ -4214,14 +4214,14 @@ impl<S: Simd> core::ops::BitAnd<i32x8<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitOr for i32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for i32x8<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_i32x8(*self, rhs);
@@ -4229,14 +4229,14 @@ impl<S: Simd> core::ops::BitOrAssign for i32x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<i32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i32) -> Self::Output {
         self.simd.or_i32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i32> for i32x8<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i32) {
         *self = self.simd.or_i32x8(*self, rhs.simd_into(self.simd));
@@ -4244,7 +4244,7 @@ impl<S: Simd> core::ops::BitOrAssign<i32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<i32x8<S>> for i32 {
     type Output = i32x8<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i32x8<S>) -> Self::Output {
         rhs.simd.or_i32x8(self.simd_into(rhs.simd), rhs)
@@ -4252,14 +4252,14 @@ impl<S: Simd> core::ops::BitOr<i32x8<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitXor for i32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for i32x8<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_i32x8(*self, rhs);
@@ -4267,14 +4267,14 @@ impl<S: Simd> core::ops::BitXorAssign for i32x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<i32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i32) -> Self::Output {
         self.simd.xor_i32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i32> for i32x8<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i32) {
         *self = self.simd.xor_i32x8(*self, rhs.simd_into(self.simd));
@@ -4282,7 +4282,7 @@ impl<S: Simd> core::ops::BitXorAssign<i32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<i32x8<S>> for i32 {
     type Output = i32x8<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i32x8<S>) -> Self::Output {
         rhs.simd.xor_i32x8(self.simd_into(rhs.simd), rhs)
@@ -4290,7 +4290,7 @@ impl<S: Simd> core::ops::BitXor<i32x8<S>> for i32 {
 }
 impl<S: Simd> core::ops::Not for i32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_i32x8(self)
@@ -4298,7 +4298,7 @@ impl<S: Simd> core::ops::Not for i32x8<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i32x8(self, rhs)
@@ -4312,7 +4312,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i32x8(self, rhs)
@@ -4326,14 +4326,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::Shr for i32x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i32x8<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i32x8(*self, rhs);
@@ -4341,14 +4341,14 @@ impl<S: Simd> core::ops::ShrAssign for i32x8<S> {
 }
 impl<S: Simd> core::ops::Add for u32x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for u32x8<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_u32x8(*self, rhs);
@@ -4356,14 +4356,14 @@ impl<S: Simd> core::ops::AddAssign for u32x8<S> {
 }
 impl<S: Simd> core::ops::Add<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u32) -> Self::Output {
         self.simd.add_u32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<u32> for u32x8<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: u32) {
         *self = self.simd.add_u32x8(*self, rhs.simd_into(self.simd));
@@ -4371,7 +4371,7 @@ impl<S: Simd> core::ops::AddAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::Add<u32x8<S>> for u32 {
     type Output = u32x8<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u32x8<S>) -> Self::Output {
         rhs.simd.add_u32x8(self.simd_into(rhs.simd), rhs)
@@ -4379,14 +4379,14 @@ impl<S: Simd> core::ops::Add<u32x8<S>> for u32 {
 }
 impl<S: Simd> core::ops::Sub for u32x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for u32x8<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_u32x8(*self, rhs);
@@ -4394,14 +4394,14 @@ impl<S: Simd> core::ops::SubAssign for u32x8<S> {
 }
 impl<S: Simd> core::ops::Sub<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u32) -> Self::Output {
         self.simd.sub_u32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<u32> for u32x8<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u32) {
         *self = self.simd.sub_u32x8(*self, rhs.simd_into(self.simd));
@@ -4409,7 +4409,7 @@ impl<S: Simd> core::ops::SubAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::Sub<u32x8<S>> for u32 {
     type Output = u32x8<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u32x8<S>) -> Self::Output {
         rhs.simd.sub_u32x8(self.simd_into(rhs.simd), rhs)
@@ -4417,14 +4417,14 @@ impl<S: Simd> core::ops::Sub<u32x8<S>> for u32 {
 }
 impl<S: Simd> core::ops::Mul for u32x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for u32x8<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_u32x8(*self, rhs);
@@ -4432,14 +4432,14 @@ impl<S: Simd> core::ops::MulAssign for u32x8<S> {
 }
 impl<S: Simd> core::ops::Mul<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u32) -> Self::Output {
         self.simd.mul_u32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<u32> for u32x8<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: u32) {
         *self = self.simd.mul_u32x8(*self, rhs.simd_into(self.simd));
@@ -4447,7 +4447,7 @@ impl<S: Simd> core::ops::MulAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::Mul<u32x8<S>> for u32 {
     type Output = u32x8<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u32x8<S>) -> Self::Output {
         rhs.simd.mul_u32x8(self.simd_into(rhs.simd), rhs)
@@ -4455,14 +4455,14 @@ impl<S: Simd> core::ops::Mul<u32x8<S>> for u32 {
 }
 impl<S: Simd> core::ops::BitAnd for u32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for u32x8<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_u32x8(*self, rhs);
@@ -4470,14 +4470,14 @@ impl<S: Simd> core::ops::BitAndAssign for u32x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u32) -> Self::Output {
         self.simd.and_u32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<u32> for u32x8<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: u32) {
         *self = self.simd.and_u32x8(*self, rhs.simd_into(self.simd));
@@ -4485,7 +4485,7 @@ impl<S: Simd> core::ops::BitAndAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u32x8<S>> for u32 {
     type Output = u32x8<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u32x8<S>) -> Self::Output {
         rhs.simd.and_u32x8(self.simd_into(rhs.simd), rhs)
@@ -4493,14 +4493,14 @@ impl<S: Simd> core::ops::BitAnd<u32x8<S>> for u32 {
 }
 impl<S: Simd> core::ops::BitOr for u32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for u32x8<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_u32x8(*self, rhs);
@@ -4508,14 +4508,14 @@ impl<S: Simd> core::ops::BitOrAssign for u32x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u32) -> Self::Output {
         self.simd.or_u32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<u32> for u32x8<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: u32) {
         *self = self.simd.or_u32x8(*self, rhs.simd_into(self.simd));
@@ -4523,7 +4523,7 @@ impl<S: Simd> core::ops::BitOrAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<u32x8<S>> for u32 {
     type Output = u32x8<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u32x8<S>) -> Self::Output {
         rhs.simd.or_u32x8(self.simd_into(rhs.simd), rhs)
@@ -4531,14 +4531,14 @@ impl<S: Simd> core::ops::BitOr<u32x8<S>> for u32 {
 }
 impl<S: Simd> core::ops::BitXor for u32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for u32x8<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_u32x8(*self, rhs);
@@ -4546,14 +4546,14 @@ impl<S: Simd> core::ops::BitXorAssign for u32x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u32) -> Self::Output {
         self.simd.xor_u32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<u32> for u32x8<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: u32) {
         *self = self.simd.xor_u32x8(*self, rhs.simd_into(self.simd));
@@ -4561,7 +4561,7 @@ impl<S: Simd> core::ops::BitXorAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<u32x8<S>> for u32 {
     type Output = u32x8<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u32x8<S>) -> Self::Output {
         rhs.simd.xor_u32x8(self.simd_into(rhs.simd), rhs)
@@ -4569,7 +4569,7 @@ impl<S: Simd> core::ops::BitXor<u32x8<S>> for u32 {
 }
 impl<S: Simd> core::ops::Not for u32x8<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_u32x8(self)
@@ -4577,7 +4577,7 @@ impl<S: Simd> core::ops::Not for u32x8<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u32x8(self, rhs)
@@ -4591,7 +4591,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u32x8(self, rhs)
@@ -4605,14 +4605,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::Shr for u32x8<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u32x8<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u32x8(*self, rhs);
@@ -4620,14 +4620,14 @@ impl<S: Simd> core::ops::ShrAssign for u32x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd for mask32x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask32x8<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask32x8(*self, rhs);
@@ -4635,14 +4635,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask32x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i32> for mask32x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i32) -> Self::Output {
         self.simd.and_mask32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i32> for mask32x8<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i32) {
         *self = self.simd.and_mask32x8(*self, rhs.simd_into(self.simd));
@@ -4650,7 +4650,7 @@ impl<S: Simd> core::ops::BitAndAssign<i32> for mask32x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask32x8<S>> for i32 {
     type Output = mask32x8<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask32x8<S>) -> Self::Output {
         rhs.simd.and_mask32x8(self.simd_into(rhs.simd), rhs)
@@ -4658,14 +4658,14 @@ impl<S: Simd> core::ops::BitAnd<mask32x8<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitOr for mask32x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask32x8<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask32x8(*self, rhs);
@@ -4673,14 +4673,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask32x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<i32> for mask32x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i32) -> Self::Output {
         self.simd.or_mask32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i32> for mask32x8<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i32) {
         *self = self.simd.or_mask32x8(*self, rhs.simd_into(self.simd));
@@ -4688,7 +4688,7 @@ impl<S: Simd> core::ops::BitOrAssign<i32> for mask32x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask32x8<S>> for i32 {
     type Output = mask32x8<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask32x8<S>) -> Self::Output {
         rhs.simd.or_mask32x8(self.simd_into(rhs.simd), rhs)
@@ -4696,14 +4696,14 @@ impl<S: Simd> core::ops::BitOr<mask32x8<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitXor for mask32x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask32x8<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask32x8(*self, rhs);
@@ -4711,14 +4711,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask32x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<i32> for mask32x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i32) -> Self::Output {
         self.simd.xor_mask32x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i32> for mask32x8<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i32) {
         *self = self.simd.xor_mask32x8(*self, rhs.simd_into(self.simd));
@@ -4726,7 +4726,7 @@ impl<S: Simd> core::ops::BitXorAssign<i32> for mask32x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask32x8<S>> for i32 {
     type Output = mask32x8<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask32x8<S>) -> Self::Output {
         rhs.simd.xor_mask32x8(self.simd_into(rhs.simd), rhs)
@@ -4734,7 +4734,7 @@ impl<S: Simd> core::ops::BitXor<mask32x8<S>> for i32 {
 }
 impl<S: Simd> core::ops::Not for mask32x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask32x8(self)
@@ -4742,7 +4742,7 @@ impl<S: Simd> core::ops::Not for mask32x8<S> {
 }
 impl<S: Simd> core::ops::Neg for f64x4<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector."]
+    #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_f64x4(self)
@@ -4750,14 +4750,14 @@ impl<S: Simd> core::ops::Neg for f64x4<S> {
 }
 impl<S: Simd> core::ops::Add for f64x4<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for f64x4<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_f64x4(*self, rhs);
@@ -4765,14 +4765,14 @@ impl<S: Simd> core::ops::AddAssign for f64x4<S> {
 }
 impl<S: Simd> core::ops::Add<f64> for f64x4<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f64) -> Self::Output {
         self.simd.add_f64x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<f64> for f64x4<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: f64) {
         *self = self.simd.add_f64x4(*self, rhs.simd_into(self.simd));
@@ -4780,7 +4780,7 @@ impl<S: Simd> core::ops::AddAssign<f64> for f64x4<S> {
 }
 impl<S: Simd> core::ops::Add<f64x4<S>> for f64 {
     type Output = f64x4<S>;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f64x4<S>) -> Self::Output {
         rhs.simd.add_f64x4(self.simd_into(rhs.simd), rhs)
@@ -4788,14 +4788,14 @@ impl<S: Simd> core::ops::Add<f64x4<S>> for f64 {
 }
 impl<S: Simd> core::ops::Sub for f64x4<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_f64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for f64x4<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_f64x4(*self, rhs);
@@ -4803,14 +4803,14 @@ impl<S: Simd> core::ops::SubAssign for f64x4<S> {
 }
 impl<S: Simd> core::ops::Sub<f64> for f64x4<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f64) -> Self::Output {
         self.simd.sub_f64x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<f64> for f64x4<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: f64) {
         *self = self.simd.sub_f64x4(*self, rhs.simd_into(self.simd));
@@ -4818,7 +4818,7 @@ impl<S: Simd> core::ops::SubAssign<f64> for f64x4<S> {
 }
 impl<S: Simd> core::ops::Sub<f64x4<S>> for f64 {
     type Output = f64x4<S>;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f64x4<S>) -> Self::Output {
         rhs.simd.sub_f64x4(self.simd_into(rhs.simd), rhs)
@@ -4826,14 +4826,14 @@ impl<S: Simd> core::ops::Sub<f64x4<S>> for f64 {
 }
 impl<S: Simd> core::ops::Mul for f64x4<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_f64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for f64x4<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_f64x4(*self, rhs);
@@ -4841,14 +4841,14 @@ impl<S: Simd> core::ops::MulAssign for f64x4<S> {
 }
 impl<S: Simd> core::ops::Mul<f64> for f64x4<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f64) -> Self::Output {
         self.simd.mul_f64x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<f64> for f64x4<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: f64) {
         *self = self.simd.mul_f64x4(*self, rhs.simd_into(self.simd));
@@ -4856,7 +4856,7 @@ impl<S: Simd> core::ops::MulAssign<f64> for f64x4<S> {
 }
 impl<S: Simd> core::ops::Mul<f64x4<S>> for f64 {
     type Output = f64x4<S>;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f64x4<S>) -> Self::Output {
         rhs.simd.mul_f64x4(self.simd_into(rhs.simd), rhs)
@@ -4864,14 +4864,14 @@ impl<S: Simd> core::ops::Mul<f64x4<S>> for f64 {
 }
 impl<S: Simd> core::ops::Div for f64x4<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: Self) -> Self::Output {
         self.simd.div_f64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::DivAssign for f64x4<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: Self) {
         *self = self.simd.div_f64x4(*self, rhs);
@@ -4879,14 +4879,14 @@ impl<S: Simd> core::ops::DivAssign for f64x4<S> {
 }
 impl<S: Simd> core::ops::Div<f64> for f64x4<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f64) -> Self::Output {
         self.simd.div_f64x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::DivAssign<f64> for f64x4<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: f64) {
         *self = self.simd.div_f64x4(*self, rhs.simd_into(self.simd));
@@ -4894,7 +4894,7 @@ impl<S: Simd> core::ops::DivAssign<f64> for f64x4<S> {
 }
 impl<S: Simd> core::ops::Div<f64x4<S>> for f64 {
     type Output = f64x4<S>;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f64x4<S>) -> Self::Output {
         rhs.simd.div_f64x4(self.simd_into(rhs.simd), rhs)
@@ -4902,14 +4902,14 @@ impl<S: Simd> core::ops::Div<f64x4<S>> for f64 {
 }
 impl<S: Simd> core::ops::BitAnd for mask64x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask64x4<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask64x4(*self, rhs);
@@ -4917,14 +4917,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask64x4<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i64> for mask64x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i64) -> Self::Output {
         self.simd.and_mask64x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i64> for mask64x4<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i64) {
         *self = self.simd.and_mask64x4(*self, rhs.simd_into(self.simd));
@@ -4932,7 +4932,7 @@ impl<S: Simd> core::ops::BitAndAssign<i64> for mask64x4<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask64x4<S>> for i64 {
     type Output = mask64x4<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask64x4<S>) -> Self::Output {
         rhs.simd.and_mask64x4(self.simd_into(rhs.simd), rhs)
@@ -4940,14 +4940,14 @@ impl<S: Simd> core::ops::BitAnd<mask64x4<S>> for i64 {
 }
 impl<S: Simd> core::ops::BitOr for mask64x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask64x4<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask64x4(*self, rhs);
@@ -4955,14 +4955,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask64x4<S> {
 }
 impl<S: Simd> core::ops::BitOr<i64> for mask64x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i64) -> Self::Output {
         self.simd.or_mask64x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i64> for mask64x4<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i64) {
         *self = self.simd.or_mask64x4(*self, rhs.simd_into(self.simd));
@@ -4970,7 +4970,7 @@ impl<S: Simd> core::ops::BitOrAssign<i64> for mask64x4<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask64x4<S>> for i64 {
     type Output = mask64x4<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask64x4<S>) -> Self::Output {
         rhs.simd.or_mask64x4(self.simd_into(rhs.simd), rhs)
@@ -4978,14 +4978,14 @@ impl<S: Simd> core::ops::BitOr<mask64x4<S>> for i64 {
 }
 impl<S: Simd> core::ops::BitXor for mask64x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask64x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask64x4<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask64x4(*self, rhs);
@@ -4993,14 +4993,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask64x4<S> {
 }
 impl<S: Simd> core::ops::BitXor<i64> for mask64x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i64) -> Self::Output {
         self.simd.xor_mask64x4(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i64> for mask64x4<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i64) {
         *self = self.simd.xor_mask64x4(*self, rhs.simd_into(self.simd));
@@ -5008,7 +5008,7 @@ impl<S: Simd> core::ops::BitXorAssign<i64> for mask64x4<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask64x4<S>> for i64 {
     type Output = mask64x4<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask64x4<S>) -> Self::Output {
         rhs.simd.xor_mask64x4(self.simd_into(rhs.simd), rhs)
@@ -5016,7 +5016,7 @@ impl<S: Simd> core::ops::BitXor<mask64x4<S>> for i64 {
 }
 impl<S: Simd> core::ops::Not for mask64x4<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask64x4(self)
@@ -5024,7 +5024,7 @@ impl<S: Simd> core::ops::Not for mask64x4<S> {
 }
 impl<S: Simd> core::ops::Neg for f32x16<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector."]
+    #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_f32x16(self)
@@ -5032,14 +5032,14 @@ impl<S: Simd> core::ops::Neg for f32x16<S> {
 }
 impl<S: Simd> core::ops::Add for f32x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for f32x16<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_f32x16(*self, rhs);
@@ -5047,14 +5047,14 @@ impl<S: Simd> core::ops::AddAssign for f32x16<S> {
 }
 impl<S: Simd> core::ops::Add<f32> for f32x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f32) -> Self::Output {
         self.simd.add_f32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<f32> for f32x16<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: f32) {
         *self = self.simd.add_f32x16(*self, rhs.simd_into(self.simd));
@@ -5062,7 +5062,7 @@ impl<S: Simd> core::ops::AddAssign<f32> for f32x16<S> {
 }
 impl<S: Simd> core::ops::Add<f32x16<S>> for f32 {
     type Output = f32x16<S>;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f32x16<S>) -> Self::Output {
         rhs.simd.add_f32x16(self.simd_into(rhs.simd), rhs)
@@ -5070,14 +5070,14 @@ impl<S: Simd> core::ops::Add<f32x16<S>> for f32 {
 }
 impl<S: Simd> core::ops::Sub for f32x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_f32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for f32x16<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_f32x16(*self, rhs);
@@ -5085,14 +5085,14 @@ impl<S: Simd> core::ops::SubAssign for f32x16<S> {
 }
 impl<S: Simd> core::ops::Sub<f32> for f32x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f32) -> Self::Output {
         self.simd.sub_f32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<f32> for f32x16<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: f32) {
         *self = self.simd.sub_f32x16(*self, rhs.simd_into(self.simd));
@@ -5100,7 +5100,7 @@ impl<S: Simd> core::ops::SubAssign<f32> for f32x16<S> {
 }
 impl<S: Simd> core::ops::Sub<f32x16<S>> for f32 {
     type Output = f32x16<S>;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f32x16<S>) -> Self::Output {
         rhs.simd.sub_f32x16(self.simd_into(rhs.simd), rhs)
@@ -5108,14 +5108,14 @@ impl<S: Simd> core::ops::Sub<f32x16<S>> for f32 {
 }
 impl<S: Simd> core::ops::Mul for f32x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_f32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for f32x16<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_f32x16(*self, rhs);
@@ -5123,14 +5123,14 @@ impl<S: Simd> core::ops::MulAssign for f32x16<S> {
 }
 impl<S: Simd> core::ops::Mul<f32> for f32x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f32) -> Self::Output {
         self.simd.mul_f32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<f32> for f32x16<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: f32) {
         *self = self.simd.mul_f32x16(*self, rhs.simd_into(self.simd));
@@ -5138,7 +5138,7 @@ impl<S: Simd> core::ops::MulAssign<f32> for f32x16<S> {
 }
 impl<S: Simd> core::ops::Mul<f32x16<S>> for f32 {
     type Output = f32x16<S>;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f32x16<S>) -> Self::Output {
         rhs.simd.mul_f32x16(self.simd_into(rhs.simd), rhs)
@@ -5146,14 +5146,14 @@ impl<S: Simd> core::ops::Mul<f32x16<S>> for f32 {
 }
 impl<S: Simd> core::ops::Div for f32x16<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: Self) -> Self::Output {
         self.simd.div_f32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::DivAssign for f32x16<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: Self) {
         *self = self.simd.div_f32x16(*self, rhs);
@@ -5161,14 +5161,14 @@ impl<S: Simd> core::ops::DivAssign for f32x16<S> {
 }
 impl<S: Simd> core::ops::Div<f32> for f32x16<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f32) -> Self::Output {
         self.simd.div_f32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::DivAssign<f32> for f32x16<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: f32) {
         *self = self.simd.div_f32x16(*self, rhs.simd_into(self.simd));
@@ -5176,7 +5176,7 @@ impl<S: Simd> core::ops::DivAssign<f32> for f32x16<S> {
 }
 impl<S: Simd> core::ops::Div<f32x16<S>> for f32 {
     type Output = f32x16<S>;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f32x16<S>) -> Self::Output {
         rhs.simd.div_f32x16(self.simd_into(rhs.simd), rhs)
@@ -5184,7 +5184,7 @@ impl<S: Simd> core::ops::Div<f32x16<S>> for f32 {
 }
 impl<S: Simd> core::ops::Neg for i8x64<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector, wrapping on overflow."]
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_i8x64(self)
@@ -5192,14 +5192,14 @@ impl<S: Simd> core::ops::Neg for i8x64<S> {
 }
 impl<S: Simd> core::ops::Add for i8x64<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for i8x64<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_i8x64(*self, rhs);
@@ -5207,14 +5207,14 @@ impl<S: Simd> core::ops::AddAssign for i8x64<S> {
 }
 impl<S: Simd> core::ops::Add<i8> for i8x64<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i8) -> Self::Output {
         self.simd.add_i8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<i8> for i8x64<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: i8) {
         *self = self.simd.add_i8x64(*self, rhs.simd_into(self.simd));
@@ -5222,7 +5222,7 @@ impl<S: Simd> core::ops::AddAssign<i8> for i8x64<S> {
 }
 impl<S: Simd> core::ops::Add<i8x64<S>> for i8 {
     type Output = i8x64<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i8x64<S>) -> Self::Output {
         rhs.simd.add_i8x64(self.simd_into(rhs.simd), rhs)
@@ -5230,14 +5230,14 @@ impl<S: Simd> core::ops::Add<i8x64<S>> for i8 {
 }
 impl<S: Simd> core::ops::Sub for i8x64<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for i8x64<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_i8x64(*self, rhs);
@@ -5245,14 +5245,14 @@ impl<S: Simd> core::ops::SubAssign for i8x64<S> {
 }
 impl<S: Simd> core::ops::Sub<i8> for i8x64<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i8) -> Self::Output {
         self.simd.sub_i8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<i8> for i8x64<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: i8) {
         *self = self.simd.sub_i8x64(*self, rhs.simd_into(self.simd));
@@ -5260,7 +5260,7 @@ impl<S: Simd> core::ops::SubAssign<i8> for i8x64<S> {
 }
 impl<S: Simd> core::ops::Sub<i8x64<S>> for i8 {
     type Output = i8x64<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i8x64<S>) -> Self::Output {
         rhs.simd.sub_i8x64(self.simd_into(rhs.simd), rhs)
@@ -5268,14 +5268,14 @@ impl<S: Simd> core::ops::Sub<i8x64<S>> for i8 {
 }
 impl<S: Simd> core::ops::Mul for i8x64<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for i8x64<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_i8x64(*self, rhs);
@@ -5283,14 +5283,14 @@ impl<S: Simd> core::ops::MulAssign for i8x64<S> {
 }
 impl<S: Simd> core::ops::Mul<i8> for i8x64<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i8) -> Self::Output {
         self.simd.mul_i8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<i8> for i8x64<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: i8) {
         *self = self.simd.mul_i8x64(*self, rhs.simd_into(self.simd));
@@ -5298,7 +5298,7 @@ impl<S: Simd> core::ops::MulAssign<i8> for i8x64<S> {
 }
 impl<S: Simd> core::ops::Mul<i8x64<S>> for i8 {
     type Output = i8x64<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i8x64<S>) -> Self::Output {
         rhs.simd.mul_i8x64(self.simd_into(rhs.simd), rhs)
@@ -5306,14 +5306,14 @@ impl<S: Simd> core::ops::Mul<i8x64<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitAnd for i8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for i8x64<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_i8x64(*self, rhs);
@@ -5321,14 +5321,14 @@ impl<S: Simd> core::ops::BitAndAssign for i8x64<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i8> for i8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i8) -> Self::Output {
         self.simd.and_i8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i8> for i8x64<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i8) {
         *self = self.simd.and_i8x64(*self, rhs.simd_into(self.simd));
@@ -5336,7 +5336,7 @@ impl<S: Simd> core::ops::BitAndAssign<i8> for i8x64<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i8x64<S>> for i8 {
     type Output = i8x64<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i8x64<S>) -> Self::Output {
         rhs.simd.and_i8x64(self.simd_into(rhs.simd), rhs)
@@ -5344,14 +5344,14 @@ impl<S: Simd> core::ops::BitAnd<i8x64<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitOr for i8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for i8x64<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_i8x64(*self, rhs);
@@ -5359,14 +5359,14 @@ impl<S: Simd> core::ops::BitOrAssign for i8x64<S> {
 }
 impl<S: Simd> core::ops::BitOr<i8> for i8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i8) -> Self::Output {
         self.simd.or_i8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i8> for i8x64<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i8) {
         *self = self.simd.or_i8x64(*self, rhs.simd_into(self.simd));
@@ -5374,7 +5374,7 @@ impl<S: Simd> core::ops::BitOrAssign<i8> for i8x64<S> {
 }
 impl<S: Simd> core::ops::BitOr<i8x64<S>> for i8 {
     type Output = i8x64<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i8x64<S>) -> Self::Output {
         rhs.simd.or_i8x64(self.simd_into(rhs.simd), rhs)
@@ -5382,14 +5382,14 @@ impl<S: Simd> core::ops::BitOr<i8x64<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitXor for i8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for i8x64<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_i8x64(*self, rhs);
@@ -5397,14 +5397,14 @@ impl<S: Simd> core::ops::BitXorAssign for i8x64<S> {
 }
 impl<S: Simd> core::ops::BitXor<i8> for i8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i8) -> Self::Output {
         self.simd.xor_i8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i8> for i8x64<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i8) {
         *self = self.simd.xor_i8x64(*self, rhs.simd_into(self.simd));
@@ -5412,7 +5412,7 @@ impl<S: Simd> core::ops::BitXorAssign<i8> for i8x64<S> {
 }
 impl<S: Simd> core::ops::BitXor<i8x64<S>> for i8 {
     type Output = i8x64<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i8x64<S>) -> Self::Output {
         rhs.simd.xor_i8x64(self.simd_into(rhs.simd), rhs)
@@ -5420,7 +5420,7 @@ impl<S: Simd> core::ops::BitXor<i8x64<S>> for i8 {
 }
 impl<S: Simd> core::ops::Not for i8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_i8x64(self)
@@ -5428,7 +5428,7 @@ impl<S: Simd> core::ops::Not for i8x64<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i8x64<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i8x64(self, rhs)
@@ -5442,7 +5442,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i8x64<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i8x64<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i8x64(self, rhs)
@@ -5456,14 +5456,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i8x64<S> {
 }
 impl<S: Simd> core::ops::Shr for i8x64<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i8x64<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i8x64(*self, rhs);
@@ -5471,14 +5471,14 @@ impl<S: Simd> core::ops::ShrAssign for i8x64<S> {
 }
 impl<S: Simd> core::ops::Add for u8x64<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for u8x64<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_u8x64(*self, rhs);
@@ -5486,14 +5486,14 @@ impl<S: Simd> core::ops::AddAssign for u8x64<S> {
 }
 impl<S: Simd> core::ops::Add<u8> for u8x64<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u8) -> Self::Output {
         self.simd.add_u8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<u8> for u8x64<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: u8) {
         *self = self.simd.add_u8x64(*self, rhs.simd_into(self.simd));
@@ -5501,7 +5501,7 @@ impl<S: Simd> core::ops::AddAssign<u8> for u8x64<S> {
 }
 impl<S: Simd> core::ops::Add<u8x64<S>> for u8 {
     type Output = u8x64<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u8x64<S>) -> Self::Output {
         rhs.simd.add_u8x64(self.simd_into(rhs.simd), rhs)
@@ -5509,14 +5509,14 @@ impl<S: Simd> core::ops::Add<u8x64<S>> for u8 {
 }
 impl<S: Simd> core::ops::Sub for u8x64<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for u8x64<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_u8x64(*self, rhs);
@@ -5524,14 +5524,14 @@ impl<S: Simd> core::ops::SubAssign for u8x64<S> {
 }
 impl<S: Simd> core::ops::Sub<u8> for u8x64<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u8) -> Self::Output {
         self.simd.sub_u8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<u8> for u8x64<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u8) {
         *self = self.simd.sub_u8x64(*self, rhs.simd_into(self.simd));
@@ -5539,7 +5539,7 @@ impl<S: Simd> core::ops::SubAssign<u8> for u8x64<S> {
 }
 impl<S: Simd> core::ops::Sub<u8x64<S>> for u8 {
     type Output = u8x64<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u8x64<S>) -> Self::Output {
         rhs.simd.sub_u8x64(self.simd_into(rhs.simd), rhs)
@@ -5547,14 +5547,14 @@ impl<S: Simd> core::ops::Sub<u8x64<S>> for u8 {
 }
 impl<S: Simd> core::ops::Mul for u8x64<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for u8x64<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_u8x64(*self, rhs);
@@ -5562,14 +5562,14 @@ impl<S: Simd> core::ops::MulAssign for u8x64<S> {
 }
 impl<S: Simd> core::ops::Mul<u8> for u8x64<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u8) -> Self::Output {
         self.simd.mul_u8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<u8> for u8x64<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: u8) {
         *self = self.simd.mul_u8x64(*self, rhs.simd_into(self.simd));
@@ -5577,7 +5577,7 @@ impl<S: Simd> core::ops::MulAssign<u8> for u8x64<S> {
 }
 impl<S: Simd> core::ops::Mul<u8x64<S>> for u8 {
     type Output = u8x64<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u8x64<S>) -> Self::Output {
         rhs.simd.mul_u8x64(self.simd_into(rhs.simd), rhs)
@@ -5585,14 +5585,14 @@ impl<S: Simd> core::ops::Mul<u8x64<S>> for u8 {
 }
 impl<S: Simd> core::ops::BitAnd for u8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for u8x64<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_u8x64(*self, rhs);
@@ -5600,14 +5600,14 @@ impl<S: Simd> core::ops::BitAndAssign for u8x64<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u8> for u8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u8) -> Self::Output {
         self.simd.and_u8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<u8> for u8x64<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: u8) {
         *self = self.simd.and_u8x64(*self, rhs.simd_into(self.simd));
@@ -5615,7 +5615,7 @@ impl<S: Simd> core::ops::BitAndAssign<u8> for u8x64<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u8x64<S>> for u8 {
     type Output = u8x64<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u8x64<S>) -> Self::Output {
         rhs.simd.and_u8x64(self.simd_into(rhs.simd), rhs)
@@ -5623,14 +5623,14 @@ impl<S: Simd> core::ops::BitAnd<u8x64<S>> for u8 {
 }
 impl<S: Simd> core::ops::BitOr for u8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for u8x64<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_u8x64(*self, rhs);
@@ -5638,14 +5638,14 @@ impl<S: Simd> core::ops::BitOrAssign for u8x64<S> {
 }
 impl<S: Simd> core::ops::BitOr<u8> for u8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u8) -> Self::Output {
         self.simd.or_u8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<u8> for u8x64<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: u8) {
         *self = self.simd.or_u8x64(*self, rhs.simd_into(self.simd));
@@ -5653,7 +5653,7 @@ impl<S: Simd> core::ops::BitOrAssign<u8> for u8x64<S> {
 }
 impl<S: Simd> core::ops::BitOr<u8x64<S>> for u8 {
     type Output = u8x64<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u8x64<S>) -> Self::Output {
         rhs.simd.or_u8x64(self.simd_into(rhs.simd), rhs)
@@ -5661,14 +5661,14 @@ impl<S: Simd> core::ops::BitOr<u8x64<S>> for u8 {
 }
 impl<S: Simd> core::ops::BitXor for u8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for u8x64<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_u8x64(*self, rhs);
@@ -5676,14 +5676,14 @@ impl<S: Simd> core::ops::BitXorAssign for u8x64<S> {
 }
 impl<S: Simd> core::ops::BitXor<u8> for u8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u8) -> Self::Output {
         self.simd.xor_u8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<u8> for u8x64<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: u8) {
         *self = self.simd.xor_u8x64(*self, rhs.simd_into(self.simd));
@@ -5691,7 +5691,7 @@ impl<S: Simd> core::ops::BitXorAssign<u8> for u8x64<S> {
 }
 impl<S: Simd> core::ops::BitXor<u8x64<S>> for u8 {
     type Output = u8x64<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u8x64<S>) -> Self::Output {
         rhs.simd.xor_u8x64(self.simd_into(rhs.simd), rhs)
@@ -5699,7 +5699,7 @@ impl<S: Simd> core::ops::BitXor<u8x64<S>> for u8 {
 }
 impl<S: Simd> core::ops::Not for u8x64<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_u8x64(self)
@@ -5707,7 +5707,7 @@ impl<S: Simd> core::ops::Not for u8x64<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u8x64<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u8x64(self, rhs)
@@ -5721,7 +5721,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u8x64<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u8x64<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u8x64(self, rhs)
@@ -5735,14 +5735,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u8x64<S> {
 }
 impl<S: Simd> core::ops::Shr for u8x64<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u8x64<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u8x64(*self, rhs);
@@ -5750,14 +5750,14 @@ impl<S: Simd> core::ops::ShrAssign for u8x64<S> {
 }
 impl<S: Simd> core::ops::BitAnd for mask8x64<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask8x64<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask8x64(*self, rhs);
@@ -5765,14 +5765,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask8x64<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i8> for mask8x64<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i8) -> Self::Output {
         self.simd.and_mask8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i8> for mask8x64<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i8) {
         *self = self.simd.and_mask8x64(*self, rhs.simd_into(self.simd));
@@ -5780,7 +5780,7 @@ impl<S: Simd> core::ops::BitAndAssign<i8> for mask8x64<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask8x64<S>> for i8 {
     type Output = mask8x64<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask8x64<S>) -> Self::Output {
         rhs.simd.and_mask8x64(self.simd_into(rhs.simd), rhs)
@@ -5788,14 +5788,14 @@ impl<S: Simd> core::ops::BitAnd<mask8x64<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitOr for mask8x64<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask8x64<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask8x64(*self, rhs);
@@ -5803,14 +5803,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask8x64<S> {
 }
 impl<S: Simd> core::ops::BitOr<i8> for mask8x64<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i8) -> Self::Output {
         self.simd.or_mask8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i8> for mask8x64<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i8) {
         *self = self.simd.or_mask8x64(*self, rhs.simd_into(self.simd));
@@ -5818,7 +5818,7 @@ impl<S: Simd> core::ops::BitOrAssign<i8> for mask8x64<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask8x64<S>> for i8 {
     type Output = mask8x64<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask8x64<S>) -> Self::Output {
         rhs.simd.or_mask8x64(self.simd_into(rhs.simd), rhs)
@@ -5826,14 +5826,14 @@ impl<S: Simd> core::ops::BitOr<mask8x64<S>> for i8 {
 }
 impl<S: Simd> core::ops::BitXor for mask8x64<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask8x64<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask8x64(*self, rhs);
@@ -5841,14 +5841,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask8x64<S> {
 }
 impl<S: Simd> core::ops::BitXor<i8> for mask8x64<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i8) -> Self::Output {
         self.simd.xor_mask8x64(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i8> for mask8x64<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i8) {
         *self = self.simd.xor_mask8x64(*self, rhs.simd_into(self.simd));
@@ -5856,7 +5856,7 @@ impl<S: Simd> core::ops::BitXorAssign<i8> for mask8x64<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask8x64<S>> for i8 {
     type Output = mask8x64<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask8x64<S>) -> Self::Output {
         rhs.simd.xor_mask8x64(self.simd_into(rhs.simd), rhs)
@@ -5864,7 +5864,7 @@ impl<S: Simd> core::ops::BitXor<mask8x64<S>> for i8 {
 }
 impl<S: Simd> core::ops::Not for mask8x64<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask8x64(self)
@@ -5872,7 +5872,7 @@ impl<S: Simd> core::ops::Not for mask8x64<S> {
 }
 impl<S: Simd> core::ops::Neg for i16x32<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector, wrapping on overflow."]
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_i16x32(self)
@@ -5880,14 +5880,14 @@ impl<S: Simd> core::ops::Neg for i16x32<S> {
 }
 impl<S: Simd> core::ops::Add for i16x32<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for i16x32<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_i16x32(*self, rhs);
@@ -5895,14 +5895,14 @@ impl<S: Simd> core::ops::AddAssign for i16x32<S> {
 }
 impl<S: Simd> core::ops::Add<i16> for i16x32<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i16) -> Self::Output {
         self.simd.add_i16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<i16> for i16x32<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: i16) {
         *self = self.simd.add_i16x32(*self, rhs.simd_into(self.simd));
@@ -5910,7 +5910,7 @@ impl<S: Simd> core::ops::AddAssign<i16> for i16x32<S> {
 }
 impl<S: Simd> core::ops::Add<i16x32<S>> for i16 {
     type Output = i16x32<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i16x32<S>) -> Self::Output {
         rhs.simd.add_i16x32(self.simd_into(rhs.simd), rhs)
@@ -5918,14 +5918,14 @@ impl<S: Simd> core::ops::Add<i16x32<S>> for i16 {
 }
 impl<S: Simd> core::ops::Sub for i16x32<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for i16x32<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_i16x32(*self, rhs);
@@ -5933,14 +5933,14 @@ impl<S: Simd> core::ops::SubAssign for i16x32<S> {
 }
 impl<S: Simd> core::ops::Sub<i16> for i16x32<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i16) -> Self::Output {
         self.simd.sub_i16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<i16> for i16x32<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: i16) {
         *self = self.simd.sub_i16x32(*self, rhs.simd_into(self.simd));
@@ -5948,7 +5948,7 @@ impl<S: Simd> core::ops::SubAssign<i16> for i16x32<S> {
 }
 impl<S: Simd> core::ops::Sub<i16x32<S>> for i16 {
     type Output = i16x32<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i16x32<S>) -> Self::Output {
         rhs.simd.sub_i16x32(self.simd_into(rhs.simd), rhs)
@@ -5956,14 +5956,14 @@ impl<S: Simd> core::ops::Sub<i16x32<S>> for i16 {
 }
 impl<S: Simd> core::ops::Mul for i16x32<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for i16x32<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_i16x32(*self, rhs);
@@ -5971,14 +5971,14 @@ impl<S: Simd> core::ops::MulAssign for i16x32<S> {
 }
 impl<S: Simd> core::ops::Mul<i16> for i16x32<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i16) -> Self::Output {
         self.simd.mul_i16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<i16> for i16x32<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: i16) {
         *self = self.simd.mul_i16x32(*self, rhs.simd_into(self.simd));
@@ -5986,7 +5986,7 @@ impl<S: Simd> core::ops::MulAssign<i16> for i16x32<S> {
 }
 impl<S: Simd> core::ops::Mul<i16x32<S>> for i16 {
     type Output = i16x32<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i16x32<S>) -> Self::Output {
         rhs.simd.mul_i16x32(self.simd_into(rhs.simd), rhs)
@@ -5994,14 +5994,14 @@ impl<S: Simd> core::ops::Mul<i16x32<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitAnd for i16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for i16x32<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_i16x32(*self, rhs);
@@ -6009,14 +6009,14 @@ impl<S: Simd> core::ops::BitAndAssign for i16x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i16> for i16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i16) -> Self::Output {
         self.simd.and_i16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i16> for i16x32<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i16) {
         *self = self.simd.and_i16x32(*self, rhs.simd_into(self.simd));
@@ -6024,7 +6024,7 @@ impl<S: Simd> core::ops::BitAndAssign<i16> for i16x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i16x32<S>> for i16 {
     type Output = i16x32<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i16x32<S>) -> Self::Output {
         rhs.simd.and_i16x32(self.simd_into(rhs.simd), rhs)
@@ -6032,14 +6032,14 @@ impl<S: Simd> core::ops::BitAnd<i16x32<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitOr for i16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for i16x32<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_i16x32(*self, rhs);
@@ -6047,14 +6047,14 @@ impl<S: Simd> core::ops::BitOrAssign for i16x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<i16> for i16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i16) -> Self::Output {
         self.simd.or_i16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i16> for i16x32<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i16) {
         *self = self.simd.or_i16x32(*self, rhs.simd_into(self.simd));
@@ -6062,7 +6062,7 @@ impl<S: Simd> core::ops::BitOrAssign<i16> for i16x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<i16x32<S>> for i16 {
     type Output = i16x32<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i16x32<S>) -> Self::Output {
         rhs.simd.or_i16x32(self.simd_into(rhs.simd), rhs)
@@ -6070,14 +6070,14 @@ impl<S: Simd> core::ops::BitOr<i16x32<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitXor for i16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for i16x32<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_i16x32(*self, rhs);
@@ -6085,14 +6085,14 @@ impl<S: Simd> core::ops::BitXorAssign for i16x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<i16> for i16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i16) -> Self::Output {
         self.simd.xor_i16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i16> for i16x32<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i16) {
         *self = self.simd.xor_i16x32(*self, rhs.simd_into(self.simd));
@@ -6100,7 +6100,7 @@ impl<S: Simd> core::ops::BitXorAssign<i16> for i16x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<i16x32<S>> for i16 {
     type Output = i16x32<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i16x32<S>) -> Self::Output {
         rhs.simd.xor_i16x32(self.simd_into(rhs.simd), rhs)
@@ -6108,7 +6108,7 @@ impl<S: Simd> core::ops::BitXor<i16x32<S>> for i16 {
 }
 impl<S: Simd> core::ops::Not for i16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_i16x32(self)
@@ -6116,7 +6116,7 @@ impl<S: Simd> core::ops::Not for i16x32<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i16x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i16x32(self, rhs)
@@ -6130,7 +6130,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i16x32<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i16x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i16x32(self, rhs)
@@ -6144,14 +6144,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i16x32<S> {
 }
 impl<S: Simd> core::ops::Shr for i16x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i16x32<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i16x32(*self, rhs);
@@ -6159,14 +6159,14 @@ impl<S: Simd> core::ops::ShrAssign for i16x32<S> {
 }
 impl<S: Simd> core::ops::Add for u16x32<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for u16x32<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_u16x32(*self, rhs);
@@ -6174,14 +6174,14 @@ impl<S: Simd> core::ops::AddAssign for u16x32<S> {
 }
 impl<S: Simd> core::ops::Add<u16> for u16x32<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u16) -> Self::Output {
         self.simd.add_u16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<u16> for u16x32<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: u16) {
         *self = self.simd.add_u16x32(*self, rhs.simd_into(self.simd));
@@ -6189,7 +6189,7 @@ impl<S: Simd> core::ops::AddAssign<u16> for u16x32<S> {
 }
 impl<S: Simd> core::ops::Add<u16x32<S>> for u16 {
     type Output = u16x32<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u16x32<S>) -> Self::Output {
         rhs.simd.add_u16x32(self.simd_into(rhs.simd), rhs)
@@ -6197,14 +6197,14 @@ impl<S: Simd> core::ops::Add<u16x32<S>> for u16 {
 }
 impl<S: Simd> core::ops::Sub for u16x32<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for u16x32<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_u16x32(*self, rhs);
@@ -6212,14 +6212,14 @@ impl<S: Simd> core::ops::SubAssign for u16x32<S> {
 }
 impl<S: Simd> core::ops::Sub<u16> for u16x32<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u16) -> Self::Output {
         self.simd.sub_u16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<u16> for u16x32<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u16) {
         *self = self.simd.sub_u16x32(*self, rhs.simd_into(self.simd));
@@ -6227,7 +6227,7 @@ impl<S: Simd> core::ops::SubAssign<u16> for u16x32<S> {
 }
 impl<S: Simd> core::ops::Sub<u16x32<S>> for u16 {
     type Output = u16x32<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u16x32<S>) -> Self::Output {
         rhs.simd.sub_u16x32(self.simd_into(rhs.simd), rhs)
@@ -6235,14 +6235,14 @@ impl<S: Simd> core::ops::Sub<u16x32<S>> for u16 {
 }
 impl<S: Simd> core::ops::Mul for u16x32<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for u16x32<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_u16x32(*self, rhs);
@@ -6250,14 +6250,14 @@ impl<S: Simd> core::ops::MulAssign for u16x32<S> {
 }
 impl<S: Simd> core::ops::Mul<u16> for u16x32<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u16) -> Self::Output {
         self.simd.mul_u16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<u16> for u16x32<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: u16) {
         *self = self.simd.mul_u16x32(*self, rhs.simd_into(self.simd));
@@ -6265,7 +6265,7 @@ impl<S: Simd> core::ops::MulAssign<u16> for u16x32<S> {
 }
 impl<S: Simd> core::ops::Mul<u16x32<S>> for u16 {
     type Output = u16x32<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u16x32<S>) -> Self::Output {
         rhs.simd.mul_u16x32(self.simd_into(rhs.simd), rhs)
@@ -6273,14 +6273,14 @@ impl<S: Simd> core::ops::Mul<u16x32<S>> for u16 {
 }
 impl<S: Simd> core::ops::BitAnd for u16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for u16x32<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_u16x32(*self, rhs);
@@ -6288,14 +6288,14 @@ impl<S: Simd> core::ops::BitAndAssign for u16x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u16> for u16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u16) -> Self::Output {
         self.simd.and_u16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<u16> for u16x32<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: u16) {
         *self = self.simd.and_u16x32(*self, rhs.simd_into(self.simd));
@@ -6303,7 +6303,7 @@ impl<S: Simd> core::ops::BitAndAssign<u16> for u16x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u16x32<S>> for u16 {
     type Output = u16x32<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u16x32<S>) -> Self::Output {
         rhs.simd.and_u16x32(self.simd_into(rhs.simd), rhs)
@@ -6311,14 +6311,14 @@ impl<S: Simd> core::ops::BitAnd<u16x32<S>> for u16 {
 }
 impl<S: Simd> core::ops::BitOr for u16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for u16x32<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_u16x32(*self, rhs);
@@ -6326,14 +6326,14 @@ impl<S: Simd> core::ops::BitOrAssign for u16x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<u16> for u16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u16) -> Self::Output {
         self.simd.or_u16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<u16> for u16x32<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: u16) {
         *self = self.simd.or_u16x32(*self, rhs.simd_into(self.simd));
@@ -6341,7 +6341,7 @@ impl<S: Simd> core::ops::BitOrAssign<u16> for u16x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<u16x32<S>> for u16 {
     type Output = u16x32<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u16x32<S>) -> Self::Output {
         rhs.simd.or_u16x32(self.simd_into(rhs.simd), rhs)
@@ -6349,14 +6349,14 @@ impl<S: Simd> core::ops::BitOr<u16x32<S>> for u16 {
 }
 impl<S: Simd> core::ops::BitXor for u16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for u16x32<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_u16x32(*self, rhs);
@@ -6364,14 +6364,14 @@ impl<S: Simd> core::ops::BitXorAssign for u16x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<u16> for u16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u16) -> Self::Output {
         self.simd.xor_u16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<u16> for u16x32<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: u16) {
         *self = self.simd.xor_u16x32(*self, rhs.simd_into(self.simd));
@@ -6379,7 +6379,7 @@ impl<S: Simd> core::ops::BitXorAssign<u16> for u16x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<u16x32<S>> for u16 {
     type Output = u16x32<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u16x32<S>) -> Self::Output {
         rhs.simd.xor_u16x32(self.simd_into(rhs.simd), rhs)
@@ -6387,7 +6387,7 @@ impl<S: Simd> core::ops::BitXor<u16x32<S>> for u16 {
 }
 impl<S: Simd> core::ops::Not for u16x32<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_u16x32(self)
@@ -6395,7 +6395,7 @@ impl<S: Simd> core::ops::Not for u16x32<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u16x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u16x32(self, rhs)
@@ -6409,7 +6409,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u16x32<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u16x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u16x32(self, rhs)
@@ -6423,14 +6423,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u16x32<S> {
 }
 impl<S: Simd> core::ops::Shr for u16x32<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u16x32<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u16x32(*self, rhs);
@@ -6438,14 +6438,14 @@ impl<S: Simd> core::ops::ShrAssign for u16x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd for mask16x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask16x32<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask16x32(*self, rhs);
@@ -6453,14 +6453,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask16x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i16> for mask16x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i16) -> Self::Output {
         self.simd.and_mask16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i16> for mask16x32<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i16) {
         *self = self.simd.and_mask16x32(*self, rhs.simd_into(self.simd));
@@ -6468,7 +6468,7 @@ impl<S: Simd> core::ops::BitAndAssign<i16> for mask16x32<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask16x32<S>> for i16 {
     type Output = mask16x32<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask16x32<S>) -> Self::Output {
         rhs.simd.and_mask16x32(self.simd_into(rhs.simd), rhs)
@@ -6476,14 +6476,14 @@ impl<S: Simd> core::ops::BitAnd<mask16x32<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitOr for mask16x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask16x32<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask16x32(*self, rhs);
@@ -6491,14 +6491,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask16x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<i16> for mask16x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i16) -> Self::Output {
         self.simd.or_mask16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i16> for mask16x32<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i16) {
         *self = self.simd.or_mask16x32(*self, rhs.simd_into(self.simd));
@@ -6506,7 +6506,7 @@ impl<S: Simd> core::ops::BitOrAssign<i16> for mask16x32<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask16x32<S>> for i16 {
     type Output = mask16x32<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask16x32<S>) -> Self::Output {
         rhs.simd.or_mask16x32(self.simd_into(rhs.simd), rhs)
@@ -6514,14 +6514,14 @@ impl<S: Simd> core::ops::BitOr<mask16x32<S>> for i16 {
 }
 impl<S: Simd> core::ops::BitXor for mask16x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask16x32<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask16x32(*self, rhs);
@@ -6529,14 +6529,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask16x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<i16> for mask16x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i16) -> Self::Output {
         self.simd.xor_mask16x32(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i16> for mask16x32<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i16) {
         *self = self.simd.xor_mask16x32(*self, rhs.simd_into(self.simd));
@@ -6544,7 +6544,7 @@ impl<S: Simd> core::ops::BitXorAssign<i16> for mask16x32<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask16x32<S>> for i16 {
     type Output = mask16x32<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask16x32<S>) -> Self::Output {
         rhs.simd.xor_mask16x32(self.simd_into(rhs.simd), rhs)
@@ -6552,7 +6552,7 @@ impl<S: Simd> core::ops::BitXor<mask16x32<S>> for i16 {
 }
 impl<S: Simd> core::ops::Not for mask16x32<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask16x32(self)
@@ -6560,7 +6560,7 @@ impl<S: Simd> core::ops::Not for mask16x32<S> {
 }
 impl<S: Simd> core::ops::Neg for i32x16<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector, wrapping on overflow."]
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_i32x16(self)
@@ -6568,14 +6568,14 @@ impl<S: Simd> core::ops::Neg for i32x16<S> {
 }
 impl<S: Simd> core::ops::Add for i32x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for i32x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_i32x16(*self, rhs);
@@ -6583,14 +6583,14 @@ impl<S: Simd> core::ops::AddAssign for i32x16<S> {
 }
 impl<S: Simd> core::ops::Add<i32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i32) -> Self::Output {
         self.simd.add_i32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<i32> for i32x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: i32) {
         *self = self.simd.add_i32x16(*self, rhs.simd_into(self.simd));
@@ -6598,7 +6598,7 @@ impl<S: Simd> core::ops::AddAssign<i32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::Add<i32x16<S>> for i32 {
     type Output = i32x16<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: i32x16<S>) -> Self::Output {
         rhs.simd.add_i32x16(self.simd_into(rhs.simd), rhs)
@@ -6606,14 +6606,14 @@ impl<S: Simd> core::ops::Add<i32x16<S>> for i32 {
 }
 impl<S: Simd> core::ops::Sub for i32x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for i32x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_i32x16(*self, rhs);
@@ -6621,14 +6621,14 @@ impl<S: Simd> core::ops::SubAssign for i32x16<S> {
 }
 impl<S: Simd> core::ops::Sub<i32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i32) -> Self::Output {
         self.simd.sub_i32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<i32> for i32x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: i32) {
         *self = self.simd.sub_i32x16(*self, rhs.simd_into(self.simd));
@@ -6636,7 +6636,7 @@ impl<S: Simd> core::ops::SubAssign<i32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::Sub<i32x16<S>> for i32 {
     type Output = i32x16<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: i32x16<S>) -> Self::Output {
         rhs.simd.sub_i32x16(self.simd_into(rhs.simd), rhs)
@@ -6644,14 +6644,14 @@ impl<S: Simd> core::ops::Sub<i32x16<S>> for i32 {
 }
 impl<S: Simd> core::ops::Mul for i32x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for i32x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_i32x16(*self, rhs);
@@ -6659,14 +6659,14 @@ impl<S: Simd> core::ops::MulAssign for i32x16<S> {
 }
 impl<S: Simd> core::ops::Mul<i32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i32) -> Self::Output {
         self.simd.mul_i32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<i32> for i32x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: i32) {
         *self = self.simd.mul_i32x16(*self, rhs.simd_into(self.simd));
@@ -6674,7 +6674,7 @@ impl<S: Simd> core::ops::MulAssign<i32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::Mul<i32x16<S>> for i32 {
     type Output = i32x16<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: i32x16<S>) -> Self::Output {
         rhs.simd.mul_i32x16(self.simd_into(rhs.simd), rhs)
@@ -6682,14 +6682,14 @@ impl<S: Simd> core::ops::Mul<i32x16<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitAnd for i32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for i32x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_i32x16(*self, rhs);
@@ -6697,14 +6697,14 @@ impl<S: Simd> core::ops::BitAndAssign for i32x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i32) -> Self::Output {
         self.simd.and_i32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i32> for i32x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i32) {
         *self = self.simd.and_i32x16(*self, rhs.simd_into(self.simd));
@@ -6712,7 +6712,7 @@ impl<S: Simd> core::ops::BitAndAssign<i32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i32x16<S>> for i32 {
     type Output = i32x16<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: i32x16<S>) -> Self::Output {
         rhs.simd.and_i32x16(self.simd_into(rhs.simd), rhs)
@@ -6720,14 +6720,14 @@ impl<S: Simd> core::ops::BitAnd<i32x16<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitOr for i32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for i32x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_i32x16(*self, rhs);
@@ -6735,14 +6735,14 @@ impl<S: Simd> core::ops::BitOrAssign for i32x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<i32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i32) -> Self::Output {
         self.simd.or_i32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i32> for i32x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i32) {
         *self = self.simd.or_i32x16(*self, rhs.simd_into(self.simd));
@@ -6750,7 +6750,7 @@ impl<S: Simd> core::ops::BitOrAssign<i32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<i32x16<S>> for i32 {
     type Output = i32x16<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: i32x16<S>) -> Self::Output {
         rhs.simd.or_i32x16(self.simd_into(rhs.simd), rhs)
@@ -6758,14 +6758,14 @@ impl<S: Simd> core::ops::BitOr<i32x16<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitXor for i32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for i32x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_i32x16(*self, rhs);
@@ -6773,14 +6773,14 @@ impl<S: Simd> core::ops::BitXorAssign for i32x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<i32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i32) -> Self::Output {
         self.simd.xor_i32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i32> for i32x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i32) {
         *self = self.simd.xor_i32x16(*self, rhs.simd_into(self.simd));
@@ -6788,7 +6788,7 @@ impl<S: Simd> core::ops::BitXorAssign<i32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<i32x16<S>> for i32 {
     type Output = i32x16<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: i32x16<S>) -> Self::Output {
         rhs.simd.xor_i32x16(self.simd_into(rhs.simd), rhs)
@@ -6796,7 +6796,7 @@ impl<S: Simd> core::ops::BitXor<i32x16<S>> for i32 {
 }
 impl<S: Simd> core::ops::Not for i32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_i32x16(self)
@@ -6804,7 +6804,7 @@ impl<S: Simd> core::ops::Not for i32x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i32x16(self, rhs)
@@ -6818,7 +6818,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i32x16(self, rhs)
@@ -6832,14 +6832,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::Shr for i32x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i32x16<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i32x16(*self, rhs);
@@ -6847,14 +6847,14 @@ impl<S: Simd> core::ops::ShrAssign for i32x16<S> {
 }
 impl<S: Simd> core::ops::Add for u32x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for u32x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_u32x16(*self, rhs);
@@ -6862,14 +6862,14 @@ impl<S: Simd> core::ops::AddAssign for u32x16<S> {
 }
 impl<S: Simd> core::ops::Add<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u32) -> Self::Output {
         self.simd.add_u32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<u32> for u32x16<S> {
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: u32) {
         *self = self.simd.add_u32x16(*self, rhs.simd_into(self.simd));
@@ -6877,7 +6877,7 @@ impl<S: Simd> core::ops::AddAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::Add<u32x16<S>> for u32 {
     type Output = u32x16<S>;
-    #[doc = "Adds two vectors element-wise, wrapping on overflow."]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn add(self, rhs: u32x16<S>) -> Self::Output {
         rhs.simd.add_u32x16(self.simd_into(rhs.simd), rhs)
@@ -6885,14 +6885,14 @@ impl<S: Simd> core::ops::Add<u32x16<S>> for u32 {
 }
 impl<S: Simd> core::ops::Sub for u32x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for u32x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_u32x16(*self, rhs);
@@ -6900,14 +6900,14 @@ impl<S: Simd> core::ops::SubAssign for u32x16<S> {
 }
 impl<S: Simd> core::ops::Sub<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u32) -> Self::Output {
         self.simd.sub_u32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<u32> for u32x16<S> {
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u32) {
         *self = self.simd.sub_u32x16(*self, rhs.simd_into(self.simd));
@@ -6915,7 +6915,7 @@ impl<S: Simd> core::ops::SubAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::Sub<u32x16<S>> for u32 {
     type Output = u32x16<S>;
-    #[doc = "Subtracts two vectors element-wise, wrapping on overflow."]
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn sub(self, rhs: u32x16<S>) -> Self::Output {
         rhs.simd.sub_u32x16(self.simd_into(rhs.simd), rhs)
@@ -6923,14 +6923,14 @@ impl<S: Simd> core::ops::Sub<u32x16<S>> for u32 {
 }
 impl<S: Simd> core::ops::Mul for u32x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for u32x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_u32x16(*self, rhs);
@@ -6938,14 +6938,14 @@ impl<S: Simd> core::ops::MulAssign for u32x16<S> {
 }
 impl<S: Simd> core::ops::Mul<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u32) -> Self::Output {
         self.simd.mul_u32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<u32> for u32x16<S> {
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: u32) {
         *self = self.simd.mul_u32x16(*self, rhs.simd_into(self.simd));
@@ -6953,7 +6953,7 @@ impl<S: Simd> core::ops::MulAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::Mul<u32x16<S>> for u32 {
     type Output = u32x16<S>;
-    #[doc = "Multiplies two vectors element-wise, wrapping on overflow."]
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
     #[inline(always)]
     fn mul(self, rhs: u32x16<S>) -> Self::Output {
         rhs.simd.mul_u32x16(self.simd_into(rhs.simd), rhs)
@@ -6961,14 +6961,14 @@ impl<S: Simd> core::ops::Mul<u32x16<S>> for u32 {
 }
 impl<S: Simd> core::ops::BitAnd for u32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for u32x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_u32x16(*self, rhs);
@@ -6976,14 +6976,14 @@ impl<S: Simd> core::ops::BitAndAssign for u32x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u32) -> Self::Output {
         self.simd.and_u32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<u32> for u32x16<S> {
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: u32) {
         *self = self.simd.and_u32x16(*self, rhs.simd_into(self.simd));
@@ -6991,7 +6991,7 @@ impl<S: Simd> core::ops::BitAndAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<u32x16<S>> for u32 {
     type Output = u32x16<S>;
-    #[doc = "Computes the bitwise AND of two vectors."]
+    #[doc = "Compute the bitwise AND of two vectors."]
     #[inline(always)]
     fn bitand(self, rhs: u32x16<S>) -> Self::Output {
         rhs.simd.and_u32x16(self.simd_into(rhs.simd), rhs)
@@ -6999,14 +6999,14 @@ impl<S: Simd> core::ops::BitAnd<u32x16<S>> for u32 {
 }
 impl<S: Simd> core::ops::BitOr for u32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for u32x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_u32x16(*self, rhs);
@@ -7014,14 +7014,14 @@ impl<S: Simd> core::ops::BitOrAssign for u32x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u32) -> Self::Output {
         self.simd.or_u32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<u32> for u32x16<S> {
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: u32) {
         *self = self.simd.or_u32x16(*self, rhs.simd_into(self.simd));
@@ -7029,7 +7029,7 @@ impl<S: Simd> core::ops::BitOrAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<u32x16<S>> for u32 {
     type Output = u32x16<S>;
-    #[doc = "Computes the bitwise OR of two vectors."]
+    #[doc = "Compute the bitwise OR of two vectors."]
     #[inline(always)]
     fn bitor(self, rhs: u32x16<S>) -> Self::Output {
         rhs.simd.or_u32x16(self.simd_into(rhs.simd), rhs)
@@ -7037,14 +7037,14 @@ impl<S: Simd> core::ops::BitOr<u32x16<S>> for u32 {
 }
 impl<S: Simd> core::ops::BitXor for u32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for u32x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_u32x16(*self, rhs);
@@ -7052,14 +7052,14 @@ impl<S: Simd> core::ops::BitXorAssign for u32x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u32) -> Self::Output {
         self.simd.xor_u32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<u32> for u32x16<S> {
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: u32) {
         *self = self.simd.xor_u32x16(*self, rhs.simd_into(self.simd));
@@ -7067,7 +7067,7 @@ impl<S: Simd> core::ops::BitXorAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<u32x16<S>> for u32 {
     type Output = u32x16<S>;
-    #[doc = "Computes the bitwise XOR of two vectors."]
+    #[doc = "Compute the bitwise XOR of two vectors."]
     #[inline(always)]
     fn bitxor(self, rhs: u32x16<S>) -> Self::Output {
         rhs.simd.xor_u32x16(self.simd_into(rhs.simd), rhs)
@@ -7075,7 +7075,7 @@ impl<S: Simd> core::ops::BitXor<u32x16<S>> for u32 {
 }
 impl<S: Simd> core::ops::Not for u32x16<S> {
     type Output = Self;
-    #[doc = "Computes the bitwise NOT of the vector."]
+    #[doc = "Compute the bitwise NOT of the vector."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_u32x16(self)
@@ -7083,7 +7083,7 @@ impl<S: Simd> core::ops::Not for u32x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u32x16(self, rhs)
@@ -7097,7 +7097,7 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u32x16(self, rhs)
@@ -7111,14 +7111,14 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::Shr for u32x16<S> {
     type Output = Self;
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u32x16<S> {
-    #[doc = "Shifts each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u32x16(*self, rhs);
@@ -7126,14 +7126,14 @@ impl<S: Simd> core::ops::ShrAssign for u32x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd for mask32x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask32x16<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask32x16(*self, rhs);
@@ -7141,14 +7141,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask32x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i32> for mask32x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i32) -> Self::Output {
         self.simd.and_mask32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i32> for mask32x16<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i32) {
         *self = self.simd.and_mask32x16(*self, rhs.simd_into(self.simd));
@@ -7156,7 +7156,7 @@ impl<S: Simd> core::ops::BitAndAssign<i32> for mask32x16<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask32x16<S>> for i32 {
     type Output = mask32x16<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask32x16<S>) -> Self::Output {
         rhs.simd.and_mask32x16(self.simd_into(rhs.simd), rhs)
@@ -7164,14 +7164,14 @@ impl<S: Simd> core::ops::BitAnd<mask32x16<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitOr for mask32x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask32x16<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask32x16(*self, rhs);
@@ -7179,14 +7179,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask32x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<i32> for mask32x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i32) -> Self::Output {
         self.simd.or_mask32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i32> for mask32x16<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i32) {
         *self = self.simd.or_mask32x16(*self, rhs.simd_into(self.simd));
@@ -7194,7 +7194,7 @@ impl<S: Simd> core::ops::BitOrAssign<i32> for mask32x16<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask32x16<S>> for i32 {
     type Output = mask32x16<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask32x16<S>) -> Self::Output {
         rhs.simd.or_mask32x16(self.simd_into(rhs.simd), rhs)
@@ -7202,14 +7202,14 @@ impl<S: Simd> core::ops::BitOr<mask32x16<S>> for i32 {
 }
 impl<S: Simd> core::ops::BitXor for mask32x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask32x16<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask32x16(*self, rhs);
@@ -7217,14 +7217,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask32x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<i32> for mask32x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i32) -> Self::Output {
         self.simd.xor_mask32x16(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i32> for mask32x16<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i32) {
         *self = self.simd.xor_mask32x16(*self, rhs.simd_into(self.simd));
@@ -7232,7 +7232,7 @@ impl<S: Simd> core::ops::BitXorAssign<i32> for mask32x16<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask32x16<S>> for i32 {
     type Output = mask32x16<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask32x16<S>) -> Self::Output {
         rhs.simd.xor_mask32x16(self.simd_into(rhs.simd), rhs)
@@ -7240,7 +7240,7 @@ impl<S: Simd> core::ops::BitXor<mask32x16<S>> for i32 {
 }
 impl<S: Simd> core::ops::Not for mask32x16<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask32x16(self)
@@ -7248,7 +7248,7 @@ impl<S: Simd> core::ops::Not for mask32x16<S> {
 }
 impl<S: Simd> core::ops::Neg for f64x8<S> {
     type Output = Self;
-    #[doc = "Negates each element of the vector."]
+    #[doc = "Negate each element of the vector."]
     #[inline(always)]
     fn neg(self) -> Self::Output {
         self.simd.neg_f64x8(self)
@@ -7256,14 +7256,14 @@ impl<S: Simd> core::ops::Neg for f64x8<S> {
 }
 impl<S: Simd> core::ops::Add for f64x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::AddAssign for f64x8<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.simd.add_f64x8(*self, rhs);
@@ -7271,14 +7271,14 @@ impl<S: Simd> core::ops::AddAssign for f64x8<S> {
 }
 impl<S: Simd> core::ops::Add<f64> for f64x8<S> {
     type Output = Self;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f64) -> Self::Output {
         self.simd.add_f64x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::AddAssign<f64> for f64x8<S> {
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add_assign(&mut self, rhs: f64) {
         *self = self.simd.add_f64x8(*self, rhs.simd_into(self.simd));
@@ -7286,7 +7286,7 @@ impl<S: Simd> core::ops::AddAssign<f64> for f64x8<S> {
 }
 impl<S: Simd> core::ops::Add<f64x8<S>> for f64 {
     type Output = f64x8<S>;
-    #[doc = "Adds two vectors element-wise."]
+    #[doc = "Add two vectors element-wise."]
     #[inline(always)]
     fn add(self, rhs: f64x8<S>) -> Self::Output {
         rhs.simd.add_f64x8(self.simd_into(rhs.simd), rhs)
@@ -7294,14 +7294,14 @@ impl<S: Simd> core::ops::Add<f64x8<S>> for f64 {
 }
 impl<S: Simd> core::ops::Sub for f64x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         self.simd.sub_f64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::SubAssign for f64x8<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.simd.sub_f64x8(*self, rhs);
@@ -7309,14 +7309,14 @@ impl<S: Simd> core::ops::SubAssign for f64x8<S> {
 }
 impl<S: Simd> core::ops::Sub<f64> for f64x8<S> {
     type Output = Self;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f64) -> Self::Output {
         self.simd.sub_f64x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::SubAssign<f64> for f64x8<S> {
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub_assign(&mut self, rhs: f64) {
         *self = self.simd.sub_f64x8(*self, rhs.simd_into(self.simd));
@@ -7324,7 +7324,7 @@ impl<S: Simd> core::ops::SubAssign<f64> for f64x8<S> {
 }
 impl<S: Simd> core::ops::Sub<f64x8<S>> for f64 {
     type Output = f64x8<S>;
-    #[doc = "Subtracts two vectors element-wise."]
+    #[doc = "Subtract two vectors element-wise."]
     #[inline(always)]
     fn sub(self, rhs: f64x8<S>) -> Self::Output {
         rhs.simd.sub_f64x8(self.simd_into(rhs.simd), rhs)
@@ -7332,14 +7332,14 @@ impl<S: Simd> core::ops::Sub<f64x8<S>> for f64 {
 }
 impl<S: Simd> core::ops::Mul for f64x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         self.simd.mul_f64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::MulAssign for f64x8<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.simd.mul_f64x8(*self, rhs);
@@ -7347,14 +7347,14 @@ impl<S: Simd> core::ops::MulAssign for f64x8<S> {
 }
 impl<S: Simd> core::ops::Mul<f64> for f64x8<S> {
     type Output = Self;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f64) -> Self::Output {
         self.simd.mul_f64x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::MulAssign<f64> for f64x8<S> {
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul_assign(&mut self, rhs: f64) {
         *self = self.simd.mul_f64x8(*self, rhs.simd_into(self.simd));
@@ -7362,7 +7362,7 @@ impl<S: Simd> core::ops::MulAssign<f64> for f64x8<S> {
 }
 impl<S: Simd> core::ops::Mul<f64x8<S>> for f64 {
     type Output = f64x8<S>;
-    #[doc = "Multiplies two vectors element-wise."]
+    #[doc = "Multiply two vectors element-wise."]
     #[inline(always)]
     fn mul(self, rhs: f64x8<S>) -> Self::Output {
         rhs.simd.mul_f64x8(self.simd_into(rhs.simd), rhs)
@@ -7370,14 +7370,14 @@ impl<S: Simd> core::ops::Mul<f64x8<S>> for f64 {
 }
 impl<S: Simd> core::ops::Div for f64x8<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: Self) -> Self::Output {
         self.simd.div_f64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::DivAssign for f64x8<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: Self) {
         *self = self.simd.div_f64x8(*self, rhs);
@@ -7385,14 +7385,14 @@ impl<S: Simd> core::ops::DivAssign for f64x8<S> {
 }
 impl<S: Simd> core::ops::Div<f64> for f64x8<S> {
     type Output = Self;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f64) -> Self::Output {
         self.simd.div_f64x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::DivAssign<f64> for f64x8<S> {
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div_assign(&mut self, rhs: f64) {
         *self = self.simd.div_f64x8(*self, rhs.simd_into(self.simd));
@@ -7400,7 +7400,7 @@ impl<S: Simd> core::ops::DivAssign<f64> for f64x8<S> {
 }
 impl<S: Simd> core::ops::Div<f64x8<S>> for f64 {
     type Output = f64x8<S>;
-    #[doc = "Divides two vectors element-wise."]
+    #[doc = "Divide two vectors element-wise."]
     #[inline(always)]
     fn div(self, rhs: f64x8<S>) -> Self::Output {
         rhs.simd.div_f64x8(self.simd_into(rhs.simd), rhs)
@@ -7408,14 +7408,14 @@ impl<S: Simd> core::ops::Div<f64x8<S>> for f64 {
 }
 impl<S: Simd> core::ops::BitAnd for mask64x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         self.simd.and_mask64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitAndAssign for mask64x8<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = self.simd.and_mask64x8(*self, rhs);
@@ -7423,14 +7423,14 @@ impl<S: Simd> core::ops::BitAndAssign for mask64x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<i64> for mask64x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: i64) -> Self::Output {
         self.simd.and_mask64x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitAndAssign<i64> for mask64x8<S> {
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: i64) {
         *self = self.simd.and_mask64x8(*self, rhs.simd_into(self.simd));
@@ -7438,7 +7438,7 @@ impl<S: Simd> core::ops::BitAndAssign<i64> for mask64x8<S> {
 }
 impl<S: Simd> core::ops::BitAnd<mask64x8<S>> for i64 {
     type Output = mask64x8<S>;
-    #[doc = "Computes the logical AND of two masks."]
+    #[doc = "Compute the logical AND of two masks."]
     #[inline(always)]
     fn bitand(self, rhs: mask64x8<S>) -> Self::Output {
         rhs.simd.and_mask64x8(self.simd_into(rhs.simd), rhs)
@@ -7446,14 +7446,14 @@ impl<S: Simd> core::ops::BitAnd<mask64x8<S>> for i64 {
 }
 impl<S: Simd> core::ops::BitOr for mask64x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         self.simd.or_mask64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitOrAssign for mask64x8<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = self.simd.or_mask64x8(*self, rhs);
@@ -7461,14 +7461,14 @@ impl<S: Simd> core::ops::BitOrAssign for mask64x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<i64> for mask64x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: i64) -> Self::Output {
         self.simd.or_mask64x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitOrAssign<i64> for mask64x8<S> {
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: i64) {
         *self = self.simd.or_mask64x8(*self, rhs.simd_into(self.simd));
@@ -7476,7 +7476,7 @@ impl<S: Simd> core::ops::BitOrAssign<i64> for mask64x8<S> {
 }
 impl<S: Simd> core::ops::BitOr<mask64x8<S>> for i64 {
     type Output = mask64x8<S>;
-    #[doc = "Computes the logical OR of two masks."]
+    #[doc = "Compute the logical OR of two masks."]
     #[inline(always)]
     fn bitor(self, rhs: mask64x8<S>) -> Self::Output {
         rhs.simd.or_mask64x8(self.simd_into(rhs.simd), rhs)
@@ -7484,14 +7484,14 @@ impl<S: Simd> core::ops::BitOr<mask64x8<S>> for i64 {
 }
 impl<S: Simd> core::ops::BitXor for mask64x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         self.simd.xor_mask64x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::BitXorAssign for mask64x8<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask64x8(*self, rhs);
@@ -7499,14 +7499,14 @@ impl<S: Simd> core::ops::BitXorAssign for mask64x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<i64> for mask64x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: i64) -> Self::Output {
         self.simd.xor_mask64x8(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> core::ops::BitXorAssign<i64> for mask64x8<S> {
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: i64) {
         *self = self.simd.xor_mask64x8(*self, rhs.simd_into(self.simd));
@@ -7514,7 +7514,7 @@ impl<S: Simd> core::ops::BitXorAssign<i64> for mask64x8<S> {
 }
 impl<S: Simd> core::ops::BitXor<mask64x8<S>> for i64 {
     type Output = mask64x8<S>;
-    #[doc = "Computes the logical XOR of two masks."]
+    #[doc = "Compute the logical XOR of two masks."]
     #[inline(always)]
     fn bitxor(self, rhs: mask64x8<S>) -> Self::Output {
         rhs.simd.xor_mask64x8(self.simd_into(rhs.simd), rhs)
@@ -7522,7 +7522,7 @@ impl<S: Simd> core::ops::BitXor<mask64x8<S>> for i64 {
 }
 impl<S: Simd> core::ops::Not for mask64x8<S> {
     type Output = Self;
-    #[doc = "Computes the logical NOT of the mask."]
+    #[doc = "Compute the logical NOT of the mask."]
     #[inline(always)]
     fn not(self) -> Self::Output {
         self.simd.not_mask64x8(self)
