@@ -231,16 +231,14 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let splat = generic_op_name("splat", ty);
     let mut methods = vec![];
     for Op { method, sig, .. } in vec_trait_ops_for(ty.scalar) {
-        let method_name = Ident::new(method, Span::call_site());
         let trait_method = generic_op_name(method, ty);
-        if let Some(args) = sig.vec_trait_args() {
-            let ret_ty = sig.trait_ret_ty();
+        if let Some(method_sig) = sig.vec_trait_method_sig(method) {
             let call_args = sig
                 .forwarding_call_args()
                 .expect("this method can be forwarded to a specific Simd function");
             methods.push(quote! {
                 #[inline(always)]
-                fn #method_name(#args) -> #ret_ty {
+                #method_sig {
                     self.simd.#trait_method(#call_args)
                 }
             });

@@ -915,7 +915,7 @@ impl CoreOpTrait {
 }
 
 impl OpSig {
-    pub(crate) fn simd_trait_arg_names(&self) -> &'static [&'static str] {
+    fn simd_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
             Self::Splat => &["val"],
             Self::Unary
@@ -935,7 +935,7 @@ impl OpSig {
             Self::StoreInterleaved { .. } => &["a", "dest"],
         }
     }
-    pub(crate) fn vec_trait_arg_names(&self) -> &'static [&'static str] {
+    fn vec_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
             Self::Splat | Self::LoadInterleaved { .. } | Self::StoreInterleaved { .. } => &[],
             Self::Unary
@@ -952,18 +952,19 @@ impl OpSig {
         }
     }
 
-    pub(crate) fn simd_trait_args(&self, vec_ty: &VecType) -> TokenStream {
+    pub(crate) fn simd_trait_method_sig(&self, vec_ty: &VecType, method_name: &str) -> TokenStream {
         let ty = vec_ty.rust();
         let arg_names = self
             .simd_trait_arg_names()
             .iter()
             .map(|n| Ident::new(n, Span::call_site()))
             .collect::<Vec<_>>();
-        match self {
+        let method_ident = Ident::new(method_name, Span::call_site());
+        let sig_inner = match self {
             Self::Splat => {
                 let arg0 = &arg_names[0];
                 let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                quote! { self, #arg0: #scalar }
+                quote! { (self, #arg0: #scalar) -> #ty<Self> }
             }
             Self::LoadInterleaved {
                 block_size,
@@ -971,7 +972,7 @@ impl OpSig {
             } => {
                 let arg0 = &arg_names[0];
                 let arg_ty = load_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                quote! { self, #arg0: #arg_ty }
+                quote! { (self, #arg0: #arg_ty) -> #ty<Self> }
             }
             Self::StoreInterleaved {
                 block_size,
@@ -980,80 +981,126 @@ impl OpSig {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 let arg_ty = store_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                quote! { self, #arg0: #ty<Self>, #arg1: #arg_ty }
+                quote! { (self, #arg0: #ty<Self>, #arg1: #arg_ty) -> () }
             }
-            Self::Unary
-            | Self::Split { .. }
-            | Self::Cvt { .. }
-            | Self::Reinterpret { .. }
-            | Self::WidenNarrow { .. }
-            | Self::MaskReduce { .. } => {
-                let arg0 = &arg_names[0];
-                quote! { self, #arg0: #ty<Self> }
-            }
-            Self::Binary
-            | Self::Compare
-            | Self::Combine { .. }
-            | Self::Zip { .. }
-            | Self::Unzip { .. } => {
+            Self::Compare => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
-                quote! { self, #arg0: #ty<Self>, #arg1: #ty<Self> }
+                let result = vec_ty.mask_ty().rust();
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
+            }
+            Self::Split { half_ty } => {
+                let arg0 = &arg_names[0];
+                let result = half_ty.rust();
+                quote! { (self, #arg0: #ty<Self>) -> (#result<Self>, #result<Self>) }
+            }
+            Self::Combine { combined_ty } => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let result = combined_ty.rust();
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
+            }
+            Self::Unary => {
+                let arg0 = &arg_names[0];
+                quote! { (self, #arg0: #ty<Self>) -> #ty<Self> }
+            }
+            Self::Binary | Self::Zip { .. } | Self::Unzip { .. } => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
+            }
+            Self::Cvt {
+                target_ty,
+                scalar_bits,
+            } => {
+                let arg0 = &arg_names[0];
+                let result = VecType::new(*target_ty, *scalar_bits, vec_ty.len).rust();
+                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
+            }
+            Self::Reinterpret {
+                target_ty,
+                scalar_bits,
+            } => {
+                let arg0 = &arg_names[0];
+                let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
+                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
+            }
+            Self::WidenNarrow { target_ty } => {
+                let arg0 = &arg_names[0];
+                let result = target_ty.rust();
+                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
+            }
+            Self::MaskReduce { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { (self, #arg0: #ty<Self>) -> bool }
             }
             Self::Shift => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
-                quote! { self, #arg0: #ty<Self>, #arg1: u32 }
+                quote! { (self, #arg0: #ty<Self>, #arg1: u32) -> #ty<Self> }
             }
             Self::Ternary => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 let arg2 = &arg_names[2];
-                quote! { self, #arg0: #ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self> }
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
             }
             Self::Select => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 let arg2 = &arg_names[2];
                 let mask_ty = vec_ty.mask_ty().rust();
-                quote! { self, #arg0: #mask_ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self> }
+                quote! { (self, #arg0: #mask_ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
             }
+        };
+
+        quote! {
+            fn #method_ident #sig_inner
         }
     }
 
-    pub(crate) fn vec_trait_args(&self) -> Option<TokenStream> {
+    pub(crate) fn vec_trait_method_sig(&self, method_name: &str) -> Option<TokenStream> {
         let arg_names = self
             .vec_trait_arg_names()
             .iter()
             .map(|n| Ident::new(n, Span::call_site()))
             .collect::<Vec<_>>();
-        let args = match self {
+        let method_ident = Ident::new(method_name, Span::call_site());
+        let sig_inner = match self {
             Self::Splat | Self::LoadInterleaved { .. } | Self::StoreInterleaved { .. } => {
                 return None;
             }
             Self::Unary
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
-            | Self::WidenNarrow { .. }
-            | Self::MaskReduce { .. } => {
+            | Self::WidenNarrow { .. } => {
                 let arg0 = &arg_names[0];
-                quote! { #arg0 }
+                quote! { (#arg0) -> Self }
             }
-            Self::Binary | Self::Compare | Self::Zip { .. } | Self::Unzip { .. } => {
+            Self::MaskReduce { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { (#arg0) -> bool }
+            }
+            Self::Binary | Self::Zip { .. } | Self::Unzip { .. } => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
-                quote! { #arg0, #arg1: impl SimdInto<Self, S> }
+                quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
+            }
+            Self::Compare => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> Self::Mask }
             }
             Self::Shift => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
-                quote! { #arg0, #arg1: u32 }
+                quote! { (#arg0, #arg1: u32) -> Self }
             }
             Self::Ternary => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 let arg2 = &arg_names[2];
-                quote! { #arg0, #arg1: impl SimdInto<Self, S>, #arg2: impl SimdInto<Self, S> }
+                quote! { (#arg0, #arg1: impl SimdInto<Self, S>, #arg2: impl SimdInto<Self, S>) -> Self }
             }
             // select is currently done by trait, but maybe we'll implement for
             // masks.
@@ -1061,21 +1108,34 @@ impl OpSig {
             // These signatures involve types not in the Simd trait
             Self::Split { .. } | Self::Combine { .. } => return None,
         };
-        Some(args)
+        Some(quote! { fn #method_ident #sig_inner })
     }
 
     pub(crate) fn forwarding_call_args(&self) -> Option<TokenStream> {
+        let arg_names = self
+            .vec_trait_arg_names()
+            .iter()
+            .map(|n| Ident::new(n, Span::call_site()))
+            .collect::<Vec<_>>();
         let args = match self {
-            Self::Unary | Self::MaskReduce { .. } => quote! { self },
+            Self::Unary | Self::MaskReduce { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { #arg0 }
+            }
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
             | Self::Zip { .. }
             | Self::Unzip { .. } => {
-                quote! { self, rhs.simd_into(self.simd) }
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { #arg0, #arg1.simd_into(self.simd) }
             }
             Self::Ternary => {
-                quote! { self, op1.simd_into(self.simd), op2.simd_into(self.simd) }
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let arg2 = &arg_names[2];
+                quote! { #arg0, #arg1.simd_into(self.simd), #arg2.simd_into(self.simd) }
             }
             Self::Splat
             | Self::Select
@@ -1088,66 +1148,6 @@ impl OpSig {
             | Self::StoreInterleaved { .. } => return None,
         };
         Some(args)
-    }
-
-    pub(crate) fn simd_impl_ret_ty(&self, ty: &VecType) -> TokenStream {
-        let quant = quote! { <Self> };
-        match self {
-            Self::Splat
-            | Self::Unary
-            | Self::Binary
-            | Self::Select
-            | Self::Ternary
-            | Self::Shift
-            | Self::LoadInterleaved { .. } => {
-                let rust = ty.rust();
-                quote! { #rust #quant }
-            }
-            Self::Compare => {
-                let rust = ty.mask_ty().rust();
-                quote! { #rust #quant }
-            }
-            Self::Combine { combined_ty } => {
-                let result = combined_ty.rust();
-                quote! { #result #quant }
-            }
-            Self::Split { half_ty } => {
-                let result = half_ty.rust();
-                quote! { ( #result #quant, #result #quant ) }
-            }
-            Self::Zip { .. } | Self::Unzip { .. } => {
-                let rust = ty.rust();
-                quote! { #rust #quant }
-            }
-            Self::Cvt {
-                target_ty,
-                scalar_bits,
-            } => {
-                let result = VecType::new(*target_ty, *scalar_bits, ty.len).rust();
-                quote! { #result #quant }
-            }
-            Self::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => {
-                let result = ty.reinterpret(*target_ty, *scalar_bits).rust();
-                quote! { #result #quant }
-            }
-            Self::WidenNarrow { target_ty } => {
-                let result = target_ty.rust();
-                quote! { #result #quant }
-            }
-            Self::MaskReduce { .. } => quote! { bool },
-            Self::StoreInterleaved { .. } => quote! {()},
-        }
-    }
-
-    pub(crate) fn trait_ret_ty(&self) -> TokenStream {
-        match self {
-            Self::Compare => quote! { Self::Mask },
-            Self::MaskReduce { .. } => quote! { bool },
-            _ => quote! { Self },
-        }
     }
 
     pub(crate) fn format_docstring(&self, docstring: &str, flavor: TyFlavor) -> String {
@@ -1204,21 +1204,13 @@ pub(crate) enum TyFlavor {
     VecImpl,
 }
 
-pub(crate) fn load_interleaved_arg_ty(
-    block_size: u16,
-    block_count: u16,
-    vec_ty: &VecType,
-) -> TokenStream {
+fn load_interleaved_arg_ty(block_size: u16, block_count: u16, vec_ty: &VecType) -> TokenStream {
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
     quote! { &[#scalar; #len] }
 }
 
-pub(crate) fn store_interleaved_arg_ty(
-    block_size: u16,
-    block_count: u16,
-    vec_ty: &VecType,
-) -> TokenStream {
+fn store_interleaved_arg_ty(block_size: u16, block_count: u16, vec_ty: &VecType) -> TokenStream {
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
     quote! { &mut [#scalar; #len] }

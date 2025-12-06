@@ -4,7 +4,6 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::ops::{load_interleaved_arg_ty, store_interleaved_arg_ty};
 use crate::{
     ops::OpSig,
     types::{ScalarType, VecType},
@@ -63,28 +62,28 @@ pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
 ///
 /// Only suitable for lane-wise and block-wise operations
 pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
-    let ty_rust = ty.rust();
-    let name = generic_op_name(op, ty);
+    let name = format!("{op}_{}", ty.rust_name());
     let split = Ident::new(&format!("split_{}", ty.rust_name()), Span::call_site());
     let half = VecType::new(ty.scalar, ty.scalar_bits, ty.len / 2);
     let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
     let do_half = Ident::new(&format!("{op}_{}", half.rust_name()), Span::call_site());
-    let ret_ty = sig.simd_impl_ret_ty(ty);
+    let method_sig = sig.simd_trait_method_sig(ty, &name);
+    let method_sig = quote! {
+        #[inline(always)]
+        #method_sig
+    };
     match sig {
         OpSig::Splat => {
-            let scalar = ty.scalar.rust(ty.scalar_bits);
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #scalar) -> #ret_ty {
-                    let half = self.#do_half(a);
+                #method_sig {
+                    let half = self.#do_half(val);
                     self.#combine(half, half)
                 }
             }
         }
         OpSig::Unary => {
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
                     self.#combine(self.#do_half(a0), self.#do_half(a1))
                 }
@@ -92,8 +91,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
         OpSig::Binary => {
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
                     let (b0, b1) = self.#split(b);
                     self.#combine(self.#do_half(a0, b0), self.#do_half(a1, b1))
@@ -102,17 +100,15 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
         OpSig::Shift => {
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>, b: u32) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
-                    self.#combine(self.#do_half(a0, b), self.#do_half(a1, b))
+                    self.#combine(self.#do_half(a0, shift), self.#do_half(a1, shift))
                 }
             }
         }
         OpSig::Ternary => {
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>, c: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
                     let (b0, b1) = self.#split(b);
                     let (c0, c1) = self.#split(c);
@@ -127,8 +123,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 Span::call_site(),
             );
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
                     let (b0, b1) = self.#split(b);
                     self.#combine_mask(self.#do_half(a0, b0), self.#do_half(a1, b1))
@@ -137,12 +132,10 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
         OpSig::Select => {
             let mask_ty = VecType::new(ScalarType::Mask, ty.scalar_bits, ty.len);
-            let mask = mask_ty.rust();
             let split_mask =
                 Ident::new(&format!("split_{}", mask_ty.rust_name()), Span::call_site());
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #mask<Self>, b: #ty_rust<Self>, c: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split_mask(a);
                     let (b0, b1) = self.#split(b);
                     let (c0, c1) = self.#split(c);
@@ -183,8 +176,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 Ident::new(&format!("zip_high_{}", half.rust_name()), Span::call_site());
 
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let #e1 = self.#split(a);
                     let #e2 = self.#split(b);
                     self.#combine(self.#zip_low_half(#e3), self.#zip_high_half(#e3))
@@ -193,8 +185,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
         OpSig::Unzip { .. } => {
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
                     let (b0, b1) = self.#split(b);
                     self.#combine(self.#do_half(a0, a1), self.#do_half(b0, b1))
@@ -208,8 +199,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             let half = VecType::new(target_ty, scalar_bits, ty.len / 2);
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
                     self.#combine(self.#do_half(a0), self.#do_half(a1))
                 }
@@ -223,8 +213,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             half.len /= 2;
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
                     self.#combine(self.#do_half(a0), self.#do_half(a1))
                 }
@@ -237,8 +226,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 Span::call_site(),
             );
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
                     self.#combine(self.#do_half(a0), self.#do_half(a1))
                 }
@@ -249,8 +237,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         OpSig::MaskReduce { quantifier, .. } => {
             let combine_op = quantifier.bool_op();
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>) -> #ret_ty {
+                #method_sig {
                     let (a0, a1) = self.#split(a);
                     self.#do_half(a0) #combine_op self.#do_half(a1)
                 }
@@ -260,7 +247,6 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             block_size,
             block_count,
         } => {
-            let arg = load_interleaved_arg_ty(block_size, block_count, ty);
             let split_len = (block_size * block_count) as usize / (ty.scalar_bits * 2);
             let delegate = format_ident!(
                 "{op}_{}",
@@ -271,8 +257,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 .rust_name()
             );
             quote! {
-                #[inline(always)]
-                fn #name(self, src: #arg) -> #ret_ty {
+                #method_sig {
                     let (chunks, _) = src.as_chunks::<#split_len>();
                     unsafe {
                         core::mem::transmute([self.#delegate(&chunks[0]), self.#delegate(&chunks[1])])
@@ -280,14 +265,9 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::StoreInterleaved {
-            block_size,
-            block_count,
-        } => {
-            let arg = store_interleaved_arg_ty(block_size, block_count, ty);
+        OpSig::StoreInterleaved { .. } => {
             quote! {
-                #[inline(always)]
-                fn #name(self, a: #ty_rust<Self>, dest: #arg) -> #ret_ty {
+                #method_sig {
                     todo!()
                 }
             }

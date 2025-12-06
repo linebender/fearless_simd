@@ -135,13 +135,12 @@ fn mk_simd_impl() -> TokenStream {
                 continue;
             }
             let method_name = format!("{method}_{ty_name}");
-            let method_ident = Ident::new(&method_name, Span::call_site());
-            let ret_ty = sig.simd_impl_ret_ty(vec_ty);
-            let args = sig.simd_trait_args(vec_ty);
+            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
             let method_sig = quote! {
                 #[inline(always)]
-                fn #method_ident(#args) -> #ret_ty
+                #method_sig
             };
+
             let method = match sig {
                 OpSig::Splat => {
                     let num_elements = vec_ty.len;
