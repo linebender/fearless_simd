@@ -210,6 +210,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -264,6 +266,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -345,6 +349,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -399,6 +405,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -480,6 +488,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -536,6 +546,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -786,6 +798,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -842,6 +856,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -927,6 +943,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -983,6 +1001,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -1070,6 +1090,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -1128,6 +1150,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -1388,6 +1412,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -1442,6 +1468,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -1525,6 +1553,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -1579,6 +1609,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -1666,6 +1698,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -1722,6 +1756,8 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
@@ -2029,6 +2065,8 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     + core::ops::Not<Output = Self>
     + core::ops::Shl<u32, Output = Self>
     + core::ops::ShlAssign<u32>
+    + core::ops::Shl<Output = Self>
+    + core::ops::ShlAssign
     + core::ops::Shr<u32, Output = Self>
     + core::ops::ShrAssign<u32>
     + core::ops::Shr<Output = Self>

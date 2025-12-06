@@ -112,15 +112,6 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
 
                 quote! { #intrinsic ( #( #args ),* ) }
             }
-            "shrv" if ty.scalar_bits > 16 => {
-                let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
-                let name = match ty.scalar {
-                    ScalarType::Int => "srav",
-                    _ => "srlv",
-                };
-                let intrinsic = intrinsic_ident(name, suffix, ty.n_bits());
-                quote! { #intrinsic ( #( #args ),* ) }
-            }
             "min_precise" | "max_precise" => {
                 assert_eq!(
                     ty.scalar,

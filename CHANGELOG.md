@@ -28,6 +28,7 @@ This release has an [MSRV][] of 1.88.
 - A `prelude` module, which exports all the traits in the library but not the types. ([#149][] by [@valadaptive][])
 - The `any_true`, `all_true`, `any_false`, and `all_false` methods on mask types. ([#141][] by [@valadaptive][])
 - Documentation for most traits, vector types, and operations. ([#154][] by [@valadaptive][])
+- A "shift left by vector" operation, to go with the existing "shift right by vector". ([#155][] by [@valadaptive][])
 
 ### Fixed
 
@@ -148,6 +149,7 @@ No changelog was kept for this release.
 [#145]: https://github.com/linebender/fearless_simd/pull/145
 [#149]: https://github.com/linebender/fearless_simd/pull/149
 [#154]: https://github.com/linebender/fearless_simd/pull/154
+[#155]: https://github.com/linebender/fearless_simd/pull/155
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0

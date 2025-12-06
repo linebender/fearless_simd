@@ -174,10 +174,6 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         #method_sig
     };
 
-    if method == "shrv" {
-        return scalar_binary(&method_ident, quote!(core::ops::Shr::shr), vec_ty);
-    }
-
     match sig {
         OpSig::Splat => handle_splat(method_sig, vec_ty),
         OpSig::Compare => handle_compare(method_sig, method, vec_ty),
@@ -185,7 +181,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::WidenNarrow { target_ty } => {
             handle_widen_narrow(method_sig, method, vec_ty, target_ty)
         }
-        OpSig::Binary => handle_binary(method_sig, method, vec_ty),
+        OpSig::Binary => handle_binary(method_sig, &method_ident, method, vec_ty),
         OpSig::Shift => handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
         OpSig::Select => handle_select(method_sig, vec_ty),
@@ -409,33 +405,40 @@ pub(crate) fn handle_widen_narrow(
 
 pub(crate) fn handle_binary(
     method_sig: TokenStream,
+    method_ident: &Ident,
     method: &str,
     vec_ty: &VecType,
 ) -> TokenStream {
-    if method == "mul" && vec_ty.scalar_bits == 8 {
-        // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
-        let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
-        let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
-        let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
-        let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
-        let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
-        let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
-        quote! {
-            #method_sig {
-                unsafe {
-                    let dst_even = #mullo(a.into(), b.into());
-                    let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
+    match method {
+        "mul" if vec_ty.scalar_bits == 8 => {
+            // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
+            let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
+            let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
+            let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
+            let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
+            let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
+            let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
+            quote! {
+                #method_sig {
+                    unsafe {
+                        let dst_even = #mullo(a.into(), b.into());
+                        let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
 
-                    #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(self)
+                        #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(self)
+                    }
                 }
             }
         }
-    } else {
-        let args = [quote! { a.into() }, quote! { b.into() }];
-        let expr = x86::expr(method, vec_ty, &args);
-        quote! {
-            #method_sig {
-                unsafe { #expr.simd_into(self) }
+        // SSE2 has shift operations, but they shift every lane by the same amount, so we can't use them here.
+        "shlv" => scalar_binary(method_ident, quote!(core::ops::Shl::shl), vec_ty),
+        "shrv" => scalar_binary(method_ident, quote!(core::ops::Shr::shr), vec_ty),
+        _ => {
+            let args = [quote! { a.into() }, quote! { b.into() }];
+            let expr = x86::expr(method, vec_ty, &args);
+            quote! {
+                #method_sig {
+                    unsafe { #expr.simd_into(self) }
+                }
             }
         }
     }

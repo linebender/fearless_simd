@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    self, coarse_type, extend_intrinsic, intrinsic_ident, pack_intrinsic, set1_intrinsic,
-    simple_intrinsic,
+    self, coarse_type, extend_intrinsic, intrinsic_ident, op_suffix, pack_intrinsic,
+    set1_intrinsic, simple_intrinsic,
 };
-use crate::generic::{generic_combine, generic_op, generic_split, scalar_binary};
+use crate::generic::{generic_combine, generic_op, generic_split};
 use crate::mk_sse4_2;
 use crate::ops::{Op, OpSig, ops_for_type};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
@@ -171,10 +171,6 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         #method_sig
     };
 
-    if method == "shrv" && scalar_bits < 32 {
-        return scalar_binary(&method_ident, quote!(core::ops::Shr::shr), vec_ty);
-    }
-
     match sig {
         OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty),
         OpSig::Compare => mk_sse4_2::handle_compare(method_sig, method, vec_ty),
@@ -182,7 +178,11 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::WidenNarrow { target_ty } => {
             handle_widen_narrow(method_sig, method, vec_ty, target_ty)
         }
-        OpSig::Binary => mk_sse4_2::handle_binary(method_sig, method, vec_ty),
+        OpSig::Binary => match method {
+            "shlv" if scalar_bits >= 32 => handle_shift_vectored(method_sig, method, vec_ty),
+            "shrv" if scalar_bits >= 32 => handle_shift_vectored(method_sig, method, vec_ty),
+            _ => mk_sse4_2::handle_binary(method_sig, &method_ident, method, vec_ty),
+        },
         OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => match method {
             "madd" => {
@@ -390,6 +390,28 @@ pub(crate) fn handle_widen_narrow(
     quote! {
         #method_sig {
             #expr
+        }
+    }
+}
+
+pub(crate) fn handle_shift_vectored(
+    method_sig: TokenStream,
+    method: &str,
+    ty: &VecType,
+) -> TokenStream {
+    let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
+    let name = match (method, ty.scalar) {
+        ("shrv", ScalarType::Int) => "srav",
+        ("shrv", _) => "srlv",
+        ("shlv", _) => "sllv",
+        _ => unreachable!(),
+    };
+    let intrinsic = intrinsic_ident(name, suffix, ty.n_bits());
+    quote! {
+        #method_sig {
+            unsafe {
+                #intrinsic(a.into(), b.into()).simd_into(self)
+            }
         }
     }
 }

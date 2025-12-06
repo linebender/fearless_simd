@@ -1885,6 +1885,25 @@ fn shl_u32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn shlv_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0xFFFFFFFF, 0xFFFF, 0xFF, 0]);
+    assert_eq!(
+        (a << u32x4::splat(simd, 4)).val,
+        [0xFFFFFFF0, 0xFFFF0, 0xFF0, 0]
+    );
+}
+
+#[simd_test]
+fn shlv_u32x4_varied<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[u32::MAX; 4]);
+    const SHIFTS: [u32; 4] = [0, 1, 2, 3];
+    assert_eq!(
+        (a << u32x4::from_slice(simd, &SHIFTS)).val,
+        SHIFTS.map(|x| u32::MAX << x)
+    );
+}
+
+#[simd_test]
 fn add_i16x8<S: Simd>(simd: S) {
     let a = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
     let b = i16x8::from_slice(simd, &[10, 20, 30, 40, 50, 60, 70, 80]);

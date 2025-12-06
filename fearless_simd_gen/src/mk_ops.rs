@@ -29,7 +29,7 @@ pub(crate) fn mk_ops() -> TokenStream {
             let doc = sig.format_docstring(doc, TyFlavor::VecImpl);
 
             match op {
-                CoreOpTrait::ShrVectored => {
+                CoreOpTrait::ShlVectored | CoreOpTrait::ShrVectored => {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
