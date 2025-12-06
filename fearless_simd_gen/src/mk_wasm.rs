@@ -37,7 +37,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
     for vec_ty in SIMD_TYPES {
         let ty_name = vec_ty.rust_name();
-        let ty = vec_ty.rust();
 
         for Op { method, sig, .. } in ops_for_type(vec_ty) {
             let b1 = vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow")
@@ -52,11 +51,10 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
             let method_name = format!("{method}_{ty_name}");
             let method_ident = Ident::new(&method_name, Span::call_site());
-            let ret_ty = sig.simd_impl_ret_ty(vec_ty);
-            let args = sig.simd_trait_args(vec_ty);
+            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
             let method_sig = quote! {
                 #[inline(always)]
-                fn #method_ident(#args) -> #ret_ty
+                #method_sig
             };
             let m = match sig {
                 OpSig::Splat => {
@@ -128,8 +126,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             };
 
                             quote! {
-                                #[inline(always)]
-                                fn #method_ident(self, a: #ty<Self>, b: #ty<Self>) -> #ret_ty {
+                                #method_sig {
                                     let low = #extmul_low(a.into(), b.into());
                                     let high = #extmul_high(a.into(), b.into());
                                     u8x16_shuffle::<0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30>(low, high).simd_into(self)

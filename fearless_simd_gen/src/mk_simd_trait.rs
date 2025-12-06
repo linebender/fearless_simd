@@ -1,7 +1,7 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::{
@@ -20,13 +20,11 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         } in &ops_for_type(vec_ty)
         {
             let method_name = format!("{method}_{ty_name}");
-            let method = Ident::new(&method_name, Span::call_site());
-            let args = sig.simd_trait_args(vec_ty);
-            let ret_ty = sig.simd_impl_ret_ty(vec_ty);
+            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
             let doc = sig.format_docstring(doc, TyFlavor::SimdTrait);
             methods.extend(quote! {
                 #[doc = #doc]
-                fn #method(#args) -> #ret_ty;
+                #method_sig;
             });
         }
     }
@@ -217,13 +215,11 @@ fn methods_for_vec_trait(scalar: ScalarType) -> Vec<TokenStream> {
         method, sig, doc, ..
     } in vec_trait_ops_for(scalar)
     {
-        let method_name = Ident::new(method, Span::call_site());
         let doc = sig.format_docstring(doc, TyFlavor::VecImpl);
-        if let Some(args) = sig.vec_trait_args() {
-            let ret_ty = sig.trait_ret_ty();
+        if let Some(method_sig) = sig.vec_trait_method_sig(method) {
             methods.push(quote! {
                 #[doc = #doc]
-                fn #method_name(#args) -> #ret_ty;
+                #method_sig;
             });
         }
     }
