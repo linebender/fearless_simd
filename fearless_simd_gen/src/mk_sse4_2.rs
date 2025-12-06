@@ -429,6 +429,7 @@ pub(crate) fn handle_binary(
                 }
             }
         }
+        // SSE2 has shift operations, but they shift every lane by the same amount, so we can't use them here.
         "shlv" => scalar_binary(method_ident, quote!(core::ops::Shl::shl), vec_ty),
         "shrv" => scalar_binary(method_ident, quote!(core::ops::Shr::shr), vec_ty),
         _ => {
