@@ -189,8 +189,10 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Ternary => {
                     if matches!(method, "mul_add" | "mul_sub") {
-                        let add_sub =
-                            generic_op_name(if method == "mul_add" { "add" } else { "sub" }, vec_ty);
+                        let add_sub = generic_op_name(
+                            if method == "mul_add" { "add" } else { "sub" },
+                            vec_ty,
+                        );
                         let mul = generic_op_name("mul", vec_ty);
 
                         let c = if method == "mul_sub" {
