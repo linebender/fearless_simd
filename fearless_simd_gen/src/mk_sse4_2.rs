@@ -512,14 +512,14 @@ pub(crate) fn handle_ternary(
     vec_ty: &VecType,
 ) -> TokenStream {
     match method {
-        "madd" => {
+        "mul_add" => {
             quote! {
                 #method_sig {
                     a * b + c
                 }
             }
         }
-        "msub" => {
+        "mul_sub" => {
             quote! {
                 #method_sig {
                     a * b - c

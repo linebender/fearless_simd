@@ -188,12 +188,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Ternary => {
-                    if matches!(method, "madd" | "msub") {
-                        let add_sub =
-                            generic_op_name(if method == "madd" { "add" } else { "sub" }, vec_ty);
+                    if matches!(method, "mul_add" | "mul_sub") {
+                        let add_sub = generic_op_name(
+                            if method == "mul_add" { "add" } else { "sub" },
+                            vec_ty,
+                        );
                         let mul = generic_op_name("mul", vec_ty);
 
-                        let c = if method == "msub" {
+                        let c = if method == "mul_sub" {
                             // WebAssembly just... forgot fused multiply-subtract? It seems the
                             // initial proposal
                             // (https://github.com/WebAssembly/relaxed-simd/issues/27) confused it

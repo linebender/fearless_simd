@@ -165,11 +165,11 @@ impl Simd for Sse4_2 {
         }
     }
     #[inline(always)]
-    fn madd_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+    fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         a * b + c
     }
     #[inline(always)]
-    fn msub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
+    fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         a * b - c
     }
     #[inline(always)]
@@ -1370,11 +1370,11 @@ impl Simd for Sse4_2 {
         }
     }
     #[inline(always)]
-    fn madd_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+    fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         a * b + c
     }
     #[inline(always)]
-    fn msub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
+    fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         a * b - c
     }
     #[inline(always)]
@@ -1612,18 +1612,24 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
-    fn madd_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
+    fn mul_add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         let (b0, b1) = self.split_f32x8(b);
         let (c0, c1) = self.split_f32x8(c);
-        self.combine_f32x4(self.madd_f32x4(a0, b0, c0), self.madd_f32x4(a1, b1, c1))
+        self.combine_f32x4(
+            self.mul_add_f32x4(a0, b0, c0),
+            self.mul_add_f32x4(a1, b1, c1),
+        )
     }
     #[inline(always)]
-    fn msub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
+    fn mul_sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         let (b0, b1) = self.split_f32x8(b);
         let (c0, c1) = self.split_f32x8(c);
-        self.combine_f32x4(self.msub_f32x4(a0, b0, c0), self.msub_f32x4(a1, b1, c1))
+        self.combine_f32x4(
+            self.mul_sub_f32x4(a0, b0, c0),
+            self.mul_sub_f32x4(a1, b1, c1),
+        )
     }
     #[inline(always)]
     fn floor_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -3143,18 +3149,24 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
-    fn madd_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
+    fn mul_add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
         let (b0, b1) = self.split_f64x4(b);
         let (c0, c1) = self.split_f64x4(c);
-        self.combine_f64x2(self.madd_f64x2(a0, b0, c0), self.madd_f64x2(a1, b1, c1))
+        self.combine_f64x2(
+            self.mul_add_f64x2(a0, b0, c0),
+            self.mul_add_f64x2(a1, b1, c1),
+        )
     }
     #[inline(always)]
-    fn msub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
+    fn mul_sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
         let (b0, b1) = self.split_f64x4(b);
         let (c0, c1) = self.split_f64x4(c);
-        self.combine_f64x2(self.msub_f64x2(a0, b0, c0), self.msub_f64x2(a1, b1, c1))
+        self.combine_f64x2(
+            self.mul_sub_f64x2(a0, b0, c0),
+            self.mul_sub_f64x2(a1, b1, c1),
+        )
     }
     #[inline(always)]
     fn floor_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -3433,18 +3445,24 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
-    fn madd_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
+    fn mul_add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         let (b0, b1) = self.split_f32x16(b);
         let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(self.madd_f32x8(a0, b0, c0), self.madd_f32x8(a1, b1, c1))
+        self.combine_f32x8(
+            self.mul_add_f32x8(a0, b0, c0),
+            self.mul_add_f32x8(a1, b1, c1),
+        )
     }
     #[inline(always)]
-    fn msub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
+    fn mul_sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         let (b0, b1) = self.split_f32x16(b);
         let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(self.msub_f32x8(a0, b0, c0), self.msub_f32x8(a1, b1, c1))
+        self.combine_f32x8(
+            self.mul_sub_f32x8(a0, b0, c0),
+            self.mul_sub_f32x8(a1, b1, c1),
+        )
     }
     #[inline(always)]
     fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -5104,18 +5122,24 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
-    fn madd_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
+    fn mul_add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         let (b0, b1) = self.split_f64x8(b);
         let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(self.madd_f64x4(a0, b0, c0), self.madd_f64x4(a1, b1, c1))
+        self.combine_f64x4(
+            self.mul_add_f64x4(a0, b0, c0),
+            self.mul_add_f64x4(a1, b1, c1),
+        )
     }
     #[inline(always)]
-    fn msub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
+    fn mul_sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         let (b0, b1) = self.split_f64x8(b);
         let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(self.msub_f64x4(a0, b0, c0), self.msub_f64x4(a1, b1, c1))
+        self.combine_f64x4(
+            self.mul_sub_f64x4(a0, b0, c0),
+            self.mul_sub_f64x4(a1, b1, c1),
+        )
     }
     #[inline(always)]
     fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
