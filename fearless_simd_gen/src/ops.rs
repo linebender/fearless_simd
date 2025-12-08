@@ -279,14 +279,14 @@ const FLOAT_OPS: &[Op] = &[
         Signaling NaN values are not produced by floating-point math operations, only from manual initialization with specific bit patterns. You probably don't need to worry about them.",
     ),
     Op::new(
-        "madd",
+        "mul_add",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) + {arg2}` (fused multiply-add) for each element.\n\n\
         Depending on hardware support, the result may be computed with only one rounding error, or may be implemented as a regular multiply followed by an add, which will result in two rounding errors.",
     ),
     Op::new(
-        "msub",
+        "mul_sub",
         OpKind::VecTraitMethod,
         OpSig::Ternary,
         "Compute `({arg0} * {arg1}) - {arg2}` (fused multiply-subtract) for each element.\n\n\

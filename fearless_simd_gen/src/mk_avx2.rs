@@ -185,7 +185,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         },
         OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => match method {
-            "madd" => {
+            "mul_add" => {
                 let intrinsic = simple_intrinsic("fmadd", vec_ty);
                 quote! {
                     #method_sig {
@@ -193,7 +193,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
                     }
                 }
             }
-            "msub" => {
+            "mul_sub" => {
                 let intrinsic = simple_intrinsic("fmsub", vec_ty);
                 quote! {
                     #method_sig {
