@@ -101,8 +101,7 @@ fn neon_array_type(ty: &VecType) -> (&'static str, &'static str, usize) {
 pub(crate) fn opt_q(ty: &VecType) -> &'static str {
     match ty.n_bits() {
         64 => "",
-        128 => "q",
-        _ => panic!("unsupported simd width"),
+        _ => "q",
     }
 }
 
@@ -110,6 +109,20 @@ pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> Ident {
     let (opt_q, scalar_c, size) = neon_array_type(ty);
     Ident::new(
         &format!("{name}{opt_q}_{scalar_c}{size}"),
+        Span::call_site(),
+    )
+}
+
+pub(crate) fn load_intrinsic(ty: &VecType) -> Ident {
+    let (opt_q, scalar_c, size) = neon_array_type(ty);
+    let num_blocks = ty.n_bits() / 128;
+    let opt_count = if num_blocks > 1 {
+        format!("_x{num_blocks}")
+    } else {
+        String::new()
+    };
+    Ident::new(
+        &format!("vld1{opt_q}_{scalar_c}{size}{opt_count}"),
         Span::call_site(),
     )
 }
