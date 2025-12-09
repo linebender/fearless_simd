@@ -132,7 +132,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             }
                         }
                         "max_precise" | "min_precise" => {
-                            let intrinsic: TokenStream = simple_intrinsic(
+                            let intrinsic = simple_intrinsic(
                                 if method == "max_precise" {
                                     "pmax"
                                 } else {
@@ -140,7 +140,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 },
                                 vec_ty,
                             );
-                            let compare_ne: TokenStream = simple_intrinsic("ne", vec_ty);
+                            let compare_ne = simple_intrinsic("ne", vec_ty);
                             quote! {
                                 #method_sig {
                                     let intermediate = #intrinsic(b.into(), a.into());
@@ -459,12 +459,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     condition,
                 } => {
                     let (intrinsic, negate) = match (quantifier, condition) {
-                        (Quantifier::Any, true) => (quote! { v128_any_true }, None),
+                        (Quantifier::Any, true) => (v128_intrinsic("any_true"), None),
                         (Quantifier::Any, false) => {
                             (simple_intrinsic("all_true", vec_ty), Some(quote! { ! }))
                         }
                         (Quantifier::All, true) => (simple_intrinsic("all_true", vec_ty), None),
-                        (Quantifier::All, false) => (quote! { v128_any_true }, Some(quote! { ! })),
+                        (Quantifier::All, false) => {
+                            (v128_intrinsic("any_true"), Some(quote! { ! }))
+                        }
                     };
 
                     quote! {
