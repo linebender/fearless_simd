@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use proc_macro2::{Ident, Literal, Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) enum ScalarType {
@@ -66,6 +66,43 @@ impl VecType {
     pub(crate) fn rust(&self) -> TokenStream {
         let ident = Ident::new(&self.rust_name(), Span::call_site());
         quote! { #ident }
+    }
+
+    /// Returns the name of the `Aligned{128/256/512}` wrapper for this vector type, used to wrap native vector types or
+    /// arrays of them.
+    pub(crate) fn aligned_wrapper(&self) -> TokenStream {
+        let aligned = format_ident!("Aligned{}", self.n_bits());
+        quote! { crate::support::#aligned }
+    }
+
+    /// Returns the native vector type wrapped by the `Aligned` wrapper. This could be a single native vector type or an
+    /// array of them.
+    pub(crate) fn wrapped_native_ty(
+        &self,
+        arch_ty: impl Fn(&Self) -> Ident,
+        max_block_size: usize,
+    ) -> TokenStream {
+        let block_size = self.n_bits().min(max_block_size);
+        let block_count = self.n_bits() / block_size;
+        let native_block_ty =
+            Self::new(self.scalar, self.scalar_bits, block_size / self.scalar_bits);
+        let native_block_ty_ident = arch_ty(&native_block_ty);
+        if self.n_bits() == block_size {
+            quote! { #native_block_ty_ident }
+        } else {
+            quote! { [#native_block_ty_ident; #block_count] }
+        }
+    }
+
+    /// Returns the full type name for this vector's `Aligned` wrapper, including the type parameter.
+    pub(crate) fn aligned_wrapper_ty(
+        &self,
+        arch_ty: impl Fn(&Self) -> Ident,
+        max_block_size: usize,
+    ) -> TokenStream {
+        let newtype = self.aligned_wrapper();
+        let native_ty = self.wrapped_native_ty(arch_ty, max_block_size);
+        quote! { #newtype<#native_ty> }
     }
 
     pub(crate) fn reinterpret(&self, dst_scalar: ScalarType, dst_scalar_bits: usize) -> Self {

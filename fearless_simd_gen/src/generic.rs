@@ -5,54 +5,9 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    ops::OpSig,
-    types::{ScalarType, VecType},
+    ops::{OpSig, RefKind},
+    types::{SIMD_TYPES, ScalarType, VecType},
 };
-
-/// Implementation of combine based on `copy_from_slice`
-pub(crate) fn generic_combine(ty: &VecType, combined_ty: &VecType) -> TokenStream {
-    let n = ty.len;
-    let n2 = combined_ty.len;
-    let ty_rust = ty.rust();
-    let result = combined_ty.rust();
-    let name = Ident::new(&format!("combine_{}", ty.rust_name()), Span::call_site());
-    let default = match ty.scalar {
-        ScalarType::Float => quote! { 0.0 },
-        _ => quote! { 0 },
-    };
-    quote! {
-        #[inline(always)]
-        fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #result<Self> {
-            let mut result = [#default; #n2];
-            result[0..#n].copy_from_slice(&a.val);
-            result[#n..#n2].copy_from_slice(&b.val);
-            result.simd_into(self)
-        }
-    }
-}
-
-/// Implementation of split based on `copy_from_slice`
-pub(crate) fn generic_split(ty: &VecType, half_ty: &VecType) -> TokenStream {
-    let n = ty.len;
-    let nhalf = half_ty.len;
-    let ty_rust = ty.rust();
-    let result = half_ty.rust();
-    let name = Ident::new(&format!("split_{}", ty.rust_name()), Span::call_site());
-    let default = match ty.scalar {
-        ScalarType::Float => quote! { 0.0 },
-        _ => quote! { 0 },
-    };
-    quote! {
-        #[inline(always)]
-        fn #name(self, a: #ty_rust<Self>) -> (#result<Self>, #result<Self>) {
-            let mut b0 = [#default; #nhalf];
-            let mut b1 = [#default; #nhalf];
-            b0.copy_from_slice(&a.val[0..#nhalf]);
-            b1.copy_from_slice(&a.val[#nhalf..#n]);
-            (b0.simd_into(self), b1.simd_into(self))
-        }
-    }
-}
 
 pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
     Ident::new(&format!("{op}_{}", ty.rust_name()), Span::call_site())
@@ -233,8 +188,6 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::Split { half_ty } => generic_split(ty, &half_ty),
-        OpSig::Combine { combined_ty } => generic_combine(ty, &combined_ty),
         OpSig::MaskReduce { quantifier, .. } => {
             let combine_op = quantifier.bool_op();
             quote! {
@@ -273,6 +226,14 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 }
             }
         }
+        OpSig::Split { .. }
+        | OpSig::Combine { .. }
+        | OpSig::AsArray { .. }
+        | OpSig::FromArray { .. } => {
+            panic!("These operations require more information about the target platform");
+        }
+        OpSig::FromBytes => generic_from_bytes(method_sig, ty),
+        OpSig::ToBytes => generic_to_bytes(method_sig, ty),
     }
 }
 
@@ -281,7 +242,172 @@ pub(crate) fn scalar_binary(name: &Ident, f: TokenStream, ty: &VecType) -> Token
     quote! {
         #[inline(always)]
         fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #ty_rust<Self> {
-            core::array::from_fn(|i| #f(a.val[i], b.val[i])).simd_into(self)
+            core::array::from_fn(|i| #f(a[i], b[i])).simd_into(self)
+        }
+    }
+}
+
+pub(crate) fn generic_block_split(
+    method_sig: TokenStream,
+    half_ty: &VecType,
+    max_block_size: usize,
+) -> TokenStream {
+    let split_arch_ty = half_ty.aligned_wrapper();
+    let half_rust = half_ty.rust();
+    let expr = match (half_ty.n_bits(), max_block_size) {
+        (256, 128) => quote! {
+            (
+                #half_rust { val: #split_arch_ty([a.val.0[0], a.val.0[1]]), simd: self },
+                #half_rust { val: #split_arch_ty([a.val.0[2], a.val.0[3]]), simd: self },
+            )
+        },
+        (128, 128) | (256, 256) => quote! {
+            (
+                #half_rust { val: #split_arch_ty(a.val.0[0]), simd: self },
+                #half_rust { val: #split_arch_ty(a.val.0[1]), simd: self },
+            )
+        },
+        _ => unimplemented!(),
+    };
+    quote! {
+        #method_sig {
+            #expr
+        }
+    }
+}
+
+pub(crate) fn generic_block_combine(
+    method_sig: TokenStream,
+    combined_ty: &VecType,
+    max_block_size: usize,
+) -> TokenStream {
+    let combined_arch_ty = combined_ty.aligned_wrapper();
+    let combined_rust = combined_ty.rust();
+    let expr = match (combined_ty.n_bits(), max_block_size) {
+        (512, 128) => quote! {
+            #combined_rust {val: #combined_arch_ty([a.val.0[0], a.val.0[1], b.val.0[0], b.val.0[1]]), simd: self }
+        },
+        (256, 128) | (512, 256) => quote! {
+            #combined_rust {val: #combined_arch_ty([a.val.0, b.val.0]), simd: self }
+        },
+        _ => unimplemented!(),
+    };
+    quote! {
+        #method_sig {
+            #expr
+        }
+    }
+}
+
+pub(crate) fn generic_from_array(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    _kind: RefKind,
+    max_block_size: usize,
+    load_unaligned_block: impl Fn(&VecType) -> Ident,
+) -> TokenStream {
+    let block_size = max_block_size.min(vec_ty.n_bits());
+    let block_count = vec_ty.n_bits() / block_size;
+    let num_scalars_per_block = vec_ty.len / block_count;
+
+    let native_block_ty = VecType::new(
+        vec_ty.scalar,
+        vec_ty.scalar_bits,
+        block_size / vec_ty.scalar_bits,
+    );
+
+    let wrapper_ty = vec_ty.aligned_wrapper();
+    let load_unaligned = load_unaligned_block(&native_block_ty);
+    let expr = if block_count == 1 {
+        quote! {
+            unsafe { #wrapper_ty(#load_unaligned(val.as_ptr() as *const _)) }
+        }
+    } else {
+        let blocks = (0..block_count).map(|n| n * num_scalars_per_block);
+        quote! {
+            unsafe { #wrapper_ty([
+                #(#load_unaligned(val.as_ptr().add(#blocks) as *const _)),*
+            ]) }
+        }
+    };
+    let vec_rust = vec_ty.rust();
+
+    quote! {
+        #method_sig {
+            #vec_rust { val: #expr, simd: self }
+        }
+    }
+}
+
+pub(crate) fn generic_as_array(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    kind: RefKind,
+    max_block_size: usize,
+    arch_ty: impl Fn(&VecType) -> Ident,
+) -> TokenStream {
+    let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+    let num_scalars = vec_ty.len;
+
+    let ref_tok = kind.token();
+    let native_ty = vec_ty.wrapped_native_ty(arch_ty, max_block_size);
+
+    quote! {
+        #method_sig {
+            unsafe {
+                // Safety: The native vector type backing any implementation will be:
+                // - A `#[repr(simd)]` type, which has the same layout as an array of scalars
+                // - An array of `#[repr(simd)]` types
+                // - For AArch64 specifically, a `#[repr(C)]` tuple of `#[repr(simd)]` types
+                //
+                // Not only do these all have the same layout as a flat array of the corresponding scalars, but they
+                // wrap primitives where all bit patterns are valid (ints and floats).
+                core::mem::transmute::<#ref_tok #native_ty, #ref_tok [#rust_scalar; #num_scalars]>(#ref_tok a.val.0)
+            }
+        }
+    }
+}
+
+pub(crate) fn generic_to_bytes(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+    quote! {
+        #method_sig {
+            unsafe {
+                #bytes_ty { val: core::mem::transmute(a.val), simd: self }
+            }
+        }
+    }
+}
+
+pub(crate) fn generic_from_bytes(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let ty = vec_ty.rust();
+    quote! {
+        #method_sig {
+            unsafe {
+                #ty { val: core::mem::transmute(a.val), simd: self }
+            }
+        }
+    }
+}
+
+pub(crate) fn impl_arch_types(
+    level_name: &str,
+    max_block_size: usize,
+    arch_ty: impl Fn(&VecType) -> Ident,
+) -> TokenStream {
+    let mut assoc_types = vec![];
+    for vec_ty in SIMD_TYPES {
+        let ty_ident = vec_ty.rust();
+        let wrapper_ty = vec_ty.aligned_wrapper_ty(&arch_ty, max_block_size);
+        assoc_types.push(quote! {
+            type #ty_ident = #wrapper_ty;
+        });
+    }
+    let level_tok = Ident::new(level_name, Span::call_site());
+
+    quote! {
+        impl ArchTypes for #level_tok {
+            #( #assoc_types )*
         }
     }
 }

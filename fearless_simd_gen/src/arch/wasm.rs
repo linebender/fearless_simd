@@ -43,7 +43,7 @@ pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> Ident {
     Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site())
 }
 
-fn v128_intrinsic(name: &str) -> Ident {
+pub(crate) fn v128_intrinsic(name: &str) -> Ident {
     let ty_prefix = Ident::new("v128", Span::call_site());
     let ident = Ident::new(name, Span::call_site());
     Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site())

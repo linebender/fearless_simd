@@ -4,12 +4,15 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::arch::wasm::arch_ty;
-use crate::generic::{generic_op_name, scalar_binary};
+use crate::arch::wasm::{arch_ty, v128_intrinsic};
+use crate::generic::{
+    generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
+    generic_from_bytes, generic_op_name, generic_to_bytes, impl_arch_types, scalar_binary,
+};
 use crate::ops::{Op, Quantifier, valid_reinterpret};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
-    generic::{generic_combine, generic_op, generic_split},
+    generic::generic_op,
     ops::{OpSig, ops_for_type},
     types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
@@ -40,12 +43,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
         let ty_name = vec_ty.rust_name();
 
         for Op { method, sig, .. } in ops_for_type(vec_ty) {
-            let b1 = vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow")
-                || vec_ty.n_bits() > 256;
-            let b2 = !matches!(method, "load_interleaved_128")
-                && !matches!(method, "store_interleaved_128");
-
-            if b1 && b2 {
+            if sig.should_use_generic_op(vec_ty, 128) {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
@@ -250,8 +248,10 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
-                OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
+                OpSig::Combine { combined_ty } => {
+                    generic_block_combine(method_sig, &combined_ty, 128)
+                }
+                OpSig::Split { half_ty } => generic_block_split(method_sig, &half_ty, 128),
                 OpSig::Zip { select_low } => {
                     let (indices, shuffle_fn) = match vec_ty.scalar_bits {
                         8 => {
@@ -635,6 +635,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
+                OpSig::FromArray { kind } => {
+                    generic_from_array(method_sig, vec_ty, kind, 128, |_| v128_intrinsic("load"))
+                }
+                OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 128, |_| {
+                    Ident::new("v128", Span::call_site())
+                }),
+                OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+                OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             };
 
             methods.push(m);
@@ -678,6 +686,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
 pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
     let imports = type_imports();
+    let arch_types_impl =
+        impl_arch_types(level.name(), 128, |_| Ident::new("v128", Span::call_site()));
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();
     let level_tok = level.token();
@@ -685,7 +695,7 @@ pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
     quote! {
         use core::arch::wasm32::*;
 
-        use crate::{seal::Seal, Level, Simd, SimdFrom, SimdInto};
+        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
 
         #imports
 
@@ -703,6 +713,8 @@ pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
         }
 
         impl Seal for #level_tok {}
+
+        #arch_types_impl
 
         #simd_impl
 
@@ -722,7 +734,7 @@ fn mk_type_impl() -> TokenStream {
                 #[inline(always)]
                 fn simd_from(arch: v128, simd: S) -> Self {
                     Self {
-                        val: unsafe { core::mem::transmute(arch) },
+                        val: unsafe { core::mem::transmute_copy(&arch) },
                         simd
                     }
                 }
@@ -730,7 +742,7 @@ fn mk_type_impl() -> TokenStream {
             impl<S: Simd> From<#simd<S>> for v128 {
                 #[inline(always)]
                 fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute(value.val) }
+                    unsafe { core::mem::transmute_copy(&value.val) }
                 }
             }
         });

@@ -23,6 +23,23 @@ impl Quantifier {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RefKind {
+    Value,
+    Ref,
+    Mut,
+}
+
+impl RefKind {
+    pub(crate) fn token(&self) -> Option<TokenStream> {
+        match self {
+            Self::Value => None,
+            Self::Ref => Some(quote! { & }),
+            Self::Mut => Some(quote! { &mut }),
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
     /// Takes a single argument of the underlying SIMD element type, and returns the corresponding vector type.
@@ -80,6 +97,17 @@ pub(crate) enum OpSig {
     /// The inverse of [`OpSig::LoadInterleaved`]. Takes a vector argument with the length (`block_size` * `block_count`) /
     /// [scalar type's byte size], and a mutable reference to a scalar array of the same length, and returns nothing.
     StoreInterleaved { block_size: u16, block_count: u16 },
+    /// Takes a single argument of the array type corresponding to the vector type (e.g. `[f32; 4]` for `f32x4<S>`), or
+    /// a reference to it, and returns that vector type.
+    FromArray { kind: RefKind },
+    /// Takes a single argument of the vector type, or a reference to it, and returns the corresponding array type (e.g.
+    /// `[f32; 4]` for `f32x4<S>`) or a reference to it.
+    AsArray { kind: RefKind },
+    /// Takes a single argument of the vector type, and returns a vector type with `u8` elements and the same bit width.
+    FromBytes,
+    /// Takes a single argument of a vector type with `u8` elements, and returns a vector type with different elements
+    /// and the same bit width.
+    ToBytes,
 }
 
 /// Where this operation is defined, and how it is called.
@@ -123,13 +151,62 @@ impl Op {
     }
 }
 
-const FLOAT_OPS: &[Op] = &[
+const BASE_OPS: &[Op] = &[
     Op::new(
         "splat",
         OpKind::BaseTraitMethod,
         OpSig::Splat,
         "Create a SIMD vector with all elements set to the given value.",
     ),
+    Op::new(
+        "load_array",
+        OpKind::BaseTraitMethod,
+        OpSig::FromArray {
+            kind: RefKind::Value,
+        },
+        "Create a SIMD vector from an array of the same length.",
+    ),
+    Op::new(
+        "load_array_ref",
+        OpKind::BaseTraitMethod,
+        OpSig::FromArray { kind: RefKind::Ref },
+        "Create a SIMD vector from an array of the same length.",
+    ),
+    Op::new(
+        "as_array",
+        OpKind::BaseTraitMethod,
+        OpSig::AsArray {
+            kind: RefKind::Value,
+        },
+        "Convert a SIMD vector to an array.",
+    ),
+    Op::new(
+        "as_array_ref",
+        OpKind::BaseTraitMethod,
+        OpSig::AsArray { kind: RefKind::Ref },
+        "Project a reference to a SIMD vector to a reference to the equivalent array.",
+    ),
+    Op::new(
+        "as_array_mut",
+        OpKind::BaseTraitMethod,
+        OpSig::AsArray { kind: RefKind::Mut },
+        "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array.",
+    ),
+    Op::new(
+        "cvt_from_bytes",
+        OpKind::OwnTrait,
+        OpSig::FromBytes,
+        "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length.",
+    ),
+    Op::new(
+        "cvt_to_bytes",
+        OpKind::OwnTrait,
+        OpSig::ToBytes,
+        "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length.",
+    ),
+];
+
+const FLOAT_OPS: &[Op] = &[
     Op::new(
         "abs",
         OpKind::VecTraitMethod,
@@ -335,12 +412,6 @@ const FLOAT_OPS: &[Op] = &[
 
 const INT_OPS: &[Op] = &[
     Op::new(
-        "splat",
-        OpKind::BaseTraitMethod,
-        OpSig::Splat,
-        "Create a SIMD vector with all elements set to the given value.",
-    ),
-    Op::new(
         "add",
         OpKind::Overloaded(CoreOpTrait::Add),
         OpSig::Binary,
@@ -508,12 +579,6 @@ macro_rules! mask_reduce_blurb {
 
 const MASK_OPS: &[Op] = &[
     Op::new(
-        "splat",
-        OpKind::BaseTraitMethod,
-        OpSig::Splat,
-        "Create a SIMD mask with all elements set to the given value.",
-    ),
-    Op::new(
         "and",
         OpKind::Overloaded(CoreOpTrait::BitAnd),
         OpSig::Binary,
@@ -609,7 +674,9 @@ pub(crate) fn vec_trait_ops_for(scalar: ScalarType) -> Vec<Op> {
         ScalarType::Int | ScalarType::Unsigned => INT_OPS,
         ScalarType::Mask => MASK_OPS,
     };
-    base.iter()
+    BASE_OPS
+        .iter()
+        .chain(base.iter())
         .filter(|op| matches!(op.kind, OpKind::VecTraitMethod))
         .copied()
         .collect()
@@ -629,9 +696,10 @@ pub(crate) fn overloaded_ops_for(scalar: ScalarType) -> Vec<(CoreOpTrait, OpSig,
         ScalarType::Mask => MASK_OPS,
     };
     // We prepend the negate operation only for signed integer types.
-    (scalar == ScalarType::Int)
-        .then_some(NEGATE_INT)
-        .into_iter()
+    BASE_OPS
+        .iter()
+        .copied()
+        .chain((scalar == ScalarType::Int).then_some(NEGATE_INT))
         .chain(base.iter().copied())
         .filter_map(|op| match op.kind {
             OpKind::Overloaded(core_op) => Some((core_op, op.sig, op.doc)),
@@ -715,7 +783,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ScalarType::Int | ScalarType::Unsigned => INT_OPS,
         ScalarType::Mask => MASK_OPS,
     };
-    let mut ops = base.to_vec();
+    let mut ops: Vec<Op> = BASE_OPS.iter().chain(base.iter()).copied().collect();
 
     if let Some(combined_ty) = ty.combine_operand() {
         ops.push(Op::new(
@@ -957,15 +1025,49 @@ impl CoreOpTrait {
 }
 
 impl OpSig {
+    /// Determine whether a given operation should defer to the generic split/combine implementation, for a given vector
+    /// type and the maximum native vector width.
+    pub(crate) fn should_use_generic_op(&self, vec_ty: &VecType, native_width: usize) -> bool {
+        // For widen/narrow operations, we care about the *target* type's width.
+        if let Self::WidenNarrow { target_ty } = self
+            && target_ty.n_bits() <= native_width
+        {
+            return false;
+        }
+
+        // These operations need to work on the full vector type.
+        if matches!(
+            self,
+            Self::Split { .. }
+                | Self::Combine { .. }
+                | Self::LoadInterleaved { .. }
+                | Self::StoreInterleaved { .. }
+                | Self::FromArray { .. }
+                | Self::AsArray { .. }
+        ) {
+            return false;
+        }
+
+        // Otherwise, defer to split/combine if this is a wider operation than natively supported.
+        if vec_ty.n_bits() <= native_width {
+            return false;
+        }
+
+        true
+    }
+
     fn simd_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
-            Self::Splat => &["val"],
+            Self::Splat | Self::FromArray { .. } => &["val"],
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
-            | Self::MaskReduce { .. } => &["a"],
+            | Self::MaskReduce { .. }
+            | Self::AsArray { .. }
+            | Self::FromBytes
+            | Self::ToBytes => &["a"],
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -979,12 +1081,18 @@ impl OpSig {
     }
     fn vec_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
-            Self::Splat | Self::LoadInterleaved { .. } | Self::StoreInterleaved { .. } => &[],
+            Self::Splat
+            | Self::LoadInterleaved { .. }
+            | Self::StoreInterleaved { .. }
+            | Self::FromArray { .. }
+            | Self::FromBytes { .. } => &[],
             Self::Unary
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
-            | Self::MaskReduce { .. } => &["self"],
+            | Self::MaskReduce { .. }
+            | Self::AsArray { .. }
+            | Self::ToBytes => &["self"],
             Self::Binary | Self::Compare | Self::Zip { .. } | Self::Unzip { .. } => {
                 &["self", "rhs"]
             }
@@ -1095,6 +1203,32 @@ impl OpSig {
                 let mask_ty = vec_ty.mask_ty().rust();
                 quote! { (self, #arg0: #mask_ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
             }
+            Self::FromArray { kind } => {
+                let arg0 = &arg_names[0];
+                let ref_tok = kind.token();
+                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let array_ty = quote! { [#rust_scalar; #len] };
+                quote! { (self, #arg0: #ref_tok #array_ty) -> #ty<Self> }
+            }
+            Self::AsArray { kind } => {
+                let arg0 = &arg_names[0];
+                let ref_tok = kind.token();
+                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let array_ty = quote! { [#rust_scalar; #len] };
+                quote! { (self, #arg0: #ref_tok #ty<Self>) -> #ref_tok #array_ty }
+            }
+            Self::FromBytes => {
+                let arg0 = &arg_names[0];
+                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+                quote! { (self, #arg0: #bytes_ty<Self>) -> #ty<Self> }
+            }
+            Self::ToBytes => {
+                let arg0 = &arg_names[0];
+                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+                quote! { (self, #arg0: #ty<Self>) -> #bytes_ty<Self> }
+            }
         };
 
         quote! {
@@ -1149,7 +1283,12 @@ impl OpSig {
             // masks.
             Self::Select => return None,
             // These signatures involve types not in the Simd trait
-            Self::Split { .. } | Self::Combine { .. } => return None,
+            Self::Split { .. }
+            | Self::Combine { .. }
+            | Self::FromArray { .. }
+            | Self::AsArray { .. }
+            | Self::FromBytes
+            | Self::ToBytes => return None,
         };
         Some(quote! { fn #method_ident #sig_inner })
     }
@@ -1188,7 +1327,11 @@ impl OpSig {
             | Self::WidenNarrow { .. }
             | Self::Shift
             | Self::LoadInterleaved { .. }
-            | Self::StoreInterleaved { .. } => return None,
+            | Self::StoreInterleaved { .. }
+            | Self::FromArray { .. }
+            | Self::AsArray { .. }
+            | Self::FromBytes
+            | Self::ToBytes => return None,
         };
         Some(args)
     }
