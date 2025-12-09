@@ -28,7 +28,7 @@ pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
+pub(crate) fn arch_ty(ty: &VecType) -> Ident {
     let suffix = match (ty.scalar, ty.scalar_bits) {
         (ScalarType::Float, 32) => "",
         (ScalarType::Float, 64) => "d",
@@ -36,8 +36,7 @@ pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
         (ScalarType::Unsigned | ScalarType::Int | ScalarType::Mask, _) => "i",
     };
     let name = format!("__m{}{}", ty.scalar_bits * ty.len, suffix);
-    let ident = Ident::new(&name, Span::call_site());
-    quote! { #ident }
+    Ident::new(&name, Span::call_site())
 }
 
 pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {

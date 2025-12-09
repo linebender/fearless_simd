@@ -41,7 +41,7 @@ fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
+pub(crate) fn arch_ty(ty: &VecType) -> Ident {
     let scalar = match ty.scalar {
         ScalarType::Float => "float",
         ScalarType::Unsigned => "uint",
@@ -54,8 +54,7 @@ pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
     } else {
         format!("{}{}x{}_t", scalar, ty.scalar_bits, ty.len)
     };
-    let ident = Ident::new(&name, Span::call_site());
-    quote! { #ident }
+    Ident::new(&name, Span::call_site())
 }
 
 // expects args and return value in arch dialect

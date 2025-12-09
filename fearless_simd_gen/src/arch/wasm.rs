@@ -51,15 +51,14 @@ fn v128_intrinsic(name: &str) -> TokenStream {
     quote! { #combined_ident }
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
+pub(crate) fn arch_ty(ty: &VecType) -> Ident {
     let scalar = match ty.scalar {
         ScalarType::Float => "f",
         ScalarType::Unsigned => "u",
         ScalarType::Int | ScalarType::Mask => "i",
     };
     let name = format!("{}{}x{}", scalar, ty.scalar_bits, ty.len);
-    let ident = Ident::new(&name, Span::call_site());
-    quote! { #ident }
+    Ident::new(&name, Span::call_site())
 }
 
 // expects args and return value in arch dialect
