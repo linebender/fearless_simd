@@ -59,6 +59,8 @@ This release has an [MSRV][] of 1.88.
 
   Some functionality (such as `split` or `combine`) is exposed under new traits. You may use the new `prelude` module to
   conveniently import all of the traits.
+- Breaking change: The `madd` and `msub` methods have been renamed to `mul_add` and `mul_sub`, matching Rust's naming conventions.
+  ([#158][] by [@Shnatsel][])
 
 ### Removed
 
@@ -119,6 +121,7 @@ No changelog was kept for this release.
 [@Ralith]: https://github.com/Ralith
 [@DJMcNab]: https://github.com/DJMcNab
 [@valadaptive]: https://github.com/valadaptive
+[@Shnatsel]: https://github.com/Shnatsel
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
 [#76]: https://github.com/linebender/fearless_simd/pull/76
@@ -150,6 +153,7 @@ No changelog was kept for this release.
 [#149]: https://github.com/linebender/fearless_simd/pull/149
 [#154]: https://github.com/linebender/fearless_simd/pull/154
 [#155]: https://github.com/linebender/fearless_simd/pull/155
+[#158]: https://github.com/linebender/fearless_simd/pull/158
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
