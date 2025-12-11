@@ -294,7 +294,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Ternary => {
                     let args = match method {
-                        "mul_add" | "mul_sub" => [
+                        "mul_add" | "mul_sub" | "mul_neg_add" => [
                             quote! { c.into() },
                             quote! { b.into() },
                             quote! { a.into() },
@@ -312,6 +312,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         let neg = simple_intrinsic("vneg", vec_ty);
                         expr = quote! { #neg(#expr) };
                     }
+                    // mul_neg_add computes c - (a * b), which is exactly what vfms does
                     quote! {
                         #method_sig {
                             unsafe {

@@ -201,6 +201,14 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
                     }
                 }
             }
+            "mul_neg_add" => {
+                let intrinsic = simple_intrinsic("fnmadd", vec_ty);
+                quote! {
+                    #method_sig {
+                        unsafe { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) }
+                    }
+                }
+            }
             _ => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
         },
         OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty),

@@ -146,6 +146,14 @@ fn msub_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn mul_neg_add_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[2.0, 3.0, 4.0, 5.0]);
+    let b = f32x4::from_slice(simd, &[10.0, 10.0, 10.0, 10.0]);
+    let c = f32x4::from_slice(simd, &[100.0, 50.0, 25.0, 10.0]);
+    assert_eq!(a.mul_neg_add(b, c).val, [80.0, 20.0, -15.0, -40.0]);
+}
+
+#[simd_test]
 fn max_precise_f32x4_with_nan<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[f32::NAN, -3.0, f32::INFINITY, 0.5]);
     let b = f32x4::from_slice(simd, &[1.0, f32::NAN, 7.0, f32::NEG_INFINITY]);
@@ -2710,6 +2718,14 @@ fn madd_f64x2<S: Simd>(simd: S) {
     let b = f64x2::from_slice(simd, &[4.0, 5.0]);
     let c = f64x2::from_slice(simd, &[2.0, 3.0]);
     assert_eq!(a.mul_add(b, c).val, [6.0, 13.0]);
+}
+
+#[simd_test]
+fn mul_neg_add_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[2.0, 3.0]);
+    let b = f64x2::from_slice(simd, &[4.0, 5.0]);
+    let c = f64x2::from_slice(simd, &[20.0, 30.0]);
+    assert_eq!(a.mul_neg_add(b, c).val, [12.0, 15.0]);
 }
 
 #[simd_test]
