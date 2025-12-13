@@ -4,14 +4,16 @@
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::arch::neon::split_intrinsic;
+use crate::arch::neon::load_intrinsic;
+use crate::generic::{
+    generic_as_array, generic_from_array, generic_from_bytes, generic_to_bytes, impl_arch_types,
+};
 use crate::ops::{Op, valid_reinterpret};
-use crate::types::ScalarType;
 use crate::{
-    arch::neon::{self, cvt_intrinsic, simple_intrinsic},
-    generic::{generic_combine, generic_op, generic_split},
+    arch::neon::{self, arch_ty, cvt_intrinsic, simple_intrinsic, split_intrinsic},
+    generic::generic_op,
     ops::{OpSig, ops_for_type},
-    types::{SIMD_TYPES, VecType, type_imports},
+    types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
 
 #[derive(Clone, Copy)]
@@ -35,13 +37,14 @@ impl Level {
 
 pub(crate) fn mk_neon_impl(level: Level) -> TokenStream {
     let imports = type_imports();
+    let arch_types_impl = impl_arch_types(level.name(), 512, arch_ty);
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();
 
     quote! {
         use core::arch::aarch64::*;
 
-        use crate::{seal::Seal, Level, Simd, SimdFrom, SimdInto};
+        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
 
         #imports
 
@@ -64,6 +67,8 @@ pub(crate) fn mk_neon_impl(level: Level) -> TokenStream {
 
         #simd_impl
 
+        #arch_types_impl
+
         #ty_impl
     }
 }
@@ -76,16 +81,11 @@ fn mk_simd_impl(level: Level) -> TokenStream {
         let ty_name = vec_ty.rust_name();
 
         for Op { method, sig, .. } in ops_for_type(vec_ty) {
-            let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
-                || vec_ty.n_bits() > 256;
-
-            let b2 = !matches!(method, "load_interleaved_128")
-                && !matches!(method, "store_interleaved_128");
-
-            if b1 && b2 {
+            if sig.should_use_generic_op(vec_ty, 128) {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
+
             let method_name = format!("{method}_{ty_name}");
             let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
             let method_sig = quote! {
@@ -349,8 +349,50 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
-                OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
+                OpSig::Combine { combined_ty } => {
+                    let combined_wrapper = combined_ty.aligned_wrapper();
+                    let combined_arch_ty = arch_ty(&combined_ty);
+                    let combined_rust = combined_ty.rust();
+                    let expr = match combined_ty.n_bits() {
+                        512 => quote! {
+                            #combined_rust {val: #combined_wrapper(#combined_arch_ty(a.val.0.0, a.val.0.1, b.val.0.0, b.val.0.1)), simd: self }
+                        },
+                        256 => quote! {
+                            #combined_rust {val: #combined_wrapper(#combined_arch_ty(a.val.0, b.val.0)), simd: self }
+                        },
+                        _ => unimplemented!(),
+                    };
+                    quote! {
+                        #method_sig {
+                            #expr
+                        }
+                    }
+                }
+                OpSig::Split { half_ty } => {
+                    let split_wrapper = half_ty.aligned_wrapper();
+                    let split_arch_ty = arch_ty(&half_ty);
+                    let half_rust = half_ty.rust();
+                    let expr = match half_ty.n_bits() {
+                        256 => quote! {
+                            (
+                                #half_rust { val: #split_wrapper(#split_arch_ty(a.val.0.0, a.val.0.1)), simd: self },
+                                #half_rust { val: #split_wrapper(#split_arch_ty(a.val.0.2, a.val.0.3)), simd: self },
+                            )
+                        },
+                        128 => quote! {
+                            (
+                                #half_rust { val: #split_wrapper(a.val.0.0), simd: self },
+                                #half_rust { val: #split_wrapper(a.val.0.1), simd: self },
+                            )
+                        },
+                        _ => unimplemented!(),
+                    };
+                    quote! {
+                        #method_sig {
+                            #expr
+                        }
+                    }
+                }
                 OpSig::Zip { select_low } => {
                     let neon = if select_low { "vzip1" } else { "vzip2" };
                     let zip = simple_intrinsic(neon, vec_ty);
@@ -432,6 +474,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
+                OpSig::FromArray { kind } => {
+                    generic_from_array(method_sig, vec_ty, kind, 512, load_intrinsic)
+                }
+                OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 512, arch_ty),
+                OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+                OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             };
             methods.push(method);
         }
@@ -488,7 +536,7 @@ fn mk_type_impl() -> TokenStream {
                 #[inline(always)]
                 fn simd_from(arch: #arch, simd: S) -> Self {
                     Self {
-                        val: unsafe { core::mem::transmute(arch) },
+                        val: unsafe { core::mem::transmute_copy(&arch) },
                         simd
                     }
                 }
@@ -496,7 +544,7 @@ fn mk_type_impl() -> TokenStream {
             impl<S: Simd> From<#simd<S>> for #arch {
                 #[inline(always)]
                 fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute(value.val) }
+                    unsafe { core::mem::transmute_copy(&value.val) }
                 }
             }
         });

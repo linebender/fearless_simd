@@ -149,6 +149,7 @@ mod impl_macros;
 
 mod generated;
 mod macros;
+mod support;
 mod traits;
 
 pub use generated::*;
