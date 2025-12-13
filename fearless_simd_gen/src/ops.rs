@@ -159,7 +159,7 @@ const BASE_OPS: &[Op] = &[
     ),
     Op::new(
         "load_array",
-        OpKind::BaseTraitMethod,
+        OpKind::AssociatedOnly,
         OpSig::FromArray {
             kind: RefKind::Value,
         },
@@ -167,13 +167,13 @@ const BASE_OPS: &[Op] = &[
     ),
     Op::new(
         "load_array_ref",
-        OpKind::BaseTraitMethod,
+        OpKind::AssociatedOnly,
         OpSig::FromArray { kind: RefKind::Ref },
         "Create a SIMD vector from an array of the same length.",
     ),
     Op::new(
         "as_array",
-        OpKind::BaseTraitMethod,
+        OpKind::AssociatedOnly,
         OpSig::AsArray {
             kind: RefKind::Value,
         },
@@ -181,13 +181,13 @@ const BASE_OPS: &[Op] = &[
     ),
     Op::new(
         "as_array_ref",
-        OpKind::BaseTraitMethod,
+        OpKind::AssociatedOnly,
         OpSig::AsArray { kind: RefKind::Ref },
         "Project a reference to a SIMD vector to a reference to the equivalent array.",
     ),
     Op::new(
         "as_array_mut",
-        OpKind::BaseTraitMethod,
+        OpKind::AssociatedOnly,
         OpSig::AsArray { kind: RefKind::Mut },
         "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array.",
     ),
