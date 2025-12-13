@@ -53,65 +53,65 @@ pub trait Simd:
 {
     #[doc = r" A native-width SIMD vector of [`f32`]s."]
     type f32s: SimdFloat<
-            f32,
             Self,
+            Element = f32,
             Block = f32x4<Self>,
             Mask = Self::mask32s,
             Bytes = <Self::u32s as Bytes>::Bytes,
         > + SimdCvtFloat<Self::u32s>
         + SimdCvtFloat<Self::i32s>;
     #[doc = r" A native-width SIMD vector of [`f64`]s."]
-    type f64s: SimdFloat<f64, Self, Block = f64x2<Self>, Mask = Self::mask64s>;
+    type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s>;
     #[doc = r" A native-width SIMD vector of [`u8`]s."]
-    type u8s: SimdInt<u8, Self, Block = u8x16<Self>, Mask = Self::mask8s>;
+    type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s>;
     #[doc = r" A native-width SIMD vector of [`i8`]s."]
     type i8s: SimdInt<
-            i8,
             Self,
+            Element = i8,
             Block = i8x16<Self>,
             Mask = Self::mask8s,
             Bytes = <Self::u8s as Bytes>::Bytes,
         > + core::ops::Neg<Output = Self::i8s>;
     #[doc = r" A native-width SIMD vector of [`u16`]s."]
-    type u16s: SimdInt<u16, Self, Block = u16x8<Self>, Mask = Self::mask16s>;
+    type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s>;
     #[doc = r" A native-width SIMD vector of [`i16`]s."]
     type i16s: SimdInt<
-            i16,
             Self,
+            Element = i16,
             Block = i16x8<Self>,
             Mask = Self::mask16s,
             Bytes = <Self::u16s as Bytes>::Bytes,
         > + core::ops::Neg<Output = Self::i16s>;
     #[doc = r" A native-width SIMD vector of [`u32`]s."]
-    type u32s: SimdInt<u32, Self, Block = u32x4<Self>, Mask = Self::mask32s>
+    type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s>
         + SimdCvtTruncate<Self::f32s>;
     #[doc = r" A native-width SIMD vector of [`i32`]s."]
     type i32s: SimdInt<
-            i32,
             Self,
+            Element = i32,
             Block = i32x4<Self>,
             Mask = Self::mask32s,
             Bytes = <Self::u32s as Bytes>::Bytes,
         > + SimdCvtTruncate<Self::f32s>
         + core::ops::Neg<Output = Self::i32s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
-    type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes>
+    type mask8s: SimdMask<Self, Element = i8, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes>
         + Select<Self::u8s>
         + Select<Self::i8s>
         + Select<Self::mask8s>;
     #[doc = r" A native-width SIMD mask with 16-bit lanes."]
-    type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes>
+    type mask16s: SimdMask<Self, Element = i16, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes>
         + Select<Self::u16s>
         + Select<Self::i16s>
         + Select<Self::mask16s>;
     #[doc = r" A native-width SIMD mask with 32-bit lanes."]
-    type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes>
+    type mask32s: SimdMask<Self, Element = i32, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes>
         + Select<Self::f32s>
         + Select<Self::u32s>
         + Select<Self::i32s>
         + Select<Self::mask32s>;
     #[doc = r" A native-width SIMD mask with 64-bit lanes."]
-    type mask64s: SimdMask<i64, Self, Block = mask64x2<Self>>
+    type mask64s: SimdMask<Self, Element = i64, Block = mask64x2<Self>>
         + Select<Self::f64s>
         + Select<Self::mask64s>;
     #[doc = r" This SIMD token's feature level."]
@@ -2482,18 +2482,20 @@ pub(crate) mod arch_types {
     }
 }
 #[doc = r" Base functionality implemented by all SIMD vectors."]
-pub trait SimdBase<Element: SimdElement, S: Simd>:
+pub trait SimdBase<S: Simd>:
     Copy
     + Sync
     + Send
     + 'static
     + crate::Bytes
-    + SimdFrom<Element, S>
-    + core::ops::Index<usize, Output = Element>
-    + core::ops::IndexMut<usize, Output = Element>
+    + SimdFrom<Self::Element, S>
+    + core::ops::Index<usize, Output = Self::Element>
+    + core::ops::IndexMut<usize, Output = Self::Element>
     + core::ops::Deref<Target = Self::Array>
     + core::ops::DerefMut<Target = Self::Array>
 {
+    #[doc = r" The type of this vector's elements."]
+    type Element: SimdElement;
     #[doc = r" This vector type's lane count. This is useful when you're"]
     #[doc = r" working with a native-width vector (e.g. [`Simd::f32s`]) and"]
     #[doc = r" want to process data in native-width chunks."]
@@ -2506,51 +2508,51 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     #[doc = r""]
     #[doc = r" One possibility to consider is that the SIMD trait grows"]
     #[doc = r" `maskAxB` associated types."]
-    type Mask: SimdMask<Element::Mask, S>;
+    type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
     #[doc = r" A 128-bit SIMD vector of the same scalar type."]
-    type Block: SimdBase<Element, S>;
+    type Block: SimdBase<S, Element = Self::Element>;
     #[doc = r" The array type that this vector type corresponds to, which will"]
     #[doc = r" always be `[Self::Element; Self::N]`. It has the same layout as"]
     #[doc = r" this vector type, but likely has a lower alignment."]
     type Array;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
-    fn as_slice(&self) -> &[Element];
-    fn as_mut_slice(&mut self) -> &mut [Element];
+    fn as_slice(&self) -> &[Self::Element];
+    fn as_mut_slice(&mut self) -> &mut [Self::Element];
     #[doc = r" Create a SIMD vector from a slice."]
     #[doc = r""]
     #[doc = r" The slice must be the proper width."]
-    fn from_slice(simd: S, slice: &[Element]) -> Self;
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
     #[doc = r" Create a SIMD vector with all elements set to the given value."]
-    fn splat(simd: S, val: Element) -> Self;
+    fn splat(simd: S, val: Self::Element) -> Self;
     #[doc = r" Create a SIMD vector from a 128-bit vector of the same scalar"]
     #[doc = r" type, repeated."]
     fn block_splat(block: Self::Block) -> Self;
     #[doc = r" Create a SIMD vector where each element is produced by"]
     #[doc = r" calling `f` with that element's lane index (from 0 to"]
     #[doc = r" [`SimdBase::N`] - 1)."]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> Element) -> Self;
+    fn from_fn(simd: S, f: impl FnMut(usize) -> Self::Element) -> Self;
 }
 #[doc = r" Functionality implemented by floating-point SIMD vectors."]
-pub trait SimdFloat<Element: SimdElement, S: Simd>:
-    SimdBase<Element, S>
+pub trait SimdFloat<S: Simd>:
+    SimdBase<S>
     + core::ops::Neg<Output = Self>
     + core::ops::Add<Output = Self>
     + core::ops::AddAssign
-    + core::ops::Add<Element, Output = Self>
-    + core::ops::AddAssign<Element>
+    + core::ops::Add<Self::Element, Output = Self>
+    + core::ops::AddAssign<Self::Element>
     + core::ops::Sub<Output = Self>
     + core::ops::SubAssign
-    + core::ops::Sub<Element, Output = Self>
-    + core::ops::SubAssign<Element>
+    + core::ops::Sub<Self::Element, Output = Self>
+    + core::ops::SubAssign<Self::Element>
     + core::ops::Mul<Output = Self>
     + core::ops::MulAssign
-    + core::ops::Mul<Element, Output = Self>
-    + core::ops::MulAssign<Element>
+    + core::ops::Mul<Self::Element, Output = Self>
+    + core::ops::MulAssign<Self::Element>
     + core::ops::Div<Output = Self>
     + core::ops::DivAssign
-    + core::ops::Div<Element, Output = Self>
-    + core::ops::DivAssign<Element>
+    + core::ops::Div<Self::Element, Output = Self>
+    + core::ops::DivAssign<Self::Element>
 {
     #[doc = r" Convert this floating-point type to an integer. This is a convenience method that"]
     #[doc = r" delegates to [`SimdCvtTruncate::truncate_from`], and can only be called if there"]
@@ -2622,32 +2624,32 @@ pub trait SimdFloat<Element: SimdElement, S: Simd>:
     fn trunc(self) -> Self;
 }
 #[doc = r" Functionality implemented by (signed and unsigned) integer SIMD vectors."]
-pub trait SimdInt<Element: SimdElement, S: Simd>:
-    SimdBase<Element, S>
+pub trait SimdInt<S: Simd>:
+    SimdBase<S>
     + core::ops::Add<Output = Self>
     + core::ops::AddAssign
-    + core::ops::Add<Element, Output = Self>
-    + core::ops::AddAssign<Element>
+    + core::ops::Add<Self::Element, Output = Self>
+    + core::ops::AddAssign<Self::Element>
     + core::ops::Sub<Output = Self>
     + core::ops::SubAssign
-    + core::ops::Sub<Element, Output = Self>
-    + core::ops::SubAssign<Element>
+    + core::ops::Sub<Self::Element, Output = Self>
+    + core::ops::SubAssign<Self::Element>
     + core::ops::Mul<Output = Self>
     + core::ops::MulAssign
-    + core::ops::Mul<Element, Output = Self>
-    + core::ops::MulAssign<Element>
+    + core::ops::Mul<Self::Element, Output = Self>
+    + core::ops::MulAssign<Self::Element>
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
-    + core::ops::BitAnd<Element, Output = Self>
-    + core::ops::BitAndAssign<Element>
+    + core::ops::BitAnd<Self::Element, Output = Self>
+    + core::ops::BitAndAssign<Self::Element>
     + core::ops::BitOr<Output = Self>
     + core::ops::BitOrAssign
-    + core::ops::BitOr<Element, Output = Self>
-    + core::ops::BitOrAssign<Element>
+    + core::ops::BitOr<Self::Element, Output = Self>
+    + core::ops::BitOrAssign<Self::Element>
     + core::ops::BitXor<Output = Self>
     + core::ops::BitXorAssign
-    + core::ops::BitXor<Element, Output = Self>
-    + core::ops::BitXorAssign<Element>
+    + core::ops::BitXor<Self::Element, Output = Self>
+    + core::ops::BitXorAssign<Self::Element>
     + core::ops::Not<Output = Self>
     + core::ops::Shl<u32, Output = Self>
     + core::ops::ShlAssign<u32>
@@ -2689,20 +2691,20 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
 }
 #[doc = r" Functionality implemented by SIMD masks."]
-pub trait SimdMask<Element: SimdElement, S: Simd>:
-    SimdBase<Element, S>
+pub trait SimdMask<S: Simd>:
+    SimdBase<S>
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
-    + core::ops::BitAnd<Element, Output = Self>
-    + core::ops::BitAndAssign<Element>
+    + core::ops::BitAnd<Self::Element, Output = Self>
+    + core::ops::BitAndAssign<Self::Element>
     + core::ops::BitOr<Output = Self>
     + core::ops::BitOrAssign
-    + core::ops::BitOr<Element, Output = Self>
-    + core::ops::BitOrAssign<Element>
+    + core::ops::BitOr<Self::Element, Output = Self>
+    + core::ops::BitOrAssign<Self::Element>
     + core::ops::BitXor<Output = Self>
     + core::ops::BitXorAssign
-    + core::ops::BitXor<Element, Output = Self>
-    + core::ops::BitXorAssign<Element>
+    + core::ops::BitXor<Self::Element, Output = Self>
+    + core::ops::BitXorAssign<Self::Element>
     + core::ops::Not<Output = Self>
 {
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
