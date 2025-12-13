@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::{
-    ops::{Op, TyFlavor, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
+    ops::{Op, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
@@ -135,6 +135,20 @@ pub(crate) fn mk_arch_types() -> TokenStream {
 }
 
 fn mk_simd_base() -> TokenStream {
+    let mut methods = vec![];
+    for Op {
+        method, sig, doc, ..
+    } in base_trait_ops()
+    {
+        let doc = sig.format_docstring(doc, TyFlavor::VecImpl);
+        if let Some(method_sig) = sig.vec_trait_method_sig(method) {
+            methods.push(quote! {
+                #[doc = #doc]
+                #method_sig;
+            });
+        }
+    }
+
     quote! {
         /// Base functionality implemented by all SIMD vectors.
         pub trait SimdBase<Element: SimdElement, S: Simd>:
@@ -170,8 +184,6 @@ fn mk_simd_base() -> TokenStream {
             ///
             /// The slice must be the proper width.
             fn from_slice(simd: S, slice: &[Element]) -> Self;
-            /// Create a SIMD vector with all elements set to the given value.
-            fn splat(simd: S, val: Element) -> Self;
             /// Create a SIMD vector from a 128-bit vector of the same scalar
             /// type, repeated.
             fn block_splat(block: Self::Block) -> Self;
@@ -180,27 +192,7 @@ fn mk_simd_base() -> TokenStream {
             /// [`SimdBase::N`] - 1).
             fn from_fn(simd: S, f: impl FnMut(usize) -> Element) -> Self;
 
-            /// Concatenate `[self, rhs]` and extract `Self::N` elements
-            /// starting at index `SHIFT`.
-            ///
-            /// `SHIFT` must be within [0, `Self::N`].
-            ///
-            /// This can be used to implement a "shift items" operation by
-            /// providing all zeroes as one operand. For a left shift, the
-            /// right-hand side should be all zeroes. For a right shift by `M`
-            /// items, the left-hand side should be all zeroes, and the shift
-            /// amount will be `Self::N - M`.
-            ///
-            /// This can also be used to rotate items within a vector by
-            /// providing the same vector as both operands.
-            ///
-            /// ```text
-            /// slide::<1>([a b c d], [e f g h]) == [b c d e]
-            /// ```
-            fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
-            /// Like [`slide`](SimdBase::slide), but operates independently on
-            /// each 128-bit block.
-            fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
+            #( #methods )*
         }
     }
 }

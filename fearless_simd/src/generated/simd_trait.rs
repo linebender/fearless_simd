@@ -136,9 +136,9 @@ pub trait Simd:
     fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_f32x4(self, a: f32x4<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_f32x4<const SHIFT: usize>(
         self,
         a: f32x4<Self>,
@@ -232,9 +232,9 @@ pub trait Simd:
     fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_i8x16(self, a: i8x16<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_i8x16<const SHIFT: usize>(
         self,
         a: i8x16<Self>,
@@ -310,9 +310,9 @@ pub trait Simd:
     fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_u8x16<const SHIFT: usize>(
         self,
         a: u8x16<Self>,
@@ -386,13 +386,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask8x16(self, a: u8x16<Self>) -> mask8x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask8x16(self, a: mask8x16<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask8x16<const SHIFT: usize>(
         self,
         a: mask8x16<Self>,
         b: mask8x16<Self>,
     ) -> mask8x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask8x16<const SHIFT: usize>(
         self,
         a: mask8x16<Self>,
@@ -441,9 +441,9 @@ pub trait Simd:
     fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_i16x8(self, a: i16x8<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_i16x8<const SHIFT: usize>(
         self,
         a: i16x8<Self>,
@@ -519,9 +519,9 @@ pub trait Simd:
     fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_u16x8(self, a: u16x8<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_u16x8<const SHIFT: usize>(
         self,
         a: u16x8<Self>,
@@ -595,13 +595,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask16x8(self, a: u8x16<Self>) -> mask16x8<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask16x8(self, a: mask16x8<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask16x8<const SHIFT: usize>(
         self,
         a: mask16x8<Self>,
         b: mask16x8<Self>,
     ) -> mask16x8<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask16x8<const SHIFT: usize>(
         self,
         a: mask16x8<Self>,
@@ -650,9 +650,9 @@ pub trait Simd:
     fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_i32x4(self, a: i32x4<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_i32x4<const SHIFT: usize>(
         self,
         a: i32x4<Self>,
@@ -730,9 +730,9 @@ pub trait Simd:
     fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_u32x4(self, a: u32x4<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_u32x4<const SHIFT: usize>(
         self,
         a: u32x4<Self>,
@@ -806,13 +806,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask32x4(self, a: u8x16<Self>) -> mask32x4<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask32x4(self, a: mask32x4<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask32x4<const SHIFT: usize>(
         self,
         a: mask32x4<Self>,
         b: mask32x4<Self>,
     ) -> mask32x4<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask32x4<const SHIFT: usize>(
         self,
         a: mask32x4<Self>,
@@ -861,9 +861,9 @@ pub trait Simd:
     fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_f64x2(self, a: f64x2<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_f64x2<const SHIFT: usize>(
         self,
         a: f64x2<Self>,
@@ -947,13 +947,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask64x2(self, a: u8x16<Self>) -> mask64x2<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask64x2(self, a: mask64x2<Self>) -> u8x16<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask64x2<const SHIFT: usize>(
         self,
         a: mask64x2<Self>,
         b: mask64x2<Self>,
     ) -> mask64x2<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask64x2<const SHIFT: usize>(
         self,
         a: mask64x2<Self>,
@@ -1002,9 +1002,9 @@ pub trait Simd:
     fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_f32x8(self, a: f32x8<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_f32x8<const SHIFT: usize>(
         self,
         a: f32x8<Self>,
@@ -1100,9 +1100,9 @@ pub trait Simd:
     fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_i8x32(self, a: i8x32<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_i8x32<const SHIFT: usize>(
         self,
         a: i8x32<Self>,
@@ -1180,9 +1180,9 @@ pub trait Simd:
     fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_u8x32<const SHIFT: usize>(
         self,
         a: u8x32<Self>,
@@ -1258,13 +1258,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask8x32(self, a: u8x32<Self>) -> mask8x32<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask8x32(self, a: mask8x32<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask8x32<const SHIFT: usize>(
         self,
         a: mask8x32<Self>,
         b: mask8x32<Self>,
     ) -> mask8x32<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask8x32<const SHIFT: usize>(
         self,
         a: mask8x32<Self>,
@@ -1315,9 +1315,9 @@ pub trait Simd:
     fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_i16x16(self, a: i16x16<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_i16x16<const SHIFT: usize>(
         self,
         a: i16x16<Self>,
@@ -1395,9 +1395,9 @@ pub trait Simd:
     fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_u16x16(self, a: u16x16<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_u16x16<const SHIFT: usize>(
         self,
         a: u16x16<Self>,
@@ -1475,13 +1475,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask16x16(self, a: u8x32<Self>) -> mask16x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask16x16(self, a: mask16x16<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask16x16<const SHIFT: usize>(
         self,
         a: mask16x16<Self>,
         b: mask16x16<Self>,
     ) -> mask16x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask16x16<const SHIFT: usize>(
         self,
         a: mask16x16<Self>,
@@ -1532,9 +1532,9 @@ pub trait Simd:
     fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_i32x8(self, a: i32x8<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_i32x8<const SHIFT: usize>(
         self,
         a: i32x8<Self>,
@@ -1614,9 +1614,9 @@ pub trait Simd:
     fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_u32x8(self, a: u32x8<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_u32x8<const SHIFT: usize>(
         self,
         a: u32x8<Self>,
@@ -1692,13 +1692,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask32x8(self, a: u8x32<Self>) -> mask32x8<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask32x8(self, a: mask32x8<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask32x8<const SHIFT: usize>(
         self,
         a: mask32x8<Self>,
         b: mask32x8<Self>,
     ) -> mask32x8<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask32x8<const SHIFT: usize>(
         self,
         a: mask32x8<Self>,
@@ -1749,9 +1749,9 @@ pub trait Simd:
     fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_f64x4(self, a: f64x4<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_f64x4<const SHIFT: usize>(
         self,
         a: f64x4<Self>,
@@ -1837,13 +1837,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask64x4(self, a: u8x32<Self>) -> mask64x4<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask64x4(self, a: mask64x4<Self>) -> u8x32<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask64x4<const SHIFT: usize>(
         self,
         a: mask64x4<Self>,
         b: mask64x4<Self>,
     ) -> mask64x4<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask64x4<const SHIFT: usize>(
         self,
         a: mask64x4<Self>,
@@ -1894,9 +1894,9 @@ pub trait Simd:
     fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_f32x16<const SHIFT: usize>(
         self,
         a: f32x16<Self>,
@@ -1994,9 +1994,9 @@ pub trait Simd:
     fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_i8x64(self, a: i8x64<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_i8x64<const SHIFT: usize>(
         self,
         a: i8x64<Self>,
@@ -2072,9 +2072,9 @@ pub trait Simd:
     fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_u8x64<const SHIFT: usize>(
         self,
         a: u8x64<Self>,
@@ -2150,13 +2150,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask8x64(self, a: u8x64<Self>) -> mask8x64<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask8x64(self, a: mask8x64<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask8x64<const SHIFT: usize>(
         self,
         a: mask8x64<Self>,
         b: mask8x64<Self>,
     ) -> mask8x64<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask8x64<const SHIFT: usize>(
         self,
         a: mask8x64<Self>,
@@ -2205,9 +2205,9 @@ pub trait Simd:
     fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_i16x32(self, a: i16x32<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_i16x32<const SHIFT: usize>(
         self,
         a: i16x32<Self>,
@@ -2283,9 +2283,9 @@ pub trait Simd:
     fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_u16x32(self, a: u16x32<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_u16x32<const SHIFT: usize>(
         self,
         a: u16x32<Self>,
@@ -2365,13 +2365,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask16x32(self, a: u8x64<Self>) -> mask16x32<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask16x32(self, a: mask16x32<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask16x32<const SHIFT: usize>(
         self,
         a: mask16x32<Self>,
         b: mask16x32<Self>,
     ) -> mask16x32<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask16x32<const SHIFT: usize>(
         self,
         a: mask16x32<Self>,
@@ -2420,9 +2420,9 @@ pub trait Simd:
     fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_i32x16(self, a: i32x16<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_i32x16<const SHIFT: usize>(
         self,
         a: i32x16<Self>,
@@ -2500,9 +2500,9 @@ pub trait Simd:
     fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_u32x16<const SHIFT: usize>(
         self,
         a: u32x16<Self>,
@@ -2580,13 +2580,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask32x16(self, a: u8x64<Self>) -> mask32x16<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask32x16(self, a: mask32x16<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask32x16<const SHIFT: usize>(
         self,
         a: mask32x16<Self>,
         b: mask32x16<Self>,
     ) -> mask32x16<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask32x16<const SHIFT: usize>(
         self,
         a: mask32x16<Self>,
@@ -2635,9 +2635,9 @@ pub trait Simd:
     fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_f64x8(self, a: f64x8<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_f64x8<const SHIFT: usize>(
         self,
         a: f64x8<Self>,
@@ -2721,13 +2721,13 @@ pub trait Simd:
     fn cvt_from_bytes_mask64x8(self, a: u8x64<Self>) -> mask64x8<Self>;
     #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
     fn cvt_to_bytes_mask64x8(self, a: mask64x8<Self>) -> u8x64<Self>;
-    #[doc = ""]
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_mask64x8<const SHIFT: usize>(
         self,
         a: mask64x8<Self>,
         b: mask64x8<Self>,
     ) -> mask64x8<Self>;
-    #[doc = ""]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks_mask64x8<const SHIFT: usize>(
         self,
         a: mask64x8<Self>,
@@ -2845,8 +2845,6 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     #[doc = r""]
     #[doc = r" The slice must be the proper width."]
     fn from_slice(simd: S, slice: &[Element]) -> Self;
-    #[doc = r" Create a SIMD vector with all elements set to the given value."]
-    fn splat(simd: S, val: Element) -> Self;
     #[doc = r" Create a SIMD vector from a 128-bit vector of the same scalar"]
     #[doc = r" type, repeated."]
     fn block_splat(block: Self::Block) -> Self;
@@ -2854,26 +2852,11 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     #[doc = r" calling `f` with that element's lane index (from 0 to"]
     #[doc = r" [`SimdBase::N`] - 1)."]
     fn from_fn(simd: S, f: impl FnMut(usize) -> Element) -> Self;
-    #[doc = r" Concatenate `[self, rhs]` and extract `Self::N` elements"]
-    #[doc = r" starting at index `SHIFT`."]
-    #[doc = r""]
-    #[doc = r" `SHIFT` must be within [0, `Self::N`]."]
-    #[doc = r""]
-    #[doc = r#" This can be used to implement a "shift items" operation by"#]
-    #[doc = r" providing all zeroes as one operand. For a left shift, the"]
-    #[doc = r" right-hand side should be all zeroes. For a right shift by `M`"]
-    #[doc = r" items, the left-hand side should be all zeroes, and the shift"]
-    #[doc = r" amount will be `Self::N - M`."]
-    #[doc = r""]
-    #[doc = r" This can also be used to rotate items within a vector by"]
-    #[doc = r" providing the same vector as both operands."]
-    #[doc = r""]
-    #[doc = r" ```text"]
-    #[doc = r" slide::<1>([a b c d], [e f g h]) == [b c d e]"]
-    #[doc = r" ```"]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
+    fn splat(simd: S, val: Element) -> Self;
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = r" Like [`slide`](SimdBase::slide), but operates independently on"]
-    #[doc = r" each 128-bit block."]
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
 }
 #[doc = r" Functionality implemented by floating-point SIMD vectors."]
