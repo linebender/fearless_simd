@@ -51,6 +51,7 @@ pub(crate) enum OpSig {
     Cvt {
         target_ty: ScalarType,
         scalar_bits: usize,
+        precise: bool,
     },
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same bit width.
@@ -782,6 +783,18 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 OpSig::Cvt {
                     target_ty: ScalarType::Unsigned,
                     scalar_bits: 32,
+                    precise: false,
+                },
+                "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
+                Out-of-range values or NaN will produce implementation-defined results.",
+            ));
+            ops.push(Op::new(
+                "cvt_u32_precise",
+                OpKind::OwnTrait,
+                OpSig::Cvt {
+                    target_ty: ScalarType::Unsigned,
+                    scalar_bits: 32,
+                    precise: true,
                 },
                 "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
                 Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
@@ -792,6 +805,18 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 OpSig::Cvt {
                     target_ty: ScalarType::Int,
                     scalar_bits: 32,
+                    precise: false,
+                },
+                "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
+                Out-of-range values or NaN will produce implementation-defined results.",
+            ));
+            ops.push(Op::new(
+                "cvt_i32_precise",
+                OpKind::OwnTrait,
+                OpSig::Cvt {
+                    target_ty: ScalarType::Int,
+                    scalar_bits: 32,
+                    precise: true,
                 },
                 "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
                 Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
@@ -803,6 +828,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             OpSig::Cvt {
                 target_ty: ScalarType::Float,
                 scalar_bits: 32,
+                precise: false,
             },
             "Convert each unsigned 32-bit integer element to a floating-point value.\n\n\
             Values that cannot be exactly represented are rounded to the nearest representable value.",
@@ -813,6 +839,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             OpSig::Cvt {
                 target_ty: ScalarType::Float,
                 scalar_bits: 32,
+                precise: false,
             },
             "Convert each signed 32-bit integer element to a floating-point value.\n\n\
             Values that cannot be exactly represented are rounded to the nearest representable value.",
@@ -1018,6 +1045,7 @@ impl OpSig {
             Self::Cvt {
                 target_ty,
                 scalar_bits,
+                ..
             } => {
                 let arg0 = &arg_names[0];
                 let result = VecType::new(*target_ty, *scalar_bits, vec_ty.len).rust();

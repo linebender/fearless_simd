@@ -5,6 +5,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::arch::neon::split_intrinsic;
+use crate::generic::generic_op_name;
 use crate::ops::{Op, valid_reinterpret};
 use crate::types::ScalarType;
 use crate::{
@@ -380,13 +381,24 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 OpSig::Cvt {
                     target_ty,
                     scalar_bits,
+                    precise,
                 } => {
-                    let to_ty = &VecType::new(target_ty, scalar_bits, vec_ty.len);
-                    let neon = cvt_intrinsic("vcvt", to_ty, vec_ty);
-                    quote! {
-                        #method_sig {
-                            unsafe {
-                                #neon(a.into()).simd_into(self)
+                    if precise {
+                        let non_precise =
+                            generic_op_name(method.strip_suffix("_precise").unwrap(), vec_ty);
+                        quote! {
+                            #method_sig {
+                                self.#non_precise(a)
+                            }
+                        }
+                    } else {
+                        let to_ty = &VecType::new(target_ty, scalar_bits, vec_ty.len);
+                        let neon = cvt_intrinsic("vcvt", to_ty, vec_ty);
+                        quote! {
+                            #method_sig {
+                                unsafe {
+                                    #neon(a.into()).simd_into(self)
+                                }
                             }
                         }
                     }

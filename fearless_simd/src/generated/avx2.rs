@@ -223,6 +223,20 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         unsafe {
+            let mut converted = _mm_cvttps_epi32(a.into());
+            let in_range = _mm_cmplt_ps(a.into(), _mm_set1_ps(2147483648.0));
+            let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
+            if !all_in_range {
+                let excess = _mm_sub_ps(a.into(), _mm_set1_ps(2147483648.0));
+                let excess_converted = _mm_cvttps_epi32(_mm_andnot_ps(in_range, excess));
+                converted = _mm_add_epi32(converted, excess_converted);
+            }
+            converted.simd_into(self)
+        }
+    }
+    #[inline(always)]
+    fn cvt_u32_precise_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
+        unsafe {
             let a = _mm_max_ps(a.into(), _mm_setzero_ps());
             let mut converted = _mm_cvttps_epi32(a);
             let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
@@ -244,6 +258,10 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
+        unsafe { _mm_cvttps_epi32(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
         unsafe {
             let a = a.into();
             let mut converted = _mm_cvttps_epi32(a);
@@ -1630,6 +1648,20 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
         unsafe {
+            let mut converted = _mm256_cvttps_epi32(a.into());
+            let in_range = _mm256_cmp_ps::<17i32>(a.into(), _mm256_set1_ps(2147483648.0));
+            let all_in_range = _mm256_movemask_ps(in_range) == 0b11111111;
+            if !all_in_range {
+                let excess = _mm256_sub_ps(a.into(), _mm256_set1_ps(2147483648.0));
+                let excess_converted = _mm256_cvttps_epi32(_mm256_andnot_ps(in_range, excess));
+                converted = _mm256_add_epi32(converted, excess_converted);
+            }
+            converted.simd_into(self)
+        }
+    }
+    #[inline(always)]
+    fn cvt_u32_precise_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
+        unsafe {
             let a = _mm256_max_ps(a.into(), _mm256_setzero_ps());
             let mut converted = _mm256_cvttps_epi32(a);
             let in_range = _mm256_cmp_ps::<17i32>(a, _mm256_set1_ps(2147483648.0));
@@ -1651,6 +1683,10 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
+        unsafe { _mm256_cvttps_epi32(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn cvt_i32_precise_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
         unsafe {
             let a = a.into();
             let mut converted = _mm256_cvttps_epi32(a);
@@ -3423,9 +3459,25 @@ impl Simd for Avx2 {
         self.combine_u32x8(self.cvt_u32_f32x8(a0), self.cvt_u32_f32x8(a1))
     }
     #[inline(always)]
+    fn cvt_u32_precise_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_u32x8(
+            self.cvt_u32_precise_f32x8(a0),
+            self.cvt_u32_precise_f32x8(a1),
+        )
+    }
+    #[inline(always)]
     fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_i32x8(self.cvt_i32_f32x8(a0), self.cvt_i32_f32x8(a1))
+    }
+    #[inline(always)]
+    fn cvt_i32_precise_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_i32x8(
+            self.cvt_i32_precise_f32x8(a0),
+            self.cvt_i32_precise_f32x8(a1),
+        )
     }
     #[inline(always)]
     fn splat_i8x64(self, val: i8) -> i8x64<Self> {

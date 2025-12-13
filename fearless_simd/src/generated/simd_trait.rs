@@ -188,10 +188,14 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
-    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u32_precise_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x16(self, val: i8) -> i8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -776,10 +780,14 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
-    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u32_precise_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i32_precise_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x32(self, val: i8) -> i8x32<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -1390,10 +1398,14 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
-    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u32_precise_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i32_precise_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x64(self, val: i8) -> i8x64<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -1987,6 +1999,10 @@ pub trait SimdFloat<Element: SimdElement, S: Simd>:
     #[inline(always)]
     fn to_int<T: SimdCvtTruncate<Self>>(self) -> T {
         T::truncate_from(self)
+    }
+    #[inline(always)]
+    fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T {
+        T::truncate_from_precise(self)
     }
     #[doc = "Compute the absolute value of each element."]
     fn abs(self) -> Self;

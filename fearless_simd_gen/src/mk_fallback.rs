@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::fallback;
-use crate::generic::{generic_combine, generic_op, generic_split};
+use crate::generic::{generic_combine, generic_op, generic_op_name, generic_split};
 use crate::ops::{Op, OpSig, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
@@ -346,19 +346,30 @@ fn mk_simd_impl() -> TokenStream {
                 OpSig::Cvt {
                     target_ty,
                     scalar_bits,
+                    precise,
                 } => {
-                    let to_ty = &VecType::new(target_ty, scalar_bits, vec_ty.len);
-                    let scalar = to_ty.scalar.rust(scalar_bits);
-                    let items = make_list(
-                        (0..vec_ty.len)
-                            .map(|idx| {
-                                quote! { a[#idx] as #scalar }
-                            })
-                            .collect::<Vec<_>>(),
-                    );
-                    quote! {
-                        #method_sig {
-                            #items.simd_into(self)
+                    if precise {
+                        let non_precise =
+                            generic_op_name(method.strip_suffix("_precise").unwrap(), vec_ty);
+                        quote! {
+                            #method_sig {
+                                self.#non_precise(a)
+                            }
+                        }
+                    } else {
+                        let to_ty = &VecType::new(target_ty, scalar_bits, vec_ty.len);
+                        let scalar = to_ty.scalar.rust(scalar_bits);
+                        let items = make_list(
+                            (0..vec_ty.len)
+                                .map(|idx| {
+                                    quote! { a[#idx] as #scalar }
+                                })
+                                .collect::<Vec<_>>(),
+                        );
+                        quote! {
+                            #method_sig {
+                                #items.simd_into(self)
+                            }
                         }
                     }
                 }

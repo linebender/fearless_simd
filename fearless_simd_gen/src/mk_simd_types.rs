@@ -91,12 +91,21 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     ty.scalar.rust_name(ty.scalar_bits),
                     src_ty.rust_name()
                 );
+                let method_precise = format_ident!(
+                    "cvt_{}_precise_{}",
+                    ty.scalar.rust_name(ty.scalar_bits),
+                    src_ty.rust_name()
+                );
                 let src_ty = src_ty.rust();
                 conditional_impls.push(quote! {
                     impl<S: Simd> SimdCvtTruncate<#src_ty<S>> for #name<S> {
                         #[inline(always)]
                         fn truncate_from(x: #src_ty<S>) -> Self {
                             x.simd.#method(x)
+                        }
+                        #[inline(always)]
+                        fn truncate_from_precise(x: #src_ty<S>) -> Self {
+                            x.simd.#method_precise(x)
                         }
                     }
                 });
