@@ -211,7 +211,8 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Cvt {
             target_ty,
             scalar_bits,
-        } => mk_sse4_2::handle_cvt(method_sig, vec_ty, target_ty, scalar_bits),
+            precise,
+        } => mk_sse4_2::handle_cvt(method_sig, vec_ty, target_ty, scalar_bits, precise),
         OpSig::Reinterpret {
             target_ty,
             scalar_bits,

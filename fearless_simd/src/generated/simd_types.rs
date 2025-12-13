@@ -1470,6 +1470,10 @@ impl<S: Simd> SimdCvtTruncate<f32x4<S>> for i32x4<S> {
     fn truncate_from(x: f32x4<S>) -> Self {
         x.simd.cvt_i32_f32x4(x)
     }
+    #[inline(always)]
+    fn truncate_from_precise(x: f32x4<S>) -> Self {
+        x.simd.cvt_i32_precise_f32x4(x)
+    }
 }
 impl<S: Simd> crate::SimdCombine<i32, S> for i32x4<S> {
     type Combined = i32x8<S>;
@@ -1647,6 +1651,10 @@ impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
     #[inline(always)]
     fn truncate_from(x: f32x4<S>) -> Self {
         x.simd.cvt_u32_f32x4(x)
+    }
+    #[inline(always)]
+    fn truncate_from_precise(x: f32x4<S>) -> Self {
+        x.simd.cvt_u32_precise_f32x4(x)
     }
 }
 impl<S: Simd> crate::SimdCombine<u32, S> for u32x4<S> {
@@ -3779,6 +3787,10 @@ impl<S: Simd> SimdCvtTruncate<f32x8<S>> for i32x8<S> {
     fn truncate_from(x: f32x8<S>) -> Self {
         x.simd.cvt_i32_f32x8(x)
     }
+    #[inline(always)]
+    fn truncate_from_precise(x: f32x8<S>) -> Self {
+        x.simd.cvt_i32_precise_f32x8(x)
+    }
 }
 impl<S: Simd> crate::SimdSplit<i32, S> for i32x8<S> {
     type Split = i32x4<S>;
@@ -3972,6 +3984,10 @@ impl<S: Simd> SimdCvtTruncate<f32x8<S>> for u32x8<S> {
     #[inline(always)]
     fn truncate_from(x: f32x8<S>) -> Self {
         x.simd.cvt_u32_f32x8(x)
+    }
+    #[inline(always)]
+    fn truncate_from_precise(x: f32x8<S>) -> Self {
+        x.simd.cvt_u32_precise_f32x8(x)
     }
 }
 impl<S: Simd> crate::SimdSplit<u32, S> for u32x8<S> {
@@ -6260,6 +6276,10 @@ impl<S: Simd> SimdCvtTruncate<f32x16<S>> for i32x16<S> {
     fn truncate_from(x: f32x16<S>) -> Self {
         x.simd.cvt_i32_f32x16(x)
     }
+    #[inline(always)]
+    fn truncate_from_precise(x: f32x16<S>) -> Self {
+        x.simd.cvt_i32_precise_f32x16(x)
+    }
 }
 impl<S: Simd> crate::SimdSplit<i32, S> for i32x16<S> {
     type Split = i32x8<S>;
@@ -6455,6 +6475,10 @@ impl<S: Simd> SimdCvtTruncate<f32x16<S>> for u32x16<S> {
     #[inline(always)]
     fn truncate_from(x: f32x16<S>) -> Self {
         x.simd.cvt_u32_f32x16(x)
+    }
+    #[inline(always)]
+    fn truncate_from_precise(x: f32x16<S>) -> Self {
+        x.simd.cvt_u32_precise_f32x16(x)
     }
 }
 impl<S: Simd> crate::SimdSplit<u32, S> for u32x16<S> {

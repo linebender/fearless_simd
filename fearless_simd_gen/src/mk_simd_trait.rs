@@ -169,6 +169,9 @@ fn mk_simd_float() -> TokenStream {
             #[inline(always)]
             fn to_int<T: SimdCvtTruncate<Self>>(self) -> T { T::truncate_from(self) }
 
+            #[inline(always)]
+            fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T { T::truncate_from_precise(self) }
+
             #( #methods )*
         }
     }
