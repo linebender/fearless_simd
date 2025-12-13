@@ -43,6 +43,12 @@ impl RefKind {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SlideGranularity {
+    WithinBlocks,
+    AcrossBlocks,
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
     /// Takes a single argument of the underlying SIMD element type, and returns the corresponding vector type.
@@ -66,6 +72,8 @@ pub(crate) enum OpSig {
     Zip { select_low: bool },
     /// Takes two arguments of a vector type, and returns that same vector type.
     Unzip { select_even: bool },
+    /// Takes two arguments of a vector type, plus a const generic shift amount, and returns that same vector type.
+    Slide { granularity: SlideGranularity },
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -213,6 +221,11 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
             }
+            OpSig::Slide { .. } => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { <const SHIFT: usize>(self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -328,6 +341,11 @@ impl Op {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
+            }
+            OpSig::Slide { .. } => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { <const SHIFT: usize>(#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
             }
             OpSig::Compare => {
                 let arg0 = &arg_names[0];
@@ -464,6 +482,22 @@ const BASE_OPS: &[Op] = &[
         OpKind::OwnTrait,
         OpSig::ToBytes,
         "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length.",
+    ),
+    Op::new(
+        "slide",
+        OpKind::BaseTraitMethod,
+        OpSig::Slide {
+            granularity: SlideGranularity::AcrossBlocks,
+        },
+        "",
+    ),
+    Op::new(
+        "slide_within_blocks",
+        OpKind::BaseTraitMethod,
+        OpSig::Slide {
+            granularity: SlideGranularity::WithinBlocks,
+        },
+        "",
     ),
 ];
 
@@ -1302,8 +1336,21 @@ impl OpSig {
                 | Self::FromArray { .. }
                 | Self::AsArray { .. }
                 | Self::StoreArray
+                | Self::Slide {
+                    granularity: SlideGranularity::AcrossBlocks,
+                    ..
+                }
         ) {
             return false;
+        }
+
+        // For a block-wise item slide/shift, defer to the non-block-wise version if the operand is 1 block wide anyway
+        if let Self::Slide {
+            granularity: SlideGranularity::WithinBlocks,
+        } = self
+            && vec_ty.n_bits() == 128
+        {
+            return true;
         }
 
         // Otherwise, defer to split/combine if this is a wider operation than natively supported.
@@ -1330,7 +1377,8 @@ impl OpSig {
             | Self::Compare
             | Self::Combine { .. }
             | Self::Zip { .. }
-            | Self::Unzip { .. } => &["a", "b"],
+            | Self::Unzip { .. }
+            | Self::Slide { .. } => &["a", "b"],
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
@@ -1352,9 +1400,11 @@ impl OpSig {
             | Self::MaskReduce { .. }
             | Self::AsArray { .. }
             | Self::ToBytes => &["self"],
-            Self::Binary | Self::Compare | Self::Zip { .. } | Self::Unzip { .. } => {
-                &["self", "rhs"]
-            }
+            Self::Binary
+            | Self::Compare
+            | Self::Zip { .. }
+            | Self::Unzip { .. }
+            | Self::Slide { .. } => &["self", "rhs"],
             Self::Shift => &["self", "shift"],
             Self::Ternary => &["self", "op1", "op2"],
             Self::Select | Self::Split { .. } | Self::Combine { .. } => &[],
@@ -1400,7 +1450,8 @@ impl OpSig {
             | Self::AsArray { .. }
             | Self::StoreArray
             | Self::FromBytes
-            | Self::ToBytes => return None,
+            | Self::ToBytes
+            | Self::Slide { .. } => return None,
         };
         Some(args)
     }

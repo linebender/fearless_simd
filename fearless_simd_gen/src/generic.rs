@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{ToTokens, quote};
 
 use crate::{
-    ops::{Op, OpSig, RefKind},
+    ops::{Op, OpSig, RefKind, SlideGranularity},
     types::{ScalarType, VecType},
 };
 
@@ -204,6 +204,32 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         }
         OpSig::FromBytes => generic_from_bytes(method_sig, ty),
         OpSig::ToBytes => generic_to_bytes(method_sig, ty),
+        OpSig::Slide { granularity, .. } => {
+            match (granularity, ty.n_bits()) {
+                (SlideGranularity::WithinBlocks, 128) => {
+                    // If this operation is done on a 128-bit vector type, the "within blocks" method is identical to the
+                    // non-within-blocks one, so just defer to that.
+                    let non_blockwise = generic_op_name("slide", ty);
+                    quote! {
+                        #method_sig {
+                            self.#non_blockwise::<SHIFT>(a, b)
+                        }
+                    }
+                }
+                (SlideGranularity::WithinBlocks, _) => {
+                    quote! {
+                        #method_sig {
+                            let (a0, a1) = self.#split(a);
+                            let (b0, b1) = self.#split(b);
+                            self.#combine(self.#do_half::<SHIFT>(a0, b0), self.#do_half::<SHIFT>(a1, b1))
+                        }
+                    }
+                }
+                _ => {
+                    panic!("Item-wise shifts across blocks cannot be done via split/combine");
+                }
+            }
+        }
     }
 }
 

@@ -292,6 +292,8 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let store_array_op = generic_op_name("store_array", ty);
     let as_array_ref_op = generic_op_name("as_array_ref", ty);
     let as_array_mut_op = generic_op_name("as_array_mut", ty);
+    let slide_op = generic_op_name("slide", ty);
+    let slide_blockwise_op = generic_op_name("slide_within_blocks", ty);
     quote! {
         impl<S: Simd> SimdBase<S> for #name<S> {
             type Element = #scalar;
@@ -340,6 +342,15 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
                 simd.#from_array_op(core::array::from_fn(f))
             }
 
+            #[inline(always)]
+            fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+                self.simd.#slide_op::<SHIFT>(self, rhs.simd_into(self.simd))
+            }
+
+            #[inline(always)]
+            fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+                self.simd.#slide_blockwise_op::<SHIFT>(self, rhs.simd_into(self.simd))
+            }
         }
         impl<S: Simd> crate::#vec_trait_id<S> for #name<S> {
             #( #methods )*

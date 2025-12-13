@@ -11,10 +11,10 @@ use crate::generic::{
     generic_from_bytes, generic_op_name, generic_store_array, generic_to_bytes, scalar_binary,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig, Quantifier, valid_reinterpret};
+use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{ToTokens as _, quote};
+use quote::{ToTokens as _, format_ident, quote};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum X86 {
@@ -79,6 +79,19 @@ impl Level for X86 {
             use core::arch::x86::*;
             #[cfg(target_arch = "x86_64")]
             use core::arch::x86_64::*;
+        }
+    }
+
+    fn make_module_footer(&self) -> TokenStream {
+        let alignr_helpers = self.dyn_alignr_helpers();
+        let slide_helpers = match self {
+            X86::Sse4_2 => Self::sse42_slide_helpers(),
+            X86::Avx2 => Self::avx2_slide_helpers(),
+        };
+
+        quote! {
+            #alignr_helpers
+            #slide_helpers
         }
     }
 
@@ -149,6 +162,7 @@ impl Level for X86 {
             OpSig::Split { half_ty } => self.handle_split(method_sig, vec_ty, &half_ty),
             OpSig::Zip { select_low } => self.handle_zip(method_sig, vec_ty, select_low),
             OpSig::Unzip { select_even } => self.handle_unzip(method_sig, vec_ty, select_even),
+            OpSig::Slide { granularity } => self.handle_slide(method_sig, vec_ty, granularity),
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -946,6 +960,65 @@ impl X86 {
         }
     }
 
+    pub(crate) fn handle_slide(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+        granularity: SlideGranularity,
+    ) -> TokenStream {
+        use SlideGranularity::*;
+
+        let block_wrapper = vec_ty.aligned_wrapper();
+        let combined_bytes = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+        let scalar_bytes = vec_ty.scalar_bits / 8;
+        let max_shift = match granularity {
+            WithinBlocks => vec_ty.len / (vec_ty.n_bits() / 128),
+            AcrossBlocks => vec_ty.len,
+        };
+        let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+        let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+        let alignr_op = match (granularity, vec_ty.n_bits(), self) {
+            (WithinBlocks, 128, _) => {
+                panic!("This should have been handled by generic_op");
+            }
+            (WithinBlocks, _, _) | (_, 128, _) => {
+                // For WithinBlocks, use elements per 128-bit block; for 128-bit vectors, use total elements
+                format_ident!("dyn_alignr_{}", vec_ty.n_bits())
+            }
+            (AcrossBlocks, 256 | 512, Self::Sse4_2) => {
+                // Inter-block shift or rotate in SSE4.2: use cross_block_alignr
+
+                format_ident!("cross_block_alignr_128x{}", vec_ty.n_bits() / 128)
+            }
+            (AcrossBlocks, 256 | 512, Self::Avx2) => {
+                format_ident!("cross_block_alignr_256x{}", vec_ty.n_bits() / 256)
+            }
+            _ => unimplemented!(),
+        };
+        let byte_shift = if scalar_bytes == 1 {
+            quote! { SHIFT }
+        } else {
+            quote! { SHIFT * #scalar_bytes }
+        };
+
+        quote! {
+            #method_sig {
+                unsafe {
+                    if SHIFT >= #max_shift {
+                        return b;
+                    }
+
+                    // b and a are swapped here to match ARM's vext semantics. For vext, we can think of `a` as the "left",
+                    // and we concatenate `b` to its "right". This makes sense, since `a` is the left-hand side and `b` is
+                    // the right-hand side. x86's `alignr` is backwards, and treats `b` as the high/left block.
+                    let result = #alignr_op(self.#to_bytes(b).val.0, self.#to_bytes(a).val.0, #byte_shift);
+                    self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                }
+            }
+        }
+    }
+
     pub(crate) fn handle_cvt(
         &self,
         method_sig: TokenStream,
@@ -1491,6 +1564,129 @@ impl X86 {
         quote! {
             #method_sig {
                 #expr
+            }
+        }
+    }
+
+    fn dyn_alignr_helpers(&self) -> TokenStream {
+        let mut fns = vec![];
+
+        let vec_widths: &[usize] = match self {
+            X86::Sse4_2 => &[128],
+            X86::Avx2 => &[128, 256],
+        };
+
+        for vec_ty in vec_widths
+            .iter()
+            .map(|n| VecType::new(ScalarType::Int, 8, *n / 8))
+        {
+            let arch_ty = self.arch_ty(&vec_ty);
+
+            let helper_name = format_ident!("dyn_alignr_{}", vec_ty.n_bits());
+            let alignr_intrinsic = simple_sign_unaware_intrinsic("alignr", &vec_ty);
+            let shifts = (0_usize..16).map(|shift| {
+                let shift_i32 = i32::try_from(shift).unwrap();
+                quote! { #shift => #alignr_intrinsic::<#shift_i32>(a, b) }
+            });
+
+            fns.push(quote! {
+                /// This is a version of the `alignr` intrinsic that takes a non-const shift argument. The shift is still
+                /// expected to be constant in practice, so the match statement will be optimized out. This exists because
+                /// Rust doesn't currently let you do math on const generics.
+                #[inline(always)]
+                unsafe fn #helper_name(a: #arch_ty, b: #arch_ty, shift: usize) -> #arch_ty {
+                    unsafe {
+                        match shift {
+                            #(#shifts,)*
+                            _ => unreachable!()
+                        }
+                    }
+                }
+            });
+        }
+
+        quote! { #( #fns )* }
+    }
+
+    fn sse42_slide_helpers() -> TokenStream {
+        let mut fns = vec![];
+
+        for num_blocks in [2_usize, 4_usize] {
+            let helper_name = format_ident!("cross_block_alignr_128x{}", num_blocks);
+            let blocks_idx = 0..num_blocks;
+
+            // Unroll the construction of the blocks. I tried using `array::from_fn`, but the compiler thought the
+            // closure was too big and didn't inline it.
+            fns.push(quote! {
+                /// Concatenates `b` and `a` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`.
+                /// Extracts from [b : a] (b in low bytes, a in high bytes), matching `alignr` semantics.
+                #[inline(always)]
+                unsafe fn #helper_name(a: [__m128i; #num_blocks], b: [__m128i; #num_blocks], shift_bytes: usize) -> [__m128i; #num_blocks] {
+                    [#({
+                        let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, #blocks_idx, shift_bytes);
+                        unsafe { dyn_alignr_128(hi, lo, shift_bytes % 16) }
+                    }),*]
+                }
+            });
+        }
+
+        quote! {
+            #(#fns)*
+        }
+    }
+
+    fn avx2_slide_helpers() -> TokenStream {
+        quote! {
+            /// Computes one output __m256i for `cross_block_alignr_*` operations.
+            ///
+            /// Given an array of registers, each containing two 128-bit blocks, extracts two adjacent blocks (`lo_idx` and
+            /// `hi_idx` = `lo_idx + 1`) and performs `alignr` with `intra_shift`.
+            #[inline(always)]
+            unsafe fn cross_block_alignr_one(regs: &[__m256i], block_idx: usize, shift_bytes: usize) -> __m256i {
+                let lo_idx = block_idx + (shift_bytes / 16);
+                let intra_shift = shift_bytes % 16;
+                let lo_blocks = if lo_idx % 2 == 0 {
+                    regs[lo_idx / 2]
+                } else {
+                    unsafe { _mm256_permute2x128_si256::<0x21>(regs[lo_idx / 2], regs[(lo_idx / 2) + 1]) }
+                };
+
+                // For hi_blocks, we need blocks (`lo_idx + 1`) and (`lo_idx + 2`)
+                let hi_idx = lo_idx + 1;
+                let hi_blocks = if hi_idx % 2 == 0 {
+                    regs[hi_idx / 2]
+                } else {
+                    unsafe { _mm256_permute2x128_si256::<0x21>(regs[hi_idx / 2], regs[(hi_idx / 2) + 1]) }
+                };
+
+                unsafe { dyn_alignr_256(hi_blocks, lo_blocks, intra_shift) }
+            }
+
+            /// Concatenates `b` and `a` (each 2 x __m256i = 4 blocks) and extracts 4 blocks starting at byte offset
+            /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+            #[inline(always)]
+            unsafe fn cross_block_alignr_256x2(a: [__m256i; 2], b: [__m256i; 2], shift_bytes: usize) -> [__m256i; 2] {
+                // Concatenation is [b : a], so b blocks come first
+                let regs = [b[0], b[1], a[0], a[1]];
+
+                unsafe {
+                    [
+                        cross_block_alignr_one(&regs, 0, shift_bytes),
+                        cross_block_alignr_one(&regs, 2, shift_bytes),
+                    ]
+                }
+            }
+
+            /// Concatenates `b` and `a` (each 1 x __m256i = 2 blocks) and extracts 2 blocks starting at byte offset
+            /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+            #[inline(always)]
+            unsafe fn cross_block_alignr_256x1(a: __m256i, b: __m256i, shift_bytes: usize) -> __m256i {
+                // Concatenation is [b : a], so b comes first
+                let regs = [b, a];
+
+                unsafe {
+                    cross_block_alignr_one(&regs, 0, shift_bytes)
+                }
             }
         }
     }

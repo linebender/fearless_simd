@@ -180,6 +180,28 @@ fn mk_simd_base() -> TokenStream {
             /// calling `f` with that element's lane index (from 0 to
             /// [`SimdBase::N`] - 1).
             fn from_fn(simd: S, f: impl FnMut(usize) -> Self::Element) -> Self;
+
+            /// Concatenate `[self, rhs]` and extract `Self::N` elements
+            /// starting at index `SHIFT`.
+            ///
+            /// `SHIFT` must be within [0, `Self::N`].
+            ///
+            /// This can be used to implement a "shift items" operation by
+            /// providing all zeroes as one operand. For a left shift, the
+            /// right-hand side should be all zeroes. For a right shift by `M`
+            /// items, the left-hand side should be all zeroes, and the shift
+            /// amount will be `Self::N - M`.
+            ///
+            /// This can also be used to rotate items within a vector by
+            /// providing the same vector as both operands.
+            ///
+            /// ```text
+            /// slide::<1>([a b c d], [e f g h]) == [b c d e]
+            /// ```
+            fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
+            /// Like [`slide`](SimdBase::slide), but operates independently on
+            /// each 128-bit block.
+            fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
         }
     }
 }

@@ -142,6 +142,31 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_f32x4(a).val.0,
+                self.cvt_to_bytes_f32x4(b).val.0,
+                SHIFT * 4usize,
+            )
+        };
+        self.cvt_from_bytes_f32x4(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x4<const SHIFT: usize>(
+        self,
+        a: f32x4<Self>,
+        b: f32x4<Self>,
+    ) -> f32x4<Self> {
+        self.slide_f32x4::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         unsafe { vabsq_f32(a.into()).simd_into(self) }
     }
@@ -364,6 +389,31 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_i8x16(a).val.0,
+                self.cvt_to_bytes_i8x16(b).val.0,
+                SHIFT,
+            )
+        };
+        self.cvt_from_bytes_i8x16(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x16<const SHIFT: usize>(
+        self,
+        a: i8x16<Self>,
+        b: i8x16<Self>,
+    ) -> i8x16<Self> {
+        self.slide_i8x16::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         unsafe { vaddq_s8(a.into(), b.into()).simd_into(self) }
     }
@@ -533,6 +583,31 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_u8x16(a).val.0,
+                self.cvt_to_bytes_u8x16(b).val.0,
+                SHIFT,
+            )
+        };
+        self.cvt_from_bytes_u8x16(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x16<const SHIFT: usize>(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+    ) -> u8x16<Self> {
+        self.slide_u8x16::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -706,6 +781,35 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask8x16<const SHIFT: usize>(
+        self,
+        a: mask8x16<Self>,
+        b: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_mask8x16(a).val.0,
+                self.cvt_to_bytes_mask8x16(b).val.0,
+                SHIFT,
+            )
+        };
+        self.cvt_from_bytes_mask8x16(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x16<const SHIFT: usize>(
+        self,
+        a: mask8x16<Self>,
+        b: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        self.slide_mask8x16::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         unsafe { vandq_s8(a.into(), b.into()).simd_into(self) }
     }
@@ -808,6 +912,31 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_i16x8(a).val.0,
+                self.cvt_to_bytes_i16x8(b).val.0,
+                SHIFT * 2usize,
+            )
+        };
+        self.cvt_from_bytes_i16x8(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x8<const SHIFT: usize>(
+        self,
+        a: i16x8<Self>,
+        b: i16x8<Self>,
+    ) -> i16x8<Self> {
+        self.slide_i16x8::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -981,6 +1110,31 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_u16x8(a).val.0,
+                self.cvt_to_bytes_u16x8(b).val.0,
+                SHIFT * 2usize,
+            )
+        };
+        self.cvt_from_bytes_u16x8(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x8<const SHIFT: usize>(
+        self,
+        a: u16x8<Self>,
+        b: u16x8<Self>,
+    ) -> u16x8<Self> {
+        self.slide_u16x8::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         unsafe { vaddq_u16(a.into(), b.into()).simd_into(self) }
     }
@@ -1148,6 +1302,35 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask16x8<const SHIFT: usize>(
+        self,
+        a: mask16x8<Self>,
+        b: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_mask16x8(a).val.0,
+                self.cvt_to_bytes_mask16x8(b).val.0,
+                SHIFT * 2usize,
+            )
+        };
+        self.cvt_from_bytes_mask16x8(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x8<const SHIFT: usize>(
+        self,
+        a: mask16x8<Self>,
+        b: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        self.slide_mask16x8::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         unsafe { vandq_s16(a.into(), b.into()).simd_into(self) }
     }
@@ -1250,6 +1433,31 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_i32x4(a).val.0,
+                self.cvt_to_bytes_i32x4(b).val.0,
+                SHIFT * 4usize,
+            )
+        };
+        self.cvt_from_bytes_i32x4(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x4<const SHIFT: usize>(
+        self,
+        a: i32x4<Self>,
+        b: i32x4<Self>,
+    ) -> i32x4<Self> {
+        self.slide_i32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1427,6 +1635,31 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_u32x4(a).val.0,
+                self.cvt_to_bytes_u32x4(b).val.0,
+                SHIFT * 4usize,
+            )
+        };
+        self.cvt_from_bytes_u32x4(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x4<const SHIFT: usize>(
+        self,
+        a: u32x4<Self>,
+        b: u32x4<Self>,
+    ) -> u32x4<Self> {
+        self.slide_u32x4::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         unsafe { vaddq_u32(a.into(), b.into()).simd_into(self) }
     }
@@ -1594,6 +1827,35 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask32x4<const SHIFT: usize>(
+        self,
+        a: mask32x4<Self>,
+        b: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_mask32x4(a).val.0,
+                self.cvt_to_bytes_mask32x4(b).val.0,
+                SHIFT * 4usize,
+            )
+        };
+        self.cvt_from_bytes_mask32x4(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x4<const SHIFT: usize>(
+        self,
+        a: mask32x4<Self>,
+        b: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        self.slide_mask32x4::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         unsafe { vandq_s32(a.into(), b.into()).simd_into(self) }
     }
@@ -1696,6 +1958,31 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        if SHIFT >= 2usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_f64x2(a).val.0,
+                self.cvt_to_bytes_f64x2(b).val.0,
+                SHIFT * 8usize,
+            )
+        };
+        self.cvt_from_bytes_f64x2(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x2<const SHIFT: usize>(
+        self,
+        a: f64x2<Self>,
+        b: f64x2<Self>,
+    ) -> f64x2<Self> {
+        self.slide_f64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -1892,6 +2179,35 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask64x2<const SHIFT: usize>(
+        self,
+        a: mask64x2<Self>,
+        b: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        if SHIFT >= 2usize {
+            return b;
+        }
+        let result = unsafe {
+            dyn_vext_128(
+                self.cvt_to_bytes_mask64x2(a).val.0,
+                self.cvt_to_bytes_mask64x2(b).val.0,
+                SHIFT * 8usize,
+            )
+        };
+        self.cvt_from_bytes_mask64x2(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x2<const SHIFT: usize>(
+        self,
+        a: mask64x2<Self>,
+        b: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        self.slide_mask64x2::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         unsafe { vandq_s64(a.into(), b.into()).simd_into(self) }
     }
@@ -1995,6 +2311,56 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_f32x8(a).val.0;
+            let b_bytes = self.cvt_to_bytes_f32x8(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT * 4usize;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_f32x8(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x8<const SHIFT: usize>(
+        self,
+        a: f32x8<Self>,
+        b: f32x8<Self>,
+    ) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(
+            self.slide_within_blocks_f32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -2311,6 +2677,56 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_i8x32(a).val.0;
+            let b_bytes = self.cvt_to_bytes_i8x32(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_i8x32(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x32<const SHIFT: usize>(
+        self,
+        a: i8x32<Self>,
+        b: i8x32<Self>,
+    ) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(
+            self.slide_within_blocks_i8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x16::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         let (b0, b1) = self.split_i8x32(b);
@@ -2540,6 +2956,56 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_u8x32(a).val.0;
+            let b_bytes = self.cvt_to_bytes_u8x32(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_u8x32(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x32<const SHIFT: usize>(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(
+            self.slide_within_blocks_u8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x16::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
@@ -2764,6 +3230,60 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask8x32<const SHIFT: usize>(
+        self,
+        a: mask8x32<Self>,
+        b: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_mask8x32(a).val.0;
+            let b_bytes = self.cvt_to_bytes_mask8x32(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_mask8x32(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x32<const SHIFT: usize>(
+        self,
+        a: mask8x32<Self>,
+        b: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        self.combine_mask8x16(
+            self.slide_within_blocks_mask8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask8x16::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_mask8x32(b);
@@ -2901,6 +3421,56 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_i16x16(a).val.0;
+            let b_bytes = self.cvt_to_bytes_i16x16(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT * 2usize;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_i16x16(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x16<const SHIFT: usize>(
+        self,
+        a: i16x16<Self>,
+        b: i16x16<Self>,
+    ) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(
+            self.slide_within_blocks_i16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -3130,6 +3700,56 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_u16x16(a).val.0;
+            let b_bytes = self.cvt_to_bytes_u16x16(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT * 2usize;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_u16x16(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x16<const SHIFT: usize>(
+        self,
+        a: u16x16<Self>,
+        b: u16x16<Self>,
+    ) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(
+            self.slide_within_blocks_u16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -3365,6 +3985,60 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask16x16<const SHIFT: usize>(
+        self,
+        a: mask16x16<Self>,
+        b: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_mask16x16(a).val.0;
+            let b_bytes = self.cvt_to_bytes_mask16x16(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT * 2usize;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_mask16x16(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x16<const SHIFT: usize>(
+        self,
+        a: mask16x16<Self>,
+        b: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask16x8(
+            self.slide_within_blocks_mask16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask16x8::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_mask16x16(b);
@@ -3502,6 +4176,56 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_i32x8(a).val.0;
+            let b_bytes = self.cvt_to_bytes_i32x8(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT * 4usize;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_i32x8(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x8<const SHIFT: usize>(
+        self,
+        a: i32x8<Self>,
+        b: i32x8<Self>,
+    ) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(
+            self.slide_within_blocks_i32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -3738,6 +4462,56 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_u32x8(a).val.0;
+            let b_bytes = self.cvt_to_bytes_u32x8(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT * 4usize;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_u32x8(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x8<const SHIFT: usize>(
+        self,
+        a: u32x8<Self>,
+        b: u32x8<Self>,
+    ) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(
+            self.slide_within_blocks_u32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x4::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
         let (b0, b1) = self.split_u32x8(b);
@@ -3959,6 +4733,60 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask32x8<const SHIFT: usize>(
+        self,
+        a: mask32x8<Self>,
+        b: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_mask32x8(a).val.0;
+            let b_bytes = self.cvt_to_bytes_mask32x8(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT * 4usize;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_mask32x8(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x8<const SHIFT: usize>(
+        self,
+        a: mask32x8<Self>,
+        b: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask32x4(
+            self.slide_within_blocks_mask32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask32x4::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_mask32x8(b);
@@ -4096,6 +4924,56 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_f64x4(a).val.0;
+            let b_bytes = self.cvt_to_bytes_f64x4(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT * 8usize;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_f64x4(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x4<const SHIFT: usize>(
+        self,
+        a: f64x4<Self>,
+        b: f64x4<Self>,
+    ) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(
+            self.slide_within_blocks_f64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x2::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -4365,6 +5243,60 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask64x4<const SHIFT: usize>(
+        self,
+        a: mask64x4<Self>,
+        b: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_mask64x4(a).val.0;
+            let b_bytes = self.cvt_to_bytes_mask64x4(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1];
+            let b_blocks = [b_bytes.0, b_bytes.1];
+            let shift_bytes = SHIFT * 8usize;
+            uint8x16x2_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_mask64x4(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x4<const SHIFT: usize>(
+        self,
+        a: mask64x4<Self>,
+        b: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask64x2(
+            self.slide_within_blocks_mask64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask64x2::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
         let (a0, a1) = self.split_mask64x4(a);
         let (b0, b1) = self.split_mask64x4(b);
@@ -4502,6 +5434,74 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_f32x16(a).val.0;
+            let b_bytes = self.cvt_to_bytes_f32x16(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT * 4usize;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_f32x16(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x16<const SHIFT: usize>(
+        self,
+        a: f32x16<Self>,
+        b: f32x16<Self>,
+    ) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(
+            self.slide_within_blocks_f32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -4817,6 +5817,74 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        if SHIFT >= 64usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_i8x64(a).val.0;
+            let b_bytes = self.cvt_to_bytes_i8x64(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_i8x64(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x64<const SHIFT: usize>(
+        self,
+        a: i8x64<Self>,
+        b: i8x64<Self>,
+    ) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(
+            self.slide_within_blocks_i8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x32::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         let (b0, b1) = self.split_i8x64(b);
@@ -5037,6 +6105,74 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        if SHIFT >= 64usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_u8x64(a).val.0;
+            let b_bytes = self.cvt_to_bytes_u8x64(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_u8x64(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x64<const SHIFT: usize>(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(
+            self.slide_within_blocks_u8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x32::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         let (a0, a1) = self.split_u8x64(a);
         let (b0, b1) = self.split_u8x64(b);
@@ -5255,6 +6391,78 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask8x64<const SHIFT: usize>(
+        self,
+        a: mask8x64<Self>,
+        b: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        if SHIFT >= 64usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_mask8x64(a).val.0;
+            let b_bytes = self.cvt_to_bytes_mask8x64(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_mask8x64(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x64<const SHIFT: usize>(
+        self,
+        a: mask8x64<Self>,
+        b: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        self.combine_mask8x32(
+            self.slide_within_blocks_mask8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask8x32::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_mask8x64(b);
@@ -5383,6 +6591,74 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_i16x32(a).val.0;
+            let b_bytes = self.cvt_to_bytes_i16x32(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT * 2usize;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_i16x32(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x32<const SHIFT: usize>(
+        self,
+        a: i16x32<Self>,
+        b: i16x32<Self>,
+    ) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(
+            self.slide_within_blocks_i16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -5612,6 +6888,74 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_u16x32(a).val.0;
+            let b_bytes = self.cvt_to_bytes_u16x32(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT * 2usize;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_u16x32(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x32<const SHIFT: usize>(
+        self,
+        a: u16x32<Self>,
+        b: u16x32<Self>,
+    ) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(
+            self.slide_within_blocks_u16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -5851,6 +7195,78 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask16x32<const SHIFT: usize>(
+        self,
+        a: mask16x32<Self>,
+        b: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_mask16x32(a).val.0;
+            let b_bytes = self.cvt_to_bytes_mask16x32(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT * 2usize;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_mask16x32(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x32<const SHIFT: usize>(
+        self,
+        a: mask16x32<Self>,
+        b: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask16x16(
+            self.slide_within_blocks_mask16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask16x16::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_mask16x32(b);
@@ -5982,6 +7398,74 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_i32x16(a).val.0;
+            let b_bytes = self.cvt_to_bytes_i32x16(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT * 4usize;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_i32x16(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x16<const SHIFT: usize>(
+        self,
+        a: i32x16<Self>,
+        b: i32x16<Self>,
+    ) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(
+            self.slide_within_blocks_i32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -6209,6 +7693,74 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_u32x16(a).val.0;
+            let b_bytes = self.cvt_to_bytes_u32x16(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT * 4usize;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_u32x16(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x16<const SHIFT: usize>(
+        self,
+        a: u32x16<Self>,
+        b: u32x16<Self>,
+    ) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(
+            self.slide_within_blocks_u32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x8::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
         let (b0, b1) = self.split_u32x16(b);
@@ -6429,6 +7981,78 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
+    fn slide_mask32x16<const SHIFT: usize>(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_mask32x16(a).val.0;
+            let b_bytes = self.cvt_to_bytes_mask32x16(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT * 4usize;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_mask32x16(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x16<const SHIFT: usize>(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask32x8(
+            self.slide_within_blocks_mask32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask32x8::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_mask32x16(b);
@@ -6557,6 +8181,74 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_f64x8(a).val.0;
+            let b_bytes = self.cvt_to_bytes_f64x8(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT * 8usize;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_f64x8(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x8<const SHIFT: usize>(
+        self,
+        a: f64x8<Self>,
+        b: f64x8<Self>,
+    ) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(
+            self.slide_within_blocks_f64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -6815,6 +8507,78 @@ impl Simd for Neon {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask64x8<const SHIFT: usize>(
+        self,
+        a: mask64x8<Self>,
+        b: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = unsafe {
+            let a_bytes = self.cvt_to_bytes_mask64x8(a).val.0;
+            let b_bytes = self.cvt_to_bytes_mask64x8(b).val.0;
+            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
+            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
+            let shift_bytes = SHIFT * 8usize;
+            uint8x16x4_t(
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        0,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        1,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        2,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+                {
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
+                        &a_blocks,
+                        &b_blocks,
+                        3,
+                        shift_bytes,
+                    );
+                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                },
+            )
+        };
+        self.cvt_from_bytes_mask64x8(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x8<const SHIFT: usize>(
+        self,
+        a: mask64x8<Self>,
+        b: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask64x4(
+            self.slide_within_blocks_mask64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask64x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
@@ -7432,5 +9196,32 @@ impl<S: Simd> From<mask64x8<S>> for int64x2x4_t {
     #[inline(always)]
     fn from(value: mask64x8<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[doc = r" This is a version of the `vext` intrinsic that takes a non-const shift argument. The shift is still"]
+#[doc = r" expected to be constant in practice, so the match statement will be optimized out. This exists because"]
+#[doc = r" Rust doesn't currently let you do math on const generics."]
+#[inline(always)]
+unsafe fn dyn_vext_128(a: uint8x16_t, b: uint8x16_t, shift: usize) -> uint8x16_t {
+    unsafe {
+        match shift {
+            0usize => vextq_u8::<0i32>(a, b),
+            1usize => vextq_u8::<1i32>(a, b),
+            2usize => vextq_u8::<2i32>(a, b),
+            3usize => vextq_u8::<3i32>(a, b),
+            4usize => vextq_u8::<4i32>(a, b),
+            5usize => vextq_u8::<5i32>(a, b),
+            6usize => vextq_u8::<6i32>(a, b),
+            7usize => vextq_u8::<7i32>(a, b),
+            8usize => vextq_u8::<8i32>(a, b),
+            9usize => vextq_u8::<9i32>(a, b),
+            10usize => vextq_u8::<10i32>(a, b),
+            11usize => vextq_u8::<11i32>(a, b),
+            12usize => vextq_u8::<12i32>(a, b),
+            13usize => vextq_u8::<13i32>(a, b),
+            14usize => vextq_u8::<14i32>(a, b),
+            15usize => vextq_u8::<15i32>(a, b),
+            _ => unreachable!(),
+        }
     }
 }
