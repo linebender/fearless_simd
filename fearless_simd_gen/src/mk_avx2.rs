@@ -34,6 +34,8 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
     let arch_types_impl = impl_arch_types(Level.name(), 256, arch_ty);
     let simd_impl = mk_simd_impl();
     let ty_impl = mk_type_impl();
+    let alignr_helpers = mk_sse4_2::dyn_alignr_helpers(&[128, 256]);
+    let permute_helpers = mk_block_permute_helpers();
 
     quote! {
         #[cfg(target_arch = "x86")]
@@ -73,6 +75,9 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
         #simd_impl
 
         #ty_impl
+
+        #alignr_helpers
+        #permute_helpers
     }
 }
 
@@ -160,6 +165,62 @@ fn mk_type_impl() -> TokenStream {
     }
 }
 
+fn mk_block_permute_helpers() -> TokenStream {
+    quote! {
+        /// Computes one output __m256i for `cross_block_alignr_*` operations.
+        ///
+        /// Given an array of registers, each containing two 128-bit blocks, extracts two adjacent blocks (`lo_idx` and
+        /// `hi_idx` = `lo_idx + 1`) and performs `alignr` with `intra_shift`.
+        #[inline(always)]
+        unsafe fn cross_block_alignr_one(regs: &[__m256i], block_idx: usize, shift_bytes: usize) -> __m256i {
+            let lo_idx = block_idx + (shift_bytes / 16);
+            let intra_shift = shift_bytes % 16;
+            let lo_blocks = if lo_idx % 2 == 0 {
+                regs[lo_idx / 2]
+            } else {
+                unsafe { _mm256_permute2x128_si256::<0x21>(regs[lo_idx / 2], regs[(lo_idx / 2) + 1]) }
+            };
+
+            // For hi_blocks, we need blocks (`lo_idx + 1`) and (`lo_idx + 2`)
+            let hi_idx = lo_idx + 1;
+            let hi_blocks = if hi_idx % 2 == 0 {
+                regs[hi_idx / 2]
+            } else {
+                unsafe { _mm256_permute2x128_si256::<0x21>(regs[hi_idx / 2], regs[(hi_idx / 2) + 1]) }
+            };
+
+            unsafe { dyn_alignr_256(hi_blocks, lo_blocks, intra_shift) }
+        }
+
+        /// Concatenates `b` and `a` (each 2 x __m256i = 4 blocks) and extracts 4 blocks starting at byte offset
+        /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+        #[inline(always)]
+        unsafe fn cross_block_alignr_256x2(a: [__m256i; 2], b: [__m256i; 2], shift_bytes: usize) -> [__m256i; 2] {
+            // Concatenation is [b : a], so b blocks come first
+            let regs = [b[0], b[1], a[0], a[1]];
+
+            unsafe {
+                [
+                    cross_block_alignr_one(&regs, 0, shift_bytes),
+                    cross_block_alignr_one(&regs, 2, shift_bytes),
+                ]
+            }
+        }
+
+        /// Concatenates `b` and `a` (each 1 x __m256i = 2 blocks) and extracts 2 blocks starting at byte offset
+        /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+        #[inline(always)]
+        unsafe fn cross_block_alignr_256x1(a: __m256i, b: __m256i, shift_bytes: usize) -> __m256i {
+            // Concatenation is [b : a], so b comes first
+            let regs = [b, a];
+
+            unsafe {
+                cross_block_alignr_one(&regs, 0, shift_bytes)
+            }
+        }
+    }
+}
+
 fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
     let scalar_bits = vec_ty.scalar_bits;
     let ty_name = vec_ty.rust_name();
@@ -208,6 +269,9 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Split { half_ty } => handle_split(method_sig, vec_ty, &half_ty),
         OpSig::Zip { select_low } => mk_sse4_2::handle_zip(method_sig, vec_ty, select_low),
         OpSig::Unzip { select_even } => mk_sse4_2::handle_unzip(method_sig, vec_ty, select_even),
+        OpSig::Slide { granularity } => {
+            mk_sse4_2::handle_slide(method_sig, vec_ty, granularity, 256)
+        }
         OpSig::Cvt {
             target_ty,
             scalar_bits,

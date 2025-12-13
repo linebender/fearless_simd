@@ -1,7 +1,7 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::arch::wasm::v128_intrinsic;
@@ -9,7 +9,7 @@ use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
     generic_from_bytes, generic_op_name, generic_to_bytes, impl_arch_types, scalar_binary,
 };
-use crate::ops::{Op, Quantifier, valid_reinterpret};
+use crate::ops::{Op, Quantifier, SlideGranularity, valid_reinterpret};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     generic::generic_op,
@@ -334,6 +334,48 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     quote! {
                         #method_sig {
                             #shuffle_fn::<#indices>(a.into(), b.into()).simd_into(self)
+                        }
+                    }
+                }
+                OpSig::Slide { granularity } => {
+                    use SlideGranularity::*;
+
+                    let block_wrapper = vec_ty.aligned_wrapper();
+                    let combined_bytes = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+                    let scalar_bytes = vec_ty.scalar_bits / 8;
+                    let num_items = vec_ty.len;
+                    let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+                    let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+                    let slide_op = match (granularity, vec_ty.n_bits()) {
+                        (WithinBlocks, 128) => {
+                            panic!("This should have been handled by generic_op");
+                        }
+                        (WithinBlocks, _) | (_, 128) => {
+                            format_ident!("dyn_slide_{}", vec_ty.n_bits())
+                        }
+                        (AcrossBlocks, 256 | 512) => {
+                            format_ident!("cross_block_slide_128x{}", vec_ty.n_bits() / 128)
+                        }
+                        _ => unimplemented!(),
+                    };
+
+                    let byte_shift = if scalar_bytes == 1 {
+                        quote! { SHIFT }
+                    } else {
+                        quote! { SHIFT * #scalar_bytes }
+                    };
+
+                    quote! {
+                        #method_sig {
+                            if SHIFT >= #num_items {
+                                return b;
+                            }
+
+                            unsafe {
+                                let result = #slide_op(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift);
+                                self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                            }
                         }
                     }
                 }
@@ -670,6 +712,7 @@ pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
         impl_arch_types(level.name(), 128, |_| Ident::new("v128", Span::call_site()));
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();
+    let helpers = mk_slide_helpers();
     let level_tok = level.token();
 
     quote! {
@@ -699,6 +742,8 @@ pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
         #simd_impl
 
         #ty_impl
+
+        #helpers
     }
 }
 
@@ -729,5 +774,61 @@ fn mk_type_impl() -> TokenStream {
     }
     quote! {
         #( #result )*
+    }
+}
+
+fn mk_slide_helpers() -> TokenStream {
+    let mut fns = vec![];
+
+    // This behaves like ARM's vext instruction: `a` is the "left" vector and `b` is the "right".
+    let shifts = (0_usize..16).map(|shift| {
+        let indices = (shift..shift + 16).map(Literal::usize_unsuffixed);
+        let shift_literal = Literal::usize_unsuffixed(shift);
+        quote! { #shift_literal => i8x16_shuffle::<#( #indices ),*>(a, b) }
+    });
+
+    fns.push(quote! {
+        /// This is a vector extend, like `vext` on ARM or `alignr` on x86, that takes a non-const shift argument.
+        /// The shift is still expected to be constant in practice, so the match statement will be optimized out.
+        /// This exists because Rust doesn't currently let you do math on const generics.
+        #[inline(always)]
+        unsafe fn dyn_slide_128(a: v128, b: v128, shift: usize) -> v128 {
+            unsafe {
+                match shift {
+                    #(#shifts,)*
+                    _ => unreachable!()
+                }
+            }
+        }
+    });
+
+    // Generate cross_block_alignr helper for N=2 and N=4 (256-bit and 512-bit vectors)
+    for num_blocks in [2_usize, 4_usize] {
+        let helper_name = format_ident!("cross_block_slide_128x{}", num_blocks);
+
+        // Generate the explicit unrolled calls for each output block
+        let block_calls: Vec<_> = (0..num_blocks)
+            .map(|i| {
+                quote! {
+                    {
+                        let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, #i, shift_bytes);
+                        unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+                    }
+                }
+            })
+            .collect();
+
+        fns.push(quote! {
+            /// Concatenates `a` and `b` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`.
+            #[inline(always)]
+            unsafe fn #helper_name(a: [v128; #num_blocks], b: [v128; #num_blocks], shift_bytes: usize) -> [v128; #num_blocks] {
+                // Explicitly unrolled to help LLVM optimize
+                [#(#block_calls),*]
+            }
+        });
+    }
+
+    quote! {
+        #( #fns )*
     }
 }

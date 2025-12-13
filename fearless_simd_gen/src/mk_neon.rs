@@ -6,9 +6,10 @@ use quote::{format_ident, quote};
 
 use crate::arch::neon::load_intrinsic;
 use crate::generic::{
-    generic_as_array, generic_from_array, generic_from_bytes, generic_to_bytes, impl_arch_types,
+    generic_as_array, generic_from_array, generic_from_bytes, generic_op_name, generic_to_bytes,
+    impl_arch_types,
 };
-use crate::ops::{Op, valid_reinterpret};
+use crate::ops::{Op, SlideGranularity, valid_reinterpret};
 use crate::{
     arch::neon::{self, arch_ty, cvt_intrinsic, simple_intrinsic, split_intrinsic},
     generic::generic_op,
@@ -40,6 +41,7 @@ pub(crate) fn mk_neon_impl(level: Level) -> TokenStream {
     let arch_types_impl = impl_arch_types(level.name(), 512, arch_ty);
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();
+    let helpers = mk_slide_helpers();
 
     quote! {
         use core::arch::aarch64::*;
@@ -70,6 +72,8 @@ pub(crate) fn mk_neon_impl(level: Level) -> TokenStream {
         #arch_types_impl
 
         #ty_impl
+
+        #helpers
     }
 }
 
@@ -419,6 +423,72 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
+                OpSig::Slide { granularity } => {
+                    use SlideGranularity::*;
+
+                    let block_wrapper = vec_ty.aligned_wrapper();
+                    let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8);
+                    let combined_bytes = bytes_ty.rust();
+                    let scalar_bytes = vec_ty.scalar_bits / 8;
+                    let num_items = vec_ty.len;
+                    let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+                    let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+                    let byte_shift = if scalar_bytes == 1 {
+                        quote! { SHIFT }
+                    } else {
+                        quote! { SHIFT * #scalar_bytes }
+                    };
+
+                    let bytes_expr = match (granularity, vec_ty.n_bits()) {
+                        (WithinBlocks, 128) => {
+                            panic!("This should have been handled by generic_op");
+                        }
+                        (WithinBlocks, _) | (_, 128) => {
+                            quote! {
+                                unsafe {
+                                    dyn_vext_128(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift)
+                                }
+                            }
+                        }
+                        (AcrossBlocks, 256 | 512) => {
+                            let num_blocks = vec_ty.n_bits() / 128;
+
+                            // Ranges are not `Copy`, so we need to create a new range iterator for each usage
+                            let blocks = (0..num_blocks).map(Literal::usize_unsuffixed);
+                            let blocks2 = blocks.clone();
+                            let blocks3 = blocks.clone();
+                            let bytes_arch_ty = arch_ty(&bytes_ty);
+
+                            quote! {
+                                unsafe {
+                                    let a_bytes = self.#to_bytes(a).val.0;
+                                    let b_bytes = self.#to_bytes(b).val.0;
+                                    let a_blocks = [#( a_bytes.#blocks ),*];
+                                    let b_blocks = [#( b_bytes.#blocks2 ),*];
+
+                                    let shift_bytes = #byte_shift;
+                                    #bytes_arch_ty(#({
+                                        let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a_blocks, &b_blocks, #blocks3, shift_bytes);
+                                        dyn_vext_128(lo, hi, shift_bytes % 16)
+                                    }),*)
+                                }
+                            }
+                        }
+                        _ => unimplemented!(),
+                    };
+
+                    quote! {
+                        #method_sig {
+                            if SHIFT >= #num_items {
+                                return b;
+                            }
+
+                            let result = #bytes_expr;
+                            self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                        }
+                    }
+                }
                 OpSig::Cvt {
                     target_ty,
                     scalar_bits,
@@ -551,5 +621,27 @@ fn mk_type_impl() -> TokenStream {
     }
     quote! {
         #( #result )*
+    }
+}
+
+fn mk_slide_helpers() -> TokenStream {
+    let shifts = (0_usize..16).map(|shift| {
+        let shift_i32 = i32::try_from(shift).unwrap();
+        quote! { #shift => vextq_u8::<#shift_i32>(a, b) }
+    });
+
+    quote! {
+        /// This is a version of the `vext` intrinsic that takes a non-const shift argument. The shift is still
+        /// expected to be constant in practice, so the match statement will be optimized out. This exists because
+        /// Rust doesn't currently let you do math on const generics.
+        #[inline(always)]
+        unsafe fn dyn_vext_128(a: uint8x16_t, b: uint8x16_t, shift: usize) -> uint8x16_t {
+            unsafe {
+                match shift {
+                    #(#shifts,)*
+                    _ => unreachable!()
+                }
+            }
+        }
     }
 }

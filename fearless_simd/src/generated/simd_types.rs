@@ -110,6 +110,16 @@ impl<S: Simd> SimdBase<f32, S> for f32x4<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> f32) -> Self {
         simd.load_array_f32x4(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_f32x4::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_f32x4::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdFloat<f32, S> for f32x4<S> {
     #[inline(always)]
@@ -330,6 +340,16 @@ impl<S: Simd> SimdBase<i8, S> for i8x16<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i8) -> Self {
         simd.load_array_i8x16(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_i8x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_i8x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdInt<i8, S> for i8x16<S> {
     #[inline(always)]
@@ -489,6 +509,16 @@ impl<S: Simd> SimdBase<u8, S> for u8x16<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> u8) -> Self {
         simd.load_array_u8x16(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_u8x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_u8x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<u8, S> for u8x16<S> {
@@ -655,6 +685,16 @@ impl<S: Simd> SimdBase<i8, S> for mask8x16<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i8) -> Self {
         simd.load_array_mask8x16(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask8x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask8x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i8, S> for mask8x16<S> {
     #[inline(always)]
@@ -790,6 +830,16 @@ impl<S: Simd> SimdBase<i16, S> for i16x8<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> i16) -> Self {
         simd.load_array_i16x8(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_i16x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_i16x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<i16, S> for i16x8<S> {
@@ -950,6 +1000,16 @@ impl<S: Simd> SimdBase<u16, S> for u16x8<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> u16) -> Self {
         simd.load_array_u16x8(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_u16x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_u16x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<u16, S> for u16x8<S> {
@@ -1116,6 +1176,16 @@ impl<S: Simd> SimdBase<i16, S> for mask16x8<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i16) -> Self {
         simd.load_array_mask16x8(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask16x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask16x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i16, S> for mask16x8<S> {
     #[inline(always)]
@@ -1251,6 +1321,16 @@ impl<S: Simd> SimdBase<i32, S> for i32x4<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> i32) -> Self {
         simd.load_array_i32x4(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_i32x4::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_i32x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<i32, S> for i32x4<S> {
@@ -1416,6 +1496,16 @@ impl<S: Simd> SimdBase<u32, S> for u32x4<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> u32) -> Self {
         simd.load_array_u32x4(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_u32x4::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_u32x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<u32, S> for u32x4<S> {
@@ -1587,6 +1677,16 @@ impl<S: Simd> SimdBase<i32, S> for mask32x4<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i32) -> Self {
         simd.load_array_mask32x4(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask32x4::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask32x4::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i32, S> for mask32x4<S> {
     #[inline(always)]
@@ -1722,6 +1822,16 @@ impl<S: Simd> SimdBase<f64, S> for f64x2<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> f64) -> Self {
         simd.load_array_f64x2(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_f64x2::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_f64x2::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdFloat<f64, S> for f64x2<S> {
@@ -1938,6 +2048,16 @@ impl<S: Simd> SimdBase<i64, S> for mask64x2<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i64) -> Self {
         simd.load_array_mask64x2(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask64x2::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask64x2::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i64, S> for mask64x2<S> {
     #[inline(always)]
@@ -2073,6 +2193,16 @@ impl<S: Simd> SimdBase<f32, S> for f32x8<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> f32) -> Self {
         simd.load_array_f32x8(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_f32x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_f32x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdFloat<f32, S> for f32x8<S> {
@@ -2301,6 +2431,16 @@ impl<S: Simd> SimdBase<i8, S> for i8x32<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i8) -> Self {
         simd.load_array_i8x32(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_i8x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_i8x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdInt<i8, S> for i8x32<S> {
     #[inline(always)]
@@ -2467,6 +2607,16 @@ impl<S: Simd> SimdBase<u8, S> for u8x32<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> u8) -> Self {
         simd.load_array_u8x32(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_u8x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_u8x32::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<u8, S> for u8x32<S> {
@@ -2640,6 +2790,16 @@ impl<S: Simd> SimdBase<i8, S> for mask8x32<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i8) -> Self {
         simd.load_array_mask8x32(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask8x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask8x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i8, S> for mask8x32<S> {
     #[inline(always)]
@@ -2787,6 +2947,16 @@ impl<S: Simd> SimdBase<i16, S> for i16x16<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> i16) -> Self {
         simd.load_array_i16x16(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_i16x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_i16x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<i16, S> for i16x16<S> {
@@ -2960,6 +3130,16 @@ impl<S: Simd> SimdBase<u16, S> for u16x16<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> u16) -> Self {
         simd.load_array_u16x16(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_u16x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_u16x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdInt<u16, S> for u16x16<S> {
     #[inline(always)]
@@ -3132,6 +3312,16 @@ impl<S: Simd> SimdBase<i16, S> for mask16x16<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i16) -> Self {
         simd.load_array_mask16x16(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask16x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask16x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i16, S> for mask16x16<S> {
     #[inline(always)]
@@ -3274,6 +3464,16 @@ impl<S: Simd> SimdBase<i32, S> for i32x8<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> i32) -> Self {
         simd.load_array_i32x8(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_i32x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_i32x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<i32, S> for i32x8<S> {
@@ -3446,6 +3646,16 @@ impl<S: Simd> SimdBase<u32, S> for u32x8<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> u32) -> Self {
         simd.load_array_u32x8(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_u32x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_u32x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<u32, S> for u32x8<S> {
@@ -3624,6 +3834,16 @@ impl<S: Simd> SimdBase<i32, S> for mask32x8<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i32) -> Self {
         simd.load_array_mask32x8(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask32x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask32x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i32, S> for mask32x8<S> {
     #[inline(always)]
@@ -3766,6 +3986,16 @@ impl<S: Simd> SimdBase<f64, S> for f64x4<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> f64) -> Self {
         simd.load_array_f64x4(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_f64x4::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_f64x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdFloat<f64, S> for f64x4<S> {
@@ -3989,6 +4219,16 @@ impl<S: Simd> SimdBase<i64, S> for mask64x4<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i64) -> Self {
         simd.load_array_mask64x4(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask64x4::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask64x4::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i64, S> for mask64x4<S> {
     #[inline(always)]
@@ -4137,6 +4377,16 @@ impl<S: Simd> SimdBase<f32, S> for f32x16<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> f32) -> Self {
         simd.load_array_f32x16(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_f32x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_f32x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdFloat<f32, S> for f32x16<S> {
@@ -4359,6 +4609,16 @@ impl<S: Simd> SimdBase<i8, S> for i8x64<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i8) -> Self {
         simd.load_array_i8x64(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_i8x64::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_i8x64::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdInt<i8, S> for i8x64<S> {
     #[inline(always)]
@@ -4519,6 +4779,16 @@ impl<S: Simd> SimdBase<u8, S> for u8x64<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> u8) -> Self {
         simd.load_array_u8x64(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_u8x64::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_u8x64::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<u8, S> for u8x64<S> {
@@ -4686,6 +4956,16 @@ impl<S: Simd> SimdBase<i8, S> for mask8x64<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i8) -> Self {
         simd.load_array_mask8x64(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask8x64::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask8x64::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i8, S> for mask8x64<S> {
     #[inline(always)]
@@ -4827,6 +5107,16 @@ impl<S: Simd> SimdBase<i16, S> for i16x32<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> i16) -> Self {
         simd.load_array_i16x32(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_i16x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_i16x32::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<i16, S> for i16x32<S> {
@@ -4994,6 +5284,16 @@ impl<S: Simd> SimdBase<u16, S> for u16x32<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> u16) -> Self {
         simd.load_array_u16x32(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_u16x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_u16x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdInt<u16, S> for u16x32<S> {
     #[inline(always)]
@@ -5160,6 +5460,16 @@ impl<S: Simd> SimdBase<i16, S> for mask16x32<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i16) -> Self {
         simd.load_array_mask16x32(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask16x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask16x32::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i16, S> for mask16x32<S> {
     #[inline(always)]
@@ -5301,6 +5611,16 @@ impl<S: Simd> SimdBase<i32, S> for i32x16<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> i32) -> Self {
         simd.load_array_i32x16(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_i32x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_i32x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<i32, S> for i32x16<S> {
@@ -5473,6 +5793,16 @@ impl<S: Simd> SimdBase<u32, S> for u32x16<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> u32) -> Self {
         simd.load_array_u32x16(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_u32x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_u32x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdInt<u32, S> for u32x16<S> {
     #[inline(always)]
@@ -5644,6 +5974,16 @@ impl<S: Simd> SimdBase<i32, S> for mask32x16<S> {
     fn from_fn(simd: S, f: impl FnMut(usize) -> i32) -> Self {
         simd.load_array_mask32x16(core::array::from_fn(f))
     }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask32x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask32x16::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdMask<i32, S> for mask32x16<S> {
     #[inline(always)]
@@ -5780,6 +6120,16 @@ impl<S: Simd> SimdBase<f64, S> for f64x8<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> f64) -> Self {
         simd.load_array_f64x8(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_f64x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_f64x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdFloat<f64, S> for f64x8<S> {
@@ -5996,6 +6346,16 @@ impl<S: Simd> SimdBase<i64, S> for mask64x8<S> {
     #[inline(always)]
     fn from_fn(simd: S, f: impl FnMut(usize) -> i64) -> Self {
         simd.load_array_mask64x8(core::array::from_fn(f))
+    }
+    #[inline(always)]
+    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_mask64x8::<SHIFT>(self, rhs.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
+        self.simd
+            .slide_within_blocks_mask64x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdMask<i64, S> for mask64x8<S> {
