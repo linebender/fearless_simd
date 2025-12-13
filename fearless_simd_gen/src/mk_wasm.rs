@@ -188,34 +188,55 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Ternary => {
-                    if matches!(method, "mul_add" | "mul_sub") {
-                        let add_sub = generic_op_name(
-                            if method == "mul_add" { "add" } else { "sub" },
-                            vec_ty,
-                        );
+                    if matches!(method, "mul_add" | "mul_sub" | "mul_neg_add") {
+                        let fallback_op = if method == "mul_neg_add" {
+                            "sub"
+                        } else if method == "mul_add" {
+                            "add"
+                        } else {
+                            "sub"
+                        };
+                        let add_sub = generic_op_name(fallback_op, vec_ty);
                         let mul = generic_op_name("mul", vec_ty);
 
-                        let c = if method == "mul_sub" {
+                        let (relaxed_intrinsic, c_expr, fallback_expr) = if method == "mul_add" {
+                            let relaxed_madd = simple_intrinsic("relaxed_madd", vec_ty);
+                            (
+                                relaxed_madd,
+                                quote! { c.into() },
+                                quote! { self.#add_sub(self.#mul(a, b), c) },
+                            )
+                        } else if method == "mul_sub" {
                             // WebAssembly just... forgot fused multiply-subtract? It seems the
                             // initial proposal
                             // (https://github.com/WebAssembly/relaxed-simd/issues/27) confused it
                             // with negate multiply-add, and nobody ever resolved the confusion.
                             let negate = simple_intrinsic("neg", vec_ty);
-                            quote! { #negate(c.into()) }
+                            let relaxed_madd = simple_intrinsic("relaxed_madd", vec_ty);
+                            (
+                                relaxed_madd,
+                                quote! { #negate(c.into()) },
+                                quote! { self.#add_sub(self.#mul(a, b), c) },
+                            )
                         } else {
-                            quote! { c.into() }
+                            // mul_neg_add: c - (a * b)
+                            let relaxed_nmadd = simple_intrinsic("relaxed_nmadd", vec_ty);
+                            (
+                                relaxed_nmadd,
+                                quote! { c.into() },
+                                quote! { self.#add_sub(c, self.#mul(a, b)) },
+                            )
                         };
-                        let relaxed_madd = simple_intrinsic("relaxed_madd", vec_ty);
 
                         quote! {
                             #[cfg(target_feature = "relaxed-simd")]
                             #method_sig {
-                                #relaxed_madd(a.into(), b.into(), #c).simd_into(self)
+                                #relaxed_intrinsic(a.into(), b.into(), #c_expr).simd_into(self)
                             }
 
                             #[cfg(not(target_feature = "relaxed-simd"))]
                             #method_sig {
-                                self.#add_sub(self.#mul(a, b), c)
+                                #fallback_expr
                             }
                         }
                     } else {

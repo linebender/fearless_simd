@@ -246,6 +246,13 @@ fn mk_simd_impl() -> TokenStream {
                                 a.mul(b).sub(c)
                             }
                         }
+                    } else if method == "mul_neg_add" {
+                        // TODO: Same as above
+                        quote! {
+                            #method_sig {
+                                c.sub(a.mul(b))
+                            }
+                        }
                     } else {
                         let args = [
                             quote! { a.into() },

@@ -526,6 +526,13 @@ pub(crate) fn handle_ternary(
                 }
             }
         }
+        "mul_neg_add" => {
+            quote! {
+                #method_sig {
+                    c - a * b
+                }
+            }
+        }
         _ => {
             let args = [
                 quote! { a.into() },
