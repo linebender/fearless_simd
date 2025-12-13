@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    self, coarse_type, extend_intrinsic, intrinsic_ident, op_suffix, pack_intrinsic,
+    self, arch_ty, coarse_type, extend_intrinsic, intrinsic_ident, op_suffix, pack_intrinsic,
     set1_intrinsic, simple_intrinsic,
 };
-use crate::generic::{generic_combine, generic_op, generic_split};
+use crate::generic::{
+    generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
+    generic_from_bytes, generic_op, generic_to_bytes, impl_arch_types,
+};
 use crate::mk_sse4_2;
 use crate::ops::{Op, OpSig, ops_for_type};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
@@ -28,8 +31,11 @@ impl Level {
 
 pub(crate) fn mk_avx2_impl() -> TokenStream {
     let imports = type_imports();
+    let arch_types_impl = impl_arch_types(Level.name(), 256, arch_ty);
     let simd_impl = mk_simd_impl();
     let ty_impl = mk_type_impl();
+    let alignr_helpers = mk_sse4_2::dyn_alignr_helpers(&[128, 256]);
+    let permute_helpers = mk_block_permute_helpers();
 
     quote! {
         #[cfg(target_arch = "x86")]
@@ -38,7 +44,7 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
         use core::arch::x86_64::*;
 
         use core::ops::*;
-        use crate::{seal::Seal, Level, Simd, SimdFrom, SimdInto};
+        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
 
         #imports
 
@@ -64,9 +70,14 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
 
         impl Seal for Avx2 {}
 
+        #arch_types_impl
+
         #simd_impl
 
         #ty_impl
+
+        #alignr_helpers
+        #permute_helpers
     }
 }
 
@@ -75,13 +86,7 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for Op { method, sig, .. } in ops_for_type(vec_ty) {
-            let too_wide = (vec_ty.n_bits() > 256 && !matches!(method, "split" | "narrow"))
-                || vec_ty.n_bits() > 512;
-
-            let acceptable_wide_op = matches!(method, "load_interleaved_128")
-                || matches!(method, "store_interleaved_128");
-
-            if too_wide && !acceptable_wide_op {
+            if sig.should_use_generic_op(vec_ty, 256) {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
@@ -142,7 +147,7 @@ fn mk_type_impl() -> TokenStream {
                 #[inline(always)]
                 fn simd_from(arch: #arch, simd: S) -> Self {
                     Self {
-                        val: unsafe { core::mem::transmute(arch) },
+                        val: unsafe { core::mem::transmute_copy(&arch) },
                         simd
                     }
                 }
@@ -150,13 +155,69 @@ fn mk_type_impl() -> TokenStream {
             impl<S: Simd> From<#simd<S>> for #arch {
                 #[inline(always)]
                 fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute(value.val) }
+                    unsafe { core::mem::transmute_copy(&value.val) }
                 }
             }
         });
     }
     quote! {
         #( #result )*
+    }
+}
+
+fn mk_block_permute_helpers() -> TokenStream {
+    quote! {
+        /// Computes one output __m256i for `cross_block_alignr_*` operations.
+        ///
+        /// Given an array of registers, each containing two 128-bit blocks, extracts two adjacent blocks (`lo_idx` and
+        /// `hi_idx` = `lo_idx + 1`) and performs `alignr` with `intra_shift`.
+        #[inline(always)]
+        unsafe fn cross_block_alignr_one(regs: &[__m256i], block_idx: usize, shift_bytes: usize) -> __m256i {
+            let lo_idx = block_idx + (shift_bytes / 16);
+            let intra_shift = shift_bytes % 16;
+            let lo_blocks = if lo_idx % 2 == 0 {
+                regs[lo_idx / 2]
+            } else {
+                unsafe { _mm256_permute2x128_si256::<0x21>(regs[lo_idx / 2], regs[(lo_idx / 2) + 1]) }
+            };
+
+            // For hi_blocks, we need blocks (`lo_idx + 1`) and (`lo_idx + 2`)
+            let hi_idx = lo_idx + 1;
+            let hi_blocks = if hi_idx % 2 == 0 {
+                regs[hi_idx / 2]
+            } else {
+                unsafe { _mm256_permute2x128_si256::<0x21>(regs[hi_idx / 2], regs[(hi_idx / 2) + 1]) }
+            };
+
+            unsafe { dyn_alignr_256(hi_blocks, lo_blocks, intra_shift) }
+        }
+
+        /// Concatenates `b` and `a` (each 2 x __m256i = 4 blocks) and extracts 4 blocks starting at byte offset
+        /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+        #[inline(always)]
+        unsafe fn cross_block_alignr_256x2(a: [__m256i; 2], b: [__m256i; 2], shift_bytes: usize) -> [__m256i; 2] {
+            // Concatenation is [b : a], so b blocks come first
+            let regs = [b[0], b[1], a[0], a[1]];
+
+            unsafe {
+                [
+                    cross_block_alignr_one(&regs, 0, shift_bytes),
+                    cross_block_alignr_one(&regs, 2, shift_bytes),
+                ]
+            }
+        }
+
+        /// Concatenates `b` and `a` (each 1 x __m256i = 2 blocks) and extracts 2 blocks starting at byte offset
+        /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+        #[inline(always)]
+        unsafe fn cross_block_alignr_256x1(a: __m256i, b: __m256i, shift_bytes: usize) -> __m256i {
+            // Concatenation is [b : a], so b comes first
+            let regs = [b, a];
+
+            unsafe {
+                cross_block_alignr_one(&regs, 0, shift_bytes)
+            }
+        }
     }
 }
 
@@ -208,6 +269,9 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Split { half_ty } => handle_split(method_sig, vec_ty, &half_ty),
         OpSig::Zip { select_low } => mk_sse4_2::handle_zip(method_sig, vec_ty, select_low),
         OpSig::Unzip { select_even } => mk_sse4_2::handle_unzip(method_sig, vec_ty, select_even),
+        OpSig::Slide { granularity } => {
+            mk_sse4_2::handle_slide(method_sig, vec_ty, granularity, 256)
+        }
         OpSig::Cvt {
             target_ty,
             scalar_bits,
@@ -228,6 +292,14 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
             block_size,
             block_count,
         } => mk_sse4_2::handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
+        OpSig::FromArray { kind } => {
+            generic_from_array(method_sig, vec_ty, kind, 256, |block_ty| {
+                intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
+            })
+        }
+        OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 256, arch_ty),
+        OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+        OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
     }
 }
 
@@ -236,7 +308,7 @@ pub(crate) fn handle_split(
     vec_ty: &VecType,
     half_ty: &VecType,
 ) -> TokenStream {
-    if vec_ty.n_bits() == 256 {
+    if half_ty.n_bits() == 128 {
         let extract_op = match vec_ty.scalar {
             ScalarType::Float => "extractf128",
             _ => "extracti128",
@@ -253,7 +325,7 @@ pub(crate) fn handle_split(
             }
         }
     } else {
-        generic_split(vec_ty, half_ty)
+        generic_block_split(method_sig, half_ty, 256)
     }
 }
 
@@ -262,7 +334,7 @@ pub(crate) fn handle_combine(
     vec_ty: &VecType,
     combined_ty: &VecType,
 ) -> TokenStream {
-    if vec_ty.n_bits() == 128 {
+    if combined_ty.n_bits() == 256 {
         let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
             (ScalarType::Float, 32) => "m128",
             (ScalarType::Float, 64) => "m128d",
@@ -277,7 +349,7 @@ pub(crate) fn handle_combine(
             }
         }
     } else {
-        generic_combine(vec_ty, combined_ty)
+        generic_block_combine(method_sig, combined_ty, 256)
     }
 }
 

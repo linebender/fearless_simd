@@ -2,12 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    self, cast_ident, coarse_type, extend_intrinsic, float_compare_method, intrinsic_ident,
-    op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
-    unpack_intrinsic,
+    self, arch_ty, cast_ident, coarse_type, extend_intrinsic, float_compare_method,
+    intrinsic_ident, op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic,
+    simple_sign_unaware_intrinsic, unpack_intrinsic,
 };
-use crate::generic::{generic_combine, generic_op, generic_op_name, generic_split, scalar_binary};
-use crate::ops::{Op, OpSig, Quantifier, ops_for_type, valid_reinterpret};
+use crate::generic::{
+    generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
+    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes, impl_arch_types,
+    scalar_binary,
+};
+use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -28,8 +32,12 @@ impl Level {
 
 pub(crate) fn mk_sse4_2_impl() -> TokenStream {
     let imports = type_imports();
+    let arch_types_impl = impl_arch_types(Level.name(), 128, arch_ty);
     let simd_impl = mk_simd_impl();
     let ty_impl = mk_type_impl();
+
+    let alignr_helpers = dyn_alignr_helpers(&[128]);
+    let helpers = cross_block_slide_helpers();
 
     quote! {
         #[cfg(target_arch = "x86")]
@@ -38,7 +46,7 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
         use core::arch::x86_64::*;
 
         use core::ops::*;
-        use crate::{seal::Seal, Level, Simd, SimdFrom, SimdInto};
+        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
 
         #imports
 
@@ -64,9 +72,14 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
 
         impl Seal for Sse4_2 {}
 
+        #arch_types_impl
+
         #simd_impl
 
         #ty_impl
+
+        #alignr_helpers
+        #helpers
     }
 }
 
@@ -75,13 +88,7 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for Op { method, sig, .. } in ops_for_type(vec_ty) {
-            let too_wide = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
-                || vec_ty.n_bits() > 256;
-
-            let acceptable_wide_op = matches!(method, "load_interleaved_128")
-                || matches!(method, "store_interleaved_128");
-
-            if too_wide && !acceptable_wide_op {
+            if sig.should_use_generic_op(vec_ty, 128) {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
@@ -146,7 +153,7 @@ fn mk_type_impl() -> TokenStream {
                 #[inline(always)]
                 fn simd_from(arch: #arch, simd: S) -> Self {
                     Self {
-                        val: unsafe { core::mem::transmute(arch) },
+                        val: unsafe { core::mem::transmute_copy(&arch) },
                         simd
                     }
                 }
@@ -154,7 +161,7 @@ fn mk_type_impl() -> TokenStream {
             impl<S: Simd> From<#simd<S>> for #arch {
                 #[inline(always)]
                 fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute(value.val) }
+                    unsafe { core::mem::transmute_copy(&value.val) }
                 }
             }
         });
@@ -185,10 +192,11 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Shift => handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
         OpSig::Select => handle_select(method_sig, vec_ty),
-        OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
-        OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
+        OpSig::Combine { combined_ty } => generic_block_combine(method_sig, &combined_ty, 128),
+        OpSig::Split { half_ty } => generic_block_split(method_sig, &half_ty, 128),
         OpSig::Zip { select_low } => handle_zip(method_sig, vec_ty, select_low),
         OpSig::Unzip { select_even } => handle_unzip(method_sig, vec_ty, select_even),
+        OpSig::Slide { granularity } => handle_slide(method_sig, vec_ty, granularity, 128),
         OpSig::Cvt {
             target_ty,
             scalar_bits,
@@ -209,6 +217,134 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
             block_size,
             block_count,
         } => handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
+        OpSig::FromArray { kind } => {
+            generic_from_array(method_sig, vec_ty, kind, 128, |block_ty| {
+                intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
+            })
+        }
+        OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 128, arch_ty),
+        OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+        OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
+    }
+}
+
+pub(crate) fn dyn_alignr_helpers(vec_widths: &[usize]) -> TokenStream {
+    let mut fns = vec![];
+    for vec_ty in vec_widths
+        .iter()
+        .map(|n| VecType::new(ScalarType::Int, 8, *n / 8))
+    {
+        let arch_ty = arch_ty(&vec_ty);
+
+        let helper_name = format_ident!("dyn_alignr_{}", vec_ty.n_bits());
+        let alignr_intrinsic = simple_sign_unaware_intrinsic("alignr", &vec_ty);
+        let shifts = (0_usize..16).map(|shift| {
+            let shift_i32 = i32::try_from(shift).unwrap();
+            quote! { #shift => #alignr_intrinsic::<#shift_i32>(a, b) }
+        });
+
+        fns.push(quote! {
+            /// This is a version of the `alignr` intrinsic that takes a non-const shift argument. The shift is still
+            /// expected to be constant in practice, so the match statement will be optimized out. This exists because
+            /// Rust doesn't currently let you do math on const generics.
+            #[inline(always)]
+            unsafe fn #helper_name(a: #arch_ty, b: #arch_ty, shift: usize) -> #arch_ty {
+                unsafe {
+                    match shift {
+                        #(#shifts,)*
+                        _ => unreachable!()
+                    }
+                }
+            }
+        });
+    }
+
+    quote! { #( #fns )* }
+}
+
+fn cross_block_slide_helpers() -> TokenStream {
+    let mut fns = vec![];
+
+    for num_blocks in [2_usize, 4_usize] {
+        let helper_name = format_ident!("cross_block_alignr_128x{}", num_blocks);
+        let blocks_idx = 0..num_blocks;
+
+        // Unroll the construction of the blocks. I tried using `array::from_fn`, but the compiler thought the
+        // closure was too big and didn't inline it.
+        fns.push(quote! {
+            /// Concatenates `b` and `a` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`.
+            /// Extracts from [b : a] (b in low bytes, a in high bytes), matching `alignr` semantics.
+            #[inline(always)]
+            unsafe fn #helper_name(a: [__m128i; #num_blocks], b: [__m128i; #num_blocks], shift_bytes: usize) -> [__m128i; #num_blocks] {
+                [#({
+                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, #blocks_idx, shift_bytes);
+                    unsafe { dyn_alignr_128(hi, lo, shift_bytes % 16) }
+                }),*]
+            }
+        });
+    }
+
+    quote! {
+        #(#fns)*
+    }
+}
+
+pub(crate) fn handle_slide(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    granularity: SlideGranularity,
+    native_vector_width: usize,
+) -> TokenStream {
+    use SlideGranularity::*;
+
+    let block_wrapper = vec_ty.aligned_wrapper();
+    let combined_bytes = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+    let scalar_bytes = vec_ty.scalar_bits / 8;
+    let max_shift = match granularity {
+        WithinBlocks => vec_ty.len / (vec_ty.n_bits() / 128),
+        AcrossBlocks => vec_ty.len,
+    };
+    let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+    let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+    let alignr_op = match (granularity, vec_ty.n_bits(), native_vector_width) {
+        (WithinBlocks, 128, _) => {
+            panic!("This should have been handled by generic_op");
+        }
+        (WithinBlocks, _, _) | (_, 128, _) => {
+            // For WithinBlocks, use elements per 128-bit block; for 128-bit vectors, use total elements
+            format_ident!("dyn_alignr_{}", vec_ty.n_bits())
+        }
+        (AcrossBlocks, 256 | 512, 128) => {
+            // Inter-block shift or rotate in SSE4.2: use cross_block_alignr
+
+            format_ident!("cross_block_alignr_128x{}", vec_ty.n_bits() / 128)
+        }
+        (AcrossBlocks, 256 | 512, 256) => {
+            format_ident!("cross_block_alignr_256x{}", vec_ty.n_bits() / 256)
+        }
+        _ => unimplemented!(),
+    };
+    let byte_shift = if scalar_bytes == 1 {
+        quote! { SHIFT }
+    } else {
+        quote! { SHIFT * #scalar_bytes }
+    };
+
+    quote! {
+        #method_sig {
+            unsafe {
+                if SHIFT >= #max_shift {
+                    return b;
+                }
+
+                // b and a are swapped here to match ARM's vext semantics. For vext, we can think of `a` as the "left",
+                // and we concatenate `b` to its "right". This makes sense, since `a` is the left-hand side and `b` is
+                // the right-hand side. x86's `alignr` is backwards, and treats `b` as the high/left block.
+                let result = #alignr_op(self.#to_bytes(b).val.0, self.#to_bytes(a).val.0, #byte_shift);
+                self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+            }
+        }
     }
 }
 
