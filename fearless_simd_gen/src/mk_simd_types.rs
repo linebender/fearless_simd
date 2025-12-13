@@ -73,6 +73,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     let src_ty = src_ty.rust();
                     conditional_impls.push(quote! {
                         impl<S: Simd> SimdCvtFloat<#src_ty<S>> for #name<S> {
+                            #[inline(always)]
                             fn float_from(x: #src_ty<S>) -> Self {
                                 x.simd.#method(x)
                             }
@@ -93,6 +94,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 let src_ty = src_ty.rust();
                 conditional_impls.push(quote! {
                     impl<S: Simd> SimdCvtTruncate<#src_ty<S>> for #name<S> {
+                        #[inline(always)]
                         fn truncate_from(x: #src_ty<S>) -> Self {
                             x.simd.#method(x)
                         }

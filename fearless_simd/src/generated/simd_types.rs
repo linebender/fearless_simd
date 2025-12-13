@@ -220,11 +220,13 @@ impl<S: Simd> crate::SimdFloat<f32, S> for f32x4<S> {
     }
 }
 impl<S: Simd> SimdCvtFloat<u32x4<S>> for f32x4<S> {
+    #[inline(always)]
     fn float_from(x: u32x4<S>) -> Self {
         x.simd.cvt_f32_u32x4(x)
     }
 }
 impl<S: Simd> SimdCvtFloat<i32x4<S>> for f32x4<S> {
+    #[inline(always)]
     fn float_from(x: i32x4<S>) -> Self {
         x.simd.cvt_f32_i32x4(x)
     }
@@ -1464,6 +1466,7 @@ impl<S: Simd> crate::SimdInt<i32, S> for i32x4<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for i32x4<S> {
+    #[inline(always)]
     fn truncate_from(x: f32x4<S>) -> Self {
         x.simd.cvt_i32_f32x4(x)
     }
@@ -1641,6 +1644,7 @@ impl<S: Simd> crate::SimdInt<u32, S> for u32x4<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
+    #[inline(always)]
     fn truncate_from(x: f32x4<S>) -> Self {
         x.simd.cvt_u32_f32x4(x)
     }
@@ -2395,11 +2399,13 @@ impl<S: Simd> crate::SimdFloat<f32, S> for f32x8<S> {
     }
 }
 impl<S: Simd> SimdCvtFloat<u32x8<S>> for f32x8<S> {
+    #[inline(always)]
     fn float_from(x: u32x8<S>) -> Self {
         x.simd.cvt_f32_u32x8(x)
     }
 }
 impl<S: Simd> SimdCvtFloat<i32x8<S>> for f32x8<S> {
+    #[inline(always)]
     fn float_from(x: i32x8<S>) -> Self {
         x.simd.cvt_f32_i32x8(x)
     }
@@ -3769,6 +3775,7 @@ impl<S: Simd> crate::SimdInt<i32, S> for i32x8<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for i32x8<S> {
+    #[inline(always)]
     fn truncate_from(x: f32x8<S>) -> Self {
         x.simd.cvt_i32_f32x8(x)
     }
@@ -3962,6 +3969,7 @@ impl<S: Simd> crate::SimdInt<u32, S> for u32x8<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for u32x8<S> {
+    #[inline(always)]
     fn truncate_from(x: f32x8<S>) -> Self {
         x.simd.cvt_u32_f32x8(x)
     }
@@ -4762,11 +4770,13 @@ impl<S: Simd> crate::SimdFloat<f32, S> for f32x16<S> {
     }
 }
 impl<S: Simd> SimdCvtFloat<u32x16<S>> for f32x16<S> {
+    #[inline(always)]
     fn float_from(x: u32x16<S>) -> Self {
         x.simd.cvt_f32_u32x16(x)
     }
 }
 impl<S: Simd> SimdCvtFloat<i32x16<S>> for f32x16<S> {
+    #[inline(always)]
     fn float_from(x: i32x16<S>) -> Self {
         x.simd.cvt_f32_i32x16(x)
     }
@@ -6246,6 +6256,7 @@ impl<S: Simd> crate::SimdInt<i32, S> for i32x16<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for i32x16<S> {
+    #[inline(always)]
     fn truncate_from(x: f32x16<S>) -> Self {
         x.simd.cvt_i32_f32x16(x)
     }
@@ -6441,6 +6452,7 @@ impl<S: Simd> crate::SimdInt<u32, S> for u32x16<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for u32x16<S> {
+    #[inline(always)]
     fn truncate_from(x: f32x16<S>) -> Self {
         x.simd.cvt_u32_f32x16(x)
     }
