@@ -137,6 +137,7 @@ impl SimdElement for i64 {
 /// Construction of integer vectors from floats by truncation
 pub trait SimdCvtTruncate<T> {
     fn truncate_from(x: T) -> Self;
+    fn truncate_from_precise(x: T) -> Self;
 }
 
 /// Construction of floating point vectors from integers

@@ -4,6 +4,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
+use crate::arch::wasm::arch_ty;
 use crate::generic::{generic_op_name, scalar_binary};
 use crate::ops::{Op, Quantifier, valid_reinterpret};
 use crate::{
@@ -366,22 +367,42 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 OpSig::Cvt {
                     target_ty,
                     scalar_bits,
+                    precise,
                 } => {
-                    let src_prefix = vec_ty.scalar.prefix();
-                    let dst_prefix = target_ty.prefix();
-                    let len = vec_ty.len;
-                    let op = match (vec_ty.scalar, target_ty) {
-                        (ScalarType::Float, ScalarType::Int | ScalarType::Unsigned) => "trunc_sat",
-                        (ScalarType::Int | ScalarType::Unsigned, ScalarType::Float) => "convert",
+                    let (op, uses_relaxed) = match (vec_ty.scalar, target_ty, precise) {
+                        (ScalarType::Float, ScalarType::Int | ScalarType::Unsigned, false) => {
+                            ("relaxed_trunc", true)
+                        }
+                        (ScalarType::Float, ScalarType::Int | ScalarType::Unsigned, true) => {
+                            ("trunc_sat", false)
+                        }
+                        (ScalarType::Int | ScalarType::Unsigned, ScalarType::Float, _) => {
+                            ("convert", false)
+                        }
                         _ => unimplemented!(),
                     };
-                    let conversion_fn = format_ident!(
-                        "{dst_prefix}{scalar_bits}x{len}_{op}_{src_prefix}{scalar_bits}x{len}"
-                    );
+                    let dst_ty = arch_ty(&vec_ty.reinterpret(target_ty, scalar_bits));
+                    let src_ty = arch_ty(vec_ty);
+                    let conversion_fn = format_ident!("{dst_ty}_{op}_{src_ty}");
 
-                    quote! {
-                        #method_sig {
-                            #conversion_fn(a.into()).simd_into(self)
+                    if uses_relaxed {
+                        let precise = generic_op_name(&[method, "_precise"].join(""), vec_ty);
+                        quote! {
+                            #[cfg(target_feature = "relaxed-simd")]
+                            #method_sig {
+                                #conversion_fn(a.into()).simd_into(self)
+                            }
+
+                            #[cfg(not(target_feature = "relaxed-simd"))]
+                            #method_sig {
+                                self.#precise(a)
+                            }
+                        }
+                    } else {
+                        quote! {
+                            #method_sig {
+                                #conversion_fn(a.into()).simd_into(self)
+                            }
                         }
                     }
                 }

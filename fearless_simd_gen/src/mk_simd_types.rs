@@ -6,7 +6,10 @@ use quote::{format_ident, quote};
 
 use crate::{
     generic::generic_op_name,
-    ops::{Op, vec_trait_ops_for},
+    ops::{
+        F32_TO_I32, F32_TO_I32_PRECISE, F32_TO_U32, F32_TO_U32_PRECISE, I32_TO_F32, Op, TyFlavor,
+        U32_TO_F32, vec_trait_ops_for,
+    },
     types::{SIMD_TYPES, ScalarType, VecType},
 };
 
@@ -71,8 +74,15 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                         src_ty.rust_name()
                     );
                     let src_ty = src_ty.rust();
+                    let op = match src_scalar {
+                        ScalarType::Unsigned => U32_TO_F32,
+                        ScalarType::Int => I32_TO_F32,
+                        _ => unreachable!(),
+                    };
+                    let doc = op.sig.format_docstring(op.doc, TyFlavor::VecImpl);
                     conditional_impls.push(quote! {
                         impl<S: Simd> SimdCvtFloat<#src_ty<S>> for #name<S> {
+                            #[doc = #doc]
                             #[inline(always)]
                             fn float_from(x: #src_ty<S>) -> Self {
                                 x.simd.#method(x)
@@ -91,12 +101,37 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     ty.scalar.rust_name(ty.scalar_bits),
                     src_ty.rust_name()
                 );
+                let op = match ty.scalar {
+                    ScalarType::Unsigned => F32_TO_U32,
+                    ScalarType::Int => F32_TO_I32,
+                    _ => unreachable!(),
+                };
+                let doc = op.sig.format_docstring(op.doc, TyFlavor::VecImpl);
+                let method_precise = format_ident!(
+                    "cvt_{}_precise_{}",
+                    ty.scalar.rust_name(ty.scalar_bits),
+                    src_ty.rust_name()
+                );
+                let op_precise = match ty.scalar {
+                    ScalarType::Unsigned => F32_TO_U32_PRECISE,
+                    ScalarType::Int => F32_TO_I32_PRECISE,
+                    _ => unreachable!(),
+                };
+                let doc_precise = op_precise
+                    .sig
+                    .format_docstring(op_precise.doc, TyFlavor::VecImpl);
                 let src_ty = src_ty.rust();
                 conditional_impls.push(quote! {
                     impl<S: Simd> SimdCvtTruncate<#src_ty<S>> for #name<S> {
+                        #[doc = #doc]
                         #[inline(always)]
                         fn truncate_from(x: #src_ty<S>) -> Self {
                             x.simd.#method(x)
+                        }
+                        #[doc = #doc_precise]
+                        #[inline(always)]
+                        fn truncate_from_precise(x: #src_ty<S>) -> Self {
+                            x.simd.#method_precise(x)
                         }
                     }
                 });

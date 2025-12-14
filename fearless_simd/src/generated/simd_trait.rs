@@ -188,10 +188,14 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
-    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u32_precise_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x16(self, val: i8) -> i8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -776,10 +780,14 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
-    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u32_precise_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i32_precise_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x32(self, val: i8) -> i8x32<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -1390,10 +1398,14 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
-    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u32_precise_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i32_precise_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x64(self, val: i8) -> i8x64<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -1984,9 +1996,27 @@ pub trait SimdFloat<Element: SimdElement, S: Simd>:
     + core::ops::Div<Element, Output = Self>
     + core::ops::DivAssign<Element>
 {
+    #[doc = r" Convert this floating-point type to an integer. This is a convenience method that"]
+    #[doc = r" delegates to [`SimdCvtTruncate::truncate_from`], and can only be called if there"]
+    #[doc = r" actually exists a target type of the same bit width (currently, only `u32` and"]
+    #[doc = r" `i32`)."]
+    #[doc = r""]
+    #[doc = r" For more information about the semantics of this specific conversion, see the"]
+    #[doc = r" concrete `SimdCvtTruncate` implementations for integer types."]
     #[inline(always)]
     fn to_int<T: SimdCvtTruncate<Self>>(self) -> T {
         T::truncate_from(self)
+    }
+    #[doc = r" Convert this floating-point type to an integer, saturating on overflow and returning"]
+    #[doc = r" 0 for NaN. This is a convenience method that delegates to"]
+    #[doc = r" [`SimdCvtTruncate::truncate_from_precise`], and can only be called if there actually"]
+    #[doc = r" exists a target type of the same bit width (currently, only `u32` and `i32`)."]
+    #[doc = r""]
+    #[doc = r" For more information about the semantics of this specific conversion, see the"]
+    #[doc = r" concrete `SimdCvtTruncate` implementations for integer types."]
+    #[inline(always)]
+    fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T {
+        T::truncate_from_precise(self)
     }
     #[doc = "Compute the absolute value of each element."]
     fn abs(self) -> Self;
@@ -2072,6 +2102,9 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     + core::ops::Shr<Output = Self>
     + core::ops::ShrAssign
 {
+    #[doc = r" Convert this integer type to a floating-point type. This is a convenience method"]
+    #[doc = r" that delegates to [`SimdCvtFloat::float_from`], and can only be called if there"]
+    #[doc = r" actually exists a target type of the same bit width (currently, only `f32`)."]
     #[inline(always)]
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)

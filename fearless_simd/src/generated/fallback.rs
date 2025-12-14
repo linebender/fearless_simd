@@ -404,6 +404,10 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn cvt_u32_precise_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
+        self.cvt_u32_f32x4(a)
+    }
+    #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
         [
             a[0usize] as i32,
@@ -412,6 +416,10 @@ impl Simd for Fallback {
             a[3usize] as i32,
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
+        self.cvt_i32_f32x4(a)
     }
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
@@ -3555,9 +3563,25 @@ impl Simd for Fallback {
         self.combine_u32x4(self.cvt_u32_f32x4(a0), self.cvt_u32_f32x4(a1))
     }
     #[inline(always)]
+    fn cvt_u32_precise_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_u32x4(
+            self.cvt_u32_precise_f32x4(a0),
+            self.cvt_u32_precise_f32x4(a1),
+        )
+    }
+    #[inline(always)]
     fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_i32x4(self.cvt_i32_f32x4(a0), self.cvt_i32_f32x4(a1))
+    }
+    #[inline(always)]
+    fn cvt_i32_precise_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_i32x4(
+            self.cvt_i32_precise_f32x4(a0),
+            self.cvt_i32_precise_f32x4(a1),
+        )
     }
     #[inline(always)]
     fn splat_i8x32(self, val: i8) -> i8x32<Self> {
@@ -5422,9 +5446,25 @@ impl Simd for Fallback {
         self.combine_u32x8(self.cvt_u32_f32x8(a0), self.cvt_u32_f32x8(a1))
     }
     #[inline(always)]
+    fn cvt_u32_precise_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_u32x8(
+            self.cvt_u32_precise_f32x8(a0),
+            self.cvt_u32_precise_f32x8(a1),
+        )
+    }
+    #[inline(always)]
     fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_i32x8(self.cvt_i32_f32x8(a0), self.cvt_i32_f32x8(a1))
+    }
+    #[inline(always)]
+    fn cvt_i32_precise_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_i32x8(
+            self.cvt_i32_precise_f32x8(a0),
+            self.cvt_i32_precise_f32x8(a1),
+        )
     }
     #[inline(always)]
     fn splat_i8x64(self, val: i8) -> i8x64<Self> {

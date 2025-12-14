@@ -192,7 +192,8 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Cvt {
             target_ty,
             scalar_bits,
-        } => handle_cvt(method_sig, vec_ty, target_ty, scalar_bits),
+            precise,
+        } => handle_cvt(method_sig, vec_ty, target_ty, scalar_bits, precise),
         OpSig::Reinterpret {
             target_ty,
             scalar_bits,
@@ -786,6 +787,7 @@ pub(crate) fn handle_cvt(
     vec_ty: &VecType,
     target_scalar: ScalarType,
     target_scalar_bits: usize,
+    precise: bool,
 ) -> TokenStream {
     assert_eq!(
         vec_ty.scalar_bits, target_scalar_bits,
@@ -820,8 +822,35 @@ pub(crate) fn handle_cvt(
             let add_int = simple_sign_unaware_intrinsic("add", &target_ty);
             let sub_float = simple_intrinsic("sub", vec_ty);
 
-            match target_scalar {
-                ScalarType::Int => {
+            match (target_scalar, precise) {
+                (ScalarType::Int, false) => {
+                    quote! {
+                        unsafe {
+                            #convert(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                (ScalarType::Unsigned, false) => {
+                    quote! {
+                        unsafe {
+                            let mut converted = #convert(a.into());
+
+                            // In the common case where everything is in range of an i32, we don't need to do anything else.
+                            let in_range = #cmplt(a.into(), #set1_float(2147483648.0));
+                            let all_in_range = #movemask(in_range) == #all_ones;
+
+                            if !all_in_range {
+                                // Add any excess (beyond the maximum value)
+                                let excess = #sub_float(a.into(), #set1_float(2147483648.0));
+                                let excess_converted = #convert(#andnot(in_range, excess));
+                                converted = #add_int(converted, excess_converted);
+                            }
+
+                            converted.simd_into(self)
+                        }
+                    }
+                }
+                (ScalarType::Int, true) => {
                     quote! {
                         unsafe {
                             let a = a.into();
@@ -846,7 +875,7 @@ pub(crate) fn handle_cvt(
                         }
                     }
                 }
-                ScalarType::Unsigned => {
+                (ScalarType::Unsigned, true) => {
                     quote! {
                         unsafe {
                             // Clamp out-of-range values (and NaN) to 0. Intel's `_mm_max_ps` always takes the second

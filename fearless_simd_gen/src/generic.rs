@@ -195,6 +195,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         OpSig::Cvt {
             target_ty,
             scalar_bits,
+            ..
         } => {
             let half = VecType::new(target_ty, scalar_bits, ty.len / 2);
             let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
