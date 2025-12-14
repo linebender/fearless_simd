@@ -325,6 +325,35 @@ impl Level {
         None
     }
 
+    /// Check whether this is the `Fallback` level; that is, whether no better feature level could
+    /// be statically or dynamically detected. This is useful if there's a scalarized version of
+    /// your algorithm that runs faster if SIMD isn't supported.
+    ///
+    /// This method is always available, even in cases where `Fallback` is not; for instance, if
+    /// you're targeting a platform that always supports some level of SIMD. In such cases, it will
+    /// always return false.
+    pub fn is_fallback(self) -> bool {
+        #[cfg(any(
+            all(target_arch = "aarch64", not(target_feature = "neon")),
+            all(
+                any(target_arch = "x86", target_arch = "x86_64"),
+                not(target_feature = "sse4.2")
+            ),
+            all(target_arch = "wasm32", not(target_feature = "simd128")),
+            not(any(
+                target_arch = "x86",
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+                target_arch = "wasm32"
+            )),
+            feature = "force_support_fallback"
+        ))]
+        return matches!(self, Self::Fallback(_));
+
+        #[allow(unreachable_code, reason = "Fallback unreachable in some cfgs.")]
+        false
+    }
+
     /// If this is a proof that Neon (or better) is available, access that instruction set.
     ///
     /// This method should be preferred over matching against the `Neon` variant of self,
