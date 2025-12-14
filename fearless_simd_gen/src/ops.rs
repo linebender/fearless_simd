@@ -640,6 +640,75 @@ pub(crate) fn overloaded_ops_for(scalar: ScalarType) -> Vec<(CoreOpTrait, OpSig,
         .collect()
 }
 
+pub(crate) const F32_TO_U32: Op = Op::new(
+    "cvt_u32",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Unsigned,
+        scalar_bits: 32,
+        precise: false,
+    },
+    "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
+    Out-of-range values or NaN will produce implementation-defined results.\n\n\
+    On x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\n\
+    If you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards.",
+);
+pub(crate) const F32_TO_U32_PRECISE: Op = Op::new(
+    "cvt_u32_precise",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Unsigned,
+        scalar_bits: 32,
+        precise: true,
+    },
+    "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
+    Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
+);
+pub(crate) const F32_TO_I32: Op = Op::new(
+    "cvt_i32",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Int,
+        scalar_bits: 32,
+        precise: false,
+    },
+    "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
+    Out-of-range values or NaN will produce implementation-defined results.",
+);
+pub(crate) const F32_TO_I32_PRECISE: Op = Op::new(
+    "cvt_i32_precise",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Int,
+        scalar_bits: 32,
+        precise: true,
+    },
+    "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
+    Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
+);
+pub(crate) const U32_TO_F32: Op = Op::new(
+    "cvt_f32",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Float,
+        scalar_bits: 32,
+        precise: false,
+    },
+    "Convert each unsigned 32-bit integer element to a floating-point value.\n\n\
+    Values that cannot be exactly represented are rounded to the nearest representable value.",
+);
+pub(crate) const I32_TO_F32: Op = Op::new(
+    "cvt_f32",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Float,
+        scalar_bits: 32,
+        precise: false,
+    },
+    "Convert each signed 32-bit integer element to a floating-point value.\n\n\
+    Values that cannot be exactly represented are rounded to the nearest representable value.",
+);
+
 pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
     let base = match ty.scalar {
         ScalarType::Float => FLOAT_OPS,
@@ -777,73 +846,13 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
 
     match (ty.scalar, ty.scalar_bits) {
         (ScalarType::Float, 32) => {
-            ops.push(Op::new(
-                "cvt_u32",
-                OpKind::OwnTrait,
-                OpSig::Cvt {
-                    target_ty: ScalarType::Unsigned,
-                    scalar_bits: 32,
-                    precise: false,
-                },
-                "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
-                Out-of-range values or NaN will produce implementation-defined results.",
-            ));
-            ops.push(Op::new(
-                "cvt_u32_precise",
-                OpKind::OwnTrait,
-                OpSig::Cvt {
-                    target_ty: ScalarType::Unsigned,
-                    scalar_bits: 32,
-                    precise: true,
-                },
-                "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
-                Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
-            ));
-            ops.push(Op::new(
-                "cvt_i32",
-                OpKind::OwnTrait,
-                OpSig::Cvt {
-                    target_ty: ScalarType::Int,
-                    scalar_bits: 32,
-                    precise: false,
-                },
-                "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
-                Out-of-range values or NaN will produce implementation-defined results.",
-            ));
-            ops.push(Op::new(
-                "cvt_i32_precise",
-                OpKind::OwnTrait,
-                OpSig::Cvt {
-                    target_ty: ScalarType::Int,
-                    scalar_bits: 32,
-                    precise: true,
-                },
-                "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
-                Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
-            ));
+            ops.push(F32_TO_U32);
+            ops.push(F32_TO_U32_PRECISE);
+            ops.push(F32_TO_I32);
+            ops.push(F32_TO_I32_PRECISE);
         }
-        (ScalarType::Unsigned, 32) => ops.push(Op::new(
-            "cvt_f32",
-            OpKind::OwnTrait,
-            OpSig::Cvt {
-                target_ty: ScalarType::Float,
-                scalar_bits: 32,
-                precise: false,
-            },
-            "Convert each unsigned 32-bit integer element to a floating-point value.\n\n\
-            Values that cannot be exactly represented are rounded to the nearest representable value.",
-        )),
-        (ScalarType::Int, 32) => ops.push(Op::new(
-            "cvt_f32",
-            OpKind::OwnTrait,
-            OpSig::Cvt {
-                target_ty: ScalarType::Float,
-                scalar_bits: 32,
-                precise: false,
-            },
-            "Convert each signed 32-bit integer element to a floating-point value.\n\n\
-            Values that cannot be exactly represented are rounded to the nearest representable value.",
-        )),
+        (ScalarType::Unsigned, 32) => ops.push(U32_TO_F32),
+        (ScalarType::Int, 32) => ops.push(I32_TO_F32),
         _ => (),
     }
 

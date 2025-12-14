@@ -220,12 +220,14 @@ impl<S: Simd> crate::SimdFloat<f32, S> for f32x4<S> {
     }
 }
 impl<S: Simd> SimdCvtFloat<u32x4<S>> for f32x4<S> {
+    #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     #[inline(always)]
     fn float_from(x: u32x4<S>) -> Self {
         x.simd.cvt_f32_u32x4(x)
     }
 }
 impl<S: Simd> SimdCvtFloat<i32x4<S>> for f32x4<S> {
+    #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     #[inline(always)]
     fn float_from(x: i32x4<S>) -> Self {
         x.simd.cvt_f32_i32x4(x)
@@ -1466,10 +1468,12 @@ impl<S: Simd> crate::SimdInt<i32, S> for i32x4<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for i32x4<S> {
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     #[inline(always)]
     fn truncate_from(x: f32x4<S>) -> Self {
         x.simd.cvt_i32_f32x4(x)
     }
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     #[inline(always)]
     fn truncate_from_precise(x: f32x4<S>) -> Self {
         x.simd.cvt_i32_precise_f32x4(x)
@@ -1648,10 +1652,12 @@ impl<S: Simd> crate::SimdInt<u32, S> for u32x4<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
     fn truncate_from(x: f32x4<S>) -> Self {
         x.simd.cvt_u32_f32x4(x)
     }
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     #[inline(always)]
     fn truncate_from_precise(x: f32x4<S>) -> Self {
         x.simd.cvt_u32_precise_f32x4(x)
@@ -2407,12 +2413,14 @@ impl<S: Simd> crate::SimdFloat<f32, S> for f32x8<S> {
     }
 }
 impl<S: Simd> SimdCvtFloat<u32x8<S>> for f32x8<S> {
+    #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     #[inline(always)]
     fn float_from(x: u32x8<S>) -> Self {
         x.simd.cvt_f32_u32x8(x)
     }
 }
 impl<S: Simd> SimdCvtFloat<i32x8<S>> for f32x8<S> {
+    #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     #[inline(always)]
     fn float_from(x: i32x8<S>) -> Self {
         x.simd.cvt_f32_i32x8(x)
@@ -3783,10 +3791,12 @@ impl<S: Simd> crate::SimdInt<i32, S> for i32x8<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for i32x8<S> {
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     #[inline(always)]
     fn truncate_from(x: f32x8<S>) -> Self {
         x.simd.cvt_i32_f32x8(x)
     }
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     #[inline(always)]
     fn truncate_from_precise(x: f32x8<S>) -> Self {
         x.simd.cvt_i32_precise_f32x8(x)
@@ -3981,10 +3991,12 @@ impl<S: Simd> crate::SimdInt<u32, S> for u32x8<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for u32x8<S> {
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
     fn truncate_from(x: f32x8<S>) -> Self {
         x.simd.cvt_u32_f32x8(x)
     }
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     #[inline(always)]
     fn truncate_from_precise(x: f32x8<S>) -> Self {
         x.simd.cvt_u32_precise_f32x8(x)
@@ -4786,12 +4798,14 @@ impl<S: Simd> crate::SimdFloat<f32, S> for f32x16<S> {
     }
 }
 impl<S: Simd> SimdCvtFloat<u32x16<S>> for f32x16<S> {
+    #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     #[inline(always)]
     fn float_from(x: u32x16<S>) -> Self {
         x.simd.cvt_f32_u32x16(x)
     }
 }
 impl<S: Simd> SimdCvtFloat<i32x16<S>> for f32x16<S> {
+    #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     #[inline(always)]
     fn float_from(x: i32x16<S>) -> Self {
         x.simd.cvt_f32_i32x16(x)
@@ -6272,10 +6286,12 @@ impl<S: Simd> crate::SimdInt<i32, S> for i32x16<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for i32x16<S> {
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     #[inline(always)]
     fn truncate_from(x: f32x16<S>) -> Self {
         x.simd.cvt_i32_f32x16(x)
     }
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     #[inline(always)]
     fn truncate_from_precise(x: f32x16<S>) -> Self {
         x.simd.cvt_i32_precise_f32x16(x)
@@ -6472,10 +6488,12 @@ impl<S: Simd> crate::SimdInt<u32, S> for u32x16<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for u32x16<S> {
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
     fn truncate_from(x: f32x16<S>) -> Self {
         x.simd.cvt_u32_f32x16(x)
     }
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
     #[inline(always)]
     fn truncate_from_precise(x: f32x16<S>) -> Self {
         x.simd.cvt_u32_precise_f32x16(x)
