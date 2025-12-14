@@ -1996,10 +1996,24 @@ pub trait SimdFloat<Element: SimdElement, S: Simd>:
     + core::ops::Div<Element, Output = Self>
     + core::ops::DivAssign<Element>
 {
+    #[doc = r" Convert this floating-point type to an integer. This is a convenience method that"]
+    #[doc = r" delegates to [`SimdCvtTruncate::truncate_from`], and can only be called if there"]
+    #[doc = r" actually exists a target type of the same bit width (currently, only `u32` and"]
+    #[doc = r" `i32`)."]
+    #[doc = r""]
+    #[doc = r" For more information about the semantics of this specific conversion, see the"]
+    #[doc = r" concrete `SimdCvtTruncate` implementations for integer types."]
     #[inline(always)]
     fn to_int<T: SimdCvtTruncate<Self>>(self) -> T {
         T::truncate_from(self)
     }
+    #[doc = r" Convert this floating-point type to an integer, saturating on overflow and returning"]
+    #[doc = r" 0 for NaN. This is a convenience method that delegates to"]
+    #[doc = r" [`SimdCvtTruncate::truncate_from_precise`], and can only be called if there actually"]
+    #[doc = r" exists a target type of the same bit width (currently, only `u32` and `i32`)."]
+    #[doc = r""]
+    #[doc = r" For more information about the semantics of this specific conversion, see the"]
+    #[doc = r" concrete `SimdCvtTruncate` implementations for integer types."]
     #[inline(always)]
     fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T {
         T::truncate_from_precise(self)
@@ -2088,6 +2102,9 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     + core::ops::Shr<Output = Self>
     + core::ops::ShrAssign
 {
+    #[doc = r" Convert this integer type to a floating-point type. This is a convenience method"]
+    #[doc = r" that delegates to [`SimdCvtFloat::float_from`], and can only be called if there"]
+    #[doc = r" actually exists a target type of the same bit width (currently, only `f32`)."]
     #[inline(always)]
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)

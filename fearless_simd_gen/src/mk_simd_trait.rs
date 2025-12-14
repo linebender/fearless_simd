@@ -166,9 +166,23 @@ fn mk_simd_float() -> TokenStream {
         pub trait SimdFloat<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             #(+ #op_traits)*
         {
+            /// Convert this floating-point type to an integer. This is a convenience method that
+            /// delegates to [`SimdCvtTruncate::truncate_from`], and can only be called if there
+            /// actually exists a target type of the same bit width (currently, only `u32` and
+            /// `i32`).
+            ///
+            /// For more information about the semantics of this specific conversion, see the
+            /// concrete `SimdCvtTruncate` implementations for integer types.
             #[inline(always)]
             fn to_int<T: SimdCvtTruncate<Self>>(self) -> T { T::truncate_from(self) }
 
+            /// Convert this floating-point type to an integer, saturating on overflow and returning
+            /// 0 for NaN. This is a convenience method that delegates to
+            /// [`SimdCvtTruncate::truncate_from_precise`], and can only be called if there actually
+            /// exists a target type of the same bit width (currently, only `u32` and `i32`).
+            ///
+            /// For more information about the semantics of this specific conversion, see the
+            /// concrete `SimdCvtTruncate` implementations for integer types.
             #[inline(always)]
             fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T { T::truncate_from_precise(self) }
 
@@ -188,6 +202,9 @@ fn mk_simd_int() -> TokenStream {
         pub trait SimdInt<Element: SimdElement, S: Simd>: SimdBase<Element, S>
             #(+ #op_traits)*
         {
+            /// Convert this integer type to a floating-point type. This is a convenience method
+            /// that delegates to [`SimdCvtFloat::float_from`], and can only be called if there
+            /// actually exists a target type of the same bit width (currently, only `f32`).
             #[inline(always)]
             fn to_float<T: SimdCvtFloat<Self>>(self) -> T { T::float_from(self) }
 
