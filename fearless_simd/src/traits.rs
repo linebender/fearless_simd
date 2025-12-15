@@ -5,6 +5,7 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
+
 use crate::{Level, Simd, SimdBase};
 
 /// Element-wise selection between two SIMD vectors using `self`.
@@ -163,4 +164,50 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> {
 
     /// Split this vector into left and right halves.
     fn split(self) -> (Self::Split, Self::Split);
+}
+
+/// Gathering of elements in a slice, treating each element in the vector as an index. Out-of-bounds
+/// indices are clamped to the last element in the slice.
+///
+/// Currently, this does not map to hardware "gather" instructions, but does allow you to avoid
+/// bounds checks that the compiler is currently not capable of eliding.
+pub trait SimdGather<S: Simd>: SimdBase<S> {
+    /// The type returned from [`SimdGather::gather`]. This will always be `[T; <Self as
+    /// SimdBase<S>>::N]`, but associated constants are currently not powerful enough to express
+    /// that directly.
+    type Gathered<T>;
+
+    /// Gather elements from a slice, treating each element in this vector as an index. Returns an
+    /// array of gathered elements, with the same element count as the vector type. Out-of bounds
+    /// indices are clamped to the last element in the slice.
+    ///
+    /// Panics if the slice doesn't contain at least one element.
+    fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T>;
+    /// Gather elements from a slice into another slice, treating each element in this vector as an
+    /// index.
+    ///
+    /// Unlike [`SimdGather::gather`], this is "length-erased", and can be used with the
+    /// native-width associated types on [`Simd`] (e.g. [`Simd::u32s`]).
+    ///
+    /// Panics if the slice doesn't contain at least one element, or if the destination slice
+    /// doesn't have the same element count as this vector.
+    fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]);
+}
+
+/// Scattering of elements into a slice, treating each element in the vector as an index to write
+/// to. Out-of-bounds indices are clamped to the last element in the slice. If multiple indices are
+/// identical, the order in which the writes occur is unspecified.
+///
+/// Currently, this does not map to hardware "scatter" instructions, but does allow you to avoid
+/// bounds checks that the compiler is currently not capable of eliding.
+pub trait SimdScatter<S: Simd>: SimdBase<S> {
+    /// Scatter elements from one slice into another, treating each element in this vector as an
+    /// index into the destination slice. Out-of bounds indices are clamped to the last element in
+    /// the slice.
+    ///
+    /// Panics if the slice doesn't contain at least one element, or if the source slice doesn't
+    /// have the same element count as this vector.
+    ///
+    /// If multiple indices are identical, the order in which the writes occur is unspecified.
+    fn scatter<T: Copy>(self, src: &[T], dst: &mut [T]);
 }
