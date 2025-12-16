@@ -384,6 +384,8 @@ pub(crate) fn generic_from_bytes(method_sig: TokenStream, vec_ty: &VecType) -> T
     quote! {
         #method_sig {
             unsafe {
+                // Safety: All values are wrapped in alignment wrappers (`Aligned128`, `Aligned256`, `Aligned512`), so
+                // we're transmuting between types with all valid bit patterns and the same size and alignment.
                 #ty { val: core::mem::transmute(a.val), simd: self }
             }
         }
