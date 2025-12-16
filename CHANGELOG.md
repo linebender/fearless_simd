@@ -8,10 +8,14 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 # Changelog
 
-The latest published Fearless SIMD release is [0.3.0](#030-2025-10-14) which was released on 2025-10-14.
-You can find its changes [documented below](#030-2025-10-14).
+The latest published Fearless SIMD release is [0.4.0](#040-2025-12-16) which was released on 2025-12-16.
+You can find its changes [documented below](#040-2025-12-16).
 
 ## [Unreleased]
+
+This release has an [MSRV][] of 1.88.
+
+## [0.4.0][] (2025-12-16)
 
 This release has an [MSRV][] of 1.88.
 
@@ -24,6 +28,7 @@ This release has an [MSRV][] of 1.88.
 - The bitwise "not" operation on integer vector types. ([#130][] by [@valadaptive][])
 - The `from_fn` method on vector types. ([#137][] by [@valadaptive][])
 - The `load_interleaved` and `store_interleaved` operations now use native intrinsics on x86, instead of using the fallback implementations. ([#140][] by [@valadaptive][])
+- Add support for `relaxed_simd` operations in WebAssembly. ([#143][] by [@valadaptive][])
 - The `ceil` and `round_ties_even` operations on floating-point vector types. (Rust's `round` operation rounds away from zero in the case of ties. Many architectures do not natively implement that behavior, so it's omitted.) ([#145][] by [@valadaptive][])
 - A `prelude` module, which exports all the traits in the library but not the types. ([#149][] by [@valadaptive][])
 - The `any_true`, `all_true`, `any_false`, and `all_false` methods on mask types. ([#141][] by [@valadaptive][])
@@ -150,6 +155,7 @@ No changelog was kept for this release.
 [#137]: https://github.com/linebender/fearless_simd/pull/137
 [#140]: https://github.com/linebender/fearless_simd/pull/140
 [#141]: https://github.com/linebender/fearless_simd/pull/141
+[#143]: https://github.com/linebender/fearless_simd/pull/143
 [#145]: https://github.com/linebender/fearless_simd/pull/145
 [#149]: https://github.com/linebender/fearless_simd/pull/149
 [#154]: https://github.com/linebender/fearless_simd/pull/154
