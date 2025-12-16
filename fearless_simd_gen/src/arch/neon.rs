@@ -101,7 +101,8 @@ fn neon_array_type(ty: &VecType) -> (&'static str, &'static str, usize) {
 pub(crate) fn opt_q(ty: &VecType) -> &'static str {
     match ty.n_bits() {
         64 => "",
-        _ => "q",
+        128 | 256 | 512 => "q",
+        other => panic!("unsupported simd width: {other}"),
     }
 }
 
