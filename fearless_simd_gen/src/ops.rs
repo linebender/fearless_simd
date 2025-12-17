@@ -1016,8 +1016,8 @@ impl CoreOpTrait {
             _ => vec![
                 quote! { core::ops::#trait_name<Output = Self> },
                 quote! { core::ops::#trait_name_assign },
-                quote! { core::ops::#trait_name<Element, Output = Self> },
-                quote! { core::ops::#trait_name_assign<Element> },
+                quote! { core::ops::#trait_name<Self::Element, Output = Self> },
+                quote! { core::ops::#trait_name_assign<Self::Element> },
             ]
             .into_iter(),
         }

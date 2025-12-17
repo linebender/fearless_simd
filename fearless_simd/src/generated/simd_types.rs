@@ -77,7 +77,8 @@ impl<S: Simd> Bytes for f32x4<S> {
         value.simd.cvt_from_bytes_f32x4(value)
     }
 }
-impl<S: Simd> SimdBase<f32, S> for f32x4<S> {
+impl<S: Simd> SimdBase<S> for f32x4<S> {
+    type Element = f32;
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = f32x4<S>;
@@ -111,7 +112,7 @@ impl<S: Simd> SimdBase<f32, S> for f32x4<S> {
         simd.load_array_f32x4(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdFloat<f32, S> for f32x4<S> {
+impl<S: Simd> crate::SimdFloat<S> for f32x4<S> {
     #[inline(always)]
     fn abs(self) -> Self {
         self.simd.abs_f32x4(self)
@@ -221,7 +222,7 @@ impl<S: Simd> SimdCvtFloat<i32x4<S>> for f32x4<S> {
         x.simd.cvt_f32_i32x4(x)
     }
 }
-impl<S: Simd> crate::SimdCombine<f32, S> for f32x4<S> {
+impl<S: Simd> crate::SimdCombine<S> for f32x4<S> {
     type Combined = f32x8<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -301,7 +302,8 @@ impl<S: Simd> Bytes for i8x16<S> {
         value.simd.cvt_from_bytes_i8x16(value)
     }
 }
-impl<S: Simd> SimdBase<i8, S> for i8x16<S> {
+impl<S: Simd> SimdBase<S> for i8x16<S> {
+    type Element = i8;
     const N: usize = 16;
     type Mask = mask8x16<S>;
     type Block = i8x16<S>;
@@ -335,7 +337,7 @@ impl<S: Simd> SimdBase<i8, S> for i8x16<S> {
         simd.load_array_i8x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<i8, S> for i8x16<S> {
+impl<S: Simd> crate::SimdInt<S> for i8x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x16(self, rhs.simd_into(self.simd))
@@ -381,7 +383,7 @@ impl<S: Simd> crate::SimdInt<i8, S> for i8x16<S> {
         self.simd.max_i8x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdCombine<i8, S> for i8x16<S> {
+impl<S: Simd> crate::SimdCombine<S> for i8x16<S> {
     type Combined = i8x32<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -461,7 +463,8 @@ impl<S: Simd> Bytes for u8x16<S> {
         value.simd.cvt_from_bytes_u8x16(value)
     }
 }
-impl<S: Simd> SimdBase<u8, S> for u8x16<S> {
+impl<S: Simd> SimdBase<S> for u8x16<S> {
+    type Element = u8;
     const N: usize = 16;
     type Mask = mask8x16<S>;
     type Block = u8x16<S>;
@@ -495,7 +498,7 @@ impl<S: Simd> SimdBase<u8, S> for u8x16<S> {
         simd.load_array_u8x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<u8, S> for u8x16<S> {
+impl<S: Simd> crate::SimdInt<S> for u8x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u8x16(self, rhs.simd_into(self.simd))
@@ -541,7 +544,7 @@ impl<S: Simd> crate::SimdInt<u8, S> for u8x16<S> {
         self.simd.max_u8x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdCombine<u8, S> for u8x16<S> {
+impl<S: Simd> crate::SimdCombine<S> for u8x16<S> {
     type Combined = u8x32<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -626,7 +629,8 @@ impl<S: Simd> Bytes for mask8x16<S> {
         value.simd.cvt_from_bytes_mask8x16(value)
     }
 }
-impl<S: Simd> SimdBase<i8, S> for mask8x16<S> {
+impl<S: Simd> SimdBase<S> for mask8x16<S> {
+    type Element = i8;
     const N: usize = 16;
     type Mask = mask8x16<S>;
     type Block = mask8x16<S>;
@@ -660,7 +664,7 @@ impl<S: Simd> SimdBase<i8, S> for mask8x16<S> {
         simd.load_array_mask8x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i8, S> for mask8x16<S> {
+impl<S: Simd> crate::SimdMask<S> for mask8x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask8x16(self, rhs.simd_into(self.simd))
@@ -682,7 +686,7 @@ impl<S: Simd> crate::SimdMask<i8, S> for mask8x16<S> {
         self.simd.all_false_mask8x16(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i8, S> for mask8x16<S> {
+impl<S: Simd> crate::SimdCombine<S> for mask8x16<S> {
     type Combined = mask8x32<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -762,7 +766,8 @@ impl<S: Simd> Bytes for i16x8<S> {
         value.simd.cvt_from_bytes_i16x8(value)
     }
 }
-impl<S: Simd> SimdBase<i16, S> for i16x8<S> {
+impl<S: Simd> SimdBase<S> for i16x8<S> {
+    type Element = i16;
     const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = i16x8<S>;
@@ -796,7 +801,7 @@ impl<S: Simd> SimdBase<i16, S> for i16x8<S> {
         simd.load_array_i16x8(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<i16, S> for i16x8<S> {
+impl<S: Simd> crate::SimdInt<S> for i16x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x8(self, rhs.simd_into(self.simd))
@@ -842,7 +847,7 @@ impl<S: Simd> crate::SimdInt<i16, S> for i16x8<S> {
         self.simd.max_i16x8(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdCombine<i16, S> for i16x8<S> {
+impl<S: Simd> crate::SimdCombine<S> for i16x8<S> {
     type Combined = i16x16<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -922,7 +927,8 @@ impl<S: Simd> Bytes for u16x8<S> {
         value.simd.cvt_from_bytes_u16x8(value)
     }
 }
-impl<S: Simd> SimdBase<u16, S> for u16x8<S> {
+impl<S: Simd> SimdBase<S> for u16x8<S> {
+    type Element = u16;
     const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = u16x8<S>;
@@ -956,7 +962,7 @@ impl<S: Simd> SimdBase<u16, S> for u16x8<S> {
         simd.load_array_u16x8(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<u16, S> for u16x8<S> {
+impl<S: Simd> crate::SimdInt<S> for u16x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u16x8(self, rhs.simd_into(self.simd))
@@ -1002,7 +1008,7 @@ impl<S: Simd> crate::SimdInt<u16, S> for u16x8<S> {
         self.simd.max_u16x8(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdCombine<u16, S> for u16x8<S> {
+impl<S: Simd> crate::SimdCombine<S> for u16x8<S> {
     type Combined = u16x16<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -1087,7 +1093,8 @@ impl<S: Simd> Bytes for mask16x8<S> {
         value.simd.cvt_from_bytes_mask16x8(value)
     }
 }
-impl<S: Simd> SimdBase<i16, S> for mask16x8<S> {
+impl<S: Simd> SimdBase<S> for mask16x8<S> {
+    type Element = i16;
     const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = mask16x8<S>;
@@ -1121,7 +1128,7 @@ impl<S: Simd> SimdBase<i16, S> for mask16x8<S> {
         simd.load_array_mask16x8(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i16, S> for mask16x8<S> {
+impl<S: Simd> crate::SimdMask<S> for mask16x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask16x8(self, rhs.simd_into(self.simd))
@@ -1143,7 +1150,7 @@ impl<S: Simd> crate::SimdMask<i16, S> for mask16x8<S> {
         self.simd.all_false_mask16x8(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i16, S> for mask16x8<S> {
+impl<S: Simd> crate::SimdCombine<S> for mask16x8<S> {
     type Combined = mask16x16<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -1223,7 +1230,8 @@ impl<S: Simd> Bytes for i32x4<S> {
         value.simd.cvt_from_bytes_i32x4(value)
     }
 }
-impl<S: Simd> SimdBase<i32, S> for i32x4<S> {
+impl<S: Simd> SimdBase<S> for i32x4<S> {
+    type Element = i32;
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = i32x4<S>;
@@ -1257,7 +1265,7 @@ impl<S: Simd> SimdBase<i32, S> for i32x4<S> {
         simd.load_array_i32x4(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<i32, S> for i32x4<S> {
+impl<S: Simd> crate::SimdInt<S> for i32x4<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x4(self, rhs.simd_into(self.simd))
@@ -1315,7 +1323,7 @@ impl<S: Simd> SimdCvtTruncate<f32x4<S>> for i32x4<S> {
         x.simd.cvt_i32_precise_f32x4(x)
     }
 }
-impl<S: Simd> crate::SimdCombine<i32, S> for i32x4<S> {
+impl<S: Simd> crate::SimdCombine<S> for i32x4<S> {
     type Combined = i32x8<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -1395,7 +1403,8 @@ impl<S: Simd> Bytes for u32x4<S> {
         value.simd.cvt_from_bytes_u32x4(value)
     }
 }
-impl<S: Simd> SimdBase<u32, S> for u32x4<S> {
+impl<S: Simd> SimdBase<S> for u32x4<S> {
+    type Element = u32;
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = u32x4<S>;
@@ -1429,7 +1438,7 @@ impl<S: Simd> SimdBase<u32, S> for u32x4<S> {
         simd.load_array_u32x4(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<u32, S> for u32x4<S> {
+impl<S: Simd> crate::SimdInt<S> for u32x4<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u32x4(self, rhs.simd_into(self.simd))
@@ -1487,7 +1496,7 @@ impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
         x.simd.cvt_u32_precise_f32x4(x)
     }
 }
-impl<S: Simd> crate::SimdCombine<u32, S> for u32x4<S> {
+impl<S: Simd> crate::SimdCombine<S> for u32x4<S> {
     type Combined = u32x8<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -1572,7 +1581,8 @@ impl<S: Simd> Bytes for mask32x4<S> {
         value.simd.cvt_from_bytes_mask32x4(value)
     }
 }
-impl<S: Simd> SimdBase<i32, S> for mask32x4<S> {
+impl<S: Simd> SimdBase<S> for mask32x4<S> {
+    type Element = i32;
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = mask32x4<S>;
@@ -1606,7 +1616,7 @@ impl<S: Simd> SimdBase<i32, S> for mask32x4<S> {
         simd.load_array_mask32x4(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i32, S> for mask32x4<S> {
+impl<S: Simd> crate::SimdMask<S> for mask32x4<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask32x4(self, rhs.simd_into(self.simd))
@@ -1628,7 +1638,7 @@ impl<S: Simd> crate::SimdMask<i32, S> for mask32x4<S> {
         self.simd.all_false_mask32x4(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i32, S> for mask32x4<S> {
+impl<S: Simd> crate::SimdCombine<S> for mask32x4<S> {
     type Combined = mask32x8<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -1708,7 +1718,8 @@ impl<S: Simd> Bytes for f64x2<S> {
         value.simd.cvt_from_bytes_f64x2(value)
     }
 }
-impl<S: Simd> SimdBase<f64, S> for f64x2<S> {
+impl<S: Simd> SimdBase<S> for f64x2<S> {
+    type Element = f64;
     const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = f64x2<S>;
@@ -1742,7 +1753,7 @@ impl<S: Simd> SimdBase<f64, S> for f64x2<S> {
         simd.load_array_f64x2(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdFloat<f64, S> for f64x2<S> {
+impl<S: Simd> crate::SimdFloat<S> for f64x2<S> {
     #[inline(always)]
     fn abs(self) -> Self {
         self.simd.abs_f64x2(self)
@@ -1838,7 +1849,7 @@ impl<S: Simd> crate::SimdFloat<f64, S> for f64x2<S> {
         self.simd.trunc_f64x2(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<f64, S> for f64x2<S> {
+impl<S: Simd> crate::SimdCombine<S> for f64x2<S> {
     type Combined = f64x4<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -1923,7 +1934,8 @@ impl<S: Simd> Bytes for mask64x2<S> {
         value.simd.cvt_from_bytes_mask64x2(value)
     }
 }
-impl<S: Simd> SimdBase<i64, S> for mask64x2<S> {
+impl<S: Simd> SimdBase<S> for mask64x2<S> {
+    type Element = i64;
     const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = mask64x2<S>;
@@ -1957,7 +1969,7 @@ impl<S: Simd> SimdBase<i64, S> for mask64x2<S> {
         simd.load_array_mask64x2(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i64, S> for mask64x2<S> {
+impl<S: Simd> crate::SimdMask<S> for mask64x2<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask64x2(self, rhs.simd_into(self.simd))
@@ -1979,7 +1991,7 @@ impl<S: Simd> crate::SimdMask<i64, S> for mask64x2<S> {
         self.simd.all_false_mask64x2(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i64, S> for mask64x2<S> {
+impl<S: Simd> crate::SimdCombine<S> for mask64x2<S> {
     type Combined = mask64x4<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -2059,7 +2071,8 @@ impl<S: Simd> Bytes for f32x8<S> {
         value.simd.cvt_from_bytes_f32x8(value)
     }
 }
-impl<S: Simd> SimdBase<f32, S> for f32x8<S> {
+impl<S: Simd> SimdBase<S> for f32x8<S> {
+    type Element = f32;
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = f32x4<S>;
@@ -2093,7 +2106,7 @@ impl<S: Simd> SimdBase<f32, S> for f32x8<S> {
         simd.load_array_f32x8(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdFloat<f32, S> for f32x8<S> {
+impl<S: Simd> crate::SimdFloat<S> for f32x8<S> {
     #[inline(always)]
     fn abs(self) -> Self {
         self.simd.abs_f32x8(self)
@@ -2203,14 +2216,14 @@ impl<S: Simd> SimdCvtFloat<i32x8<S>> for f32x8<S> {
         x.simd.cvt_f32_i32x8(x)
     }
 }
-impl<S: Simd> crate::SimdSplit<f32, S> for f32x8<S> {
+impl<S: Simd> crate::SimdSplit<S> for f32x8<S> {
     type Split = f32x4<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_f32x8(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<f32, S> for f32x8<S> {
+impl<S: Simd> crate::SimdCombine<S> for f32x8<S> {
     type Combined = f32x16<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -2290,7 +2303,8 @@ impl<S: Simd> Bytes for i8x32<S> {
         value.simd.cvt_from_bytes_i8x32(value)
     }
 }
-impl<S: Simd> SimdBase<i8, S> for i8x32<S> {
+impl<S: Simd> SimdBase<S> for i8x32<S> {
+    type Element = i8;
     const N: usize = 32;
     type Mask = mask8x32<S>;
     type Block = i8x16<S>;
@@ -2324,7 +2338,7 @@ impl<S: Simd> SimdBase<i8, S> for i8x32<S> {
         simd.load_array_i8x32(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<i8, S> for i8x32<S> {
+impl<S: Simd> crate::SimdInt<S> for i8x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x32(self, rhs.simd_into(self.simd))
@@ -2370,14 +2384,14 @@ impl<S: Simd> crate::SimdInt<i8, S> for i8x32<S> {
         self.simd.max_i8x32(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdSplit<i8, S> for i8x32<S> {
+impl<S: Simd> crate::SimdSplit<S> for i8x32<S> {
     type Split = i8x16<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_i8x32(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i8, S> for i8x32<S> {
+impl<S: Simd> crate::SimdCombine<S> for i8x32<S> {
     type Combined = i8x64<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -2457,7 +2471,8 @@ impl<S: Simd> Bytes for u8x32<S> {
         value.simd.cvt_from_bytes_u8x32(value)
     }
 }
-impl<S: Simd> SimdBase<u8, S> for u8x32<S> {
+impl<S: Simd> SimdBase<S> for u8x32<S> {
+    type Element = u8;
     const N: usize = 32;
     type Mask = mask8x32<S>;
     type Block = u8x16<S>;
@@ -2491,7 +2506,7 @@ impl<S: Simd> SimdBase<u8, S> for u8x32<S> {
         simd.load_array_u8x32(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<u8, S> for u8x32<S> {
+impl<S: Simd> crate::SimdInt<S> for u8x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u8x32(self, rhs.simd_into(self.simd))
@@ -2537,14 +2552,14 @@ impl<S: Simd> crate::SimdInt<u8, S> for u8x32<S> {
         self.simd.max_u8x32(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdSplit<u8, S> for u8x32<S> {
+impl<S: Simd> crate::SimdSplit<S> for u8x32<S> {
     type Split = u8x16<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_u8x32(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<u8, S> for u8x32<S> {
+impl<S: Simd> crate::SimdCombine<S> for u8x32<S> {
     type Combined = u8x64<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -2629,7 +2644,8 @@ impl<S: Simd> Bytes for mask8x32<S> {
         value.simd.cvt_from_bytes_mask8x32(value)
     }
 }
-impl<S: Simd> SimdBase<i8, S> for mask8x32<S> {
+impl<S: Simd> SimdBase<S> for mask8x32<S> {
+    type Element = i8;
     const N: usize = 32;
     type Mask = mask8x32<S>;
     type Block = mask8x16<S>;
@@ -2663,7 +2679,7 @@ impl<S: Simd> SimdBase<i8, S> for mask8x32<S> {
         simd.load_array_mask8x32(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i8, S> for mask8x32<S> {
+impl<S: Simd> crate::SimdMask<S> for mask8x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask8x32(self, rhs.simd_into(self.simd))
@@ -2685,14 +2701,14 @@ impl<S: Simd> crate::SimdMask<i8, S> for mask8x32<S> {
         self.simd.all_false_mask8x32(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<i8, S> for mask8x32<S> {
+impl<S: Simd> crate::SimdSplit<S> for mask8x32<S> {
     type Split = mask8x16<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_mask8x32(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i8, S> for mask8x32<S> {
+impl<S: Simd> crate::SimdCombine<S> for mask8x32<S> {
     type Combined = mask8x64<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -2777,7 +2793,8 @@ impl<S: Simd> Bytes for i16x16<S> {
         value.simd.cvt_from_bytes_i16x16(value)
     }
 }
-impl<S: Simd> SimdBase<i16, S> for i16x16<S> {
+impl<S: Simd> SimdBase<S> for i16x16<S> {
+    type Element = i16;
     const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = i16x8<S>;
@@ -2811,7 +2828,7 @@ impl<S: Simd> SimdBase<i16, S> for i16x16<S> {
         simd.load_array_i16x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<i16, S> for i16x16<S> {
+impl<S: Simd> crate::SimdInt<S> for i16x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x16(self, rhs.simd_into(self.simd))
@@ -2857,14 +2874,14 @@ impl<S: Simd> crate::SimdInt<i16, S> for i16x16<S> {
         self.simd.max_i16x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdSplit<i16, S> for i16x16<S> {
+impl<S: Simd> crate::SimdSplit<S> for i16x16<S> {
     type Split = i16x8<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_i16x16(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i16, S> for i16x16<S> {
+impl<S: Simd> crate::SimdCombine<S> for i16x16<S> {
     type Combined = i16x32<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -2949,7 +2966,8 @@ impl<S: Simd> Bytes for u16x16<S> {
         value.simd.cvt_from_bytes_u16x16(value)
     }
 }
-impl<S: Simd> SimdBase<u16, S> for u16x16<S> {
+impl<S: Simd> SimdBase<S> for u16x16<S> {
+    type Element = u16;
     const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = u16x8<S>;
@@ -2983,7 +3001,7 @@ impl<S: Simd> SimdBase<u16, S> for u16x16<S> {
         simd.load_array_u16x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<u16, S> for u16x16<S> {
+impl<S: Simd> crate::SimdInt<S> for u16x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u16x16(self, rhs.simd_into(self.simd))
@@ -3029,14 +3047,14 @@ impl<S: Simd> crate::SimdInt<u16, S> for u16x16<S> {
         self.simd.max_u16x16(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdSplit<u16, S> for u16x16<S> {
+impl<S: Simd> crate::SimdSplit<S> for u16x16<S> {
     type Split = u16x8<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_u16x16(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<u16, S> for u16x16<S> {
+impl<S: Simd> crate::SimdCombine<S> for u16x16<S> {
     type Combined = u16x32<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -3121,7 +3139,8 @@ impl<S: Simd> Bytes for mask16x16<S> {
         value.simd.cvt_from_bytes_mask16x16(value)
     }
 }
-impl<S: Simd> SimdBase<i16, S> for mask16x16<S> {
+impl<S: Simd> SimdBase<S> for mask16x16<S> {
+    type Element = i16;
     const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = mask16x8<S>;
@@ -3155,7 +3174,7 @@ impl<S: Simd> SimdBase<i16, S> for mask16x16<S> {
         simd.load_array_mask16x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i16, S> for mask16x16<S> {
+impl<S: Simd> crate::SimdMask<S> for mask16x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask16x16(self, rhs.simd_into(self.simd))
@@ -3177,14 +3196,14 @@ impl<S: Simd> crate::SimdMask<i16, S> for mask16x16<S> {
         self.simd.all_false_mask16x16(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<i16, S> for mask16x16<S> {
+impl<S: Simd> crate::SimdSplit<S> for mask16x16<S> {
     type Split = mask16x8<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_mask16x16(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i16, S> for mask16x16<S> {
+impl<S: Simd> crate::SimdCombine<S> for mask16x16<S> {
     type Combined = mask16x32<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -3264,7 +3283,8 @@ impl<S: Simd> Bytes for i32x8<S> {
         value.simd.cvt_from_bytes_i32x8(value)
     }
 }
-impl<S: Simd> SimdBase<i32, S> for i32x8<S> {
+impl<S: Simd> SimdBase<S> for i32x8<S> {
+    type Element = i32;
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = i32x4<S>;
@@ -3298,7 +3318,7 @@ impl<S: Simd> SimdBase<i32, S> for i32x8<S> {
         simd.load_array_i32x8(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<i32, S> for i32x8<S> {
+impl<S: Simd> crate::SimdInt<S> for i32x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x8(self, rhs.simd_into(self.simd))
@@ -3356,14 +3376,14 @@ impl<S: Simd> SimdCvtTruncate<f32x8<S>> for i32x8<S> {
         x.simd.cvt_i32_precise_f32x8(x)
     }
 }
-impl<S: Simd> crate::SimdSplit<i32, S> for i32x8<S> {
+impl<S: Simd> crate::SimdSplit<S> for i32x8<S> {
     type Split = i32x4<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_i32x8(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i32, S> for i32x8<S> {
+impl<S: Simd> crate::SimdCombine<S> for i32x8<S> {
     type Combined = i32x16<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -3443,7 +3463,8 @@ impl<S: Simd> Bytes for u32x8<S> {
         value.simd.cvt_from_bytes_u32x8(value)
     }
 }
-impl<S: Simd> SimdBase<u32, S> for u32x8<S> {
+impl<S: Simd> SimdBase<S> for u32x8<S> {
+    type Element = u32;
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = u32x4<S>;
@@ -3477,7 +3498,7 @@ impl<S: Simd> SimdBase<u32, S> for u32x8<S> {
         simd.load_array_u32x8(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<u32, S> for u32x8<S> {
+impl<S: Simd> crate::SimdInt<S> for u32x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u32x8(self, rhs.simd_into(self.simd))
@@ -3535,14 +3556,14 @@ impl<S: Simd> SimdCvtTruncate<f32x8<S>> for u32x8<S> {
         x.simd.cvt_u32_precise_f32x8(x)
     }
 }
-impl<S: Simd> crate::SimdSplit<u32, S> for u32x8<S> {
+impl<S: Simd> crate::SimdSplit<S> for u32x8<S> {
     type Split = u32x4<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_u32x8(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<u32, S> for u32x8<S> {
+impl<S: Simd> crate::SimdCombine<S> for u32x8<S> {
     type Combined = u32x16<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -3627,7 +3648,8 @@ impl<S: Simd> Bytes for mask32x8<S> {
         value.simd.cvt_from_bytes_mask32x8(value)
     }
 }
-impl<S: Simd> SimdBase<i32, S> for mask32x8<S> {
+impl<S: Simd> SimdBase<S> for mask32x8<S> {
+    type Element = i32;
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = mask32x4<S>;
@@ -3661,7 +3683,7 @@ impl<S: Simd> SimdBase<i32, S> for mask32x8<S> {
         simd.load_array_mask32x8(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i32, S> for mask32x8<S> {
+impl<S: Simd> crate::SimdMask<S> for mask32x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask32x8(self, rhs.simd_into(self.simd))
@@ -3683,14 +3705,14 @@ impl<S: Simd> crate::SimdMask<i32, S> for mask32x8<S> {
         self.simd.all_false_mask32x8(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<i32, S> for mask32x8<S> {
+impl<S: Simd> crate::SimdSplit<S> for mask32x8<S> {
     type Split = mask32x4<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_mask32x8(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i32, S> for mask32x8<S> {
+impl<S: Simd> crate::SimdCombine<S> for mask32x8<S> {
     type Combined = mask32x16<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -3770,7 +3792,8 @@ impl<S: Simd> Bytes for f64x4<S> {
         value.simd.cvt_from_bytes_f64x4(value)
     }
 }
-impl<S: Simd> SimdBase<f64, S> for f64x4<S> {
+impl<S: Simd> SimdBase<S> for f64x4<S> {
+    type Element = f64;
     const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = f64x2<S>;
@@ -3804,7 +3827,7 @@ impl<S: Simd> SimdBase<f64, S> for f64x4<S> {
         simd.load_array_f64x4(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdFloat<f64, S> for f64x4<S> {
+impl<S: Simd> crate::SimdFloat<S> for f64x4<S> {
     #[inline(always)]
     fn abs(self) -> Self {
         self.simd.abs_f64x4(self)
@@ -3900,14 +3923,14 @@ impl<S: Simd> crate::SimdFloat<f64, S> for f64x4<S> {
         self.simd.trunc_f64x4(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<f64, S> for f64x4<S> {
+impl<S: Simd> crate::SimdSplit<S> for f64x4<S> {
     type Split = f64x2<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_f64x4(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<f64, S> for f64x4<S> {
+impl<S: Simd> crate::SimdCombine<S> for f64x4<S> {
     type Combined = f64x8<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -3992,7 +4015,8 @@ impl<S: Simd> Bytes for mask64x4<S> {
         value.simd.cvt_from_bytes_mask64x4(value)
     }
 }
-impl<S: Simd> SimdBase<i64, S> for mask64x4<S> {
+impl<S: Simd> SimdBase<S> for mask64x4<S> {
+    type Element = i64;
     const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = mask64x2<S>;
@@ -4026,7 +4050,7 @@ impl<S: Simd> SimdBase<i64, S> for mask64x4<S> {
         simd.load_array_mask64x4(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i64, S> for mask64x4<S> {
+impl<S: Simd> crate::SimdMask<S> for mask64x4<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask64x4(self, rhs.simd_into(self.simd))
@@ -4048,14 +4072,14 @@ impl<S: Simd> crate::SimdMask<i64, S> for mask64x4<S> {
         self.simd.all_false_mask64x4(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<i64, S> for mask64x4<S> {
+impl<S: Simd> crate::SimdSplit<S> for mask64x4<S> {
     type Split = mask64x2<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
         self.simd.split_mask64x4(self)
     }
 }
-impl<S: Simd> crate::SimdCombine<i64, S> for mask64x4<S> {
+impl<S: Simd> crate::SimdCombine<S> for mask64x4<S> {
     type Combined = mask64x8<S>;
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
@@ -4140,7 +4164,8 @@ impl<S: Simd> Bytes for f32x16<S> {
         value.simd.cvt_from_bytes_f32x16(value)
     }
 }
-impl<S: Simd> SimdBase<f32, S> for f32x16<S> {
+impl<S: Simd> SimdBase<S> for f32x16<S> {
+    type Element = f32;
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = f32x4<S>;
@@ -4175,7 +4200,7 @@ impl<S: Simd> SimdBase<f32, S> for f32x16<S> {
         simd.load_array_f32x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdFloat<f32, S> for f32x16<S> {
+impl<S: Simd> crate::SimdFloat<S> for f32x16<S> {
     #[inline(always)]
     fn abs(self) -> Self {
         self.simd.abs_f32x16(self)
@@ -4285,7 +4310,7 @@ impl<S: Simd> SimdCvtFloat<i32x16<S>> for f32x16<S> {
         x.simd.cvt_f32_i32x16(x)
     }
 }
-impl<S: Simd> crate::SimdSplit<f32, S> for f32x16<S> {
+impl<S: Simd> crate::SimdSplit<S> for f32x16<S> {
     type Split = f32x8<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -4365,7 +4390,8 @@ impl<S: Simd> Bytes for i8x64<S> {
         value.simd.cvt_from_bytes_i8x64(value)
     }
 }
-impl<S: Simd> SimdBase<i8, S> for i8x64<S> {
+impl<S: Simd> SimdBase<S> for i8x64<S> {
+    type Element = i8;
     const N: usize = 64;
     type Mask = mask8x64<S>;
     type Block = i8x16<S>;
@@ -4400,7 +4426,7 @@ impl<S: Simd> SimdBase<i8, S> for i8x64<S> {
         simd.load_array_i8x64(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<i8, S> for i8x64<S> {
+impl<S: Simd> crate::SimdInt<S> for i8x64<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i8x64(self, rhs.simd_into(self.simd))
@@ -4446,7 +4472,7 @@ impl<S: Simd> crate::SimdInt<i8, S> for i8x64<S> {
         self.simd.max_i8x64(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdSplit<i8, S> for i8x64<S> {
+impl<S: Simd> crate::SimdSplit<S> for i8x64<S> {
     type Split = i8x32<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -4526,7 +4552,8 @@ impl<S: Simd> Bytes for u8x64<S> {
         value.simd.cvt_from_bytes_u8x64(value)
     }
 }
-impl<S: Simd> SimdBase<u8, S> for u8x64<S> {
+impl<S: Simd> SimdBase<S> for u8x64<S> {
+    type Element = u8;
     const N: usize = 64;
     type Mask = mask8x64<S>;
     type Block = u8x16<S>;
@@ -4561,7 +4588,7 @@ impl<S: Simd> SimdBase<u8, S> for u8x64<S> {
         simd.load_array_u8x64(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<u8, S> for u8x64<S> {
+impl<S: Simd> crate::SimdInt<S> for u8x64<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u8x64(self, rhs.simd_into(self.simd))
@@ -4607,7 +4634,7 @@ impl<S: Simd> crate::SimdInt<u8, S> for u8x64<S> {
         self.simd.max_u8x64(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdSplit<u8, S> for u8x64<S> {
+impl<S: Simd> crate::SimdSplit<S> for u8x64<S> {
     type Split = u8x32<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -4692,7 +4719,8 @@ impl<S: Simd> Bytes for mask8x64<S> {
         value.simd.cvt_from_bytes_mask8x64(value)
     }
 }
-impl<S: Simd> SimdBase<i8, S> for mask8x64<S> {
+impl<S: Simd> SimdBase<S> for mask8x64<S> {
+    type Element = i8;
     const N: usize = 64;
     type Mask = mask8x64<S>;
     type Block = mask8x16<S>;
@@ -4727,7 +4755,7 @@ impl<S: Simd> SimdBase<i8, S> for mask8x64<S> {
         simd.load_array_mask8x64(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i8, S> for mask8x64<S> {
+impl<S: Simd> crate::SimdMask<S> for mask8x64<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask8x64(self, rhs.simd_into(self.simd))
@@ -4749,7 +4777,7 @@ impl<S: Simd> crate::SimdMask<i8, S> for mask8x64<S> {
         self.simd.all_false_mask8x64(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<i8, S> for mask8x64<S> {
+impl<S: Simd> crate::SimdSplit<S> for mask8x64<S> {
     type Split = mask8x32<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -4834,7 +4862,8 @@ impl<S: Simd> Bytes for i16x32<S> {
         value.simd.cvt_from_bytes_i16x32(value)
     }
 }
-impl<S: Simd> SimdBase<i16, S> for i16x32<S> {
+impl<S: Simd> SimdBase<S> for i16x32<S> {
+    type Element = i16;
     const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = i16x8<S>;
@@ -4869,7 +4898,7 @@ impl<S: Simd> SimdBase<i16, S> for i16x32<S> {
         simd.load_array_i16x32(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<i16, S> for i16x32<S> {
+impl<S: Simd> crate::SimdInt<S> for i16x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i16x32(self, rhs.simd_into(self.simd))
@@ -4915,7 +4944,7 @@ impl<S: Simd> crate::SimdInt<i16, S> for i16x32<S> {
         self.simd.max_i16x32(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdSplit<i16, S> for i16x32<S> {
+impl<S: Simd> crate::SimdSplit<S> for i16x32<S> {
     type Split = i16x16<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -5000,7 +5029,8 @@ impl<S: Simd> Bytes for u16x32<S> {
         value.simd.cvt_from_bytes_u16x32(value)
     }
 }
-impl<S: Simd> SimdBase<u16, S> for u16x32<S> {
+impl<S: Simd> SimdBase<S> for u16x32<S> {
+    type Element = u16;
     const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = u16x8<S>;
@@ -5035,7 +5065,7 @@ impl<S: Simd> SimdBase<u16, S> for u16x32<S> {
         simd.load_array_u16x32(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<u16, S> for u16x32<S> {
+impl<S: Simd> crate::SimdInt<S> for u16x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u16x32(self, rhs.simd_into(self.simd))
@@ -5081,7 +5111,7 @@ impl<S: Simd> crate::SimdInt<u16, S> for u16x32<S> {
         self.simd.max_u16x32(self, rhs.simd_into(self.simd))
     }
 }
-impl<S: Simd> crate::SimdSplit<u16, S> for u16x32<S> {
+impl<S: Simd> crate::SimdSplit<S> for u16x32<S> {
     type Split = u16x16<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -5166,7 +5196,8 @@ impl<S: Simd> Bytes for mask16x32<S> {
         value.simd.cvt_from_bytes_mask16x32(value)
     }
 }
-impl<S: Simd> SimdBase<i16, S> for mask16x32<S> {
+impl<S: Simd> SimdBase<S> for mask16x32<S> {
+    type Element = i16;
     const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = mask16x8<S>;
@@ -5201,7 +5232,7 @@ impl<S: Simd> SimdBase<i16, S> for mask16x32<S> {
         simd.load_array_mask16x32(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i16, S> for mask16x32<S> {
+impl<S: Simd> crate::SimdMask<S> for mask16x32<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask16x32(self, rhs.simd_into(self.simd))
@@ -5223,7 +5254,7 @@ impl<S: Simd> crate::SimdMask<i16, S> for mask16x32<S> {
         self.simd.all_false_mask16x32(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<i16, S> for mask16x32<S> {
+impl<S: Simd> crate::SimdSplit<S> for mask16x32<S> {
     type Split = mask16x16<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -5308,7 +5339,8 @@ impl<S: Simd> Bytes for i32x16<S> {
         value.simd.cvt_from_bytes_i32x16(value)
     }
 }
-impl<S: Simd> SimdBase<i32, S> for i32x16<S> {
+impl<S: Simd> SimdBase<S> for i32x16<S> {
+    type Element = i32;
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = i32x4<S>;
@@ -5343,7 +5375,7 @@ impl<S: Simd> SimdBase<i32, S> for i32x16<S> {
         simd.load_array_i32x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<i32, S> for i32x16<S> {
+impl<S: Simd> crate::SimdInt<S> for i32x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_i32x16(self, rhs.simd_into(self.simd))
@@ -5401,7 +5433,7 @@ impl<S: Simd> SimdCvtTruncate<f32x16<S>> for i32x16<S> {
         x.simd.cvt_i32_precise_f32x16(x)
     }
 }
-impl<S: Simd> crate::SimdSplit<i32, S> for i32x16<S> {
+impl<S: Simd> crate::SimdSplit<S> for i32x16<S> {
     type Split = i32x8<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -5486,7 +5518,8 @@ impl<S: Simd> Bytes for u32x16<S> {
         value.simd.cvt_from_bytes_u32x16(value)
     }
 }
-impl<S: Simd> SimdBase<u32, S> for u32x16<S> {
+impl<S: Simd> SimdBase<S> for u32x16<S> {
+    type Element = u32;
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = u32x4<S>;
@@ -5521,7 +5554,7 @@ impl<S: Simd> SimdBase<u32, S> for u32x16<S> {
         simd.load_array_u32x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdInt<u32, S> for u32x16<S> {
+impl<S: Simd> crate::SimdInt<S> for u32x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_u32x16(self, rhs.simd_into(self.simd))
@@ -5579,7 +5612,7 @@ impl<S: Simd> SimdCvtTruncate<f32x16<S>> for u32x16<S> {
         x.simd.cvt_u32_precise_f32x16(x)
     }
 }
-impl<S: Simd> crate::SimdSplit<u32, S> for u32x16<S> {
+impl<S: Simd> crate::SimdSplit<S> for u32x16<S> {
     type Split = u32x8<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -5664,7 +5697,8 @@ impl<S: Simd> Bytes for mask32x16<S> {
         value.simd.cvt_from_bytes_mask32x16(value)
     }
 }
-impl<S: Simd> SimdBase<i32, S> for mask32x16<S> {
+impl<S: Simd> SimdBase<S> for mask32x16<S> {
+    type Element = i32;
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = mask32x4<S>;
@@ -5699,7 +5733,7 @@ impl<S: Simd> SimdBase<i32, S> for mask32x16<S> {
         simd.load_array_mask32x16(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i32, S> for mask32x16<S> {
+impl<S: Simd> crate::SimdMask<S> for mask32x16<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask32x16(self, rhs.simd_into(self.simd))
@@ -5721,7 +5755,7 @@ impl<S: Simd> crate::SimdMask<i32, S> for mask32x16<S> {
         self.simd.all_false_mask32x16(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<i32, S> for mask32x16<S> {
+impl<S: Simd> crate::SimdSplit<S> for mask32x16<S> {
     type Split = mask32x8<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -5801,7 +5835,8 @@ impl<S: Simd> Bytes for f64x8<S> {
         value.simd.cvt_from_bytes_f64x8(value)
     }
 }
-impl<S: Simd> SimdBase<f64, S> for f64x8<S> {
+impl<S: Simd> SimdBase<S> for f64x8<S> {
+    type Element = f64;
     const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = f64x2<S>;
@@ -5836,7 +5871,7 @@ impl<S: Simd> SimdBase<f64, S> for f64x8<S> {
         simd.load_array_f64x8(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdFloat<f64, S> for f64x8<S> {
+impl<S: Simd> crate::SimdFloat<S> for f64x8<S> {
     #[inline(always)]
     fn abs(self) -> Self {
         self.simd.abs_f64x8(self)
@@ -5932,7 +5967,7 @@ impl<S: Simd> crate::SimdFloat<f64, S> for f64x8<S> {
         self.simd.trunc_f64x8(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<f64, S> for f64x8<S> {
+impl<S: Simd> crate::SimdSplit<S> for f64x8<S> {
     type Split = f64x4<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {
@@ -6017,7 +6052,8 @@ impl<S: Simd> Bytes for mask64x8<S> {
         value.simd.cvt_from_bytes_mask64x8(value)
     }
 }
-impl<S: Simd> SimdBase<i64, S> for mask64x8<S> {
+impl<S: Simd> SimdBase<S> for mask64x8<S> {
+    type Element = i64;
     const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = mask64x2<S>;
@@ -6052,7 +6088,7 @@ impl<S: Simd> SimdBase<i64, S> for mask64x8<S> {
         simd.load_array_mask64x8(core::array::from_fn(f))
     }
 }
-impl<S: Simd> crate::SimdMask<i64, S> for mask64x8<S> {
+impl<S: Simd> crate::SimdMask<S> for mask64x8<S> {
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
         self.simd.simd_eq_mask64x8(self, rhs.simd_into(self.simd))
@@ -6074,7 +6110,7 @@ impl<S: Simd> crate::SimdMask<i64, S> for mask64x8<S> {
         self.simd.all_false_mask64x8(self)
     }
 }
-impl<S: Simd> crate::SimdSplit<i64, S> for mask64x8<S> {
+impl<S: Simd> crate::SimdSplit<S> for mask64x8<S> {
     type Split = mask64x4<S>;
     #[inline(always)]
     fn split(self) -> (Self::Split, Self::Split) {

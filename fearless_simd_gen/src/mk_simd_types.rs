@@ -145,7 +145,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             let half_ty_rust = half_ty.rust();
             let split_method = generic_op_name("split", ty);
             conditional_impls.push(quote! {
-                impl<S: Simd> crate::SimdSplit<#rust_scalar, S> for #name<S> {
+                impl<S: Simd> crate::SimdSplit<S> for #name<S> {
                     type Split = #half_ty_rust<S>;
 
                     #[inline(always)]
@@ -159,7 +159,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             let combined_ty_rust = combined_ty.rust();
             let combine_method = generic_op_name("combine", ty);
             conditional_impls.push(quote! {
-                impl<S: Simd> crate::SimdCombine<#rust_scalar, S> for #name<S> {
+                impl<S: Simd> crate::SimdCombine<S> for #name<S> {
                     type Combined = #combined_ty_rust<S>;
 
                     #[inline(always)]
@@ -299,7 +299,8 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let as_array_ref_op = generic_op_name("as_array_ref", ty);
     let as_array_mut_op = generic_op_name("as_array_mut", ty);
     quote! {
-        impl<S: Simd> SimdBase<#scalar, S> for #name<S> {
+        impl<S: Simd> SimdBase<S> for #name<S> {
+            type Element = #scalar;
             const N: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
@@ -341,7 +342,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             }
 
         }
-        impl<S: Simd> crate::#vec_trait_id<#scalar, S> for #name<S> {
+        impl<S: Simd> crate::#vec_trait_id<S> for #name<S> {
             #( #methods )*
         }
     }
