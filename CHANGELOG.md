@@ -64,6 +64,7 @@ This release has an [MSRV][] of 1.88.
 - Breaking change: The `madd` and `msub` methods have been renamed to `mul_add` and `mul_sub`, matching Rust's naming conventions.
   ([#158][] by [@Shnatsel][])
 - Breaking change: the `val` field on SIMD vector types is now private, and vector types are no longer represented as arrays internally. To access a vector type's elements, you can use the `Into` or `Deref` traits to obtain an array, or the `as_slice`/`as_mut_slice` methods to obtain a slice. ([#159][] by [@valadaptive][])
+- Breaking change: the `Element` type on the `SimdBase` trait is now an associated type instead of a type parameter. This should make it more pleasant to write code that's generic over different vector types. ([#170][] by [@valadaptive][])
 
 ### Removed
 
@@ -160,6 +161,7 @@ No changelog was kept for this release.
 [#159]: https://github.com/linebender/fearless_simd/pull/159
 [#167]: https://github.com/linebender/fearless_simd/pull/167
 [#168]: https://github.com/linebender/fearless_simd/pull/168
+[#170]: https://github.com/linebender/fearless_simd/pull/170
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
