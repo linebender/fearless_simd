@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    self, coarse_type, extend_intrinsic, intrinsic_ident, op_suffix, pack_intrinsic,
+    self, arch_ty, coarse_type, extend_intrinsic, intrinsic_ident, op_suffix, pack_intrinsic,
     set1_intrinsic, simple_intrinsic,
 };
-use crate::generic::{generic_combine, generic_op, generic_split};
+use crate::generic::{
+    generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
+    generic_from_bytes, generic_op, generic_to_bytes, impl_arch_types,
+};
 use crate::mk_sse4_2;
 use crate::ops::{Op, OpSig, ops_for_type};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
@@ -28,6 +31,7 @@ impl Level {
 
 pub(crate) fn mk_avx2_impl() -> TokenStream {
     let imports = type_imports();
+    let arch_types_impl = impl_arch_types(Level.name(), 256, arch_ty);
     let simd_impl = mk_simd_impl();
     let ty_impl = mk_type_impl();
 
@@ -38,7 +42,7 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
         use core::arch::x86_64::*;
 
         use core::ops::*;
-        use crate::{seal::Seal, Level, Simd, SimdFrom, SimdInto};
+        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
 
         #imports
 
@@ -64,6 +68,8 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
 
         impl Seal for Avx2 {}
 
+        #arch_types_impl
+
         #simd_impl
 
         #ty_impl
@@ -75,13 +81,7 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for Op { method, sig, .. } in ops_for_type(vec_ty) {
-            let too_wide = (vec_ty.n_bits() > 256 && !matches!(method, "split" | "narrow"))
-                || vec_ty.n_bits() > 512;
-
-            let acceptable_wide_op = matches!(method, "load_interleaved_128")
-                || matches!(method, "store_interleaved_128");
-
-            if too_wide && !acceptable_wide_op {
+            if sig.should_use_generic_op(vec_ty, 256) {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
@@ -142,7 +142,7 @@ fn mk_type_impl() -> TokenStream {
                 #[inline(always)]
                 fn simd_from(arch: #arch, simd: S) -> Self {
                     Self {
-                        val: unsafe { core::mem::transmute(arch) },
+                        val: unsafe { core::mem::transmute_copy(&arch) },
                         simd
                     }
                 }
@@ -150,7 +150,7 @@ fn mk_type_impl() -> TokenStream {
             impl<S: Simd> From<#simd<S>> for #arch {
                 #[inline(always)]
                 fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute(value.val) }
+                    unsafe { core::mem::transmute_copy(&value.val) }
                 }
             }
         });
@@ -229,6 +229,14 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
             block_size,
             block_count,
         } => mk_sse4_2::handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
+        OpSig::FromArray { kind } => {
+            generic_from_array(method_sig, vec_ty, kind, 256, |block_ty| {
+                intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
+            })
+        }
+        OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 256, arch_ty),
+        OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+        OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
     }
 }
 
@@ -237,7 +245,7 @@ pub(crate) fn handle_split(
     vec_ty: &VecType,
     half_ty: &VecType,
 ) -> TokenStream {
-    if vec_ty.n_bits() == 256 {
+    if half_ty.n_bits() == 128 {
         let extract_op = match vec_ty.scalar {
             ScalarType::Float => "extractf128",
             _ => "extracti128",
@@ -254,7 +262,7 @@ pub(crate) fn handle_split(
             }
         }
     } else {
-        generic_split(vec_ty, half_ty)
+        generic_block_split(method_sig, half_ty, 256)
     }
 }
 
@@ -263,7 +271,7 @@ pub(crate) fn handle_combine(
     vec_ty: &VecType,
     combined_ty: &VecType,
 ) -> TokenStream {
-    if vec_ty.n_bits() == 128 {
+    if combined_ty.n_bits() == 256 {
         let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
             (ScalarType::Float, 32) => "m128",
             (ScalarType::Float, 64) => "m128d",
@@ -278,7 +286,7 @@ pub(crate) fn handle_combine(
             }
         }
     } else {
-        generic_combine(vec_ty, combined_ty)
+        generic_block_combine(method_sig, combined_ty, 256)
     }
 }
 

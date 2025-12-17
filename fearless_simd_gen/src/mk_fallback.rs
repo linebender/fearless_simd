@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::fallback;
-use crate::generic::{generic_combine, generic_op, generic_op_name, generic_split};
-use crate::ops::{Op, OpSig, ops_for_type, valid_reinterpret};
+use crate::generic::{generic_from_bytes, generic_op, generic_op_name, generic_to_bytes};
+use crate::ops::{Op, OpSig, RefKind, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -24,11 +24,12 @@ impl Level {
 
 pub(crate) fn mk_fallback_impl() -> TokenStream {
     let imports = type_imports();
+    let arch_types_impl = mk_arch_types();
     let simd_impl = mk_simd_impl();
 
     quote! {
         use core::ops::*;
-        use crate::{Bytes, seal::Seal, Level, Simd, SimdInto};
+        use crate::{seal::Seal, arch_types::ArchTypes, Bytes, Level, Simd, SimdInto};
 
         #imports
 
@@ -114,7 +115,30 @@ pub(crate) fn mk_fallback_impl() -> TokenStream {
 
         impl Seal for Fallback {}
 
+        #arch_types_impl
+
         #simd_impl
+    }
+}
+
+fn mk_arch_types() -> TokenStream {
+    // We can't use the generic version, because the fallback implementation is the only one that doesn't provide native
+    // vector types and instead uses plain arrays
+    let mut arch_types = vec![];
+    for vec_ty in SIMD_TYPES {
+        let ty_ident = vec_ty.rust();
+        let scalar_rust = vec_ty.scalar.rust(vec_ty.scalar_bits);
+        let len = vec_ty.len;
+        let wrapper_name = vec_ty.aligned_wrapper();
+        arch_types.push(quote! {
+            type #ty_ident = #wrapper_name<[#scalar_rust; #len]>;
+        });
+    }
+
+    quote! {
+        impl ArchTypes for Fallback {
+            #( #arch_types )*
+        }
     }
 }
 
@@ -125,12 +149,7 @@ fn mk_simd_impl() -> TokenStream {
         let scalar_bits = vec_ty.scalar_bits;
         let ty_name = vec_ty.rust_name();
         for Op { method, sig, .. } in ops_for_type(vec_ty) {
-            let b1 = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
-                || vec_ty.n_bits() > 256;
-            let b2 = !matches!(method, "load_interleaved_128")
-                && !matches!(method, "store_interleaved_128");
-
-            if b1 && b2 {
+            if sig.should_use_generic_op(vec_ty, 128) {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
@@ -295,8 +314,51 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
-                OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
-                OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
+                OpSig::Combine { combined_ty } => {
+                    let n = vec_ty.len;
+                    let n2 = combined_ty.len;
+                    let ty_rust = vec_ty.rust();
+                    let result = combined_ty.rust();
+                    let name = Ident::new(
+                        &format!("combine_{}", vec_ty.rust_name()),
+                        Span::call_site(),
+                    );
+                    let default = match vec_ty.scalar {
+                        ScalarType::Float => quote! { 0.0 },
+                        _ => quote! { 0 },
+                    };
+                    quote! {
+                        #[inline(always)]
+                        fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #result<Self> {
+                            let mut result = [#default; #n2];
+                            result[0..#n].copy_from_slice(&a.val.0);
+                            result[#n..#n2].copy_from_slice(&b.val.0);
+                            result.simd_into(self)
+                        }
+                    }
+                }
+                OpSig::Split { half_ty } => {
+                    let n = vec_ty.len;
+                    let nhalf = half_ty.len;
+                    let ty_rust = vec_ty.rust();
+                    let result = half_ty.rust();
+                    let name =
+                        Ident::new(&format!("split_{}", vec_ty.rust_name()), Span::call_site());
+                    let default = match vec_ty.scalar {
+                        ScalarType::Float => quote! { 0.0 },
+                        _ => quote! { 0 },
+                    };
+                    quote! {
+                        #[inline(always)]
+                        fn #name(self, a: #ty_rust<Self>) -> (#result<Self>, #result<Self>) {
+                            let mut b0 = [#default; #nhalf];
+                            let mut b1 = [#default; #nhalf];
+                            b0.copy_from_slice(&a.val.0[0..#nhalf]);
+                            b1.copy_from_slice(&a.val.0[#nhalf..#n]);
+                            (b0.simd_into(self), b1.simd_into(self))
+                        }
+                    }
+                }
                 OpSig::Zip { select_low } => {
                     let indices = if select_low {
                         0..vec_ty.len / 2
@@ -444,6 +506,29 @@ fn mk_simd_impl() -> TokenStream {
                         }
                     }
                 }
+                OpSig::FromArray { kind } => {
+                    let vec_rust = vec_ty.rust();
+                    let wrapper = vec_ty.aligned_wrapper();
+                    let expr = match kind {
+                        RefKind::Value => quote! { val },
+                        RefKind::Ref | RefKind::Mut => quote! { *val },
+                    };
+                    quote! {
+                        #method_sig {
+                            #vec_rust { val: #wrapper(#expr), simd: self }
+                        }
+                    }
+                }
+                OpSig::AsArray { kind } => {
+                    let ref_tok = kind.token();
+                    quote! {
+                        #method_sig {
+                            #ref_tok a.val.0
+                        }
+                    }
+                }
+                OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+                OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             };
             methods.push(method);
         }

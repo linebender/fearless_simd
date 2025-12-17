@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    self, cast_ident, coarse_type, extend_intrinsic, float_compare_method, intrinsic_ident,
-    op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
-    unpack_intrinsic,
+    self, arch_ty, cast_ident, coarse_type, extend_intrinsic, float_compare_method,
+    intrinsic_ident, op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic,
+    simple_sign_unaware_intrinsic, unpack_intrinsic,
 };
-use crate::generic::{generic_combine, generic_op, generic_op_name, generic_split, scalar_binary};
+use crate::generic::{
+    generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
+    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes, impl_arch_types,
+    scalar_binary,
+};
 use crate::ops::{Op, OpSig, Quantifier, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
@@ -28,6 +32,7 @@ impl Level {
 
 pub(crate) fn mk_sse4_2_impl() -> TokenStream {
     let imports = type_imports();
+    let arch_types_impl = impl_arch_types(Level.name(), 128, arch_ty);
     let simd_impl = mk_simd_impl();
     let ty_impl = mk_type_impl();
 
@@ -38,7 +43,7 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
         use core::arch::x86_64::*;
 
         use core::ops::*;
-        use crate::{seal::Seal, Level, Simd, SimdFrom, SimdInto};
+        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
 
         #imports
 
@@ -64,6 +69,8 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
 
         impl Seal for Sse4_2 {}
 
+        #arch_types_impl
+
         #simd_impl
 
         #ty_impl
@@ -75,13 +82,7 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for Op { method, sig, .. } in ops_for_type(vec_ty) {
-            let too_wide = (vec_ty.n_bits() > 128 && !matches!(method, "split" | "narrow"))
-                || vec_ty.n_bits() > 256;
-
-            let acceptable_wide_op = matches!(method, "load_interleaved_128")
-                || matches!(method, "store_interleaved_128");
-
-            if too_wide && !acceptable_wide_op {
+            if sig.should_use_generic_op(vec_ty, 128) {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
@@ -146,7 +147,7 @@ fn mk_type_impl() -> TokenStream {
                 #[inline(always)]
                 fn simd_from(arch: #arch, simd: S) -> Self {
                     Self {
-                        val: unsafe { core::mem::transmute(arch) },
+                        val: unsafe { core::mem::transmute_copy(&arch) },
                         simd
                     }
                 }
@@ -154,7 +155,7 @@ fn mk_type_impl() -> TokenStream {
             impl<S: Simd> From<#simd<S>> for #arch {
                 #[inline(always)]
                 fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute(value.val) }
+                    unsafe { core::mem::transmute_copy(&value.val) }
                 }
             }
         });
@@ -185,8 +186,8 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Shift => handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
         OpSig::Select => handle_select(method_sig, vec_ty),
-        OpSig::Combine { combined_ty } => generic_combine(vec_ty, &combined_ty),
-        OpSig::Split { half_ty } => generic_split(vec_ty, &half_ty),
+        OpSig::Combine { combined_ty } => generic_block_combine(method_sig, &combined_ty, 128),
+        OpSig::Split { half_ty } => generic_block_split(method_sig, &half_ty, 128),
         OpSig::Zip { select_low } => handle_zip(method_sig, vec_ty, select_low),
         OpSig::Unzip { select_even } => handle_unzip(method_sig, vec_ty, select_even),
         OpSig::Cvt {
@@ -210,6 +211,14 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
             block_size,
             block_count,
         } => handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
+        OpSig::FromArray { kind } => {
+            generic_from_array(method_sig, vec_ty, kind, 128, |block_ty| {
+                intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
+            })
+        }
+        OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 128, arch_ty),
+        OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+        OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
     }
 }
 

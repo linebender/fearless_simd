@@ -19,14 +19,22 @@ pub(crate) fn mk_simd_types() -> TokenStream {
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
+        let name_str = ty.rust_name();
         let doc = ty.docstring();
         let align = ty.n_bits() / 8;
         let align_lit = Literal::usize_unsuffixed(align);
         let len = Literal::usize_unsuffixed(ty.len);
         let rust_scalar = ty.scalar.rust(ty.scalar_bits);
-        let select = Ident::new(&format!("select_{}", ty.rust_name()), Span::call_site());
+        let select = generic_op_name("select", ty);
+        let from_array_op = generic_op_name("load_array", ty);
+        let as_array_op = generic_op_name("as_array", ty);
+        let as_array_ref_op = generic_op_name("as_array_ref", ty);
+        let as_array_mut_op = generic_op_name("as_array_mut", ty);
+        let from_bytes_op = generic_op_name("cvt_from_bytes", ty);
+        let to_bytes_op = generic_op_name("cvt_to_bytes", ty);
         let bytes = VecType::new(ScalarType::Unsigned, 8, align).rust();
         let mask = ty.mask_ty().rust();
+
         let scalar_impl = {
             let splat = Ident::new(&format!("splat_{}", ty.rust_name()), Span::call_site());
             quote! {
@@ -41,24 +49,19 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     type Output = #rust_scalar;
                     #[inline(always)]
                     fn index(&self, i: usize) -> &Self::Output {
-                        &self.val[i]
+                        &self.simd.#as_array_ref_op(self)[i]
                     }
                 }
 
                 impl<S: Simd> core::ops::IndexMut<usize> for #name<S> {
                     #[inline(always)]
                     fn index_mut (&mut self, i: usize) -> &mut Self::Output {
-                        &mut self.val[i]
+                        &mut self.simd.#as_array_mut_op(self)[i]
                     }
                 }
             }
         };
         let impl_block = simd_vec_impl(ty);
-        let simd_from_items = make_list(
-            (0..ty.len)
-                .map(|idx| quote! { val[#idx] })
-                .collect::<Vec<_>>(),
-        );
         let mut conditional_impls = Vec::new();
         // TODO: Relax `if` clauses once 64-bit integer or 16-bit floats vectors are implemented
         match ty.scalar {
@@ -168,30 +171,24 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         }
         result.extend(quote! {
             #[doc = #doc]
-            #[derive(Clone, Copy, Debug)]
+            #[derive(Clone, Copy)]
             #[repr(C, align(#align_lit))]
             pub struct #name<S: Simd> {
-                pub val: [#rust_scalar; #len],
+                pub(crate) val: S::#name,
                 pub simd: S,
             }
 
             impl<S: Simd> SimdFrom<[#rust_scalar; #len], S> for #name<S> {
                 #[inline(always)]
                 fn simd_from(val: [#rust_scalar; #len], simd: S) -> Self {
-                    // Note: Previously, we would just straight up copy `val`. However, at least on
-                    // ARM, this would always lead to it being compiled to a `memset_pattern16`, at least
-                    // for scalar f32x4, which significantly slowed down the `render_strips` benchmark.
-                    // Assigning each index individually seems to circumvent this quirk.
-                    // TODO: Investigate whether this has detrimental effects for other numeric
-                    // types.
-                    Self { val: #simd_from_items, simd }
+                    simd.#from_array_op(val)
                 }
             }
 
             impl<S: Simd> From<#name<S>> for [#rust_scalar; #len] {
                 #[inline(always)]
                 fn from(value: #name<S>) -> Self {
-                    value.val
+                    value.simd.#as_array_op(value)
                 }
             }
 
@@ -199,14 +196,20 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 type Target = [#rust_scalar; #len];
                 #[inline(always)]
                 fn deref(&self) -> &Self::Target {
-                    &self.val
+                    self.simd.#as_array_ref_op(self)
                 }
             }
 
             impl<S: Simd> core::ops::DerefMut for #name<S> {
                 #[inline(always)]
                 fn deref_mut(&mut self) -> &mut Self::Target {
-                    &mut self.val
+                    self.simd.#as_array_mut_op(self)
+                }
+            }
+
+            impl<S: Simd + core::fmt::Debug> core::fmt::Debug for #name<S> {
+                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    crate::support::simd_debug_impl(f, #name_str, &self.simd, self.simd.#as_array_ref_op(self))
                 }
             }
 
@@ -224,22 +227,12 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
                 #[inline(always)]
                 fn to_bytes(self) -> Self::Bytes {
-                    unsafe {
-                        #bytes {
-                            val: core::mem::transmute(self.val),
-                            simd: self.simd,
-                        }
-                    }
+                    self.simd.#to_bytes_op(self)
                 }
 
                 #[inline(always)]
                 fn from_bytes(value: Self::Bytes) -> Self {
-                    unsafe {
-                        Self {
-                            val: core::mem::transmute(value.val),
-                            simd: value.simd,
-                        }
-                    }
+                    value.simd.#from_bytes_op(value)
                 }
             }
 
@@ -259,10 +252,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         ScalarType::Float => "SimdFloat",
         ScalarType::Unsigned | ScalarType::Int => "SimdInt",
         ScalarType::Mask => "SimdMask",
-    };
-    let zero = match ty.scalar {
-        ScalarType::Float => quote! { 0.0 },
-        _ => quote! { 0 },
     };
     let vec_trait_id = Ident::new(vec_trait, Span::call_site());
     let splat = generic_op_name("splat", ty);
@@ -306,11 +295,15 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         }
         _ => unreachable!(),
     };
+    let from_array_op = generic_op_name("load_array", ty);
+    let as_array_ref_op = generic_op_name("as_array_ref", ty);
+    let as_array_mut_op = generic_op_name("as_array_mut", ty);
     quote! {
         impl<S: Simd> SimdBase<#scalar, S> for #name<S> {
             const N: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
+            type Array = [#scalar; #len];
 
             #[inline(always)]
             fn witness(&self) -> S {
@@ -319,19 +312,17 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
 
             #[inline(always)]
             fn as_slice(&self) -> &[#scalar] {
-                &self.val
+                self.simd.#as_array_ref_op(self).as_slice()
             }
 
             #[inline(always)]
             fn as_mut_slice(&mut self) -> &mut [#scalar] {
-                &mut self.val
+                self.simd.#as_array_mut_op(self).as_mut_slice()
             }
 
             #[inline(always)]
             fn from_slice(simd: S, slice: &[#scalar]) -> Self {
-                let mut val = [#zero; #len];
-                val.copy_from_slice(slice);
-                Self { val, simd }
+                simd.#from_array_op(slice.try_into().unwrap())
             }
 
             #[inline(always)]
@@ -346,10 +337,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
 
             #[inline(always)]
             fn from_fn(simd: S, f: impl FnMut(usize) -> #scalar) -> Self {
-                Self {
-                    val: core::array::from_fn(f),
-                    simd,
-                }
+                simd.#from_array_op(core::array::from_fn(f))
             }
 
         }
@@ -357,8 +345,4 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             #( #methods )*
         }
     }
-}
-
-fn make_list(items: Vec<TokenStream>) -> TokenStream {
-    quote!([#( #items, )*])
 }

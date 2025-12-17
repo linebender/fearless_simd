@@ -67,15 +67,14 @@ pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
     quote! {#ty_prefix::#ident}
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
+pub(crate) fn arch_ty(ty: &VecType) -> Ident {
     let scalar = match ty.scalar {
         ScalarType::Float => "f",
         ScalarType::Unsigned => "u",
         ScalarType::Int | ScalarType::Mask => "i",
     };
     let name = format!("{}{}", scalar, ty.scalar_bits);
-    let ident = Ident::new(&name, Span::call_site());
-    quote! { #ident }
+    Ident::new(&name, Span::call_site())
 }
 
 pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {

@@ -63,10 +63,10 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         ///     let a = [1.0, 2.0, 3.0, 4.0].simd_into(simd);
         ///     let b = [5.0, 6.0, 7.0, 8.0].simd_into(simd);
         ///     let result = add_vectors(simd, a, b);
-        ///     # assert_eq!(result.val, [6.0, 8.0, 10.0, 12.0]);
+        ///     # assert_eq!(*result, [6.0, 8.0, 10.0, 12.0]);
         /// });
         /// ```
-        pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
+        pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + arch_types::ArchTypes + 'static {
             /// A native-width SIMD vector of [`f32`]s.
             type f32s: SimdFloat<f32, Self, Block = f32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>;
             /// A native-width SIMD vector of [`f64`]s.
@@ -104,11 +104,34 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             #( #methods )*
         }
     };
+    code.extend(mk_arch_types());
     code.extend(mk_simd_base());
     code.extend(mk_simd_float());
     code.extend(mk_simd_int());
     code.extend(mk_simd_mask());
     code
+}
+
+pub(crate) fn mk_arch_types() -> TokenStream {
+    let mut types = vec![];
+    for vec_ty in SIMD_TYPES {
+        let ty_name = vec_ty.rust();
+        types.push(quote! {
+            type #ty_name: Copy + Send + Sync;
+        });
+    }
+
+    quote! {
+        pub(crate) mod arch_types {
+            #[expect(
+                unnameable_types,
+                reason = "The native vector types that back a `Simd` implementation are an internal implementation detail, and intentionally kept private"
+            )]
+            pub trait ArchTypes {
+                #( #types )*
+            }
+        }
+    }
 }
 
 fn mk_simd_base() -> TokenStream {
@@ -118,6 +141,7 @@ fn mk_simd_base() -> TokenStream {
             Copy + Sync + Send + 'static
             + crate::Bytes + SimdFrom<Element, S>
             + core::ops::Index<usize, Output = Element> + core::ops::IndexMut<usize, Output = Element>
+            + core::ops::Deref<Target = Self::Array>+ core::ops::DerefMut<Target = Self::Array>
         {
             /// This vector type's lane count. This is useful when you're
             /// working with a native-width vector (e.g. [`Simd::f32s`]) and
@@ -134,6 +158,10 @@ fn mk_simd_base() -> TokenStream {
             type Mask: SimdMask<Element::Mask, S>;
             /// A 128-bit SIMD vector of the same scalar type.
             type Block: SimdBase<Element, S>;
+            /// The array type that this vector type corresponds to, which will
+            /// always be `[Self::Element; Self::N]`. It has the same layout as
+            /// this vector type, but likely has a lower alignment.
+            type Array;
             /// Get the [`Simd`] implementation associated with this type.
             fn witness(&self) -> S;
             fn as_slice(&self) -> &[Element];

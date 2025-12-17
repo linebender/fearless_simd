@@ -37,29 +37,26 @@ fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
+pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> Ident {
     let ty_prefix = arch_ty(ty);
     let ident = Ident::new(name, Span::call_site());
-    let combined_ident = Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site());
-    quote! { #combined_ident }
+    Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site())
 }
 
-fn v128_intrinsic(name: &str) -> TokenStream {
+pub(crate) fn v128_intrinsic(name: &str) -> Ident {
     let ty_prefix = Ident::new("v128", Span::call_site());
     let ident = Ident::new(name, Span::call_site());
-    let combined_ident = Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site());
-    quote! { #combined_ident }
+    Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site())
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
+pub(crate) fn arch_ty(ty: &VecType) -> Ident {
     let scalar = match ty.scalar {
         ScalarType::Float => "f",
         ScalarType::Unsigned => "u",
         ScalarType::Int | ScalarType::Mask => "i",
     };
     let name = format!("{}{}x{}", scalar, ty.scalar_bits, ty.len);
-    let ident = Ident::new(&name, Span::call_site());
-    quote! { #ident }
+    Ident::new(&name, Span::call_site())
 }
 
 // expects args and return value in arch dialect
