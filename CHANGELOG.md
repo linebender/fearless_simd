@@ -30,6 +30,7 @@ This release has an [MSRV][] of 1.88.
 - Documentation for most traits, vector types, and operations. ([#154][] by [@valadaptive][])
 - A "shift left by vector" operation, to go with the existing "shift right by vector". ([#155][] by [@valadaptive][])
 - "Precise" float-to-integer conversions, which saturate out-of-bounds results and convert NaN to 0 across all platforms. ([#167][] by [@valadaptive][])
+- The `Level::is_fallback` method, which lets you check if the current SIMD level is the scalar fallback. This works even if `Level::Fallback` is not compiled in, always returning false in that case. ([#168][] by [@valadaptive][])
 
 ### Fixed
 
@@ -158,6 +159,7 @@ No changelog was kept for this release.
 [#158]: https://github.com/linebender/fearless_simd/pull/158
 [#159]: https://github.com/linebender/fearless_simd/pull/159
 [#167]: https://github.com/linebender/fearless_simd/pull/167
+[#168]: https://github.com/linebender/fearless_simd/pull/168
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
