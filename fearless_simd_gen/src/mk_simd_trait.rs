@@ -5,6 +5,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::{
+    generic::generic_op_name,
     ops::{Op, TyFlavor, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, type_imports},
 };
@@ -14,13 +15,12 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     let mut methods = vec![];
     // Float methods
     for vec_ty in SIMD_TYPES {
-        let ty_name = vec_ty.rust_name();
         for Op {
             method, sig, doc, ..
         } in &ops_for_type(vec_ty)
         {
-            let method_name = format!("{method}_{ty_name}");
-            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
+            let method_ident = generic_op_name(method, vec_ty);
+            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_ident);
             let doc = sig.format_docstring(doc, TyFlavor::SimdTrait);
             methods.extend(quote! {
                 #[doc = #doc]

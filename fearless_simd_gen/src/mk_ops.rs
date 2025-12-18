@@ -5,6 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
+    generic::generic_op_name,
     ops::{CoreOpTrait, OpSig, TyFlavor, overloaded_ops_for},
     types::{SIMD_TYPES, type_imports},
 };
@@ -23,8 +24,7 @@ pub(crate) fn mk_ops() -> TokenStream {
             let op_assign_fn = format_ident!("{opfn}_assign");
             let trait_id = Ident::new(trait_name, Span::call_site());
             let trait_assign_id = format_ident!("{trait_name}Assign");
-            let simd_fn_name = format!("{simd_name}_{}", ty.rust_name());
-            let simd_fn = Ident::new(&simd_fn_name, Span::call_site());
+            let simd_fn = generic_op_name(simd_name, ty);
             let opfn = Ident::new(opfn, Span::call_site());
             let doc = sig.format_docstring(doc, TyFlavor::VecImpl);
 

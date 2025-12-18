@@ -166,10 +166,8 @@ fn mk_type_impl() -> TokenStream {
 }
 
 fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
-    let ty_name = vec_ty.rust_name();
-    let method_name = format!("{method}_{ty_name}");
-    let method_ident = Ident::new(&method_name, Span::call_site());
-    let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
+    let method_ident = generic_op_name(method, vec_ty);
+    let method_sig = sig.simd_trait_method_sig(vec_ty, &method_ident);
     let method_sig = quote! {
         #[inline(always)]
         #method_sig

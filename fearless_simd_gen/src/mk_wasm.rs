@@ -40,17 +40,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
     let mut methods = vec![];
 
     for vec_ty in SIMD_TYPES {
-        let ty_name = vec_ty.rust_name();
-
         for Op { method, sig, .. } in ops_for_type(vec_ty) {
             if sig.should_use_generic_op(vec_ty, 128) {
                 methods.push(generic_op(method, sig, vec_ty));
                 continue;
             }
 
-            let method_name = format!("{method}_{ty_name}");
-            let method_ident = Ident::new(&method_name, Span::call_site());
-            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
+            let method_ident = generic_op_name(method, vec_ty);
+            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_ident);
             let method_sig = quote! {
                 #[inline(always)]
                 #method_sig

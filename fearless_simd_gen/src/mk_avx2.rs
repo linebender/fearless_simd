@@ -7,7 +7,7 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op, generic_to_bytes, impl_arch_types,
+    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes, impl_arch_types,
 };
 use crate::mk_sse4_2;
 use crate::ops::{Op, OpSig, ops_for_type};
@@ -162,10 +162,8 @@ fn mk_type_impl() -> TokenStream {
 
 fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
     let scalar_bits = vec_ty.scalar_bits;
-    let ty_name = vec_ty.rust_name();
-    let method_name = format!("{method}_{ty_name}");
-    let method_ident = Ident::new(&method_name, Span::call_site());
-    let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
+    let method_ident = generic_op_name(method, vec_ty);
+    let method_sig = sig.simd_trait_method_sig(vec_ty, &method_ident);
     let method_sig = quote! {
         #[inline(always)]
         #method_sig

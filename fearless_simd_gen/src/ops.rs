@@ -1102,14 +1102,17 @@ impl OpSig {
         }
     }
 
-    pub(crate) fn simd_trait_method_sig(&self, vec_ty: &VecType, method_name: &str) -> TokenStream {
+    pub(crate) fn simd_trait_method_sig(
+        &self,
+        vec_ty: &VecType,
+        method_ident: &Ident,
+    ) -> TokenStream {
         let ty = vec_ty.rust();
         let arg_names = self
             .simd_trait_arg_names()
             .iter()
             .map(|n| Ident::new(n, Span::call_site()))
             .collect::<Vec<_>>();
-        let method_ident = Ident::new(method_name, Span::call_site());
         let sig_inner = match self {
             Self::Splat => {
                 let arg0 = &arg_names[0];
