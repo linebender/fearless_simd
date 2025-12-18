@@ -105,8 +105,8 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Shift => {
-                    let dup_type = VecType::new(ScalarType::Int, vec_ty.scalar_bits, vec_ty.len);
-                    let scalar = dup_type.scalar.rust(scalar_bits);
+                    let dup_type = vec_ty.reinterpret(ScalarType::Int, vec_ty.scalar_bits);
+                    let scalar = dup_type.scalar.rust(dup_type.scalar_bits);
                     let dup_intrinsic = split_intrinsic("vdup", "n", &dup_type);
                     let shift = if method == "shr" {
                         quote! { -(shift as #scalar) }
@@ -248,10 +248,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             if method == "shrv" {
                                 let neg = simple_intrinsic(
                                     "vneg",
-                                    &VecType {
-                                        scalar: ScalarType::Int,
-                                        ..*vec_ty
-                                    },
+                                    &vec_ty.reinterpret(ScalarType::Int, vec_ty.scalar_bits),
                                 );
                                 let arg1 = &args[1];
                                 args[1] = quote! { #neg(#arg1) };
@@ -265,7 +262,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         "copysign" => {
                             let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
                             let unsigned_ty =
-                                VecType::new(ScalarType::Unsigned, vec_ty.scalar_bits, vec_ty.len);
+                                vec_ty.reinterpret(ScalarType::Unsigned, vec_ty.scalar_bits);
                             let sign_mask =
                                 neon::expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
                             let vbsl = simple_intrinsic("vbsl", vec_ty);
@@ -433,7 +430,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             }
                         }
                     } else {
-                        let to_ty = &VecType::new(target_ty, scalar_bits, vec_ty.len);
+                        let to_ty = &vec_ty.reinterpret(target_ty, scalar_bits);
                         let neon = cvt_intrinsic("vcvt", to_ty, vec_ty);
                         quote! {
                             #method_sig {
@@ -474,7 +471,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         (crate::ops::Quantifier::All, false) => ("vmaxv", quote! { == 0 }),
                     };
 
-                    let u32_ty = VecType::new(ScalarType::Unsigned, 32, vec_ty.n_bits() / 32);
+                    let u32_ty = vec_ty.reinterpret(ScalarType::Unsigned, 32);
                     let min_max = simple_intrinsic(reduction, &u32_ty);
                     let reinterpret = format_ident!("vreinterpretq_u32_s{}", vec_ty.scalar_bits);
                     quote! {

@@ -82,7 +82,7 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
             }
         }
         OpSig::Select => {
-            let mask_ty = VecType::new(ScalarType::Mask, ty.scalar_bits, ty.len);
+            let mask_ty = ty.reinterpret(ScalarType::Mask, ty.scalar_bits);
             let split_mask = generic_op_name("split", &mask_ty);
             quote! {
                 #method_sig {

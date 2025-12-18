@@ -797,7 +797,7 @@ pub(crate) fn handle_cvt(
     );
     let expr = match (vec_ty.scalar, target_scalar) {
         (ScalarType::Float, ScalarType::Int | ScalarType::Unsigned) => {
-            let target_ty = VecType::new(target_scalar, target_scalar_bits, vec_ty.len);
+            let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
             let max = simple_intrinsic("max", vec_ty);
             let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
             let cmplt = float_compare_method("simd_lt", vec_ty);
@@ -912,7 +912,7 @@ pub(crate) fn handle_cvt(
                 vec_ty.scalar_bits, 32,
                 "i64 to f64 conversions do not exist until AVX-512 and require special consideration"
             );
-            let target_ty = VecType::new(target_scalar, target_scalar_bits, vec_ty.len);
+            let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
             let intrinsic = simple_intrinsic("cvtepi32", &target_ty);
             quote! {
                 unsafe {
@@ -926,7 +926,7 @@ pub(crate) fn handle_cvt(
                 "u64 to f64 conversions do not exist until AVX-512 and require special consideration"
             );
 
-            let target_ty = VecType::new(target_scalar, target_scalar_bits, vec_ty.len);
+            let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
             let set1_int = set1_intrinsic(vec_ty);
             let set1_float = set1_intrinsic(&target_ty);
             let add_float = simple_intrinsic("add", &target_ty);
@@ -1018,7 +1018,7 @@ pub(crate) fn handle_mask_reduce(
 
     let (movemask, all_ones) = match vec_ty.scalar_bits {
         32 | 64 => {
-            let float_ty = VecType::new(ScalarType::Float, vec_ty.scalar_bits, vec_ty.len);
+            let float_ty = vec_ty.reinterpret(ScalarType::Float, vec_ty.scalar_bits);
             let movemask = simple_intrinsic("movemask", &float_ty);
             let cast = cast_ident(
                 ScalarType::Mask,
@@ -1038,7 +1038,7 @@ pub(crate) fn handle_mask_reduce(
             (movemask, all_ones)
         }
         8 | 16 => {
-            let bits_ty = VecType::new(ScalarType::Int, 8, vec_ty.n_bits() / 8);
+            let bits_ty = vec_ty.reinterpret(ScalarType::Int, 8);
             let movemask = simple_intrinsic("movemask", &bits_ty);
             let movemask = quote! { #movemask(a.into()) };
             let all_ones = match vec_ty.n_bits() {
@@ -1085,10 +1085,10 @@ pub(crate) fn handle_load_interleaved(
                 VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
             let load_unaligned =
                 intrinsic_ident("loadu", coarse_type(&block_ty), block_ty.n_bits());
-            let vec_32 = VecType::new(block_ty.scalar, 32, block_ty.n_bits() / 32);
+            let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
             let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
             let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
-            let vec_64 = VecType::new(block_ty.scalar, 64, block_ty.n_bits() / 64);
+            let vec_64 = block_ty.reinterpret(block_ty.scalar, 64);
             let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
             let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
 
@@ -1213,10 +1213,10 @@ pub(crate) fn handle_store_interleaved(
                 VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
             let store_unaligned =
                 intrinsic_ident("storeu", coarse_type(&block_ty), block_ty.n_bits());
-            let vec_32 = VecType::new(block_ty.scalar, 32, block_ty.n_bits() / 32);
+            let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
             let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
             let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
-            let vec_64 = VecType::new(block_ty.scalar, 64, block_ty.n_bits() / 64);
+            let vec_64 = block_ty.reinterpret(block_ty.scalar, 64);
             let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
             let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
 

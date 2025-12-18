@@ -4,7 +4,7 @@
 use crate::arch::fallback;
 use crate::generic::{generic_from_bytes, generic_op, generic_op_name, generic_to_bytes};
 use crate::ops::{Op, OpSig, RefKind, ops_for_type, valid_reinterpret};
-use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
+use crate::types::{SIMD_TYPES, ScalarType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
@@ -277,7 +277,7 @@ fn mk_simd_impl() -> TokenStream {
                     }
                 }
                 OpSig::Compare => {
-                    let mask_type = VecType::new(ScalarType::Mask, vec_ty.scalar_bits, vec_ty.len);
+                    let mask_type = vec_ty.reinterpret(ScalarType::Mask, vec_ty.scalar_bits);
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx: usize| {
@@ -415,7 +415,7 @@ fn mk_simd_impl() -> TokenStream {
                             }
                         }
                     } else {
-                        let to_ty = &VecType::new(target_ty, scalar_bits, vec_ty.len);
+                        let to_ty = vec_ty.reinterpret(target_ty, scalar_bits);
                         let scalar = to_ty.scalar.rust(scalar_bits);
                         let items = make_list(
                             (0..vec_ty.len)

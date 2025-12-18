@@ -217,7 +217,7 @@ impl Op {
                 ..
             } => {
                 let arg0 = &arg_names[0];
-                let result = VecType::new(*target_ty, *scalar_bits, vec_ty.len).rust();
+                let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
                 quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
             }
             OpSig::Reinterpret {

@@ -67,10 +67,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         match ty.scalar {
             ScalarType::Float if ty.scalar_bits == 32 => {
                 for src_scalar in [ScalarType::Unsigned, ScalarType::Int] {
-                    let src_ty = VecType {
-                        scalar: src_scalar,
-                        ..*ty
-                    };
+                    let src_ty = ty.reinterpret(src_scalar, ty.scalar_bits);
                     let method = format_ident!(
                         "cvt_{}_{}",
                         ty.scalar.rust_name(ty.scalar_bits),
@@ -95,10 +92,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 }
             }
             ScalarType::Int | ScalarType::Unsigned if ty.scalar_bits == 32 => {
-                let src_ty = VecType {
-                    scalar: ScalarType::Float,
-                    ..*ty
-                };
+                let src_ty = ty.reinterpret(ScalarType::Float, ty.scalar_bits);
                 let method = format_ident!(
                     "cvt_{}_{}",
                     ty.scalar.rust_name(ty.scalar_bits),
