@@ -36,6 +36,16 @@ impl ScalarType {
         let ident = Ident::new(&self.rust_name(scalar_bits), Span::call_site());
         quote! { #ident }
     }
+
+    pub(crate) fn native_width_name(&self, scalar_bits: usize) -> Ident {
+        let prefix = match self {
+            Self::Float => "f",
+            Self::Unsigned => "u",
+            Self::Int => "i",
+            Self::Mask => "mask",
+        };
+        format_ident!("{}{}s", prefix, scalar_bits)
+    }
 }
 
 impl VecType {

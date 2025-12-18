@@ -8,10 +8,10 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes, scalar_binary,
+    generic_from_bytes, generic_op_name, generic_to_bytes, scalar_binary,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig, Quantifier, ops_for_type, valid_reinterpret};
+use crate::ops::{Op, OpSig, Quantifier, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{ToTokens as _, quote};
@@ -23,13 +23,43 @@ impl Level for Sse4_2 {
     fn name(&self) -> &'static str {
         "Sse4_2"
     }
+
+    fn native_width(&self) -> usize {
+        128
+    }
+
+    fn make_vectorize_body(&self) -> TokenStream {
+        quote! {
+            #[target_feature(enable = "sse4.2")]
+            #[inline]
+            unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
+                f()
+            }
+            unsafe { vectorize_sse4_2(f) }
+        }
+    }
+
+    fn make_level_body(&self) -> TokenStream {
+        let level_tok = Self.token();
+        quote! {
+            #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
+            return Level::#level_tok(self);
+            #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+            {
+                Level::baseline()
+            }
+        }
+    }
+
+    fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        make_method(op, vec_ty)
+    }
 }
 
-pub(crate) fn mk_sse4_2_impl() -> TokenStream {
+pub(crate) fn mk_sse4_2_impl(level: &dyn Level) -> TokenStream {
     let imports = type_imports();
-    let arch_types_impl =
-        Sse4_2.impl_arch_types(128, &|vec_ty| arch_ty(vec_ty).into_token_stream());
-    let simd_impl = mk_simd_impl();
+    let arch_types_impl = level.impl_arch_types(128, &|vec_ty| arch_ty(vec_ty).into_token_stream());
+    let simd_impl = level.mk_simd_impl();
     let ty_impl = mk_type_impl();
 
     quote! {
@@ -70,62 +100,6 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
         #simd_impl
 
         #ty_impl
-    }
-}
-
-fn mk_simd_impl() -> TokenStream {
-    let level_tok = Sse4_2.token();
-    let mut methods = vec![];
-    for vec_ty in SIMD_TYPES {
-        for op in ops_for_type(vec_ty) {
-            if op.sig.should_use_generic_op(vec_ty, 128) {
-                methods.push(generic_op(&op, vec_ty));
-                continue;
-            }
-
-            let method = make_method(op, vec_ty);
-
-            methods.push(method);
-        }
-    }
-    // Note: the `vectorize` implementation is pretty boilerplate and should probably
-    // be factored out for DRY.
-    quote! {
-        impl Simd for #level_tok {
-            type f32s = f32x4<Self>;
-            type f64s = f64x2<Self>;
-            type u8s = u8x16<Self>;
-            type i8s = i8x16<Self>;
-            type u16s = u16x8<Self>;
-            type i16s = i16x8<Self>;
-            type u32s = u32x4<Self>;
-            type i32s = i32x4<Self>;
-            type mask8s = mask8x16<Self>;
-            type mask16s = mask16x8<Self>;
-            type mask32s = mask32x4<Self>;
-            type mask64s = mask64x2<Self>;
-            #[inline(always)]
-            fn level(self) -> Level {
-                #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
-                return Level::#level_tok(self);
-                #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
-                {
-                    Level::baseline()
-                }
-            }
-
-            #[inline]
-            fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-                #[target_feature(enable = "sse4.2")]
-                #[inline]
-                unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
-                    f()
-                }
-                unsafe { vectorize_sse4_2(f) }
-            }
-
-            #( #methods )*
-        }
     }
 }
 

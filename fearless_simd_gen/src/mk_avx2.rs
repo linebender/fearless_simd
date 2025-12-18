@@ -7,11 +7,11 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes,
+    generic_from_bytes, generic_op_name, generic_to_bytes,
 };
 use crate::level::Level;
 use crate::mk_sse4_2;
-use crate::ops::{Op, OpSig, ops_for_type};
+use crate::ops::{Op, OpSig};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::TokenStream;
 use quote::{ToTokens as _, quote};
@@ -23,12 +23,31 @@ impl Level for Avx2 {
     fn name(&self) -> &'static str {
         "Avx2"
     }
+
+    fn native_width(&self) -> usize {
+        256
+    }
+
+    fn make_vectorize_body(&self) -> TokenStream {
+        quote! {
+            #[target_feature(enable = "avx2,fma")]
+            #[inline]
+            unsafe fn vectorize_avx2<F: FnOnce() -> R, R>(f: F) -> R {
+                f()
+            }
+            unsafe { vectorize_avx2(f) }
+        }
+    }
+
+    fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        make_method(op, vec_ty)
+    }
 }
 
-pub(crate) fn mk_avx2_impl() -> TokenStream {
+pub(crate) fn mk_avx2_impl(level: &dyn Level) -> TokenStream {
     let imports = type_imports();
-    let arch_types_impl = Avx2.impl_arch_types(256, &|vec_ty| arch_ty(vec_ty).into_token_stream());
-    let simd_impl = mk_simd_impl();
+    let arch_types_impl = level.impl_arch_types(256, &|vec_ty| arch_ty(vec_ty).into_token_stream());
+    let simd_impl = level.mk_simd_impl();
     let ty_impl = mk_type_impl();
 
     quote! {
@@ -69,58 +88,6 @@ pub(crate) fn mk_avx2_impl() -> TokenStream {
         #simd_impl
 
         #ty_impl
-    }
-}
-
-fn mk_simd_impl() -> TokenStream {
-    let level_tok = Avx2.token();
-    let mut methods = vec![];
-    for vec_ty in SIMD_TYPES {
-        for op in ops_for_type(vec_ty) {
-            if op.sig.should_use_generic_op(vec_ty, 256) {
-                methods.push(generic_op(&op, vec_ty));
-                continue;
-            }
-
-            let method = make_method(op, vec_ty);
-
-            methods.push(method);
-        }
-    }
-
-    // Note: the `vectorize` implementation is pretty boilerplate and should probably
-    // be factored out for DRY.
-    quote! {
-        impl Simd for #level_tok {
-            type f32s = f32x8<Self>;
-            type f64s = f64x4<Self>;
-            type u8s = u8x32<Self>;
-            type i8s = i8x32<Self>;
-            type u16s = u16x16<Self>;
-            type i16s = i16x16<Self>;
-            type u32s = u32x8<Self>;
-            type i32s = i32x8<Self>;
-            type mask8s = mask8x32<Self>;
-            type mask16s = mask16x16<Self>;
-            type mask32s = mask32x8<Self>;
-            type mask64s = mask64x4<Self>;
-            #[inline(always)]
-            fn level(self) -> Level {
-                Level::#level_tok(self)
-            }
-
-            #[inline]
-            fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-                #[target_feature(enable = "avx2,fma")]
-                #[inline]
-                unsafe fn vectorize_avx2<F: FnOnce() -> R, R>(f: F) -> R {
-                    f()
-                }
-                unsafe { vectorize_avx2(f) }
-            }
-
-            #( #methods )*
-        }
     }
 }
 

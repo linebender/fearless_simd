@@ -82,11 +82,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-        #[inline]
-        unsafe fn vectorize_simd128<F: FnOnce() -> R, R>(f: F) -> R {
-            f()
-        }
-        unsafe { vectorize_simd128(f) }
+        f()
     }
     #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
