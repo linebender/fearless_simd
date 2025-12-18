@@ -43,10 +43,6 @@ impl Level for Neon {
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
         let method_sig = op.simd_trait_method_sig(vec_ty);
-        let method_sig = quote! {
-            #[inline(always)]
-            #method_sig
-        };
 
         match sig {
             OpSig::Splat => {

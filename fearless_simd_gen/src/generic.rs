@@ -22,10 +22,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
     let combine = generic_op_name("combine", &half);
     let do_half = generic_op_name(op.method, &half);
     let method_sig = op.simd_trait_method_sig(ty);
-    let method_sig = quote! {
-        #[inline(always)]
-        #method_sig
-    };
     match op.sig {
         OpSig::Splat => {
             quote! {

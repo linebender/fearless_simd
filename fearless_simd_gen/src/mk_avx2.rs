@@ -127,10 +127,6 @@ fn make_method(op: Op, vec_ty: &VecType) -> TokenStream {
     let scalar_bits = vec_ty.scalar_bits;
     let Op { sig, method, .. } = op;
     let method_sig = op.simd_trait_method_sig(vec_ty);
-    let method_sig = quote! {
-        #[inline(always)]
-        #method_sig
-    };
 
     match sig {
         OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty),

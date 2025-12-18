@@ -40,10 +40,6 @@ impl Level for WasmSimd128 {
         let Op { sig, method, .. } = op;
 
         let method_sig = op.simd_trait_method_sig(vec_ty);
-        let method_sig = quote! {
-            #[inline(always)]
-            #method_sig
-        };
         match sig {
             OpSig::Splat => {
                 let expr = wasm::expr(method, vec_ty, &[quote! { val }]);

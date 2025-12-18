@@ -106,7 +106,10 @@ pub(crate) trait Level {
                     #vectorize_body
                 }
 
-                #( #methods )*
+                #(
+                    #[inline(always)]
+                    #methods
+                )*
             }
         }
     }

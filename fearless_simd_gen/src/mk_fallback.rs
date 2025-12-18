@@ -6,7 +6,7 @@ use crate::generic::{generic_from_bytes, generic_op_name, generic_to_bytes};
 use crate::level::Level;
 use crate::ops::{Op, OpSig, RefKind, valid_reinterpret};
 use crate::types::{ScalarType, VecType, type_imports};
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
 
 #[derive(Clone, Copy)]
@@ -40,10 +40,6 @@ impl Level for Fallback {
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
         let method_sig = op.simd_trait_method_sig(vec_ty);
-        let method_sig = quote! {
-            #[inline(always)]
-            #method_sig
-        };
 
         match sig {
             OpSig::Splat => {
@@ -199,19 +195,12 @@ impl Level for Fallback {
             OpSig::Combine { combined_ty } => {
                 let n = vec_ty.len;
                 let n2 = combined_ty.len;
-                let ty_rust = vec_ty.rust();
-                let result = combined_ty.rust();
-                let name = Ident::new(
-                    &format!("combine_{}", vec_ty.rust_name()),
-                    Span::call_site(),
-                );
                 let default = match vec_ty.scalar {
                     ScalarType::Float => quote! { 0.0 },
                     _ => quote! { 0 },
                 };
                 quote! {
-                    #[inline(always)]
-                    fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #result<Self> {
+                #method_sig {
                         let mut result = [#default; #n2];
                         result[0..#n].copy_from_slice(&a.val.0);
                         result[#n..#n2].copy_from_slice(&b.val.0);
@@ -222,16 +211,12 @@ impl Level for Fallback {
             OpSig::Split { half_ty } => {
                 let n = vec_ty.len;
                 let nhalf = half_ty.len;
-                let ty_rust = vec_ty.rust();
-                let result = half_ty.rust();
-                let name = Ident::new(&format!("split_{}", vec_ty.rust_name()), Span::call_site());
                 let default = match vec_ty.scalar {
                     ScalarType::Float => quote! { 0.0 },
                     _ => quote! { 0 },
                 };
                 quote! {
-                    #[inline(always)]
-                    fn #name(self, a: #ty_rust<Self>) -> (#result<Self>, #result<Self>) {
+                #method_sig {
                         let mut b0 = [#default; #nhalf];
                         let mut b1 = [#default; #nhalf];
                         b0.copy_from_slice(&a.val.0[0..#nhalf]);

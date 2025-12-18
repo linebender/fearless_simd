@@ -138,10 +138,6 @@ fn mk_type_impl() -> TokenStream {
 fn make_method(op: Op, vec_ty: &VecType) -> TokenStream {
     let Op { sig, method, .. } = op;
     let method_sig = op.simd_trait_method_sig(vec_ty);
-    let method_sig = quote! {
-        #[inline(always)]
-        #method_sig
-    };
 
     match sig {
         OpSig::Splat => handle_splat(method_sig, vec_ty),
