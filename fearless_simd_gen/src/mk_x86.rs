@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    self, arch_ty, cast_ident, coarse_type, extend_intrinsic, float_compare_method,
-    intrinsic_ident, op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic,
-    simple_sign_unaware_intrinsic, unpack_intrinsic,
+    self, cast_ident, coarse_type, extend_intrinsic, float_compare_method, intrinsic_ident,
+    op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
+    unpack_intrinsic,
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
@@ -49,7 +49,14 @@ impl Level for X86 {
     }
 
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
-        arch_ty(vec_ty).into_token_stream()
+        let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
+            (ScalarType::Float, 32) => "",
+            (ScalarType::Float, 64) => "d",
+            (ScalarType::Float, _) => unimplemented!(),
+            (ScalarType::Unsigned | ScalarType::Int | ScalarType::Mask, _) => "i",
+        };
+        let name = format!("__m{}{}", vec_ty.scalar_bits * vec_ty.len, suffix);
+        Ident::new(&name, Span::call_site()).into_token_stream()
     }
 
     fn token_doc(&self) -> &'static str {
