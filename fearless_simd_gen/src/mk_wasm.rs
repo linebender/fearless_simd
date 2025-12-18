@@ -104,7 +104,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 }
                 OpSig::Binary => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
-                    match method {
+                    let expr = match method {
                         "mul" if vec_ty.scalar_bits == 8 && vec_ty.len == 16 => {
                             let (extmul_low, extmul_high) = match vec_ty.scalar {
                                 ScalarType::Unsigned => (
@@ -119,11 +119,9 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             };
 
                             quote! {
-                                #method_sig {
-                                    let low = #extmul_low(a.into(), b.into());
-                                    let high = #extmul_high(a.into(), b.into());
-                                    u8x16_shuffle::<0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30>(low, high).simd_into(self)
-                                }
+                                let low = #extmul_low(a.into(), b.into());
+                                let high = #extmul_high(a.into(), b.into());
+                                u8x16_shuffle::<0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30>(low, high).simd_into(self)
                             }
                         }
                         "max_precise" | "min_precise" => {
@@ -137,14 +135,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             );
                             let compare_ne = simple_intrinsic("ne", vec_ty);
                             quote! {
-                                #method_sig {
-                                    let intermediate = #intrinsic(b.into(), a.into());
+                                let intermediate = #intrinsic(b.into(), a.into());
 
-                                    // See the x86 min_precise/max_precise code in `arch::x86` for more info on how this
-                                    // works.
-                                    let b_is_nan = #compare_ne(b.into(), b.into());
-                                    v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
-                                }
+                                // See the x86 min_precise/max_precise code in `arch::x86` for more info on how this
+                                // works.
+                                let b_is_nan = #compare_ne(b.into(), b.into());
+                                v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
                             }
                         }
                         "max" | "min" if vec_ty.scalar == ScalarType::Float => {
@@ -161,39 +157,23 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
                             quote! {
                                 #[cfg(target_feature = "relaxed-simd")]
-                                #method_sig {
-                                    #relaxed_expr.simd_into(self)
-                                }
+                                { #relaxed_expr.simd_into(self) }
 
                                 #[cfg(not(target_feature = "relaxed-simd"))]
-                                #method_sig {
-                                    #expr.simd_into(self)
-                                }
+                                { #expr.simd_into(self) }
                             }
                         }
-                        "shlv" => {
-                            let expr = scalar_binary(quote!(core::ops::Shl::shl));
-                            quote! {
-                                #method_sig {
-                                    #expr
-                                }
-                            }
-                        }
-                        "shrv" => {
-                            let expr = scalar_binary(quote!(core::ops::Shr::shr));
-                            quote! {
-                                #method_sig {
-                                    #expr
-                                }
-                            }
-                        }
+                        "shlv" => scalar_binary(quote!(core::ops::Shl::shl)),
+                        "shrv" => scalar_binary(quote!(core::ops::Shr::shr)),
                         _ => {
                             let expr = wasm::expr(method, vec_ty, &args);
-                            quote! {
-                                #method_sig {
-                                    #expr.simd_into(self)
-                                }
-                            }
+                            quote! { #expr.simd_into(self) }
+                        }
+                    };
+
+                    quote! {
+                        #method_sig {
+                            #expr
                         }
                     }
                 }
@@ -218,14 +198,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         let relaxed_madd = simple_intrinsic("relaxed_madd", vec_ty);
 
                         quote! {
-                            #[cfg(target_feature = "relaxed-simd")]
                             #method_sig {
-                                #relaxed_madd(a.into(), b.into(), #c).simd_into(self)
-                            }
+                                #[cfg(target_feature = "relaxed-simd")]
+                                { #relaxed_madd(a.into(), b.into(), #c).simd_into(self) }
 
-                            #[cfg(not(target_feature = "relaxed-simd"))]
-                            #method_sig {
-                                self.#add_sub(self.#mul(a, b), c)
+                                #[cfg(not(target_feature = "relaxed-simd"))]
+                                { self.#add_sub(self.#mul(a, b), c) }
                             }
                         }
                     } else {
@@ -248,14 +226,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     let lane_select = simple_intrinsic("relaxed_laneselect", &lane_ty);
 
                     quote! {
-                        #[cfg(target_feature = "relaxed-simd")]
                         #method_sig {
-                            #lane_select(b.into(), c.into(), a.into()).simd_into(self)
-                        }
+                            #[cfg(target_feature = "relaxed-simd")]
+                            { #lane_select(b.into(), c.into(), a.into()).simd_into(self) }
 
-                        #[cfg(not(target_feature = "relaxed-simd"))]
-                        #method_sig {
-                            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+                            #[cfg(not(target_feature = "relaxed-simd"))]
+                            { v128_bitselect(b.into(), c.into(), a.into()).simd_into(self) }
                         }
                     }
                 }
@@ -399,14 +375,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     if uses_relaxed {
                         let precise = generic_op_name(&[method, "_precise"].join(""), vec_ty);
                         quote! {
-                            #[cfg(target_feature = "relaxed-simd")]
                             #method_sig {
-                                #conversion_fn(a.into()).simd_into(self)
-                            }
+                                #[cfg(target_feature = "relaxed-simd")]
+                                { #conversion_fn(a.into()).simd_into(self) }
 
-                            #[cfg(not(target_feature = "relaxed-simd"))]
-                            #method_sig {
-                                self.#precise(a)
+                                #[cfg(not(target_feature = "relaxed-simd"))]
+                                { self.#precise(a) }
                             }
                         }
                     } else {

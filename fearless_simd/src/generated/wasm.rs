@@ -205,25 +205,27 @@ impl Simd for WasmSimd128 {
     fn unzip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         u32x4_shuffle::<1, 3, 5, 7>(a.into(), b.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        f32x4_relaxed_max(a.into(), b.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            f32x4_relaxed_max(a.into(), b.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            f32x4_max(a.into(), b.into()).simd_into(self)
+        }
     }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        f32x4_max(a.into(), b.into()).simd_into(self)
-    }
-    #[cfg(target_feature = "relaxed-simd")]
-    #[inline(always)]
-    fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        f32x4_relaxed_min(a.into(), b.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        f32x4_min(a.into(), b.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            f32x4_relaxed_min(a.into(), b.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            f32x4_min(a.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -237,25 +239,27 @@ impl Simd for WasmSimd128 {
         let b_is_nan = f32x4_ne(b.into(), b.into());
         v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        f32x4_relaxed_madd(a.into(), b.into(), c.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            f32x4_relaxed_madd(a.into(), b.into(), c.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            self.add_f32x4(self.mul_f32x4(a, b), c)
+        }
     }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        self.add_f32x4(self.mul_f32x4(a, b), c)
-    }
-    #[cfg(target_feature = "relaxed-simd")]
-    #[inline(always)]
-    fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        f32x4_relaxed_madd(a.into(), b.into(), f32x4_neg(c.into())).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        self.sub_f32x4(self.mul_f32x4(a, b), c)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            f32x4_relaxed_madd(a.into(), b.into(), f32x4_neg(c.into())).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            self.sub_f32x4(self.mul_f32x4(a, b), c)
+        }
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -277,15 +281,16 @@ impl Simd for WasmSimd128 {
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         f32x4_trunc(a.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        i32x4_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i32x4_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self> {
@@ -310,29 +315,31 @@ impl Simd for WasmSimd128 {
     fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         <v128>::from(a).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        u32x4_relaxed_trunc_f32x4(a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        self.cvt_u32_precise_f32x4(a)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            u32x4_relaxed_trunc_f32x4(a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            self.cvt_u32_precise_f32x4(a)
+        }
     }
     #[inline(always)]
     fn cvt_u32_precise_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         u32x4_trunc_sat_f32x4(a.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        i32x4_relaxed_trunc_f32x4(a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        self.cvt_i32_precise_f32x4(a)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i32x4_relaxed_trunc_f32x4(a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            self.cvt_i32_precise_f32x4(a)
+        }
     }
     #[inline(always)]
     fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
@@ -482,15 +489,16 @@ impl Simd for WasmSimd128 {
         )
         .simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        i8x16_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i8x16_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -663,15 +671,16 @@ impl Simd for WasmSimd128 {
         )
         .simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        i8x16_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i8x16_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -762,7 +771,6 @@ impl Simd for WasmSimd128 {
     fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
         v128_not(a.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_mask8x16(
         self,
@@ -770,17 +778,14 @@ impl Simd for WasmSimd128 {
         b: mask8x16<Self>,
         c: mask8x16<Self>,
     ) -> mask8x16<Self> {
-        i8x16_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_mask8x16(
-        self,
-        a: mask8x16<Self>,
-        b: mask8x16<Self>,
-        c: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i8x16_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -937,15 +942,16 @@ impl Simd for WasmSimd128 {
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         u16x8_shuffle::<1, 3, 5, 7, 9, 11, 13, 15>(a.into(), b.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        i16x8_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i16x8_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -1102,15 +1108,16 @@ impl Simd for WasmSimd128 {
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         u16x8_shuffle::<1, 3, 5, 7, 9, 11, 13, 15>(a.into(), b.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        i16x8_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i16x8_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1199,7 +1206,6 @@ impl Simd for WasmSimd128 {
     fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
         v128_not(a.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_mask16x8(
         self,
@@ -1207,17 +1213,14 @@ impl Simd for WasmSimd128 {
         b: mask16x8<Self>,
         c: mask16x8<Self>,
     ) -> mask16x8<Self> {
-        i16x8_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_mask16x8(
-        self,
-        a: mask16x8<Self>,
-        b: mask16x8<Self>,
-        c: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i16x8_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -1374,15 +1377,16 @@ impl Simd for WasmSimd128 {
     fn unzip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         u32x4_shuffle::<1, 3, 5, 7>(a.into(), b.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        i32x4_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i32x4_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1543,15 +1547,16 @@ impl Simd for WasmSimd128 {
     fn unzip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         u32x4_shuffle::<1, 3, 5, 7>(a.into(), b.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        i32x4_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i32x4_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1640,7 +1645,6 @@ impl Simd for WasmSimd128 {
     fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
         v128_not(a.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_mask32x4(
         self,
@@ -1648,17 +1652,14 @@ impl Simd for WasmSimd128 {
         b: mask32x4<Self>,
         c: mask32x4<Self>,
     ) -> mask32x4<Self> {
-        i32x4_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_mask32x4(
-        self,
-        a: mask32x4<Self>,
-        b: mask32x4<Self>,
-        c: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i32x4_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -1806,25 +1807,27 @@ impl Simd for WasmSimd128 {
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         u64x2_shuffle::<1, 3>(a.into(), b.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        f64x2_relaxed_max(a.into(), b.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            f64x2_relaxed_max(a.into(), b.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            f64x2_max(a.into(), b.into()).simd_into(self)
+        }
     }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        f64x2_max(a.into(), b.into()).simd_into(self)
-    }
-    #[cfg(target_feature = "relaxed-simd")]
-    #[inline(always)]
-    fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        f64x2_relaxed_min(a.into(), b.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        f64x2_min(a.into(), b.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            f64x2_relaxed_min(a.into(), b.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            f64x2_min(a.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -1838,25 +1841,27 @@ impl Simd for WasmSimd128 {
         let b_is_nan = f64x2_ne(b.into(), b.into());
         v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        f64x2_relaxed_madd(a.into(), b.into(), c.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            f64x2_relaxed_madd(a.into(), b.into(), c.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            self.add_f64x2(self.mul_f64x2(a, b), c)
+        }
     }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        self.add_f64x2(self.mul_f64x2(a, b), c)
-    }
-    #[cfg(target_feature = "relaxed-simd")]
-    #[inline(always)]
-    fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        f64x2_relaxed_madd(a.into(), b.into(), f64x2_neg(c.into())).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
     #[inline(always)]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        self.sub_f64x2(self.mul_f64x2(a, b), c)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            f64x2_relaxed_madd(a.into(), b.into(), f64x2_neg(c.into())).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            self.sub_f64x2(self.mul_f64x2(a, b), c)
+        }
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -1878,15 +1883,16 @@ impl Simd for WasmSimd128 {
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         f64x2_trunc(a.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        i64x2_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i64x2_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self> {
@@ -1963,7 +1969,6 @@ impl Simd for WasmSimd128 {
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
         v128_not(a.into()).simd_into(self)
     }
-    #[cfg(target_feature = "relaxed-simd")]
     #[inline(always)]
     fn select_mask64x2(
         self,
@@ -1971,17 +1976,14 @@ impl Simd for WasmSimd128 {
         b: mask64x2<Self>,
         c: mask64x2<Self>,
     ) -> mask64x2<Self> {
-        i64x2_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
-    }
-    #[cfg(not(target_feature = "relaxed-simd"))]
-    #[inline(always)]
-    fn select_mask64x2(
-        self,
-        a: mask64x2<Self>,
-        b: mask64x2<Self>,
-        c: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        #[cfg(target_feature = "relaxed-simd")]
+        {
+            i64x2_relaxed_laneselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
+        #[cfg(not(target_feature = "relaxed-simd"))]
+        {
+            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
