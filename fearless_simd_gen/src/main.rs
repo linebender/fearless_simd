@@ -11,6 +11,8 @@ use std::{fs::File, io::Write, path::Path};
 use clap::{Parser, ValueEnum};
 use proc_macro2::TokenStream;
 
+use crate::level::Level as _;
+
 mod arch;
 mod generic;
 mod level;
@@ -60,11 +62,11 @@ impl Module {
             Self::SimdTypes => mk_simd_types::mk_simd_types(),
             Self::SimdTrait => mk_simd_trait::mk_simd_trait(),
             Self::Ops => mk_ops::mk_ops(),
-            Self::Neon => mk_neon::mk_neon_impl(&mk_neon::Neon),
-            Self::Wasm => mk_wasm::mk_wasm128_impl(&mk_wasm::WasmSimd128),
-            Self::Fallback => mk_fallback::mk_fallback_impl(&mk_fallback::Fallback),
-            Self::Sse4_2 => mk_sse4_2::mk_sse4_2_impl(&mk_sse4_2::Sse4_2),
-            Self::Avx2 => mk_avx2::mk_avx2_impl(&mk_avx2::Avx2),
+            Self::Neon => mk_neon::Neon.make_module(),
+            Self::Wasm => mk_wasm::WasmSimd128.make_module(),
+            Self::Fallback => mk_fallback::Fallback.make_module(),
+            Self::Sse4_2 => mk_sse4_2::Sse4_2.make_module(),
+            Self::Avx2 => mk_avx2::Avx2.make_module(),
         }
     }
 

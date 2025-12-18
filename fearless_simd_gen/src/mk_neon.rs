@@ -13,7 +13,7 @@ use crate::ops::{Op, valid_reinterpret};
 use crate::{
     arch::neon::{self, arch_ty, cvt_intrinsic, simple_intrinsic, split_intrinsic},
     ops::OpSig,
-    types::{SIMD_TYPES, ScalarType, VecType, type_imports},
+    types::{SIMD_TYPES, ScalarType, VecType},
 };
 
 #[derive(Clone, Copy)]
@@ -28,6 +28,28 @@ impl Level for Neon {
         128
     }
 
+    fn max_block_size(&self) -> usize {
+        512
+    }
+
+    fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
+        arch_ty(vec_ty).into_token_stream()
+    }
+
+    fn token_doc(&self) -> &'static str {
+        r#"The SIMD token for the "neon" level."#
+    }
+
+    fn token_inner(&self) -> TokenStream {
+        quote!(crate::core_arch::aarch64::Neon)
+    }
+
+    fn make_module_prelude(&self) -> TokenStream {
+        quote! {
+            use core::arch::aarch64::*;
+        }
+    }
+
     fn make_vectorize_body(&self) -> TokenStream {
         quote! {
         #[target_feature(enable = "neon")]
@@ -37,6 +59,17 @@ impl Level for Neon {
             f()
         }
         unsafe { vectorize_neon(f) }
+        }
+    }
+
+    fn make_impl_body(&self) -> TokenStream {
+        quote! {
+            #[inline]
+            pub const unsafe fn new_unchecked() -> Self {
+                Neon {
+                    neon: unsafe { crate::core_arch::aarch64::Neon::new_unchecked() },
+                }
+            }
         }
     }
 
@@ -432,74 +465,36 @@ impl Level for Neon {
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }
     }
-}
 
-pub(crate) fn mk_neon_impl(level: &dyn Level) -> TokenStream {
-    let imports = type_imports();
-    let arch_types_impl = level.impl_arch_types(512, &|vec_ty| arch_ty(vec_ty).into_token_stream());
-    let simd_impl = level.mk_simd_impl();
-    let ty_impl = mk_type_impl();
-
-    quote! {
-        use core::arch::aarch64::*;
-
-        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
-
-        #imports
-
-        /// The SIMD token for the "neon" level.
-        #[derive(Clone, Copy, Debug)]
-        pub struct Neon {
-            pub neon: crate::core_arch::aarch64::Neon,
+    fn mk_type_impl(&self) -> TokenStream {
+        let mut result = vec![];
+        for ty in SIMD_TYPES {
+            let n_bits = ty.n_bits();
+            if !(n_bits == 64 || n_bits == 128 || n_bits == 256 || n_bits == 512) {
+                continue;
             }
-
-        impl Neon {
-            #[inline]
-            pub const unsafe fn new_unchecked() -> Self {
-                Neon {
-                    neon: unsafe { crate::core_arch::aarch64::Neon::new_unchecked() },
-                }
-                }
-            }
-
-        impl Seal for Neon {}
-
-        #simd_impl
-
-        #arch_types_impl
-
-        #ty_impl
-    }
-}
-
-fn mk_type_impl() -> TokenStream {
-    let mut result = vec![];
-    for ty in SIMD_TYPES {
-        let n_bits = ty.n_bits();
-        if !(n_bits == 64 || n_bits == 128 || n_bits == 256 || n_bits == 512) {
-            continue;
-        }
-        let simd = ty.rust();
-        let arch = neon::arch_ty(ty);
-        result.push(quote! {
-            impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
-                #[inline(always)]
-                fn simd_from(arch: #arch, simd: S) -> Self {
-                    Self {
-                        val: unsafe { core::mem::transmute_copy(&arch) },
-                        simd
+            let simd = ty.rust();
+            let arch = neon::arch_ty(ty);
+            result.push(quote! {
+                impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
+                    #[inline(always)]
+                    fn simd_from(arch: #arch, simd: S) -> Self {
+                        Self {
+                            val: unsafe { core::mem::transmute_copy(&arch) },
+                            simd
+                        }
                     }
                 }
-            }
-            impl<S: Simd> From<#simd<S>> for #arch {
-                #[inline(always)]
-                fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute_copy(&value.val) }
+                impl<S: Simd> From<#simd<S>> for #arch {
+                    #[inline(always)]
+                    fn from(value: #simd<S>) -> Self {
+                        unsafe { core::mem::transmute_copy(&value.val) }
+                    }
                 }
-            }
-        });
-    }
-    quote! {
-        #( #result )*
+            });
+        }
+        quote! {
+            #( #result )*
+        }
     }
 }

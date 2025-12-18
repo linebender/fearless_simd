@@ -7,28 +7,33 @@ use quote::quote;
 use crate::{
     generic::generic_op,
     ops::{Op, ops_for_type},
-    types::{SIMD_TYPES, ScalarType, VecType},
+    types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
 
 pub(crate) trait Level {
     fn name(&self) -> &'static str;
     fn native_width(&self) -> usize;
+    fn max_block_size(&self) -> usize;
+    fn arch_ty(&self, vec_ty: &VecType) -> TokenStream;
+    fn token_doc(&self) -> &'static str;
+    fn token_inner(&self) -> TokenStream;
+
+    fn make_module_prelude(&self) -> TokenStream;
     fn make_vectorize_body(&self) -> TokenStream;
+    fn make_impl_body(&self) -> TokenStream;
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream;
+    fn mk_type_impl(&self) -> TokenStream;
 
     fn token(&self) -> Ident {
         Ident::new(self.name(), Span::call_site())
     }
 
-    fn impl_arch_types(
-        &self,
-        max_block_size: usize,
-        arch_ty: &dyn Fn(&VecType) -> TokenStream,
-    ) -> TokenStream {
+    fn impl_arch_types(&self) -> TokenStream {
         let mut assoc_types = vec![];
         for vec_ty in SIMD_TYPES {
             let ty_ident = vec_ty.rust();
-            let wrapper_ty = vec_ty.aligned_wrapper_ty(arch_ty, max_block_size);
+            let wrapper_ty =
+                vec_ty.aligned_wrapper_ty(|vec_ty| self.arch_ty(vec_ty), self.max_block_size());
             assoc_types.push(quote! {
                 type #ty_ident = #wrapper_ty;
             });
@@ -111,6 +116,45 @@ pub(crate) trait Level {
                     #methods
                 )*
             }
+        }
+    }
+
+    fn make_module(&self) -> TokenStream {
+        let level_tok = self.token();
+        let token_doc = self.token_doc();
+        let field_name = Ident::new(&self.name().to_ascii_lowercase(), Span::call_site());
+        let token_inner = self.token_inner();
+        let imports = type_imports();
+        let module_prelude = self.make_module_prelude();
+        let impl_body = self.make_impl_body();
+        let arch_types_impl = self.impl_arch_types();
+        let simd_impl = self.mk_simd_impl();
+        let ty_impl = self.mk_type_impl();
+
+        quote! {
+            use crate::{prelude::*, seal::Seal, arch_types::ArchTypes, Level};
+
+            #imports
+
+            #module_prelude
+
+            #[doc = #token_doc]
+            #[derive(Clone, Copy, Debug)]
+            pub struct #level_tok {
+                pub #field_name: #token_inner,
+            }
+
+            impl #level_tok {
+                #impl_body
+            }
+
+            impl Seal for #level_tok {}
+
+            #arch_types_impl
+
+            #simd_impl
+
+            #ty_impl
         }
     }
 }

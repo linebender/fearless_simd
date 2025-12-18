@@ -12,7 +12,7 @@ use crate::generic::{
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, valid_reinterpret};
-use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
+use crate::types::{SIMD_TYPES, ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{ToTokens as _, quote};
 
@@ -26,6 +26,31 @@ impl Level for Sse4_2 {
 
     fn native_width(&self) -> usize {
         128
+    }
+
+    fn max_block_size(&self) -> usize {
+        128
+    }
+
+    fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
+        arch_ty(vec_ty).into_token_stream()
+    }
+
+    fn token_doc(&self) -> &'static str {
+        r#"The SIMD token for the "SSE4.2" level."#
+    }
+
+    fn token_inner(&self) -> TokenStream {
+        quote!(crate::core_arch::x86::Sse4_2)
+    }
+
+    fn make_module_prelude(&self) -> TokenStream {
+        quote! {
+            #[cfg(target_arch = "x86")]
+            use core::arch::x86::*;
+            #[cfg(target_arch = "x86_64")]
+            use core::arch::x86_64::*;
+        }
     }
 
     fn make_vectorize_body(&self) -> TokenStream {
@@ -51,35 +76,8 @@ impl Level for Sse4_2 {
         }
     }
 
-    fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        make_method(op, vec_ty)
-    }
-}
-
-pub(crate) fn mk_sse4_2_impl(level: &dyn Level) -> TokenStream {
-    let imports = type_imports();
-    let arch_types_impl = level.impl_arch_types(128, &|vec_ty| arch_ty(vec_ty).into_token_stream());
-    let simd_impl = level.mk_simd_impl();
-    let ty_impl = mk_type_impl();
-
-    quote! {
-        #[cfg(target_arch = "x86")]
-        use core::arch::x86::*;
-        #[cfg(target_arch = "x86_64")]
-        use core::arch::x86_64::*;
-
-        use core::ops::*;
-        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
-
-        #imports
-
-        /// The SIMD token for the "SSE 4.2" level.
-        #[derive(Clone, Copy, Debug)]
-        pub struct Sse4_2 {
-            pub sse4_2: crate::core_arch::x86::Sse4_2,
-        }
-
-        impl Sse4_2 {
+    fn make_impl_body(&self) -> TokenStream {
+        quote! {
             /// Create a SIMD token.
             ///
             /// # Safety
@@ -92,46 +90,42 @@ pub(crate) fn mk_sse4_2_impl(level: &dyn Level) -> TokenStream {
                 }
             }
         }
-
-        impl Seal for Sse4_2 {}
-
-        #arch_types_impl
-
-        #simd_impl
-
-        #ty_impl
     }
-}
 
-fn mk_type_impl() -> TokenStream {
-    let mut result = vec![];
-    for ty in SIMD_TYPES {
-        let n_bits = ty.n_bits();
-        if n_bits != 128 {
-            continue;
-        }
-        let simd = ty.rust();
-        let arch = x86::arch_ty(ty);
-        result.push(quote! {
-            impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
-                #[inline(always)]
-                fn simd_from(arch: #arch, simd: S) -> Self {
-                    Self {
-                        val: unsafe { core::mem::transmute_copy(&arch) },
-                        simd
+    fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        make_method(op, vec_ty)
+    }
+
+    fn mk_type_impl(&self) -> TokenStream {
+        let mut result = vec![];
+        for ty in SIMD_TYPES {
+            let n_bits = ty.n_bits();
+            if n_bits != 128 {
+                continue;
+            }
+            let simd = ty.rust();
+            let arch = x86::arch_ty(ty);
+            result.push(quote! {
+                impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
+                    #[inline(always)]
+                    fn simd_from(arch: #arch, simd: S) -> Self {
+                        Self {
+                            val: unsafe { core::mem::transmute_copy(&arch) },
+                            simd
+                        }
                     }
                 }
-            }
-            impl<S: Simd> From<#simd<S>> for #arch {
-                #[inline(always)]
-                fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute_copy(&value.val) }
+                impl<S: Simd> From<#simd<S>> for #arch {
+                    #[inline(always)]
+                    fn from(value: #simd<S>) -> Self {
+                        unsafe { core::mem::transmute_copy(&value.val) }
+                    }
                 }
-            }
-        });
-    }
-    quote! {
-        #( #result )*
+            });
+        }
+        quote! {
+            #( #result )*
+        }
     }
 }
 

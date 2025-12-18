@@ -14,7 +14,7 @@ use crate::ops::{Op, Quantifier, valid_reinterpret};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     ops::OpSig,
-    types::{SIMD_TYPES, ScalarType, VecType, type_imports},
+    types::{SIMD_TYPES, ScalarType, VecType},
 };
 
 #[derive(Clone, Copy)]
@@ -29,10 +29,41 @@ impl Level for WasmSimd128 {
         128
     }
 
+    fn max_block_size(&self) -> usize {
+        128
+    }
+
+    fn arch_ty(&self, _vec_ty: &VecType) -> TokenStream {
+        quote! { v128 }
+    }
+
+    fn token_doc(&self) -> &'static str {
+        r#"The SIMD token for the "wasm128" level."#
+    }
+
+    fn token_inner(&self) -> TokenStream {
+        quote!(crate::core_arch::wasm32::WasmSimd128)
+    }
+
+    fn make_module_prelude(&self) -> TokenStream {
+        quote! {
+            use core::arch::wasm32::*;
+        }
+    }
+
     fn make_vectorize_body(&self) -> TokenStream {
         // WASM SIMD128 is enabled statically, so a `#[target_feature]` block does nothing
         quote! {
             f()
+        }
+    }
+
+    fn make_impl_body(&self) -> TokenStream {
+        quote! {
+            #[inline]
+            pub const fn new_unchecked() -> Self {
+                Self { wasmsimd128: crate::core_arch::wasm32::WasmSimd128::new() }
+            }
         }
     }
 
@@ -595,72 +626,34 @@ impl Level for WasmSimd128 {
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }
     }
-}
 
-pub(crate) fn mk_wasm128_impl(level: &dyn Level) -> TokenStream {
-    let imports = type_imports();
-    let arch_types_impl = level.impl_arch_types(128, &|_| quote!(v128));
-    let simd_impl = level.mk_simd_impl();
-    let ty_impl = mk_type_impl();
-    let level_tok = level.token();
-
-    quote! {
-        use core::arch::wasm32::*;
-
-        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
-
-        #imports
-
-        /// The SIMD token for the "wasm128" level.
-        #[derive(Clone, Copy, Debug)]
-        pub struct #level_tok {
-            pub wasmsimd128: crate::core_arch::wasm32::WasmSimd128,
-        }
-
-        impl #level_tok {
-            // TODO: this can be renamed to `new` like with `Fallback`.
-            #[inline]
-            pub const fn new_unchecked() -> Self {
-                Self { wasmsimd128: crate::core_arch::wasm32::WasmSimd128::new() }
+    fn mk_type_impl(&self) -> TokenStream {
+        let mut result = vec![];
+        for ty in SIMD_TYPES {
+            if ty.n_bits() != 128 {
+                continue;
             }
-        }
-
-        impl Seal for #level_tok {}
-
-        #arch_types_impl
-
-        #simd_impl
-
-        #ty_impl
-    }
-}
-
-fn mk_type_impl() -> TokenStream {
-    let mut result = vec![];
-    for ty in SIMD_TYPES {
-        if ty.n_bits() != 128 {
-            continue;
-        }
-        let simd = ty.rust();
-        result.push(quote! {
-            impl<S: Simd> SimdFrom<v128, S> for #simd<S> {
-                #[inline(always)]
-                fn simd_from(arch: v128, simd: S) -> Self {
-                    Self {
-                        val: unsafe { core::mem::transmute_copy(&arch) },
-                        simd
+            let simd = ty.rust();
+            result.push(quote! {
+                impl<S: Simd> SimdFrom<v128, S> for #simd<S> {
+                    #[inline(always)]
+                    fn simd_from(arch: v128, simd: S) -> Self {
+                        Self {
+                            val: unsafe { core::mem::transmute_copy(&arch) },
+                            simd
+                        }
                     }
                 }
-            }
-            impl<S: Simd> From<#simd<S>> for v128 {
-                #[inline(always)]
-                fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute_copy(&value.val) }
+                impl<S: Simd> From<#simd<S>> for v128 {
+                    #[inline(always)]
+                    fn from(value: #simd<S>) -> Self {
+                        unsafe { core::mem::transmute_copy(&value.val) }
+                    }
                 }
-            }
-        });
-    }
-    quote! {
-        #( #result )*
+            });
+        }
+        quote! {
+            #( #result )*
+        }
     }
 }

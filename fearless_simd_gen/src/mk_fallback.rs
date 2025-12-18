@@ -5,7 +5,7 @@ use crate::arch::fallback::{self, arch_ty};
 use crate::generic::{generic_from_bytes, generic_op_name, generic_to_bytes};
 use crate::level::Level;
 use crate::ops::{Op, OpSig, RefKind, valid_reinterpret};
-use crate::types::{ScalarType, VecType, type_imports};
+use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -21,6 +21,93 @@ impl Level for Fallback {
         128
     }
 
+    fn max_block_size(&self) -> usize {
+        512
+    }
+
+    fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
+        arch_ty(vec_ty)
+    }
+
+    fn token_doc(&self) -> &'static str {
+        r#"The SIMD token for the "fallback" level."#
+    }
+
+    fn token_inner(&self) -> TokenStream {
+        quote!(crate::core_arch::fallback::Fallback)
+    }
+
+    fn make_module_prelude(&self) -> TokenStream {
+        quote! {
+            use core::ops::*;
+
+            #[cfg(all(feature = "libm", not(feature = "std")))]
+            trait FloatExt {
+                fn floor(self) -> Self;
+                fn ceil(self) -> Self;
+                fn round_ties_even(self) -> Self;
+                fn fract(self) -> Self;
+                fn sqrt(self) -> Self;
+                fn trunc(self) -> Self;
+            }
+            #[cfg(all(feature = "libm", not(feature = "std")))]
+            impl FloatExt for f32 {
+                #[inline(always)]
+                fn floor(self) -> f32 {
+                    libm::floorf(self)
+                }
+                #[inline(always)]
+                fn ceil(self) -> f32 {
+                    libm::ceilf(self)
+                }
+                #[inline(always)]
+                fn round_ties_even(self) -> f32 {
+                    libm::rintf(self)
+                }
+                #[inline(always)]
+                fn sqrt(self) -> f32 {
+                    libm::sqrtf(self)
+                }
+                #[inline(always)]
+                fn fract(self) -> f32 {
+                    self - self.trunc()
+                }
+                #[inline(always)]
+                fn trunc(self) -> f32 {
+                    libm::truncf(self)
+                }
+            }
+
+            #[cfg(all(feature = "libm", not(feature = "std")))]
+            impl FloatExt for f64 {
+                #[inline(always)]
+                fn floor(self) -> f64 {
+                    libm::floor(self)
+                }
+                #[inline(always)]
+                fn ceil(self) -> f64 {
+                    libm::ceil(self)
+                }
+                #[inline(always)]
+                fn round_ties_even(self) -> f64 {
+                    libm::rint(self)
+                }
+                #[inline(always)]
+                fn sqrt(self) -> f64 {
+                    libm::sqrt(self)
+                }
+                #[inline(always)]
+                fn fract(self) -> f64 {
+                    self - self.trunc()
+                }
+                #[inline(always)]
+                fn trunc(self) -> f64 {
+                    libm::trunc(self)
+                }
+            }
+        }
+    }
+
     fn make_vectorize_body(&self) -> TokenStream {
         quote! {
             f()
@@ -34,6 +121,17 @@ impl Level for Fallback {
             return Level::#level_tok(self);
             #[cfg(not(feature = "force_support_fallback"))]
             Level::baseline()
+        }
+    }
+
+    fn make_impl_body(&self) -> TokenStream {
+        quote! {
+            #[inline]
+            pub const fn new() -> Self {
+                Self {
+                    fallback: crate::core_arch::fallback::Fallback::new(),
+                }
+            }
         }
     }
 
@@ -394,104 +492,9 @@ impl Level for Fallback {
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }
     }
-}
 
-pub(crate) fn mk_fallback_impl(level: &dyn Level) -> TokenStream {
-    let imports = type_imports();
-    let arch_types_impl = level.impl_arch_types(512, &arch_ty);
-    let simd_impl = level.mk_simd_impl();
-
-    quote! {
-        use core::ops::*;
-        use crate::{seal::Seal, arch_types::ArchTypes, Bytes, Level, Simd, SimdInto};
-
-        #imports
-
-        #[cfg(all(feature = "libm", not(feature = "std")))]
-        trait FloatExt {
-            fn floor(self) -> Self;
-            fn ceil(self) -> Self;
-            fn round_ties_even(self) -> Self;
-            fn fract(self) -> Self;
-            fn sqrt(self) -> Self;
-            fn trunc(self) -> Self;
-        }
-        #[cfg(all(feature = "libm", not(feature = "std")))]
-        impl FloatExt for f32 {
-            #[inline(always)]
-            fn floor(self) -> f32 {
-                libm::floorf(self)
-            }
-            #[inline(always)]
-            fn ceil(self) -> f32 {
-                libm::ceilf(self)
-            }
-            #[inline(always)]
-            fn round_ties_even(self) -> f32 {
-                libm::rintf(self)
-            }
-            #[inline(always)]
-            fn sqrt(self) -> f32 {
-                libm::sqrtf(self)
-            }
-            #[inline(always)]
-            fn fract(self) -> f32 {
-                self - self.trunc()
-            }
-            #[inline(always)]
-            fn trunc(self) -> f32 {
-                libm::truncf(self)
-            }
-            }
-
-        #[cfg(all(feature = "libm", not(feature = "std")))]
-        impl FloatExt for f64 {
-            #[inline(always)]
-            fn floor(self) -> f64 {
-                libm::floor(self)
-            }
-            #[inline(always)]
-            fn ceil(self) -> f64 {
-                libm::ceil(self)
-            }
-            #[inline(always)]
-            fn round_ties_even(self) -> f64 {
-                libm::rint(self)
-            }
-            #[inline(always)]
-            fn sqrt(self) -> f64 {
-                libm::sqrt(self)
-            }
-            #[inline(always)]
-            fn fract(self) -> f64 {
-                self - self.trunc()
-            }
-            #[inline(always)]
-            fn trunc(self) -> f64 {
-                libm::trunc(self)
-            }
-        }
-
-        /// The SIMD token for the "fallback" level.
-        #[derive(Clone, Copy, Debug)]
-        pub struct Fallback {
-            pub fallback: crate::core_arch::fallback::Fallback,
-        }
-
-        impl Fallback {
-            #[inline]
-            pub const fn new() -> Self {
-                Fallback {
-                    fallback: crate::core_arch::fallback::Fallback::new(),
-                }
-            }
-            }
-
-        impl Seal for Fallback {}
-
-        #arch_types_impl
-
-        #simd_impl
+    fn mk_type_impl(&self) -> TokenStream {
+        TokenStream::new()
     }
 }
 

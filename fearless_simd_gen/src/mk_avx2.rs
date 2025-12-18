@@ -12,7 +12,7 @@ use crate::generic::{
 use crate::level::Level;
 use crate::mk_sse4_2;
 use crate::ops::{Op, OpSig};
-use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
+use crate::types::{SIMD_TYPES, ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::{ToTokens as _, quote};
 
@@ -28,6 +28,31 @@ impl Level for Avx2 {
         256
     }
 
+    fn max_block_size(&self) -> usize {
+        256
+    }
+
+    fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
+        arch_ty(vec_ty).into_token_stream()
+    }
+
+    fn token_doc(&self) -> &'static str {
+        r#"The SIMD token for the "AVX2" and "FMA" level."#
+    }
+
+    fn token_inner(&self) -> TokenStream {
+        quote!(crate::core_arch::x86::Avx2)
+    }
+
+    fn make_module_prelude(&self) -> TokenStream {
+        quote! {
+            #[cfg(target_arch = "x86")]
+            use core::arch::x86::*;
+            #[cfg(target_arch = "x86_64")]
+            use core::arch::x86_64::*;
+        }
+    }
+
     fn make_vectorize_body(&self) -> TokenStream {
         quote! {
             #[target_feature(enable = "avx2,fma")]
@@ -39,87 +64,56 @@ impl Level for Avx2 {
         }
     }
 
-    fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        make_method(op, vec_ty)
-    }
-}
-
-pub(crate) fn mk_avx2_impl(level: &dyn Level) -> TokenStream {
-    let imports = type_imports();
-    let arch_types_impl = level.impl_arch_types(256, &|vec_ty| arch_ty(vec_ty).into_token_stream());
-    let simd_impl = level.mk_simd_impl();
-    let ty_impl = mk_type_impl();
-
-    quote! {
-        #[cfg(target_arch = "x86")]
-        use core::arch::x86::*;
-        #[cfg(target_arch = "x86_64")]
-        use core::arch::x86_64::*;
-
-        use core::ops::*;
-        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
-
-        #imports
-
-        /// The SIMD token for the "AVX2" and "FMA" level.
-        #[derive(Clone, Copy, Debug)]
-        pub struct Avx2 {
-            pub avx2: crate::core_arch::x86::Avx2,
-        }
-
-        impl Avx2 {
+    fn make_impl_body(&self) -> TokenStream {
+        quote! {
             /// Create a SIMD token.
             ///
             /// # Safety
             ///
-            /// The AVX2 and FMA CPU feature must be available.
+            /// The AVX2 and FMA CPU features must be available.
             #[inline]
             pub const unsafe fn new_unchecked() -> Self {
-                Avx2 {
+                Self {
                     avx2: unsafe { crate::core_arch::x86::Avx2::new_unchecked() },
                 }
             }
         }
-
-        impl Seal for Avx2 {}
-
-        #arch_types_impl
-
-        #simd_impl
-
-        #ty_impl
     }
-}
 
-fn mk_type_impl() -> TokenStream {
-    let mut result = vec![];
-    for ty in SIMD_TYPES {
-        let n_bits = ty.n_bits();
-        if n_bits != 256 {
-            continue;
-        }
-        let simd = ty.rust();
-        let arch = x86::arch_ty(ty);
-        result.push(quote! {
-            impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
-                #[inline(always)]
-                fn simd_from(arch: #arch, simd: S) -> Self {
-                    Self {
-                        val: unsafe { core::mem::transmute_copy(&arch) },
-                        simd
+    fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        make_method(op, vec_ty)
+    }
+
+    fn mk_type_impl(&self) -> TokenStream {
+        let mut result = vec![];
+        for ty in SIMD_TYPES {
+            let n_bits = ty.n_bits();
+            if n_bits != 256 {
+                continue;
+            }
+            let simd = ty.rust();
+            let arch = x86::arch_ty(ty);
+            result.push(quote! {
+                impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
+                    #[inline(always)]
+                    fn simd_from(arch: #arch, simd: S) -> Self {
+                        Self {
+                            val: unsafe { core::mem::transmute_copy(&arch) },
+                            simd
+                        }
                     }
                 }
-            }
-            impl<S: Simd> From<#simd<S>> for #arch {
-                #[inline(always)]
-                fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute_copy(&value.val) }
+                impl<S: Simd> From<#simd<S>> for #arch {
+                    #[inline(always)]
+                    fn from(value: #simd<S>) -> Self {
+                        unsafe { core::mem::transmute_copy(&value.val) }
+                    }
                 }
-            }
-        });
-    }
-    quote! {
-        #( #result )*
+            });
+        }
+        quote! {
+            #( #result )*
+        }
     }
 }
 
