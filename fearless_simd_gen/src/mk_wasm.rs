@@ -222,7 +222,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 OpSig::Select => {
                     // Rust includes unsigned versions of the lane select intrinsics, but they're
                     // just aliases for the signed ones
-                    let lane_ty = vec_ty.reinterpret(ScalarType::Int, vec_ty.scalar_bits);
+                    let lane_ty = vec_ty.cast(ScalarType::Int);
                     let lane_select = simple_intrinsic("relaxed_laneselect", &lane_ty);
 
                     quote! {

@@ -105,6 +105,12 @@ impl VecType {
         quote! { #newtype<#native_ty> }
     }
 
+    /// Returns a type of the same bit width and element width, but a different element type.
+    pub(crate) fn cast(&self, dst_scalar: ScalarType) -> Self {
+        Self::new(dst_scalar, self.scalar_bits, self.len)
+    }
+
+    /// Returns a type of the same bit width, but a different element type and element width.
     pub(crate) fn reinterpret(&self, dst_scalar: ScalarType, dst_scalar_bits: usize) -> Self {
         Self::new(dst_scalar, dst_scalar_bits, self.n_bits() / dst_scalar_bits)
     }

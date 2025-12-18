@@ -277,7 +277,7 @@ fn mk_simd_impl() -> TokenStream {
                     }
                 }
                 OpSig::Compare => {
-                    let mask_type = vec_ty.reinterpret(ScalarType::Mask, vec_ty.scalar_bits);
+                    let mask_type = vec_ty.cast(ScalarType::Mask);
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx: usize| {

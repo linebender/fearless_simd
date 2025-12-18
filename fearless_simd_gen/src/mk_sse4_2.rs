@@ -1018,7 +1018,7 @@ pub(crate) fn handle_mask_reduce(
 
     let (movemask, all_ones) = match vec_ty.scalar_bits {
         32 | 64 => {
-            let float_ty = vec_ty.reinterpret(ScalarType::Float, vec_ty.scalar_bits);
+            let float_ty = vec_ty.cast(ScalarType::Float);
             let movemask = simple_intrinsic("movemask", &float_ty);
             let cast = cast_ident(
                 ScalarType::Mask,

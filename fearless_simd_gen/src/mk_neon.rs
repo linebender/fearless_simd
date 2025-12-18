@@ -105,7 +105,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Shift => {
-                    let dup_type = vec_ty.reinterpret(ScalarType::Int, vec_ty.scalar_bits);
+                    let dup_type = vec_ty.cast(ScalarType::Int);
                     let scalar = dup_type.scalar.rust(dup_type.scalar_bits);
                     let dup_intrinsic = split_intrinsic("vdup", "n", &dup_type);
                     let shift = if method == "shr" {
@@ -246,10 +246,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
                             // For a right shift, we need to negate the shift amount
                             if method == "shrv" {
-                                let neg = simple_intrinsic(
-                                    "vneg",
-                                    &vec_ty.reinterpret(ScalarType::Int, vec_ty.scalar_bits),
-                                );
+                                let neg = simple_intrinsic("vneg", &vec_ty.cast(ScalarType::Int));
                                 let arg1 = &args[1];
                                 args[1] = quote! { #neg(#arg1) };
                             }
@@ -261,8 +258,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                         "copysign" => {
                             let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
-                            let unsigned_ty =
-                                vec_ty.reinterpret(ScalarType::Unsigned, vec_ty.scalar_bits);
+                            let unsigned_ty = vec_ty.cast(ScalarType::Unsigned);
                             let sign_mask =
                                 neon::expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
                             let vbsl = simple_intrinsic("vbsl", vec_ty);
