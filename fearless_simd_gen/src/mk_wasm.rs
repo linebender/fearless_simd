@@ -14,7 +14,7 @@ use crate::ops::{Op, Quantifier, valid_reinterpret};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     ops::OpSig,
-    types::{SIMD_TYPES, ScalarType, VecType},
+    types::{ScalarType, VecType},
 };
 
 #[derive(Clone, Copy)]
@@ -624,36 +624,6 @@ impl Level for WasmSimd128 {
             }),
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
-        }
-    }
-
-    fn mk_type_impl(&self) -> TokenStream {
-        let mut result = vec![];
-        for ty in SIMD_TYPES {
-            if ty.n_bits() != 128 {
-                continue;
-            }
-            let simd = ty.rust();
-            result.push(quote! {
-                impl<S: Simd> SimdFrom<v128, S> for #simd<S> {
-                    #[inline(always)]
-                    fn simd_from(arch: v128, simd: S) -> Self {
-                        Self {
-                            val: unsafe { core::mem::transmute_copy(&arch) },
-                            simd
-                        }
-                    }
-                }
-                impl<S: Simd> From<#simd<S>> for v128 {
-                    #[inline(always)]
-                    fn from(value: #simd<S>) -> Self {
-                        unsafe { core::mem::transmute_copy(&value.val) }
-                    }
-                }
-            });
-        }
-        quote! {
-            #( #result )*
         }
     }
 }

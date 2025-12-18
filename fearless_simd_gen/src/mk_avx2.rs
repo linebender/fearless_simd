@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    self, arch_ty, coarse_type, extend_intrinsic, intrinsic_ident, op_suffix, pack_intrinsic,
+    arch_ty, coarse_type, extend_intrinsic, intrinsic_ident, op_suffix, pack_intrinsic,
     set1_intrinsic, simple_intrinsic,
 };
 use crate::generic::{
@@ -12,7 +12,7 @@ use crate::generic::{
 use crate::level::Level;
 use crate::mk_sse4_2;
 use crate::ops::{Op, OpSig};
-use crate::types::{SIMD_TYPES, ScalarType, VecType};
+use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::{ToTokens as _, quote};
 
@@ -82,38 +82,6 @@ impl Level for Avx2 {
 
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         make_method(op, vec_ty)
-    }
-
-    fn mk_type_impl(&self) -> TokenStream {
-        let mut result = vec![];
-        for ty in SIMD_TYPES {
-            let n_bits = ty.n_bits();
-            if n_bits != 256 {
-                continue;
-            }
-            let simd = ty.rust();
-            let arch = x86::arch_ty(ty);
-            result.push(quote! {
-                impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
-                    #[inline(always)]
-                    fn simd_from(arch: #arch, simd: S) -> Self {
-                        Self {
-                            val: unsafe { core::mem::transmute_copy(&arch) },
-                            simd
-                        }
-                    }
-                }
-                impl<S: Simd> From<#simd<S>> for #arch {
-                    #[inline(always)]
-                    fn from(value: #simd<S>) -> Self {
-                        unsafe { core::mem::transmute_copy(&value.val) }
-                    }
-                }
-            });
-        }
-        quote! {
-            #( #result )*
-        }
     }
 }
 

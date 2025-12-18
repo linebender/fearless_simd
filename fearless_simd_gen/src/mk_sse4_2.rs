@@ -12,7 +12,7 @@ use crate::generic::{
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, valid_reinterpret};
-use crate::types::{SIMD_TYPES, ScalarType, VecType};
+use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{ToTokens as _, quote};
 
@@ -94,38 +94,6 @@ impl Level for Sse4_2 {
 
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         make_method(op, vec_ty)
-    }
-
-    fn mk_type_impl(&self) -> TokenStream {
-        let mut result = vec![];
-        for ty in SIMD_TYPES {
-            let n_bits = ty.n_bits();
-            if n_bits != 128 {
-                continue;
-            }
-            let simd = ty.rust();
-            let arch = x86::arch_ty(ty);
-            result.push(quote! {
-                impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
-                    #[inline(always)]
-                    fn simd_from(arch: #arch, simd: S) -> Self {
-                        Self {
-                            val: unsafe { core::mem::transmute_copy(&arch) },
-                            simd
-                        }
-                    }
-                }
-                impl<S: Simd> From<#simd<S>> for #arch {
-                    #[inline(always)]
-                    fn from(value: #simd<S>) -> Self {
-                        unsafe { core::mem::transmute_copy(&value.val) }
-                    }
-                }
-            });
-        }
-        quote! {
-            #( #result )*
-        }
     }
 }
 

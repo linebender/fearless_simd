@@ -13,7 +13,7 @@ use crate::ops::{Op, valid_reinterpret};
 use crate::{
     arch::neon::{self, arch_ty, cvt_intrinsic, simple_intrinsic, split_intrinsic},
     ops::OpSig,
-    types::{SIMD_TYPES, ScalarType, VecType},
+    types::{ScalarType, VecType},
 };
 
 #[derive(Clone, Copy)]
@@ -463,38 +463,6 @@ impl Level for Neon {
             OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 512, arch_ty),
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
-        }
-    }
-
-    fn mk_type_impl(&self) -> TokenStream {
-        let mut result = vec![];
-        for ty in SIMD_TYPES {
-            let n_bits = ty.n_bits();
-            if !(n_bits == 64 || n_bits == 128 || n_bits == 256 || n_bits == 512) {
-                continue;
-            }
-            let simd = ty.rust();
-            let arch = neon::arch_ty(ty);
-            result.push(quote! {
-                impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
-                    #[inline(always)]
-                    fn simd_from(arch: #arch, simd: S) -> Self {
-                        Self {
-                            val: unsafe { core::mem::transmute_copy(&arch) },
-                            simd
-                        }
-                    }
-                }
-                impl<S: Simd> From<#simd<S>> for #arch {
-                    #[inline(always)]
-                    fn from(value: #simd<S>) -> Self {
-                        unsafe { core::mem::transmute_copy(&value.val) }
-                    }
-                }
-            });
-        }
-        quote! {
-            #( #result )*
         }
     }
 }

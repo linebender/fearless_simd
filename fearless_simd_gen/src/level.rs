@@ -22,7 +22,6 @@ pub(crate) trait Level {
     fn make_vectorize_body(&self) -> TokenStream;
     fn make_impl_body(&self) -> TokenStream;
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream;
-    fn mk_type_impl(&self) -> TokenStream;
 
     fn token(&self) -> Ident {
         Ident::new(self.name(), Span::call_site())
@@ -116,6 +115,42 @@ pub(crate) trait Level {
                     #methods
                 )*
             }
+        }
+    }
+
+    fn mk_type_impl(&self) -> TokenStream {
+        let native_width = self.native_width();
+        let max_block_size = self.max_block_size();
+        let mut result = vec![];
+        for ty in SIMD_TYPES {
+            let n_bits = ty.n_bits();
+            // If n_bits is below our native width (e.g. 128 bits for AVX2), another module will have already
+            // implemented the conversion.
+            if n_bits > max_block_size || n_bits < native_width {
+                continue;
+            }
+            let simd = ty.rust();
+            let arch = self.arch_ty(ty);
+            result.push(quote! {
+                impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
+                    #[inline(always)]
+                    fn simd_from(arch: #arch, simd: S) -> Self {
+                        Self {
+                            val: unsafe { core::mem::transmute_copy(&arch) },
+                            simd
+                        }
+                    }
+                }
+                impl<S: Simd> From<#simd<S>> for #arch {
+                    #[inline(always)]
+                    fn from(value: #simd<S>) -> Self {
+                        unsafe { core::mem::transmute_copy(&value.val) }
+                    }
+                }
+            });
+        }
+        quote! {
+            #( #result )*
         }
     }
 
