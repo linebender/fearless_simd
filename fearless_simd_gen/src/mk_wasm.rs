@@ -4,7 +4,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::arch::wasm::{arch_ty, v128_intrinsic};
+use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
     generic_from_bytes, generic_op_name, generic_to_bytes, scalar_binary,
@@ -380,8 +380,8 @@ impl Level for WasmSimd128 {
                     }
                     _ => unimplemented!(),
                 };
-                let dst_ty = arch_ty(&vec_ty.reinterpret(target_ty, scalar_bits));
-                let src_ty = arch_ty(vec_ty);
+                let dst_ty = arch_prefix(&vec_ty.reinterpret(target_ty, scalar_bits));
+                let src_ty = arch_prefix(vec_ty);
                 let conversion_fn = format_ident!("{dst_ty}_{op}_{src_ty}");
 
                 if uses_relaxed {

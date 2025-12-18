@@ -11,7 +11,7 @@ use crate::generic::{
 use crate::level::Level;
 use crate::ops::{Op, valid_reinterpret};
 use crate::{
-    arch::neon::{self, arch_ty, cvt_intrinsic, simple_intrinsic, split_intrinsic},
+    arch::neon::{self, cvt_intrinsic, simple_intrinsic, split_intrinsic},
     ops::OpSig,
     types::{ScalarType, VecType},
 };
@@ -33,7 +33,19 @@ impl Level for Neon {
     }
 
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
-        arch_ty(vec_ty).into_token_stream()
+        let scalar = match vec_ty.scalar {
+            ScalarType::Float => "float",
+            ScalarType::Unsigned => "uint",
+            ScalarType::Int | ScalarType::Mask => "int",
+        };
+        let name = if vec_ty.n_bits() == 256 {
+            format!("{}{}x{}x2_t", scalar, vec_ty.scalar_bits, vec_ty.len / 2)
+        } else if vec_ty.n_bits() == 512 {
+            format!("{}{}x{}x4_t", scalar, vec_ty.scalar_bits, vec_ty.len / 4)
+        } else {
+            format!("{}{}x{}_t", scalar, vec_ty.scalar_bits, vec_ty.len)
+        };
+        Ident::new(&name, Span::call_site()).into_token_stream()
     }
 
     fn token_doc(&self) -> &'static str {
@@ -52,13 +64,13 @@ impl Level for Neon {
 
     fn make_vectorize_body(&self) -> TokenStream {
         quote! {
-        #[target_feature(enable = "neon")]
-        #[inline]
-        // unsafe not needed here with tf11, but can be justified
-        unsafe fn vectorize_neon<F: FnOnce() -> R, R>(f: F) -> R {
-            f()
-        }
-        unsafe { vectorize_neon(f) }
+            #[target_feature(enable = "neon")]
+            #[inline]
+            // unsafe not needed here with tf11, but can be justified
+            unsafe fn vectorize_neon<F: FnOnce() -> R, R>(f: F) -> R {
+                f()
+            }
+            unsafe { vectorize_neon(f) }
         }
     }
 
@@ -174,7 +186,7 @@ impl Level for Neon {
                 let target_scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
 
                 if method == "narrow" {
-                    let arch = neon::arch_ty(vec_ty);
+                    let arch = self.arch_ty(vec_ty);
 
                     let id1 = Ident::new(&format!("vmovn_{}", vec_scalar_ty), Span::call_site());
                     let id2 =
@@ -192,7 +204,7 @@ impl Level for Neon {
                         }
                     }
                 } else {
-                    let arch = neon::arch_ty(&target_ty);
+                    let arch = self.arch_ty(&target_ty);
                     let id1 = Ident::new(&format!("vmovl_{}", vec_scalar_ty), Span::call_site());
                     let id2 = Ident::new(&format!("vget_low_{}", vec_scalar_ty), Span::call_site());
                     let id3 =
@@ -323,7 +335,7 @@ impl Level for Neon {
             }
             OpSig::Combine { combined_ty } => {
                 let combined_wrapper = combined_ty.aligned_wrapper();
-                let combined_arch_ty = arch_ty(&combined_ty);
+                let combined_arch_ty = self.arch_ty(&combined_ty);
                 let combined_rust = combined_ty.rust();
                 let expr = match combined_ty.n_bits() {
                     512 => quote! {
@@ -342,7 +354,7 @@ impl Level for Neon {
             }
             OpSig::Split { half_ty } => {
                 let split_wrapper = half_ty.aligned_wrapper();
-                let split_arch_ty = arch_ty(&half_ty);
+                let split_arch_ty = self.arch_ty(&half_ty);
                 let half_rust = half_ty.rust();
                 let expr = match half_ty.n_bits() {
                     256 => quote! {
@@ -460,7 +472,9 @@ impl Level for Neon {
             OpSig::FromArray { kind } => {
                 generic_from_array(method_sig, vec_ty, kind, 512, load_intrinsic)
             }
-            OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 512, arch_ty),
+            OpSig::AsArray { kind } => {
+                generic_as_array(method_sig, vec_ty, kind, 512, |vec_ty| self.arch_ty(vec_ty))
+            }
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }

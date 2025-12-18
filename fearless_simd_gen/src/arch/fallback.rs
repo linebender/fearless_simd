@@ -66,12 +66,6 @@ pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
     quote! {#ty_prefix::#ident}
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
-    let scalar_rust = ty.scalar.rust(ty.scalar_bits);
-    let len = ty.len;
-    quote!([#scalar_rust; #len])
-}
-
 pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
     let Some(translated) = translate_op(op, ty.scalar == ScalarType::Float) else {
         unimplemented!("missing {op}");

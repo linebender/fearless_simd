@@ -81,81 +81,81 @@ impl Level for Avx2 {
     }
 
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        make_method(op, vec_ty)
-    }
-}
+        let scalar_bits = vec_ty.scalar_bits;
+        let Op { sig, method, .. } = op;
+        let method_sig = op.simd_trait_method_sig(vec_ty);
 
-fn make_method(op: Op, vec_ty: &VecType) -> TokenStream {
-    let scalar_bits = vec_ty.scalar_bits;
-    let Op { sig, method, .. } = op;
-    let method_sig = op.simd_trait_method_sig(vec_ty);
-
-    match sig {
-        OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty),
-        OpSig::Compare => mk_sse4_2::handle_compare(method_sig, method, vec_ty),
-        OpSig::Unary => mk_sse4_2::handle_unary(method_sig, method, vec_ty),
-        OpSig::WidenNarrow { target_ty } => {
-            handle_widen_narrow(method_sig, method, vec_ty, target_ty)
-        }
-        OpSig::Binary => match method {
-            "shlv" if scalar_bits >= 32 => handle_shift_vectored(method_sig, method, vec_ty),
-            "shrv" if scalar_bits >= 32 => handle_shift_vectored(method_sig, method, vec_ty),
-            _ => mk_sse4_2::handle_binary(method_sig, method, vec_ty),
-        },
-        OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty),
-        OpSig::Ternary => match method {
-            "mul_add" => {
-                let intrinsic = simple_intrinsic("fmadd", vec_ty);
-                quote! {
-                    #method_sig {
-                        unsafe { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) }
+        match sig {
+            OpSig::Splat => mk_sse4_2::handle_splat(method_sig, vec_ty),
+            OpSig::Compare => mk_sse4_2::handle_compare(method_sig, method, vec_ty),
+            OpSig::Unary => mk_sse4_2::handle_unary(method_sig, method, vec_ty),
+            OpSig::WidenNarrow { target_ty } => {
+                handle_widen_narrow(method_sig, method, vec_ty, target_ty)
+            }
+            OpSig::Binary => match method {
+                "shlv" if scalar_bits >= 32 => handle_shift_vectored(method_sig, method, vec_ty),
+                "shrv" if scalar_bits >= 32 => handle_shift_vectored(method_sig, method, vec_ty),
+                _ => mk_sse4_2::handle_binary(method_sig, method, vec_ty),
+            },
+            OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty),
+            OpSig::Ternary => match method {
+                "mul_add" => {
+                    let intrinsic = simple_intrinsic("fmadd", vec_ty);
+                    quote! {
+                        #method_sig {
+                            unsafe { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) }
+                        }
                     }
                 }
-            }
-            "mul_sub" => {
-                let intrinsic = simple_intrinsic("fmsub", vec_ty);
-                quote! {
-                    #method_sig {
-                        unsafe { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) }
+                "mul_sub" => {
+                    let intrinsic = simple_intrinsic("fmsub", vec_ty);
+                    quote! {
+                        #method_sig {
+                            unsafe { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) }
+                        }
                     }
                 }
+                _ => mk_sse4_2::handle_ternary(method_sig, method, vec_ty),
+            },
+            OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty),
+            OpSig::Combine { combined_ty } => handle_combine(method_sig, vec_ty, &combined_ty),
+            OpSig::Split { half_ty } => handle_split(method_sig, vec_ty, &half_ty),
+            OpSig::Zip { select_low } => mk_sse4_2::handle_zip(method_sig, vec_ty, select_low),
+            OpSig::Unzip { select_even } => {
+                mk_sse4_2::handle_unzip(method_sig, vec_ty, select_even)
             }
-            _ => mk_sse4_2::handle_ternary(method_sig, method, vec_ty),
-        },
-        OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty),
-        OpSig::Combine { combined_ty } => handle_combine(method_sig, vec_ty, &combined_ty),
-        OpSig::Split { half_ty } => handle_split(method_sig, vec_ty, &half_ty),
-        OpSig::Zip { select_low } => mk_sse4_2::handle_zip(method_sig, vec_ty, select_low),
-        OpSig::Unzip { select_even } => mk_sse4_2::handle_unzip(method_sig, vec_ty, select_even),
-        OpSig::Cvt {
-            target_ty,
-            scalar_bits,
-            precise,
-        } => mk_sse4_2::handle_cvt(method_sig, vec_ty, target_ty, scalar_bits, precise),
-        OpSig::Reinterpret {
-            target_ty,
-            scalar_bits,
-        } => mk_sse4_2::handle_reinterpret(method_sig, vec_ty, target_ty, scalar_bits),
-        OpSig::MaskReduce {
-            quantifier,
-            condition,
-        } => mk_sse4_2::handle_mask_reduce(method_sig, vec_ty, quantifier, condition),
-        OpSig::LoadInterleaved {
-            block_size,
-            block_count,
-        } => mk_sse4_2::handle_load_interleaved(method_sig, vec_ty, block_size, block_count),
-        OpSig::StoreInterleaved {
-            block_size,
-            block_count,
-        } => mk_sse4_2::handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
-        OpSig::FromArray { kind } => {
-            generic_from_array(method_sig, vec_ty, kind, 256, |block_ty| {
-                intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
-            })
+            OpSig::Cvt {
+                target_ty,
+                scalar_bits,
+                precise,
+            } => mk_sse4_2::handle_cvt(method_sig, vec_ty, target_ty, scalar_bits, precise),
+            OpSig::Reinterpret {
+                target_ty,
+                scalar_bits,
+            } => mk_sse4_2::handle_reinterpret(self, method_sig, vec_ty, target_ty, scalar_bits),
+            OpSig::MaskReduce {
+                quantifier,
+                condition,
+            } => mk_sse4_2::handle_mask_reduce(method_sig, vec_ty, quantifier, condition),
+            OpSig::LoadInterleaved {
+                block_size,
+                block_count,
+            } => mk_sse4_2::handle_load_interleaved(method_sig, vec_ty, block_size, block_count),
+            OpSig::StoreInterleaved {
+                block_size,
+                block_count,
+            } => mk_sse4_2::handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
+            OpSig::FromArray { kind } => {
+                generic_from_array(method_sig, vec_ty, kind, 256, |block_ty| {
+                    intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
+                })
+            }
+            OpSig::AsArray { kind } => {
+                generic_as_array(method_sig, vec_ty, kind, 256, |vec_ty| self.arch_ty(vec_ty))
+            }
+            OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+            OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }
-        OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 256, arch_ty),
-        OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
-        OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
     }
 }
 

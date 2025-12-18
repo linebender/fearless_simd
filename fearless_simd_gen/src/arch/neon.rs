@@ -41,22 +41,6 @@ fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> Ident {
-    let scalar = match ty.scalar {
-        ScalarType::Float => "float",
-        ScalarType::Unsigned => "uint",
-        ScalarType::Int | ScalarType::Mask => "int",
-    };
-    let name = if ty.n_bits() == 256 {
-        format!("{}{}x{}x2_t", scalar, ty.scalar_bits, ty.len / 2)
-    } else if ty.n_bits() == 512 {
-        format!("{}{}x{}x4_t", scalar, ty.scalar_bits, ty.len / 4)
-    } else {
-        format!("{}{}x{}_t", scalar, ty.scalar_bits, ty.len)
-    };
-    Ident::new(&name, Span::call_site())
-}
-
 // expects args and return value in arch dialect
 pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
     // There is no logical NOT for 64-bit, so we need this workaround.

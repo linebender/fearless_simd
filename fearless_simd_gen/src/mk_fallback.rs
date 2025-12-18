@@ -1,7 +1,7 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use crate::arch::fallback::{self, arch_ty};
+use crate::arch::fallback;
 use crate::generic::{generic_from_bytes, generic_op_name, generic_to_bytes};
 use crate::level::Level;
 use crate::ops::{Op, OpSig, RefKind, valid_reinterpret};
@@ -26,7 +26,9 @@ impl Level for Fallback {
     }
 
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
-        arch_ty(vec_ty)
+        let scalar_rust = vec_ty.scalar.rust(vec_ty.scalar_bits);
+        let len = vec_ty.len;
+        quote!([#scalar_rust; #len])
     }
 
     fn token_doc(&self) -> &'static str {

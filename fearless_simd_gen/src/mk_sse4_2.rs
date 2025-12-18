@@ -93,58 +93,56 @@ impl Level for Sse4_2 {
     }
 
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        make_method(op, vec_ty)
-    }
-}
+        let Op { sig, method, .. } = op;
+        let method_sig = op.simd_trait_method_sig(vec_ty);
 
-fn make_method(op: Op, vec_ty: &VecType) -> TokenStream {
-    let Op { sig, method, .. } = op;
-    let method_sig = op.simd_trait_method_sig(vec_ty);
-
-    match sig {
-        OpSig::Splat => handle_splat(method_sig, vec_ty),
-        OpSig::Compare => handle_compare(method_sig, method, vec_ty),
-        OpSig::Unary => handle_unary(method_sig, method, vec_ty),
-        OpSig::WidenNarrow { target_ty } => {
-            handle_widen_narrow(method_sig, method, vec_ty, target_ty)
+        match sig {
+            OpSig::Splat => handle_splat(method_sig, vec_ty),
+            OpSig::Compare => handle_compare(method_sig, method, vec_ty),
+            OpSig::Unary => handle_unary(method_sig, method, vec_ty),
+            OpSig::WidenNarrow { target_ty } => {
+                handle_widen_narrow(method_sig, method, vec_ty, target_ty)
+            }
+            OpSig::Binary => handle_binary(method_sig, method, vec_ty),
+            OpSig::Shift => handle_shift(method_sig, method, vec_ty),
+            OpSig::Ternary => handle_ternary(method_sig, method, vec_ty),
+            OpSig::Select => handle_select(method_sig, vec_ty),
+            OpSig::Combine { combined_ty } => generic_block_combine(method_sig, &combined_ty, 128),
+            OpSig::Split { half_ty } => generic_block_split(method_sig, &half_ty, 128),
+            OpSig::Zip { select_low } => handle_zip(method_sig, vec_ty, select_low),
+            OpSig::Unzip { select_even } => handle_unzip(method_sig, vec_ty, select_even),
+            OpSig::Cvt {
+                target_ty,
+                scalar_bits,
+                precise,
+            } => handle_cvt(method_sig, vec_ty, target_ty, scalar_bits, precise),
+            OpSig::Reinterpret {
+                target_ty,
+                scalar_bits,
+            } => handle_reinterpret(self, method_sig, vec_ty, target_ty, scalar_bits),
+            OpSig::MaskReduce {
+                quantifier,
+                condition,
+            } => handle_mask_reduce(method_sig, vec_ty, quantifier, condition),
+            OpSig::LoadInterleaved {
+                block_size,
+                block_count,
+            } => handle_load_interleaved(method_sig, vec_ty, block_size, block_count),
+            OpSig::StoreInterleaved {
+                block_size,
+                block_count,
+            } => handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
+            OpSig::FromArray { kind } => {
+                generic_from_array(method_sig, vec_ty, kind, 128, |block_ty| {
+                    intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
+                })
+            }
+            OpSig::AsArray { kind } => {
+                generic_as_array(method_sig, vec_ty, kind, 128, |vec_ty| self.arch_ty(vec_ty))
+            }
+            OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+            OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }
-        OpSig::Binary => handle_binary(method_sig, method, vec_ty),
-        OpSig::Shift => handle_shift(method_sig, method, vec_ty),
-        OpSig::Ternary => handle_ternary(method_sig, method, vec_ty),
-        OpSig::Select => handle_select(method_sig, vec_ty),
-        OpSig::Combine { combined_ty } => generic_block_combine(method_sig, &combined_ty, 128),
-        OpSig::Split { half_ty } => generic_block_split(method_sig, &half_ty, 128),
-        OpSig::Zip { select_low } => handle_zip(method_sig, vec_ty, select_low),
-        OpSig::Unzip { select_even } => handle_unzip(method_sig, vec_ty, select_even),
-        OpSig::Cvt {
-            target_ty,
-            scalar_bits,
-            precise,
-        } => handle_cvt(method_sig, vec_ty, target_ty, scalar_bits, precise),
-        OpSig::Reinterpret {
-            target_ty,
-            scalar_bits,
-        } => handle_reinterpret(method_sig, vec_ty, target_ty, scalar_bits),
-        OpSig::MaskReduce {
-            quantifier,
-            condition,
-        } => handle_mask_reduce(method_sig, vec_ty, quantifier, condition),
-        OpSig::LoadInterleaved {
-            block_size,
-            block_count,
-        } => handle_load_interleaved(method_sig, vec_ty, block_size, block_count),
-        OpSig::StoreInterleaved {
-            block_size,
-            block_count,
-        } => handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
-        OpSig::FromArray { kind } => {
-            generic_from_array(method_sig, vec_ty, kind, 128, |block_ty| {
-                intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
-            })
-        }
-        OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 128, arch_ty),
-        OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
-        OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
     }
 }
 
@@ -896,6 +894,7 @@ pub(crate) fn handle_cvt(
 }
 
 pub(crate) fn handle_reinterpret(
+    level: &impl Level,
     method_sig: TokenStream,
     vec_ty: &VecType,
     target_ty: ScalarType,
@@ -908,7 +907,7 @@ pub(crate) fn handle_reinterpret(
     );
 
     if coarse_type(vec_ty) == coarse_type(&dst_ty) {
-        let arch_ty = x86::arch_ty(vec_ty);
+        let arch_ty = level.arch_ty(vec_ty);
         quote! {
             #method_sig {
                 #arch_ty::from(a).simd_into(self)

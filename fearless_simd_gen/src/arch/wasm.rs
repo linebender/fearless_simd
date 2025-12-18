@@ -37,7 +37,7 @@ fn translate_op(op: &str) -> Option<&'static str> {
 }
 
 pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> Ident {
-    let ty_prefix = arch_ty(ty);
+    let ty_prefix = arch_prefix(ty);
     let ident = Ident::new(name, Span::call_site());
     Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site())
 }
@@ -48,7 +48,7 @@ pub(crate) fn v128_intrinsic(name: &str) -> Ident {
     Ident::new(&format!("{}_{}", ty_prefix, ident), Span::call_site())
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> Ident {
+pub(crate) fn arch_prefix(ty: &VecType) -> Ident {
     let scalar = match ty.scalar {
         ScalarType::Float => "f",
         ScalarType::Unsigned => "u",
