@@ -14,7 +14,7 @@ use crate::generic::{
 use crate::ops::{Op, OpSig, Quantifier, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{format_ident, quote};
+use quote::quote;
 
 #[derive(Clone, Copy)]
 pub(crate) struct Level;
@@ -81,13 +81,13 @@ fn mk_simd_impl() -> TokenStream {
     let level_tok = Level.token();
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
-        for Op { method, sig, .. } in ops_for_type(vec_ty) {
-            if sig.should_use_generic_op(vec_ty, 128) {
-                methods.push(generic_op(method, sig, vec_ty));
+        for op in ops_for_type(vec_ty) {
+            if op.sig.should_use_generic_op(vec_ty, 128) {
+                methods.push(generic_op(&op, vec_ty));
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty);
+            let method = make_method(op, vec_ty);
 
             methods.push(method);
         }
@@ -165,11 +165,9 @@ fn mk_type_impl() -> TokenStream {
     }
 }
 
-fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
-    let ty_name = vec_ty.rust_name();
-    let method_name = format!("{method}_{ty_name}");
-    let method_ident = Ident::new(&method_name, Span::call_site());
-    let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
+fn make_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    let Op { sig, method, .. } = op;
+    let method_sig = op.simd_trait_method_sig(vec_ty);
     let method_sig = quote! {
         #[inline(always)]
         #method_sig
@@ -182,9 +180,9 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::WidenNarrow { target_ty } => {
             handle_widen_narrow(method_sig, method, vec_ty, target_ty)
         }
-        OpSig::Binary => handle_binary(method_sig, &method_ident, method, vec_ty),
+        OpSig::Binary => handle_binary(method_sig, method, vec_ty),
         OpSig::Shift => handle_shift(method_sig, method, vec_ty),
-        OpSig::Ternary => handle_ternary(method_sig, &method_ident, method, vec_ty),
+        OpSig::Ternary => handle_ternary(method_sig, method, vec_ty),
         OpSig::Select => handle_select(method_sig, vec_ty),
         OpSig::Combine { combined_ty } => generic_block_combine(method_sig, &combined_ty, 128),
         OpSig::Split { half_ty } => generic_block_split(method_sig, &half_ty, 128),
@@ -360,14 +358,9 @@ pub(crate) fn handle_widen_narrow(
                 target_ty.scalar_bits,
                 vec_ty.n_bits(),
             );
-            let combine = format_ident!(
-                "combine_{}",
-                VecType {
-                    len: vec_ty.len / 2,
-                    scalar_bits: vec_ty.scalar_bits * 2,
-                    ..*vec_ty
-                }
-                .rust_name()
+            let combine = generic_op_name(
+                "combine",
+                &vec_ty.reinterpret(vec_ty.scalar, vec_ty.scalar_bits * 2),
             );
             quote! {
                 #method_sig {
@@ -393,7 +386,7 @@ pub(crate) fn handle_widen_narrow(
                 matches!(vec_ty.scalar, ScalarType::Int),
                 target_ty.n_bits(),
             );
-            let split = format_ident!("split_{}", vec_ty.rust_name());
+            let split = generic_op_name("split", vec_ty);
             quote! {
                 #method_sig {
                     let (a, b) = self.#split(a);
@@ -415,11 +408,10 @@ pub(crate) fn handle_widen_narrow(
 
 pub(crate) fn handle_binary(
     method_sig: TokenStream,
-    method_ident: &Ident,
     method: &str,
     vec_ty: &VecType,
 ) -> TokenStream {
-    match method {
+    let body = match method {
         "mul" if vec_ty.scalar_bits == 8 => {
             // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
             let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
@@ -429,27 +421,29 @@ pub(crate) fn handle_binary(
             let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
             let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
             quote! {
-                #method_sig {
-                    unsafe {
-                        let dst_even = #mullo(a.into(), b.into());
-                        let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
+                unsafe {
+                    let dst_even = #mullo(a.into(), b.into());
+                    let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
 
-                        #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(self)
-                    }
+                    #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(self)
                 }
             }
         }
         // SSE2 has shift operations, but they shift every lane by the same amount, so we can't use them here.
-        "shlv" => scalar_binary(method_ident, quote!(core::ops::Shl::shl), vec_ty),
-        "shrv" => scalar_binary(method_ident, quote!(core::ops::Shr::shr), vec_ty),
+        "shlv" => scalar_binary(quote!(core::ops::Shl::shl)),
+        "shrv" => scalar_binary(quote!(core::ops::Shr::shr)),
         _ => {
             let args = [quote! { a.into() }, quote! { b.into() }];
             let expr = x86::expr(method, vec_ty, &args);
             quote! {
-                #method_sig {
-                    unsafe { #expr.simd_into(self) }
-                }
+                unsafe { #expr.simd_into(self) }
             }
+        }
+    };
+
+    quote! {
+        #method_sig {
+            #body
         }
     }
 }
@@ -517,7 +511,6 @@ pub(crate) fn handle_shift(method_sig: TokenStream, method: &str, vec_ty: &VecTy
 
 pub(crate) fn handle_ternary(
     method_sig: TokenStream,
-    _method_ident: &Ident,
     method: &str,
     vec_ty: &VecType,
 ) -> TokenStream {
@@ -804,7 +797,7 @@ pub(crate) fn handle_cvt(
     );
     let expr = match (vec_ty.scalar, target_scalar) {
         (ScalarType::Float, ScalarType::Int | ScalarType::Unsigned) => {
-            let target_ty = VecType::new(target_scalar, target_scalar_bits, vec_ty.len);
+            let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
             let max = simple_intrinsic("max", vec_ty);
             let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
             let cmplt = float_compare_method("simd_lt", vec_ty);
@@ -919,7 +912,7 @@ pub(crate) fn handle_cvt(
                 vec_ty.scalar_bits, 32,
                 "i64 to f64 conversions do not exist until AVX-512 and require special consideration"
             );
-            let target_ty = VecType::new(target_scalar, target_scalar_bits, vec_ty.len);
+            let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
             let intrinsic = simple_intrinsic("cvtepi32", &target_ty);
             quote! {
                 unsafe {
@@ -933,7 +926,7 @@ pub(crate) fn handle_cvt(
                 "u64 to f64 conversions do not exist until AVX-512 and require special consideration"
             );
 
-            let target_ty = VecType::new(target_scalar, target_scalar_bits, vec_ty.len);
+            let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
             let set1_int = set1_intrinsic(vec_ty);
             let set1_float = set1_intrinsic(&target_ty);
             let add_float = simple_intrinsic("add", &target_ty);
@@ -1025,7 +1018,7 @@ pub(crate) fn handle_mask_reduce(
 
     let (movemask, all_ones) = match vec_ty.scalar_bits {
         32 | 64 => {
-            let float_ty = VecType::new(ScalarType::Float, vec_ty.scalar_bits, vec_ty.len);
+            let float_ty = vec_ty.cast(ScalarType::Float);
             let movemask = simple_intrinsic("movemask", &float_ty);
             let cast = cast_ident(
                 ScalarType::Mask,
@@ -1045,7 +1038,7 @@ pub(crate) fn handle_mask_reduce(
             (movemask, all_ones)
         }
         8 | 16 => {
-            let bits_ty = VecType::new(ScalarType::Int, 8, vec_ty.n_bits() / 8);
+            let bits_ty = vec_ty.reinterpret(ScalarType::Int, 8);
             let movemask = simple_intrinsic("movemask", &bits_ty);
             let movemask = quote! { #movemask(a.into()) };
             let all_ones = match vec_ty.n_bits() {
@@ -1092,10 +1085,10 @@ pub(crate) fn handle_load_interleaved(
                 VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
             let load_unaligned =
                 intrinsic_ident("loadu", coarse_type(&block_ty), block_ty.n_bits());
-            let vec_32 = VecType::new(block_ty.scalar, 32, block_ty.n_bits() / 32);
+            let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
             let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
             let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
-            let vec_64 = VecType::new(block_ty.scalar, 64, block_ty.n_bits() / 64);
+            let vec_64 = block_ty.reinterpret(block_ty.scalar, 64);
             let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
             let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
 
@@ -1220,10 +1213,10 @@ pub(crate) fn handle_store_interleaved(
                 VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
             let store_unaligned =
                 intrinsic_ident("storeu", coarse_type(&block_ty), block_ty.n_bits());
-            let vec_32 = VecType::new(block_ty.scalar, 32, block_ty.n_bits() / 32);
+            let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
             let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
             let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
-            let vec_64 = VecType::new(block_ty.scalar, 64, block_ty.n_bits() / 64);
+            let vec_64 = block_ty.reinterpret(block_ty.scalar, 64);
             let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
             let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
 

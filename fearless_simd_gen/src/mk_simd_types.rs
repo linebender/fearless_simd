@@ -67,10 +67,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         match ty.scalar {
             ScalarType::Float if ty.scalar_bits == 32 => {
                 for src_scalar in [ScalarType::Unsigned, ScalarType::Int] {
-                    let src_ty = VecType {
-                        scalar: src_scalar,
-                        ..*ty
-                    };
+                    let src_ty = ty.cast(src_scalar);
                     let method = format_ident!(
                         "cvt_{}_{}",
                         ty.scalar.rust_name(ty.scalar_bits),
@@ -82,7 +79,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                         ScalarType::Int => I32_TO_F32,
                         _ => unreachable!(),
                     };
-                    let doc = op.sig.format_docstring(op.doc, TyFlavor::VecImpl);
+                    let doc = op.format_docstring(TyFlavor::VecImpl);
                     conditional_impls.push(quote! {
                         impl<S: Simd> SimdCvtFloat<#src_ty<S>> for #name<S> {
                             #[doc = #doc]
@@ -95,10 +92,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 }
             }
             ScalarType::Int | ScalarType::Unsigned if ty.scalar_bits == 32 => {
-                let src_ty = VecType {
-                    scalar: ScalarType::Float,
-                    ..*ty
-                };
+                let src_ty = ty.cast(ScalarType::Float);
                 let method = format_ident!(
                     "cvt_{}_{}",
                     ty.scalar.rust_name(ty.scalar_bits),
@@ -109,7 +103,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     ScalarType::Int => F32_TO_I32,
                     _ => unreachable!(),
                 };
-                let doc = op.sig.format_docstring(op.doc, TyFlavor::VecImpl);
+                let doc = op.format_docstring(TyFlavor::VecImpl);
                 let method_precise = format_ident!(
                     "cvt_{}_precise_{}",
                     ty.scalar.rust_name(ty.scalar_bits),
@@ -120,9 +114,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     ScalarType::Int => F32_TO_I32_PRECISE,
                     _ => unreachable!(),
                 };
-                let doc_precise = op_precise
-                    .sig
-                    .format_docstring(op_precise.doc, TyFlavor::VecImpl);
+                let doc_precise = op_precise.format_docstring(TyFlavor::VecImpl);
                 let src_ty = src_ty.rust();
                 conditional_impls.push(quote! {
                     impl<S: Simd> SimdCvtTruncate<#src_ty<S>> for #name<S> {
@@ -256,9 +248,10 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let vec_trait_id = Ident::new(vec_trait, Span::call_site());
     let splat = generic_op_name("splat", ty);
     let mut methods = vec![];
-    for Op { method, sig, .. } in vec_trait_ops_for(ty.scalar) {
+    for op in vec_trait_ops_for(ty.scalar) {
+        let Op { sig, method, .. } = op;
         let trait_method = generic_op_name(method, ty);
-        if let Some(method_sig) = sig.vec_trait_method_sig(method) {
+        if let Some(method_sig) = op.vec_trait_method_sig() {
             let call_args = sig
                 .forwarding_call_args()
                 .expect("this method can be forwarded to a specific Simd function");

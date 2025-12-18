@@ -40,17 +40,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
     let mut methods = vec![];
 
     for vec_ty in SIMD_TYPES {
-        let ty_name = vec_ty.rust_name();
-
-        for Op { method, sig, .. } in ops_for_type(vec_ty) {
+        for op in ops_for_type(vec_ty) {
+            let Op { sig, method, .. } = op;
             if sig.should_use_generic_op(vec_ty, 128) {
-                methods.push(generic_op(method, sig, vec_ty));
+                methods.push(generic_op(&op, vec_ty));
                 continue;
             }
 
-            let method_name = format!("{method}_{ty_name}");
-            let method_ident = Ident::new(&method_name, Span::call_site());
-            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
+            let method_sig = op.simd_trait_method_sig(vec_ty);
             let method_sig = quote! {
                 #[inline(always)]
                 #method_sig
@@ -89,25 +86,9 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Binary if method == "copysign" => {
-                    let splat: Ident = format_ident!("{}_splat", vec_ty.rust_name());
-                    let sign_mask_literal = match vec_ty.scalar_bits {
-                        32 => quote! { -0.0_f32 },
-                        64 => quote! { -0.0_f64 },
-                        _ => unimplemented!(),
-                    };
-                    quote! {
-                        #method_sig {
-                            let sign_mask = #splat(#sign_mask_literal);
-                            let sign_bits = v128_and(b.into(), sign_mask.into());
-                            let magnitude = v128_andnot(a.into(), sign_mask.into());
-                            v128_or(magnitude, sign_bits).simd_into(self)
-                        }
-                    }
-                }
                 OpSig::Binary => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
-                    match method {
+                    let expr = match method {
                         "mul" if vec_ty.scalar_bits == 8 && vec_ty.len == 16 => {
                             let (extmul_low, extmul_high) = match vec_ty.scalar {
                                 ScalarType::Unsigned => (
@@ -122,11 +103,9 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             };
 
                             quote! {
-                                #method_sig {
-                                    let low = #extmul_low(a.into(), b.into());
-                                    let high = #extmul_high(a.into(), b.into());
-                                    u8x16_shuffle::<0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30>(low, high).simd_into(self)
-                                }
+                                let low = #extmul_low(a.into(), b.into());
+                                let high = #extmul_high(a.into(), b.into());
+                                u8x16_shuffle::<0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30>(low, high).simd_into(self)
                             }
                         }
                         "max_precise" | "min_precise" => {
@@ -140,14 +119,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                             );
                             let compare_ne = simple_intrinsic("ne", vec_ty);
                             quote! {
-                                #method_sig {
-                                    let intermediate = #intrinsic(b.into(), a.into());
+                                let intermediate = #intrinsic(b.into(), a.into());
 
-                                    // See the x86 min_precise/max_precise code in `arch::x86` for more info on how this
-                                    // works.
-                                    let b_is_nan = #compare_ne(b.into(), b.into());
-                                    v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
-                                }
+                                // See the x86 min_precise/max_precise code in `arch::x86` for more info on how this
+                                // works.
+                                let b_is_nan = #compare_ne(b.into(), b.into());
+                                v128_bitselect(a.into(), intermediate, b_is_nan).simd_into(self)
                             }
                         }
                         "max" | "min" if vec_ty.scalar == ScalarType::Float => {
@@ -164,25 +141,37 @@ fn mk_simd_impl(level: Level) -> TokenStream {
 
                             quote! {
                                 #[cfg(target_feature = "relaxed-simd")]
-                                #method_sig {
-                                    #relaxed_expr.simd_into(self)
-                                }
+                                { #relaxed_expr.simd_into(self) }
 
                                 #[cfg(not(target_feature = "relaxed-simd"))]
-                                #method_sig {
-                                    #expr.simd_into(self)
-                                }
+                                { #expr.simd_into(self) }
                             }
                         }
-                        "shlv" => scalar_binary(&method_ident, quote!(core::ops::Shl::shl), vec_ty),
-                        "shrv" => scalar_binary(&method_ident, quote!(core::ops::Shr::shr), vec_ty),
+                        "shlv" => scalar_binary(quote!(core::ops::Shl::shl)),
+                        "shrv" => scalar_binary(quote!(core::ops::Shr::shr)),
+                        "copysign" => {
+                            let splat = simple_intrinsic("splat", vec_ty);
+                            let sign_mask_literal = match vec_ty.scalar_bits {
+                                32 => quote! { -0.0_f32 },
+                                64 => quote! { -0.0_f64 },
+                                _ => unimplemented!(),
+                            };
+                            quote! {
+                                let sign_mask = #splat(#sign_mask_literal);
+                                let sign_bits = v128_and(b.into(), sign_mask.into());
+                                let magnitude = v128_andnot(a.into(), sign_mask.into());
+                                v128_or(magnitude, sign_bits).simd_into(self)
+                            }
+                        }
                         _ => {
                             let expr = wasm::expr(method, vec_ty, &args);
-                            quote! {
-                                #method_sig {
-                                    #expr.simd_into(self)
-                                }
-                            }
+                            quote! { #expr.simd_into(self) }
+                        }
+                    };
+
+                    quote! {
+                        #method_sig {
+                            #expr
                         }
                     }
                 }
@@ -207,14 +196,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         let relaxed_madd = simple_intrinsic("relaxed_madd", vec_ty);
 
                         quote! {
-                            #[cfg(target_feature = "relaxed-simd")]
                             #method_sig {
-                                #relaxed_madd(a.into(), b.into(), #c).simd_into(self)
-                            }
+                                #[cfg(target_feature = "relaxed-simd")]
+                                { #relaxed_madd(a.into(), b.into(), #c).simd_into(self) }
 
-                            #[cfg(not(target_feature = "relaxed-simd"))]
-                            #method_sig {
-                                self.#add_sub(self.#mul(a, b), c)
+                                #[cfg(not(target_feature = "relaxed-simd"))]
+                                { self.#add_sub(self.#mul(a, b), c) }
                             }
                         }
                     } else {
@@ -233,18 +220,16 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                 OpSig::Select => {
                     // Rust includes unsigned versions of the lane select intrinsics, but they're
                     // just aliases for the signed ones
-                    let lane_ty = VecType::new(ScalarType::Int, vec_ty.scalar_bits, vec_ty.len);
+                    let lane_ty = vec_ty.cast(ScalarType::Int);
                     let lane_select = simple_intrinsic("relaxed_laneselect", &lane_ty);
 
                     quote! {
-                        #[cfg(target_feature = "relaxed-simd")]
                         #method_sig {
-                            #lane_select(b.into(), c.into(), a.into()).simd_into(self)
-                        }
+                            #[cfg(target_feature = "relaxed-simd")]
+                            { #lane_select(b.into(), c.into(), a.into()).simd_into(self) }
 
-                        #[cfg(not(target_feature = "relaxed-simd"))]
-                        #method_sig {
-                            v128_bitselect(b.into(), c.into(), a.into()).simd_into(self)
+                            #[cfg(not(target_feature = "relaxed-simd"))]
+                            { v128_bitselect(b.into(), c.into(), a.into()).simd_into(self) }
                         }
                     }
                 }
@@ -388,14 +373,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     if uses_relaxed {
                         let precise = generic_op_name(&[method, "_precise"].join(""), vec_ty);
                         quote! {
-                            #[cfg(target_feature = "relaxed-simd")]
                             #method_sig {
-                                #conversion_fn(a.into()).simd_into(self)
-                            }
+                                #[cfg(target_feature = "relaxed-simd")]
+                                { #conversion_fn(a.into()).simd_into(self) }
 
-                            #[cfg(not(target_feature = "relaxed-simd"))]
-                            #method_sig {
-                                self.#precise(a)
+                                #[cfg(not(target_feature = "relaxed-simd"))]
+                                { self.#precise(a) }
                             }
                         }
                     } else {
@@ -510,20 +493,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         _ => panic!("unsupported scalar_bits"),
                     };
 
-                    let combine_method_name =
-                        |scalar: ScalarType, scalar_bits: usize, lane_count: usize| -> Ident {
-                            let scalar = match scalar {
-                                ScalarType::Float => 'f',
-                                ScalarType::Unsigned => 'u',
-                                _ => unimplemented!(),
-                            };
-                            format_ident!("combine_{scalar}{scalar_bits}x{lane_count}")
-                        };
+                    let block_ty = vec_ty.block_ty();
+                    let block_ty_2x =
+                        VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
 
-                    let combine_method =
-                        combine_method_name(vec_ty.scalar, vec_ty.scalar_bits, elems_per_vec);
-                    let combine_method_2x =
-                        combine_method_name(vec_ty.scalar, vec_ty.scalar_bits, elems_per_vec * 2);
+                    let combine_method = generic_op_name("combine", &block_ty);
+                    let combine_method_2x = generic_op_name("combine", &block_ty_2x);
 
                     let combine_code = quote! {
                         let combined_lower = self.#combine_method(out0.simd_into(self), out1.simd_into(self));
@@ -582,20 +557,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         _ => panic!("unsupported scalar_bits"),
                     };
 
-                    let split_method_name =
-                        |scalar: ScalarType, scalar_bits: usize, lane_count: usize| -> Ident {
-                            let scalar = match scalar {
-                                ScalarType::Float => 'f',
-                                ScalarType::Unsigned => 'u',
-                                _ => unimplemented!(),
-                            };
-                            format_ident!("split_{scalar}{scalar_bits}x{lane_count}")
-                        };
+                    let block_ty = vec_ty.block_ty();
+                    let block_ty_2x =
+                        VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
+                    let block_ty_4x =
+                        VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 4);
 
-                    let split_method_2x =
-                        split_method_name(vec_ty.scalar, vec_ty.scalar_bits, elems_per_vec * 4);
-                    let split_method =
-                        split_method_name(vec_ty.scalar, vec_ty.scalar_bits, elems_per_vec * 2);
+                    let split_method = generic_op_name("split", &block_ty_2x);
+                    let split_method_2x = generic_op_name("split", &block_ty_4x);
 
                     let split_code = quote! {
                         let (lower, upper) = self.#split_method_2x(a);
@@ -702,13 +671,14 @@ pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
         /// The SIMD token for the "wasm128" level.
         #[derive(Clone, Copy, Debug)]
         pub struct #level_tok {
-            _private: (),
+            pub wasmsimd128: crate::core_arch::wasm32::WasmSimd128,
         }
 
         impl #level_tok {
+            // TODO: this can be renamed to `new` like with `Fallback`.
             #[inline]
             pub const fn new_unchecked() -> Self {
-                Self { _private: () }
+                Self { wasmsimd128: crate::core_arch::wasm32::WasmSimd128::new() }
             }
         }
 

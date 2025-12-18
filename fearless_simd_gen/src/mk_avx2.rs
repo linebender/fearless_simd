@@ -7,13 +7,13 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op, generic_to_bytes, impl_arch_types,
+    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes, impl_arch_types,
 };
 use crate::mk_sse4_2;
 use crate::ops::{Op, OpSig, ops_for_type};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{format_ident, quote};
+use quote::quote;
 
 #[derive(Clone, Copy)]
 pub(crate) struct Level;
@@ -80,13 +80,13 @@ fn mk_simd_impl() -> TokenStream {
     let level_tok = Level.token();
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
-        for Op { method, sig, .. } in ops_for_type(vec_ty) {
-            if sig.should_use_generic_op(vec_ty, 256) {
-                methods.push(generic_op(method, sig, vec_ty));
+        for op in ops_for_type(vec_ty) {
+            if op.sig.should_use_generic_op(vec_ty, 256) {
+                methods.push(generic_op(&op, vec_ty));
                 continue;
             }
 
-            let method = make_method(method, sig, vec_ty);
+            let method = make_method(op, vec_ty);
 
             methods.push(method);
         }
@@ -160,12 +160,10 @@ fn mk_type_impl() -> TokenStream {
     }
 }
 
-fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
+fn make_method(op: Op, vec_ty: &VecType) -> TokenStream {
     let scalar_bits = vec_ty.scalar_bits;
-    let ty_name = vec_ty.rust_name();
-    let method_name = format!("{method}_{ty_name}");
-    let method_ident = Ident::new(&method_name, Span::call_site());
-    let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
+    let Op { sig, method, .. } = op;
+    let method_sig = op.simd_trait_method_sig(vec_ty);
     let method_sig = quote! {
         #[inline(always)]
         #method_sig
@@ -181,7 +179,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
         OpSig::Binary => match method {
             "shlv" if scalar_bits >= 32 => handle_shift_vectored(method_sig, method, vec_ty),
             "shrv" if scalar_bits >= 32 => handle_shift_vectored(method_sig, method, vec_ty),
-            _ => mk_sse4_2::handle_binary(method_sig, &method_ident, method, vec_ty),
+            _ => mk_sse4_2::handle_binary(method_sig, method, vec_ty),
         },
         OpSig::Shift => mk_sse4_2::handle_shift(method_sig, method, vec_ty),
         OpSig::Ternary => match method {
@@ -201,7 +199,7 @@ fn make_method(method: &str, sig: OpSig, vec_ty: &VecType) -> TokenStream {
                     }
                 }
             }
-            _ => mk_sse4_2::handle_ternary(method_sig, &method_ident, method, vec_ty),
+            _ => mk_sse4_2::handle_ternary(method_sig, method, vec_ty),
         },
         OpSig::Select => mk_sse4_2::handle_select(method_sig, vec_ty),
         OpSig::Combine { combined_ty } => handle_combine(method_sig, vec_ty, &combined_ty),
@@ -320,16 +318,11 @@ pub(crate) fn handle_widen_narrow(
                         target_ty.scalar_bits,
                         vec_ty.n_bits(),
                     );
-                    let combine = format_ident!(
-                        "combine_{}",
-                        VecType {
-                            len: vec_ty.len / 2,
-                            scalar_bits: vec_ty.scalar_bits * 2,
-                            ..*vec_ty
-                        }
-                        .rust_name()
+                    let combine = generic_op_name(
+                        "combine",
+                        &vec_ty.reinterpret(vec_ty.scalar, vec_ty.scalar_bits * 2),
                     );
-                    let split = format_ident!("split_{}", vec_ty.rust_name());
+                    let split = generic_op_name("split", vec_ty);
                     quote! {
                         unsafe {
                             let (a0, a1) = self.#split(a);
@@ -374,7 +367,7 @@ pub(crate) fn handle_widen_narrow(
                         matches!(vec_ty.scalar, ScalarType::Int),
                         target_ty.n_bits(),
                     );
-                    let split = format_ident!("split_{}", vec_ty.rust_name());
+                    let split = generic_op_name("split", vec_ty);
                     quote! {
                         let (a, b) = self.#split(a);
                         unsafe {

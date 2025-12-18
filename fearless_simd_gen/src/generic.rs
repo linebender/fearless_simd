@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{format_ident, quote};
+use quote::quote;
 
 use crate::{
-    ops::{OpSig, RefKind},
+    ops::{Op, OpSig, RefKind},
     types::{SIMD_TYPES, ScalarType, VecType},
 };
 
@@ -16,18 +16,17 @@ pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
 /// Implementation based on split/combine
 ///
 /// Only suitable for lane-wise and block-wise operations
-pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
-    let name = format!("{op}_{}", ty.rust_name());
-    let split = Ident::new(&format!("split_{}", ty.rust_name()), Span::call_site());
+pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
+    let split = generic_op_name("split", ty);
     let half = VecType::new(ty.scalar, ty.scalar_bits, ty.len / 2);
-    let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
-    let do_half = Ident::new(&format!("{op}_{}", half.rust_name()), Span::call_site());
-    let method_sig = sig.simd_trait_method_sig(ty, &name);
+    let combine = generic_op_name("combine", &half);
+    let do_half = generic_op_name(op.method, &half);
+    let method_sig = op.simd_trait_method_sig(ty);
     let method_sig = quote! {
         #[inline(always)]
         #method_sig
     };
-    match sig {
+    match op.sig {
         OpSig::Splat => {
             quote! {
                 #method_sig {
@@ -73,10 +72,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
         OpSig::Compare => {
             let half_mask = VecType::new(ScalarType::Mask, ty.scalar_bits, ty.len / 2);
-            let combine_mask = Ident::new(
-                &format!("combine_{}", half_mask.rust_name()),
-                Span::call_site(),
-            );
+            let combine_mask = generic_op_name("combine", &half_mask);
             quote! {
                 #method_sig {
                     let (a0, a1) = self.#split(a);
@@ -86,9 +82,8 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             }
         }
         OpSig::Select => {
-            let mask_ty = VecType::new(ScalarType::Mask, ty.scalar_bits, ty.len);
-            let split_mask =
-                Ident::new(&format!("split_{}", mask_ty.rust_name()), Span::call_site());
+            let mask_ty = ty.cast(ScalarType::Mask);
+            let split_mask = generic_op_name("split", &mask_ty);
             quote! {
                 #method_sig {
                     let (a0, a1) = self.#split_mask(a);
@@ -125,10 +120,8 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
                 )
             };
 
-            let zip_low_half =
-                Ident::new(&format!("zip_low_{}", half.rust_name()), Span::call_site());
-            let zip_high_half =
-                Ident::new(&format!("zip_high_{}", half.rust_name()), Span::call_site());
+            let zip_low_half = generic_op_name("zip_low", &half);
+            let zip_high_half = generic_op_name("zip_high", &half);
 
             quote! {
                 #method_sig {
@@ -151,17 +144,8 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             target_ty,
             scalar_bits,
             ..
-        } => {
-            let half = VecType::new(target_ty, scalar_bits, ty.len / 2);
-            let combine = Ident::new(&format!("combine_{}", half.rust_name()), Span::call_site());
-            quote! {
-                #method_sig {
-                    let (a0, a1) = self.#split(a);
-                    self.#combine(self.#do_half(a0), self.#do_half(a1))
-                }
-            }
         }
-        OpSig::Reinterpret {
+        | OpSig::Reinterpret {
             target_ty,
             scalar_bits,
         } => {
@@ -177,10 +161,7 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
         }
         OpSig::WidenNarrow { mut target_ty } => {
             target_ty.len /= 2;
-            let combine = Ident::new(
-                &format!("combine_{}", target_ty.rust_name()),
-                Span::call_site(),
-            );
+            let combine = generic_op_name("combine", &target_ty);
             quote! {
                 #method_sig {
                     let (a0, a1) = self.#split(a);
@@ -202,19 +183,11 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
             block_count,
         } => {
             let split_len = (block_size * block_count) as usize / (ty.scalar_bits * 2);
-            let delegate = format_ident!(
-                "{op}_{}",
-                VecType {
-                    len: ty.len / 2,
-                    ..*ty
-                }
-                .rust_name()
-            );
             quote! {
                 #method_sig {
                     let (chunks, _) = src.as_chunks::<#split_len>();
                     unsafe {
-                        core::mem::transmute([self.#delegate(&chunks[0]), self.#delegate(&chunks[1])])
+                        core::mem::transmute([self.#do_half(&chunks[0]), self.#do_half(&chunks[1])])
                     }
                 }
             }
@@ -237,14 +210,8 @@ pub(crate) fn generic_op(op: &str, sig: OpSig, ty: &VecType) -> TokenStream {
     }
 }
 
-pub(crate) fn scalar_binary(name: &Ident, f: TokenStream, ty: &VecType) -> TokenStream {
-    let ty_rust = ty.rust();
-    quote! {
-        #[inline(always)]
-        fn #name(self, a: #ty_rust<Self>, b: #ty_rust<Self>) -> #ty_rust<Self> {
-            core::array::from_fn(|i| #f(a[i], b[i])).simd_into(self)
-        }
-    }
+pub(crate) fn scalar_binary(f: TokenStream) -> TokenStream {
+    quote! { core::array::from_fn(|i| #f(a[i], b[i])).simd_into(self) }
 }
 
 pub(crate) fn generic_block_split(

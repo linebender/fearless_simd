@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::{
-    ops::{Op, TyFlavor, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
+    ops::{OpKind, TyFlavor, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
@@ -14,14 +14,9 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     let mut methods = vec![];
     // Float methods
     for vec_ty in SIMD_TYPES {
-        let ty_name = vec_ty.rust_name();
-        for Op {
-            method, sig, doc, ..
-        } in &ops_for_type(vec_ty)
-        {
-            let method_name = format!("{method}_{ty_name}");
-            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
-            let doc = sig.format_docstring(doc, TyFlavor::SimdTrait);
+        for op in ops_for_type(vec_ty) {
+            let method_sig = op.simd_trait_method_sig(vec_ty);
+            let doc = op.format_docstring(TyFlavor::SimdTrait);
             methods.extend(quote! {
                 #[doc = #doc]
                 #method_sig;
@@ -190,7 +185,11 @@ fn mk_simd_float() -> TokenStream {
     let overloaded_ops = overloaded_ops_for(ScalarType::Float);
     let op_traits = overloaded_ops
         .iter()
-        .flat_map(|(op, _, _)| op.trait_bounds());
+        .filter_map(|op| match &op.kind {
+            OpKind::Overloaded(core_op) => Some(core_op),
+            _ => None,
+        })
+        .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by floating-point SIMD vectors.
         pub trait SimdFloat<S: Simd>: SimdBase<S>
@@ -226,7 +225,11 @@ fn mk_simd_int() -> TokenStream {
     let overloaded_ops = overloaded_ops_for(ScalarType::Unsigned);
     let op_traits = overloaded_ops
         .iter()
-        .flat_map(|(op, _, _)| op.trait_bounds());
+        .filter_map(|op| match &op.kind {
+            OpKind::Overloaded(core_op) => Some(core_op),
+            _ => None,
+        })
+        .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by (signed and unsigned) integer SIMD vectors.
         pub trait SimdInt<S: Simd>: SimdBase<S>
@@ -248,7 +251,11 @@ fn mk_simd_mask() -> TokenStream {
     let overloaded_ops = overloaded_ops_for(ScalarType::Mask);
     let op_traits = overloaded_ops
         .iter()
-        .flat_map(|(op, _, _)| op.trait_bounds());
+        .filter_map(|op| match &op.kind {
+            OpKind::Overloaded(core_op) => Some(core_op),
+            _ => None,
+        })
+        .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by SIMD masks.
         pub trait SimdMask<S: Simd>: SimdBase<S>
@@ -261,12 +268,9 @@ fn mk_simd_mask() -> TokenStream {
 
 fn methods_for_vec_trait(scalar: ScalarType) -> Vec<TokenStream> {
     let mut methods = vec![];
-    for Op {
-        method, sig, doc, ..
-    } in vec_trait_ops_for(scalar)
-    {
-        let doc = sig.format_docstring(doc, TyFlavor::VecImpl);
-        if let Some(method_sig) = sig.vec_trait_method_sig(method) {
+    for op in vec_trait_ops_for(scalar) {
+        let doc = op.format_docstring(TyFlavor::VecImpl);
+        if let Some(method_sig) = op.vec_trait_method_sig() {
             methods.push(quote! {
                 #[doc = #doc]
                 #method_sig;

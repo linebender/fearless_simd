@@ -4,7 +4,7 @@
 use crate::arch::fallback;
 use crate::generic::{generic_from_bytes, generic_op, generic_op_name, generic_to_bytes};
 use crate::ops::{Op, OpSig, RefKind, ops_for_type, valid_reinterpret};
-use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
+use crate::types::{SIMD_TYPES, ScalarType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
@@ -147,14 +147,13 @@ fn mk_simd_impl() -> TokenStream {
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         let scalar_bits = vec_ty.scalar_bits;
-        let ty_name = vec_ty.rust_name();
-        for Op { method, sig, .. } in ops_for_type(vec_ty) {
+        for op in ops_for_type(vec_ty) {
+            let Op { sig, method, .. } = op;
             if sig.should_use_generic_op(vec_ty, 128) {
-                methods.push(generic_op(method, sig, vec_ty));
+                methods.push(generic_op(&op, vec_ty));
                 continue;
             }
-            let method_name = format!("{method}_{ty_name}");
-            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_name);
+            let method_sig = op.simd_trait_method_sig(vec_ty);
             let method_sig = quote! {
                 #[inline(always)]
                 #method_sig
@@ -251,15 +250,12 @@ fn mk_simd_impl() -> TokenStream {
                 }
                 OpSig::Ternary => {
                     if method == "mul_add" {
-                        // TODO: This is has slightly different semantics than a fused multiply-add,
-                        // since we are not actually fusing it, should this be documented?
                         quote! {
                             #method_sig {
                                a.mul(b).add(c)
                             }
                         }
                     } else if method == "mul_sub" {
-                        // TODO: Same as above
                         quote! {
                             #method_sig {
                                 a.mul(b).sub(c)
@@ -281,7 +277,7 @@ fn mk_simd_impl() -> TokenStream {
                     }
                 }
                 OpSig::Compare => {
-                    let mask_type = VecType::new(ScalarType::Mask, vec_ty.scalar_bits, vec_ty.len);
+                    let mask_type = vec_ty.cast(ScalarType::Mask);
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx: usize| {
@@ -419,7 +415,7 @@ fn mk_simd_impl() -> TokenStream {
                             }
                         }
                     } else {
-                        let to_ty = &VecType::new(target_ty, scalar_bits, vec_ty.len);
+                        let to_ty = vec_ty.reinterpret(target_ty, scalar_bits);
                         let scalar = to_ty.scalar.rust(scalar_bits);
                         let items = make_list(
                             (0..vec_ty.len)
