@@ -40,14 +40,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
     let mut methods = vec![];
 
     for vec_ty in SIMD_TYPES {
-        for Op { method, sig, .. } in ops_for_type(vec_ty) {
+        for op in ops_for_type(vec_ty) {
+            let Op { sig, method, .. } = op;
             if sig.should_use_generic_op(vec_ty, 128) {
-                methods.push(generic_op(method, sig, vec_ty));
+                methods.push(generic_op(&op, vec_ty));
                 continue;
             }
 
-            let method_ident = generic_op_name(method, vec_ty);
-            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_ident);
+            let method_sig = op.simd_trait_method_sig(vec_ty);
             let method_sig = quote! {
                 #[inline(always)]
                 #method_sig
@@ -171,8 +171,22 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                                 }
                             }
                         }
-                        "shlv" => scalar_binary(&method_ident, quote!(core::ops::Shl::shl), vec_ty),
-                        "shrv" => scalar_binary(&method_ident, quote!(core::ops::Shr::shr), vec_ty),
+                        "shlv" => {
+                            let expr = scalar_binary(quote!(core::ops::Shl::shl));
+                            quote! {
+                                #method_sig {
+                                    #expr
+                                }
+                            }
+                        }
+                        "shrv" => {
+                            let expr = scalar_binary(quote!(core::ops::Shr::shr));
+                            quote! {
+                                #method_sig {
+                                    #expr
+                                }
+                            }
+                        }
                         _ => {
                             let expr = wasm::expr(method, vec_ty, &args);
                             quote! {

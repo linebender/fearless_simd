@@ -80,14 +80,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
     for vec_ty in SIMD_TYPES {
         let scalar_bits = vec_ty.scalar_bits;
 
-        for Op { method, sig, .. } in ops_for_type(vec_ty) {
+        for op in ops_for_type(vec_ty) {
+            let Op { sig, method, .. } = op;
             if sig.should_use_generic_op(vec_ty, 128) {
-                methods.push(generic_op(method, sig, vec_ty));
+                methods.push(generic_op(&op, vec_ty));
                 continue;
             }
 
-            let method_ident = generic_op_name(method, vec_ty);
-            let method_sig = sig.simd_trait_method_sig(vec_ty, &method_ident);
+            let method_sig = op.simd_trait_method_sig(vec_ty);
             let method_sig = quote! {
                 #[inline(always)]
                 #method_sig
