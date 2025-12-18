@@ -673,13 +673,14 @@ pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
         /// The SIMD token for the "wasm128" level.
         #[derive(Clone, Copy, Debug)]
         pub struct #level_tok {
-            _private: (),
+            pub wasmsimd128: crate::core_arch::wasm32::WasmSimd128,
         }
 
         impl #level_tok {
+            // TODO: this can be renamed to `new` like with `Fallback`.
             #[inline]
             pub const fn new_unchecked() -> Self {
-                Self { _private: () }
+                Self { wasmsimd128: crate::core_arch::wasm32::WasmSimd128::new() }
             }
         }
 
