@@ -54,7 +54,7 @@ pub(crate) trait Level {
         }
     }
 
-    fn mk_simd_impl(&self) -> TokenStream {
+    fn make_simd_impl(&self) -> TokenStream {
         let level_tok = self.token();
         let native_width = self.native_width();
         let mut methods = vec![];
@@ -118,7 +118,7 @@ pub(crate) trait Level {
         }
     }
 
-    fn mk_type_impl(&self) -> TokenStream {
+    fn make_type_impl(&self) -> TokenStream {
         let native_width = self.native_width();
         let max_block_size = self.max_block_size();
         let mut result = vec![];
@@ -163,8 +163,8 @@ pub(crate) trait Level {
         let module_prelude = self.make_module_prelude();
         let impl_body = self.make_impl_body();
         let arch_types_impl = self.impl_arch_types();
-        let simd_impl = self.mk_simd_impl();
-        let ty_impl = self.mk_type_impl();
+        let simd_impl = self.make_simd_impl();
+        let ty_impl = self.make_type_impl();
 
         quote! {
             use crate::{prelude::*, seal::Seal, arch_types::ArchTypes, Level};

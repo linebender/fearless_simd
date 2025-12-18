@@ -232,7 +232,7 @@ impl Level for Fallback {
                 if method == "mul_add" {
                     quote! {
                         #method_sig {
-                           a.mul(b).add(c)
+                            a.mul(b).add(c)
                         }
                     }
                 } else if method == "mul_sub" {
@@ -251,7 +251,7 @@ impl Level for Fallback {
                     let expr = fallback::expr(method, vec_ty, &args);
                     quote! {
                         #method_sig {
-                           #expr.simd_into(self)
+                            #expr.simd_into(self)
                         }
                     }
                 }
@@ -298,7 +298,7 @@ impl Level for Fallback {
                     _ => quote! { 0 },
                 };
                 quote! {
-                #method_sig {
+                    #method_sig {
                         let mut result = [#default; #n2];
                         result[0..#n].copy_from_slice(&a.val.0);
                         result[#n..#n2].copy_from_slice(&b.val.0);
@@ -314,7 +314,7 @@ impl Level for Fallback {
                     _ => quote! { 0 },
                 };
                 quote! {
-                #method_sig {
+                    #method_sig {
                         let mut b0 = [#default; #nhalf];
                         let mut b1 = [#default; #nhalf];
                         b0.copy_from_slice(&a.val.0[0..#nhalf]);
@@ -493,7 +493,7 @@ impl Level for Fallback {
         }
     }
 
-    fn mk_type_impl(&self) -> TokenStream {
+    fn make_type_impl(&self) -> TokenStream {
         TokenStream::new()
     }
 }
