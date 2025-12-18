@@ -13,6 +13,7 @@ use proc_macro2::TokenStream;
 
 mod arch;
 mod generic;
+mod level;
 mod mk_avx2;
 mod mk_fallback;
 mod mk_neon;
@@ -59,8 +60,8 @@ impl Module {
             Self::SimdTypes => mk_simd_types::mk_simd_types(),
             Self::SimdTrait => mk_simd_trait::mk_simd_trait(),
             Self::Ops => mk_ops::mk_ops(),
-            Self::Neon => mk_neon::mk_neon_impl(mk_neon::Level::Neon),
-            Self::Wasm => mk_wasm::mk_wasm128_impl(mk_wasm::Level::WasmSimd128),
+            Self::Neon => mk_neon::mk_neon_impl(&mk_neon::Neon),
+            Self::Wasm => mk_wasm::mk_wasm128_impl(&mk_wasm::WasmSimd128),
             Self::Fallback => mk_fallback::mk_fallback_impl(),
             Self::Sse4_2 => mk_sse4_2::mk_sse4_2_impl(),
             Self::Avx2 => mk_avx2::mk_avx2_impl(),

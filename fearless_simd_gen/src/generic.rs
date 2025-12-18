@@ -5,6 +5,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
 use crate::{
+    level::Level,
     ops::{Op, OpSig, RefKind},
     types::{SIMD_TYPES, ScalarType, VecType},
 };
@@ -360,7 +361,7 @@ pub(crate) fn generic_from_bytes(method_sig: TokenStream, vec_ty: &VecType) -> T
 }
 
 pub(crate) fn impl_arch_types(
-    level_name: &str,
+    level: &dyn Level,
     max_block_size: usize,
     arch_ty: impl Fn(&VecType) -> Ident,
 ) -> TokenStream {
@@ -372,7 +373,7 @@ pub(crate) fn impl_arch_types(
             type #ty_ident = #wrapper_ty;
         });
     }
-    let level_tok = Ident::new(level_name, Span::call_site());
+    let level_tok = Ident::new(level.name(), Span::call_site());
 
     quote! {
         impl ArchTypes for #level_tok {

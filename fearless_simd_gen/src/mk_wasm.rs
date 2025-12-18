@@ -9,6 +9,7 @@ use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
     generic_from_bytes, generic_op_name, generic_to_bytes, impl_arch_types, scalar_binary,
 };
+use crate::level::Level;
 use crate::ops::{Op, Quantifier, valid_reinterpret};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
@@ -18,24 +19,15 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub(crate) enum Level {
-    WasmSimd128,
-}
+pub(crate) struct WasmSimd128;
 
-impl Level {
-    fn name(self) -> &'static str {
-        match self {
-            Self::WasmSimd128 => "WasmSimd128",
-        }
-    }
-
-    fn token(self) -> TokenStream {
-        let ident = Ident::new(self.name(), Span::call_site());
-        quote! { #ident }
+impl Level for WasmSimd128 {
+    fn name(&self) -> &'static str {
+        "WasmSimd128"
     }
 }
 
-fn mk_simd_impl(level: Level) -> TokenStream {
+fn mk_simd_impl(level: &dyn Level) -> TokenStream {
     let level_tok = level.token();
     let mut methods = vec![];
 
@@ -653,10 +645,9 @@ fn mk_simd_impl(level: Level) -> TokenStream {
     }
 }
 
-pub(crate) fn mk_wasm128_impl(level: Level) -> TokenStream {
+pub(crate) fn mk_wasm128_impl(level: &dyn Level) -> TokenStream {
     let imports = type_imports();
-    let arch_types_impl =
-        impl_arch_types(level.name(), 128, |_| Ident::new("v128", Span::call_site()));
+    let arch_types_impl = impl_arch_types(level, 128, |_| Ident::new("v128", Span::call_site()));
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();
     let level_tok = level.token();

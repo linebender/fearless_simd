@@ -9,6 +9,7 @@ use crate::generic::{
     generic_as_array, generic_from_array, generic_from_bytes, generic_op_name, generic_to_bytes,
     impl_arch_types,
 };
+use crate::level::Level;
 use crate::ops::{Op, valid_reinterpret};
 use crate::{
     arch::neon::{self, arch_ty, cvt_intrinsic, simple_intrinsic, split_intrinsic},
@@ -18,27 +19,17 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub(crate) enum Level {
-    Neon,
-    // TODO: Fp16,
-}
+pub(crate) struct Neon;
 
-impl Level {
-    fn name(self) -> &'static str {
-        match self {
-            Self::Neon => "Neon",
-        }
-    }
-
-    fn token(self) -> TokenStream {
-        let ident = Ident::new(self.name(), Span::call_site());
-        quote! { #ident }
+impl Level for Neon {
+    fn name(&self) -> &'static str {
+        "Neon"
     }
 }
 
-pub(crate) fn mk_neon_impl(level: Level) -> TokenStream {
+pub(crate) fn mk_neon_impl(level: &dyn Level) -> TokenStream {
     let imports = type_imports();
-    let arch_types_impl = impl_arch_types(level.name(), 512, arch_ty);
+    let arch_types_impl = impl_arch_types(level, 512, arch_ty);
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();
 
@@ -74,7 +65,7 @@ pub(crate) fn mk_neon_impl(level: Level) -> TokenStream {
     }
 }
 
-fn mk_simd_impl(level: Level) -> TokenStream {
+fn mk_simd_impl(level: &dyn Level) -> TokenStream {
     let level_tok = level.token();
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {

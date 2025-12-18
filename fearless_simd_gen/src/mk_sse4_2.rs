@@ -11,28 +11,24 @@ use crate::generic::{
     generic_from_bytes, generic_op, generic_op_name, generic_to_bytes, impl_arch_types,
     scalar_binary,
 };
+use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
 #[derive(Clone, Copy)]
-pub(crate) struct Level;
+pub(crate) struct Sse4_2;
 
-impl Level {
-    fn name(self) -> &'static str {
+impl Level for Sse4_2 {
+    fn name(&self) -> &'static str {
         "Sse4_2"
-    }
-
-    fn token(self) -> TokenStream {
-        let ident = Ident::new(self.name(), Span::call_site());
-        quote! { #ident }
     }
 }
 
 pub(crate) fn mk_sse4_2_impl() -> TokenStream {
     let imports = type_imports();
-    let arch_types_impl = impl_arch_types(Level.name(), 128, arch_ty);
+    let arch_types_impl = impl_arch_types(&Sse4_2, 128, arch_ty);
     let simd_impl = mk_simd_impl();
     let ty_impl = mk_type_impl();
 
@@ -78,7 +74,7 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
 }
 
 fn mk_simd_impl() -> TokenStream {
-    let level_tok = Level.token();
+    let level_tok = Sse4_2.token();
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         for op in ops_for_type(vec_ty) {
