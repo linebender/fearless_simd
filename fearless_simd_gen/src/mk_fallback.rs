@@ -250,15 +250,12 @@ fn mk_simd_impl() -> TokenStream {
                 }
                 OpSig::Ternary => {
                     if method == "mul_add" {
-                        // TODO: This is has slightly different semantics than a fused multiply-add,
-                        // since we are not actually fusing it, should this be documented?
                         quote! {
                             #method_sig {
                                a.mul(b).add(c)
                             }
                         }
                     } else if method == "mul_sub" {
-                        // TODO: Same as above
                         quote! {
                             #method_sig {
                                 a.mul(b).sub(c)

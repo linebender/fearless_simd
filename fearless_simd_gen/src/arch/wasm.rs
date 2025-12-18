@@ -32,7 +32,6 @@ fn translate_op(op: &str) -> Option<&'static str> {
         "max" => "max",
         "min" => "min",
         "splat" => "splat",
-        // TODO: Only target-feature "relaxed-simd" has "relaxed_madd".
         _ => return None,
     })
 }
