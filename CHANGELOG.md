@@ -65,6 +65,7 @@ This release has an [MSRV][] of 1.88.
   ([#158][] by [@Shnatsel][])
 - Breaking change: the `val` field on SIMD vector types is now private, and vector types are no longer represented as arrays internally. To access a vector type's elements, you can use the `Into` or `Deref` traits to obtain an array, or the `as_slice`/`as_mut_slice` methods to obtain a slice. ([#159][] by [@valadaptive][])
 - Breaking change: the `Element` type on the `SimdBase` trait is now an associated type instead of a type parameter. This should make it more pleasant to write code that's generic over different vector types. ([#170][] by [@valadaptive][])
+= The `WasmSimd128` token type now wraps the new `crate::core_arch::wasm32::WasmSimd128` type. This doesn't expose any new functionality as WASM SIMD128 can only be enabled statically, but matches all the other backend tokens. ([#176][] by [@valadaptive][])
 
 ### Removed
 
@@ -162,6 +163,7 @@ No changelog was kept for this release.
 [#167]: https://github.com/linebender/fearless_simd/pull/167
 [#168]: https://github.com/linebender/fearless_simd/pull/168
 [#170]: https://github.com/linebender/fearless_simd/pull/170
+[#176]: https://github.com/linebender/fearless_simd/pull/176
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
