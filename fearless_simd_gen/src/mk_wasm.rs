@@ -86,22 +86,6 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                     }
                 }
-                OpSig::Binary if method == "copysign" => {
-                    let splat = simple_intrinsic("splat", vec_ty);
-                    let sign_mask_literal = match vec_ty.scalar_bits {
-                        32 => quote! { -0.0_f32 },
-                        64 => quote! { -0.0_f64 },
-                        _ => unimplemented!(),
-                    };
-                    quote! {
-                        #method_sig {
-                            let sign_mask = #splat(#sign_mask_literal);
-                            let sign_bits = v128_and(b.into(), sign_mask.into());
-                            let magnitude = v128_andnot(a.into(), sign_mask.into());
-                            v128_or(magnitude, sign_bits).simd_into(self)
-                        }
-                    }
-                }
                 OpSig::Binary => {
                     let args = [quote! { a.into() }, quote! { b.into() }];
                     let expr = match method {
@@ -165,6 +149,20 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         }
                         "shlv" => scalar_binary(quote!(core::ops::Shl::shl)),
                         "shrv" => scalar_binary(quote!(core::ops::Shr::shr)),
+                        "copysign" => {
+                            let splat = simple_intrinsic("splat", vec_ty);
+                            let sign_mask_literal = match vec_ty.scalar_bits {
+                                32 => quote! { -0.0_f32 },
+                                64 => quote! { -0.0_f64 },
+                                _ => unimplemented!(),
+                            };
+                            quote! {
+                                let sign_mask = #splat(#sign_mask_literal);
+                                let sign_bits = v128_and(b.into(), sign_mask.into());
+                                let magnitude = v128_andnot(a.into(), sign_mask.into());
+                                v128_or(magnitude, sign_bits).simd_into(self)
+                            }
+                        }
                         _ => {
                             let expr = wasm::expr(method, vec_ty, &args);
                             quote! { #expr.simd_into(self) }
