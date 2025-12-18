@@ -60,20 +60,16 @@ pub(crate) fn translate_op(op: &str, is_float: bool) -> Option<&'static str> {
 }
 
 pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> TokenStream {
-    let ty_prefix = arch_ty(ty);
+    let ty_prefix = ty.scalar.rust(ty.scalar_bits);
     let ident = Ident::new(name, Span::call_site());
 
     quote! {#ty_prefix::#ident}
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> Ident {
-    let scalar = match ty.scalar {
-        ScalarType::Float => "f",
-        ScalarType::Unsigned => "u",
-        ScalarType::Int | ScalarType::Mask => "i",
-    };
-    let name = format!("{}{}", scalar, ty.scalar_bits);
-    Ident::new(&name, Span::call_site())
+pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
+    let scalar_rust = ty.scalar.rust(ty.scalar_bits);
+    let len = ty.len;
+    quote!([#scalar_rust; #len])
 }
 
 pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {

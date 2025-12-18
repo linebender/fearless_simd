@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use crate::arch::wasm::{arch_ty, v128_intrinsic};
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op_name, generic_to_bytes, impl_arch_types, scalar_binary,
+    generic_from_bytes, generic_op_name, generic_to_bytes, scalar_binary,
 };
 use crate::level::Level;
 use crate::ops::{Op, Quantifier, valid_reinterpret};
@@ -647,7 +647,7 @@ fn mk_simd_impl(level: &dyn Level) -> TokenStream {
 
 pub(crate) fn mk_wasm128_impl(level: &dyn Level) -> TokenStream {
     let imports = type_imports();
-    let arch_types_impl = impl_arch_types(level, 128, |_| Ident::new("v128", Span::call_site()));
+    let arch_types_impl = level.impl_arch_types(128, &|_| quote!(v128));
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();
     let level_tok = level.token();

@@ -79,7 +79,7 @@ impl VecType {
     /// array of them.
     pub(crate) fn wrapped_native_ty(
         &self,
-        arch_ty: impl Fn(&Self) -> Ident,
+        arch_ty: impl Fn(&Self) -> TokenStream,
         max_block_size: usize,
     ) -> TokenStream {
         let block_size = self.n_bits().min(max_block_size);
@@ -97,7 +97,7 @@ impl VecType {
     /// Returns the full type name for this vector's `Aligned` wrapper, including the type parameter.
     pub(crate) fn aligned_wrapper_ty(
         &self,
-        arch_ty: impl Fn(&Self) -> Ident,
+        arch_ty: impl Fn(&Self) -> TokenStream,
         max_block_size: usize,
     ) -> TokenStream {
         let newtype = self.aligned_wrapper();

@@ -1,30 +1,26 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use crate::arch::fallback;
+use crate::arch::fallback::{self, arch_ty};
 use crate::generic::{generic_from_bytes, generic_op, generic_op_name, generic_to_bytes};
+use crate::level::Level;
 use crate::ops::{Op, OpSig, RefKind, ops_for_type, valid_reinterpret};
 use crate::types::{SIMD_TYPES, ScalarType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
 #[derive(Clone, Copy)]
-pub(crate) struct Level;
+pub(crate) struct Fallback;
 
-impl Level {
-    fn name(self) -> &'static str {
+impl Level for Fallback {
+    fn name(&self) -> &'static str {
         "Fallback"
-    }
-
-    fn token(self) -> TokenStream {
-        let ident = Ident::new(self.name(), Span::call_site());
-        quote! { #ident }
     }
 }
 
 pub(crate) fn mk_fallback_impl() -> TokenStream {
     let imports = type_imports();
-    let arch_types_impl = mk_arch_types();
+    let arch_types_impl = Fallback.impl_arch_types(512, &arch_ty);
     let simd_impl = mk_simd_impl();
 
     quote! {
@@ -121,29 +117,8 @@ pub(crate) fn mk_fallback_impl() -> TokenStream {
     }
 }
 
-fn mk_arch_types() -> TokenStream {
-    // We can't use the generic version, because the fallback implementation is the only one that doesn't provide native
-    // vector types and instead uses plain arrays
-    let mut arch_types = vec![];
-    for vec_ty in SIMD_TYPES {
-        let ty_ident = vec_ty.rust();
-        let scalar_rust = vec_ty.scalar.rust(vec_ty.scalar_bits);
-        let len = vec_ty.len;
-        let wrapper_name = vec_ty.aligned_wrapper();
-        arch_types.push(quote! {
-            type #ty_ident = #wrapper_name<[#scalar_rust; #len]>;
-        });
-    }
-
-    quote! {
-        impl ArchTypes for Fallback {
-            #( #arch_types )*
-        }
-    }
-}
-
 fn mk_simd_impl() -> TokenStream {
-    let level_tok = Level.token();
+    let level_tok = Fallback.token();
     let mut methods = vec![];
     for vec_ty in SIMD_TYPES {
         let scalar_bits = vec_ty.scalar_bits;
@@ -231,11 +206,11 @@ fn mk_simd_impl() -> TokenStream {
                     }
                 }
                 OpSig::Shift => {
-                    let arch_ty = fallback::arch_ty(vec_ty);
+                    let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx| {
-                                let args = [quote! { a[#idx] }, quote! { shift as #arch_ty }];
+                                let args = [quote! { a[#idx] }, quote! { shift as #rust_scalar }];
                                 let expr = fallback::expr(method, vec_ty, &args);
                                 quote! { #expr }
                             })

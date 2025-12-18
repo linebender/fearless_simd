@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use proc_macro2::{Ident, Literal, Span, TokenStream};
-use quote::{format_ident, quote};
+use quote::{ToTokens as _, format_ident, quote};
 
 use crate::arch::neon::load_intrinsic;
 use crate::generic::{
     generic_as_array, generic_from_array, generic_from_bytes, generic_op_name, generic_to_bytes,
-    impl_arch_types,
 };
 use crate::level::Level;
 use crate::ops::{Op, valid_reinterpret};
@@ -29,7 +28,7 @@ impl Level for Neon {
 
 pub(crate) fn mk_neon_impl(level: &dyn Level) -> TokenStream {
     let imports = type_imports();
-    let arch_types_impl = impl_arch_types(level, 512, arch_ty);
+    let arch_types_impl = level.impl_arch_types(512, &|vec_ty| arch_ty(vec_ty).into_token_stream());
     let simd_impl = mk_simd_impl(level);
     let ty_impl = mk_type_impl();
 

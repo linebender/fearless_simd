@@ -7,14 +7,14 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes, impl_arch_types,
+    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes,
 };
 use crate::level::Level;
 use crate::mk_sse4_2;
 use crate::ops::{Op, OpSig, ops_for_type};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{ToTokens as _, quote};
 
 #[derive(Clone, Copy)]
 pub(crate) struct Avx2;
@@ -27,7 +27,7 @@ impl Level for Avx2 {
 
 pub(crate) fn mk_avx2_impl() -> TokenStream {
     let imports = type_imports();
-    let arch_types_impl = impl_arch_types(&Avx2, 256, arch_ty);
+    let arch_types_impl = Avx2.impl_arch_types(256, &|vec_ty| arch_ty(vec_ty).into_token_stream());
     let simd_impl = mk_simd_impl();
     let ty_impl = mk_type_impl();
 
