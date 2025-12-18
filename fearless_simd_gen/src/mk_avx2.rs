@@ -7,13 +7,13 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op, generic_to_bytes, impl_arch_types,
+    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes, impl_arch_types,
 };
 use crate::mk_sse4_2;
 use crate::ops::{Op, OpSig, ops_for_type};
 use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{format_ident, quote};
+use quote::quote;
 
 #[derive(Clone, Copy)]
 pub(crate) struct Level;
@@ -318,16 +318,11 @@ pub(crate) fn handle_widen_narrow(
                         target_ty.scalar_bits,
                         vec_ty.n_bits(),
                     );
-                    let combine = format_ident!(
-                        "combine_{}",
-                        VecType {
-                            len: vec_ty.len / 2,
-                            scalar_bits: vec_ty.scalar_bits * 2,
-                            ..*vec_ty
-                        }
-                        .rust_name()
+                    let combine = generic_op_name(
+                        "combine",
+                        &vec_ty.reinterpret(vec_ty.scalar, vec_ty.scalar_bits * 2),
                     );
-                    let split = format_ident!("split_{}", vec_ty.rust_name());
+                    let split = generic_op_name("split", vec_ty);
                     quote! {
                         unsafe {
                             let (a0, a1) = self.#split(a);
@@ -372,7 +367,7 @@ pub(crate) fn handle_widen_narrow(
                         matches!(vec_ty.scalar, ScalarType::Int),
                         target_ty.n_bits(),
                     );
-                    let split = format_ident!("split_{}", vec_ty.rust_name());
+                    let split = generic_op_name("split", vec_ty);
                     quote! {
                         let (a, b) = self.#split(a);
                         unsafe {

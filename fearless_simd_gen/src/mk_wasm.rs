@@ -87,7 +87,7 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                     }
                 }
                 OpSig::Binary if method == "copysign" => {
-                    let splat: Ident = format_ident!("{}_splat", vec_ty.rust_name());
+                    let splat = simple_intrinsic("splat", vec_ty);
                     let sign_mask_literal = match vec_ty.scalar_bits {
                         32 => quote! { -0.0_f32 },
                         64 => quote! { -0.0_f64 },
@@ -521,20 +521,12 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         _ => panic!("unsupported scalar_bits"),
                     };
 
-                    let combine_method_name =
-                        |scalar: ScalarType, scalar_bits: usize, lane_count: usize| -> Ident {
-                            let scalar = match scalar {
-                                ScalarType::Float => 'f',
-                                ScalarType::Unsigned => 'u',
-                                _ => unimplemented!(),
-                            };
-                            format_ident!("combine_{scalar}{scalar_bits}x{lane_count}")
-                        };
+                    let block_ty = vec_ty.block_ty();
+                    let block_ty_2x =
+                        VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
 
-                    let combine_method =
-                        combine_method_name(vec_ty.scalar, vec_ty.scalar_bits, elems_per_vec);
-                    let combine_method_2x =
-                        combine_method_name(vec_ty.scalar, vec_ty.scalar_bits, elems_per_vec * 2);
+                    let combine_method = generic_op_name("combine", &block_ty);
+                    let combine_method_2x = generic_op_name("combine", &block_ty_2x);
 
                     let combine_code = quote! {
                         let combined_lower = self.#combine_method(out0.simd_into(self), out1.simd_into(self));
@@ -593,20 +585,14 @@ fn mk_simd_impl(level: Level) -> TokenStream {
                         _ => panic!("unsupported scalar_bits"),
                     };
 
-                    let split_method_name =
-                        |scalar: ScalarType, scalar_bits: usize, lane_count: usize| -> Ident {
-                            let scalar = match scalar {
-                                ScalarType::Float => 'f',
-                                ScalarType::Unsigned => 'u',
-                                _ => unimplemented!(),
-                            };
-                            format_ident!("split_{scalar}{scalar_bits}x{lane_count}")
-                        };
+                    let block_ty = vec_ty.block_ty();
+                    let block_ty_2x =
+                        VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
+                    let block_ty_4x =
+                        VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 4);
 
-                    let split_method_2x =
-                        split_method_name(vec_ty.scalar, vec_ty.scalar_bits, elems_per_vec * 4);
-                    let split_method =
-                        split_method_name(vec_ty.scalar, vec_ty.scalar_bits, elems_per_vec * 2);
+                    let split_method = generic_op_name("split", &block_ty_2x);
+                    let split_method_2x = generic_op_name("split", &block_ty_4x);
 
                     let split_code = quote! {
                         let (lower, upper) = self.#split_method_2x(a);
