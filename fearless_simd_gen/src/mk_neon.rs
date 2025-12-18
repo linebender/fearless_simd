@@ -469,11 +469,17 @@ impl Level for Neon {
                     }
                 }
             }
-            OpSig::FromArray { kind } => {
-                generic_from_array(method_sig, vec_ty, kind, 512, load_intrinsic)
-            }
+            OpSig::FromArray { kind } => generic_from_array(
+                method_sig,
+                vec_ty,
+                kind,
+                self.max_block_size(),
+                load_intrinsic,
+            ),
             OpSig::AsArray { kind } => {
-                generic_as_array(method_sig, vec_ty, kind, 512, |vec_ty| self.arch_ty(vec_ty))
+                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
+                    self.arch_ty(vec_ty)
+                })
             }
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),

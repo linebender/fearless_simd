@@ -617,11 +617,15 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::FromArray { kind } => {
-                generic_from_array(method_sig, vec_ty, kind, 128, |_| v128_intrinsic("load"))
+                generic_from_array(method_sig, vec_ty, kind, self.max_block_size(), |_| {
+                    v128_intrinsic("load")
+                })
             }
-            OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 128, |_| {
-                Ident::new("v128", Span::call_site())
-            }),
+            OpSig::AsArray { kind } => {
+                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |_| {
+                    Ident::new("v128", Span::call_site())
+                })
+            }
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }
