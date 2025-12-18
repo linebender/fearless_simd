@@ -16,14 +16,13 @@ use crate::level::Level as _;
 mod arch;
 mod generic;
 mod level;
-mod mk_avx2;
 mod mk_fallback;
 mod mk_neon;
 mod mk_ops;
 mod mk_simd_trait;
 mod mk_simd_types;
-mod mk_sse4_2;
 mod mk_wasm;
+mod mk_x86;
 mod ops;
 mod types;
 
@@ -65,8 +64,8 @@ impl Module {
             Self::Neon => mk_neon::Neon.make_module(),
             Self::Wasm => mk_wasm::WasmSimd128.make_module(),
             Self::Fallback => mk_fallback::Fallback.make_module(),
-            Self::Sse4_2 => mk_sse4_2::Sse4_2.make_module(),
-            Self::Avx2 => mk_avx2::Avx2.make_module(),
+            Self::Sse4_2 => mk_x86::X86::Sse4_2.make_module(),
+            Self::Avx2 => mk_x86::X86::Avx2.make_module(),
         }
     }
 
