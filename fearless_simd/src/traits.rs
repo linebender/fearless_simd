@@ -66,7 +66,7 @@ pub(crate) mod seal {
 ///
 /// The [`SimdInto`] trait is also provided for convenience.
 pub trait SimdFrom<T, S: Simd> {
-    fn simd_from(value: T, simd: S) -> Self;
+    fn simd_from(simd: S, value: T) -> Self;
 }
 
 /// Value conversion, adding a SIMD blessing.
@@ -82,12 +82,12 @@ pub trait SimdInto<T, S> {
 
 impl<F, T: SimdFrom<F, S>, S: Simd> SimdInto<T, S> for F {
     fn simd_into(self, simd: S) -> T {
-        SimdFrom::simd_from(self, simd)
+        SimdFrom::simd_from(simd, self)
     }
 }
 
 impl<T, S: Simd> SimdFrom<T, S> for T {
-    fn simd_from(value: T, _simd: S) -> Self {
+    fn simd_from(_simd: S, value: T) -> Self {
         value
     }
 }

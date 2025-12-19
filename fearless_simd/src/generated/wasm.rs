@@ -7291,7 +7291,7 @@ impl Simd for WasmSimd128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for f32x4<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7306,7 +7306,7 @@ impl<S: Simd> From<f32x4<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for i8x16<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7321,7 +7321,7 @@ impl<S: Simd> From<i8x16<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for u8x16<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7336,7 +7336,7 @@ impl<S: Simd> From<u8x16<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for mask8x16<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7351,7 +7351,7 @@ impl<S: Simd> From<mask8x16<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for i16x8<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7366,7 +7366,7 @@ impl<S: Simd> From<i16x8<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for u16x8<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7381,7 +7381,7 @@ impl<S: Simd> From<u16x8<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for mask16x8<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7396,7 +7396,7 @@ impl<S: Simd> From<mask16x8<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for i32x4<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7411,7 +7411,7 @@ impl<S: Simd> From<i32x4<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for u32x4<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7426,7 +7426,7 @@ impl<S: Simd> From<u32x4<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for mask32x4<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7441,7 +7441,7 @@ impl<S: Simd> From<mask32x4<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for f64x2<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7456,7 +7456,7 @@ impl<S: Simd> From<f64x2<S>> for v128 {
 }
 impl<S: Simd> SimdFrom<v128, S> for mask64x2<S> {
     #[inline(always)]
-    fn simd_from(arch: v128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: v128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,

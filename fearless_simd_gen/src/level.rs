@@ -178,7 +178,7 @@ pub(crate) trait Level {
             result.push(quote! {
                 impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                     #[inline(always)]
-                    fn simd_from(arch: #arch, simd: S) -> Self {
+                    fn simd_from(simd: S, arch: #arch) -> Self {
                         Self {
                             val: unsafe { core::mem::transmute_copy(&arch) },
                             simd
