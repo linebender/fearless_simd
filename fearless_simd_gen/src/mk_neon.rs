@@ -32,6 +32,10 @@ impl Level for Neon {
         512
     }
 
+    fn enabled_target_features(&self) -> Option<&'static str> {
+        Some("neon")
+    }
+
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
         let scalar = match vec_ty.scalar {
             ScalarType::Float => "float",
@@ -59,18 +63,6 @@ impl Level for Neon {
     fn make_module_prelude(&self) -> TokenStream {
         quote! {
             use core::arch::aarch64::*;
-        }
-    }
-
-    fn make_vectorize_body(&self) -> TokenStream {
-        quote! {
-            #[target_feature(enable = "neon")]
-            #[inline]
-            // unsafe not needed here with tf11, but can be justified
-            unsafe fn vectorize_neon<F: FnOnce() -> R, R>(f: F) -> R {
-                f()
-            }
-            unsafe { vectorize_neon(f) }
         }
     }
 

@@ -33,6 +33,10 @@ impl Level for WasmSimd128 {
         128
     }
 
+    fn enabled_target_features(&self) -> Option<&'static str> {
+        None
+    }
+
     fn arch_ty(&self, _vec_ty: &VecType) -> TokenStream {
         quote! { v128 }
     }
@@ -48,13 +52,6 @@ impl Level for WasmSimd128 {
     fn make_module_prelude(&self) -> TokenStream {
         quote! {
             use core::arch::wasm32::*;
-        }
-    }
-
-    fn make_vectorize_body(&self) -> TokenStream {
-        // WASM SIMD128 is enabled statically, so a `#[target_feature]` block does nothing
-        quote! {
-            f()
         }
     }
 

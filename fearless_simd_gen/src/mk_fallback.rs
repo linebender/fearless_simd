@@ -25,6 +25,10 @@ impl Level for Fallback {
         512
     }
 
+    fn enabled_target_features(&self) -> Option<&'static str> {
+        None
+    }
+
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
         let scalar_rust = vec_ty.scalar.rust(vec_ty.scalar_bits);
         let len = vec_ty.len;
@@ -107,12 +111,6 @@ impl Level for Fallback {
                     libm::trunc(self)
                 }
             }
-        }
-    }
-
-    fn make_vectorize_body(&self) -> TokenStream {
-        quote! {
-            f()
         }
     }
 

@@ -32,6 +32,10 @@ impl Level for Sse4_2 {
         128
     }
 
+    fn enabled_target_features(&self) -> Option<&'static str> {
+        Some("sse4.2")
+    }
+
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
         arch_ty(vec_ty).into_token_stream()
     }
@@ -50,17 +54,6 @@ impl Level for Sse4_2 {
             use core::arch::x86::*;
             #[cfg(target_arch = "x86_64")]
             use core::arch::x86_64::*;
-        }
-    }
-
-    fn make_vectorize_body(&self) -> TokenStream {
-        quote! {
-            #[target_feature(enable = "sse4.2")]
-            #[inline]
-            unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
-                f()
-            }
-            unsafe { vectorize_sse4_2(f) }
         }
     }
 

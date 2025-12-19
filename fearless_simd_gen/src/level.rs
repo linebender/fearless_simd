@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 
 use crate::{
     generic::generic_op,
@@ -10,17 +10,43 @@ use crate::{
     types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
 
+/// Trait implemented by each SIMD level code generator. The methods on top must be provided by each code generator; the
+/// others are provided as default trait methods that call into the non-default ones.
 pub(crate) trait Level {
+    /// The name of this SIMD level token (e.g. `Neon` or `Sse4_2`).
     fn name(&self) -> &'static str;
+    /// The highest vector width, in bits, that SIMD instructions can directly operate on. Operations above this width
+    /// will be implemented via split/combine.
     fn native_width(&self) -> usize;
+    /// The highest bit width available to *store* vector types in. This is usually the same as [`Level::native_width`],
+    /// but may differ if the implementation provides wider vector types than most instructions actually operate on. For
+    /// instance, NEON provides tuples of vectors like `int32x4x4_t` up to 512 bits, and the fallback implementation
+    /// stores everything as arrays but only operates on 128-bit chunks.
     fn max_block_size(&self) -> usize;
+    /// The names of the target features to enable within vectorized code. This goes in the
+    /// `#[target_feature(enable = "...")]` attribute.
+    ///
+    /// If this SIMD level is not runtime-toggleable (for instance, the fallback implementation or WASM SIMD128),
+    /// returns `None`.
+    fn enabled_target_features(&self) -> Option<&'static str>;
+    /// A function that takes a given vector type and returns the corresponding native vector type. For instance,
+    /// `f32x8` would map to `__m256` on `Avx2`, and to `[f32; 8]` on `Fallback`. This will never be passed a vector
+    /// type *larger* than [`Level::max_block_size`], since [`VecType::aligned_wrapper_ty`] will split those up into
+    /// smaller blocks.
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream;
+    /// The docstring for this SIMD level token.
     fn token_doc(&self) -> &'static str;
+    /// The full path to the `core_arch` token wrapped by this SIMD level token.
     fn token_inner(&self) -> TokenStream;
 
+    /// Any additional imports or supporting code necessary for the module (for instance, importing
+    /// implementation-specific functions from `core::arch`).
     fn make_module_prelude(&self) -> TokenStream;
-    fn make_vectorize_body(&self) -> TokenStream;
+    /// The body of the SIMD token's inherent `impl` block. By convention, this contains an unsafe `new_unchecked`
+    /// method for constructing a SIMD token that may not be supported on current hardware, or a safe `new` method for
+    /// constructing a SIMD token that is statically known to be supported.
     fn make_impl_body(&self) -> TokenStream;
+    /// Generate a single operation's method on the `Simd` implementation.
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream;
 
     fn token(&self) -> Ident {
@@ -46,6 +72,8 @@ pub(crate) trait Level {
         }
     }
 
+    /// The body of the `Simd::level` function. This can be overridden, e.g. to return `Level::baseline()` if we know a
+    /// higher SIMD level is statically enabled.
     fn make_level_body(&self) -> TokenStream {
         let level_tok = self.token();
 
@@ -70,7 +98,23 @@ pub(crate) trait Level {
             }
         }
 
-        let vectorize_body = self.make_vectorize_body();
+        let vectorize_body = if let Some(target_features) = self.enabled_target_features() {
+            let vectorize = format_ident!("vectorize_{}", self.name().to_ascii_lowercase());
+            quote! {
+                #[target_feature(enable = #target_features)]
+                #[inline]
+                unsafe fn #vectorize<F: FnOnce() -> R, R>(f: F) -> R {
+                    f()
+                }
+                unsafe { #vectorize(f) }
+            }
+        } else {
+            // If this SIMD level doesn't do runtime feature detection/enabling, just call the inner function as-is
+            quote! {
+                f()
+            }
+        };
+
         let level_body = self.make_level_body();
 
         let mut assoc_types = vec![];
