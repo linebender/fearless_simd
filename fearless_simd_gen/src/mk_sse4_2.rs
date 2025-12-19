@@ -8,52 +8,69 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op, generic_op_name, generic_to_bytes, impl_arch_types,
-    scalar_binary,
+    generic_from_bytes, generic_op_name, generic_to_bytes, scalar_binary,
 };
-use crate::ops::{Op, OpSig, Quantifier, ops_for_type, valid_reinterpret};
-use crate::types::{SIMD_TYPES, ScalarType, VecType, type_imports};
+use crate::level::Level;
+use crate::ops::{Op, OpSig, Quantifier, valid_reinterpret};
+use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
+use quote::{ToTokens as _, quote};
 
 #[derive(Clone, Copy)]
-pub(crate) struct Level;
+pub(crate) struct Sse4_2;
 
-impl Level {
-    fn name(self) -> &'static str {
+impl Level for Sse4_2 {
+    fn name(&self) -> &'static str {
         "Sse4_2"
     }
 
-    fn token(self) -> TokenStream {
-        let ident = Ident::new(self.name(), Span::call_site());
-        quote! { #ident }
+    fn native_width(&self) -> usize {
+        128
     }
-}
 
-pub(crate) fn mk_sse4_2_impl() -> TokenStream {
-    let imports = type_imports();
-    let arch_types_impl = impl_arch_types(Level.name(), 128, arch_ty);
-    let simd_impl = mk_simd_impl();
-    let ty_impl = mk_type_impl();
+    fn max_block_size(&self) -> usize {
+        128
+    }
 
-    quote! {
-        #[cfg(target_arch = "x86")]
-        use core::arch::x86::*;
-        #[cfg(target_arch = "x86_64")]
-        use core::arch::x86_64::*;
+    fn enabled_target_features(&self) -> Option<&'static str> {
+        Some("sse4.2")
+    }
 
-        use core::ops::*;
-        use crate::{seal::Seal, arch_types::ArchTypes, Level, Simd, SimdFrom, SimdInto};
+    fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
+        arch_ty(vec_ty).into_token_stream()
+    }
 
-        #imports
+    fn token_doc(&self) -> &'static str {
+        r#"The SIMD token for the "SSE4.2" level."#
+    }
 
-        /// The SIMD token for the "SSE 4.2" level.
-        #[derive(Clone, Copy, Debug)]
-        pub struct Sse4_2 {
-            pub sse4_2: crate::core_arch::x86::Sse4_2,
+    fn token_inner(&self) -> TokenStream {
+        quote!(crate::core_arch::x86::Sse4_2)
+    }
+
+    fn make_module_prelude(&self) -> TokenStream {
+        quote! {
+            #[cfg(target_arch = "x86")]
+            use core::arch::x86::*;
+            #[cfg(target_arch = "x86_64")]
+            use core::arch::x86_64::*;
         }
+    }
 
-        impl Sse4_2 {
+    fn make_level_body(&self) -> TokenStream {
+        let level_tok = Self.token();
+        quote! {
+            #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
+            return Level::#level_tok(self);
+            #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+            {
+                Level::baseline()
+            }
+        }
+    }
+
+    fn make_impl_body(&self) -> TokenStream {
+        quote! {
             /// Create a SIMD token.
             ///
             /// # Safety
@@ -66,157 +83,59 @@ pub(crate) fn mk_sse4_2_impl() -> TokenStream {
                 }
             }
         }
-
-        impl Seal for Sse4_2 {}
-
-        #arch_types_impl
-
-        #simd_impl
-
-        #ty_impl
     }
-}
 
-fn mk_simd_impl() -> TokenStream {
-    let level_tok = Level.token();
-    let mut methods = vec![];
-    for vec_ty in SIMD_TYPES {
-        for op in ops_for_type(vec_ty) {
-            if op.sig.should_use_generic_op(vec_ty, 128) {
-                methods.push(generic_op(&op, vec_ty));
-                continue;
+    fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let Op { sig, method, .. } = op;
+        let method_sig = op.simd_trait_method_sig(vec_ty);
+
+        match sig {
+            OpSig::Splat => handle_splat(method_sig, vec_ty),
+            OpSig::Compare => handle_compare(method_sig, method, vec_ty),
+            OpSig::Unary => handle_unary(method_sig, method, vec_ty),
+            OpSig::WidenNarrow { target_ty } => {
+                handle_widen_narrow(method_sig, method, vec_ty, target_ty)
             }
-
-            let method = make_method(op, vec_ty);
-
-            methods.push(method);
-        }
-    }
-    // Note: the `vectorize` implementation is pretty boilerplate and should probably
-    // be factored out for DRY.
-    quote! {
-        impl Simd for #level_tok {
-            type f32s = f32x4<Self>;
-            type f64s = f64x2<Self>;
-            type u8s = u8x16<Self>;
-            type i8s = i8x16<Self>;
-            type u16s = u16x8<Self>;
-            type i16s = i16x8<Self>;
-            type u32s = u32x4<Self>;
-            type i32s = i32x4<Self>;
-            type mask8s = mask8x16<Self>;
-            type mask16s = mask16x8<Self>;
-            type mask32s = mask32x4<Self>;
-            type mask64s = mask64x2<Self>;
-            #[inline(always)]
-            fn level(self) -> Level {
-                #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
-                return Level::#level_tok(self);
-                #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
-                {
-                    Level::baseline()
-                }
+            OpSig::Binary => handle_binary(method_sig, method, vec_ty),
+            OpSig::Shift => handle_shift(method_sig, method, vec_ty),
+            OpSig::Ternary => handle_ternary(method_sig, method, vec_ty),
+            OpSig::Select => handle_select(method_sig, vec_ty),
+            OpSig::Combine { combined_ty } => generic_block_combine(method_sig, &combined_ty, 128),
+            OpSig::Split { half_ty } => generic_block_split(method_sig, &half_ty, 128),
+            OpSig::Zip { select_low } => handle_zip(method_sig, vec_ty, select_low),
+            OpSig::Unzip { select_even } => handle_unzip(method_sig, vec_ty, select_even),
+            OpSig::Cvt {
+                target_ty,
+                scalar_bits,
+                precise,
+            } => handle_cvt(method_sig, vec_ty, target_ty, scalar_bits, precise),
+            OpSig::Reinterpret {
+                target_ty,
+                scalar_bits,
+            } => handle_reinterpret(self, method_sig, vec_ty, target_ty, scalar_bits),
+            OpSig::MaskReduce {
+                quantifier,
+                condition,
+            } => handle_mask_reduce(method_sig, vec_ty, quantifier, condition),
+            OpSig::LoadInterleaved {
+                block_size,
+                block_count,
+            } => handle_load_interleaved(method_sig, vec_ty, block_size, block_count),
+            OpSig::StoreInterleaved {
+                block_size,
+                block_count,
+            } => handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
+            OpSig::FromArray { kind } => {
+                generic_from_array(method_sig, vec_ty, kind, 128, |block_ty| {
+                    intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
+                })
             }
-
-            #[inline]
-            fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-                #[target_feature(enable = "sse4.2")]
-                #[inline]
-                unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
-                    f()
-                }
-                unsafe { vectorize_sse4_2(f) }
+            OpSig::AsArray { kind } => {
+                generic_as_array(method_sig, vec_ty, kind, 128, |vec_ty| self.arch_ty(vec_ty))
             }
-
-            #( #methods )*
+            OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
+            OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }
-    }
-}
-
-fn mk_type_impl() -> TokenStream {
-    let mut result = vec![];
-    for ty in SIMD_TYPES {
-        let n_bits = ty.n_bits();
-        if n_bits != 128 {
-            continue;
-        }
-        let simd = ty.rust();
-        let arch = x86::arch_ty(ty);
-        result.push(quote! {
-            impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
-                #[inline(always)]
-                fn simd_from(arch: #arch, simd: S) -> Self {
-                    Self {
-                        val: unsafe { core::mem::transmute_copy(&arch) },
-                        simd
-                    }
-                }
-            }
-            impl<S: Simd> From<#simd<S>> for #arch {
-                #[inline(always)]
-                fn from(value: #simd<S>) -> Self {
-                    unsafe { core::mem::transmute_copy(&value.val) }
-                }
-            }
-        });
-    }
-    quote! {
-        #( #result )*
-    }
-}
-
-fn make_method(op: Op, vec_ty: &VecType) -> TokenStream {
-    let Op { sig, method, .. } = op;
-    let method_sig = op.simd_trait_method_sig(vec_ty);
-    let method_sig = quote! {
-        #[inline(always)]
-        #method_sig
-    };
-
-    match sig {
-        OpSig::Splat => handle_splat(method_sig, vec_ty),
-        OpSig::Compare => handle_compare(method_sig, method, vec_ty),
-        OpSig::Unary => handle_unary(method_sig, method, vec_ty),
-        OpSig::WidenNarrow { target_ty } => {
-            handle_widen_narrow(method_sig, method, vec_ty, target_ty)
-        }
-        OpSig::Binary => handle_binary(method_sig, method, vec_ty),
-        OpSig::Shift => handle_shift(method_sig, method, vec_ty),
-        OpSig::Ternary => handle_ternary(method_sig, method, vec_ty),
-        OpSig::Select => handle_select(method_sig, vec_ty),
-        OpSig::Combine { combined_ty } => generic_block_combine(method_sig, &combined_ty, 128),
-        OpSig::Split { half_ty } => generic_block_split(method_sig, &half_ty, 128),
-        OpSig::Zip { select_low } => handle_zip(method_sig, vec_ty, select_low),
-        OpSig::Unzip { select_even } => handle_unzip(method_sig, vec_ty, select_even),
-        OpSig::Cvt {
-            target_ty,
-            scalar_bits,
-            precise,
-        } => handle_cvt(method_sig, vec_ty, target_ty, scalar_bits, precise),
-        OpSig::Reinterpret {
-            target_ty,
-            scalar_bits,
-        } => handle_reinterpret(method_sig, vec_ty, target_ty, scalar_bits),
-        OpSig::MaskReduce {
-            quantifier,
-            condition,
-        } => handle_mask_reduce(method_sig, vec_ty, quantifier, condition),
-        OpSig::LoadInterleaved {
-            block_size,
-            block_count,
-        } => handle_load_interleaved(method_sig, vec_ty, block_size, block_count),
-        OpSig::StoreInterleaved {
-            block_size,
-            block_count,
-        } => handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
-        OpSig::FromArray { kind } => {
-            generic_from_array(method_sig, vec_ty, kind, 128, |block_ty| {
-                intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits())
-            })
-        }
-        OpSig::AsArray { kind } => generic_as_array(method_sig, vec_ty, kind, 128, arch_ty),
-        OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
-        OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
     }
 }
 
@@ -968,6 +887,7 @@ pub(crate) fn handle_cvt(
 }
 
 pub(crate) fn handle_reinterpret(
+    level: &impl Level,
     method_sig: TokenStream,
     vec_ty: &VecType,
     target_ty: ScalarType,
@@ -980,7 +900,7 @@ pub(crate) fn handle_reinterpret(
     );
 
     if coarse_type(vec_ty) == coarse_type(&dst_ty) {
-        let arch_ty = x86::arch_ty(vec_ty);
+        let arch_ty = level.arch_ty(vec_ty);
         quote! {
             #method_sig {
                 #arch_ty::from(a).simd_into(self)

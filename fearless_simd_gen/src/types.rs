@@ -36,6 +36,16 @@ impl ScalarType {
         let ident = Ident::new(&self.rust_name(scalar_bits), Span::call_site());
         quote! { #ident }
     }
+
+    pub(crate) fn native_width_name(&self, scalar_bits: usize) -> Ident {
+        let prefix = match self {
+            Self::Float => "f",
+            Self::Unsigned => "u",
+            Self::Int => "i",
+            Self::Mask => "mask",
+        };
+        format_ident!("{}{}s", prefix, scalar_bits)
+    }
 }
 
 impl VecType {
@@ -79,7 +89,7 @@ impl VecType {
     /// array of them.
     pub(crate) fn wrapped_native_ty(
         &self,
-        arch_ty: impl Fn(&Self) -> Ident,
+        arch_ty: impl Fn(&Self) -> TokenStream,
         max_block_size: usize,
     ) -> TokenStream {
         let block_size = self.n_bits().min(max_block_size);
@@ -97,7 +107,7 @@ impl VecType {
     /// Returns the full type name for this vector's `Aligned` wrapper, including the type parameter.
     pub(crate) fn aligned_wrapper_ty(
         &self,
-        arch_ty: impl Fn(&Self) -> Ident,
+        arch_ty: impl Fn(&Self) -> TokenStream,
         max_block_size: usize,
     ) -> TokenStream {
         let newtype = self.aligned_wrapper();

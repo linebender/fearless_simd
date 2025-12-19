@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
+use quote::{ToTokens, quote};
 
 use crate::{
     ops::{Op, OpSig, RefKind},
-    types::{SIMD_TYPES, ScalarType, VecType},
+    types::{ScalarType, VecType},
 };
 
 pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
@@ -22,10 +22,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
     let combine = generic_op_name("combine", &half);
     let do_half = generic_op_name(op.method, &half);
     let method_sig = op.simd_trait_method_sig(ty);
-    let method_sig = quote! {
-        #[inline(always)]
-        #method_sig
-    };
     match op.sig {
         OpSig::Splat => {
             quote! {
@@ -306,18 +302,19 @@ pub(crate) fn generic_from_array(
     }
 }
 
-pub(crate) fn generic_as_array(
+pub(crate) fn generic_as_array<T: ToTokens>(
     method_sig: TokenStream,
     vec_ty: &VecType,
     kind: RefKind,
     max_block_size: usize,
-    arch_ty: impl Fn(&VecType) -> Ident,
+    arch_ty: impl Fn(&VecType) -> T,
 ) -> TokenStream {
     let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let num_scalars = vec_ty.len;
 
     let ref_tok = kind.token();
-    let native_ty = vec_ty.wrapped_native_ty(arch_ty, max_block_size);
+    let native_ty =
+        vec_ty.wrapped_native_ty(|vec_ty| arch_ty(vec_ty).into_token_stream(), max_block_size);
 
     quote! {
         #method_sig {
@@ -355,28 +352,6 @@ pub(crate) fn generic_from_bytes(method_sig: TokenStream, vec_ty: &VecType) -> T
                 // we're transmuting between types with all valid bit patterns and the same size and alignment.
                 #ty { val: core::mem::transmute(a.val), simd: self }
             }
-        }
-    }
-}
-
-pub(crate) fn impl_arch_types(
-    level_name: &str,
-    max_block_size: usize,
-    arch_ty: impl Fn(&VecType) -> Ident,
-) -> TokenStream {
-    let mut assoc_types = vec![];
-    for vec_ty in SIMD_TYPES {
-        let ty_ident = vec_ty.rust();
-        let wrapper_ty = vec_ty.aligned_wrapper_ty(&arch_ty, max_block_size);
-        assoc_types.push(quote! {
-            type #ty_ident = #wrapper_ty;
-        });
-    }
-    let level_tok = Ident::new(level_name, Span::call_site());
-
-    quote! {
-        impl ArchTypes for #level_tok {
-            #( #assoc_types )*
         }
     }
 }
