@@ -7009,7 +7009,7 @@ impl Simd for Avx2 {
 }
 impl<S: Simd> SimdFrom<__m256, S> for f32x8<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7024,7 +7024,7 @@ impl<S: Simd> From<f32x8<S>> for __m256 {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for i8x32<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7039,7 +7039,7 @@ impl<S: Simd> From<i8x32<S>> for __m256i {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for u8x32<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7054,7 +7054,7 @@ impl<S: Simd> From<u8x32<S>> for __m256i {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for mask8x32<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7069,7 +7069,7 @@ impl<S: Simd> From<mask8x32<S>> for __m256i {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for i16x16<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7084,7 +7084,7 @@ impl<S: Simd> From<i16x16<S>> for __m256i {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for u16x16<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7099,7 +7099,7 @@ impl<S: Simd> From<u16x16<S>> for __m256i {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for mask16x16<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7114,7 +7114,7 @@ impl<S: Simd> From<mask16x16<S>> for __m256i {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for i32x8<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7129,7 +7129,7 @@ impl<S: Simd> From<i32x8<S>> for __m256i {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for u32x8<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7144,7 +7144,7 @@ impl<S: Simd> From<u32x8<S>> for __m256i {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for mask32x8<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7159,7 +7159,7 @@ impl<S: Simd> From<mask32x8<S>> for __m256i {
 }
 impl<S: Simd> SimdFrom<__m256d, S> for f64x4<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256d, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256d) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7174,7 +7174,7 @@ impl<S: Simd> From<f64x4<S>> for __m256d {
 }
 impl<S: Simd> SimdFrom<__m256i, S> for mask64x4<S> {
     #[inline(always)]
-    fn simd_from(arch: __m256i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m256i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,

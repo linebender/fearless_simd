@@ -212,7 +212,7 @@ impl VecType {
                     "
     # use fearless_simd::{block_name};
     // From `Self::Block`:
-    let f = {rust_name}::block_splat({block_name}::simd_from([{block_example}], simd));"
+    let f = {rust_name}::block_splat({block_name}::simd_from(simd, [{block_example}]));"
                 )
             } else {
                 String::new()
@@ -226,13 +226,13 @@ impl VecType {
 fn construct_simd<S: Simd>(simd: S) {{
     // From a single scalar value:
     let a = {rust_name}::splat(simd, {splat_example});
-    let b = {rust_name}::simd_from({splat_example}, simd);
+    let b = {rust_name}::simd_from(simd, {splat_example});
 
     // From a slice:
     let c = {rust_name}::from_slice(simd, &[{many_example}]);
 
     // From an array:
-    let d = {rust_name}::simd_from([{many_example}], simd);
+    let d = {rust_name}::simd_from(simd, [{many_example}]);
 
     // From an element-wise function:
     let e = {rust_name}::from_fn(simd, |i| i as {scalar_name});\

@@ -7351,7 +7351,7 @@ impl Simd for Sse4_2 {
 }
 impl<S: Simd> SimdFrom<__m128, S> for f32x4<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7366,7 +7366,7 @@ impl<S: Simd> From<f32x4<S>> for __m128 {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for i8x16<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7381,7 +7381,7 @@ impl<S: Simd> From<i8x16<S>> for __m128i {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for u8x16<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7396,7 +7396,7 @@ impl<S: Simd> From<u8x16<S>> for __m128i {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for mask8x16<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7411,7 +7411,7 @@ impl<S: Simd> From<mask8x16<S>> for __m128i {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for i16x8<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7426,7 +7426,7 @@ impl<S: Simd> From<i16x8<S>> for __m128i {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for u16x8<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7441,7 +7441,7 @@ impl<S: Simd> From<u16x8<S>> for __m128i {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for mask16x8<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7456,7 +7456,7 @@ impl<S: Simd> From<mask16x8<S>> for __m128i {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for i32x4<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7471,7 +7471,7 @@ impl<S: Simd> From<i32x4<S>> for __m128i {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for u32x4<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7486,7 +7486,7 @@ impl<S: Simd> From<u32x4<S>> for __m128i {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for mask32x4<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7501,7 +7501,7 @@ impl<S: Simd> From<mask32x4<S>> for __m128i {
 }
 impl<S: Simd> SimdFrom<__m128d, S> for f64x2<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128d, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128d) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
@@ -7516,7 +7516,7 @@ impl<S: Simd> From<f64x2<S>> for __m128d {
 }
 impl<S: Simd> SimdFrom<__m128i, S> for mask64x2<S> {
     #[inline(always)]
-    fn simd_from(arch: __m128i, simd: S) -> Self {
+    fn simd_from(simd: S, arch: __m128i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,

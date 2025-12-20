@@ -40,7 +40,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             quote! {
                 impl<S: Simd> SimdFrom<#rust_scalar, S> for #name<S> {
                     #[inline(always)]
-                    fn simd_from(value: #rust_scalar, simd: S) -> Self {
+                    fn simd_from(simd: S, value: #rust_scalar) -> Self {
                         simd.#splat(value)
                     }
                 }
@@ -172,7 +172,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
             impl<S: Simd> SimdFrom<[#rust_scalar; #len], S> for #name<S> {
                 #[inline(always)]
-                fn simd_from(val: [#rust_scalar; #len], simd: S) -> Self {
+                fn simd_from(simd: S, val: [#rust_scalar; #len]) -> Self {
                     simd.#from_array_op(val)
                 }
             }
