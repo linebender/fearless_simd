@@ -230,7 +230,7 @@ impl X86 {
                     let gt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
 
                     if vec_ty.scalar == ScalarType::Unsigned {
-                        // SSE4.2 only has signed GT/LT, but not unsigned.
+                        // Below AVX-512, we only have signed GT/LT, not unsigned.
                         let set = set1_intrinsic(vec_ty);
                         let sign = match vec_ty.scalar_bits {
                             8 => quote! { 0x80u8 },
@@ -451,8 +451,7 @@ impl X86 {
                         quote! {
                             let (a, b) = self.#split(a);
                             unsafe {
-                                // Note that SSE4.2 only has an intrinsic for saturating cast,
-                                // but not wrapping.
+                                // Below AVX-512. we only have an intrinsic for saturating cast, but not wrapping.
                                 let mask = #mask(0xFF);
                                 let lo_masked = _mm_and_si128(a.into(), mask);
                                 let hi_masked = _mm_and_si128(b.into(), mask);
@@ -547,8 +546,7 @@ impl X86 {
         let shift_intrinsic = intrinsic_ident(op, suffix, ty_bits);
 
         if vec_ty.scalar_bits == 8 {
-            // SSE doesn't have shifting for 8-bit, so we first convert into
-            // 16 bit, shift, and then back to 8-bit
+            // x86 doesn't have shifting for 8-bit, so we first convert into 16-bit, shift, and then back to 8-bit.
 
             let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
             let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
