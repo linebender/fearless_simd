@@ -72,6 +72,12 @@ pub(crate) trait Level {
         }
     }
 
+    /// Any additional supporting code necessary for the module's implementation, but placed *after* the `Simd`
+    /// implementation itself.
+    fn make_module_footer(&self) -> TokenStream {
+        TokenStream::new()
+    }
+
     /// The body of the `Simd::level` function. This can be overridden, e.g. to return `Level::baseline()` if we know a
     /// higher SIMD level is statically enabled.
     fn make_level_body(&self) -> TokenStream {
@@ -209,6 +215,7 @@ pub(crate) trait Level {
         let arch_types_impl = self.impl_arch_types();
         let simd_impl = self.make_simd_impl();
         let ty_impl = self.make_type_impl();
+        let footer = self.make_module_footer();
 
         quote! {
             use crate::{prelude::*, seal::Seal, arch_types::ArchTypes, Level};
@@ -234,6 +241,8 @@ pub(crate) trait Level {
             #simd_impl
 
             #ty_impl
+
+            #footer
         }
     }
 }

@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::{
-    ops::{OpKind, TyFlavor, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
+    ops::{OpKind, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
     types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
@@ -130,6 +130,17 @@ pub(crate) fn mk_arch_types() -> TokenStream {
 }
 
 fn mk_simd_base() -> TokenStream {
+    let mut methods = vec![];
+    for op in base_trait_ops() {
+        let doc = op.format_docstring(TyFlavor::VecImpl);
+        if let Some(method_sig) = op.vec_trait_method_sig() {
+            methods.push(quote! {
+                #[doc = #doc]
+                #method_sig;
+            });
+        }
+    }
+
     quote! {
         /// Base functionality implemented by all SIMD vectors.
         pub trait SimdBase<S: Simd>:
@@ -167,8 +178,6 @@ fn mk_simd_base() -> TokenStream {
             ///
             /// The slice must be the proper width.
             fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
-            /// Create a SIMD vector with all elements set to the given value.
-            fn splat(simd: S, val: Self::Element) -> Self;
             /// Create a SIMD vector from a 128-bit vector of the same scalar
             /// type, repeated.
             fn block_splat(block: Self::Block) -> Self;
@@ -176,6 +185,8 @@ fn mk_simd_base() -> TokenStream {
             /// calling `f` with that element's lane index (from 0 to
             /// [`SimdBase::N`] - 1).
             fn from_fn(simd: S, f: impl FnMut(usize) -> Self::Element) -> Self;
+
+            #( #methods )*
         }
     }
 }
