@@ -1568,6 +1568,10 @@ impl X86 {
         }
     }
 
+    /// Generates versions of the "alignr" intrinsics that take the shift amount as a regular argument instead of a
+    /// const generic argument, to make them easier to use in higher-level operations. These are low-level helpers that
+    /// inherit the semantics of the underlying `alignr` intrinsics, so the argument order is backwards from ARM's
+    /// `vext` and our `slide` operation, and the 256-bit AVX2 version still operates *within* 128-bit lanes.
     fn dyn_alignr_helpers(&self) -> TokenStream {
         let mut fns = vec![];
 
