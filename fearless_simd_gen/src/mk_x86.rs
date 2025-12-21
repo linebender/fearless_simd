@@ -85,8 +85,8 @@ impl Level for X86 {
     fn make_module_footer(&self) -> TokenStream {
         let alignr_helpers = self.dyn_alignr_helpers();
         let slide_helpers = match self {
-            X86::Sse4_2 => Self::sse42_slide_helpers(),
-            X86::Avx2 => Self::avx2_slide_helpers(),
+            Self::Sse4_2 => Self::sse42_slide_helpers(),
+            Self::Avx2 => Self::avx2_slide_helpers(),
         };
 
         quote! {
@@ -1576,8 +1576,8 @@ impl X86 {
         let mut fns = vec![];
 
         let vec_widths: &[usize] = match self {
-            X86::Sse4_2 => &[128],
-            X86::Avx2 => &[128, 256],
+            Self::Sse4_2 => &[128],
+            Self::Avx2 => &[128, 256],
         };
 
         for vec_ty in vec_widths
@@ -1649,7 +1649,7 @@ impl X86 {
             unsafe fn cross_block_alignr_one(regs: &[__m256i], block_idx: usize, shift_bytes: usize) -> __m256i {
                 let lo_idx = block_idx + (shift_bytes / 16);
                 let intra_shift = shift_bytes % 16;
-                let lo_blocks = if lo_idx % 2 == 0 {
+                let lo_blocks = if lo_idx & 1 == 0 {
                     regs[lo_idx / 2]
                 } else {
                     unsafe { _mm256_permute2x128_si256::<0x21>(regs[lo_idx / 2], regs[(lo_idx / 2) + 1]) }
@@ -1657,7 +1657,7 @@ impl X86 {
 
                 // For hi_blocks, we need blocks (`lo_idx + 1`) and (`lo_idx + 2`)
                 let hi_idx = lo_idx + 1;
-                let hi_blocks = if hi_idx % 2 == 0 {
+                let hi_blocks = if hi_idx & 1 == 0 {
                     regs[hi_idx / 2]
                 } else {
                     unsafe { _mm256_permute2x128_si256::<0x21>(regs[hi_idx / 2], regs[(hi_idx / 2) + 1]) }

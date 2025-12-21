@@ -8597,13 +8597,13 @@ unsafe fn cross_block_alignr_one(
 ) -> __m256i {
     let lo_idx = block_idx + (shift_bytes / 16);
     let intra_shift = shift_bytes % 16;
-    let lo_blocks = if lo_idx % 2 == 0 {
+    let lo_blocks = if lo_idx & 1 == 0 {
         regs[lo_idx / 2]
     } else {
         unsafe { _mm256_permute2x128_si256::<0x21>(regs[lo_idx / 2], regs[(lo_idx / 2) + 1]) }
     };
     let hi_idx = lo_idx + 1;
-    let hi_blocks = if hi_idx % 2 == 0 {
+    let hi_blocks = if hi_idx & 1 == 0 {
         regs[hi_idx / 2]
     } else {
         unsafe { _mm256_permute2x128_si256::<0x21>(regs[hi_idx / 2], regs[(hi_idx / 2) + 1]) }
