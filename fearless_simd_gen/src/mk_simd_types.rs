@@ -206,7 +206,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     #[inline(always)]
                     fn scatter<T: Copy>(self, src: &[T], dst: &mut [T]) {
                         assert_eq!(Self::N, src.len(), "scatter: source slice must have the same element count as the vector type");
-                        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
+                        assert!(!dst.is_empty(), "scatter: destination slice must not be empty");
 
                         // Same logic as for `gather`, but for `dst`. See the comments there.
                         let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>() &&
