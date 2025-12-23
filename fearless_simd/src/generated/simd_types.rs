@@ -577,7 +577,8 @@ impl<S: Simd> SimdGather<S> for u8x16<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
-        core::array::from_fn(|i| unsafe { *src.get_unchecked(inbounds[i] as usize) })
+        let inbounds = &*inbounds;
+        core::array::from_fn(|i| unsafe { *src.get_unchecked(*inbounds.get_unchecked(i) as usize) })
     }
     #[inline(always)]
     fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
@@ -600,8 +601,11 @@ impl<S: Simd> SimdGather<S> for u8x16<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            dst[i] = unsafe { *src.get_unchecked(inbounds[i] as usize) }
+            unsafe {
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+            }
         }
     }
 }
@@ -624,8 +628,11 @@ impl<S: Simd> SimdScatter<S> for u8x16<S> {
                 ((dst.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            unsafe { *dst.get_unchecked_mut(inbounds[i] as usize) = src[i] };
+            unsafe {
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
+            };
         }
     }
 }
@@ -1123,7 +1130,8 @@ impl<S: Simd> SimdGather<S> for u16x8<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
-        core::array::from_fn(|i| unsafe { *src.get_unchecked(inbounds[i] as usize) })
+        let inbounds = &*inbounds;
+        core::array::from_fn(|i| unsafe { *src.get_unchecked(*inbounds.get_unchecked(i) as usize) })
     }
     #[inline(always)]
     fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
@@ -1146,8 +1154,11 @@ impl<S: Simd> SimdGather<S> for u16x8<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            dst[i] = unsafe { *src.get_unchecked(inbounds[i] as usize) }
+            unsafe {
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+            }
         }
     }
 }
@@ -1170,8 +1181,11 @@ impl<S: Simd> SimdScatter<S> for u16x8<S> {
                 ((dst.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            unsafe { *dst.get_unchecked_mut(inbounds[i] as usize) = src[i] };
+            unsafe {
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
+            };
         }
     }
 }
@@ -1693,7 +1707,8 @@ impl<S: Simd> SimdGather<S> for u32x4<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
-        core::array::from_fn(|i| unsafe { *src.get_unchecked(inbounds[i] as usize) })
+        let inbounds = &*inbounds;
+        core::array::from_fn(|i| unsafe { *src.get_unchecked(*inbounds.get_unchecked(i) as usize) })
     }
     #[inline(always)]
     fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
@@ -1716,8 +1731,11 @@ impl<S: Simd> SimdGather<S> for u32x4<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            dst[i] = unsafe { *src.get_unchecked(inbounds[i] as usize) }
+            unsafe {
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+            }
         }
     }
 }
@@ -1740,8 +1758,11 @@ impl<S: Simd> SimdScatter<S> for u32x4<S> {
                 ((dst.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            unsafe { *dst.get_unchecked_mut(inbounds[i] as usize) = src[i] };
+            unsafe {
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
+            };
         }
     }
 }
@@ -2846,7 +2867,8 @@ impl<S: Simd> SimdGather<S> for u8x32<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
-        core::array::from_fn(|i| unsafe { *src.get_unchecked(inbounds[i] as usize) })
+        let inbounds = &*inbounds;
+        core::array::from_fn(|i| unsafe { *src.get_unchecked(*inbounds.get_unchecked(i) as usize) })
     }
     #[inline(always)]
     fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
@@ -2869,8 +2891,11 @@ impl<S: Simd> SimdGather<S> for u8x32<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            dst[i] = unsafe { *src.get_unchecked(inbounds[i] as usize) }
+            unsafe {
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+            }
         }
     }
 }
@@ -2893,8 +2918,11 @@ impl<S: Simd> SimdScatter<S> for u8x32<S> {
                 ((dst.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            unsafe { *dst.get_unchecked_mut(inbounds[i] as usize) = src[i] };
+            unsafe {
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
+            };
         }
     }
 }
@@ -3423,7 +3451,8 @@ impl<S: Simd> SimdGather<S> for u16x16<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
-        core::array::from_fn(|i| unsafe { *src.get_unchecked(inbounds[i] as usize) })
+        let inbounds = &*inbounds;
+        core::array::from_fn(|i| unsafe { *src.get_unchecked(*inbounds.get_unchecked(i) as usize) })
     }
     #[inline(always)]
     fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
@@ -3446,8 +3475,11 @@ impl<S: Simd> SimdGather<S> for u16x16<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            dst[i] = unsafe { *src.get_unchecked(inbounds[i] as usize) }
+            unsafe {
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+            }
         }
     }
 }
@@ -3470,8 +3502,11 @@ impl<S: Simd> SimdScatter<S> for u16x16<S> {
                 ((dst.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            unsafe { *dst.get_unchecked_mut(inbounds[i] as usize) = src[i] };
+            unsafe {
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
+            };
         }
     }
 }
@@ -4014,7 +4049,8 @@ impl<S: Simd> SimdGather<S> for u32x8<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
-        core::array::from_fn(|i| unsafe { *src.get_unchecked(inbounds[i] as usize) })
+        let inbounds = &*inbounds;
+        core::array::from_fn(|i| unsafe { *src.get_unchecked(*inbounds.get_unchecked(i) as usize) })
     }
     #[inline(always)]
     fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
@@ -4037,8 +4073,11 @@ impl<S: Simd> SimdGather<S> for u32x8<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            dst[i] = unsafe { *src.get_unchecked(inbounds[i] as usize) }
+            unsafe {
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+            }
         }
     }
 }
@@ -4061,8 +4100,11 @@ impl<S: Simd> SimdScatter<S> for u32x8<S> {
                 ((dst.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            unsafe { *dst.get_unchecked_mut(inbounds[i] as usize) = src[i] };
+            unsafe {
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
+            };
         }
     }
 }
@@ -5189,7 +5231,8 @@ impl<S: Simd> SimdGather<S> for u8x64<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
-        core::array::from_fn(|i| unsafe { *src.get_unchecked(inbounds[i] as usize) })
+        let inbounds = &*inbounds;
+        core::array::from_fn(|i| unsafe { *src.get_unchecked(*inbounds.get_unchecked(i) as usize) })
     }
     #[inline(always)]
     fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
@@ -5212,8 +5255,11 @@ impl<S: Simd> SimdGather<S> for u8x64<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            dst[i] = unsafe { *src.get_unchecked(inbounds[i] as usize) }
+            unsafe {
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+            }
         }
     }
 }
@@ -5236,8 +5282,11 @@ impl<S: Simd> SimdScatter<S> for u8x64<S> {
                 ((dst.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            unsafe { *dst.get_unchecked_mut(inbounds[i] as usize) = src[i] };
+            unsafe {
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
+            };
         }
     }
 }
@@ -5748,7 +5797,8 @@ impl<S: Simd> SimdGather<S> for u16x32<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
-        core::array::from_fn(|i| unsafe { *src.get_unchecked(inbounds[i] as usize) })
+        let inbounds = &*inbounds;
+        core::array::from_fn(|i| unsafe { *src.get_unchecked(*inbounds.get_unchecked(i) as usize) })
     }
     #[inline(always)]
     fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
@@ -5771,8 +5821,11 @@ impl<S: Simd> SimdGather<S> for u16x32<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            dst[i] = unsafe { *src.get_unchecked(inbounds[i] as usize) }
+            unsafe {
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+            }
         }
     }
 }
@@ -5795,8 +5848,11 @@ impl<S: Simd> SimdScatter<S> for u16x32<S> {
                 ((dst.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            unsafe { *dst.get_unchecked_mut(inbounds[i] as usize) = src[i] };
+            unsafe {
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
+            };
         }
     }
 }
@@ -6331,7 +6387,8 @@ impl<S: Simd> SimdGather<S> for u32x16<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
-        core::array::from_fn(|i| unsafe { *src.get_unchecked(inbounds[i] as usize) })
+        let inbounds = &*inbounds;
+        core::array::from_fn(|i| unsafe { *src.get_unchecked(*inbounds.get_unchecked(i) as usize) })
     }
     #[inline(always)]
     fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
@@ -6354,8 +6411,11 @@ impl<S: Simd> SimdGather<S> for u32x16<S> {
                 ((src.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            dst[i] = unsafe { *src.get_unchecked(inbounds[i] as usize) }
+            unsafe {
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+            }
         }
     }
 }
@@ -6378,8 +6438,11 @@ impl<S: Simd> SimdScatter<S> for u32x16<S> {
                 ((dst.len() - 1) as Self::Element).simd_into(self.simd),
             )
         };
+        let inbounds = &*inbounds;
         for i in 0..Self::N {
-            unsafe { *dst.get_unchecked_mut(inbounds[i] as usize) = src[i] };
+            unsafe {
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
+            };
         }
     }
 }
