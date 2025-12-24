@@ -147,11 +147,10 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
                         assert!(!src.is_empty(), "gather: source slice must not be empty");
 
-                        // Before ensuring the source slice is bigger than `Self::Element::MAX as usize`, we need to
-                        // make sure that's actually a valid cast. We may eventually get an i64/u64 type, which is
-                        // larger than `usize` on 32-bit platforms. If our `Element` type is wider than `usize`, then
-                        // `Element::MAX` will be larger than any possible slice length.
-                        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>() &&
+                        // Check if the element type is small enough that the slice's length could (and then does)
+                        // exceed its maximum value. The `size_of` check ensures that `Self::Element::MAX as usize` will
+                        // never truncate/wrap.
+                        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>() &&
                             src.len() > Self::Element::MAX as usize
                         {
                             // The slice is big enough to accept any index. For instance, if this is a vector of `u8`s,
@@ -181,7 +180,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                         assert!(!src.is_empty(), "gather_into: source slice must not be empty");
 
                         // Same logic as for `gather`. See the comments there.
-                        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>() &&
+                        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>() &&
                             src.len() > Self::Element::MAX as usize
                         {
                             self
@@ -209,7 +208,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                         assert!(!dst.is_empty(), "scatter: destination slice must not be empty");
 
                         // Same logic as for `gather`, but for `dst`. See the comments there.
-                        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>() &&
+                        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>() &&
                             dst.len() > Self::Element::MAX as usize
                         {
                             self

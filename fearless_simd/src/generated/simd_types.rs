@@ -567,7 +567,7 @@ impl<S: Simd> SimdGather<S> for u8x16<S> {
     #[inline(always)]
     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
         assert!(!src.is_empty(), "gather: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -591,7 +591,7 @@ impl<S: Simd> SimdGather<S> for u8x16<S> {
             !src.is_empty(),
             "gather_into: source slice must not be empty"
         );
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -617,8 +617,11 @@ impl<S: Simd> SimdScatter<S> for u8x16<S> {
             src.len(),
             "scatter: source slice must have the same element count as the vector type"
         );
-        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        assert!(
+            !dst.is_empty(),
+            "scatter: destination slice must not be empty"
+        );
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && dst.len() > Self::Element::MAX as usize
         {
             self
@@ -1120,7 +1123,7 @@ impl<S: Simd> SimdGather<S> for u16x8<S> {
     #[inline(always)]
     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
         assert!(!src.is_empty(), "gather: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -1144,7 +1147,7 @@ impl<S: Simd> SimdGather<S> for u16x8<S> {
             !src.is_empty(),
             "gather_into: source slice must not be empty"
         );
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -1170,8 +1173,11 @@ impl<S: Simd> SimdScatter<S> for u16x8<S> {
             src.len(),
             "scatter: source slice must have the same element count as the vector type"
         );
-        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        assert!(
+            !dst.is_empty(),
+            "scatter: destination slice must not be empty"
+        );
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && dst.len() > Self::Element::MAX as usize
         {
             self
@@ -1697,7 +1703,7 @@ impl<S: Simd> SimdGather<S> for u32x4<S> {
     #[inline(always)]
     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
         assert!(!src.is_empty(), "gather: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -1721,7 +1727,7 @@ impl<S: Simd> SimdGather<S> for u32x4<S> {
             !src.is_empty(),
             "gather_into: source slice must not be empty"
         );
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -1747,8 +1753,11 @@ impl<S: Simd> SimdScatter<S> for u32x4<S> {
             src.len(),
             "scatter: source slice must have the same element count as the vector type"
         );
-        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        assert!(
+            !dst.is_empty(),
+            "scatter: destination slice must not be empty"
+        );
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && dst.len() > Self::Element::MAX as usize
         {
             self
@@ -2857,7 +2866,7 @@ impl<S: Simd> SimdGather<S> for u8x32<S> {
     #[inline(always)]
     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
         assert!(!src.is_empty(), "gather: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -2881,7 +2890,7 @@ impl<S: Simd> SimdGather<S> for u8x32<S> {
             !src.is_empty(),
             "gather_into: source slice must not be empty"
         );
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -2907,8 +2916,11 @@ impl<S: Simd> SimdScatter<S> for u8x32<S> {
             src.len(),
             "scatter: source slice must have the same element count as the vector type"
         );
-        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        assert!(
+            !dst.is_empty(),
+            "scatter: destination slice must not be empty"
+        );
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && dst.len() > Self::Element::MAX as usize
         {
             self
@@ -3441,7 +3453,7 @@ impl<S: Simd> SimdGather<S> for u16x16<S> {
     #[inline(always)]
     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
         assert!(!src.is_empty(), "gather: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -3465,7 +3477,7 @@ impl<S: Simd> SimdGather<S> for u16x16<S> {
             !src.is_empty(),
             "gather_into: source slice must not be empty"
         );
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -3491,8 +3503,11 @@ impl<S: Simd> SimdScatter<S> for u16x16<S> {
             src.len(),
             "scatter: source slice must have the same element count as the vector type"
         );
-        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        assert!(
+            !dst.is_empty(),
+            "scatter: destination slice must not be empty"
+        );
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && dst.len() > Self::Element::MAX as usize
         {
             self
@@ -4039,7 +4054,7 @@ impl<S: Simd> SimdGather<S> for u32x8<S> {
     #[inline(always)]
     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
         assert!(!src.is_empty(), "gather: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -4063,7 +4078,7 @@ impl<S: Simd> SimdGather<S> for u32x8<S> {
             !src.is_empty(),
             "gather_into: source slice must not be empty"
         );
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -4089,8 +4104,11 @@ impl<S: Simd> SimdScatter<S> for u32x8<S> {
             src.len(),
             "scatter: source slice must have the same element count as the vector type"
         );
-        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        assert!(
+            !dst.is_empty(),
+            "scatter: destination slice must not be empty"
+        );
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && dst.len() > Self::Element::MAX as usize
         {
             self
@@ -5221,7 +5239,7 @@ impl<S: Simd> SimdGather<S> for u8x64<S> {
     #[inline(always)]
     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
         assert!(!src.is_empty(), "gather: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -5245,7 +5263,7 @@ impl<S: Simd> SimdGather<S> for u8x64<S> {
             !src.is_empty(),
             "gather_into: source slice must not be empty"
         );
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -5271,8 +5289,11 @@ impl<S: Simd> SimdScatter<S> for u8x64<S> {
             src.len(),
             "scatter: source slice must have the same element count as the vector type"
         );
-        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        assert!(
+            !dst.is_empty(),
+            "scatter: destination slice must not be empty"
+        );
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && dst.len() > Self::Element::MAX as usize
         {
             self
@@ -5787,7 +5808,7 @@ impl<S: Simd> SimdGather<S> for u16x32<S> {
     #[inline(always)]
     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
         assert!(!src.is_empty(), "gather: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -5811,7 +5832,7 @@ impl<S: Simd> SimdGather<S> for u16x32<S> {
             !src.is_empty(),
             "gather_into: source slice must not be empty"
         );
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -5837,8 +5858,11 @@ impl<S: Simd> SimdScatter<S> for u16x32<S> {
             src.len(),
             "scatter: source slice must have the same element count as the vector type"
         );
-        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        assert!(
+            !dst.is_empty(),
+            "scatter: destination slice must not be empty"
+        );
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && dst.len() > Self::Element::MAX as usize
         {
             self
@@ -6377,7 +6401,7 @@ impl<S: Simd> SimdGather<S> for u32x16<S> {
     #[inline(always)]
     fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
         assert!(!src.is_empty(), "gather: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -6401,7 +6425,7 @@ impl<S: Simd> SimdGather<S> for u32x16<S> {
             !src.is_empty(),
             "gather_into: source slice must not be empty"
         );
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && src.len() > Self::Element::MAX as usize
         {
             self
@@ -6427,8 +6451,11 @@ impl<S: Simd> SimdScatter<S> for u32x16<S> {
             src.len(),
             "scatter: source slice must have the same element count as the vector type"
         );
-        assert!(!dst.is_empty(), "scatter: source slice must not be empty");
-        let inbounds = if core::mem::size_of::<Self::Element>() <= core::mem::size_of::<usize>()
+        assert!(
+            !dst.is_empty(),
+            "scatter: destination slice must not be empty"
+        );
+        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>()
             && dst.len() > Self::Element::MAX as usize
         {
             self
