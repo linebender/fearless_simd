@@ -589,7 +589,7 @@ impl<S: Simd> SimdGather<S> for u8x16<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
             }
         }
     }
@@ -619,8 +619,8 @@ impl<S: Simd> SimdScatter<S> for u8x16<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
-            };
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+            }
         }
     }
 }
@@ -1130,7 +1130,7 @@ impl<S: Simd> SimdGather<S> for u16x8<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
             }
         }
     }
@@ -1160,8 +1160,8 @@ impl<S: Simd> SimdScatter<S> for u16x8<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
-            };
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+            }
         }
     }
 }
@@ -1695,7 +1695,7 @@ impl<S: Simd> SimdGather<S> for u32x4<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
             }
         }
     }
@@ -1725,8 +1725,8 @@ impl<S: Simd> SimdScatter<S> for u32x4<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
-            };
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+            }
         }
     }
 }
@@ -2828,7 +2828,7 @@ impl<S: Simd> SimdGather<S> for u8x32<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
             }
         }
     }
@@ -2858,8 +2858,8 @@ impl<S: Simd> SimdScatter<S> for u8x32<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
-            };
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+            }
         }
     }
 }
@@ -3400,7 +3400,7 @@ impl<S: Simd> SimdGather<S> for u16x16<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
             }
         }
     }
@@ -3430,8 +3430,8 @@ impl<S: Simd> SimdScatter<S> for u16x16<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
-            };
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+            }
         }
     }
 }
@@ -3986,7 +3986,7 @@ impl<S: Simd> SimdGather<S> for u32x8<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
             }
         }
     }
@@ -4016,8 +4016,8 @@ impl<S: Simd> SimdScatter<S> for u32x8<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
-            };
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+            }
         }
     }
 }
@@ -5141,7 +5141,7 @@ impl<S: Simd> SimdGather<S> for u8x64<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
             }
         }
     }
@@ -5171,8 +5171,8 @@ impl<S: Simd> SimdScatter<S> for u8x64<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
-            };
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+            }
         }
     }
 }
@@ -5695,7 +5695,7 @@ impl<S: Simd> SimdGather<S> for u16x32<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
             }
         }
     }
@@ -5725,8 +5725,8 @@ impl<S: Simd> SimdScatter<S> for u16x32<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
-            };
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+            }
         }
     }
 }
@@ -6273,7 +6273,7 @@ impl<S: Simd> SimdGather<S> for u32x16<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
             }
         }
     }
@@ -6303,8 +6303,8 @@ impl<S: Simd> SimdScatter<S> for u32x16<S> {
         let inbounds = &*inbounds;
         for i in 0..Self::N {
             unsafe {
-                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i)
-            };
+                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+            }
         }
     }
 }

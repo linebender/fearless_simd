@@ -195,7 +195,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                                 // we asserted that `src` is not empty. Therefore, the index into `src` is valid. `i`
                                 // will be between [0, Self::N), so the index into `inbounds` is valid. The index into
                                 // `dst` is also valid, since we asserted above that `dst.len() == Self::N`.
-                                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
                             }
                         }
                     }
@@ -218,11 +218,13 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
                         let inbounds = &*inbounds;
                         for i in 0..Self::N {
-                            // Safety: All elements of `inbounds` are in [0, dst.len()). 0 is a valid index, because we
-                            // asserted that `dst` is not empty. Therefore, the index into `dst` is valid. `i` will be
-                            // between [0, Self::N), so the index into `inbounds` is valid. The index into `src` is also
-                            // valid, since we asserted above that `src.len() == Self::N`.
-                            unsafe { *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i) };
+                            unsafe {
+                                // Safety: All elements of `inbounds` are in [0, dst.len()). 0 is a valid index, because
+                                // we asserted that `dst` is not empty. Therefore, the index into `dst` is valid. `i`
+                                // will be between [0, Self::N), so the index into `inbounds` is valid. The index into
+                                // `src` is also valid, since we asserted above that `src.len() == Self::N`.
+                                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+                            }
                         }
                     }
                 }
