@@ -29,6 +29,20 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         .filter(|attr| !attr.path().is_ident("simd_test"))
         .collect();
 
+    // If this is a `#[should_panic]` test, run it with the fallback so it actually panics
+    let should_panic_attr = input_fn
+        .attrs
+        .iter()
+        .find(|attr| attr.path().is_ident("should_panic"));
+    let panic_else = if should_panic_attr.is_some() {
+        quote! {
+            let fallback = fearless_simd::Fallback::new();
+            #input_fn_name(fallback);
+        }
+    } else {
+        quote! {}
+    };
+
     let fallback_snippet = quote! {
         #(#test_attrs)*
         #[test]
@@ -47,6 +61,9 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     // target features aren't supported. This is not ideal, since it may mislead you into thinking tests have passed
     // when they haven't even been run, but some CI runners don't support all target features and we don't want failures
     // as a result of that.
+    //
+    // However, for #[should_panic] tests, we need to panic if features aren't available to avoid
+    // "test did not panic as expected" failures.
 
     let neon_snippet = quote! {
         #[cfg(target_arch = "aarch64")]
@@ -56,6 +73,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
             if std::arch::is_aarch64_feature_detected!("neon") {
                 let neon = unsafe { fearless_simd::aarch64::Neon::new_unchecked() };
                 #input_fn_name(neon);
+            } else {
+                #panic_else
             }
         }
     };
@@ -68,6 +87,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
             if std::arch::is_x86_feature_detected!("sse4.2") {
                 let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
                 #input_fn_name(sse4);
+            } else {
+                #panic_else
             }
         }
     };
@@ -82,6 +103,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
             {
                 let avx2 = unsafe { fearless_simd::x86::Avx2::new_unchecked() };
                 #input_fn_name(avx2);
+            } else {
+                #panic_else
             }
         }
     };
