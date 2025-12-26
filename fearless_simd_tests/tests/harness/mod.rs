@@ -3207,3 +3207,364 @@ fn store_slice_f32x4<S: Simd>(simd: S) {
     a.store_slice(&mut dest);
     assert_eq!(dest, [1.0, 2.0, 3.0, 4.0]);
 }
+
+#[simd_test]
+fn gather_u16x8_basic<S: Simd>(simd: S) {
+    let indices = u16x8::from_slice(simd, &[7, 6, 5, 4, 3, 2, 1, 0]);
+    let src = [100, 200, 300, 400, 500, 600, 700, 800];
+    let result = indices.gather(&src);
+    assert_eq!(result, [800, 700, 600, 500, 400, 300, 200, 100]);
+}
+
+#[simd_test]
+fn gather_u32x4_basic<S: Simd>(simd: S) {
+    let indices = u32x4::from_slice(simd, &[3, 1, 2, 0]);
+    let src = [1000, 2000, 3000, 4000];
+    let result = indices.gather(&src);
+    assert_eq!(result, [4000, 2000, 3000, 1000]);
+}
+
+#[simd_test]
+fn gather_with_duplicate_indices<S: Simd>(simd: S) {
+    let indices = u8x16::from_slice(simd, &[0, 0, 1, 1, 2, 2, 3, 3, 0, 1, 2, 3, 0, 1, 2, 3]);
+    let src = [10, 20, 30, 40];
+    let result = indices.gather(&src);
+    assert_eq!(
+        result,
+        [
+            10, 10, 20, 20, 30, 30, 40, 40, 10, 20, 30, 40, 10, 20, 30, 40
+        ]
+    );
+}
+
+#[simd_test]
+fn gather_out_of_bounds_clamping<S: Simd>(simd: S) {
+    // Indices that are out of bounds should be clamped to the last element
+    let indices = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 100, 200, 255, 3, 4, 0, 50, 99, 1, 2, 3, 4, 150],
+    );
+    let src = [10, 20, 30, 40, 50];
+    let result = indices.gather(&src);
+    assert_eq!(
+        result,
+        [
+            10, 20, 30, 50, 50, 50, 40, 50, 10, 50, 50, 20, 30, 40, 50, 50
+        ]
+    );
+}
+
+#[simd_test]
+fn gather_u8x16_basic<S: Simd>(simd: S) {
+    let indices = u8x16::from_slice(
+        simd,
+        &[0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15],
+    );
+    let src = [
+        10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160,
+    ];
+    let result = indices.gather(&src);
+    assert_eq!(
+        result,
+        [
+            10, 30, 50, 70, 90, 110, 130, 150, 20, 40, 60, 80, 100, 120, 140, 160
+        ]
+    );
+}
+
+#[simd_test]
+fn gather_u32x4_out_of_bounds<S: Simd>(simd: S) {
+    let indices = u32x4::from_slice(simd, &[0, 1000, u32::MAX, 2]);
+    let src = [100, 200, 300];
+    let result = indices.gather(&src);
+    assert_eq!(result, [100, 300, 300, 300]);
+}
+
+#[simd_test]
+fn gather_single_element_source<S: Simd>(simd: S) {
+    // All indices should point to the single element
+    let indices = u8x16::from_slice(
+        simd,
+        &[0, 5, 10, 255, 100, 50, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    );
+    let src = [42];
+    let result = indices.gather(&src);
+    assert_eq!(result, [42; 16]);
+}
+
+// Note that the #[should_panic] tests are automatically skipped on wasm32-wasip1 with the default runner, which has
+// panic=abort. cargo-nextest appears to support these, since it runs each test in its own process.
+#[simd_test]
+#[should_panic(expected = "gather: source slice must not be empty")]
+fn gather_empty_source_panics<S: Simd>(simd: S) {
+    let indices = u8x16::splat(simd, 0);
+    let src: [i32; 0] = [];
+    let _result = indices.gather(&src);
+}
+
+#[simd_test]
+fn gather_into_u8x16_basic<S: Simd>(simd: S) {
+    let indices = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let src = [100; 20];
+    let mut dst = [0; 16];
+    indices.gather_into(&src, &mut dst);
+    assert_eq!(dst, [100; 16]);
+}
+
+#[simd_test]
+fn gather_into_u32x4_basic<S: Simd>(simd: S) {
+    let indices = u32x4::from_slice(simd, &[2, 0, 3, 1]);
+    let src = [10, 20, 30, 40];
+    let mut dst = [0; 4];
+    indices.gather_into(&src, &mut dst);
+    assert_eq!(dst, [30, 10, 40, 20]);
+}
+
+#[simd_test]
+fn gather_into_with_clamping<S: Simd>(simd: S) {
+    let indices = u16x8::from_slice(simd, &[0, 1, 2, 100, 200, 500, 1000, u16::MAX]);
+    let src = [5, 10, 15];
+    let mut dst = [0; 8];
+    indices.gather_into(&src, &mut dst);
+    // All out-of-bounds indices should clamp to index 2
+    assert_eq!(dst, [5, 10, 15, 15, 15, 15, 15, 15]);
+}
+
+#[simd_test]
+#[should_panic(expected = "gather_into: source slice must not be empty")]
+fn gather_into_empty_source_panics<S: Simd>(simd: S) {
+    let indices = u32x4::splat(simd, 0);
+    let src: [i32; 0] = [];
+    let mut dst = [0; 4];
+    indices.gather_into(&src, &mut dst);
+}
+
+#[simd_test]
+#[should_panic(
+    expected = "gather_into: destination slice must have the same element count as the vector type"
+)]
+fn gather_into_wrong_dst_size_panics<S: Simd>(simd: S) {
+    let indices = u8x16::splat(simd, 0);
+    let src = [1, 2, 3];
+    let mut dst = [0; 8]; // Should be 16
+    indices.gather_into(&src, &mut dst);
+}
+
+#[simd_test]
+fn scatter_u8x16_basic<S: Simd>(simd: S) {
+    let indices = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let src = [
+        10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160,
+    ];
+    let mut dst = [0; 16];
+    indices.scatter(&src, &mut dst);
+    assert_eq!(dst, src);
+}
+
+#[simd_test]
+fn scatter_u16x8_basic<S: Simd>(simd: S) {
+    let indices = u16x8::from_slice(simd, &[7, 6, 5, 4, 3, 2, 1, 0]);
+    let src = [100, 200, 300, 400, 500, 600, 700, 800];
+    let mut dst = [0; 8];
+    indices.scatter(&src, &mut dst);
+    assert_eq!(dst, [800, 700, 600, 500, 400, 300, 200, 100]);
+}
+
+#[simd_test]
+fn scatter_u32x4_basic<S: Simd>(simd: S) {
+    let indices = u32x4::from_slice(simd, &[2, 0, 3, 1]);
+    let src = [10, 20, 30, 40];
+    let mut dst = [0; 4];
+    indices.scatter(&src, &mut dst);
+    assert_eq!(dst, [20, 40, 10, 30]);
+}
+
+#[simd_test]
+fn scatter_with_duplicate_indices<S: Simd>(simd: S) {
+    // When multiple indices point to the same location, one of them will win
+    // The behavior is unspecified, but all should be valid values from src
+    let indices = u8x16::from_slice(simd, &[0, 0, 1, 1, 2, 2, 3, 3, 0, 1, 2, 3, 0, 1, 2, 3]);
+    let src = [
+        10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160,
+    ];
+    let mut dst = [0; 4];
+    indices.scatter(&src, &mut dst);
+
+    assert!([10, 20, 90, 130].contains(&dst[0]));
+    assert!([30, 40, 100, 140].contains(&dst[1]));
+    assert!([50, 60, 110, 150].contains(&dst[2]));
+    assert!([70, 80, 120, 160].contains(&dst[3]));
+}
+
+#[simd_test]
+fn scatter_out_of_bounds_clamping<S: Simd>(simd: S) {
+    // Out of bounds indices should be clamped to the last element
+    let indices = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 100, 200, 255, 3, 4, 0, 50, 99, 1, 2, 3, 4, 150],
+    );
+    let src = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    let mut dst = [0; 5];
+    indices.scatter(&src, &mut dst);
+
+    assert!([1, 9].contains(&dst[0]));
+    assert!([2, 12].contains(&dst[1]));
+    assert!([3, 13].contains(&dst[2]));
+    assert!([7, 14].contains(&dst[3]));
+    assert!([5, 6, 8, 10, 11, 15, 16].contains(&dst[4]));
+}
+
+#[simd_test]
+fn scatter_single_element_destination<S: Simd>(simd: S) {
+    // All indices should be clamped to 0, so all writes go to the same location
+    let indices = u8x16::from_slice(
+        simd,
+        &[0, 5, 10, 255, 100, 50, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    );
+    let src = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    let mut dst = [0];
+    indices.scatter(&src, &mut dst);
+
+    assert!((1..=16).contains(&dst[0]));
+}
+
+#[simd_test]
+fn scatter_u32x4_out_of_bounds<S: Simd>(simd: S) {
+    let indices = u32x4::from_slice(simd, &[0, 1000, u32::MAX, 2]);
+    let src = [100, 200, 300, 400];
+    let mut dst = [0; 3];
+    indices.scatter(&src, &mut dst);
+
+    assert_eq!(dst[0], 100);
+    assert!([200, 300, 400].contains(&dst[2]));
+}
+
+#[simd_test]
+#[should_panic(expected = "scatter: destination slice must not be empty")]
+fn scatter_empty_destination_panics<S: Simd>(simd: S) {
+    let indices = u8x16::splat(simd, 0);
+    let src = [0; 16];
+    let mut dst: [i32; 0] = [];
+    indices.scatter(&src, &mut dst);
+}
+
+#[simd_test]
+#[should_panic(
+    expected = "scatter: source slice must have the same element count as the vector type"
+)]
+fn scatter_wrong_src_size_panics<S: Simd>(simd: S) {
+    let indices = u8x16::splat(simd, 0);
+    let src = [1, 2, 3]; // Should be 16
+    let mut dst = [0; 10];
+    indices.scatter(&src, &mut dst);
+}
+
+// ===== Additional edge case tests =====
+
+#[simd_test]
+fn gather_scatter_roundtrip<S: Simd>(simd: S) {
+    // Test that gather followed by scatter with the same indices preserves data
+    let indices = u32x4::from_slice(simd, &[3, 1, 2, 0]);
+    let original = [100, 200, 300, 400];
+
+    let gathered = indices.gather(&original);
+    assert_eq!(gathered, [400, 200, 300, 100]);
+
+    let mut result = [0; 4];
+    indices.scatter(&gathered, &mut result);
+    assert_eq!(result, original);
+}
+
+#[simd_test]
+fn gather_u16x16_native_width<S: Simd>(simd: S) {
+    let data: Vec<u32> = (0..100).collect();
+    let indices = S::u16s::from_slice(simd, &vec![5_u16; S::u16s::N]);
+
+    let mut result = vec![0_u32; S::u16s::N];
+    indices.gather_into(&data, &mut result);
+    assert_eq!(result, vec![5_u32; S::u16s::N]);
+}
+
+#[simd_test]
+fn scatter_u32_native_width<S: Simd>(simd: S) {
+    let src = vec![42_u64; S::u32s::N];
+    let mut dst = vec![0_u64; 100];
+
+    let indices = S::u32s::from_slice(simd, &vec![10_u32; S::u32s::N]);
+    indices.scatter(&src, &mut dst);
+
+    for (i, item) in dst.iter().enumerate() {
+        if i == 10 {
+            assert_eq!(*item, 42);
+        } else {
+            assert_eq!(*item, 0);
+        }
+    }
+}
+
+#[simd_test]
+fn gather_with_large_type<S: Simd>(simd: S) {
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    struct LargeStruct {
+        a: u64,
+        b: u64,
+        c: u64,
+    }
+
+    let src = [
+        LargeStruct { a: 1, b: 2, c: 3 },
+        LargeStruct { a: 4, b: 5, c: 6 },
+        LargeStruct { a: 7, b: 8, c: 9 },
+        LargeStruct {
+            a: 10,
+            b: 11,
+            c: 12,
+        },
+    ];
+
+    let indices = u32x4::from_slice(simd, &[3, 0, 2, 1]);
+    let result = indices.gather(&src);
+
+    assert_eq!(
+        result[0],
+        LargeStruct {
+            a: 10,
+            b: 11,
+            c: 12
+        }
+    );
+    assert_eq!(result[1], LargeStruct { a: 1, b: 2, c: 3 });
+    assert_eq!(result[2], LargeStruct { a: 7, b: 8, c: 9 });
+    assert_eq!(result[3], LargeStruct { a: 4, b: 5, c: 6 });
+}
+
+#[simd_test]
+fn scatter_with_large_type<S: Simd>(simd: S) {
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    struct LargeStruct {
+        a: u64,
+        b: u64,
+    }
+
+    let src = [
+        LargeStruct { a: 1, b: 2 },
+        LargeStruct { a: 3, b: 4 },
+        LargeStruct { a: 5, b: 6 },
+        LargeStruct { a: 7, b: 8 },
+    ];
+
+    let indices = u32x4::from_slice(simd, &[2, 0, 3, 1]);
+    let mut dst = [LargeStruct { a: 0, b: 0 }; 4];
+    indices.scatter(&src, &mut dst);
+
+    assert_eq!(dst[0], LargeStruct { a: 3, b: 4 });
+    assert_eq!(dst[1], LargeStruct { a: 7, b: 8 });
+    assert_eq!(dst[2], LargeStruct { a: 1, b: 2 });
+    assert_eq!(dst[3], LargeStruct { a: 5, b: 6 });
+}
