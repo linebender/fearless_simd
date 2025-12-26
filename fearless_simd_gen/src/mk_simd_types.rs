@@ -165,7 +165,6 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                             self.simd.#min_method(self, ((src.len() - 1) as Self::Element).simd_into(self.simd))
                         };
 
-                        let inbounds = &*inbounds;
                         core::array::from_fn(|i| unsafe {
                             // Safety: All elements of `inbounds` are in [0, src.len()). 0 is a valid index, because we
                             // asserted that `src` is not empty. Therefore, the index into `src` is valid. `i` will be
@@ -188,7 +187,6 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                             self.simd.#min_method(self, ((src.len() - 1) as Self::Element).simd_into(self.simd))
                         };
 
-                        let inbounds = &*inbounds;
                         for i in 0..Self::N {
                             unsafe {
                                 // Safety: All elements of `inbounds` are in [0, src.len()). 0 is a valid index, because
@@ -216,7 +214,6 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                             self.simd.#min_method(self, ((dst.len() - 1) as Self::Element).simd_into(self.simd))
                         };
 
-                        let inbounds = &*inbounds;
                         for i in 0..Self::N {
                             unsafe {
                                 // Safety: All elements of `inbounds` are in [0, dst.len()). 0 is a valid index, because
