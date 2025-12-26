@@ -23,28 +23,15 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     let avx2_name = get_ident("avx2");
     let wasm_name = get_ident("wasm");
 
-    let ignore_attr = |f: fn(&str) -> bool| {
-        let should_ignore = input_fn
-            .attrs
-            .iter()
-            .any(|attr| attr.path().is_ident("ignore"))
-            || f(&input_fn_name.to_string());
-        if should_ignore {
-            quote! { #[ignore] }
-        } else {
-            quote! {}
-        }
-    };
-
-    let ignore_fallback = ignore_attr(exclude_fallback);
-    let ignore_neon = ignore_attr(exclude_neon);
-    let ignore_sse4 = ignore_attr(exclude_sse4);
-    let ignore_avx2 = ignore_attr(exclude_avx2);
-    let ignore_wasm = ignore_attr(exclude_wasm);
+    let test_attrs: Vec<_> = input_fn
+        .attrs
+        .iter()
+        .filter(|attr| !attr.path().is_ident("simd_test"))
+        .collect();
 
     let fallback_snippet = quote! {
+        #(#test_attrs)*
         #[test]
-        #ignore_fallback
         fn #fallback_name() {
             let fallback = fearless_simd::Fallback::new();
             #input_fn_name(fallback);
@@ -63,8 +50,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let neon_snippet = quote! {
         #[cfg(target_arch = "aarch64")]
+        #(#test_attrs)*
         #[test]
-        #ignore_neon
         fn #neon_name() {
             if std::arch::is_aarch64_feature_detected!("neon") {
                 let neon = unsafe { fearless_simd::aarch64::Neon::new_unchecked() };
@@ -75,8 +62,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let sse4_snippet = quote! {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #(#test_attrs)*
         #[test]
-        #ignore_sse4
         fn #sse4_name() {
             if std::arch::is_x86_feature_detected!("sse4.2") {
                 let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
@@ -87,8 +74,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let avx2_snippet = quote! {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #(#test_attrs)*
         #[test]
-        #ignore_avx2
         fn #avx2_name() {
             if std::arch::is_x86_feature_detected!("avx2")
                 && std::arch::is_x86_feature_detected!("fma")
@@ -101,8 +88,8 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let wasm_snippet = quote! {
         #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        #(#test_attrs)*
         #[test]
-        #ignore_wasm
         fn #wasm_name() {
             let wasm = unsafe { fearless_simd::wasm32::WasmSimd128::new_unchecked() };
             #input_fn_name(wasm);
@@ -119,27 +106,4 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #avx2_snippet
     }
     .into()
-}
-
-// You can update below functions if you want to exclude certain tests from different architectures
-// (for example because they haven't been implemented yet).
-
-fn exclude_neon(_test_name: &str) -> bool {
-    false
-}
-
-fn exclude_fallback(_test_name: &str) -> bool {
-    false
-}
-
-fn exclude_sse4(_test_name: &str) -> bool {
-    false
-}
-
-fn exclude_avx2(_test_name: &str) -> bool {
-    false
-}
-
-fn exclude_wasm(_test_name: &str) -> bool {
-    false
 }
