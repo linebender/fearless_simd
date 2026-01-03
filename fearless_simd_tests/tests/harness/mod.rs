@@ -3018,10 +3018,16 @@ fn store_array_f64x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_i8x16<S: Simd>(simd: S) {
-    let a = i8x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+    let a = i8x16::from_slice(
+        simd,
+        &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    );
     let mut dest = [0_i8; 16];
     simd.store_array_i8x16(a, &mut dest);
-    assert_eq!(dest, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+    assert_eq!(
+        dest,
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    );
 }
 
 #[simd_test]
@@ -3042,10 +3048,16 @@ fn store_array_i32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_u8x16<S: Simd>(simd: S) {
-    let a = u8x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+    let a = u8x16::from_slice(
+        simd,
+        &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    );
     let mut dest = [0_u8; 16];
     simd.store_array_u8x16(a, &mut dest);
-    assert_eq!(dest, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+    assert_eq!(
+        dest,
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    );
 }
 
 #[simd_test]

@@ -307,7 +307,10 @@ impl Op {
             .collect::<Vec<_>>();
         let method_ident = Ident::new(self.method, Span::call_site());
         let sig_inner = match &self.sig {
-            OpSig::Splat | OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } | OpSig::ToArray => {
+            OpSig::Splat
+            | OpSig::LoadInterleaved { .. }
+            | OpSig::StoreInterleaved { .. }
+            | OpSig::ToArray => {
                 return None;
             }
             OpSig::Unary
