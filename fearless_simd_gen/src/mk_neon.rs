@@ -4,9 +4,10 @@
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
-use crate::arch::neon::load_intrinsic;
+use crate::arch::neon::{load_intrinsic, store_intrinsic};
 use crate::generic::{
-    generic_as_array, generic_from_array, generic_from_bytes, generic_op_name, generic_to_bytes,
+    generic_as_array, generic_from_array, generic_from_bytes, generic_op_name, generic_to_array,
+    generic_to_bytes,
 };
 use crate::level::Level;
 use crate::ops::{Op, valid_reinterpret};
@@ -472,6 +473,9 @@ impl Level for Neon {
                 generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
                     self.arch_ty(vec_ty)
                 })
+            }
+            OpSig::ToArray => {
+                generic_to_array(method_sig, vec_ty, self.max_block_size(), store_intrinsic)
             }
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),

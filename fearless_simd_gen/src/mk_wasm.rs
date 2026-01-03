@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op_name, generic_to_bytes, scalar_binary,
+    generic_from_bytes, generic_op_name, generic_to_array, generic_to_bytes, scalar_binary,
 };
 use crate::level::Level;
 use crate::ops::{Op, Quantifier, valid_reinterpret};
@@ -623,6 +623,9 @@ impl Level for WasmSimd128 {
                     Ident::new("v128", Span::call_site())
                 })
             }
+            OpSig::ToArray => generic_to_array(method_sig, vec_ty, self.max_block_size(), |_| {
+                v128_intrinsic("store")
+            }),
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }

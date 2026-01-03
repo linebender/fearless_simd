@@ -181,6 +181,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self> {
         unsafe {
             f32x4 {
@@ -532,6 +536,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_i8x16(self, a: &mut i8x16<Self>) -> &mut [i8; 16usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self> {
@@ -1096,6 +1104,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
         unsafe {
             u8x16 {
@@ -1654,6 +1666,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask8x16(self, a: mask8x16<Self>, dest: &mut [i8; 16usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask8x16(self, a: u8x16<Self>) -> mask8x16<Self> {
         unsafe {
             mask8x16 {
@@ -1944,6 +1960,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_i16x8(self, a: &mut i16x8<Self>) -> &mut [i16; 8usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self> {
@@ -2317,6 +2337,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self> {
         unsafe {
             u16x8 {
@@ -2674,6 +2698,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask16x8(self, a: mask16x8<Self>, dest: &mut [i16; 8usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask16x8(self, a: u8x16<Self>) -> mask16x8<Self> {
         unsafe {
             mask16x8 {
@@ -2860,6 +2888,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_i32x4(self, a: &mut i32x4<Self>) -> &mut [i32; 4usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self> {
@@ -3151,6 +3183,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self> {
         unsafe {
             u32x4 {
@@ -3426,6 +3462,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask32x4(self, a: mask32x4<Self>, dest: &mut [i32; 4usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask32x4(self, a: u8x16<Self>) -> mask32x4<Self> {
         unsafe {
             mask32x4 {
@@ -3560,6 +3600,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_f64x2(self, a: &mut f64x2<Self>) -> &mut [f64; 2usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self> {
@@ -3801,6 +3845,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask64x2(self, a: mask64x2<Self>, dest: &mut [i64; 2usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask64x2(self, a: u8x16<Self>) -> mask64x2<Self> {
         unsafe {
             mask64x2 {
@@ -3920,6 +3968,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_f32x8(self, a: &mut f32x8<Self>) -> &mut [f32; 8usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self> {
@@ -4225,6 +4277,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self> {
         unsafe {
             i8x32 {
@@ -4443,6 +4499,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
         unsafe {
             u8x32 {
@@ -4656,6 +4716,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask8x32(self, a: mask8x32<Self>, dest: &mut [i8; 32usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask8x32(self, a: u8x32<Self>) -> mask8x32<Self> {
         unsafe {
             mask8x32 {
@@ -4782,6 +4846,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_i16x16(self, a: &mut i16x16<Self>) -> &mut [i16; 16usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self> {
@@ -5000,6 +5068,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_u16x16(self, a: &mut u16x16<Self>) -> &mut [u16; 16usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self> {
@@ -5237,6 +5309,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask16x16(self, a: mask16x16<Self>, dest: &mut [i16; 16usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask16x16(self, a: u8x32<Self>) -> mask16x16<Self> {
         unsafe {
             mask16x16 {
@@ -5363,6 +5439,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_i32x8(self, a: &mut i32x8<Self>) -> &mut [i32; 8usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self> {
@@ -5588,6 +5668,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self> {
         unsafe {
             u32x8 {
@@ -5798,6 +5882,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask32x8(self, a: mask32x8<Self>, dest: &mut [i32; 8usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask32x8(self, a: u8x32<Self>) -> mask32x8<Self> {
         unsafe {
             mask32x8 {
@@ -5924,6 +6012,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_f64x4(self, a: &mut f64x4<Self>) -> &mut [f64; 4usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self> {
@@ -6182,6 +6274,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask64x4(self, a: mask64x4<Self>, dest: &mut [i64; 4usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask64x4(self, a: u8x32<Self>) -> mask64x4<Self> {
         unsafe {
             mask64x4 {
@@ -6308,6 +6404,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self> {
@@ -6636,6 +6736,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self> {
         unsafe {
             i8x64 {
@@ -6845,6 +6949,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
@@ -7133,6 +7241,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask8x64(self, a: mask8x64<Self>, dest: &mut [i8; 64usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask8x64(self, a: u8x64<Self>) -> mask8x64<Self> {
         unsafe {
             mask8x64 {
@@ -7252,6 +7364,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self> {
@@ -7472,6 +7588,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self> {
@@ -7742,6 +7862,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask16x32(self, a: mask16x32<Self>, dest: &mut [i16; 32usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask16x32(self, a: u8x64<Self>) -> mask16x32<Self> {
         unsafe {
             mask16x32 {
@@ -7864,6 +7988,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self> {
@@ -8080,6 +8208,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self> {
@@ -8315,6 +8447,10 @@ impl Simd for Fallback {
         &mut a.val.0
     }
     #[inline(always)]
+    fn store_array_mask32x16(self, a: mask32x16<Self>, dest: &mut [i32; 16usize]) -> () {
+        *dest = a.val.0;
+    }
+    #[inline(always)]
     fn cvt_from_bytes_mask32x16(self, a: u8x64<Self>) -> mask32x16<Self> {
         unsafe {
             mask32x16 {
@@ -8434,6 +8570,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self> {
@@ -8683,6 +8823,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mut_mask64x8(self, a: &mut mask64x8<Self>) -> &mut [i64; 8usize] {
         &mut a.val.0
+    }
+    #[inline(always)]
+    fn store_array_mask64x8(self, a: mask64x8<Self>, dest: &mut [i64; 8usize]) -> () {
+        *dest = a.val.0;
     }
     #[inline(always)]
     fn cvt_from_bytes_mask64x8(self, a: u8x64<Self>) -> mask64x8<Self> {

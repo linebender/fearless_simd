@@ -167,6 +167,10 @@ fn mk_simd_base() -> TokenStream {
             ///
             /// The slice must be the proper width.
             fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+            /// Store a SIMD vector into a slice.
+            ///
+            /// The slice must be the proper width.
+            fn store_slice(&self, slice: &mut [Self::Element]);
             /// Create a SIMD vector with all elements set to the given value.
             fn splat(simd: S, val: Self::Element) -> Self;
             /// Create a SIMD vector from a 128-bit vector of the same scalar
