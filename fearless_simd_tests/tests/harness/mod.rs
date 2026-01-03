@@ -3094,7 +3094,7 @@ fn store_array_u32x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_f32x16<S: Simd>(simd: S) {
-    let data: [f32; 16] = core::array::from_fn(|i| (i + 1) as f32);
+    let data: [f32; 16] = core::array::from_fn(|i| i as f32);
     let a = f32x16::from_slice(simd, &data);
     let mut dest = [0.0_f32; 16];
     simd.store_array_f32x16(a, &mut dest);
@@ -3103,7 +3103,7 @@ fn store_array_f32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_f64x8<S: Simd>(simd: S) {
-    let data: [f64; 8] = core::array::from_fn(|i| (i + 1) as f64);
+    let data: [f64; 8] = core::array::from_fn(|i| i as f64);
     let a = f64x8::from_slice(simd, &data);
     let mut dest = [0.0_f64; 8];
     simd.store_array_f64x8(a, &mut dest);
@@ -3112,7 +3112,7 @@ fn store_array_f64x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_i8x32<S: Simd>(simd: S) {
-    let data: [i8; 32] = core::array::from_fn(|i| (i + 1) as i8);
+    let data: [i8; 32] = core::array::from_fn(|i| i as i8);
     let a = i8x32::from_slice(simd, &data);
     let mut dest = [0_i8; 32];
     simd.store_array_i8x32(a, &mut dest);
@@ -3121,7 +3121,7 @@ fn store_array_i8x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_i8x64<S: Simd>(simd: S) {
-    let data: [i8; 64] = core::array::from_fn(|i| (i + 1) as i8);
+    let data: [i8; 64] = core::array::from_fn(|i| i as i8);
     let a = i8x64::from_slice(simd, &data);
     let mut dest = [0_i8; 64];
     simd.store_array_i8x64(a, &mut dest);
@@ -3130,7 +3130,7 @@ fn store_array_i8x64<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_i16x16<S: Simd>(simd: S) {
-    let data: [i16; 16] = core::array::from_fn(|i| (i + 1) as i16);
+    let data: [i16; 16] = core::array::from_fn(|i| i as i16);
     let a = i16x16::from_slice(simd, &data);
     let mut dest = [0_i16; 16];
     simd.store_array_i16x16(a, &mut dest);
@@ -3139,7 +3139,7 @@ fn store_array_i16x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_i16x32<S: Simd>(simd: S) {
-    let data: [i16; 32] = core::array::from_fn(|i| (i + 1) as i16);
+    let data: [i16; 32] = core::array::from_fn(|i| i as i16);
     let a = i16x32::from_slice(simd, &data);
     let mut dest = [0_i16; 32];
     simd.store_array_i16x32(a, &mut dest);
@@ -3148,7 +3148,7 @@ fn store_array_i16x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_i32x16<S: Simd>(simd: S) {
-    let data: [i32; 16] = core::array::from_fn(|i| (i + 1) as i32);
+    let data: [i32; 16] = core::array::from_fn(|i| i as i32);
     let a = i32x16::from_slice(simd, &data);
     let mut dest = [0_i32; 16];
     simd.store_array_i32x16(a, &mut dest);
@@ -3157,7 +3157,7 @@ fn store_array_i32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_u8x32<S: Simd>(simd: S) {
-    let data: [u8; 32] = core::array::from_fn(|i| (i + 1) as u8);
+    let data: [u8; 32] = core::array::from_fn(|i| i as u8);
     let a = u8x32::from_slice(simd, &data);
     let mut dest = [0_u8; 32];
     simd.store_array_u8x32(a, &mut dest);
@@ -3166,7 +3166,7 @@ fn store_array_u8x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_u8x64<S: Simd>(simd: S) {
-    let data: [u8; 64] = core::array::from_fn(|i| (i + 1) as u8);
+    let data: [u8; 64] = core::array::from_fn(|i| i as u8);
     let a = u8x64::from_slice(simd, &data);
     let mut dest = [0_u8; 64];
     simd.store_array_u8x64(a, &mut dest);
@@ -3175,7 +3175,7 @@ fn store_array_u8x64<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_u16x16<S: Simd>(simd: S) {
-    let data: [u16; 16] = core::array::from_fn(|i| (i + 1) as u16);
+    let data: [u16; 16] = core::array::from_fn(|i| i as u16);
     let a = u16x16::from_slice(simd, &data);
     let mut dest = [0_u16; 16];
     simd.store_array_u16x16(a, &mut dest);
@@ -3184,7 +3184,7 @@ fn store_array_u16x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_u16x32<S: Simd>(simd: S) {
-    let data: [u16; 32] = core::array::from_fn(|i| (i + 1) as u16);
+    let data: [u16; 32] = core::array::from_fn(|i| i as u16);
     let a = u16x32::from_slice(simd, &data);
     let mut dest = [0_u16; 32];
     simd.store_array_u16x32(a, &mut dest);
@@ -3193,7 +3193,7 @@ fn store_array_u16x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn store_array_u32x16<S: Simd>(simd: S) {
-    let data: [u32; 16] = core::array::from_fn(|i| (i + 1) as u32);
+    let data: [u32; 16] = core::array::from_fn(|i| i as u32);
     let a = u32x16::from_slice(simd, &data);
     let mut dest = [0_u32; 16];
     simd.store_array_u32x16(a, &mut dest);
