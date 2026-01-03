@@ -322,7 +322,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
 
             #[inline(always)]
             fn store_slice(&self, slice: &mut [#scalar]) {
-                self.simd.#store_array_op(*self, slice.try_into().unwrap())
+                self.simd.#store_array_op(*self, slice.try_into().unwrap());
             }
 
             #[inline(always)]
