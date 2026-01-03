@@ -8,7 +8,7 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op_name, generic_to_bytes, scalar_binary,
+    generic_from_bytes, generic_op_name, generic_to_array, generic_to_bytes, scalar_binary,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, valid_reinterpret};
@@ -182,6 +182,9 @@ impl Level for X86 {
                     self.arch_ty(vec_ty)
                 })
             }
+            OpSig::ToArray => generic_to_array(method_sig, vec_ty, self.max_block_size(), |block_ty| {
+                intrinsic_ident("storeu", coarse_type(block_ty), block_ty.n_bits())
+            }),
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }

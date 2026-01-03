@@ -198,7 +198,8 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         OpSig::Split { .. }
         | OpSig::Combine { .. }
         | OpSig::AsArray { .. }
-        | OpSig::FromArray { .. } => {
+        | OpSig::FromArray { .. }
+        | OpSig::ToArray => {
             panic!("These operations require more information about the target platform");
         }
         OpSig::FromBytes => generic_from_bytes(method_sig, ty),
@@ -328,6 +329,49 @@ pub(crate) fn generic_as_array<T: ToTokens>(
                 // wrap primitives where all bit patterns are valid (ints and floats).
                 core::mem::transmute::<#ref_tok #native_ty, #ref_tok [#rust_scalar; #num_scalars]>(#ref_tok a.val.0)
             }
+        }
+    }
+}
+
+pub(crate) fn generic_to_array(
+    method_sig: TokenStream,
+    vec_ty: &VecType,
+    max_block_size: usize,
+    store_unaligned_block: impl Fn(&VecType) -> Ident,
+) -> TokenStream {
+    let block_size = max_block_size.min(vec_ty.n_bits());
+    let block_count = vec_ty.n_bits() / block_size;
+    let num_scalars_per_block = vec_ty.len / block_count;
+
+    let native_block_ty = VecType::new(
+        vec_ty.scalar,
+        vec_ty.scalar_bits,
+        block_size / vec_ty.scalar_bits,
+    );
+
+    let store_unaligned = store_unaligned_block(&native_block_ty);
+    let store_expr = if block_count == 1 {
+        quote! {
+            unsafe { #store_unaligned(dest.as_mut_ptr() as *mut _, a.val.0) }
+        }
+    } else {
+        let blocks = (0..block_count).map(|n| {
+            let offset = n * num_scalars_per_block;
+            let block_idx = proc_macro2::Literal::usize_unsuffixed(n);
+            quote! {
+                #store_unaligned(dest.as_mut_ptr().add(#offset) as *mut _, a.val.0[#block_idx])
+            }
+        });
+        quote! {
+            unsafe {
+                #(#blocks;)*
+            }
+        }
+    };
+
+    quote! {
+        #method_sig {
+            #store_expr
         }
     }
 }
