@@ -2595,6 +2595,10 @@ pub trait SimdBase<S: Simd>:
     #[doc = r""]
     #[doc = r" The slice must be the proper width."]
     fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+    #[doc = r" Store a SIMD vector into a slice."]
+    #[doc = r""]
+    #[doc = r" The slice must be the proper width."]
+    fn store_slice(&self, slice: &mut [Self::Element]);
     #[doc = r" Create a SIMD vector with all elements set to the given value."]
     fn splat(simd: S, val: Self::Element) -> Self;
     #[doc = r" Create a SIMD vector from a 128-bit vector of the same scalar"]

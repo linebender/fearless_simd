@@ -100,6 +100,11 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
         simd.load_array_f32x4(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [f32]) {
+        self.simd
+            .store_array_f32x4(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: f32) -> Self {
         simd.splat_f32x4(val)
     }
@@ -325,6 +330,11 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
         simd.load_array_i8x16(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i8]) {
+        self.simd
+            .store_array_i8x16(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
         simd.splat_i8x16(val)
     }
@@ -484,6 +494,11 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u8]) -> Self {
         simd.load_array_u8x16(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [u8]) {
+        self.simd
+            .store_array_u8x16(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: u8) -> Self {
@@ -652,6 +667,11 @@ impl<S: Simd> SimdBase<S> for mask8x16<S> {
         simd.load_array_mask8x16(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i8]) {
+        self.simd
+            .store_array_mask8x16(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
         simd.splat_mask8x16(val)
     }
@@ -787,6 +807,11 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
         simd.load_array_i16x8(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [i16]) {
+        self.simd
+            .store_array_i16x8(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
@@ -948,6 +973,11 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u16]) -> Self {
         simd.load_array_u16x8(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [u16]) {
+        self.simd
+            .store_array_u16x8(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: u16) -> Self {
@@ -1116,6 +1146,11 @@ impl<S: Simd> SimdBase<S> for mask16x8<S> {
         simd.load_array_mask16x8(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i16]) {
+        self.simd
+            .store_array_mask16x8(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
         simd.splat_mask16x8(val)
     }
@@ -1251,6 +1286,11 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
         simd.load_array_i32x4(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [i32]) {
+        self.simd
+            .store_array_i32x4(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
@@ -1424,6 +1464,11 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u32]) -> Self {
         simd.load_array_u32x4(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [u32]) {
+        self.simd
+            .store_array_u32x4(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: u32) -> Self {
@@ -1604,6 +1649,11 @@ impl<S: Simd> SimdBase<S> for mask32x4<S> {
         simd.load_array_mask32x4(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i32]) {
+        self.simd
+            .store_array_mask32x4(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
         simd.splat_mask32x4(val)
     }
@@ -1739,6 +1789,11 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f64]) -> Self {
         simd.load_array_f64x2(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [f64]) {
+        self.simd
+            .store_array_f64x2(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: f64) -> Self {
@@ -1957,6 +2012,11 @@ impl<S: Simd> SimdBase<S> for mask64x2<S> {
         simd.load_array_mask64x2(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i64]) {
+        self.simd
+            .store_array_mask64x2(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i64) -> Self {
         simd.splat_mask64x2(val)
     }
@@ -2092,6 +2152,11 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f32]) -> Self {
         simd.load_array_f32x8(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [f32]) {
+        self.simd
+            .store_array_f32x8(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: f32) -> Self {
@@ -2326,6 +2391,11 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
         simd.load_array_i8x32(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i8]) {
+        self.simd
+            .store_array_i8x32(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
         simd.splat_i8x32(val)
     }
@@ -2492,6 +2562,11 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u8]) -> Self {
         simd.load_array_u8x32(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [u8]) {
+        self.simd
+            .store_array_u8x32(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: u8) -> Self {
@@ -2667,6 +2742,11 @@ impl<S: Simd> SimdBase<S> for mask8x32<S> {
         simd.load_array_mask8x32(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i8]) {
+        self.simd
+            .store_array_mask8x32(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
         simd.splat_mask8x32(val)
     }
@@ -2814,6 +2894,11 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
         simd.load_array_i16x16(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [i16]) {
+        self.simd
+            .store_array_i16x16(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
@@ -2989,6 +3074,11 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
         simd.load_array_u16x16(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [u16]) {
+        self.simd
+            .store_array_u16x16(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: u16) -> Self {
         simd.splat_u16x16(val)
     }
@@ -3162,6 +3252,11 @@ impl<S: Simd> SimdBase<S> for mask16x16<S> {
         simd.load_array_mask16x16(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i16]) {
+        self.simd
+            .store_array_mask16x16(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
         simd.splat_mask16x16(val)
     }
@@ -3304,6 +3399,11 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
         simd.load_array_i32x8(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [i32]) {
+        self.simd
+            .store_array_i32x8(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
@@ -3484,6 +3584,11 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u32]) -> Self {
         simd.load_array_u32x8(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [u32]) {
+        self.simd
+            .store_array_u32x8(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: u32) -> Self {
@@ -3671,6 +3776,11 @@ impl<S: Simd> SimdBase<S> for mask32x8<S> {
         simd.load_array_mask32x8(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i32]) {
+        self.simd
+            .store_array_mask32x8(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
         simd.splat_mask32x8(val)
     }
@@ -3813,6 +3923,11 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f64]) -> Self {
         simd.load_array_f64x4(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [f64]) {
+        self.simd
+            .store_array_f64x4(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: f64) -> Self {
@@ -4038,6 +4153,11 @@ impl<S: Simd> SimdBase<S> for mask64x4<S> {
         simd.load_array_mask64x4(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i64]) {
+        self.simd
+            .store_array_mask64x4(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i64) -> Self {
         simd.splat_mask64x4(val)
     }
@@ -4185,6 +4305,11 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f32]) -> Self {
         simd.load_array_f32x16(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [f32]) {
+        self.simd
+            .store_array_f32x16(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: f32) -> Self {
@@ -4413,6 +4538,11 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
         simd.load_array_i8x64(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i8]) {
+        self.simd
+            .store_array_i8x64(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
         simd.splat_i8x64(val)
     }
@@ -4573,6 +4703,11 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u8]) -> Self {
         simd.load_array_u8x64(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [u8]) {
+        self.simd
+            .store_array_u8x64(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: u8) -> Self {
@@ -4742,6 +4877,11 @@ impl<S: Simd> SimdBase<S> for mask8x64<S> {
         simd.load_array_mask8x64(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i8]) {
+        self.simd
+            .store_array_mask8x64(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
         simd.splat_mask8x64(val)
     }
@@ -4883,6 +5023,11 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
         simd.load_array_i16x32(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [i16]) {
+        self.simd
+            .store_array_i16x32(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
@@ -5052,6 +5197,11 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
         simd.load_array_u16x32(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [u16]) {
+        self.simd
+            .store_array_u16x32(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: u16) -> Self {
         simd.splat_u16x32(val)
     }
@@ -5219,6 +5369,11 @@ impl<S: Simd> SimdBase<S> for mask16x32<S> {
         simd.load_array_mask16x32(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i16]) {
+        self.simd
+            .store_array_mask16x32(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
         simd.splat_mask16x32(val)
     }
@@ -5360,6 +5515,11 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
         simd.load_array_i32x16(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [i32]) {
+        self.simd
+            .store_array_i32x16(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
@@ -5541,6 +5701,11 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
         simd.load_array_u32x16(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [u32]) {
+        self.simd
+            .store_array_u32x16(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: u32) -> Self {
         simd.splat_u32x16(val)
     }
@@ -5720,6 +5885,11 @@ impl<S: Simd> SimdBase<S> for mask32x16<S> {
         simd.load_array_mask32x16(slice.try_into().unwrap())
     }
     #[inline(always)]
+    fn store_slice(&self, slice: &mut [i32]) {
+        self.simd
+            .store_array_mask32x16(*self, slice.try_into().unwrap())
+    }
+    #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
         simd.splat_mask32x16(val)
     }
@@ -5856,6 +6026,11 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f64]) -> Self {
         simd.load_array_f64x8(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [f64]) {
+        self.simd
+            .store_array_f64x8(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: f64) -> Self {
@@ -6073,6 +6248,11 @@ impl<S: Simd> SimdBase<S> for mask64x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
         simd.load_array_mask64x8(slice.try_into().unwrap())
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [i64]) {
+        self.simd
+            .store_array_mask64x8(*self, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn splat(simd: S, val: i64) -> Self {

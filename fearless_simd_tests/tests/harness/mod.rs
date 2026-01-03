@@ -3187,3 +3187,11 @@ fn store_array_u32x16<S: Simd>(simd: S) {
     simd.store_array_u32x16(a, &mut dest);
     assert_eq!(dest, data);
 }
+
+#[simd_test]
+fn store_slice_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
+    let mut dest = [0.0_f32; 4];
+    a.store_slice(&mut dest);
+    assert_eq!(dest, [1.0, 2.0, 3.0, 4.0]);
+}
