@@ -3675,7 +3675,7 @@ fn slide_mask64x4<S: Simd>(simd: S) {
     let a = mask64x4::from_slice(simd, &[1, 2, 3, 4]);
     let b = mask64x4::from_slice(simd, &[5, 6, 7, 8]);
     assert_eq!(*a.slide::<0>(b), [1, 2, 3, 4]);
-    assert_eq!(*a.slide::<2>(b), [3, 4, 5, 6]); // crosses block
+    assert_eq!(*a.slide::<2>(b), [3, 4, 5, 6]);
     assert_eq!(*a.slide::<4>(b), [5, 6, 7, 8]);
 }
 
