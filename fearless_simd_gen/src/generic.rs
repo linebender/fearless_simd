@@ -333,7 +333,7 @@ pub(crate) fn generic_as_array<T: ToTokens>(
     }
 }
 
-pub(crate) fn generic_to_array(
+pub(crate) fn generic_store_array(
     method_sig: TokenStream,
     vec_ty: &VecType,
     max_block_size: usize,
