@@ -31,6 +31,7 @@ This release has an [MSRV][] of 1.88.
 - A "shift left by vector" operation, to go with the existing "shift right by vector". ([#155][] by [@valadaptive][])
 - "Precise" float-to-integer conversions, which saturate out-of-bounds results and convert NaN to 0 across all platforms. ([#167][] by [@valadaptive][])
 - The `Level::is_fallback` method, which lets you check if the current SIMD level is the scalar fallback. This works even if `Level::Fallback` is not compiled in, always returning false in that case. ([#168][] by [@valadaptive][])
+- Added `store_array` methods to store SIMD vectors back to memory explicitly using intrinsics. ([#181][] by [@LaurenzV][])
 
 ### Fixed
 
@@ -127,6 +128,7 @@ No changelog was kept for this release.
 [@Ralith]: https://github.com/Ralith
 [@DJMcNab]: https://github.com/DJMcNab
 [@valadaptive]: https://github.com/valadaptive
+[@LaurenzV]: https://github.com/LaurenzV
 [@Shnatsel]: https://github.com/Shnatsel
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75

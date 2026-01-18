@@ -488,6 +488,13 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::StoreArray => {
+                quote! {
+                    #method_sig {
+                        *dest = a.val.0;
+                    }
+                }
+            }
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }

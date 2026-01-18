@@ -106,6 +106,8 @@ pub(crate) enum OpSig {
     /// Takes a single argument of the vector type, or a reference to it, and returns the corresponding array type (e.g.
     /// `[f32; 4]` for `f32x4<S>`) or a reference to it.
     AsArray { kind: RefKind },
+    /// Takes a vector and a mutable reference to an array, and stores the vector elements into the array.
+    StoreArray,
     /// Takes a single argument of the vector type, and returns a vector type with `u8` elements and the same bit width.
     FromBytes,
     /// Takes a single argument of a vector type with `u8` elements, and returns a vector type with different elements
@@ -271,6 +273,14 @@ impl Op {
                 let array_ty = quote! { [#rust_scalar; #len] };
                 quote! { (self, #arg0: #ref_tok #ty<Self>) -> #ref_tok #array_ty }
             }
+            OpSig::StoreArray => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let array_ty = quote! { [#rust_scalar; #len] };
+                quote! { (self, #arg0: #ty<Self>, #arg1: &mut #array_ty) -> () }
+            }
             OpSig::FromBytes => {
                 let arg0 = &arg_names[0];
                 let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
@@ -297,7 +307,10 @@ impl Op {
             .collect::<Vec<_>>();
         let method_ident = Ident::new(self.method, Span::call_site());
         let sig_inner = match &self.sig {
-            OpSig::Splat | OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
+            OpSig::Splat
+            | OpSig::LoadInterleaved { .. }
+            | OpSig::StoreInterleaved { .. }
+            | OpSig::StoreArray => {
                 return None;
             }
             OpSig::Unary
@@ -433,6 +446,12 @@ const BASE_OPS: &[Op] = &[
         OpKind::AssociatedOnly,
         OpSig::AsArray { kind: RefKind::Mut },
         "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array.",
+    ),
+    Op::new(
+        "store_array",
+        OpKind::AssociatedOnly,
+        OpSig::StoreArray,
+        "Store a SIMD vector into an array of the same length.",
     ),
     Op::new(
         "cvt_from_bytes",
@@ -1282,6 +1301,7 @@ impl OpSig {
                 | Self::StoreInterleaved { .. }
                 | Self::FromArray { .. }
                 | Self::AsArray { .. }
+                | Self::StoreArray
         ) {
             return false;
         }
@@ -1314,7 +1334,7 @@ impl OpSig {
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
-            Self::StoreInterleaved { .. } => &["a", "dest"],
+            Self::StoreInterleaved { .. } | Self::StoreArray => &["a", "dest"],
         }
     }
     fn vec_trait_arg_names(&self) -> &'static [&'static str] {
@@ -1323,7 +1343,8 @@ impl OpSig {
             | Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }
-            | Self::FromBytes { .. } => &[],
+            | Self::FromBytes { .. }
+            | Self::StoreArray => &[],
             Self::Unary
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
@@ -1377,6 +1398,7 @@ impl OpSig {
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }
             | Self::AsArray { .. }
+            | Self::StoreArray
             | Self::FromBytes
             | Self::ToBytes => return None,
         };
