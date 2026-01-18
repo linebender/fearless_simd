@@ -182,7 +182,7 @@ impl Level for X86 {
                     self.arch_ty(vec_ty)
                 })
             }
-            OpSig::ToArray => {
+            OpSig::StoreArray => {
                 generic_to_array(method_sig, vec_ty, self.max_block_size(), |block_ty| {
                     intrinsic_ident("storeu", coarse_type(block_ty), block_ty.n_bits())
                 })

@@ -488,7 +488,7 @@ impl Level for Fallback {
                     }
                 }
             }
-            OpSig::ToArray => {
+            OpSig::StoreArray => {
                 quote! {
                     #method_sig {
                         *dest = a.val.0;

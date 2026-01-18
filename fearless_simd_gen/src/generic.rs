@@ -199,7 +199,7 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         | OpSig::Combine { .. }
         | OpSig::AsArray { .. }
         | OpSig::FromArray { .. }
-        | OpSig::ToArray => {
+        | OpSig::StoreArray => {
             panic!("These operations require more information about the target platform");
         }
         OpSig::FromBytes => generic_from_bytes(method_sig, ty),

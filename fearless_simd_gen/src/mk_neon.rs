@@ -474,7 +474,7 @@ impl Level for Neon {
                     self.arch_ty(vec_ty)
                 })
             }
-            OpSig::ToArray => {
+            OpSig::StoreArray => {
                 generic_to_array(method_sig, vec_ty, self.max_block_size(), store_intrinsic)
             }
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),

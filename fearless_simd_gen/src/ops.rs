@@ -107,7 +107,7 @@ pub(crate) enum OpSig {
     /// `[f32; 4]` for `f32x4<S>`) or a reference to it.
     AsArray { kind: RefKind },
     /// Takes a vector and a mutable reference to an array, and stores the vector elements into the array.
-    ToArray,
+    StoreArray,
     /// Takes a single argument of the vector type, and returns a vector type with `u8` elements and the same bit width.
     FromBytes,
     /// Takes a single argument of a vector type with `u8` elements, and returns a vector type with different elements
@@ -273,7 +273,7 @@ impl Op {
                 let array_ty = quote! { [#rust_scalar; #len] };
                 quote! { (self, #arg0: #ref_tok #ty<Self>) -> #ref_tok #array_ty }
             }
-            OpSig::ToArray => {
+            OpSig::StoreArray => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
@@ -310,7 +310,7 @@ impl Op {
             OpSig::Splat
             | OpSig::LoadInterleaved { .. }
             | OpSig::StoreInterleaved { .. }
-            | OpSig::ToArray => {
+            | OpSig::StoreArray => {
                 return None;
             }
             OpSig::Unary
@@ -450,7 +450,7 @@ const BASE_OPS: &[Op] = &[
     Op::new(
         "store_array",
         OpKind::AssociatedOnly,
-        OpSig::ToArray,
+        OpSig::StoreArray,
         "Store a SIMD vector into an array of the same length.",
     ),
     Op::new(
@@ -1301,7 +1301,7 @@ impl OpSig {
                 | Self::StoreInterleaved { .. }
                 | Self::FromArray { .. }
                 | Self::AsArray { .. }
-                | Self::ToArray
+                | Self::StoreArray
         ) {
             return false;
         }
@@ -1334,7 +1334,7 @@ impl OpSig {
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
-            Self::StoreInterleaved { .. } | Self::ToArray => &["a", "dest"],
+            Self::StoreInterleaved { .. } | Self::StoreArray => &["a", "dest"],
         }
     }
     fn vec_trait_arg_names(&self) -> &'static [&'static str] {
@@ -1344,7 +1344,7 @@ impl OpSig {
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }
             | Self::FromBytes { .. }
-            | Self::ToArray => &[],
+            | Self::StoreArray => &[],
             Self::Unary
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
@@ -1398,7 +1398,7 @@ impl OpSig {
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }
             | Self::AsArray { .. }
-            | Self::ToArray
+            | Self::StoreArray
             | Self::FromBytes
             | Self::ToBytes => return None,
         };

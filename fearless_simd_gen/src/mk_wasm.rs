@@ -623,9 +623,11 @@ impl Level for WasmSimd128 {
                     Ident::new("v128", Span::call_site())
                 })
             }
-            OpSig::ToArray => generic_to_array(method_sig, vec_ty, self.max_block_size(), |_| {
-                v128_intrinsic("store")
-            }),
+            OpSig::StoreArray => {
+                generic_to_array(method_sig, vec_ty, self.max_block_size(), |_| {
+                    v128_intrinsic("store")
+                })
+            }
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }
