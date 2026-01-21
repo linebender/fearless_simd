@@ -29,12 +29,15 @@ This release has an [MSRV][] of 1.88.
 - The `any_true`, `all_true`, `any_false`, and `all_false` methods on mask types. ([#141][] by [@valadaptive][])
 - Documentation for most traits, vector types, and operations. ([#154][] by [@valadaptive][])
 - A "shift left by vector" operation, to go with the existing "shift right by vector". ([#155][] by [@valadaptive][])
+- "Precise" float-to-integer conversions, which saturate out-of-bounds results and convert NaN to 0 across all platforms. ([#167][] by [@valadaptive][])
+- The `Level::is_fallback` method, which lets you check if the current SIMD level is the scalar fallback. This works even if `Level::Fallback` is not compiled in, always returning false in that case. ([#168][] by [@valadaptive][])
+- Added `store_array` methods to store SIMD vectors back to memory explicitly using intrinsics. ([#181][] by [@LaurenzV][])
 
 ### Fixed
 
 - Integer equality comparisons now function properly on x86. Previously, they performed "greater than" comparisons.
   ([#115][] by [@valadaptive][])
-- All float-to-integer and integer-to-float conversions are implemented properly on x86. They should now handle all values correctly, including NaN. ([#134][] by [@valadaptive][])
+- All float-to-integer and integer-to-float conversions are implemented properly on x86, including the precise versions. ([#134][] by [@valadaptive][])
 - The floating-point `min_precise` and `max_precise` operations now behave the same way on x86 and WebAssembly as they do on AArch64, returning the non-NaN operand if one operand is NaN and the other is not. Previously, they returned the second operand if either was NaN. ([#136][] by [@valadaptive][])
 
 ### Changed
@@ -61,6 +64,10 @@ This release has an [MSRV][] of 1.88.
   conveniently import all of the traits.
 - Breaking change: The `madd` and `msub` methods have been renamed to `mul_add` and `mul_sub`, matching Rust's naming conventions.
   ([#158][] by [@Shnatsel][])
+- Breaking change: the `val` field on SIMD vector types is now private, and vector types are no longer represented as arrays internally. To access a vector type's elements, you can use the `Into` or `Deref` traits to obtain an array, or the `as_slice`/`as_mut_slice` methods to obtain a slice. ([#159][] by [@valadaptive][])
+- Breaking change: the `Element` type on the `SimdBase` trait is now an associated type instead of a type parameter. This should make it more pleasant to write code that's generic over different vector types. ([#170][] by [@valadaptive][])
+- The `WasmSimd128` token type now wraps the new `crate::core_arch::wasm32::WasmSimd128` type. This doesn't expose any new functionality as WASM SIMD128 can only be enabled statically, but matches all the other backend tokens. ([#176][] by [@valadaptive][])
+- Breaking change: the `SimdFrom::simd_from` method now takes the SIMD token as the first argument instead of the second. This matches the argument order of the `from_slice`, `splat`, and `from_fn` methods on `SimdBase`. ([#180][] by [@valadaptive][])
 
 ### Removed
 
@@ -121,6 +128,7 @@ No changelog was kept for this release.
 [@Ralith]: https://github.com/Ralith
 [@DJMcNab]: https://github.com/DJMcNab
 [@valadaptive]: https://github.com/valadaptive
+[@LaurenzV]: https://github.com/LaurenzV
 [@Shnatsel]: https://github.com/Shnatsel
 
 [#75]: https://github.com/linebender/fearless_simd/pull/75
@@ -154,6 +162,12 @@ No changelog was kept for this release.
 [#154]: https://github.com/linebender/fearless_simd/pull/154
 [#155]: https://github.com/linebender/fearless_simd/pull/155
 [#158]: https://github.com/linebender/fearless_simd/pull/158
+[#159]: https://github.com/linebender/fearless_simd/pull/159
+[#167]: https://github.com/linebender/fearless_simd/pull/167
+[#168]: https://github.com/linebender/fearless_simd/pull/168
+[#170]: https://github.com/linebender/fearless_simd/pull/170
+[#176]: https://github.com/linebender/fearless_simd/pull/176
+[#180]: https://github.com/linebender/fearless_simd/pull/180
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0

@@ -45,71 +45,73 @@ use crate::{
 #[doc = r"     let a = [1.0, 2.0, 3.0, 4.0].simd_into(simd);"]
 #[doc = r"     let b = [5.0, 6.0, 7.0, 8.0].simd_into(simd);"]
 #[doc = r"     let result = add_vectors(simd, a, b);"]
-#[doc = r"     # assert_eq!(result.val, [6.0, 8.0, 10.0, 12.0]);"]
+#[doc = r"     # assert_eq!(*result, [6.0, 8.0, 10.0, 12.0]);"]
 #[doc = r" });"]
 #[doc = r" ```"]
-pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
+pub trait Simd:
+    Sized + Clone + Copy + Send + Sync + Seal + arch_types::ArchTypes + 'static
+{
     #[doc = r" A native-width SIMD vector of [`f32`]s."]
     type f32s: SimdFloat<
-            f32,
             Self,
+            Element = f32,
             Block = f32x4<Self>,
             Mask = Self::mask32s,
             Bytes = <Self::u32s as Bytes>::Bytes,
         > + SimdCvtFloat<Self::u32s>
         + SimdCvtFloat<Self::i32s>;
     #[doc = r" A native-width SIMD vector of [`f64`]s."]
-    type f64s: SimdFloat<f64, Self, Block = f64x2<Self>, Mask = Self::mask64s>;
+    type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s>;
     #[doc = r" A native-width SIMD vector of [`u8`]s."]
-    type u8s: SimdInt<u8, Self, Block = u8x16<Self>, Mask = Self::mask8s>;
+    type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s>;
     #[doc = r" A native-width SIMD vector of [`i8`]s."]
     type i8s: SimdInt<
-            i8,
             Self,
+            Element = i8,
             Block = i8x16<Self>,
             Mask = Self::mask8s,
             Bytes = <Self::u8s as Bytes>::Bytes,
         > + core::ops::Neg<Output = Self::i8s>;
     #[doc = r" A native-width SIMD vector of [`u16`]s."]
-    type u16s: SimdInt<u16, Self, Block = u16x8<Self>, Mask = Self::mask16s>;
+    type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s>;
     #[doc = r" A native-width SIMD vector of [`i16`]s."]
     type i16s: SimdInt<
-            i16,
             Self,
+            Element = i16,
             Block = i16x8<Self>,
             Mask = Self::mask16s,
             Bytes = <Self::u16s as Bytes>::Bytes,
         > + core::ops::Neg<Output = Self::i16s>;
     #[doc = r" A native-width SIMD vector of [`u32`]s."]
-    type u32s: SimdInt<u32, Self, Block = u32x4<Self>, Mask = Self::mask32s>
+    type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s>
         + SimdCvtTruncate<Self::f32s>;
     #[doc = r" A native-width SIMD vector of [`i32`]s."]
     type i32s: SimdInt<
-            i32,
             Self,
+            Element = i32,
             Block = i32x4<Self>,
             Mask = Self::mask32s,
             Bytes = <Self::u32s as Bytes>::Bytes,
         > + SimdCvtTruncate<Self::f32s>
         + core::ops::Neg<Output = Self::i32s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
-    type mask8s: SimdMask<i8, Self, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes>
+    type mask8s: SimdMask<Self, Element = i8, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes>
         + Select<Self::u8s>
         + Select<Self::i8s>
         + Select<Self::mask8s>;
     #[doc = r" A native-width SIMD mask with 16-bit lanes."]
-    type mask16s: SimdMask<i16, Self, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes>
+    type mask16s: SimdMask<Self, Element = i16, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes>
         + Select<Self::u16s>
         + Select<Self::i16s>
         + Select<Self::mask16s>;
     #[doc = r" A native-width SIMD mask with 32-bit lanes."]
-    type mask32s: SimdMask<i32, Self, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes>
+    type mask32s: SimdMask<Self, Element = i32, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes>
         + Select<Self::f32s>
         + Select<Self::u32s>
         + Select<Self::i32s>
         + Select<Self::mask32s>;
     #[doc = r" A native-width SIMD mask with 64-bit lanes."]
-    type mask64s: SimdMask<i64, Self, Block = mask64x2<Self>>
+    type mask64s: SimdMask<Self, Element = i64, Block = mask64x2<Self>>
         + Select<Self::f64s>
         + Select<Self::mask64s>;
     #[doc = r" This SIMD token's feature level."]
@@ -120,6 +122,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f32x4(self, val: f32) -> f32x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_f32x4(self, val: [f32; 4usize]) -> f32x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_f32x4(self, val: &[f32; 4usize]) -> f32x4<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_f32x4(self, a: f32x4<Self>) -> [f32; 4usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_f32x4(self, a: &f32x4<Self>) -> &[f32; 4usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_f32x4(self, a: &mut f32x4<Self>) -> &mut [f32; 4usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_f32x4(self, a: f32x4<Self>) -> u8x16<Self>;
     #[doc = "Compute the absolute value of each element."]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Negate each element of the vector."]
@@ -190,12 +208,32 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
-    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u32_precise_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x16(self, val: i8) -> i8x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i8x16(self, val: [i8; 16usize]) -> i8x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i8x16(self, val: &[i8; 16usize]) -> i8x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i8x16(self, a: i8x16<Self>) -> [i8; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i8x16(self, a: &i8x16<Self>) -> &[i8; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i8x16(self, a: &mut i8x16<Self>) -> &mut [i8; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i8x16(self, a: i8x16<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -252,6 +290,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x16(self, val: u8) -> u8x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u8x16(self, val: &[u8; 16usize]) -> u8x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u8x16(self, a: u8x16<Self>) -> [u8; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u8x16(self, a: &u8x16<Self>) -> &[u8; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u8x16(self, a: &mut u8x16<Self>) -> &mut [u8; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -304,8 +358,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask8x16(self, val: i8) -> mask8x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask8x16(self, val: &[i8; 16usize]) -> mask8x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask8x16(self, a: &mask8x16<Self>) -> &[i8; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask8x16(self, a: &mut mask8x16<Self>) -> &mut [i8; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask8x16(self, a: mask8x16<Self>, dest: &mut [i8; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask8x16(self, a: u8x16<Self>) -> mask8x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask8x16(self, a: mask8x16<Self>) -> u8x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -335,6 +405,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i16x8(self, val: i16) -> i16x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i16x8(self, val: [i16; 8usize]) -> i16x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i16x8(self, val: &[i16; 8usize]) -> i16x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i16x8(self, a: i16x8<Self>) -> [i16; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i16x8(self, a: &i16x8<Self>) -> &[i16; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i16x8(self, a: &mut i16x8<Self>) -> &mut [i16; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i16x8(self, a: i16x8<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -391,6 +477,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x8(self, val: u16) -> u16x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u16x8(self, val: &[u16; 8usize]) -> u16x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u16x8(self, a: u16x8<Self>) -> [u16; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u16x8(self, a: &u16x8<Self>) -> &[u16; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u16x8(self, a: &mut u16x8<Self>) -> &mut [u16; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u16x8(self, a: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -443,8 +545,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask16x8(self, val: i16) -> mask16x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask16x8(self, val: &[i16; 8usize]) -> mask16x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask16x8(self, a: &mask16x8<Self>) -> &[i16; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask16x8(self, a: &mut mask16x8<Self>) -> &mut [i16; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask16x8(self, a: mask16x8<Self>, dest: &mut [i16; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask16x8(self, a: u8x16<Self>) -> mask16x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask16x8(self, a: mask16x8<Self>) -> u8x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -474,6 +592,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i32x4(self, val: i32) -> i32x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i32x4(self, val: [i32; 4usize]) -> i32x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i32x4(self, val: &[i32; 4usize]) -> i32x4<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i32x4(self, a: i32x4<Self>) -> [i32; 4usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i32x4(self, a: &i32x4<Self>) -> &[i32; 4usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i32x4(self, a: &mut i32x4<Self>) -> &mut [i32; 4usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i32x4(self, a: i32x4<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -532,6 +666,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u32x4(self, val: u32) -> u32x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u32x4(self, val: &[u32; 4usize]) -> u32x4<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u32x4(self, a: u32x4<Self>) -> [u32; 4usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u32x4(self, a: &u32x4<Self>) -> &[u32; 4usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u32x4(self, a: &mut u32x4<Self>) -> &mut [u32; 4usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u32x4(self, a: u32x4<Self>) -> u8x16<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -584,8 +734,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask32x4(self, val: i32) -> mask32x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask32x4(self, val: &[i32; 4usize]) -> mask32x4<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask32x4(self, a: &mask32x4<Self>) -> &[i32; 4usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask32x4(self, a: &mut mask32x4<Self>) -> &mut [i32; 4usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask32x4(self, a: mask32x4<Self>, dest: &mut [i32; 4usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask32x4(self, a: u8x16<Self>) -> mask32x4<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask32x4(self, a: mask32x4<Self>) -> u8x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -615,6 +781,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f64x2(self, val: f64) -> f64x2<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_f64x2(self, val: [f64; 2usize]) -> f64x2<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_f64x2(self, val: &[f64; 2usize]) -> f64x2<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_f64x2(self, a: f64x2<Self>) -> [f64; 2usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_f64x2(self, a: &f64x2<Self>) -> &[f64; 2usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_f64x2(self, a: &mut f64x2<Self>) -> &mut [f64; 2usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_f64x2(self, a: f64x2<Self>) -> u8x16<Self>;
     #[doc = "Compute the absolute value of each element."]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Negate each element of the vector."]
@@ -679,8 +861,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask64x2(self, val: i64) -> mask64x2<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask64x2(self, val: &[i64; 2usize]) -> mask64x2<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask64x2(self, a: &mask64x2<Self>) -> &[i64; 2usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask64x2(self, a: &mut mask64x2<Self>) -> &mut [i64; 2usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask64x2(self, a: mask64x2<Self>, dest: &mut [i64; 2usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask64x2(self, a: u8x16<Self>) -> mask64x2<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask64x2(self, a: mask64x2<Self>) -> u8x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -710,6 +908,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f32x8(self, val: f32) -> f32x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_f32x8(self, val: [f32; 8usize]) -> f32x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_f32x8(self, val: &[f32; 8usize]) -> f32x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_f32x8(self, a: f32x8<Self>) -> [f32; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_f32x8(self, a: &f32x8<Self>) -> &[f32; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_f32x8(self, a: &mut f32x8<Self>) -> &mut [f32; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_f32x8(self, a: f32x8<Self>) -> u8x32<Self>;
     #[doc = "Compute the absolute value of each element."]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Negate each element of the vector."]
@@ -782,12 +996,32 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
-    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u32_precise_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i32_precise_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x32(self, val: i8) -> i8x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i8x32(self, val: [i8; 32usize]) -> i8x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i8x32(self, val: &[i8; 32usize]) -> i8x32<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i8x32(self, a: i8x32<Self>) -> [i8; 32usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i8x32(self, a: &i8x32<Self>) -> &[i8; 32usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i8x32(self, a: &mut i8x32<Self>) -> &mut [i8; 32usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i8x32(self, a: i8x32<Self>) -> u8x32<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -846,6 +1080,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x32(self, val: u8) -> u8x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u8x32(self, val: [u8; 32usize]) -> u8x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u8x32(self, val: &[u8; 32usize]) -> u8x32<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u8x32(self, a: u8x32<Self>) -> [u8; 32usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u8x32(self, a: &u8x32<Self>) -> &[u8; 32usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u8x32(self, a: &mut u8x32<Self>) -> &mut [u8; 32usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -900,8 +1150,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask8x32(self, val: i8) -> mask8x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask8x32(self, val: &[i8; 32usize]) -> mask8x32<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask8x32(self, a: &mask8x32<Self>) -> &[i8; 32usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask8x32(self, a: &mut mask8x32<Self>) -> &mut [i8; 32usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask8x32(self, a: mask8x32<Self>, dest: &mut [i8; 32usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask8x32(self, a: u8x32<Self>) -> mask8x32<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask8x32(self, a: mask8x32<Self>) -> u8x32<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -933,6 +1199,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_mask8x32(self, a: mask8x32<Self>) -> (mask8x16<Self>, mask8x16<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i16x16(self, val: i16) -> i16x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i16x16(self, val: [i16; 16usize]) -> i16x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i16x16(self, val: &[i16; 16usize]) -> i16x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i16x16(self, a: i16x16<Self>) -> [i16; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i16x16(self, a: &i16x16<Self>) -> &[i16; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i16x16(self, a: &mut i16x16<Self>) -> &mut [i16; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i16x16(self, a: i16x16<Self>) -> u8x32<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -991,6 +1273,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x16(self, val: u16) -> u16x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u16x16(self, val: [u16; 16usize]) -> u16x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u16x16(self, val: &[u16; 16usize]) -> u16x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u16x16(self, a: u16x16<Self>) -> [u16; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u16x16(self, a: &u16x16<Self>) -> &[u16; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u16x16(self, a: &mut u16x16<Self>) -> &mut [u16; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u16x16(self, a: u16x16<Self>) -> u8x32<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1047,8 +1345,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask16x16(self, val: i16) -> mask16x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask16x16(self, val: &[i16; 16usize]) -> mask16x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask16x16(self, a: &mask16x16<Self>) -> &[i16; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask16x16(self, a: &mut mask16x16<Self>) -> &mut [i16; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask16x16(self, a: mask16x16<Self>, dest: &mut [i16; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask16x16(self, a: u8x32<Self>) -> mask16x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask16x16(self, a: mask16x16<Self>) -> u8x32<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1080,6 +1394,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_mask16x16(self, a: mask16x16<Self>) -> (mask16x8<Self>, mask16x8<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i32x8(self, val: i32) -> i32x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i32x8(self, val: [i32; 8usize]) -> i32x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i32x8(self, val: &[i32; 8usize]) -> i32x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i32x8(self, a: i32x8<Self>) -> [i32; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i32x8(self, a: &i32x8<Self>) -> &[i32; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i32x8(self, a: &mut i32x8<Self>) -> &mut [i32; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i32x8(self, a: i32x8<Self>) -> u8x32<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1140,6 +1470,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u32x8(self, val: u32) -> u32x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u32x8(self, val: [u32; 8usize]) -> u32x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u32x8(self, val: &[u32; 8usize]) -> u32x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u32x8(self, a: u32x8<Self>) -> [u32; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u32x8(self, a: &u32x8<Self>) -> &[u32; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u32x8(self, a: &mut u32x8<Self>) -> &mut [u32; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u32x8(self, a: u32x8<Self>) -> u8x32<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1194,8 +1540,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask32x8(self, val: i32) -> mask32x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask32x8(self, val: &[i32; 8usize]) -> mask32x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask32x8(self, a: &mask32x8<Self>) -> &[i32; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask32x8(self, a: &mut mask32x8<Self>) -> &mut [i32; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask32x8(self, a: mask32x8<Self>, dest: &mut [i32; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask32x8(self, a: u8x32<Self>) -> mask32x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask32x8(self, a: mask32x8<Self>) -> u8x32<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1227,6 +1589,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_mask32x8(self, a: mask32x8<Self>) -> (mask32x4<Self>, mask32x4<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f64x4(self, val: f64) -> f64x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_f64x4(self, val: [f64; 4usize]) -> f64x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_f64x4(self, val: &[f64; 4usize]) -> f64x4<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_f64x4(self, a: f64x4<Self>) -> [f64; 4usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_f64x4(self, a: &f64x4<Self>) -> &[f64; 4usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_f64x4(self, a: &mut f64x4<Self>) -> &mut [f64; 4usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_f64x4(self, a: f64x4<Self>) -> u8x32<Self>;
     #[doc = "Compute the absolute value of each element."]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Negate each element of the vector."]
@@ -1293,8 +1671,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>);
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask64x4(self, val: i64) -> mask64x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask64x4(self, val: &[i64; 4usize]) -> mask64x4<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask64x4(self, a: &mask64x4<Self>) -> &[i64; 4usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask64x4(self, a: &mut mask64x4<Self>) -> &mut [i64; 4usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask64x4(self, a: mask64x4<Self>, dest: &mut [i64; 4usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask64x4(self, a: u8x32<Self>) -> mask64x4<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask64x4(self, a: mask64x4<Self>) -> u8x32<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1326,6 +1720,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_mask64x4(self, a: mask64x4<Self>) -> (mask64x2<Self>, mask64x2<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f32x16(self, val: f32) -> f32x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_f32x16(self, val: &[f32; 16usize]) -> f32x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_f32x16(self, a: f32x16<Self>) -> [f32; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_f32x16(self, a: &f32x16<Self>) -> &[f32; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
     #[doc = "Compute the absolute value of each element."]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Negate each element of the vector."]
@@ -1400,12 +1810,32 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
-    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_u32_precise_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results."]
     fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
+    #[doc = "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
+    fn cvt_i32_precise_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i8x64(self, val: i8) -> i8x64<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i8x64(self, val: &[i8; 64usize]) -> i8x64<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i8x64(self, a: i8x64<Self>) -> [i8; 64usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i8x64(self, a: &i8x64<Self>) -> &[i8; 64usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i8x64(self, a: &mut i8x64<Self>) -> &mut [i8; 64usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i8x64(self, a: i8x64<Self>) -> u8x64<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1462,6 +1892,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x64(self, val: u8) -> u8x64<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u8x64(self, val: &[u8; 64usize]) -> u8x64<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u8x64(self, a: u8x64<Self>) -> [u8; 64usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u8x64(self, a: &u8x64<Self>) -> &[u8; 64usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1516,8 +1962,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask8x64(self, val: i8) -> mask8x64<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask8x64(self, val: &[i8; 64usize]) -> mask8x64<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask8x64(self, a: &mask8x64<Self>) -> &[i8; 64usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask8x64(self, a: &mut mask8x64<Self>) -> &mut [i8; 64usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask8x64(self, a: mask8x64<Self>, dest: &mut [i8; 64usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask8x64(self, a: u8x64<Self>) -> mask8x64<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask8x64(self, a: mask8x64<Self>) -> u8x64<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1547,6 +2009,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i16x32(self, val: i16) -> i16x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i16x32(self, val: &[i16; 32usize]) -> i16x32<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i16x32(self, a: i16x32<Self>) -> [i16; 32usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i16x32(self, a: &i16x32<Self>) -> &[i16; 32usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i16x32(self, a: i16x32<Self>) -> u8x64<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1603,6 +2081,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x32(self, val: u16) -> u16x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u16x32(self, val: &[u16; 32usize]) -> u16x32<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u16x32(self, a: u16x32<Self>) -> [u16; 32usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u16x32(self, a: &u16x32<Self>) -> &[u16; 32usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u16x32(self, a: u16x32<Self>) -> u8x64<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1661,8 +2155,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask16x32(self, val: i16) -> mask16x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask16x32(self, val: &[i16; 32usize]) -> mask16x32<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask16x32(self, a: &mask16x32<Self>) -> &[i16; 32usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask16x32(self, a: &mut mask16x32<Self>) -> &mut [i16; 32usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask16x32(self, a: mask16x32<Self>, dest: &mut [i16; 32usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask16x32(self, a: u8x64<Self>) -> mask16x32<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask16x32(self, a: mask16x32<Self>) -> u8x64<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1692,6 +2202,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i32x16(self, val: i32) -> i32x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i32x16(self, val: &[i32; 16usize]) -> i32x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i32x16(self, a: i32x16<Self>) -> [i32; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i32x16(self, a: &i32x16<Self>) -> &[i32; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i32x16(self, a: i32x16<Self>) -> u8x64<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1750,6 +2276,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u32x16(self, val: u32) -> u32x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u32x16(self, val: &[u32; 16usize]) -> u32x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u32x16(self, a: u32x16<Self>) -> [u32; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u32x16(self, a: &u32x16<Self>) -> &[u32; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1806,8 +2348,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask32x16(self, val: i32) -> mask32x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask32x16(self, val: &[i32; 16usize]) -> mask32x16<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask32x16(self, a: &mask32x16<Self>) -> &[i32; 16usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask32x16(self, a: &mut mask32x16<Self>) -> &mut [i32; 16usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask32x16(self, a: mask32x16<Self>, dest: &mut [i32; 16usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask32x16(self, a: u8x64<Self>) -> mask32x16<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask32x16(self, a: mask32x16<Self>) -> u8x64<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1837,6 +2395,22 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_f64x8(self, val: f64) -> f64x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_f64x8(self, val: &[f64; 8usize]) -> f64x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_f64x8(self, a: f64x8<Self>) -> [f64; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_f64x8(self, a: &f64x8<Self>) -> &[f64; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_f64x8(self, a: f64x8<Self>) -> u8x64<Self>;
     #[doc = "Compute the absolute value of each element."]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Negate each element of the vector."]
@@ -1901,8 +2475,24 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self>;
-    #[doc = "Create a SIMD mask with all elements set to the given value."]
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_mask64x8(self, val: i64) -> mask64x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_mask64x8(self, val: &[i64; 8usize]) -> mask64x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_mask64x8(self, a: &mask64x8<Self>) -> &[i64; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_mask64x8(self, a: &mut mask64x8<Self>) -> &mut [i64; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_mask64x8(self, a: mask64x8<Self>, dest: &mut [i64; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_mask64x8(self, a: u8x64<Self>) -> mask64x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_mask64x8(self, a: mask64x8<Self>) -> u8x64<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1931,17 +2521,65 @@ pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + 'static {
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
 }
+pub(crate) mod arch_types {
+    #[expect(
+        unnameable_types,
+        reason = "The native vector types that back a `Simd` implementation are an internal implementation detail, and intentionally kept private"
+    )]
+    pub trait ArchTypes {
+        type f32x4: Copy + Send + Sync;
+        type i8x16: Copy + Send + Sync;
+        type u8x16: Copy + Send + Sync;
+        type mask8x16: Copy + Send + Sync;
+        type i16x8: Copy + Send + Sync;
+        type u16x8: Copy + Send + Sync;
+        type mask16x8: Copy + Send + Sync;
+        type i32x4: Copy + Send + Sync;
+        type u32x4: Copy + Send + Sync;
+        type mask32x4: Copy + Send + Sync;
+        type f64x2: Copy + Send + Sync;
+        type mask64x2: Copy + Send + Sync;
+        type f32x8: Copy + Send + Sync;
+        type i8x32: Copy + Send + Sync;
+        type u8x32: Copy + Send + Sync;
+        type mask8x32: Copy + Send + Sync;
+        type i16x16: Copy + Send + Sync;
+        type u16x16: Copy + Send + Sync;
+        type mask16x16: Copy + Send + Sync;
+        type i32x8: Copy + Send + Sync;
+        type u32x8: Copy + Send + Sync;
+        type mask32x8: Copy + Send + Sync;
+        type f64x4: Copy + Send + Sync;
+        type mask64x4: Copy + Send + Sync;
+        type f32x16: Copy + Send + Sync;
+        type i8x64: Copy + Send + Sync;
+        type u8x64: Copy + Send + Sync;
+        type mask8x64: Copy + Send + Sync;
+        type i16x32: Copy + Send + Sync;
+        type u16x32: Copy + Send + Sync;
+        type mask16x32: Copy + Send + Sync;
+        type i32x16: Copy + Send + Sync;
+        type u32x16: Copy + Send + Sync;
+        type mask32x16: Copy + Send + Sync;
+        type f64x8: Copy + Send + Sync;
+        type mask64x8: Copy + Send + Sync;
+    }
+}
 #[doc = r" Base functionality implemented by all SIMD vectors."]
-pub trait SimdBase<Element: SimdElement, S: Simd>:
+pub trait SimdBase<S: Simd>:
     Copy
     + Sync
     + Send
     + 'static
     + crate::Bytes
-    + SimdFrom<Element, S>
-    + core::ops::Index<usize, Output = Element>
-    + core::ops::IndexMut<usize, Output = Element>
+    + SimdFrom<Self::Element, S>
+    + core::ops::Index<usize, Output = Self::Element>
+    + core::ops::IndexMut<usize, Output = Self::Element>
+    + core::ops::Deref<Target = Self::Array>
+    + core::ops::DerefMut<Target = Self::Array>
 {
+    #[doc = r" The type of this vector's elements."]
+    type Element: SimdElement;
     #[doc = r" This vector type's lane count. This is useful when you're"]
     #[doc = r" working with a native-width vector (e.g. [`Simd::f32s`]) and"]
     #[doc = r" want to process data in native-width chunks."]
@@ -1954,51 +2592,77 @@ pub trait SimdBase<Element: SimdElement, S: Simd>:
     #[doc = r""]
     #[doc = r" One possibility to consider is that the SIMD trait grows"]
     #[doc = r" `maskAxB` associated types."]
-    type Mask: SimdMask<Element::Mask, S>;
+    type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
     #[doc = r" A 128-bit SIMD vector of the same scalar type."]
-    type Block: SimdBase<Element, S>;
+    type Block: SimdBase<S, Element = Self::Element>;
+    #[doc = r" The array type that this vector type corresponds to, which will"]
+    #[doc = r" always be `[Self::Element; Self::N]`. It has the same layout as"]
+    #[doc = r" this vector type, but likely has a lower alignment."]
+    type Array;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
-    fn as_slice(&self) -> &[Element];
-    fn as_mut_slice(&mut self) -> &mut [Element];
+    fn as_slice(&self) -> &[Self::Element];
+    fn as_mut_slice(&mut self) -> &mut [Self::Element];
     #[doc = r" Create a SIMD vector from a slice."]
     #[doc = r""]
     #[doc = r" The slice must be the proper width."]
-    fn from_slice(simd: S, slice: &[Element]) -> Self;
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+    #[doc = r" Store a SIMD vector into a slice."]
+    #[doc = r""]
+    #[doc = r" The slice must be the proper width."]
+    fn store_slice(&self, slice: &mut [Self::Element]);
     #[doc = r" Create a SIMD vector with all elements set to the given value."]
-    fn splat(simd: S, val: Element) -> Self;
+    fn splat(simd: S, val: Self::Element) -> Self;
     #[doc = r" Create a SIMD vector from a 128-bit vector of the same scalar"]
     #[doc = r" type, repeated."]
     fn block_splat(block: Self::Block) -> Self;
     #[doc = r" Create a SIMD vector where each element is produced by"]
     #[doc = r" calling `f` with that element's lane index (from 0 to"]
     #[doc = r" [`SimdBase::N`] - 1)."]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> Element) -> Self;
+    fn from_fn(simd: S, f: impl FnMut(usize) -> Self::Element) -> Self;
 }
 #[doc = r" Functionality implemented by floating-point SIMD vectors."]
-pub trait SimdFloat<Element: SimdElement, S: Simd>:
-    SimdBase<Element, S>
+pub trait SimdFloat<S: Simd>:
+    SimdBase<S>
     + core::ops::Neg<Output = Self>
     + core::ops::Add<Output = Self>
     + core::ops::AddAssign
-    + core::ops::Add<Element, Output = Self>
-    + core::ops::AddAssign<Element>
+    + core::ops::Add<Self::Element, Output = Self>
+    + core::ops::AddAssign<Self::Element>
     + core::ops::Sub<Output = Self>
     + core::ops::SubAssign
-    + core::ops::Sub<Element, Output = Self>
-    + core::ops::SubAssign<Element>
+    + core::ops::Sub<Self::Element, Output = Self>
+    + core::ops::SubAssign<Self::Element>
     + core::ops::Mul<Output = Self>
     + core::ops::MulAssign
-    + core::ops::Mul<Element, Output = Self>
-    + core::ops::MulAssign<Element>
+    + core::ops::Mul<Self::Element, Output = Self>
+    + core::ops::MulAssign<Self::Element>
     + core::ops::Div<Output = Self>
     + core::ops::DivAssign
-    + core::ops::Div<Element, Output = Self>
-    + core::ops::DivAssign<Element>
+    + core::ops::Div<Self::Element, Output = Self>
+    + core::ops::DivAssign<Self::Element>
 {
+    #[doc = r" Convert this floating-point type to an integer. This is a convenience method that"]
+    #[doc = r" delegates to [`SimdCvtTruncate::truncate_from`], and can only be called if there"]
+    #[doc = r" actually exists a target type of the same bit width (currently, only `u32` and"]
+    #[doc = r" `i32`)."]
+    #[doc = r""]
+    #[doc = r" For more information about the semantics of this specific conversion, see the"]
+    #[doc = r" concrete `SimdCvtTruncate` implementations for integer types."]
     #[inline(always)]
     fn to_int<T: SimdCvtTruncate<Self>>(self) -> T {
         T::truncate_from(self)
+    }
+    #[doc = r" Convert this floating-point type to an integer, saturating on overflow and returning"]
+    #[doc = r" 0 for NaN. This is a convenience method that delegates to"]
+    #[doc = r" [`SimdCvtTruncate::truncate_from_precise`], and can only be called if there actually"]
+    #[doc = r" exists a target type of the same bit width (currently, only `u32` and `i32`)."]
+    #[doc = r""]
+    #[doc = r" For more information about the semantics of this specific conversion, see the"]
+    #[doc = r" concrete `SimdCvtTruncate` implementations for integer types."]
+    #[inline(always)]
+    fn to_int_precise<T: SimdCvtTruncate<Self>>(self) -> T {
+        T::truncate_from_precise(self)
     }
     #[doc = "Compute the absolute value of each element."]
     fn abs(self) -> Self;
@@ -2050,32 +2714,32 @@ pub trait SimdFloat<Element: SimdElement, S: Simd>:
     fn trunc(self) -> Self;
 }
 #[doc = r" Functionality implemented by (signed and unsigned) integer SIMD vectors."]
-pub trait SimdInt<Element: SimdElement, S: Simd>:
-    SimdBase<Element, S>
+pub trait SimdInt<S: Simd>:
+    SimdBase<S>
     + core::ops::Add<Output = Self>
     + core::ops::AddAssign
-    + core::ops::Add<Element, Output = Self>
-    + core::ops::AddAssign<Element>
+    + core::ops::Add<Self::Element, Output = Self>
+    + core::ops::AddAssign<Self::Element>
     + core::ops::Sub<Output = Self>
     + core::ops::SubAssign
-    + core::ops::Sub<Element, Output = Self>
-    + core::ops::SubAssign<Element>
+    + core::ops::Sub<Self::Element, Output = Self>
+    + core::ops::SubAssign<Self::Element>
     + core::ops::Mul<Output = Self>
     + core::ops::MulAssign
-    + core::ops::Mul<Element, Output = Self>
-    + core::ops::MulAssign<Element>
+    + core::ops::Mul<Self::Element, Output = Self>
+    + core::ops::MulAssign<Self::Element>
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
-    + core::ops::BitAnd<Element, Output = Self>
-    + core::ops::BitAndAssign<Element>
+    + core::ops::BitAnd<Self::Element, Output = Self>
+    + core::ops::BitAndAssign<Self::Element>
     + core::ops::BitOr<Output = Self>
     + core::ops::BitOrAssign
-    + core::ops::BitOr<Element, Output = Self>
-    + core::ops::BitOrAssign<Element>
+    + core::ops::BitOr<Self::Element, Output = Self>
+    + core::ops::BitOrAssign<Self::Element>
     + core::ops::BitXor<Output = Self>
     + core::ops::BitXorAssign
-    + core::ops::BitXor<Element, Output = Self>
-    + core::ops::BitXorAssign<Element>
+    + core::ops::BitXor<Self::Element, Output = Self>
+    + core::ops::BitXorAssign<Self::Element>
     + core::ops::Not<Output = Self>
     + core::ops::Shl<u32, Output = Self>
     + core::ops::ShlAssign<u32>
@@ -2086,6 +2750,9 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     + core::ops::Shr<Output = Self>
     + core::ops::ShrAssign
 {
+    #[doc = r" Convert this integer type to a floating-point type. This is a convenience method"]
+    #[doc = r" that delegates to [`SimdCvtFloat::float_from`], and can only be called if there"]
+    #[doc = r" actually exists a target type of the same bit width (currently, only `f32`)."]
     #[inline(always)]
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
@@ -2114,20 +2781,20 @@ pub trait SimdInt<Element: SimdElement, S: Simd>:
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
 }
 #[doc = r" Functionality implemented by SIMD masks."]
-pub trait SimdMask<Element: SimdElement, S: Simd>:
-    SimdBase<Element, S>
+pub trait SimdMask<S: Simd>:
+    SimdBase<S>
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
-    + core::ops::BitAnd<Element, Output = Self>
-    + core::ops::BitAndAssign<Element>
+    + core::ops::BitAnd<Self::Element, Output = Self>
+    + core::ops::BitAndAssign<Self::Element>
     + core::ops::BitOr<Output = Self>
     + core::ops::BitOrAssign
-    + core::ops::BitOr<Element, Output = Self>
-    + core::ops::BitOrAssign<Element>
+    + core::ops::BitOr<Self::Element, Output = Self>
+    + core::ops::BitOrAssign<Self::Element>
     + core::ops::BitXor<Output = Self>
     + core::ops::BitXorAssign
-    + core::ops::BitXor<Element, Output = Self>
-    + core::ops::BitXorAssign<Element>
+    + core::ops::BitXor<Self::Element, Output = Self>
+    + core::ops::BitXorAssign<Self::Element>
     + core::ops::Not<Output = Self>
 {
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]

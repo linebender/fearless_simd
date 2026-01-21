@@ -6,7 +6,10 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use std::fmt::Write;
 
-use crate::types::{ScalarType, VecType};
+use crate::{
+    generic::generic_op_name,
+    types::{ScalarType, VecType},
+};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Quantifier {
@@ -19,6 +22,23 @@ impl Quantifier {
         match self {
             Self::Any => quote! { || },
             Self::All => quote! { && },
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RefKind {
+    Value,
+    Ref,
+    Mut,
+}
+
+impl RefKind {
+    pub(crate) fn token(&self) -> Option<TokenStream> {
+        match self {
+            Self::Value => None,
+            Self::Ref => Some(quote! { & }),
+            Self::Mut => Some(quote! { &mut }),
         }
     }
 }
@@ -51,6 +71,7 @@ pub(crate) enum OpSig {
     Cvt {
         target_ty: ScalarType,
         scalar_bits: usize,
+        precise: bool,
     },
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same bit width.
@@ -79,6 +100,19 @@ pub(crate) enum OpSig {
     /// The inverse of [`OpSig::LoadInterleaved`]. Takes a vector argument with the length (`block_size` * `block_count`) /
     /// [scalar type's byte size], and a mutable reference to a scalar array of the same length, and returns nothing.
     StoreInterleaved { block_size: u16, block_count: u16 },
+    /// Takes a single argument of the array type corresponding to the vector type (e.g. `[f32; 4]` for `f32x4<S>`), or
+    /// a reference to it, and returns that vector type.
+    FromArray { kind: RefKind },
+    /// Takes a single argument of the vector type, or a reference to it, and returns the corresponding array type (e.g.
+    /// `[f32; 4]` for `f32x4<S>`) or a reference to it.
+    AsArray { kind: RefKind },
+    /// Takes a vector and a mutable reference to an array, and stores the vector elements into the array.
+    StoreArray,
+    /// Takes a single argument of the vector type, and returns a vector type with `u8` elements and the same bit width.
+    FromBytes,
+    /// Takes a single argument of a vector type with `u8` elements, and returns a vector type with different elements
+    /// and the same bit width.
+    ToBytes,
 }
 
 /// Where this operation is defined, and how it is called.
@@ -120,15 +154,320 @@ impl Op {
             doc,
         }
     }
+
+    pub(crate) fn simd_trait_method_sig(&self, vec_ty: &VecType) -> TokenStream {
+        let ty = vec_ty.rust();
+        let arg_names = self
+            .sig
+            .simd_trait_arg_names()
+            .iter()
+            .map(|n| Ident::new(n, Span::call_site()))
+            .collect::<Vec<_>>();
+        let method_ident = generic_op_name(self.method, vec_ty);
+        let sig_inner = match &self.sig {
+            OpSig::Splat => {
+                let arg0 = &arg_names[0];
+                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                quote! { (self, #arg0: #scalar) -> #ty<Self> }
+            }
+            OpSig::LoadInterleaved {
+                block_size,
+                block_count,
+            } => {
+                let arg0 = &arg_names[0];
+                let arg_ty = load_interleaved_arg_ty(*block_size, *block_count, vec_ty);
+                quote! { (self, #arg0: #arg_ty) -> #ty<Self> }
+            }
+            OpSig::StoreInterleaved {
+                block_size,
+                block_count,
+            } => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let arg_ty = store_interleaved_arg_ty(*block_size, *block_count, vec_ty);
+                quote! { (self, #arg0: #ty<Self>, #arg1: #arg_ty) -> () }
+            }
+            OpSig::Compare => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let result = vec_ty.mask_ty().rust();
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
+            }
+            OpSig::Split { half_ty } => {
+                let arg0 = &arg_names[0];
+                let result = half_ty.rust();
+                quote! { (self, #arg0: #ty<Self>) -> (#result<Self>, #result<Self>) }
+            }
+            OpSig::Combine { combined_ty } => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let result = combined_ty.rust();
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
+            }
+            OpSig::Unary => {
+                let arg0 = &arg_names[0];
+                quote! { (self, #arg0: #ty<Self>) -> #ty<Self> }
+            }
+            OpSig::Binary | OpSig::Zip { .. } | OpSig::Unzip { .. } => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
+            }
+            OpSig::Cvt {
+                target_ty,
+                scalar_bits,
+                ..
+            } => {
+                let arg0 = &arg_names[0];
+                let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
+                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
+            }
+            OpSig::Reinterpret {
+                target_ty,
+                scalar_bits,
+            } => {
+                let arg0 = &arg_names[0];
+                let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
+                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
+            }
+            OpSig::WidenNarrow { target_ty } => {
+                let arg0 = &arg_names[0];
+                let result = target_ty.rust();
+                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
+            }
+            OpSig::MaskReduce { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { (self, #arg0: #ty<Self>) -> bool }
+            }
+            OpSig::Shift => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (self, #arg0: #ty<Self>, #arg1: u32) -> #ty<Self> }
+            }
+            OpSig::Ternary => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let arg2 = &arg_names[2];
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
+            }
+            OpSig::Select => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let arg2 = &arg_names[2];
+                let mask_ty = vec_ty.mask_ty().rust();
+                quote! { (self, #arg0: #mask_ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
+            }
+            OpSig::FromArray { kind } => {
+                let arg0 = &arg_names[0];
+                let ref_tok = kind.token();
+                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let array_ty = quote! { [#rust_scalar; #len] };
+                quote! { (self, #arg0: #ref_tok #array_ty) -> #ty<Self> }
+            }
+            OpSig::AsArray { kind } => {
+                let arg0 = &arg_names[0];
+                let ref_tok = kind.token();
+                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let array_ty = quote! { [#rust_scalar; #len] };
+                quote! { (self, #arg0: #ref_tok #ty<Self>) -> #ref_tok #array_ty }
+            }
+            OpSig::StoreArray => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let array_ty = quote! { [#rust_scalar; #len] };
+                quote! { (self, #arg0: #ty<Self>, #arg1: &mut #array_ty) -> () }
+            }
+            OpSig::FromBytes => {
+                let arg0 = &arg_names[0];
+                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+                quote! { (self, #arg0: #bytes_ty<Self>) -> #ty<Self> }
+            }
+            OpSig::ToBytes => {
+                let arg0 = &arg_names[0];
+                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+                quote! { (self, #arg0: #ty<Self>) -> #bytes_ty<Self> }
+            }
+        };
+
+        quote! {
+            fn #method_ident #sig_inner
+        }
+    }
+
+    pub(crate) fn vec_trait_method_sig(&self) -> Option<TokenStream> {
+        let arg_names = self
+            .sig
+            .vec_trait_arg_names()
+            .iter()
+            .map(|n| Ident::new(n, Span::call_site()))
+            .collect::<Vec<_>>();
+        let method_ident = Ident::new(self.method, Span::call_site());
+        let sig_inner = match &self.sig {
+            OpSig::Splat
+            | OpSig::LoadInterleaved { .. }
+            | OpSig::StoreInterleaved { .. }
+            | OpSig::StoreArray => {
+                return None;
+            }
+            OpSig::Unary
+            | OpSig::Cvt { .. }
+            | OpSig::Reinterpret { .. }
+            | OpSig::WidenNarrow { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { (#arg0) -> Self }
+            }
+            OpSig::MaskReduce { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { (#arg0) -> bool }
+            }
+            OpSig::Binary | OpSig::Zip { .. } | OpSig::Unzip { .. } => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
+            }
+            OpSig::Compare => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> Self::Mask }
+            }
+            OpSig::Shift => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (#arg0, #arg1: u32) -> Self }
+            }
+            OpSig::Ternary => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let arg2 = &arg_names[2];
+                quote! { (#arg0, #arg1: impl SimdInto<Self, S>, #arg2: impl SimdInto<Self, S>) -> Self }
+            }
+            // select is currently done by trait, but maybe we'll implement for
+            // masks.
+            OpSig::Select => return None,
+            // These signatures involve types not in the Simd trait
+            OpSig::Split { .. }
+            | OpSig::Combine { .. }
+            | OpSig::FromArray { .. }
+            | OpSig::AsArray { .. }
+            | OpSig::FromBytes
+            | OpSig::ToBytes => return None,
+        };
+        Some(quote! { fn #method_ident #sig_inner })
+    }
+
+    pub(crate) fn format_docstring(&self, flavor: TyFlavor) -> String {
+        let arg_names = match flavor {
+            TyFlavor::SimdTrait => self.sig.simd_trait_arg_names(),
+            TyFlavor::VecImpl => self.sig.vec_trait_arg_names(),
+        };
+
+        let interpolate_var_into = |dest: &mut String, template_var: &str| {
+            if let Some(arg_num) = template_var.strip_prefix("arg") {
+                let arg_num: usize = arg_num
+                    .parse()
+                    .with_context(|| format!("Invalid arg number: {arg_num:?}"))?;
+                let arg_name = *arg_names.get(arg_num).with_context(|| {
+                    format!("Arg number {arg_num} out of range (args are {arg_names:?})")
+                })?;
+                dest.write_str(arg_name)?;
+                Ok(())
+            } else {
+                Err(anyhow!("Unknown template variable: {template_var:?}"))
+            }
+        };
+
+        let docstring = self.doc;
+        let mut remaining = self.doc;
+        let mut dest = String::new();
+        loop {
+            // Go until we reach the next opening brace. If there is none, push the rest of the string; we're done,
+            let Some((left, right)) = remaining.split_once('{') else {
+                dest.push_str(remaining);
+                break;
+            };
+
+            dest.push_str(left);
+
+            let Some((template_var, rest)) = right.split_once('}') else {
+                panic!("Unmatched closing brace: {docstring:?}");
+            };
+            if let Err(e) = interpolate_var_into(&mut dest, template_var) {
+                panic!("{e}\nIn docstring: {docstring:?}");
+            }
+
+            remaining = rest;
+        }
+
+        dest
+    }
 }
 
-const FLOAT_OPS: &[Op] = &[
+const BASE_OPS: &[Op] = &[
     Op::new(
         "splat",
         OpKind::BaseTraitMethod,
         OpSig::Splat,
         "Create a SIMD vector with all elements set to the given value.",
     ),
+    Op::new(
+        "load_array",
+        OpKind::AssociatedOnly,
+        OpSig::FromArray {
+            kind: RefKind::Value,
+        },
+        "Create a SIMD vector from an array of the same length.",
+    ),
+    Op::new(
+        "load_array_ref",
+        OpKind::AssociatedOnly,
+        OpSig::FromArray { kind: RefKind::Ref },
+        "Create a SIMD vector from an array of the same length.",
+    ),
+    Op::new(
+        "as_array",
+        OpKind::AssociatedOnly,
+        OpSig::AsArray {
+            kind: RefKind::Value,
+        },
+        "Convert a SIMD vector to an array.",
+    ),
+    Op::new(
+        "as_array_ref",
+        OpKind::AssociatedOnly,
+        OpSig::AsArray { kind: RefKind::Ref },
+        "Project a reference to a SIMD vector to a reference to the equivalent array.",
+    ),
+    Op::new(
+        "as_array_mut",
+        OpKind::AssociatedOnly,
+        OpSig::AsArray { kind: RefKind::Mut },
+        "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array.",
+    ),
+    Op::new(
+        "store_array",
+        OpKind::AssociatedOnly,
+        OpSig::StoreArray,
+        "Store a SIMD vector into an array of the same length.",
+    ),
+    Op::new(
+        "cvt_from_bytes",
+        OpKind::OwnTrait,
+        OpSig::FromBytes,
+        "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length.",
+    ),
+    Op::new(
+        "cvt_to_bytes",
+        OpKind::OwnTrait,
+        OpSig::ToBytes,
+        "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length.",
+    ),
+];
+
+const FLOAT_OPS: &[Op] = &[
     Op::new(
         "abs",
         OpKind::VecTraitMethod,
@@ -341,12 +680,6 @@ const FLOAT_OPS: &[Op] = &[
 
 const INT_OPS: &[Op] = &[
     Op::new(
-        "splat",
-        OpKind::BaseTraitMethod,
-        OpSig::Splat,
-        "Create a SIMD vector with all elements set to the given value.",
-    ),
-    Op::new(
         "add",
         OpKind::Overloaded(CoreOpTrait::Add),
         OpSig::Binary,
@@ -514,12 +847,6 @@ macro_rules! mask_reduce_blurb {
 
 const MASK_OPS: &[Op] = &[
     Op::new(
-        "splat",
-        OpKind::BaseTraitMethod,
-        OpSig::Splat,
-        "Create a SIMD mask with all elements set to the given value.",
-    ),
-    Op::new(
         "and",
         OpKind::Overloaded(CoreOpTrait::BitAnd),
         OpSig::Binary,
@@ -615,7 +942,9 @@ pub(crate) fn vec_trait_ops_for(scalar: ScalarType) -> Vec<Op> {
         ScalarType::Int | ScalarType::Unsigned => INT_OPS,
         ScalarType::Mask => MASK_OPS,
     };
-    base.iter()
+    BASE_OPS
+        .iter()
+        .chain(base.iter())
         .filter(|op| matches!(op.kind, OpKind::VecTraitMethod))
         .copied()
         .collect()
@@ -628,23 +957,89 @@ const NEGATE_INT: Op = Op::new(
     "Negate each element of the vector, wrapping on overflow.",
 );
 
-pub(crate) fn overloaded_ops_for(scalar: ScalarType) -> Vec<(CoreOpTrait, OpSig, &'static str)> {
+pub(crate) fn overloaded_ops_for(scalar: ScalarType) -> Vec<Op> {
     let base = match scalar {
         ScalarType::Float => FLOAT_OPS,
         ScalarType::Int | ScalarType::Unsigned => INT_OPS,
         ScalarType::Mask => MASK_OPS,
     };
     // We prepend the negate operation only for signed integer types.
-    (scalar == ScalarType::Int)
-        .then_some(NEGATE_INT)
-        .into_iter()
+    BASE_OPS
+        .iter()
+        .copied()
+        .chain((scalar == ScalarType::Int).then_some(NEGATE_INT))
         .chain(base.iter().copied())
-        .filter_map(|op| match op.kind {
-            OpKind::Overloaded(core_op) => Some((core_op, op.sig, op.doc)),
-            _ => None,
-        })
         .collect()
 }
+
+pub(crate) const F32_TO_U32: Op = Op::new(
+    "cvt_u32",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Unsigned,
+        scalar_bits: 32,
+        precise: false,
+    },
+    "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
+    Out-of-range values or NaN will produce implementation-defined results.\n\n\
+    On x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\n\
+    If you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards.",
+);
+pub(crate) const F32_TO_U32_PRECISE: Op = Op::new(
+    "cvt_u32_precise",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Unsigned,
+        scalar_bits: 32,
+        precise: true,
+    },
+    "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
+    Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
+);
+pub(crate) const F32_TO_I32: Op = Op::new(
+    "cvt_i32",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Int,
+        scalar_bits: 32,
+        precise: false,
+    },
+    "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
+    Out-of-range values or NaN will produce implementation-defined results.",
+);
+pub(crate) const F32_TO_I32_PRECISE: Op = Op::new(
+    "cvt_i32_precise",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Int,
+        scalar_bits: 32,
+        precise: true,
+    },
+    "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
+    Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
+);
+pub(crate) const U32_TO_F32: Op = Op::new(
+    "cvt_f32",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Float,
+        scalar_bits: 32,
+        precise: false,
+    },
+    "Convert each unsigned 32-bit integer element to a floating-point value.\n\n\
+    Values that cannot be exactly represented are rounded to the nearest representable value.",
+);
+pub(crate) const I32_TO_F32: Op = Op::new(
+    "cvt_f32",
+    OpKind::OwnTrait,
+    OpSig::Cvt {
+        target_ty: ScalarType::Float,
+        scalar_bits: 32,
+        precise: false,
+    },
+    "Convert each signed 32-bit integer element to a floating-point value.\n\n\
+    Values that cannot be exactly represented are rounded to the nearest representable value.",
+);
 
 pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
     let base = match ty.scalar {
@@ -652,7 +1047,7 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ScalarType::Int | ScalarType::Unsigned => INT_OPS,
         ScalarType::Mask => MASK_OPS,
     };
-    let mut ops = base.to_vec();
+    let mut ops: Vec<Op> = BASE_OPS.iter().chain(base.iter()).copied().collect();
 
     if let Some(combined_ty) = ty.combine_operand() {
         ops.push(Op::new(
@@ -783,47 +1178,13 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
 
     match (ty.scalar, ty.scalar_bits) {
         (ScalarType::Float, 32) => {
-            ops.push(Op::new(
-                "cvt_u32",
-                OpKind::OwnTrait,
-                OpSig::Cvt {
-                    target_ty: ScalarType::Unsigned,
-                    scalar_bits: 32,
-                },
-                "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
-                Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
-            ));
-            ops.push(Op::new(
-                "cvt_i32",
-                OpKind::OwnTrait,
-                OpSig::Cvt {
-                    target_ty: ScalarType::Int,
-                    scalar_bits: 32,
-                },
-                "Convert each floating-point element to a signed 32-bit integer, truncating towards zero.\n\n\
-                Out-of-range values are saturated to the closest in-range value. NaN becomes 0.",
-            ));
+            ops.push(F32_TO_U32);
+            ops.push(F32_TO_U32_PRECISE);
+            ops.push(F32_TO_I32);
+            ops.push(F32_TO_I32_PRECISE);
         }
-        (ScalarType::Unsigned, 32) => ops.push(Op::new(
-            "cvt_f32",
-            OpKind::OwnTrait,
-            OpSig::Cvt {
-                target_ty: ScalarType::Float,
-                scalar_bits: 32,
-            },
-            "Convert each unsigned 32-bit integer element to a floating-point value.\n\n\
-            Values that cannot be exactly represented are rounded to the nearest representable value.",
-        )),
-        (ScalarType::Int, 32) => ops.push(Op::new(
-            "cvt_f32",
-            OpKind::OwnTrait,
-            OpSig::Cvt {
-                target_ty: ScalarType::Float,
-                scalar_bits: 32,
-            },
-            "Convert each signed 32-bit integer element to a floating-point value.\n\n\
-            Values that cannot be exactly represented are rounded to the nearest representable value.",
-        )),
+        (ScalarType::Unsigned, 32) => ops.push(U32_TO_F32),
+        (ScalarType::Int, 32) => ops.push(I32_TO_F32),
         _ => (),
     }
 
@@ -919,8 +1280,8 @@ impl CoreOpTrait {
             _ => vec![
                 quote! { core::ops::#trait_name<Output = Self> },
                 quote! { core::ops::#trait_name_assign },
-                quote! { core::ops::#trait_name<Element, Output = Self> },
-                quote! { core::ops::#trait_name_assign<Element> },
+                quote! { core::ops::#trait_name<Self::Element, Output = Self> },
+                quote! { core::ops::#trait_name_assign<Self::Element> },
             ]
             .into_iter(),
         }
@@ -928,15 +1289,50 @@ impl CoreOpTrait {
 }
 
 impl OpSig {
+    /// Determine whether a given operation should defer to the generic split/combine implementation, for a given vector
+    /// type and the maximum native vector width.
+    pub(crate) fn should_use_generic_op(&self, vec_ty: &VecType, native_width: usize) -> bool {
+        // For widen/narrow operations, we care about the *target* type's width.
+        if let Self::WidenNarrow { target_ty } = self
+            && target_ty.n_bits() <= native_width
+        {
+            return false;
+        }
+
+        // These operations need to work on the full vector type.
+        if matches!(
+            self,
+            Self::Split { .. }
+                | Self::Combine { .. }
+                | Self::LoadInterleaved { .. }
+                | Self::StoreInterleaved { .. }
+                | Self::FromArray { .. }
+                | Self::AsArray { .. }
+                | Self::StoreArray
+        ) {
+            return false;
+        }
+
+        // Otherwise, defer to split/combine if this is a wider operation than natively supported.
+        if vec_ty.n_bits() <= native_width {
+            return false;
+        }
+
+        true
+    }
+
     fn simd_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
-            Self::Splat => &["val"],
+            Self::Splat | Self::FromArray { .. } => &["val"],
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
-            | Self::MaskReduce { .. } => &["a"],
+            | Self::MaskReduce { .. }
+            | Self::AsArray { .. }
+            | Self::FromBytes
+            | Self::ToBytes => &["a"],
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -945,17 +1341,24 @@ impl OpSig {
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
-            Self::StoreInterleaved { .. } => &["a", "dest"],
+            Self::StoreInterleaved { .. } | Self::StoreArray => &["a", "dest"],
         }
     }
     fn vec_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
-            Self::Splat | Self::LoadInterleaved { .. } | Self::StoreInterleaved { .. } => &[],
+            Self::Splat
+            | Self::LoadInterleaved { .. }
+            | Self::StoreInterleaved { .. }
+            | Self::FromArray { .. }
+            | Self::FromBytes { .. }
+            | Self::StoreArray => &[],
             Self::Unary
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
-            | Self::MaskReduce { .. } => &["self"],
+            | Self::MaskReduce { .. }
+            | Self::AsArray { .. }
+            | Self::ToBytes => &["self"],
             Self::Binary | Self::Compare | Self::Zip { .. } | Self::Unzip { .. } => {
                 &["self", "rhs"]
             }
@@ -963,165 +1366,6 @@ impl OpSig {
             Self::Ternary => &["self", "op1", "op2"],
             Self::Select | Self::Split { .. } | Self::Combine { .. } => &[],
         }
-    }
-
-    pub(crate) fn simd_trait_method_sig(&self, vec_ty: &VecType, method_name: &str) -> TokenStream {
-        let ty = vec_ty.rust();
-        let arg_names = self
-            .simd_trait_arg_names()
-            .iter()
-            .map(|n| Ident::new(n, Span::call_site()))
-            .collect::<Vec<_>>();
-        let method_ident = Ident::new(method_name, Span::call_site());
-        let sig_inner = match self {
-            Self::Splat => {
-                let arg0 = &arg_names[0];
-                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                quote! { (self, #arg0: #scalar) -> #ty<Self> }
-            }
-            Self::LoadInterleaved {
-                block_size,
-                block_count,
-            } => {
-                let arg0 = &arg_names[0];
-                let arg_ty = load_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                quote! { (self, #arg0: #arg_ty) -> #ty<Self> }
-            }
-            Self::StoreInterleaved {
-                block_size,
-                block_count,
-            } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let arg_ty = store_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                quote! { (self, #arg0: #ty<Self>, #arg1: #arg_ty) -> () }
-            }
-            Self::Compare => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let result = vec_ty.mask_ty().rust();
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
-            }
-            Self::Split { half_ty } => {
-                let arg0 = &arg_names[0];
-                let result = half_ty.rust();
-                quote! { (self, #arg0: #ty<Self>) -> (#result<Self>, #result<Self>) }
-            }
-            Self::Combine { combined_ty } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let result = combined_ty.rust();
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
-            }
-            Self::Unary => {
-                let arg0 = &arg_names[0];
-                quote! { (self, #arg0: #ty<Self>) -> #ty<Self> }
-            }
-            Self::Binary | Self::Zip { .. } | Self::Unzip { .. } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
-            }
-            Self::Cvt {
-                target_ty,
-                scalar_bits,
-            } => {
-                let arg0 = &arg_names[0];
-                let result = VecType::new(*target_ty, *scalar_bits, vec_ty.len).rust();
-                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
-            }
-            Self::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => {
-                let arg0 = &arg_names[0];
-                let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
-                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
-            }
-            Self::WidenNarrow { target_ty } => {
-                let arg0 = &arg_names[0];
-                let result = target_ty.rust();
-                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
-            }
-            Self::MaskReduce { .. } => {
-                let arg0 = &arg_names[0];
-                quote! { (self, #arg0: #ty<Self>) -> bool }
-            }
-            Self::Shift => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (self, #arg0: #ty<Self>, #arg1: u32) -> #ty<Self> }
-            }
-            Self::Ternary => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let arg2 = &arg_names[2];
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
-            }
-            Self::Select => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let arg2 = &arg_names[2];
-                let mask_ty = vec_ty.mask_ty().rust();
-                quote! { (self, #arg0: #mask_ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
-            }
-        };
-
-        quote! {
-            fn #method_ident #sig_inner
-        }
-    }
-
-    pub(crate) fn vec_trait_method_sig(&self, method_name: &str) -> Option<TokenStream> {
-        let arg_names = self
-            .vec_trait_arg_names()
-            .iter()
-            .map(|n| Ident::new(n, Span::call_site()))
-            .collect::<Vec<_>>();
-        let method_ident = Ident::new(method_name, Span::call_site());
-        let sig_inner = match self {
-            Self::Splat | Self::LoadInterleaved { .. } | Self::StoreInterleaved { .. } => {
-                return None;
-            }
-            Self::Unary
-            | Self::Cvt { .. }
-            | Self::Reinterpret { .. }
-            | Self::WidenNarrow { .. } => {
-                let arg0 = &arg_names[0];
-                quote! { (#arg0) -> Self }
-            }
-            Self::MaskReduce { .. } => {
-                let arg0 = &arg_names[0];
-                quote! { (#arg0) -> bool }
-            }
-            Self::Binary | Self::Zip { .. } | Self::Unzip { .. } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
-            }
-            Self::Compare => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> Self::Mask }
-            }
-            Self::Shift => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (#arg0, #arg1: u32) -> Self }
-            }
-            Self::Ternary => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let arg2 = &arg_names[2];
-                quote! { (#arg0, #arg1: impl SimdInto<Self, S>, #arg2: impl SimdInto<Self, S>) -> Self }
-            }
-            // select is currently done by trait, but maybe we'll implement for
-            // masks.
-            Self::Select => return None,
-            // These signatures involve types not in the Simd trait
-            Self::Split { .. } | Self::Combine { .. } => return None,
-        };
-        Some(quote! { fn #method_ident #sig_inner })
     }
 
     pub(crate) fn forwarding_call_args(&self) -> Option<TokenStream> {
@@ -1158,54 +1402,14 @@ impl OpSig {
             | Self::WidenNarrow { .. }
             | Self::Shift
             | Self::LoadInterleaved { .. }
-            | Self::StoreInterleaved { .. } => return None,
+            | Self::StoreInterleaved { .. }
+            | Self::FromArray { .. }
+            | Self::AsArray { .. }
+            | Self::StoreArray
+            | Self::FromBytes
+            | Self::ToBytes => return None,
         };
         Some(args)
-    }
-
-    pub(crate) fn format_docstring(&self, docstring: &str, flavor: TyFlavor) -> String {
-        let arg_names = match flavor {
-            TyFlavor::SimdTrait => self.simd_trait_arg_names(),
-            TyFlavor::VecImpl => self.vec_trait_arg_names(),
-        };
-
-        let interpolate_var_into = |dest: &mut String, template_var: &str| {
-            if let Some(arg_num) = template_var.strip_prefix("arg") {
-                let arg_num: usize = arg_num
-                    .parse()
-                    .with_context(|| format!("Invalid arg number: {arg_num:?}"))?;
-                let arg_name = *arg_names.get(arg_num).with_context(|| {
-                    format!("Arg number {arg_num} out of range (args are {arg_names:?})")
-                })?;
-                dest.write_str(arg_name)?;
-                Ok(())
-            } else {
-                Err(anyhow!("Unknown template variable: {template_var:?}"))
-            }
-        };
-
-        let mut remaining = docstring;
-        let mut dest = String::new();
-        loop {
-            // Go until we reach the next opening brace. If there is none, push the rest of the string; we're done,
-            let Some((left, right)) = remaining.split_once('{') else {
-                dest.push_str(remaining);
-                break;
-            };
-
-            dest.push_str(left);
-
-            let Some((template_var, rest)) = right.split_once('}') else {
-                panic!("Unmatched closing brace: {docstring:?}");
-            };
-            if let Err(e) = interpolate_var_into(&mut dest, template_var) {
-                panic!("{e}\nIn docstring: {docstring:?}");
-            }
-
-            remaining = rest;
-        }
-
-        dest
     }
 }
 

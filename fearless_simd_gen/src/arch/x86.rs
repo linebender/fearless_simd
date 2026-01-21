@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::types::{ScalarType, VecType};
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 
 pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
@@ -26,18 +26,6 @@ pub(crate) fn translate_op(op: &str) -> Option<&'static str> {
         "select" => "blendv",
         _ => return None,
     })
-}
-
-pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
-    let suffix = match (ty.scalar, ty.scalar_bits) {
-        (ScalarType::Float, 32) => "",
-        (ScalarType::Float, 64) => "d",
-        (ScalarType::Float, _) => unimplemented!(),
-        (ScalarType::Unsigned | ScalarType::Int | ScalarType::Mask, _) => "i",
-    };
-    let name = format!("__m{}{}", ty.scalar_bits * ty.len, suffix);
-    let ident = Ident::new(&name, Span::call_site());
-    quote! { #ident }
 }
 
 pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {

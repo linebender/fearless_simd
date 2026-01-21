@@ -42,23 +42,6 @@ fn translate_op(op: &str) -> Option<&'static str> {
     })
 }
 
-pub(crate) fn arch_ty(ty: &VecType) -> TokenStream {
-    let scalar = match ty.scalar {
-        ScalarType::Float => "float",
-        ScalarType::Unsigned => "uint",
-        ScalarType::Int | ScalarType::Mask => "int",
-    };
-    let name = if ty.n_bits() == 256 {
-        format!("{}{}x{}x2_t", scalar, ty.scalar_bits, ty.len / 2)
-    } else if ty.n_bits() == 512 {
-        format!("{}{}x{}x4_t", scalar, ty.scalar_bits, ty.len / 4)
-    } else {
-        format!("{}{}x{}_t", scalar, ty.scalar_bits, ty.len)
-    };
-    let ident = Ident::new(&name, Span::call_site());
-    quote! { #ident }
-}
-
 // expects args and return value in arch dialect
 pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
     // There is no logical NOT for 64-bit, so we need this workaround.
@@ -103,8 +86,8 @@ fn neon_array_type(ty: &VecType) -> (&'static str, &'static str, usize) {
 pub(crate) fn opt_q(ty: &VecType) -> &'static str {
     match ty.n_bits() {
         64 => "",
-        128 => "q",
-        _ => panic!("unsupported simd width"),
+        128 | 256 | 512 => "q",
+        other => panic!("unsupported simd width: {other}"),
     }
 }
 
@@ -114,6 +97,28 @@ pub(crate) fn simple_intrinsic(name: &str, ty: &VecType) -> Ident {
         &format!("{name}{opt_q}_{scalar_c}{size}"),
         Span::call_site(),
     )
+}
+
+fn memory_intrinsic(op: &str, ty: &VecType) -> Ident {
+    let (opt_q, scalar_c, size) = neon_array_type(ty);
+    let num_blocks = ty.n_bits() / 128;
+    let opt_count = if num_blocks > 1 {
+        format!("_x{num_blocks}")
+    } else {
+        String::new()
+    };
+    Ident::new(
+        &format!("{op}1{opt_q}_{scalar_c}{size}{opt_count}"),
+        Span::call_site(),
+    )
+}
+
+pub(crate) fn load_intrinsic(ty: &VecType) -> Ident {
+    memory_intrinsic("vld", ty)
+}
+
+pub(crate) fn store_intrinsic(ty: &VecType) -> Ident {
+    memory_intrinsic("vst", ty)
 }
 
 pub(crate) fn split_intrinsic(name: &str, name2: &str, ty: &VecType) -> Ident {

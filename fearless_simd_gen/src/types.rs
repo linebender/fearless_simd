@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use proc_macro2::{Ident, Literal, Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) enum ScalarType {
@@ -36,6 +36,16 @@ impl ScalarType {
         let ident = Ident::new(&self.rust_name(scalar_bits), Span::call_site());
         quote! { #ident }
     }
+
+    pub(crate) fn native_width_name(&self, scalar_bits: usize) -> Ident {
+        let prefix = match self {
+            Self::Float => "f",
+            Self::Unsigned => "u",
+            Self::Int => "i",
+            Self::Mask => "mask",
+        };
+        format_ident!("{}{}s", prefix, scalar_bits)
+    }
 }
 
 impl VecType {
@@ -68,6 +78,49 @@ impl VecType {
         quote! { #ident }
     }
 
+    /// Returns the name of the `Aligned{128/256/512}` wrapper for this vector type, used to wrap native vector types or
+    /// arrays of them.
+    pub(crate) fn aligned_wrapper(&self) -> TokenStream {
+        let aligned = format_ident!("Aligned{}", self.n_bits());
+        quote! { crate::support::#aligned }
+    }
+
+    /// Returns the native vector type wrapped by the `Aligned` wrapper. This could be a single native vector type or an
+    /// array of them.
+    pub(crate) fn wrapped_native_ty(
+        &self,
+        arch_ty: impl Fn(&Self) -> TokenStream,
+        max_block_size: usize,
+    ) -> TokenStream {
+        let block_size = self.n_bits().min(max_block_size);
+        let block_count = self.n_bits() / block_size;
+        let native_block_ty =
+            Self::new(self.scalar, self.scalar_bits, block_size / self.scalar_bits);
+        let native_block_ty_ident = arch_ty(&native_block_ty);
+        if self.n_bits() == block_size {
+            quote! { #native_block_ty_ident }
+        } else {
+            quote! { [#native_block_ty_ident; #block_count] }
+        }
+    }
+
+    /// Returns the full type name for this vector's `Aligned` wrapper, including the type parameter.
+    pub(crate) fn aligned_wrapper_ty(
+        &self,
+        arch_ty: impl Fn(&Self) -> TokenStream,
+        max_block_size: usize,
+    ) -> TokenStream {
+        let newtype = self.aligned_wrapper();
+        let native_ty = self.wrapped_native_ty(arch_ty, max_block_size);
+        quote! { #newtype<#native_ty> }
+    }
+
+    /// Returns a type of the same bit width and element width, but a different element type.
+    pub(crate) fn cast(&self, dst_scalar: ScalarType) -> Self {
+        Self::new(dst_scalar, self.scalar_bits, self.len)
+    }
+
+    /// Returns a type of the same bit width, but a different element type and element width.
     pub(crate) fn reinterpret(&self, dst_scalar: ScalarType, dst_scalar_bits: usize) -> Self {
         Self::new(dst_scalar, dst_scalar_bits, self.n_bits() / dst_scalar_bits)
     }
@@ -159,7 +212,7 @@ impl VecType {
                     "
     # use fearless_simd::{block_name};
     // From `Self::Block`:
-    let f = {rust_name}::block_splat({block_name}::simd_from([{block_example}], simd));"
+    let f = {rust_name}::block_splat({block_name}::simd_from(simd, [{block_example}]));"
                 )
             } else {
                 String::new()
@@ -173,13 +226,13 @@ impl VecType {
 fn construct_simd<S: Simd>(simd: S) {{
     // From a single scalar value:
     let a = {rust_name}::splat(simd, {splat_example});
-    let b = {rust_name}::simd_from({splat_example}, simd);
+    let b = {rust_name}::simd_from(simd, {splat_example});
 
     // From a slice:
     let c = {rust_name}::from_slice(simd, &[{many_example}]);
 
     // From an array:
-    let d = {rust_name}::simd_from([{many_example}], simd);
+    let d = {rust_name}::simd_from(simd, [{many_example}]);
 
     // From an element-wise function:
     let e = {rust_name}::from_fn(simd, |i| i as {scalar_name});\
