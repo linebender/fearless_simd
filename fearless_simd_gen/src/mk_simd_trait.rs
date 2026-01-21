@@ -165,11 +165,11 @@ fn mk_simd_base() -> TokenStream {
             fn as_mut_slice(&mut self) -> &mut [Self::Element];
             /// Create a SIMD vector from a slice.
             ///
-            /// The slice must be the proper width.
+            /// The slice must be exactly the size of the SIMD vector.
             fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
             /// Store a SIMD vector into a slice.
             ///
-            /// The slice must be the proper width.
+            /// The slice must be exactly the size of the SIMD vector.
             fn store_slice(&self, slice: &mut [Self::Element]);
             /// Create a SIMD vector with all elements set to the given value.
             fn splat(simd: S, val: Self::Element) -> Self;
