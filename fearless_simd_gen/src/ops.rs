@@ -66,6 +66,9 @@ pub(crate) enum OpSig {
     Zip { select_low: bool },
     /// Takes two arguments of a vector type, and returns that same vector type.
     Unzip { select_even: bool },
+    /// Takes two arguments of a vector type, and returns a tuple of two vectors of the same type.
+    /// This is equivalent to calling `zip_low` and `zip_high` and returning both results.
+    Interleave,
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -213,6 +216,11 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
             }
+            OpSig::Interleave => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> (#ty<Self>, #ty<Self>) }
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -328,6 +336,11 @@ impl Op {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
+            }
+            OpSig::Interleave => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> (Self, Self) }
             }
             OpSig::Compare => {
                 let arg0 = &arg_names[0];
@@ -582,6 +595,16 @@ const FLOAT_OPS: &[Op] = &[
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.",
     ),
     Op::new(
+        "interleave",
+        OpKind::VecTraitMethod,
+        OpSig::Interleave,
+        "Interleave two vectors.\n\n\
+        The resulting vectors contain elements taken alternately from `{arg0}` and `{arg1}`, \
+        first filling the first result, and then the second.\n\n\
+        The reverse of this operation is `deinterleave`.\n\n\
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`.",
+    ),
+    Op::new(
         "max",
         OpKind::VecTraitMethod,
         OpSig::Binary,
@@ -806,6 +829,16 @@ const INT_OPS: &[Op] = &[
         OpSig::Unzip { select_even: false },
         "Extract odd-indexed elements from two vectors.\n\n\
         For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.",
+    ),
+    Op::new(
+        "interleave",
+        OpKind::VecTraitMethod,
+        OpSig::Interleave,
+        "Interleave two vectors.\n\n\
+        The resulting vectors contain elements taken alternately from `{arg0}` and `{arg1}`, \
+        first filling the first result, and then the second.\n\n\
+        The reverse of this operation is `deinterleave`.\n\n\
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`.",
     ),
     Op::new(
         "select",
@@ -1330,7 +1363,8 @@ impl OpSig {
             | Self::Compare
             | Self::Combine { .. }
             | Self::Zip { .. }
-            | Self::Unzip { .. } => &["a", "b"],
+            | Self::Unzip { .. }
+            | Self::Interleave => &["a", "b"],
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
@@ -1352,7 +1386,7 @@ impl OpSig {
             | Self::MaskReduce { .. }
             | Self::AsArray { .. }
             | Self::ToBytes => &["self"],
-            Self::Binary | Self::Compare | Self::Zip { .. } | Self::Unzip { .. } => {
+            Self::Binary | Self::Compare | Self::Zip { .. } | Self::Unzip { .. } | Self::Interleave => {
                 &["self", "rhs"]
             }
             Self::Shift => &["self", "shift"],
@@ -1376,7 +1410,8 @@ impl OpSig {
             | Self::Compare
             | Self::Combine { .. }
             | Self::Zip { .. }
-            | Self::Unzip { .. } => {
+            | Self::Unzip { .. }
+            | Self::Interleave => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { #arg0, #arg1.simd_into(self.simd) }

@@ -1773,6 +1773,114 @@ fn unzip_high_f64x4<S: Simd>(simd: S) {
     assert_eq!(*simd.unzip_high_f64x4(a, b), [2.0, 4.0, 6.0, 8.0]);
 }
 
+// Interleave tests
+
+#[simd_test]
+fn interleave_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
+    let b = f32x4::from_slice(simd, &[4.0, 5.0, 6.0, 7.0]);
+    let (x, y) = simd.interleave_f32x4(a, b);
+    assert_eq!(*x, [0.0, 4.0, 1.0, 5.0]);
+    assert_eq!(*y, [2.0, 6.0, 3.0, 7.0]);
+}
+
+#[simd_test]
+fn interleave_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    let b = f32x8::from_slice(simd, &[8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]);
+    let (x, y) = simd.interleave_f32x8(a, b);
+    assert_eq!(*x, [0.0, 8.0, 1.0, 9.0, 2.0, 10.0, 3.0, 11.0]);
+    assert_eq!(*y, [4.0, 12.0, 5.0, 13.0, 6.0, 14.0, 7.0, 15.0]);
+}
+
+#[simd_test]
+fn interleave_i32x4<S: Simd>(simd: S) {
+    let a = i32x4::from_slice(simd, &[0, 1, 2, 3]);
+    let b = i32x4::from_slice(simd, &[4, 5, 6, 7]);
+    let (x, y) = simd.interleave_i32x4(a, b);
+    assert_eq!(*x, [0, 4, 1, 5]);
+    assert_eq!(*y, [2, 6, 3, 7]);
+}
+
+#[simd_test]
+fn interleave_i32x8<S: Simd>(simd: S) {
+    let a = i32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    let b = i32x8::from_slice(simd, &[8, 9, 10, 11, 12, 13, 14, 15]);
+    let (x, y) = simd.interleave_i32x8(a, b);
+    assert_eq!(*x, [0, 8, 1, 9, 2, 10, 3, 11]);
+    assert_eq!(*y, [4, 12, 5, 13, 6, 14, 7, 15]);
+}
+
+#[simd_test]
+fn interleave_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0, 1, 2, 3]);
+    let b = u32x4::from_slice(simd, &[4, 5, 6, 7]);
+    let (x, y) = simd.interleave_u32x4(a, b);
+    assert_eq!(*x, [0, 4, 1, 5]);
+    assert_eq!(*y, [2, 6, 3, 7]);
+}
+
+#[simd_test]
+fn interleave_u32x8<S: Simd>(simd: S) {
+    let a = u32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    let b = u32x8::from_slice(simd, &[8, 9, 10, 11, 12, 13, 14, 15]);
+    let (x, y) = simd.interleave_u32x8(a, b);
+    assert_eq!(*x, [0, 8, 1, 9, 2, 10, 3, 11]);
+    assert_eq!(*y, [4, 12, 5, 13, 6, 14, 7, 15]);
+}
+
+#[simd_test]
+fn interleave_u8x16<S: Simd>(simd: S) {
+    let a = u8x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    let b = u8x16::from_slice(
+        simd,
+        &[16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+    );
+    let (x, y) = simd.interleave_u8x16(a, b);
+    assert_eq!(*x, [0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23]);
+    assert_eq!(
+        *y,
+        [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31]
+    );
+}
+
+#[simd_test]
+fn interleave_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[1.0, 2.0]);
+    let b = f64x2::from_slice(simd, &[3.0, 4.0]);
+    let (x, y) = simd.interleave_f64x2(a, b);
+    assert_eq!(*x, [1.0, 3.0]);
+    assert_eq!(*y, [2.0, 4.0]);
+}
+
+#[simd_test]
+fn interleave_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
+    let b = f64x4::from_slice(simd, &[5.0, 6.0, 7.0, 8.0]);
+    let (x, y) = simd.interleave_f64x4(a, b);
+    assert_eq!(*x, [1.0, 5.0, 2.0, 6.0]);
+    assert_eq!(*y, [3.0, 7.0, 4.0, 8.0]);
+}
+
+// Test using trait method syntax (calling on the vector directly)
+#[simd_test]
+fn interleave_trait_method_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
+    let b = f32x4::from_slice(simd, &[4.0, 5.0, 6.0, 7.0]);
+    let (x, y) = a.interleave(b);
+    assert_eq!(*x, [0.0, 4.0, 1.0, 5.0]);
+    assert_eq!(*y, [2.0, 6.0, 3.0, 7.0]);
+}
+
+#[simd_test]
+fn interleave_trait_method_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0, 1, 2, 3]);
+    let b = u32x4::from_slice(simd, &[4, 5, 6, 7]);
+    let (x, y) = a.interleave(b);
+    assert_eq!(*x, [0, 4, 1, 5]);
+    assert_eq!(*y, [2, 6, 3, 7]);
+}
+
 #[simd_test]
 fn shr_i8x16<S: Simd>(simd: S) {
     let a = i8x16::from_slice(

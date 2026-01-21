@@ -226,6 +226,10 @@ impl Simd for Sse4_2 {
         unsafe { _mm_shuffle_ps::<0b11_01_11_01>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
+        (self.zip_low_f32x4(a, b), self.zip_high_f32x4(a, b))
+    }
+    #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         unsafe { _mm_max_ps(a.into(), b.into()).simd_into(self) }
     }
@@ -540,6 +544,10 @@ impl Simd for Sse4_2 {
         }
     }
     #[inline(always)]
+    fn interleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
+        (self.zip_low_i8x16(a, b), self.zip_high_i8x16(a, b))
+    }
+    #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
         unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
@@ -746,6 +754,10 @@ impl Simd for Sse4_2 {
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
+    }
+    #[inline(always)]
+    fn interleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
+        (self.zip_low_u8x16(a, b), self.zip_high_u8x16(a, b))
     }
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
@@ -1026,6 +1038,10 @@ impl Simd for Sse4_2 {
         }
     }
     #[inline(always)]
+    fn interleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
+        (self.zip_low_i16x8(a, b), self.zip_high_i16x8(a, b))
+    }
+    #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
         unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
@@ -1207,6 +1223,10 @@ impl Simd for Sse4_2 {
             let t2 = _mm_shuffle_epi8(b.into(), mask);
             _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
+    }
+    #[inline(always)]
+    fn interleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
+        (self.zip_low_u16x8(a, b), self.zip_high_u16x8(a, b))
     }
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
@@ -1480,6 +1500,10 @@ impl Simd for Sse4_2 {
         }
     }
     #[inline(always)]
+    fn interleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
+        (self.zip_low_i32x4(a, b), self.zip_high_i32x4(a, b))
+    }
+    #[inline(always)]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
         unsafe { _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(self) }
     }
@@ -1663,6 +1687,10 @@ impl Simd for Sse4_2 {
             let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
             _mm_unpackhi_epi64(t1, t2).simd_into(self)
         }
+    }
+    #[inline(always)]
+    fn interleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
+        (self.zip_low_u32x4(a, b), self.zip_high_u32x4(a, b))
     }
     #[inline(always)]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
@@ -1927,6 +1955,10 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         unsafe { _mm_shuffle_pd::<0b11>(a.into(), b.into()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
+        (self.zip_low_f64x2(a, b), self.zip_high_f64x2(a, b))
     }
     #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -2274,6 +2306,19 @@ impl Simd for Sse4_2 {
         self.combine_f32x4(self.unzip_high_f32x4(a0, a1), self.unzip_high_f32x4(b0, b1))
     }
     #[inline(always)]
+    fn interleave_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> (f32x8<Self>, f32x8<Self>) {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        let lo_lo = self.zip_low_f32x4(a0, b0);
+        let lo_hi = self.zip_high_f32x4(a0, b0);
+        let hi_lo = self.zip_low_f32x4(a1, b1);
+        let hi_hi = self.zip_high_f32x4(a1, b1);
+        (
+            self.combine_f32x4(lo_lo, lo_hi),
+            self.combine_f32x4(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
     fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         let (b0, b1) = self.split_f32x8(b);
@@ -2617,6 +2662,19 @@ impl Simd for Sse4_2 {
         self.combine_i8x16(self.unzip_high_i8x16(a0, a1), self.unzip_high_i8x16(b0, b1))
     }
     #[inline(always)]
+    fn interleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>) {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        let lo_lo = self.zip_low_i8x16(a0, b0);
+        let lo_hi = self.zip_high_i8x16(a0, b0);
+        let hi_lo = self.zip_low_i8x16(a1, b1);
+        let hi_hi = self.zip_high_i8x16(a1, b1);
+        (
+            self.combine_i8x16(lo_lo, lo_hi),
+            self.combine_i8x16(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
     fn select_i8x32(self, a: mask8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self> {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_i8x32(b);
@@ -2855,6 +2913,19 @@ impl Simd for Sse4_2 {
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
         self.combine_u8x16(self.unzip_high_u8x16(a0, a1), self.unzip_high_u8x16(b0, b1))
+    }
+    #[inline(always)]
+    fn interleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>) {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        let lo_lo = self.zip_low_u8x16(a0, b0);
+        let lo_hi = self.zip_high_u8x16(a0, b0);
+        let hi_lo = self.zip_low_u8x16(a1, b1);
+        let hi_hi = self.zip_high_u8x16(a1, b1);
+        (
+            self.combine_u8x16(lo_lo, lo_hi),
+            self.combine_u8x16(hi_lo, hi_hi),
+        )
     }
     #[inline(always)]
     fn select_u8x32(self, a: mask8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self> {
@@ -3242,6 +3313,19 @@ impl Simd for Sse4_2 {
         self.combine_i16x8(self.unzip_high_i16x8(a0, a1), self.unzip_high_i16x8(b0, b1))
     }
     #[inline(always)]
+    fn interleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>) {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        let lo_lo = self.zip_low_i16x8(a0, b0);
+        let lo_hi = self.zip_high_i16x8(a0, b0);
+        let hi_lo = self.zip_low_i16x8(a1, b1);
+        let hi_hi = self.zip_high_i16x8(a1, b1);
+        (
+            self.combine_i16x8(lo_lo, lo_hi),
+            self.combine_i16x8(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
     fn select_i16x16(self, a: mask16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self> {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_i16x16(b);
@@ -3480,6 +3564,19 @@ impl Simd for Sse4_2 {
         let (a0, a1) = self.split_u16x16(a);
         let (b0, b1) = self.split_u16x16(b);
         self.combine_u16x8(self.unzip_high_u16x8(a0, a1), self.unzip_high_u16x8(b0, b1))
+    }
+    #[inline(always)]
+    fn interleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>) {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        let lo_lo = self.zip_low_u16x8(a0, b0);
+        let lo_hi = self.zip_high_u16x8(a0, b0);
+        let hi_lo = self.zip_low_u16x8(a1, b1);
+        let hi_hi = self.zip_high_u16x8(a1, b1);
+        (
+            self.combine_u16x8(lo_lo, lo_hi),
+            self.combine_u16x8(hi_lo, hi_hi),
+        )
     }
     #[inline(always)]
     fn select_u16x16(self, a: mask16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self> {
@@ -3878,6 +3975,19 @@ impl Simd for Sse4_2 {
         self.combine_i32x4(self.unzip_high_i32x4(a0, a1), self.unzip_high_i32x4(b0, b1))
     }
     #[inline(always)]
+    fn interleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>) {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        let lo_lo = self.zip_low_i32x4(a0, b0);
+        let lo_hi = self.zip_high_i32x4(a0, b0);
+        let hi_lo = self.zip_low_i32x4(a1, b1);
+        let hi_hi = self.zip_high_i32x4(a1, b1);
+        (
+            self.combine_i32x4(lo_lo, lo_hi),
+            self.combine_i32x4(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
     fn select_i32x8(self, a: mask32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self> {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_i32x8(b);
@@ -4121,6 +4231,19 @@ impl Simd for Sse4_2 {
         let (a0, a1) = self.split_u32x8(a);
         let (b0, b1) = self.split_u32x8(b);
         self.combine_u32x4(self.unzip_high_u32x4(a0, a1), self.unzip_high_u32x4(b0, b1))
+    }
+    #[inline(always)]
+    fn interleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>) {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        let lo_lo = self.zip_low_u32x4(a0, b0);
+        let lo_hi = self.zip_high_u32x4(a0, b0);
+        let hi_lo = self.zip_low_u32x4(a1, b1);
+        let hi_hi = self.zip_high_u32x4(a1, b1);
+        (
+            self.combine_u32x4(lo_lo, lo_hi),
+            self.combine_u32x4(hi_lo, hi_hi),
+        )
     }
     #[inline(always)]
     fn select_u32x8(self, a: mask32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self> {
@@ -4485,6 +4608,19 @@ impl Simd for Sse4_2 {
         let (a0, a1) = self.split_f64x4(a);
         let (b0, b1) = self.split_f64x4(b);
         self.combine_f64x2(self.unzip_high_f64x2(a0, a1), self.unzip_high_f64x2(b0, b1))
+    }
+    #[inline(always)]
+    fn interleave_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> (f64x4<Self>, f64x4<Self>) {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        let lo_lo = self.zip_low_f64x2(a0, b0);
+        let lo_hi = self.zip_high_f64x2(a0, b0);
+        let hi_lo = self.zip_low_f64x2(a1, b1);
+        let hi_hi = self.zip_high_f64x2(a1, b1);
+        (
+            self.combine_f64x2(lo_lo, lo_hi),
+            self.combine_f64x2(hi_lo, hi_hi),
+        )
     }
     #[inline(always)]
     fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -4921,6 +5057,19 @@ impl Simd for Sse4_2 {
         self.combine_f32x8(self.unzip_high_f32x8(a0, a1), self.unzip_high_f32x8(b0, b1))
     }
     #[inline(always)]
+    fn interleave_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> (f32x16<Self>, f32x16<Self>) {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        let lo_lo = self.zip_low_f32x8(a0, b0);
+        let lo_hi = self.zip_high_f32x8(a0, b0);
+        let hi_lo = self.zip_low_f32x8(a1, b1);
+        let hi_hi = self.zip_high_f32x8(a1, b1);
+        (
+            self.combine_f32x8(lo_lo, lo_hi),
+            self.combine_f32x8(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
     fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         let (b0, b1) = self.split_f32x16(b);
@@ -5308,6 +5457,19 @@ impl Simd for Sse4_2 {
         self.combine_i8x32(self.unzip_high_i8x32(a0, a1), self.unzip_high_i8x32(b0, b1))
     }
     #[inline(always)]
+    fn interleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>) {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        let lo_lo = self.zip_low_i8x32(a0, b0);
+        let lo_hi = self.zip_high_i8x32(a0, b0);
+        let hi_lo = self.zip_low_i8x32(a1, b1);
+        let hi_hi = self.zip_high_i8x32(a1, b1);
+        (
+            self.combine_i8x32(lo_lo, lo_hi),
+            self.combine_i8x32(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
     fn select_i8x64(self, a: mask8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_i8x64(b);
@@ -5545,6 +5707,19 @@ impl Simd for Sse4_2 {
         let (a0, a1) = self.split_u8x64(a);
         let (b0, b1) = self.split_u8x64(b);
         self.combine_u8x32(self.unzip_high_u8x32(a0, a1), self.unzip_high_u8x32(b0, b1))
+    }
+    #[inline(always)]
+    fn interleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>) {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        let lo_lo = self.zip_low_u8x32(a0, b0);
+        let lo_hi = self.zip_high_u8x32(a0, b0);
+        let hi_lo = self.zip_low_u8x32(a1, b1);
+        let hi_hi = self.zip_high_u8x32(a1, b1);
+        (
+            self.combine_u8x32(lo_lo, lo_hi),
+            self.combine_u8x32(hi_lo, hi_hi),
+        )
     }
     #[inline(always)]
     fn select_u8x64(self, a: mask8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self> {
@@ -5983,6 +6158,19 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn interleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>) {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        let lo_lo = self.zip_low_i16x16(a0, b0);
+        let lo_hi = self.zip_high_i16x16(a0, b0);
+        let hi_lo = self.zip_low_i16x16(a1, b1);
+        let hi_hi = self.zip_high_i16x16(a1, b1);
+        (
+            self.combine_i16x16(lo_lo, lo_hi),
+            self.combine_i16x16(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
     fn select_i16x32(self, a: mask16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self> {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_i16x32(b);
@@ -6228,6 +6416,19 @@ impl Simd for Sse4_2 {
         self.combine_u16x16(
             self.unzip_high_u16x16(a0, a1),
             self.unzip_high_u16x16(b0, b1),
+        )
+    }
+    #[inline(always)]
+    fn interleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>) {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        let lo_lo = self.zip_low_u16x16(a0, b0);
+        let lo_hi = self.zip_high_u16x16(a0, b0);
+        let hi_lo = self.zip_low_u16x16(a1, b1);
+        let hi_hi = self.zip_high_u16x16(a1, b1);
+        (
+            self.combine_u16x16(lo_lo, lo_hi),
+            self.combine_u16x16(hi_lo, hi_hi),
         )
     }
     #[inline(always)]
@@ -6683,6 +6884,19 @@ impl Simd for Sse4_2 {
         self.combine_i32x8(self.unzip_high_i32x8(a0, a1), self.unzip_high_i32x8(b0, b1))
     }
     #[inline(always)]
+    fn interleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>) {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        let lo_lo = self.zip_low_i32x8(a0, b0);
+        let lo_hi = self.zip_high_i32x8(a0, b0);
+        let hi_lo = self.zip_low_i32x8(a1, b1);
+        let hi_hi = self.zip_high_i32x8(a1, b1);
+        (
+            self.combine_i32x8(lo_lo, lo_hi),
+            self.combine_i32x8(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
     fn select_i32x16(self, a: mask32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_i32x16(b);
@@ -6925,6 +7139,19 @@ impl Simd for Sse4_2 {
         let (a0, a1) = self.split_u32x16(a);
         let (b0, b1) = self.split_u32x16(b);
         self.combine_u32x8(self.unzip_high_u32x8(a0, a1), self.unzip_high_u32x8(b0, b1))
+    }
+    #[inline(always)]
+    fn interleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>) {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        let lo_lo = self.zip_low_u32x8(a0, b0);
+        let lo_hi = self.zip_high_u32x8(a0, b0);
+        let hi_lo = self.zip_low_u32x8(a1, b1);
+        let hi_hi = self.zip_high_u32x8(a1, b1);
+        (
+            self.combine_u32x8(lo_lo, lo_hi),
+            self.combine_u32x8(hi_lo, hi_hi),
+        )
     }
     #[inline(always)]
     fn select_u32x16(self, a: mask32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self> {
@@ -7332,6 +7559,19 @@ impl Simd for Sse4_2 {
         let (a0, a1) = self.split_f64x8(a);
         let (b0, b1) = self.split_f64x8(b);
         self.combine_f64x4(self.unzip_high_f64x4(a0, a1), self.unzip_high_f64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn interleave_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> (f64x8<Self>, f64x8<Self>) {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        let lo_lo = self.zip_low_f64x4(a0, b0);
+        let lo_hi = self.zip_high_f64x4(a0, b0);
+        let hi_lo = self.zip_low_f64x4(a1, b1);
+        let hi_hi = self.zip_high_f64x4(a1, b1);
+        (
+            self.combine_f64x4(lo_lo, lo_hi),
+            self.combine_f64x4(hi_lo, hi_hi),
+        )
     }
     #[inline(always)]
     fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {

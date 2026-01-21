@@ -479,6 +479,16 @@ impl Level for Neon {
             }
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
+            OpSig::Interleave => {
+                // interleave(a, b) = (zip_low(a, b), zip_high(a, b))
+                let zip_low = generic_op_name("zip_low", vec_ty);
+                let zip_high = generic_op_name("zip_high", vec_ty);
+                quote! {
+                    #method_sig {
+                        (self.#zip_low(a, b), self.#zip_high(a, b))
+                    }
+                }
+            }
         }
     }
 }

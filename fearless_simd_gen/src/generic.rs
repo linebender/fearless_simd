@@ -204,6 +204,28 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         }
         OpSig::FromBytes => generic_from_bytes(method_sig, ty),
         OpSig::ToBytes => generic_to_bytes(method_sig, ty),
+        OpSig::Interleave => {
+            // interleave(a, b) = (zip_low(a, b), zip_high(a, b))
+            // For wider vectors, we split each input, interleave the halves separately,
+            // then combine the low parts and high parts.
+            let zip_low_half = generic_op_name("zip_low", &half);
+            let zip_high_half = generic_op_name("zip_high", &half);
+            quote! {
+                #method_sig {
+                    let (a0, a1) = self.#split(a);
+                    let (b0, b1) = self.#split(b);
+                    // Interleave lower halves of inputs
+                    let lo_lo = self.#zip_low_half(a0, b0);
+                    let lo_hi = self.#zip_high_half(a0, b0);
+                    // Interleave upper halves of inputs
+                    let hi_lo = self.#zip_low_half(a1, b1);
+                    let hi_hi = self.#zip_high_half(a1, b1);
+                    // Combine: first result is full interleave of lower halves,
+                    // second result is full interleave of upper halves
+                    (self.#combine(lo_lo, lo_hi), self.#combine(hi_lo, hi_hi))
+                }
+            }
+        }
     }
 }
 
