@@ -102,7 +102,6 @@ pub(crate) trait Level {
             let vectorize = format_ident!("vectorize_{}", self.name().to_ascii_lowercase());
             quote! {
                 #[target_feature(enable = #target_features)]
-                #[inline]
                 unsafe fn #vectorize<F: FnOnce() -> R, R>(f: F) -> R {
                     f()
                 }
@@ -149,7 +148,6 @@ pub(crate) trait Level {
                     #level_body
                 }
 
-                #[inline]
                 fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
                     #vectorize_body
                 }
