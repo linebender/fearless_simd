@@ -93,10 +93,8 @@ impl Simd for Sse4_2 {
             Level::baseline()
         }
     }
-    #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(enable = "sse4.2")]
-        #[inline]
         unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }

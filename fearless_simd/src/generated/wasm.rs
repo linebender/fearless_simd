@@ -80,7 +80,6 @@ impl Simd for WasmSimd128 {
     fn level(self) -> Level {
         Level::WasmSimd128(self)
     }
-    #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         f()
     }
