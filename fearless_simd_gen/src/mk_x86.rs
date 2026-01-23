@@ -170,23 +170,13 @@ impl Level for X86 {
                 block_size,
                 block_count,
             } => self.handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
-            OpSig::FromArray { kind } => generic_from_array(
-                method_sig,
-                vec_ty,
-                kind,
-                self.max_block_size(),
-                |block_ty| intrinsic_ident("loadu", coarse_type(block_ty), block_ty.n_bits()),
-            ),
+            OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
             OpSig::AsArray { kind } => {
                 generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
                     self.arch_ty(vec_ty)
                 })
             }
-            OpSig::StoreArray => {
-                generic_store_array(method_sig, vec_ty, self.max_block_size(), |block_ty| {
-                    intrinsic_ident("storeu", coarse_type(block_ty), block_ty.n_bits())
-                })
-            }
+            OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
         }

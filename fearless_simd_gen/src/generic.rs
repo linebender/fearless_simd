@@ -266,33 +266,19 @@ pub(crate) fn generic_block_combine(
 pub(crate) fn generic_from_array(
     method_sig: TokenStream,
     vec_ty: &VecType,
-    _kind: RefKind,
-    max_block_size: usize,
-    load_unaligned_block: impl Fn(&VecType) -> Ident,
+    kind: RefKind,
 ) -> TokenStream {
-    let block_size = max_block_size.min(vec_ty.n_bits());
-    let block_count = vec_ty.n_bits() / block_size;
-    let num_scalars_per_block = vec_ty.len / block_count;
-
-    let native_block_ty = VecType::new(
-        vec_ty.scalar,
-        vec_ty.scalar_bits,
-        block_size / vec_ty.scalar_bits,
-    );
-
-    let wrapper_ty = vec_ty.aligned_wrapper();
-    let load_unaligned = load_unaligned_block(&native_block_ty);
-    let expr = if block_count == 1 {
-        quote! {
-            unsafe { #wrapper_ty(#load_unaligned(val.as_ptr() as *const _)) }
-        }
+    let inner_ref = if kind == RefKind::Value {
+        quote! { &val }
     } else {
-        let blocks = (0..block_count).map(|n| n * num_scalars_per_block);
-        quote! {
-            unsafe { #wrapper_ty([
-                #(#load_unaligned(val.as_ptr().add(#blocks) as *const _)),*
-            ]) }
-        }
+        quote! { val }
+    };
+
+    // There are architecture-specific "load" intrinsics, but they can actually be *worse* for performance. If they
+    // lower to LLVM intrinsics, they will likely not be optimized until much later in the pipeline (if at all),
+    // resulting in substantially worse codegen.
+    let expr = quote! {
+        unsafe { core::mem::transmute_copy(#inner_ref) }
     };
     let vec_rust = vec_ty.rust();
 
@@ -333,39 +319,17 @@ pub(crate) fn generic_as_array<T: ToTokens>(
     }
 }
 
-pub(crate) fn generic_store_array(
-    method_sig: TokenStream,
-    vec_ty: &VecType,
-    max_block_size: usize,
-    store_unaligned_block: impl Fn(&VecType) -> Ident,
-) -> TokenStream {
-    let block_size = max_block_size.min(vec_ty.n_bits());
-    let block_count = vec_ty.n_bits() / block_size;
-    let num_scalars_per_block = vec_ty.len / block_count;
+pub(crate) fn generic_store_array(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
+    let count = vec_ty.len;
 
-    let native_block_ty = VecType::new(
-        vec_ty.scalar,
-        vec_ty.scalar_bits,
-        block_size / vec_ty.scalar_bits,
-    );
-
-    let store_unaligned = store_unaligned_block(&native_block_ty);
-    let store_expr = if block_count == 1 {
-        quote! {
-            unsafe { #store_unaligned(dest.as_mut_ptr() as *mut _, a.val.0) }
-        }
-    } else {
-        let blocks = (0..block_count).map(|n| {
-            let offset = n * num_scalars_per_block;
-            let block_idx = proc_macro2::Literal::usize_unsuffixed(n);
-            quote! {
-                #store_unaligned(dest.as_mut_ptr().add(#offset) as *mut _, a.val.0[#block_idx])
-            }
-        });
-        quote! {
-            unsafe {
-                #(#blocks;)*
-            }
+    let store_expr = quote! {
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const #scalar_ty,
+                dest.as_mut_ptr(),
+                #count,
+            );
         }
     };
 
