@@ -211,11 +211,10 @@ impl Level for Fallback {
                 }
             }
             OpSig::Shift => {
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
                 let items = make_list(
                     (0..vec_ty.len)
                         .map(|idx| {
-                            let args = [quote! { a[#idx] }, quote! { shift as #rust_scalar }];
+                            let args = [quote! { a[#idx] }, quote! { shift }];
                             let expr = fallback::expr(method, vec_ty, &args);
                             quote! { #expr }
                         })

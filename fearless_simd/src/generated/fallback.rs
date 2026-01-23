@@ -716,22 +716,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         [
-            i8::shl(a[0usize], shift as i8),
-            i8::shl(a[1usize], shift as i8),
-            i8::shl(a[2usize], shift as i8),
-            i8::shl(a[3usize], shift as i8),
-            i8::shl(a[4usize], shift as i8),
-            i8::shl(a[5usize], shift as i8),
-            i8::shl(a[6usize], shift as i8),
-            i8::shl(a[7usize], shift as i8),
-            i8::shl(a[8usize], shift as i8),
-            i8::shl(a[9usize], shift as i8),
-            i8::shl(a[10usize], shift as i8),
-            i8::shl(a[11usize], shift as i8),
-            i8::shl(a[12usize], shift as i8),
-            i8::shl(a[13usize], shift as i8),
-            i8::shl(a[14usize], shift as i8),
-            i8::shl(a[15usize], shift as i8),
+            i8::shl(a[0usize], shift),
+            i8::shl(a[1usize], shift),
+            i8::shl(a[2usize], shift),
+            i8::shl(a[3usize], shift),
+            i8::shl(a[4usize], shift),
+            i8::shl(a[5usize], shift),
+            i8::shl(a[6usize], shift),
+            i8::shl(a[7usize], shift),
+            i8::shl(a[8usize], shift),
+            i8::shl(a[9usize], shift),
+            i8::shl(a[10usize], shift),
+            i8::shl(a[11usize], shift),
+            i8::shl(a[12usize], shift),
+            i8::shl(a[13usize], shift),
+            i8::shl(a[14usize], shift),
+            i8::shl(a[15usize], shift),
         ]
         .simd_into(self)
     }
@@ -760,22 +760,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         [
-            i8::shr(a[0usize], shift as i8),
-            i8::shr(a[1usize], shift as i8),
-            i8::shr(a[2usize], shift as i8),
-            i8::shr(a[3usize], shift as i8),
-            i8::shr(a[4usize], shift as i8),
-            i8::shr(a[5usize], shift as i8),
-            i8::shr(a[6usize], shift as i8),
-            i8::shr(a[7usize], shift as i8),
-            i8::shr(a[8usize], shift as i8),
-            i8::shr(a[9usize], shift as i8),
-            i8::shr(a[10usize], shift as i8),
-            i8::shr(a[11usize], shift as i8),
-            i8::shr(a[12usize], shift as i8),
-            i8::shr(a[13usize], shift as i8),
-            i8::shr(a[14usize], shift as i8),
-            i8::shr(a[15usize], shift as i8),
+            i8::shr(a[0usize], shift),
+            i8::shr(a[1usize], shift),
+            i8::shr(a[2usize], shift),
+            i8::shr(a[3usize], shift),
+            i8::shr(a[4usize], shift),
+            i8::shr(a[5usize], shift),
+            i8::shr(a[6usize], shift),
+            i8::shr(a[7usize], shift),
+            i8::shr(a[8usize], shift),
+            i8::shr(a[9usize], shift),
+            i8::shr(a[10usize], shift),
+            i8::shr(a[11usize], shift),
+            i8::shr(a[12usize], shift),
+            i8::shr(a[13usize], shift),
+            i8::shr(a[14usize], shift),
+            i8::shr(a[15usize], shift),
         ]
         .simd_into(self)
     }
@@ -1282,22 +1282,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         [
-            u8::shl(a[0usize], shift as u8),
-            u8::shl(a[1usize], shift as u8),
-            u8::shl(a[2usize], shift as u8),
-            u8::shl(a[3usize], shift as u8),
-            u8::shl(a[4usize], shift as u8),
-            u8::shl(a[5usize], shift as u8),
-            u8::shl(a[6usize], shift as u8),
-            u8::shl(a[7usize], shift as u8),
-            u8::shl(a[8usize], shift as u8),
-            u8::shl(a[9usize], shift as u8),
-            u8::shl(a[10usize], shift as u8),
-            u8::shl(a[11usize], shift as u8),
-            u8::shl(a[12usize], shift as u8),
-            u8::shl(a[13usize], shift as u8),
-            u8::shl(a[14usize], shift as u8),
-            u8::shl(a[15usize], shift as u8),
+            u8::shl(a[0usize], shift),
+            u8::shl(a[1usize], shift),
+            u8::shl(a[2usize], shift),
+            u8::shl(a[3usize], shift),
+            u8::shl(a[4usize], shift),
+            u8::shl(a[5usize], shift),
+            u8::shl(a[6usize], shift),
+            u8::shl(a[7usize], shift),
+            u8::shl(a[8usize], shift),
+            u8::shl(a[9usize], shift),
+            u8::shl(a[10usize], shift),
+            u8::shl(a[11usize], shift),
+            u8::shl(a[12usize], shift),
+            u8::shl(a[13usize], shift),
+            u8::shl(a[14usize], shift),
+            u8::shl(a[15usize], shift),
         ]
         .simd_into(self)
     }
@@ -1326,22 +1326,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         [
-            u8::shr(a[0usize], shift as u8),
-            u8::shr(a[1usize], shift as u8),
-            u8::shr(a[2usize], shift as u8),
-            u8::shr(a[3usize], shift as u8),
-            u8::shr(a[4usize], shift as u8),
-            u8::shr(a[5usize], shift as u8),
-            u8::shr(a[6usize], shift as u8),
-            u8::shr(a[7usize], shift as u8),
-            u8::shr(a[8usize], shift as u8),
-            u8::shr(a[9usize], shift as u8),
-            u8::shr(a[10usize], shift as u8),
-            u8::shr(a[11usize], shift as u8),
-            u8::shr(a[12usize], shift as u8),
-            u8::shr(a[13usize], shift as u8),
-            u8::shr(a[14usize], shift as u8),
-            u8::shr(a[15usize], shift as u8),
+            u8::shr(a[0usize], shift),
+            u8::shr(a[1usize], shift),
+            u8::shr(a[2usize], shift),
+            u8::shr(a[3usize], shift),
+            u8::shr(a[4usize], shift),
+            u8::shr(a[5usize], shift),
+            u8::shr(a[6usize], shift),
+            u8::shr(a[7usize], shift),
+            u8::shr(a[8usize], shift),
+            u8::shr(a[9usize], shift),
+            u8::shr(a[10usize], shift),
+            u8::shr(a[11usize], shift),
+            u8::shr(a[12usize], shift),
+            u8::shr(a[13usize], shift),
+            u8::shr(a[14usize], shift),
+            u8::shr(a[15usize], shift),
         ]
         .simd_into(self)
     }
@@ -2084,14 +2084,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
         [
-            i16::shl(a[0usize], shift as i16),
-            i16::shl(a[1usize], shift as i16),
-            i16::shl(a[2usize], shift as i16),
-            i16::shl(a[3usize], shift as i16),
-            i16::shl(a[4usize], shift as i16),
-            i16::shl(a[5usize], shift as i16),
-            i16::shl(a[6usize], shift as i16),
-            i16::shl(a[7usize], shift as i16),
+            i16::shl(a[0usize], shift),
+            i16::shl(a[1usize], shift),
+            i16::shl(a[2usize], shift),
+            i16::shl(a[3usize], shift),
+            i16::shl(a[4usize], shift),
+            i16::shl(a[5usize], shift),
+            i16::shl(a[6usize], shift),
+            i16::shl(a[7usize], shift),
         ]
         .simd_into(self)
     }
@@ -2112,14 +2112,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
         [
-            i16::shr(a[0usize], shift as i16),
-            i16::shr(a[1usize], shift as i16),
-            i16::shr(a[2usize], shift as i16),
-            i16::shr(a[3usize], shift as i16),
-            i16::shr(a[4usize], shift as i16),
-            i16::shr(a[5usize], shift as i16),
-            i16::shr(a[6usize], shift as i16),
-            i16::shr(a[7usize], shift as i16),
+            i16::shr(a[0usize], shift),
+            i16::shr(a[1usize], shift),
+            i16::shr(a[2usize], shift),
+            i16::shr(a[3usize], shift),
+            i16::shr(a[4usize], shift),
+            i16::shr(a[5usize], shift),
+            i16::shr(a[6usize], shift),
+            i16::shr(a[7usize], shift),
         ]
         .simd_into(self)
     }
@@ -2459,14 +2459,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
         [
-            u16::shl(a[0usize], shift as u16),
-            u16::shl(a[1usize], shift as u16),
-            u16::shl(a[2usize], shift as u16),
-            u16::shl(a[3usize], shift as u16),
-            u16::shl(a[4usize], shift as u16),
-            u16::shl(a[5usize], shift as u16),
-            u16::shl(a[6usize], shift as u16),
-            u16::shl(a[7usize], shift as u16),
+            u16::shl(a[0usize], shift),
+            u16::shl(a[1usize], shift),
+            u16::shl(a[2usize], shift),
+            u16::shl(a[3usize], shift),
+            u16::shl(a[4usize], shift),
+            u16::shl(a[5usize], shift),
+            u16::shl(a[6usize], shift),
+            u16::shl(a[7usize], shift),
         ]
         .simd_into(self)
     }
@@ -2487,14 +2487,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
         [
-            u16::shr(a[0usize], shift as u16),
-            u16::shr(a[1usize], shift as u16),
-            u16::shr(a[2usize], shift as u16),
-            u16::shr(a[3usize], shift as u16),
-            u16::shr(a[4usize], shift as u16),
-            u16::shr(a[5usize], shift as u16),
-            u16::shr(a[6usize], shift as u16),
-            u16::shr(a[7usize], shift as u16),
+            u16::shr(a[0usize], shift),
+            u16::shr(a[1usize], shift),
+            u16::shr(a[2usize], shift),
+            u16::shr(a[3usize], shift),
+            u16::shr(a[4usize], shift),
+            u16::shr(a[5usize], shift),
+            u16::shr(a[6usize], shift),
+            u16::shr(a[7usize], shift),
         ]
         .simd_into(self)
     }
@@ -2984,10 +2984,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
         [
-            i32::shl(a[0usize], shift as i32),
-            i32::shl(a[1usize], shift as i32),
-            i32::shl(a[2usize], shift as i32),
-            i32::shl(a[3usize], shift as i32),
+            i32::shl(a[0usize], shift),
+            i32::shl(a[1usize], shift),
+            i32::shl(a[2usize], shift),
+            i32::shl(a[3usize], shift),
         ]
         .simd_into(self)
     }
@@ -3004,10 +3004,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
         [
-            i32::shr(a[0usize], shift as i32),
-            i32::shr(a[1usize], shift as i32),
-            i32::shr(a[2usize], shift as i32),
-            i32::shr(a[3usize], shift as i32),
+            i32::shr(a[0usize], shift),
+            i32::shr(a[1usize], shift),
+            i32::shr(a[2usize], shift),
+            i32::shr(a[3usize], shift),
         ]
         .simd_into(self)
     }
@@ -3277,10 +3277,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
         [
-            u32::shl(a[0usize], shift as u32),
-            u32::shl(a[1usize], shift as u32),
-            u32::shl(a[2usize], shift as u32),
-            u32::shl(a[3usize], shift as u32),
+            u32::shl(a[0usize], shift),
+            u32::shl(a[1usize], shift),
+            u32::shl(a[2usize], shift),
+            u32::shl(a[3usize], shift),
         ]
         .simd_into(self)
     }
@@ -3297,10 +3297,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
         [
-            u32::shr(a[0usize], shift as u32),
-            u32::shr(a[1usize], shift as u32),
-            u32::shr(a[2usize], shift as u32),
-            u32::shr(a[3usize], shift as u32),
+            u32::shr(a[0usize], shift),
+            u32::shr(a[1usize], shift),
+            u32::shr(a[2usize], shift),
+            u32::shr(a[3usize], shift),
         ]
         .simd_into(self)
     }

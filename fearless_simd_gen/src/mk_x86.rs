@@ -593,7 +593,7 @@ impl X86 {
         } else {
             quote! {
                 #method_sig {
-                    unsafe { #shift_intrinsic(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
+                    unsafe { #shift_intrinsic(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
                 }
             }
         }
