@@ -88,6 +88,7 @@ impl Simd for Avx2 {
     fn level(self) -> Level {
         Level::Avx2(self)
     }
+    #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(enable = "avx2,fma")]
         unsafe fn vectorize_avx2<F: FnOnce() -> R, R>(f: F) -> R {
