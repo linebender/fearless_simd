@@ -187,7 +187,7 @@ impl X86 {
     pub(crate) fn handle_splat(&self, method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
         let intrinsic = set1_intrinsic(vec_ty);
         let cast = match vec_ty.scalar {
-            ScalarType::Unsigned => quote!(as _),
+            ScalarType::Unsigned => quote!(.cast_signed()),
             _ => quote!(),
         };
         quote! {
@@ -241,7 +241,7 @@ impl X86 {
                         };
 
                         quote! {
-                            let sign_bit = #set(#sign as _);
+                            let sign_bit = #set(#sign.cast_signed());
                             let a_signed = #xor_op(a.into(), sign_bit);
                             let b_signed = #xor_op(b.into(), sign_bit);
 
@@ -1050,7 +1050,7 @@ impl X86 {
 
                                     // Clamp to u32::MAX.
                                     converted = #add_int(converted, excess_converted);
-                                    converted = #blend(converted, #set1_int(u32::MAX as i32), exceeds_unsigned_range);
+                                    converted = #blend(converted, #set1_int(u32::MAX.cast_signed()), exceeds_unsigned_range);
                                 }
 
                                 converted.simd_into(self)

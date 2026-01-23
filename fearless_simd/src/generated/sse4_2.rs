@@ -348,7 +348,7 @@ impl Simd for Sse4_2 {
                 converted = _mm_add_epi32(converted, excess_converted);
                 converted = _mm_blendv_epi8(
                     converted,
-                    _mm_set1_epi32(u32::MAX as i32),
+                    _mm_set1_epi32(u32::MAX.cast_signed()),
                     exceeds_unsigned_range,
                 );
             }
@@ -584,7 +584,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
-        unsafe { _mm_set1_epi8(val as _).simd_into(self) }
+        unsafe { _mm_set1_epi8(val.cast_signed()).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self> {
@@ -716,7 +716,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi8(0x80u8 as _);
+            let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi8(b_signed, a_signed).simd_into(self)
@@ -733,7 +733,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi8(0x80u8 as _);
+            let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi8(a_signed, b_signed).simd_into(self)
@@ -1088,7 +1088,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
-        unsafe { _mm_set1_epi16(val as _).simd_into(self) }
+        unsafe { _mm_set1_epi16(val.cast_signed()).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self> {
@@ -1195,7 +1195,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi16(0x8000u16 as _);
+            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi16(b_signed, a_signed).simd_into(self)
@@ -1212,7 +1212,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi16(0x8000u16 as _);
+            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi16(a_signed, b_signed).simd_into(self)
@@ -1564,7 +1564,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn splat_u32x4(self, val: u32) -> u32x4<Self> {
-        unsafe { _mm_set1_epi32(val as _).simd_into(self) }
+        unsafe { _mm_set1_epi32(val.cast_signed()).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self> {
@@ -1671,7 +1671,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi32(0x80000000u32 as _);
+            let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi32(b_signed, a_signed).simd_into(self)
@@ -1688,7 +1688,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi32(0x80000000u32 as _);
+            let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi32(a_signed, b_signed).simd_into(self)
