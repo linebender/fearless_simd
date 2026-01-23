@@ -23,7 +23,6 @@
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
-        clippy::unnecessary_cast,
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
     )
 )]
@@ -37,7 +36,6 @@
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
-        clippy::unnecessary_cast,
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
     )
 )]
