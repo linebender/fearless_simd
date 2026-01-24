@@ -6,7 +6,6 @@
     clippy::cast_possible_truncation,
     clippy::unseparated_literal_suffix,
     clippy::use_self,
-    trivial_numeric_casts,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 #![cfg_attr(
@@ -15,7 +14,6 @@
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
-        clippy::unnecessary_cast,
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
     )
 )]
@@ -25,7 +23,6 @@
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
-        clippy::unnecessary_cast,
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
     )
 )]
@@ -39,7 +36,6 @@
         clippy::missing_transmute_annotations,
         clippy::useless_transmute,
         clippy::new_without_default,
-        clippy::unnecessary_cast,
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
     )
 )]
