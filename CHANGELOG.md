@@ -170,6 +170,7 @@ No changelog was kept for this release.
 [#170]: https://github.com/linebender/fearless_simd/pull/170
 [#176]: https://github.com/linebender/fearless_simd/pull/176
 [#180]: https://github.com/linebender/fearless_simd/pull/180
+[#181]: https://github.com/linebender/fearless_simd/pull/181
 [#186]: https://github.com/linebender/fearless_simd/pull/186
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
