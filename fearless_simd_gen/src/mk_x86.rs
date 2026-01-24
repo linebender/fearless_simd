@@ -44,7 +44,9 @@ impl Level for X86 {
     fn enabled_target_features(&self) -> Option<&'static str> {
         Some(match self {
             Self::Sse4_2 => "sse4.2",
-            Self::Avx2 => "avx,avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,sse,sse2,sse3,sse4.1,sse4.2,ssse3,xsave",
+            Self::Avx2 => {
+                "avx,avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,sse,sse2,sse3,sse4.1,sse4.2,ssse3,xsave"
+            }
         })
     }
 
