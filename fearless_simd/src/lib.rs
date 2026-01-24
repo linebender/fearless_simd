@@ -276,8 +276,25 @@ impl Level {
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
-            if std::arch::is_x86_feature_detected!("avx2")
+            // feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
+            if std::arch::is_x86_feature_detected!("avx")
+                && std::arch::is_x86_feature_detected!("avx2")
+                && std::arch::is_x86_feature_detected!("bmi1")
+                && std::arch::is_x86_feature_detected!("bmi2")
+                && std::arch::is_x86_feature_detected!("cmpxchg16b")
+                && std::arch::is_x86_feature_detected!("f16c")
                 && std::arch::is_x86_feature_detected!("fma")
+                && std::arch::is_x86_feature_detected!("fxsr")
+                && std::arch::is_x86_feature_detected!("lzcnt")
+                && std::arch::is_x86_feature_detected!("movbe")
+                && std::arch::is_x86_feature_detected!("popcnt")
+                && std::arch::is_x86_feature_detected!("sse")
+                && std::arch::is_x86_feature_detected!("sse2")
+                && std::arch::is_x86_feature_detected!("sse3")
+                && std::arch::is_x86_feature_detected!("sse4.1")
+                && std::arch::is_x86_feature_detected!("sse4.2")
+                && std::arch::is_x86_feature_detected!("ssse3")
+                && std::arch::is_x86_feature_detected!("xsave")
             {
                 return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             } else if std::arch::is_x86_feature_detected!("sse4.2") {
