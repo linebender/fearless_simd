@@ -276,7 +276,7 @@ pub(crate) fn generic_from_array(
 
     // There are architecture-specific "load" intrinsics, but they can actually be *worse* for performance. If they
     // lower to LLVM intrinsics, they will likely not be optimized until much later in the pipeline (if at all),
-    // resulting in substantially worse codegen.
+    // resulting in substantially worse codegen. See https://github.com/linebender/fearless_simd/pull/185.
     let expr = quote! {
         // Safety: The native vector type backing any implementation will be:
         // - A `#[repr(simd)]` type, which has the same layout as an array of scalars
@@ -338,8 +338,8 @@ pub(crate) fn generic_store_array(method_sig: TokenStream, vec_ty: &VecType) -> 
     let store_expr = quote! {
         unsafe {
             // Copies `count` scalars from the backing type, which has the same layout as the destination array (see
-            // `generic_as_array`). We know that the source and destination are aligned to at least the alignment of the
-            // underlying scalar type.
+            // `generic_as_array`). The backing type is aligned to its own size, and the destination array must *by
+            // definition* be aligned to at least the alignment of the scalar.
             core::ptr::copy_nonoverlapping(
                 (&raw const a.val.0) as *const #scalar_ty,
                 dest.as_mut_ptr(),
