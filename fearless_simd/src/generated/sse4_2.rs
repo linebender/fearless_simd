@@ -477,7 +477,7 @@ impl Simd for Sse4_2 {
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         unsafe {
             let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
             let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
@@ -493,7 +493,7 @@ impl Simd for Sse4_2 {
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         unsafe {
             let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
             let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let lo_shifted = _mm_sra_epi16(lo_16, shift_count);
@@ -681,7 +681,7 @@ impl Simd for Sse4_2 {
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         unsafe {
             let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
             let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
             let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
             let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
@@ -697,7 +697,7 @@ impl Simd for Sse4_2 {
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         unsafe {
             let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
             let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
             let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
             let lo_shifted = _mm_srl_epi16(lo_16, shift_count);
