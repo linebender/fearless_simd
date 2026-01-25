@@ -299,7 +299,7 @@ impl Level for Neon {
             OpSig::Compare => {
                 let args = [quote! { a.into() }, quote! { b.into() }];
                 let expr = neon::expr(method, vec_ty, &args);
-                let opt_q = crate::arch::neon::opt_q(vec_ty);
+                let opt_q = neon::opt_q(vec_ty);
                 let scalar_bits = vec_ty.scalar_bits;
                 let reinterpret_str = format!("vreinterpret{opt_q}_s{scalar_bits}_u{scalar_bits}");
                 let reinterpret = Ident::new(&reinterpret_str, Span::call_site());
@@ -312,7 +312,7 @@ impl Level for Neon {
                 }
             }
             OpSig::Select => {
-                let opt_q = crate::arch::neon::opt_q(vec_ty);
+                let opt_q = neon::opt_q(vec_ty);
                 let scalar_bits = vec_ty.scalar_bits;
                 let reinterpret_str = format!("vreinterpret{opt_q}_u{scalar_bits}_s{scalar_bits}");
                 let reinterpret = Ident::new(&reinterpret_str, Span::call_site());
