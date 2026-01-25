@@ -96,10 +96,13 @@ impl Level for Neon {
                 let dup_type = vec_ty.cast(ScalarType::Int);
                 let scalar = dup_type.scalar.rust(dup_type.scalar_bits);
                 let dup_intrinsic = split_intrinsic("vdup", "n", &dup_type);
-                let shift = if method == "shr" {
-                    quote! { -(shift as #scalar) }
-                } else {
-                    quote! { shift as #scalar }
+                // The shift argument is `u32`. If the target is `i32`, use `cast_signed()`, else
+                // `as`-casting.
+                let shift = match (vec_ty.scalar_bits, method) {
+                    (32, "shr") => quote! { -shift.cast_signed() },
+                    (32, _) => quote! { shift.cast_signed() },
+                    (_, "shr") => quote! { -(shift as #scalar) },
+                    (_, _) => quote! { shift as #scalar },
                 };
                 let expr = neon::expr(
                     method,

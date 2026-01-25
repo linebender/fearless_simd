@@ -1329,7 +1329,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        unsafe { vshlq_s32(a.into(), vdupq_n_s32(shift as i32)).simd_into(self) }
+        unsafe { vshlq_s32(a.into(), vdupq_n_s32(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shlv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1337,7 +1337,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        unsafe { vshlq_s32(a.into(), vdupq_n_s32(-(shift as i32))).simd_into(self) }
+        unsafe { vshlq_s32(a.into(), vdupq_n_s32(-shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1510,7 +1510,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        unsafe { vshlq_u32(a.into(), vdupq_n_s32(shift as i32)).simd_into(self) }
+        unsafe { vshlq_u32(a.into(), vdupq_n_s32(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shlv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1518,7 +1518,7 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        unsafe { vshlq_u32(a.into(), vdupq_n_s32(-(shift as i32))).simd_into(self) }
+        unsafe { vshlq_u32(a.into(), vdupq_n_s32(-shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
