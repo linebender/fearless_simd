@@ -68,7 +68,7 @@ This release has an [MSRV][] of 1.88.
 - Breaking change: the `Element` type on the `SimdBase` trait is now an associated type instead of a type parameter. This should make it more pleasant to write code that's generic over different vector types. ([#170][] by [@valadaptive][])
 - The `WasmSimd128` token type now wraps the new `crate::core_arch::wasm32::WasmSimd128` type. This doesn't expose any new functionality as WASM SIMD128 can only be enabled statically, but matches all the other backend tokens. ([#176][] by [@valadaptive][])
 - Breaking change: the `SimdFrom::simd_from` method now takes the SIMD token as the first argument instead of the second. This matches the argument order of the `from_slice`, `splat`, and `from_fn` methods on `SimdBase`. ([#180][] by [@valadaptive][])
-- Code generation has been improved for shift argument casting on x86 and for scalar fallback. ([#186][] by [@tomcur][])
+- Code generation has been improved for shift argument casting on x86 and for scalar fallback. ([#186][] and [#189][] by [@tomcur][])
 
 ### Removed
 
@@ -172,6 +172,7 @@ No changelog was kept for this release.
 [#180]: https://github.com/linebender/fearless_simd/pull/180
 [#181]: https://github.com/linebender/fearless_simd/pull/181
 [#186]: https://github.com/linebender/fearless_simd/pull/186
+[#189]: https://github.com/linebender/fearless_simd/pull/189
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0

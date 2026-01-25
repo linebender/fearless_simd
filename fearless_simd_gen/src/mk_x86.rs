@@ -568,7 +568,7 @@ impl X86 {
                 #method_sig {
                     unsafe {
                         let val = a.into();
-                        let shift_count = _mm_cvtsi32_si128(shift as i32);
+                        let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
 
                         let lo_16 = #extend_intrinsic_lo;
                         let hi_16 = #extend_intrinsic_hi;
