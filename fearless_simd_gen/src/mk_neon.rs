@@ -96,10 +96,13 @@ impl Level for Neon {
                 let dup_type = vec_ty.cast(ScalarType::Int);
                 let scalar = dup_type.scalar.rust(dup_type.scalar_bits);
                 let dup_intrinsic = split_intrinsic("vdup", "n", &dup_type);
-                let shift = if method == "shr" {
-                    quote! { -(shift as #scalar) }
-                } else {
-                    quote! { shift as #scalar }
+                // The shift argument is `u32`. If the target is `i32`, use `cast_signed()`, else
+                // `as`-casting.
+                let shift = match (vec_ty.scalar_bits, method) {
+                    (32, "shr") => quote! { -shift.cast_signed() },
+                    (32, _) => quote! { shift.cast_signed() },
+                    (_, "shr") => quote! { -(shift as #scalar) },
+                    (_, _) => quote! { shift as #scalar },
                 };
                 let expr = neon::expr(
                     method,
@@ -299,7 +302,7 @@ impl Level for Neon {
             OpSig::Compare => {
                 let args = [quote! { a.into() }, quote! { b.into() }];
                 let expr = neon::expr(method, vec_ty, &args);
-                let opt_q = crate::arch::neon::opt_q(vec_ty);
+                let opt_q = neon::opt_q(vec_ty);
                 let scalar_bits = vec_ty.scalar_bits;
                 let reinterpret_str = format!("vreinterpret{opt_q}_s{scalar_bits}_u{scalar_bits}");
                 let reinterpret = Ident::new(&reinterpret_str, Span::call_site());
@@ -312,7 +315,7 @@ impl Level for Neon {
                 }
             }
             OpSig::Select => {
-                let opt_q = crate::arch::neon::opt_q(vec_ty);
+                let opt_q = neon::opt_q(vec_ty);
                 let scalar_bits = vec_ty.scalar_bits;
                 let reinterpret_str = format!("vreinterpret{opt_q}_u{scalar_bits}_s{scalar_bits}");
                 let reinterpret = Ident::new(&reinterpret_str, Span::call_site());

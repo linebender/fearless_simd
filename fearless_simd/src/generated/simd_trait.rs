@@ -2559,7 +2559,7 @@ pub trait SimdBase<S: Simd>:
     + Sync
     + Send
     + 'static
-    + crate::Bytes
+    + Bytes
     + SimdFrom<Self::Element, S>
     + core::ops::Index<usize, Output = Self::Element>
     + core::ops::IndexMut<usize, Output = Self::Element>

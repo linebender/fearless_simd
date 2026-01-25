@@ -121,7 +121,7 @@ fn test_i32_to_f32_exhaustive<S: Simd>(simd: S) {
         #[inline(always)]
         || {
             for i in (0..u32::MAX).step_by(4) {
-                let ints = i32x4::from_fn(simd, |n| (n as u32 + i) as i32);
+                let ints = i32x4::from_fn(simd, |n| (n as u32 + i).cast_signed());
                 let floats = ints.to_float::<f32x4<_>>();
                 let floats_ref = (*ints).map(|i| i as f32);
                 assert_eq!(

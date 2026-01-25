@@ -134,7 +134,7 @@ fn mk_simd_base() -> TokenStream {
         /// Base functionality implemented by all SIMD vectors.
         pub trait SimdBase<S: Simd>:
             Copy + Sync + Send + 'static
-            + crate::Bytes + SimdFrom<Self::Element, S>
+            + Bytes + SimdFrom<Self::Element, S>
             + core::ops::Index<usize, Output = Self::Element> + core::ops::IndexMut<usize, Output = Self::Element>
             + core::ops::Deref<Target = Self::Array>+ core::ops::DerefMut<Target = Self::Array>
         {
