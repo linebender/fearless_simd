@@ -24,7 +24,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         }
     }
     let mut code = quote! {
-        use crate::{seal::Seal, Level, SimdElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select, Bytes};
+        use crate::{seal::Seal, Level, SimdElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, SimdGather, SimdScatter, Select, Bytes};
         #imports
         /// The main SIMD trait, implemented by all SIMD token types.
         ///
@@ -67,15 +67,15 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             /// A native-width SIMD vector of [`f64`]s.
             type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s>;
             /// A native-width SIMD vector of [`u8`]s.
-            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s>;
+            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s> + SimdGather<Self> + SimdScatter<Self>;
             /// A native-width SIMD vector of [`i8`]s.
             type i8s: SimdInt<Self, Element = i8, Block = i8x16<Self>, Mask = Self::mask8s, Bytes = <Self::u8s as Bytes>::Bytes> + core::ops::Neg<Output = Self::i8s>;
             /// A native-width SIMD vector of [`u16`]s.
-            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s>;
+            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s> + SimdGather<Self> + SimdScatter<Self>;
             /// A native-width SIMD vector of [`i16`]s.
             type i16s: SimdInt<Self, Element = i16, Block = i16x8<Self>, Mask = Self::mask16s, Bytes = <Self::u16s as Bytes>::Bytes> + core::ops::Neg<Output = Self::i16s>;
             /// A native-width SIMD vector of [`u32`]s.
-            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s> + SimdCvtTruncate<Self::f32s>;
+            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s> + SimdCvtTruncate<Self::f32s> + SimdGather<Self> + SimdScatter<Self>;
             /// A native-width SIMD vector of [`i32`]s.
             type i32s: SimdInt<Self, Element = i32, Block = i32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtTruncate<Self::f32s>
                 + core::ops::Neg<Output = Self::i32s>;

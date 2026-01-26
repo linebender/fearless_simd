@@ -15,7 +15,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdCvtFloat, SimdCvtTruncate};
+        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdGather, SimdScatter, SimdCvtFloat, SimdCvtTruncate};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -63,6 +63,8 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         };
         let impl_block = simd_vec_impl(ty);
         let mut conditional_impls = Vec::new();
+
+        // Conversion operations
         // TODO: Relax `if` clauses once 64-bit integer or 16-bit floats vectors are implemented
         match ty.scalar {
             ScalarType::Float if ty.scalar_bits == 32 => {
@@ -133,6 +135,100 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             }
             _ => {}
         }
+
+        // Scatter/gather operations
+        if ty.scalar == ScalarType::Unsigned {
+            let min_method = generic_op_name("min", ty);
+            conditional_impls.push(quote! {
+                impl<S: Simd> SimdGather<S> for #name<S> {
+                    type Gathered<T> = [T; #len];
+
+                    #[inline(always)]
+                    fn gather<T: Copy>(self, src: &[T]) -> Self::Gathered<T> {
+                        assert!(!src.is_empty(), "gather: source slice must not be empty");
+
+                        // Check if the element type is small enough that the slice's length could (and then does)
+                        // exceed its maximum value. The `size_of` check ensures that `Self::Element::MAX as usize` will
+                        // never truncate/wrap.
+                        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>() &&
+                            src.len() > Self::Element::MAX as usize
+                        {
+                            // The slice is big enough to accept any index. For instance, if this is a vector of `u8`s,
+                            // `Self::Element::MAX` is 255, so the slice must be at least 256 elements long.
+                            self
+                        } else {
+                            // No `max(0)`; we do not implement `SimdGather` for signed integers.
+                            //
+                            // Converting `src.len() - 1` to `Self::Element` will not wrap, because if `src.len() - 1 >=
+                            // Self::Element::MAX`, that means that `src.len() > Self::Element::MAX`, and we take the
+                            // above branch instead.
+                            self.simd.#min_method(self, ((src.len() - 1) as Self::Element).simd_into(self.simd))
+                        };
+
+                        core::array::from_fn(|i| unsafe {
+                            // Safety: All elements of `inbounds` are in [0, src.len()). 0 is a valid index, because we
+                            // asserted that `src` is not empty. Therefore, the index into `src` is valid. `i` will be
+                            // between [0, Self::N), so the index into `inbounds` is valid.
+                            *src.get_unchecked(*inbounds.get_unchecked(i) as usize)
+                        })
+                    }
+
+                    #[inline(always)]
+                    fn gather_into<T: Copy>(self, src: &[T], dst: &mut [T]) {
+                        assert_eq!(Self::N, dst.len(), "gather_into: destination slice must have the same element count as the vector type");
+                        assert!(!src.is_empty(), "gather_into: source slice must not be empty");
+
+                        // Same logic as for `gather`. See the comments there.
+                        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>() &&
+                            src.len() > Self::Element::MAX as usize
+                        {
+                            self
+                        } else {
+                            self.simd.#min_method(self, ((src.len() - 1) as Self::Element).simd_into(self.simd))
+                        };
+
+                        for i in 0..Self::N {
+                            unsafe {
+                                // Safety: All elements of `inbounds` are in [0, src.len()). 0 is a valid index, because
+                                // we asserted that `src` is not empty. Therefore, the index into `src` is valid. `i`
+                                // will be between [0, Self::N), so the index into `inbounds` is valid. The index into
+                                // `dst` is also valid, since we asserted above that `dst.len() == Self::N`.
+                                *dst.get_unchecked_mut(i) = *src.get_unchecked(*inbounds.get_unchecked(i) as usize);
+                            }
+                        }
+                    }
+                }
+
+                impl<S: Simd> SimdScatter<S> for #name<S> {
+                    #[inline(always)]
+                    fn scatter<T: Copy>(self, src: &[T], dst: &mut [T]) {
+                        assert_eq!(Self::N, src.len(), "scatter: source slice must have the same element count as the vector type");
+                        assert!(!dst.is_empty(), "scatter: destination slice must not be empty");
+
+                        // Same logic as for `gather`, but for `dst`. See the comments there.
+                        let inbounds = if core::mem::size_of::<Self::Element>() < core::mem::size_of::<usize>() &&
+                            dst.len() > Self::Element::MAX as usize
+                        {
+                            self
+                        } else {
+                            self.simd.#min_method(self, ((dst.len() - 1) as Self::Element).simd_into(self.simd))
+                        };
+
+                        for i in 0..Self::N {
+                            unsafe {
+                                // Safety: All elements of `inbounds` are in [0, dst.len()). 0 is a valid index, because
+                                // we asserted that `dst` is not empty. Therefore, the index into `dst` is valid. `i`
+                                // will be between [0, Self::N), so the index into `inbounds` is valid. The index into
+                                // `src` is also valid, since we asserted above that `src.len() == Self::N`.
+                                *dst.get_unchecked_mut(*inbounds.get_unchecked(i) as usize) = *src.get_unchecked(i);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Split/combine operations
         if let Some(half_ty) = ty.split_operand() {
             let half_ty_rust = half_ty.rust();
             let split_method = generic_op_name("split", ty);
@@ -161,6 +257,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 }
             });
         }
+
         result.extend(quote! {
             #[doc = #doc]
             #[derive(Clone, Copy)]
