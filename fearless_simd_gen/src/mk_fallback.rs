@@ -368,6 +368,17 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::Slide { .. } => {
+                let n = vec_ty.len;
+                quote! {
+                    #method_sig {
+                        let mut dest = [Default::default(); #n];
+                        dest[..#n - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+                        dest[#n - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+                        dest.simd_into(self)
+                    }
+                }
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
