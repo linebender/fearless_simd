@@ -101,6 +101,9 @@ pub(crate) trait Level {
         let vectorize_body = if let Some(target_features) = self.enabled_target_features() {
             let vectorize = format_ident!("vectorize_{}", self.name().to_ascii_lowercase());
             quote! {
+                // This function is deliberately not marked #[inline]:
+                // The closure passed to it is already required to be #[inline(always)],
+                // so this wrapper is the only opportunity for the compiler to make inlining decisions.
                 #[target_feature(enable = #target_features)]
                 unsafe fn #vectorize<F: FnOnce() -> R, R>(f: F) -> R {
                     f()
