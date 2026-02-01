@@ -218,14 +218,18 @@ pub enum Level {
     /// The SIMD 128 instructions on 32-bit WebAssembly.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     WasmSimd128(WasmSimd128),
-    /// The SSE4.2 instruction set on (32 and 64 bit) x86.
+    /// The SSE4.2 instruction set on (32 and 64 bit) x86, plus `popcnt` and `cmpxchg16b`.
+    /// Also known as x86-64-v2.
+    ///
+    /// All production CPUs with SSE4.2 also support the other two extensions, so it is safe to require them.
     // We don't need to support this if the compilation target definitely supports something better.
     #[cfg(all(
         any(target_arch = "x86", target_arch = "x86_64"),
         not(all(target_feature = "avx2", target_feature = "fma"))
     ))]
     Sse4_2(Sse4_2),
-    /// The AVX2 and FMA instruction set on (32 and 64 bit) x86.
+    /// The AVX2 and FMA instruction set on (32 and 64 bit) x86, plus the other instructions
+    /// guaranteed to be available on AVX2+FMA CPUs. Also known as x86-64-v3.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Avx2(Avx2),
     // If new variants are added, make sure to handle them in `Level::dispatch`
