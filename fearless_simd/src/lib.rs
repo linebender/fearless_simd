@@ -293,7 +293,13 @@ impl Level {
                 && std::arch::is_x86_feature_detected!("xsave")
             {
                 return unsafe { Self::Avx2(Avx2::new_unchecked()) };
-            } else if std::arch::is_x86_feature_detected!("sse4.2") {
+            // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
+            // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
+            // and have these extensions already.
+            } else if std::arch::is_x86_feature_detected!("sse4.2")
+                && std::arch::is_x86_feature_detected!("cmpxchg16b")
+                && std::arch::is_x86_feature_detected!("popcnt")
+            {
                 #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
                 return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
             }
