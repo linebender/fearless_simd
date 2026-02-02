@@ -11,6 +11,8 @@
 
 //! Tests for `fearless_simd`.
 
+mod extended_tests;
+
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
