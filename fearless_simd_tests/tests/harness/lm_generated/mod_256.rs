@@ -7,6 +7,9 @@
 //! of test cases for various vector sizes, but this is a simple first step
 //! towards increased test coverage.
 
+// Copyright 2026 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
