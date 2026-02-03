@@ -1449,7 +1449,7 @@ fn from_fn_i32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn from_fn_u32x16<S: Simd>(simd: S) {
-    let a = u32x16::from_fn(simd, |i| 1u32 << i);
+    let a = u32x16::from_fn(simd, |i| 1_u32 << i);
     assert_eq!(
         *a,
         [
