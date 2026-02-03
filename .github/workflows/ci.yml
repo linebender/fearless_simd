@@ -247,6 +247,7 @@ jobs:
         with:
           toolchain: nightly
           targets: ${{ matrix.platform.target }}
+          components: rust-src
 
       - name: restore cache
         uses: Swatinem/rust-cache@v2
