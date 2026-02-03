@@ -231,6 +231,33 @@ jobs:
       - name: cargo test --doc
         run: cargo test --doc --workspace --locked --all-features --no-fail-fast --target ${{ matrix.platform.target }}
 
+  test-nightly-asan:
+    name: cargo test with Address Sanitizer
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      matrix:
+        platform:
+          - { target: aarch64-apple-darwin, os: macos-latest }
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install nightly toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          targets: ${{ matrix.platform.target }}
+          components: rust-src
+
+      - name: restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.event_name != 'merge_group' }}
+
+      # doc tests fail to link under ASAN so we use use --lib --bins --tests to exclude them
+      - name: RUSTFLAGS=-Zsanitizer=address cargo +nightly test
+        run: RUSTFLAGS=-Zsanitizer=address cargo +nightly test -Zbuild-std --lib --bins --tests --workspace --locked --all-features --target ${{ matrix.platform.target }}
+
   test-stable-wasm:
     name: cargo test (wasm32)
     runs-on: ubuntu-latest
