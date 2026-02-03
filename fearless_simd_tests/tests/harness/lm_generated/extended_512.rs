@@ -7,6 +7,11 @@
 // including mask operations (all/any/true/false), split/combine, zip/unzip,
 // shift operations, widen/narrow, and various conversion functions.
 
+#![expect(
+    clippy::cast_possible_wrap,
+    reason = "from_fn() tests use `usize as i8` and such which will never overflow for 64-long vectors"
+)]
+
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
