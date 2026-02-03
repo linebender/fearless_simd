@@ -7,11 +7,6 @@
 // including mask operations (all/any/true/false), split/combine, zip/unzip,
 // shift operations, widen/narrow, and various conversion functions.
 
-#![expect(
-    clippy::cast_possible_wrap,
-    reason = "from_fn() tests use `usize as i8` and such which will never overflow for 64-long vectors"
-)]
-
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
@@ -1385,7 +1380,7 @@ fn from_fn_f32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn from_fn_i8x64<S: Simd>(simd: S) {
-    let a = i8x64::from_fn(simd, |i| i as i8);
+    let a = i8x64::from_fn(simd, |i| i.try_into().unwrap());
     assert_eq!(
         *a,
         [
@@ -1398,7 +1393,7 @@ fn from_fn_i8x64<S: Simd>(simd: S) {
 
 #[simd_test]
 fn from_fn_u8x64<S: Simd>(simd: S) {
-    let a = u8x64::from_fn(simd, |i| (i * 2) as u8);
+    let a = u8x64::from_fn(simd, |i| (i * 2).try_into().unwrap());
     assert_eq!(
         *a,
         [
@@ -1412,7 +1407,7 @@ fn from_fn_u8x64<S: Simd>(simd: S) {
 
 #[simd_test]
 fn from_fn_i16x32<S: Simd>(simd: S) {
-    let a = i16x32::from_fn(simd, |i| (i as i16) * 100);
+    let a = i16x32::from_fn(simd, |i| i16::try_from(i).unwrap() * 100);
     assert_eq!(
         *a,
         [
@@ -1425,7 +1420,7 @@ fn from_fn_i16x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn from_fn_u16x32<S: Simd>(simd: S) {
-    let a = u16x32::from_fn(simd, |i| i as u16 + 1000);
+    let a = u16x32::from_fn(simd, |i| u16::try_from(i).unwrap() + 1000);
     assert_eq!(
         *a,
         [
@@ -1438,7 +1433,10 @@ fn from_fn_u16x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn from_fn_i32x16<S: Simd>(simd: S) {
-    let a = i32x16::from_fn(simd, |i| (i as i32) * (i as i32));
+    let a = i32x16::from_fn(simd, |i| {
+        let i: i32 = i.try_into().unwrap();
+        i * i
+    });
     assert_eq!(
         *a,
         [
