@@ -200,7 +200,11 @@ pub enum Level {
         all(target_arch = "aarch64", not(target_feature = "neon")),
         all(
             any(target_arch = "x86", target_arch = "x86_64"),
-            not(target_feature = "sse4.2")
+            not(all(
+                target_feature = "sse4.2",
+                target_feature = "cmpxchg16b",
+                target_feature = "popcnt"
+            ))
         ),
         all(target_arch = "wasm32", not(target_feature = "simd128")),
         not(any(
@@ -218,14 +222,29 @@ pub enum Level {
     /// The SIMD 128 instructions on 32-bit WebAssembly.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     WasmSimd128(WasmSimd128),
-    /// The SSE4.2 instruction set on (32 and 64 bit) x86.
+    /// The SSE4.2 instruction set on (32 and 64 bit) x86, plus `popcnt` and `cmpxchg16b`.
+    /// Also known as x86-64-v2.
+    ///
+    /// All production CPUs with SSE4.2 also support the other two extensions, so it is safe to require them.
     // We don't need to support this if the compilation target definitely supports something better.
     #[cfg(all(
         any(target_arch = "x86", target_arch = "x86_64"),
-        not(all(target_feature = "avx2", target_feature = "fma"))
+        not(all(
+            target_feature = "avx2",
+            target_feature = "bmi1",
+            target_feature = "bmi2",
+            target_feature = "cmpxchg16b",
+            target_feature = "f16c",
+            target_feature = "fma",
+            target_feature = "lzcnt",
+            target_feature = "movbe",
+            target_feature = "popcnt",
+            target_feature = "xsave"
+        ))
     ))]
     Sse4_2(Sse4_2),
-    /// The AVX2 and FMA instruction set on (32 and 64 bit) x86.
+    /// The AVX2 and FMA instruction set on (32 and 64 bit) x86, plus the other instructions
+    /// guaranteed to be available on AVX2+FMA CPUs. Also known as x86-64-v3.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Avx2(Avx2),
     // If new variants are added, make sure to handle them in `Level::dispatch`
@@ -276,12 +295,42 @@ impl Level {
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
+            // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
+            // However, the following features are implied by avx2 and do not need to be spelled out:
+            // avx,fxsr,sse,sse2,sse3,sse4.1,sse4.2,ssse3
+            // This can be verified by running:
+            // rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'
             if std::arch::is_x86_feature_detected!("avx2")
+                && std::arch::is_x86_feature_detected!("bmi1")
+                && std::arch::is_x86_feature_detected!("bmi2")
+                && std::arch::is_x86_feature_detected!("cmpxchg16b")
+                && std::arch::is_x86_feature_detected!("f16c")
                 && std::arch::is_x86_feature_detected!("fma")
+                && std::arch::is_x86_feature_detected!("lzcnt")
+                && std::arch::is_x86_feature_detected!("movbe")
+                && std::arch::is_x86_feature_detected!("popcnt")
+                && std::arch::is_x86_feature_detected!("xsave")
             {
                 return unsafe { Self::Avx2(Avx2::new_unchecked()) };
-            } else if std::arch::is_x86_feature_detected!("sse4.2") {
-                #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
+            // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
+            // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
+            // and have these extensions already.
+            } else if std::arch::is_x86_feature_detected!("sse4.2")
+                && std::arch::is_x86_feature_detected!("cmpxchg16b")
+                && std::arch::is_x86_feature_detected!("popcnt")
+            {
+                #[cfg(not(all(
+                    target_feature = "avx2",
+                    target_feature = "bmi1",
+                    target_feature = "bmi2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "f16c",
+                    target_feature = "fma",
+                    target_feature = "lzcnt",
+                    target_feature = "movbe",
+                    target_feature = "popcnt",
+                    target_feature = "xsave"
+                )))]
                 return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
             }
         }
@@ -289,7 +338,11 @@ impl Level {
             all(target_arch = "aarch64", not(target_feature = "neon")),
             all(
                 any(target_arch = "x86", target_arch = "x86_64"),
-                not(target_feature = "sse4.2")
+                not(all(
+                    target_feature = "sse4.2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "popcnt"
+                ))
             ),
             all(target_arch = "wasm32", not(target_feature = "simd128")),
             not(any(
@@ -337,7 +390,11 @@ impl Level {
             all(target_arch = "aarch64", not(target_feature = "neon")),
             all(
                 any(target_arch = "x86", target_arch = "x86_64"),
-                not(target_feature = "sse4.2")
+                not(all(
+                    target_feature = "sse4.2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "popcnt"
+                ))
             ),
             all(target_arch = "wasm32", not(target_feature = "simd128")),
             not(any(
@@ -412,7 +469,18 @@ impl Level {
             // The `avx2` target feature *also* implicitly enables the "sse4.2" target feature, which is
             // the only target feature required to make our Sse4_2 token.
             Self::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
-            #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
+            #[cfg(not(all(
+                target_feature = "avx2",
+                target_feature = "bmi1",
+                target_feature = "bmi2",
+                target_feature = "cmpxchg16b",
+                target_feature = "f16c",
+                target_feature = "fma",
+                target_feature = "lzcnt",
+                target_feature = "movbe",
+                target_feature = "popcnt",
+                target_feature = "xsave"
+            )))]
             Self::Sse4_2(sse42) => Some(sse42),
             #[allow(
                 unreachable_patterns,
@@ -485,14 +553,44 @@ impl Level {
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
-            #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+            #[cfg(all(
+                target_feature = "avx2",
+                target_feature = "bmi1",
+                target_feature = "bmi2",
+                target_feature = "cmpxchg16b",
+                target_feature = "f16c",
+                target_feature = "fma",
+                target_feature = "lzcnt",
+                target_feature = "movbe",
+                target_feature = "popcnt",
+                target_feature = "xsave"
+            ))]
             return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             #[cfg(all(
-                target_feature = "sse4.2",
-                not(all(target_feature = "avx2", target_feature = "fma"))
+                all(
+                    target_feature = "sse4.2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "popcnt"
+                ),
+                not(all(
+                    target_feature = "avx2",
+                    target_feature = "bmi1",
+                    target_feature = "bmi2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "f16c",
+                    target_feature = "fma",
+                    target_feature = "lzcnt",
+                    target_feature = "movbe",
+                    target_feature = "popcnt",
+                    target_feature = "xsave"
+                ))
             ))]
             return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
-            #[cfg(not(target_feature = "sse4.2"))]
+            #[cfg(not(all(
+                target_feature = "sse4.2",
+                target_feature = "cmpxchg16b",
+                target_feature = "popcnt"
+            )))]
             return Self::Fallback(Fallback::new());
         }
         #[cfg(target_arch = "wasm32")]

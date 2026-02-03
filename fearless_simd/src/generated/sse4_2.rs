@@ -95,7 +95,7 @@ impl Simd for Sse4_2 {
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-        #[target_feature(enable = "sse4.2")]
+        #[target_feature(enable = "sse4.2,cmpxchg16b,popcnt")]
         unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }
@@ -108,14 +108,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f32x4(self, val: [f32; 4usize]) -> f32x4<Self> {
         f32x4 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_ps(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f32x4(self, val: &[f32; 4usize]) -> f32x4<Self> {
         f32x4 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_ps(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -133,7 +133,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> () {
-        unsafe { _mm_storeu_ps(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f32,
+                dest.as_mut_ptr(),
+                4usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self> {
@@ -152,6 +158,31 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_f32x4(b).val.0,
+                self.cvt_to_bytes_f32x4(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_f32x4(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x4<const SHIFT: usize>(
+        self,
+        a: f32x4<Self>,
+        b: f32x4<Self>,
+    ) -> f32x4<Self> {
+        self.slide_f32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -341,7 +372,7 @@ impl Simd for Sse4_2 {
                 converted = _mm_add_epi32(converted, excess_converted);
                 converted = _mm_blendv_epi8(
                     converted,
-                    _mm_set1_epi32(u32::MAX as i32),
+                    _mm_set1_epi32(u32::MAX.cast_signed()),
                     exceeds_unsigned_range,
                 );
             }
@@ -378,14 +409,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i8x16(self, val: [i8; 16usize]) -> i8x16<Self> {
         i8x16 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i8x16(self, val: &[i8; 16usize]) -> i8x16<Self> {
         i8x16 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -403,7 +434,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                16usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self> {
@@ -422,6 +459,31 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_i8x16(b).val.0,
+                self.cvt_to_bytes_i8x16(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_i8x16(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x16<const SHIFT: usize>(
+        self,
+        a: i8x16<Self>,
+        b: i8x16<Self>,
+    ) -> i8x16<Self> {
+        self.slide_i8x16::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -464,7 +526,7 @@ impl Simd for Sse4_2 {
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         unsafe {
             let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
             let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
@@ -480,7 +542,7 @@ impl Simd for Sse4_2 {
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         unsafe {
             let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
             let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
             let lo_shifted = _mm_sra_epi16(lo_16, shift_count);
@@ -571,19 +633,19 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
-        unsafe { _mm_set1_epi8(val as _).simd_into(self) }
+        unsafe { _mm_set1_epi8(val.cast_signed()).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self> {
         u8x16 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u8x16(self, val: &[u8; 16usize]) -> u8x16<Self> {
         u8x16 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -601,7 +663,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u8,
+                dest.as_mut_ptr(),
+                16usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -620,6 +688,31 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_u8x16(b).val.0,
+                self.cvt_to_bytes_u8x16(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_u8x16(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x16<const SHIFT: usize>(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+    ) -> u8x16<Self> {
+        self.slide_u8x16::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -662,7 +755,7 @@ impl Simd for Sse4_2 {
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         unsafe {
             let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
             let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
             let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
             let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
@@ -678,7 +771,7 @@ impl Simd for Sse4_2 {
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         unsafe {
             let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift as i32);
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
             let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
             let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
             let lo_shifted = _mm_srl_epi16(lo_16, shift_count);
@@ -697,7 +790,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi8(0x80u8 as _);
+            let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi8(b_signed, a_signed).simd_into(self)
@@ -714,7 +807,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi8(0x80u8 as _);
+            let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi8(a_signed, b_signed).simd_into(self)
@@ -785,14 +878,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
         mask8x16 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask8x16(self, val: &[i8; 16usize]) -> mask8x16<Self> {
         mask8x16 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -810,7 +903,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_mask8x16(self, a: mask8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                16usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_mask8x16(self, a: u8x16<Self>) -> mask8x16<Self> {
@@ -829,6 +928,35 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask8x16<const SHIFT: usize>(
+        self,
+        a: mask8x16<Self>,
+        b: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_mask8x16(b).val.0,
+                self.cvt_to_bytes_mask8x16(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_mask8x16(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x16<const SHIFT: usize>(
+        self,
+        a: mask8x16<Self>,
+        b: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        self.slide_mask8x16::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -889,14 +1017,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i16x8(self, val: [i16; 8usize]) -> i16x8<Self> {
         i16x8 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i16x8(self, val: &[i16; 8usize]) -> i16x8<Self> {
         i16x8 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -914,7 +1042,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                8usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self> {
@@ -933,6 +1067,31 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_i16x8(b).val.0,
+                self.cvt_to_bytes_i16x8(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_i16x8(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x8<const SHIFT: usize>(
+        self,
+        a: i16x8<Self>,
+        b: i16x8<Self>,
+    ) -> i16x8<Self> {
+        self.slide_i16x8::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -964,7 +1123,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
-        unsafe { _mm_sll_epi16(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
+        unsafe { _mm_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -972,7 +1131,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
-        unsafe { _mm_sra_epi16(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
+        unsafe { _mm_sra_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -1057,19 +1216,19 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
-        unsafe { _mm_set1_epi16(val as _).simd_into(self) }
+        unsafe { _mm_set1_epi16(val.cast_signed()).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self> {
         u16x8 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u16x8(self, val: &[u16; 8usize]) -> u16x8<Self> {
         u16x8 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1087,7 +1246,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u16,
+                dest.as_mut_ptr(),
+                8usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self> {
@@ -1106,6 +1271,31 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_u16x8(b).val.0,
+                self.cvt_to_bytes_u16x8(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_u16x8(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x8<const SHIFT: usize>(
+        self,
+        a: u16x8<Self>,
+        b: u16x8<Self>,
+    ) -> u16x8<Self> {
+        self.slide_u16x8::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1137,7 +1327,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
-        unsafe { _mm_sll_epi16(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
+        unsafe { _mm_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1145,7 +1335,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
-        unsafe { _mm_srl_epi16(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
+        unsafe { _mm_srl_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1158,7 +1348,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi16(0x8000u16 as _);
+            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi16(b_signed, a_signed).simd_into(self)
@@ -1175,7 +1365,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi16(0x8000u16 as _);
+            let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi16(a_signed, b_signed).simd_into(self)
@@ -1241,14 +1431,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
         mask16x8 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask16x8(self, val: &[i16; 8usize]) -> mask16x8<Self> {
         mask16x8 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1266,7 +1456,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_mask16x8(self, a: mask16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                8usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_mask16x8(self, a: u8x16<Self>) -> mask16x8<Self> {
@@ -1285,6 +1481,35 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask16x8<const SHIFT: usize>(
+        self,
+        a: mask16x8<Self>,
+        b: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_mask16x8(b).val.0,
+                self.cvt_to_bytes_mask16x8(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_mask16x8(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x8<const SHIFT: usize>(
+        self,
+        a: mask16x8<Self>,
+        b: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        self.slide_mask16x8::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -1345,14 +1570,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i32x4(self, val: [i32; 4usize]) -> i32x4<Self> {
         i32x4 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i32x4(self, val: &[i32; 4usize]) -> i32x4<Self> {
         i32x4 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1370,7 +1595,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                4usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self> {
@@ -1389,6 +1620,31 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_i32x4(b).val.0,
+                self.cvt_to_bytes_i32x4(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_i32x4(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x4<const SHIFT: usize>(
+        self,
+        a: i32x4<Self>,
+        b: i32x4<Self>,
+    ) -> i32x4<Self> {
+        self.slide_i32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1420,7 +1676,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        unsafe { _mm_sll_epi32(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
+        unsafe { _mm_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shlv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1428,7 +1684,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        unsafe { _mm_sra_epi32(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
+        unsafe { _mm_sra_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1515,19 +1771,19 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn splat_u32x4(self, val: u32) -> u32x4<Self> {
-        unsafe { _mm_set1_epi32(val as _).simd_into(self) }
+        unsafe { _mm_set1_epi32(val.cast_signed()).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self> {
         u32x4 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u32x4(self, val: &[u32; 4usize]) -> u32x4<Self> {
         u32x4 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1545,7 +1801,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u32,
+                dest.as_mut_ptr(),
+                4usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self> {
@@ -1564,6 +1826,31 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_u32x4(b).val.0,
+                self.cvt_to_bytes_u32x4(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_u32x4(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x4<const SHIFT: usize>(
+        self,
+        a: u32x4<Self>,
+        b: u32x4<Self>,
+    ) -> u32x4<Self> {
+        self.slide_u32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1595,7 +1882,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        unsafe { _mm_sll_epi32(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
+        unsafe { _mm_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shlv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1603,7 +1890,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        unsafe { _mm_srl_epi32(a.into(), _mm_cvtsi32_si128(shift as _)).simd_into(self) }
+        unsafe { _mm_srl_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
     }
     #[inline(always)]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1616,7 +1903,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi32(0x80000000u32 as _);
+            let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi32(b_signed, a_signed).simd_into(self)
@@ -1633,7 +1920,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
         unsafe {
-            let sign_bit = _mm_set1_epi32(0x80000000u32 as _);
+            let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
             let a_signed = _mm_xor_si128(a.into(), sign_bit);
             let b_signed = _mm_xor_si128(b.into(), sign_bit);
             _mm_cmpgt_epi32(a_signed, b_signed).simd_into(self)
@@ -1707,14 +1994,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
         mask32x4 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask32x4(self, val: &[i32; 4usize]) -> mask32x4<Self> {
         mask32x4 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1732,7 +2019,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_mask32x4(self, a: mask32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                4usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_mask32x4(self, a: u8x16<Self>) -> mask32x4<Self> {
@@ -1751,6 +2044,35 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask32x4<const SHIFT: usize>(
+        self,
+        a: mask32x4<Self>,
+        b: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_mask32x4(b).val.0,
+                self.cvt_to_bytes_mask32x4(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_mask32x4(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x4<const SHIFT: usize>(
+        self,
+        a: mask32x4<Self>,
+        b: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        self.slide_mask32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -1811,14 +2133,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f64x2(self, val: [f64; 2usize]) -> f64x2<Self> {
         f64x2 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_pd(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f64x2(self, val: &[f64; 2usize]) -> f64x2<Self> {
         f64x2 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_pd(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1836,7 +2158,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> () {
-        unsafe { _mm_storeu_pd(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f64,
+                dest.as_mut_ptr(),
+                2usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self> {
@@ -1855,6 +2183,31 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        unsafe {
+            if SHIFT >= 2usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_f64x2(b).val.0,
+                self.cvt_to_bytes_f64x2(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_f64x2(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x2<const SHIFT: usize>(
+        self,
+        a: f64x2<Self>,
+        b: f64x2<Self>,
+    ) -> f64x2<Self> {
+        self.slide_f64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -2010,14 +2363,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
         mask64x2 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask64x2(self, val: &[i64; 2usize]) -> mask64x2<Self> {
         mask64x2 {
-            val: unsafe { crate::support::Aligned128(_mm_loadu_si128(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -2035,7 +2388,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_mask64x2(self, a: mask64x2<Self>, dest: &mut [i64; 2usize]) -> () {
-        unsafe { _mm_storeu_si128(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i64,
+                dest.as_mut_ptr(),
+                2usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_mask64x2(self, a: u8x16<Self>) -> mask64x2<Self> {
@@ -2054,6 +2413,35 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask64x2<const SHIFT: usize>(
+        self,
+        a: mask64x2<Self>,
+        b: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        unsafe {
+            if SHIFT >= 2usize {
+                return b;
+            }
+            let result = dyn_alignr_128(
+                self.cvt_to_bytes_mask64x2(b).val.0,
+                self.cvt_to_bytes_mask64x2(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_mask64x2(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x2<const SHIFT: usize>(
+        self,
+        a: mask64x2<Self>,
+        b: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        self.slide_mask64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -2115,24 +2503,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f32x8(self, val: [f32; 8usize]) -> f32x8<Self> {
         f32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_ps(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_ps(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f32x8(self, val: &[f32; 8usize]) -> f32x8<Self> {
         f32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_ps(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_ps(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -2151,8 +2529,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
         unsafe {
-            _mm_storeu_ps(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_ps(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f32,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -2172,6 +2553,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_f32x8(b).val.0,
+                self.cvt_to_bytes_f32x8(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_f32x8(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x8<const SHIFT: usize>(
+        self,
+        a: f32x8<Self>,
+        b: f32x8<Self>,
+    ) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(
+            self.slide_within_blocks_f32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -2440,24 +2851,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i8x32(self, val: [i8; 32usize]) -> i8x32<Self> {
         i8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i8x32(self, val: &[i8; 32usize]) -> i8x32<Self> {
         i8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -2476,8 +2877,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -2497,6 +2901,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        unsafe {
+            if SHIFT >= 32usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_i8x32(b).val.0,
+                self.cvt_to_bytes_i8x32(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_i8x32(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x32<const SHIFT: usize>(
+        self,
+        a: i8x32<Self>,
+        b: i8x32<Self>,
+    ) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(
+            self.slide_within_blocks_i8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -2680,24 +3114,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u8x32(self, val: [u8; 32usize]) -> u8x32<Self> {
         u8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u8x32(self, val: &[u8; 32usize]) -> u8x32<Self> {
         u8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -2716,8 +3140,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u8,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -2737,6 +3164,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        unsafe {
+            if SHIFT >= 32usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_u8x32(b).val.0,
+                self.cvt_to_bytes_u8x32(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_u8x32(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x32<const SHIFT: usize>(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(
+            self.slide_within_blocks_u8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -2915,24 +3372,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self> {
         mask8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask8x32(self, val: &[i8; 32usize]) -> mask8x32<Self> {
         mask8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -2951,8 +3398,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_mask8x32(self, a: mask8x32<Self>, dest: &mut [i8; 32usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -2972,6 +3422,40 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask8x32<const SHIFT: usize>(
+        self,
+        a: mask8x32<Self>,
+        b: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        unsafe {
+            if SHIFT >= 32usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_mask8x32(b).val.0,
+                self.cvt_to_bytes_mask8x32(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_mask8x32(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x32<const SHIFT: usize>(
+        self,
+        a: mask8x32<Self>,
+        b: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        self.combine_mask8x16(
+            self.slide_within_blocks_mask8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask8x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
@@ -3065,24 +3549,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i16x16(self, val: [i16; 16usize]) -> i16x16<Self> {
         i16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i16x16(self, val: &[i16; 16usize]) -> i16x16<Self> {
         i16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3101,8 +3575,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -3122,6 +3599,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_i16x16(b).val.0,
+                self.cvt_to_bytes_i16x16(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_i16x16(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x16<const SHIFT: usize>(
+        self,
+        a: i16x16<Self>,
+        b: i16x16<Self>,
+    ) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(
+            self.slide_within_blocks_i16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -3305,24 +3812,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u16x16(self, val: [u16; 16usize]) -> u16x16<Self> {
         u16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u16x16(self, val: &[u16; 16usize]) -> u16x16<Self> {
         u16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3341,8 +3838,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u16,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -3362,6 +3862,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_u16x16(b).val.0,
+                self.cvt_to_bytes_u16x16(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_u16x16(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x16<const SHIFT: usize>(
+        self,
+        a: u16x16<Self>,
+        b: u16x16<Self>,
+    ) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(
+            self.slide_within_blocks_u16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -3551,24 +4081,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self> {
         mask16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask16x16(self, val: &[i16; 16usize]) -> mask16x16<Self> {
         mask16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3587,8 +4107,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_mask16x16(self, a: mask16x16<Self>, dest: &mut [i16; 16usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -3608,6 +4131,40 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask16x16<const SHIFT: usize>(
+        self,
+        a: mask16x16<Self>,
+        b: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_mask16x16(b).val.0,
+                self.cvt_to_bytes_mask16x16(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_mask16x16(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x16<const SHIFT: usize>(
+        self,
+        a: mask16x16<Self>,
+        b: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask16x8(
+            self.slide_within_blocks_mask16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
@@ -3701,24 +4258,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i32x8(self, val: [i32; 8usize]) -> i32x8<Self> {
         i32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i32x8(self, val: &[i32; 8usize]) -> i32x8<Self> {
         i32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3737,8 +4284,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -3758,6 +4308,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_i32x8(b).val.0,
+                self.cvt_to_bytes_i32x8(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_i32x8(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x8<const SHIFT: usize>(
+        self,
+        a: i32x8<Self>,
+        b: i32x8<Self>,
+    ) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(
+            self.slide_within_blocks_i32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -3946,24 +4526,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u32x8(self, val: [u32; 8usize]) -> u32x8<Self> {
         u32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u32x8(self, val: &[u32; 8usize]) -> u32x8<Self> {
         u32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3982,8 +4552,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u32,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -4003,6 +4576,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_u32x8(b).val.0,
+                self.cvt_to_bytes_u32x8(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_u32x8(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x8<const SHIFT: usize>(
+        self,
+        a: u32x8<Self>,
+        b: u32x8<Self>,
+    ) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(
+            self.slide_within_blocks_u32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -4178,24 +4781,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self> {
         mask32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask32x8(self, val: &[i32; 8usize]) -> mask32x8<Self> {
         mask32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -4214,8 +4807,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_mask32x8(self, a: mask32x8<Self>, dest: &mut [i32; 8usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -4235,6 +4831,40 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask32x8<const SHIFT: usize>(
+        self,
+        a: mask32x8<Self>,
+        b: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_mask32x8(b).val.0,
+                self.cvt_to_bytes_mask32x8(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_mask32x8(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x8<const SHIFT: usize>(
+        self,
+        a: mask32x8<Self>,
+        b: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask32x4(
+            self.slide_within_blocks_mask32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -4328,24 +4958,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f64x4(self, val: [f64; 4usize]) -> f64x4<Self> {
         f64x4 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_pd(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_pd(val.as_ptr().add(2usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f64x4(self, val: &[f64; 4usize]) -> f64x4<Self> {
         f64x4 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_pd(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_pd(val.as_ptr().add(2usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -4364,8 +4984,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
         unsafe {
-            _mm_storeu_pd(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_pd(dest.as_mut_ptr().add(2usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f64,
+                dest.as_mut_ptr(),
+                4usize,
+            );
         }
     }
     #[inline(always)]
@@ -4385,6 +5008,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_f64x4(b).val.0,
+                self.cvt_to_bytes_f64x4(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_f64x4(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x4<const SHIFT: usize>(
+        self,
+        a: f64x4<Self>,
+        b: f64x4<Self>,
+    ) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(
+            self.slide_within_blocks_f64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x2::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -4606,24 +5259,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self> {
         mask64x4 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(2usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask64x4(self, val: &[i64; 4usize]) -> mask64x4<Self> {
         mask64x4 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(2usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -4642,8 +5285,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_mask64x4(self, a: mask64x4<Self>, dest: &mut [i64; 4usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(2usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i64,
+                dest.as_mut_ptr(),
+                4usize,
+            );
         }
     }
     #[inline(always)]
@@ -4663,6 +5309,40 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask64x4<const SHIFT: usize>(
+        self,
+        a: mask64x4<Self>,
+        b: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x2(
+                self.cvt_to_bytes_mask64x4(b).val.0,
+                self.cvt_to_bytes_mask64x4(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_mask64x4(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x4<const SHIFT: usize>(
+        self,
+        a: mask64x4<Self>,
+        b: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask64x2(
+            self.slide_within_blocks_mask64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask64x2::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -4756,28 +5436,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self> {
         f32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_ps(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_ps(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_ps(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_ps(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f32x16(self, val: &[f32; 16usize]) -> f32x16<Self> {
         f32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_ps(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_ps(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_ps(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_ps(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -4796,10 +5462,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
         unsafe {
-            _mm_storeu_ps(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_ps(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
-            _mm_storeu_ps(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[2]);
-            _mm_storeu_ps(dest.as_mut_ptr().add(12usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f32,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -4819,6 +5486,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_f32x16(b).val.0,
+                self.cvt_to_bytes_f32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_f32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x16<const SHIFT: usize>(
+        self,
+        a: f32x16<Self>,
+        b: f32x16<Self>,
+    ) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(
+            self.slide_within_blocks_f32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -5125,28 +5822,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self> {
         i8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(32usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i8x64(self, val: &[i8; 64usize]) -> i8x64<Self> {
         i8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(32usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -5165,10 +5848,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(32usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(48usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                64usize,
+            );
         }
     }
     #[inline(always)]
@@ -5188,6 +5872,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        unsafe {
+            if SHIFT >= 64usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_i8x64(b).val.0,
+                self.cvt_to_bytes_i8x64(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_i8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x64<const SHIFT: usize>(
+        self,
+        a: i8x64<Self>,
+        b: i8x64<Self>,
+    ) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(
+            self.slide_within_blocks_i8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x32::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -5364,28 +6078,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self> {
         u8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(32usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u8x64(self, val: &[u8; 64usize]) -> u8x64<Self> {
         u8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(32usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -5404,10 +6104,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(32usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(48usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u8,
+                dest.as_mut_ptr(),
+                64usize,
+            );
         }
     }
     #[inline(always)]
@@ -5427,6 +6128,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        unsafe {
+            if SHIFT >= 64usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_u8x64(b).val.0,
+                self.cvt_to_bytes_u8x64(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_u8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x64<const SHIFT: usize>(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(
+            self.slide_within_blocks_u8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x32::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -5648,28 +6379,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self> {
         mask8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(32usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask8x64(self, val: &[i8; 64usize]) -> mask8x64<Self> {
         mask8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(32usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -5688,10 +6405,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_mask8x64(self, a: mask8x64<Self>, dest: &mut [i8; 64usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(32usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(48usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                64usize,
+            );
         }
     }
     #[inline(always)]
@@ -5711,6 +6429,40 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask8x64<const SHIFT: usize>(
+        self,
+        a: mask8x64<Self>,
+        b: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        unsafe {
+            if SHIFT >= 64usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_mask8x64(b).val.0,
+                self.cvt_to_bytes_mask8x64(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_mask8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x64<const SHIFT: usize>(
+        self,
+        a: mask8x64<Self>,
+        b: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        self.combine_mask8x32(
+            self.slide_within_blocks_mask8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask8x32::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -5797,28 +6549,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self> {
         i16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i16x32(self, val: &[i16; 32usize]) -> i16x32<Self> {
         i16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -5837,10 +6575,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(24usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -5860,6 +6599,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        unsafe {
+            if SHIFT >= 32usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_i16x32(b).val.0,
+                self.cvt_to_bytes_i16x32(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_i16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x32<const SHIFT: usize>(
+        self,
+        a: i16x32<Self>,
+        b: i16x32<Self>,
+    ) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(
+            self.slide_within_blocks_i16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -6045,28 +6814,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self> {
         u16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u16x32(self, val: &[u16; 32usize]) -> u16x32<Self> {
         u16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -6085,10 +6840,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(24usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u16,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -6108,6 +6864,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        unsafe {
+            if SHIFT >= 32usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_u16x32(b).val.0,
+                self.cvt_to_bytes_u16x32(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_u16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x32<const SHIFT: usize>(
+        self,
+        a: u16x32<Self>,
+        b: u16x32<Self>,
+    ) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(
+            self.slide_within_blocks_u16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -6348,28 +7134,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self> {
         mask16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask16x32(self, val: &[i16; 32usize]) -> mask16x32<Self> {
         mask16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(16usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -6388,10 +7160,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_mask16x32(self, a: mask16x32<Self>, dest: &mut [i16; 32usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(24usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -6411,6 +7184,40 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask16x32<const SHIFT: usize>(
+        self,
+        a: mask16x32<Self>,
+        b: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        unsafe {
+            if SHIFT >= 32usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_mask16x32(b).val.0,
+                self.cvt_to_bytes_mask16x32(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_mask16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x32<const SHIFT: usize>(
+        self,
+        a: mask16x32<Self>,
+        b: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask16x16(
+            self.slide_within_blocks_mask16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -6500,28 +7307,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self> {
         i32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i32x16(self, val: &[i32; 16usize]) -> i32x16<Self> {
         i32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -6540,10 +7333,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(12usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -6563,6 +7357,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_i32x16(b).val.0,
+                self.cvt_to_bytes_i32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_i32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x16<const SHIFT: usize>(
+        self,
+        a: i32x16<Self>,
+        b: i32x16<Self>,
+    ) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(
+            self.slide_within_blocks_i32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -6744,28 +7568,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self> {
         u32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u32x16(self, val: &[u32; 16usize]) -> u32x16<Self> {
         u32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -6784,10 +7594,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(12usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u32,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -6807,6 +7618,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_u32x16(b).val.0,
+                self.cvt_to_bytes_u32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_u32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x16<const SHIFT: usize>(
+        self,
+        a: u32x16<Self>,
+        b: u32x16<Self>,
+    ) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(
+            self.slide_within_blocks_u32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -7020,28 +7861,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self> {
         mask32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask32x16(self, val: &[i32; 16usize]) -> mask32x16<Self> {
         mask32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(8usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -7060,10 +7887,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_mask32x16(self, a: mask32x16<Self>, dest: &mut [i32; 16usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(12usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -7083,6 +7911,40 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask32x16<const SHIFT: usize>(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_mask32x16(b).val.0,
+                self.cvt_to_bytes_mask32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_mask32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x16<const SHIFT: usize>(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask32x8(
+            self.slide_within_blocks_mask32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -7169,28 +8031,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self> {
         f64x8 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_pd(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_pd(val.as_ptr().add(2usize) as *const _),
-                    _mm_loadu_pd(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_pd(val.as_ptr().add(6usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f64x8(self, val: &[f64; 8usize]) -> f64x8<Self> {
         f64x8 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_pd(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_pd(val.as_ptr().add(2usize) as *const _),
-                    _mm_loadu_pd(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_pd(val.as_ptr().add(6usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -7209,10 +8057,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
         unsafe {
-            _mm_storeu_pd(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_pd(dest.as_mut_ptr().add(2usize) as *mut _, a.val.0[1]);
-            _mm_storeu_pd(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[2]);
-            _mm_storeu_pd(dest.as_mut_ptr().add(6usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f64,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -7232,6 +8081,36 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_f64x8(b).val.0,
+                self.cvt_to_bytes_f64x8(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_f64x8(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x8<const SHIFT: usize>(
+        self,
+        a: f64x8<Self>,
+        b: f64x8<Self>,
+    ) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(
+            self.slide_within_blocks_f64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -7446,28 +8325,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self> {
         mask64x8 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(2usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(6usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask64x8(self, val: &[i64; 8usize]) -> mask64x8<Self> {
         mask64x8 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    _mm_loadu_si128(val.as_ptr().add(0usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(2usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(4usize) as *const _),
-                    _mm_loadu_si128(val.as_ptr().add(6usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -7486,10 +8351,11 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn store_array_mask64x8(self, a: mask64x8<Self>, dest: &mut [i64; 8usize]) -> () {
         unsafe {
-            _mm_storeu_si128(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(2usize) as *mut _, a.val.0[1]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[2]);
-            _mm_storeu_si128(dest.as_mut_ptr().add(6usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i64,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -7509,6 +8375,40 @@ impl Simd for Sse4_2 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask64x8<const SHIFT: usize>(
+        self,
+        a: mask64x8<Self>,
+        b: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = cross_block_alignr_128x4(
+                self.cvt_to_bytes_mask64x8(b).val.0,
+                self.cvt_to_bytes_mask64x8(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_mask64x8(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x8<const SHIFT: usize>(
+        self,
+        a: mask64x8<Self>,
+        b: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask64x4(
+            self.slide_within_blocks_mask64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask64x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
@@ -7767,4 +8667,77 @@ impl<S: Simd> From<mask64x2<S>> for __m128i {
     fn from(value: mask64x2<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
+}
+#[doc = r" This is a version of the `alignr` intrinsic that takes a non-const shift argument. The shift is still"]
+#[doc = r" expected to be constant in practice, so the match statement will be optimized out. This exists because"]
+#[doc = r" Rust doesn't currently let you do math on const generics."]
+#[inline(always)]
+unsafe fn dyn_alignr_128(a: __m128i, b: __m128i, shift: usize) -> __m128i {
+    unsafe {
+        match shift {
+            0usize => _mm_alignr_epi8::<0i32>(a, b),
+            1usize => _mm_alignr_epi8::<1i32>(a, b),
+            2usize => _mm_alignr_epi8::<2i32>(a, b),
+            3usize => _mm_alignr_epi8::<3i32>(a, b),
+            4usize => _mm_alignr_epi8::<4i32>(a, b),
+            5usize => _mm_alignr_epi8::<5i32>(a, b),
+            6usize => _mm_alignr_epi8::<6i32>(a, b),
+            7usize => _mm_alignr_epi8::<7i32>(a, b),
+            8usize => _mm_alignr_epi8::<8i32>(a, b),
+            9usize => _mm_alignr_epi8::<9i32>(a, b),
+            10usize => _mm_alignr_epi8::<10i32>(a, b),
+            11usize => _mm_alignr_epi8::<11i32>(a, b),
+            12usize => _mm_alignr_epi8::<12i32>(a, b),
+            13usize => _mm_alignr_epi8::<13i32>(a, b),
+            14usize => _mm_alignr_epi8::<14i32>(a, b),
+            15usize => _mm_alignr_epi8::<15i32>(a, b),
+            _ => unreachable!(),
+        }
+    }
+}
+#[doc = r" Concatenates `b` and `a` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`."]
+#[doc = r" Extracts from [b : a] (b in low bytes, a in high bytes), matching `alignr` semantics."]
+#[inline(always)]
+unsafe fn cross_block_alignr_128x2(
+    a: [__m128i; 2usize],
+    b: [__m128i; 2usize],
+    shift_bytes: usize,
+) -> [__m128i; 2usize] {
+    [
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, 0usize, shift_bytes);
+            unsafe { dyn_alignr_128(hi, lo, shift_bytes % 16) }
+        },
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, 1usize, shift_bytes);
+            unsafe { dyn_alignr_128(hi, lo, shift_bytes % 16) }
+        },
+    ]
+}
+#[doc = r" Concatenates `b` and `a` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`."]
+#[doc = r" Extracts from [b : a] (b in low bytes, a in high bytes), matching `alignr` semantics."]
+#[inline(always)]
+unsafe fn cross_block_alignr_128x4(
+    a: [__m128i; 4usize],
+    b: [__m128i; 4usize],
+    shift_bytes: usize,
+) -> [__m128i; 4usize] {
+    [
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, 0usize, shift_bytes);
+            unsafe { dyn_alignr_128(hi, lo, shift_bytes % 16) }
+        },
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, 1usize, shift_bytes);
+            unsafe { dyn_alignr_128(hi, lo, shift_bytes % 16) }
+        },
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, 2usize, shift_bytes);
+            unsafe { dyn_alignr_128(hi, lo, shift_bytes % 16) }
+        },
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, 3usize, shift_bytes);
+            unsafe { dyn_alignr_128(hi, lo, shift_bytes % 16) }
+        },
+    ]
 }

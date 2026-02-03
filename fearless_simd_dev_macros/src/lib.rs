@@ -80,7 +80,10 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         fn #sse4_name() {
             if std::arch::is_x86_feature_detected!("sse4.2") {
                 let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
-                #input_fn_name(sse4);
+                sse4.vectorize(
+                    #[inline(always)]
+                    || #input_fn_name(sse4)
+                );
             }
         }
     };
@@ -94,7 +97,10 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
                 && std::arch::is_x86_feature_detected!("fma")
             {
                 let avx2 = unsafe { fearless_simd::x86::Avx2::new_unchecked() };
-                #input_fn_name(avx2);
+                avx2.vectorize(
+                    #[inline(always)]
+                    || #input_fn_name(avx2)
+                );
             }
         }
     };
@@ -110,6 +116,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     quote! {
+        #[inline(always)]
         #input_fn
 
         #fallback_snippet

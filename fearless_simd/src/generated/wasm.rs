@@ -94,14 +94,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_f32x4(self, val: [f32; 4usize]) -> f32x4<Self> {
         f32x4 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f32x4(self, val: &[f32; 4usize]) -> f32x4<Self> {
         f32x4 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -119,7 +119,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f32,
+                dest.as_mut_ptr(),
+                4usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self> {
@@ -138,6 +144,31 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_f32x4(a).val.0,
+                self.cvt_to_bytes_f32x4(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_f32x4(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x4<const SHIFT: usize>(
+        self,
+        a: f32x4<Self>,
+        b: f32x4<Self>,
+    ) -> f32x4<Self> {
+        self.slide_f32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -357,14 +388,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_i8x16(self, val: [i8; 16usize]) -> i8x16<Self> {
         i8x16 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i8x16(self, val: &[i8; 16usize]) -> i8x16<Self> {
         i8x16 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -382,7 +413,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                16usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self> {
@@ -401,6 +438,31 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_i8x16(a).val.0,
+                self.cvt_to_bytes_i8x16(b).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_i8x16(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x16<const SHIFT: usize>(
+        self,
+        a: i8x16<Self>,
+        b: i8x16<Self>,
+    ) -> i8x16<Self> {
+        self.slide_i8x16::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -543,14 +605,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self> {
         u8x16 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u8x16(self, val: &[u8; 16usize]) -> u8x16<Self> {
         u8x16 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -568,7 +630,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u8,
+                dest.as_mut_ptr(),
+                16usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -587,6 +655,31 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_u8x16(a).val.0,
+                self.cvt_to_bytes_u8x16(b).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_u8x16(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x16<const SHIFT: usize>(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+    ) -> u8x16<Self> {
+        self.slide_u8x16::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -727,14 +820,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
         mask8x16 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask8x16(self, val: &[i8; 16usize]) -> mask8x16<Self> {
         mask8x16 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -752,7 +845,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_mask8x16(self, a: mask8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                16usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_mask8x16(self, a: u8x16<Self>) -> mask8x16<Self> {
@@ -771,6 +870,35 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask8x16<const SHIFT: usize>(
+        self,
+        a: mask8x16<Self>,
+        b: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_mask8x16(a).val.0,
+                self.cvt_to_bytes_mask8x16(b).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_mask8x16(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x16<const SHIFT: usize>(
+        self,
+        a: mask8x16<Self>,
+        b: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        self.slide_mask8x16::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -838,14 +966,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_i16x8(self, val: [i16; 8usize]) -> i16x8<Self> {
         i16x8 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i16x8(self, val: &[i16; 8usize]) -> i16x8<Self> {
         i16x8 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -863,7 +991,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                8usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self> {
@@ -882,6 +1016,31 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_i16x8(a).val.0,
+                self.cvt_to_bytes_i16x8(b).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_i16x8(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x8<const SHIFT: usize>(
+        self,
+        a: i16x8<Self>,
+        b: i16x8<Self>,
+    ) -> i16x8<Self> {
+        self.slide_i16x8::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -1008,14 +1167,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self> {
         u16x8 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u16x8(self, val: &[u16; 8usize]) -> u16x8<Self> {
         u16x8 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1033,7 +1192,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u16,
+                dest.as_mut_ptr(),
+                8usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self> {
@@ -1052,6 +1217,31 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_u16x8(a).val.0,
+                self.cvt_to_bytes_u16x8(b).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_u16x8(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x8<const SHIFT: usize>(
+        self,
+        a: u16x8<Self>,
+        b: u16x8<Self>,
+    ) -> u16x8<Self> {
+        self.slide_u16x8::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1174,14 +1364,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
         mask16x8 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask16x8(self, val: &[i16; 8usize]) -> mask16x8<Self> {
         mask16x8 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1199,7 +1389,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_mask16x8(self, a: mask16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                8usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_mask16x8(self, a: u8x16<Self>) -> mask16x8<Self> {
@@ -1218,6 +1414,35 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask16x8<const SHIFT: usize>(
+        self,
+        a: mask16x8<Self>,
+        b: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_mask16x8(a).val.0,
+                self.cvt_to_bytes_mask16x8(b).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_mask16x8(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x8<const SHIFT: usize>(
+        self,
+        a: mask16x8<Self>,
+        b: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        self.slide_mask16x8::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -1285,14 +1510,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_i32x4(self, val: [i32; 4usize]) -> i32x4<Self> {
         i32x4 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i32x4(self, val: &[i32; 4usize]) -> i32x4<Self> {
         i32x4 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1310,7 +1535,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                4usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self> {
@@ -1329,6 +1560,31 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_i32x4(a).val.0,
+                self.cvt_to_bytes_i32x4(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_i32x4(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x4<const SHIFT: usize>(
+        self,
+        a: i32x4<Self>,
+        b: i32x4<Self>,
+    ) -> i32x4<Self> {
+        self.slide_i32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -1459,14 +1715,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self> {
         u32x4 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u32x4(self, val: &[u32; 4usize]) -> u32x4<Self> {
         u32x4 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1484,7 +1740,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u32,
+                dest.as_mut_ptr(),
+                4usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self> {
@@ -1503,6 +1765,31 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_u32x4(a).val.0,
+                self.cvt_to_bytes_u32x4(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_u32x4(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x4<const SHIFT: usize>(
+        self,
+        a: u32x4<Self>,
+        b: u32x4<Self>,
+    ) -> u32x4<Self> {
+        self.slide_u32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -1625,14 +1912,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
         mask32x4 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask32x4(self, val: &[i32; 4usize]) -> mask32x4<Self> {
         mask32x4 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1650,7 +1937,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_mask32x4(self, a: mask32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                4usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_mask32x4(self, a: u8x16<Self>) -> mask32x4<Self> {
@@ -1669,6 +1962,35 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask32x4<const SHIFT: usize>(
+        self,
+        a: mask32x4<Self>,
+        b: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_mask32x4(a).val.0,
+                self.cvt_to_bytes_mask32x4(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_mask32x4(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x4<const SHIFT: usize>(
+        self,
+        a: mask32x4<Self>,
+        b: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        self.slide_mask32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -1736,14 +2058,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_f64x2(self, val: [f64; 2usize]) -> f64x2<Self> {
         f64x2 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f64x2(self, val: &[f64; 2usize]) -> f64x2<Self> {
         f64x2 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1761,7 +2083,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f64,
+                dest.as_mut_ptr(),
+                2usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self> {
@@ -1780,6 +2108,31 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        if SHIFT >= 2usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_f64x2(a).val.0,
+                self.cvt_to_bytes_f64x2(b).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_f64x2(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x2<const SHIFT: usize>(
+        self,
+        a: f64x2<Self>,
+        b: f64x2<Self>,
+    ) -> f64x2<Self> {
+        self.slide_f64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -1957,14 +2310,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
         mask64x2 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask64x2(self, val: &[i64; 2usize]) -> mask64x2<Self> {
         mask64x2 {
-            val: unsafe { crate::support::Aligned128(v128_load(val.as_ptr() as *const _)) },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -1982,7 +2335,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn store_array_mask64x2(self, a: mask64x2<Self>, dest: &mut [i64; 2usize]) -> () {
-        unsafe { v128_store(dest.as_mut_ptr() as *mut _, a.val.0) }
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i64,
+                dest.as_mut_ptr(),
+                2usize,
+            );
+        }
     }
     #[inline(always)]
     fn cvt_from_bytes_mask64x2(self, a: u8x16<Self>) -> mask64x2<Self> {
@@ -2001,6 +2360,35 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask64x2<const SHIFT: usize>(
+        self,
+        a: mask64x2<Self>,
+        b: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        if SHIFT >= 2usize {
+            return b;
+        }
+        unsafe {
+            let result = dyn_slide_128(
+                self.cvt_to_bytes_mask64x2(a).val.0,
+                self.cvt_to_bytes_mask64x2(b).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_mask64x2(u8x16 {
+                val: crate::support::Aligned128(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x2<const SHIFT: usize>(
+        self,
+        a: mask64x2<Self>,
+        b: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        self.slide_mask64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -2069,24 +2457,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_f32x8(self, val: [f32; 8usize]) -> f32x8<Self> {
         f32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f32x8(self, val: &[f32; 8usize]) -> f32x8<Self> {
         f32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -2105,8 +2483,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f32,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -2126,6 +2507,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_f32x8(a).val.0,
+                self.cvt_to_bytes_f32x8(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_f32x8(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x8<const SHIFT: usize>(
+        self,
+        a: f32x8<Self>,
+        b: f32x8<Self>,
+    ) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(
+            self.slide_within_blocks_f32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -2394,24 +2805,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_i8x32(self, val: [i8; 32usize]) -> i8x32<Self> {
         i8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i8x32(self, val: &[i8; 32usize]) -> i8x32<Self> {
         i8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -2430,8 +2831,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -2451,6 +2855,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_i8x32(a).val.0,
+                self.cvt_to_bytes_i8x32(b).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_i8x32(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x32<const SHIFT: usize>(
+        self,
+        a: i8x32<Self>,
+        b: i8x32<Self>,
+    ) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(
+            self.slide_within_blocks_i8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -2634,24 +3068,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_u8x32(self, val: [u8; 32usize]) -> u8x32<Self> {
         u8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u8x32(self, val: &[u8; 32usize]) -> u8x32<Self> {
         u8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -2670,8 +3094,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u8,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -2691,6 +3118,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_u8x32(a).val.0,
+                self.cvt_to_bytes_u8x32(b).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_u8x32(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x32<const SHIFT: usize>(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(
+            self.slide_within_blocks_u8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -2869,24 +3326,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self> {
         mask8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask8x32(self, val: &[i8; 32usize]) -> mask8x32<Self> {
         mask8x32 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -2905,8 +3352,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_mask8x32(self, a: mask8x32<Self>, dest: &mut [i8; 32usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -2926,6 +3376,40 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask8x32<const SHIFT: usize>(
+        self,
+        a: mask8x32<Self>,
+        b: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_mask8x32(a).val.0,
+                self.cvt_to_bytes_mask8x32(b).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_mask8x32(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x32<const SHIFT: usize>(
+        self,
+        a: mask8x32<Self>,
+        b: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        self.combine_mask8x16(
+            self.slide_within_blocks_mask8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask8x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
@@ -3019,24 +3503,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_i16x16(self, val: [i16; 16usize]) -> i16x16<Self> {
         i16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i16x16(self, val: &[i16; 16usize]) -> i16x16<Self> {
         i16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3055,8 +3529,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -3076,6 +3553,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_i16x16(a).val.0,
+                self.cvt_to_bytes_i16x16(b).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_i16x16(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x16<const SHIFT: usize>(
+        self,
+        a: i16x16<Self>,
+        b: i16x16<Self>,
+    ) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(
+            self.slide_within_blocks_i16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -3259,24 +3766,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_u16x16(self, val: [u16; 16usize]) -> u16x16<Self> {
         u16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u16x16(self, val: &[u16; 16usize]) -> u16x16<Self> {
         u16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3295,8 +3792,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u16,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -3316,6 +3816,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_u16x16(a).val.0,
+                self.cvt_to_bytes_u16x16(b).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_u16x16(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x16<const SHIFT: usize>(
+        self,
+        a: u16x16<Self>,
+        b: u16x16<Self>,
+    ) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(
+            self.slide_within_blocks_u16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -3503,24 +4033,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self> {
         mask16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask16x16(self, val: &[i16; 16usize]) -> mask16x16<Self> {
         mask16x16 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3539,8 +4059,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_mask16x16(self, a: mask16x16<Self>, dest: &mut [i16; 16usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -3560,6 +4083,40 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask16x16<const SHIFT: usize>(
+        self,
+        a: mask16x16<Self>,
+        b: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_mask16x16(a).val.0,
+                self.cvt_to_bytes_mask16x16(b).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_mask16x16(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x16<const SHIFT: usize>(
+        self,
+        a: mask16x16<Self>,
+        b: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask16x8(
+            self.slide_within_blocks_mask16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
@@ -3653,24 +4210,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_i32x8(self, val: [i32; 8usize]) -> i32x8<Self> {
         i32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i32x8(self, val: &[i32; 8usize]) -> i32x8<Self> {
         i32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3689,8 +4236,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -3710,6 +4260,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_i32x8(a).val.0,
+                self.cvt_to_bytes_i32x8(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_i32x8(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x8<const SHIFT: usize>(
+        self,
+        a: i32x8<Self>,
+        b: i32x8<Self>,
+    ) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(
+            self.slide_within_blocks_i32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -3898,24 +4478,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_u32x8(self, val: [u32; 8usize]) -> u32x8<Self> {
         u32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u32x8(self, val: &[u32; 8usize]) -> u32x8<Self> {
         u32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -3934,8 +4504,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u32,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -3955,6 +4528,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_u32x8(a).val.0,
+                self.cvt_to_bytes_u32x8(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_u32x8(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x8<const SHIFT: usize>(
+        self,
+        a: u32x8<Self>,
+        b: u32x8<Self>,
+    ) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(
+            self.slide_within_blocks_u32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -4130,24 +4733,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self> {
         mask32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask32x8(self, val: &[i32; 8usize]) -> mask32x8<Self> {
         mask32x8 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -4166,8 +4759,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_mask32x8(self, a: mask32x8<Self>, dest: &mut [i32; 8usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -4187,6 +4783,40 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask32x8<const SHIFT: usize>(
+        self,
+        a: mask32x8<Self>,
+        b: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_mask32x8(a).val.0,
+                self.cvt_to_bytes_mask32x8(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_mask32x8(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x8<const SHIFT: usize>(
+        self,
+        a: mask32x8<Self>,
+        b: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask32x4(
+            self.slide_within_blocks_mask32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -4280,24 +4910,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_f64x4(self, val: [f64; 4usize]) -> f64x4<Self> {
         f64x4 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(2usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f64x4(self, val: &[f64; 4usize]) -> f64x4<Self> {
         f64x4 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(2usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -4316,8 +4936,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(2usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f64,
+                dest.as_mut_ptr(),
+                4usize,
+            );
         }
     }
     #[inline(always)]
@@ -4337,6 +4960,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_f64x4(a).val.0,
+                self.cvt_to_bytes_f64x4(b).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_f64x4(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x4<const SHIFT: usize>(
+        self,
+        a: f64x4<Self>,
+        b: f64x4<Self>,
+    ) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(
+            self.slide_within_blocks_f64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x2::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -4558,24 +5211,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self> {
         mask64x4 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(2usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask64x4(self, val: &[i64; 4usize]) -> mask64x4<Self> {
         mask64x4 {
-            val: unsafe {
-                crate::support::Aligned256([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(2usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -4594,8 +5237,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_mask64x4(self, a: mask64x4<Self>, dest: &mut [i64; 4usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(2usize) as *mut _, a.val.0[1]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i64,
+                dest.as_mut_ptr(),
+                4usize,
+            );
         }
     }
     #[inline(always)]
@@ -4615,6 +5261,40 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask64x4<const SHIFT: usize>(
+        self,
+        a: mask64x4<Self>,
+        b: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x2(
+                self.cvt_to_bytes_mask64x4(a).val.0,
+                self.cvt_to_bytes_mask64x4(b).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_mask64x4(u8x32 {
+                val: crate::support::Aligned256(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x4<const SHIFT: usize>(
+        self,
+        a: mask64x4<Self>,
+        b: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask64x2(
+            self.slide_within_blocks_mask64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask64x2::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -4708,28 +5388,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self> {
         f32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f32x16(self, val: &[f32; 16usize]) -> f32x16<Self> {
         f32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -4748,10 +5414,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(12usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f32,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -4771,6 +5438,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_f32x16(a).val.0,
+                self.cvt_to_bytes_f32x16(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_f32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x16<const SHIFT: usize>(
+        self,
+        a: f32x16<Self>,
+        b: f32x16<Self>,
+    ) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(
+            self.slide_within_blocks_f32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -5074,28 +5771,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self> {
         i8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(32usize) as *const _),
-                    v128_load(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i8x64(self, val: &[i8; 64usize]) -> i8x64<Self> {
         i8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(32usize) as *const _),
-                    v128_load(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -5114,10 +5797,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(32usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(48usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                64usize,
+            );
         }
     }
     #[inline(always)]
@@ -5137,6 +5821,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        if SHIFT >= 64usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_i8x64(a).val.0,
+                self.cvt_to_bytes_i8x64(b).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_i8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x64<const SHIFT: usize>(
+        self,
+        a: i8x64<Self>,
+        b: i8x64<Self>,
+    ) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(
+            self.slide_within_blocks_i8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x32::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -5313,28 +6027,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self> {
         u8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(32usize) as *const _),
-                    v128_load(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u8x64(self, val: &[u8; 64usize]) -> u8x64<Self> {
         u8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(32usize) as *const _),
-                    v128_load(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -5353,10 +6053,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(32usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(48usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u8,
+                dest.as_mut_ptr(),
+                64usize,
+            );
         }
     }
     #[inline(always)]
@@ -5376,6 +6077,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        if SHIFT >= 64usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_u8x64(a).val.0,
+                self.cvt_to_bytes_u8x64(b).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_u8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x64<const SHIFT: usize>(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(
+            self.slide_within_blocks_u8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x32::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -5608,28 +6339,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self> {
         mask8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(32usize) as *const _),
-                    v128_load(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask8x64(self, val: &[i8; 64usize]) -> mask8x64<Self> {
         mask8x64 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(32usize) as *const _),
-                    v128_load(val.as_ptr().add(48usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -5648,10 +6365,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_mask8x64(self, a: mask8x64<Self>, dest: &mut [i8; 64usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(32usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(48usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i8,
+                dest.as_mut_ptr(),
+                64usize,
+            );
         }
     }
     #[inline(always)]
@@ -5671,6 +6389,40 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask8x64<const SHIFT: usize>(
+        self,
+        a: mask8x64<Self>,
+        b: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        if SHIFT >= 64usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_mask8x64(a).val.0,
+                self.cvt_to_bytes_mask8x64(b).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_mask8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x64<const SHIFT: usize>(
+        self,
+        a: mask8x64<Self>,
+        b: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        self.combine_mask8x32(
+            self.slide_within_blocks_mask8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask8x32::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -5757,28 +6509,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self> {
         i16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i16x32(self, val: &[i16; 32usize]) -> i16x32<Self> {
         i16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -5797,10 +6535,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(24usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -5820,6 +6559,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_i16x32(a).val.0,
+                self.cvt_to_bytes_i16x32(b).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_i16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x32<const SHIFT: usize>(
+        self,
+        a: i16x32<Self>,
+        b: i16x32<Self>,
+    ) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(
+            self.slide_within_blocks_i16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -6005,28 +6774,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self> {
         u16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u16x32(self, val: &[u16; 32usize]) -> u16x32<Self> {
         u16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -6045,10 +6800,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(24usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u16,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -6068,6 +6824,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_u16x32(a).val.0,
+                self.cvt_to_bytes_u16x32(b).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_u16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x32<const SHIFT: usize>(
+        self,
+        a: u16x32<Self>,
+        b: u16x32<Self>,
+    ) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(
+            self.slide_within_blocks_u16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -6295,28 +7081,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self> {
         mask16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask16x32(self, val: &[i16; 32usize]) -> mask16x32<Self> {
         mask16x32 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(16usize) as *const _),
-                    v128_load(val.as_ptr().add(24usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -6335,10 +7107,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_mask16x32(self, a: mask16x32<Self>, dest: &mut [i16; 32usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(16usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(24usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i16,
+                dest.as_mut_ptr(),
+                32usize,
+            );
         }
     }
     #[inline(always)]
@@ -6358,6 +7131,40 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask16x32<const SHIFT: usize>(
+        self,
+        a: mask16x32<Self>,
+        b: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        if SHIFT >= 32usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_mask16x32(a).val.0,
+                self.cvt_to_bytes_mask16x32(b).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_mask16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x32<const SHIFT: usize>(
+        self,
+        a: mask16x32<Self>,
+        b: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask16x16(
+            self.slide_within_blocks_mask16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -6447,28 +7254,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self> {
         i32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i32x16(self, val: &[i32; 16usize]) -> i32x16<Self> {
         i32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -6487,10 +7280,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(12usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -6510,6 +7304,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_i32x16(a).val.0,
+                self.cvt_to_bytes_i32x16(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_i32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x16<const SHIFT: usize>(
+        self,
+        a: i32x16<Self>,
+        b: i32x16<Self>,
+    ) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(
+            self.slide_within_blocks_i32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -6691,28 +7515,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self> {
         u32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u32x16(self, val: &[u32; 16usize]) -> u32x16<Self> {
         u32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -6731,10 +7541,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(12usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const u32,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -6754,6 +7565,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_u32x16(a).val.0,
+                self.cvt_to_bytes_u32x16(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_u32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x16<const SHIFT: usize>(
+        self,
+        a: u32x16<Self>,
+        b: u32x16<Self>,
+    ) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(
+            self.slide_within_blocks_u32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -6964,28 +7805,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self> {
         mask32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask32x16(self, val: &[i32; 16usize]) -> mask32x16<Self> {
         mask32x16 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(8usize) as *const _),
-                    v128_load(val.as_ptr().add(12usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -7004,10 +7831,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_mask32x16(self, a: mask32x16<Self>, dest: &mut [i32; 16usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(8usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(12usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i32,
+                dest.as_mut_ptr(),
+                16usize,
+            );
         }
     }
     #[inline(always)]
@@ -7027,6 +7855,40 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask32x16<const SHIFT: usize>(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        if SHIFT >= 16usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_mask32x16(a).val.0,
+                self.cvt_to_bytes_mask32x16(b).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_mask32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x16<const SHIFT: usize>(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask32x8(
+            self.slide_within_blocks_mask32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -7113,28 +7975,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self> {
         f64x8 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(2usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(6usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f64x8(self, val: &[f64; 8usize]) -> f64x8<Self> {
         f64x8 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(2usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(6usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -7153,10 +8001,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(2usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(6usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const f64,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -7176,6 +8025,36 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_f64x8(a).val.0,
+                self.cvt_to_bytes_f64x8(b).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_f64x8(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x8<const SHIFT: usize>(
+        self,
+        a: f64x8<Self>,
+        b: f64x8<Self>,
+    ) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(
+            self.slide_within_blocks_f64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -7390,28 +8269,14 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self> {
         mask64x8 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(2usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(6usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_mask64x8(self, val: &[i64; 8usize]) -> mask64x8<Self> {
         mask64x8 {
-            val: unsafe {
-                crate::support::Aligned512([
-                    v128_load(val.as_ptr().add(0usize) as *const _),
-                    v128_load(val.as_ptr().add(2usize) as *const _),
-                    v128_load(val.as_ptr().add(4usize) as *const _),
-                    v128_load(val.as_ptr().add(6usize) as *const _),
-                ])
-            },
+            val: unsafe { core::mem::transmute_copy(val) },
             simd: self,
         }
     }
@@ -7430,10 +8295,11 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn store_array_mask64x8(self, a: mask64x8<Self>, dest: &mut [i64; 8usize]) -> () {
         unsafe {
-            v128_store(dest.as_mut_ptr().add(0usize) as *mut _, a.val.0[0]);
-            v128_store(dest.as_mut_ptr().add(2usize) as *mut _, a.val.0[1]);
-            v128_store(dest.as_mut_ptr().add(4usize) as *mut _, a.val.0[2]);
-            v128_store(dest.as_mut_ptr().add(6usize) as *mut _, a.val.0[3]);
+            core::ptr::copy_nonoverlapping(
+                (&raw const a.val.0) as *const i64,
+                dest.as_mut_ptr(),
+                8usize,
+            );
         }
     }
     #[inline(always)]
@@ -7453,6 +8319,40 @@ impl Simd for WasmSimd128 {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask64x8<const SHIFT: usize>(
+        self,
+        a: mask64x8<Self>,
+        b: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        unsafe {
+            let result = cross_block_slide_128x4(
+                self.cvt_to_bytes_mask64x8(a).val.0,
+                self.cvt_to_bytes_mask64x8(b).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_mask64x8(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x8<const SHIFT: usize>(
+        self,
+        a: mask64x8<Self>,
+        b: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask64x4(
+            self.slide_within_blocks_mask64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask64x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
@@ -7711,4 +8611,91 @@ impl<S: Simd> From<mask64x2<S>> for v128 {
     fn from(value: mask64x2<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
+}
+#[doc = r" This is a vector extend, like `vext` on ARM or `alignr` on x86, that takes a non-const shift argument."]
+#[doc = r" The shift is still expected to be constant in practice, so the match statement will be optimized out."]
+#[doc = r" This exists because Rust doesn't currently let you do math on const generics."]
+#[inline(always)]
+unsafe fn dyn_slide_128(a: v128, b: v128, shift: usize) -> v128 {
+    unsafe {
+        match shift {
+            0 => i8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>(a, b),
+            1 => i8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16>(a, b),
+            2 => i8x16_shuffle::<2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17>(a, b),
+            3 => i8x16_shuffle::<3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18>(a, b),
+            4 => i8x16_shuffle::<4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19>(a, b),
+            5 => i8x16_shuffle::<5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20>(a, b),
+            6 => i8x16_shuffle::<6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21>(a, b),
+            7 => i8x16_shuffle::<7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22>(a, b),
+            8 => {
+                i8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23>(a, b)
+            }
+            9 => {
+                i8x16_shuffle::<9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24>(a, b)
+            }
+            10 => i8x16_shuffle::<10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25>(
+                a, b,
+            ),
+            11 => i8x16_shuffle::<11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26>(
+                a, b,
+            ),
+            12 => i8x16_shuffle::<12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27>(
+                a, b,
+            ),
+            13 => i8x16_shuffle::<13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28>(
+                a, b,
+            ),
+            14 => i8x16_shuffle::<14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29>(
+                a, b,
+            ),
+            15 => i8x16_shuffle::<15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30>(
+                a, b,
+            ),
+            _ => unreachable!(),
+        }
+    }
+}
+#[doc = r" Concatenates `a` and `b` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`."]
+#[inline(always)]
+unsafe fn cross_block_slide_128x2(
+    a: [v128; 2usize],
+    b: [v128; 2usize],
+    shift_bytes: usize,
+) -> [v128; 2usize] {
+    [
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 0usize, shift_bytes);
+            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+        },
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 1usize, shift_bytes);
+            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+        },
+    ]
+}
+#[doc = r" Concatenates `a` and `b` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`."]
+#[inline(always)]
+unsafe fn cross_block_slide_128x4(
+    a: [v128; 4usize],
+    b: [v128; 4usize],
+    shift_bytes: usize,
+) -> [v128; 4usize] {
+    [
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 0usize, shift_bytes);
+            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+        },
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 1usize, shift_bytes);
+            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+        },
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 2usize, shift_bytes);
+            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+        },
+        {
+            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 3usize, shift_bytes);
+            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+        },
+    ]
 }

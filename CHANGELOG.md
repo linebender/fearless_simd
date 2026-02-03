@@ -127,6 +127,7 @@ No changelog was kept for this release.
 
 [@Ralith]: https://github.com/Ralith
 [@DJMcNab]: https://github.com/DJMcNab
+[@tomcur]: https://github.com/tomcur
 [@valadaptive]: https://github.com/valadaptive
 [@LaurenzV]: https://github.com/LaurenzV
 [@Shnatsel]: https://github.com/Shnatsel
@@ -168,6 +169,7 @@ No changelog was kept for this release.
 [#170]: https://github.com/linebender/fearless_simd/pull/170
 [#176]: https://github.com/linebender/fearless_simd/pull/176
 [#180]: https://github.com/linebender/fearless_simd/pull/180
+[#181]: https://github.com/linebender/fearless_simd/pull/181
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
