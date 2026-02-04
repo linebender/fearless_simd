@@ -234,6 +234,10 @@ jobs:
   test-sde:
     name: cargo test in an emulator
     runs-on: ${{ matrix.platform.os }}
+    env:
+      # doc tests take a long time to run in the emulator and are already tested elsewhere, so exclude them with --lib --bins --tests
+      # the rest of the arguments match the native test jobs
+      CARGO_TEST_ARGS: --lib --bins --tests --workspace --locked --all-features
     strategy:
       matrix:
         platform:
@@ -257,25 +261,24 @@ jobs:
 
       # build the tests outside the emulator, otherwise this job would be very slow
       - name: build tests
-        # doc tests take a long time to run in the emulator and are already tested elsewhere, so exclude them with --lib --bins --tests
-        run: cargo test --no-run --lib --bins --tests --workspace --locked --all-features
+        run: cargo test --no-run $CARGO_TEST_ARGS
 
       - name: run tests on CPU with only SSE2
         # -p4p stands for Pentium 4 Prescott, the first Intel 64-bit CPU
-        run: sde-external-10.5.0-2026-01-13-lin/sde64 -p4p -- cargo test --lib --bins --tests --workspace --locked --all-features
+        run: sde-external-10.5.0-2026-01-13-lin/sde64 -p4p -- cargo test $CARGO_TEST_ARGS
 
       - name: run tests on CPU with SSE4.2
         # -nhm stands for Nehalem
-        run: sde-external-10.5.0-2026-01-13-lin/sde64 -nhm -- cargo test --lib --bins --tests --workspace --locked --all-features
+        run: sde-external-10.5.0-2026-01-13-lin/sde64 -nhm -- cargo test $CARGO_TEST_ARGS
 
       - name: run tests on CPU with AVX2
         # -hsw stands for Haswell
-        run: sde-external-10.5.0-2026-01-13-lin/sde64 -hsw -- cargo test --lib --bins --tests --workspace --locked --all-features
+        run: sde-external-10.5.0-2026-01-13-lin/sde64 -hsw -- cargo test $CARGO_TEST_ARGS
 
       - name: run tests on CPU with AVX-512
         # Github Actions doesn't give us AVX-512 so this is the only way to exercise AVX-512 codepaths on CI
         # -icl stands for Ice Lake; technically Skylake added AVX-512 first but it's mostly useless there due to downclocking
-        run: sde-external-10.5.0-2026-01-13-lin/sde64 -icl -- cargo test --lib --bins --tests --workspace --locked --all-features
+        run: sde-external-10.5.0-2026-01-13-lin/sde64 -icl -- cargo test $CARGO_TEST_ARGS
 
   test-nightly-asan:
     name: cargo test with Address Sanitizer
