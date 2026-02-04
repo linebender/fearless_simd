@@ -231,8 +231,8 @@ jobs:
       - name: cargo test --doc
         run: cargo test --doc --workspace --locked --all-features --no-fail-fast --target ${{ matrix.platform.target }}
 
-  test-stable:
-    name: cargo test
+  test-sde:
+    name: cargo test in an emulator
     runs-on: ${{ matrix.platform.os }}
     strategy:
       matrix:
