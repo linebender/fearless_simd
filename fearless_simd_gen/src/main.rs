@@ -8,7 +8,7 @@
 
 use std::{fs::File, path::Path};
 
-use clap::{Parser, ValueEnum};
+use clap::{Parser, Subcommand, ValueEnum};
 use proc_macro2::TokenStream;
 
 use crate::{level::Level as _, util::write_code};
@@ -16,6 +16,7 @@ use crate::{level::Level as _, util::write_code};
 mod arch;
 mod generic;
 mod level;
+mod mk_core_arch;
 mod mk_fallback;
 mod mk_neon;
 mod mk_ops;
@@ -24,6 +25,7 @@ mod mk_simd_types;
 mod mk_wasm;
 mod mk_x86;
 mod ops;
+mod parse_stdarch;
 mod types;
 mod util;
 
@@ -54,6 +56,15 @@ enum Module {
 struct Cli {
     #[arg(short, long, help = "Generate a specific module and print to stdout")]
     module: Option<Module>,
+
+    #[command(subcommand)]
+    command: Option<Command>,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    /// Generate `core_arch` wrappers from stdarch source for all architectures.
+    CoreArch,
 }
 
 impl Module {
@@ -96,9 +107,33 @@ const MODULES: &[Module] = &[
 ];
 
 const FILE_BASE: &str = "./fearless_simd/src/generated";
+const CORE_ARCH_BASE: &str = "./fearless_simd/src/core_arch";
+const STDARCH_BASE: &str = "./fearless_simd_gen/stdarch";
 
 fn main() {
     let cli = Cli::parse();
+
+    // Handle subcommands first
+    if let Some(command) = cli.command {
+        match command {
+            Command::CoreArch => {
+                let base_dir = Path::new(CORE_ARCH_BASE);
+                let stdarch_dir = Path::new(STDARCH_BASE);
+                if !base_dir.is_dir() || !stdarch_dir.is_dir() {
+                    panic!("run in fearless_simd top directory");
+                }
+                let stdarch_is_empty = std::fs::read_dir(stdarch_dir).unwrap().next().is_none();
+                if stdarch_is_empty {
+                    panic!(
+                        "`stdarch` submodule is empty. Initialize or update your git submodules."
+                    );
+                }
+                generate_core_arch("./fearless_simd_gen/stdarch", CORE_ARCH_BASE);
+                return;
+            }
+        }
+    }
+
     if let Some(module) = cli.module {
         write_code(module.generate_code(), std::process::Stdio::inherit());
     } else {
@@ -110,8 +145,24 @@ fn main() {
         for module in MODULES {
             let name = module.file_base();
             let path = base_dir.join(format!("{name}.rs"));
-            let file = File::create(&path).expect("error creating {path:?}");
+            let file = File::create(&path).unwrap_or_else(|_| panic!("error creating {path:?}"));
             write_code(module.generate_code(), file);
         }
     }
+}
+
+fn generate_core_arch(stdarch_path: &str, output_base: &str) {
+    let stdarch_root = Path::new(stdarch_path);
+    let output_base = Path::new(output_base);
+
+    if !stdarch_root.exists() {
+        eprintln!(
+            "Error: stdarch directory not found at {}",
+            stdarch_root.display()
+        );
+        eprintln!("Please provide a valid path to the stdarch repository.");
+        std::process::exit(1);
+    }
+
+    mk_core_arch::generate_all_modules(stdarch_root, output_base);
 }

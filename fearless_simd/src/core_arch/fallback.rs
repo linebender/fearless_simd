@@ -10,6 +10,10 @@ pub struct Fallback {
 impl Fallback {
     /// Create a SIMD token.
     #[inline]
+    #[expect(
+        clippy::new_without_default,
+        reason = "other architectures have unsafe `new_unchecked` constructors and cannot implement `Default`; for symmetry, we do not do so either"
+    )]
     pub const fn new() -> Self {
         Self { _private: () }
     }
