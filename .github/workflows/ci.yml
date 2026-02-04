@@ -231,6 +231,51 @@ jobs:
       - name: cargo test --doc
         run: cargo test --doc --workspace --locked --all-features --no-fail-fast --target ${{ matrix.platform.target }}
 
+  test-stable:
+    name: cargo test
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      matrix:
+        platform:
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install stable toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_STABLE_VER }}
+          targets: ${{ matrix.platform.target }}
+
+      - name: restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.event_name != 'merge_group' }}
+
+      - name: install Intel Software Development Emulator
+        run: wget 'https://downloadmirror.intel.com/873619/sde-external-10.5.0-2026-01-13-lin.tar.xz' && tar -xf 'sde-external-10.5.0-2026-01-13-lin.tar.xz'
+
+      - name: build tests
+        # doc tests take a long time to run in the emulator and are already tested elsewhere, so exclude them with --lib --bins --tests
+        run: cargo test --no-run --lib --bins --tests --workspace --locked --all-features
+
+      - name: run tests on CPU with only SSE2
+        # -p4p stands for Pentium 4 Prescott, the first Intel 64-bit CPU
+        run: sde-external-10.5.0-2026-01-13-lin.tar.xz/sde64 -p4p -- cargo test --lib --bins --tests --workspace --locked --all-features
+
+      - name: run tests on CPU with SSE4.2
+        # -nhm stands for Nehalem
+        run: sde-external-10.5.0-2026-01-13-lin.tar.xz/sde64 -nhm -- cargo test --lib --bins --tests --workspace --locked --all-features
+
+      - name: run tests on CPU with AVX2
+        # -hsw stands for Haswell
+        run: sde-external-10.5.0-2026-01-13-lin.tar.xz/sde64 -hsw -- cargo test --lib --bins --tests --workspace --locked --all-features
+
+      - name: run tests on CPU with AVX-512
+        # Github Actions doesn't give us AVX-512 so this is the only way to exercise AVX-512 codepaths on CI
+        # -icl stands for Ice Lake; technically Skylake added AVX-512 first but it's mostly useless there due to downclocking
+        run: sde-external-10.5.0-2026-01-13-lin.tar.xz/sde64 -icl -- cargo test --lib --bins --tests --workspace --locked --all-features
+
   test-nightly-asan:
     name: cargo test with Address Sanitizer
     runs-on: ${{ matrix.platform.os }}
