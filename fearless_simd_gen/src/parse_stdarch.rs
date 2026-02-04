@@ -76,6 +76,8 @@ impl<'ast> Visit<'ast> for IntrinsicVisitor {
             || !target_features
                 .iter()
                 .any(|feature| feature == &self.module_feature)
+            // These will be stabilized at *some* point and are hence marked as stable, but we can't use them yet
+            || target_features.iter().any(|feature| feature == "fp16")
         {
             return;
         }

@@ -464,16 +464,6 @@ impl Neon {
     pub fn vceqd_u64(self, a: u64, b: u64) -> u64 {
         unsafe { vceqd_u64(a, b) }
     }
-    #[doc = "See [`arch::vceqz_f16`]."]
-    #[inline(always)]
-    pub fn vceqz_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vceqz_f16(a) }
-    }
-    #[doc = "See [`arch::vceqzq_f16`]."]
-    #[inline(always)]
-    pub fn vceqzq_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vceqzq_f16(a) }
-    }
     #[doc = "See [`arch::vceqz_f32`]."]
     #[inline(always)]
     pub fn vceqz_f32(self, a: float32x2_t) -> uint32x2_t {
@@ -1625,16 +1615,6 @@ impl Neon {
     pub fn vcvtq_u64_f64(self, a: float64x2_t) -> uint64x2_t {
         unsafe { vcvtq_u64_f64(a) }
     }
-    #[doc = "See [`arch::vcvta_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvta_s16_f16(self, a: float16x4_t) -> int16x4_t {
-        unsafe { vcvta_s16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtaq_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtaq_s16_f16(self, a: float16x8_t) -> int16x8_t {
-        unsafe { vcvtaq_s16_f16(a) }
-    }
     #[doc = "See [`arch::vcvta_s32_f32`]."]
     #[inline(always)]
     pub fn vcvta_s32_f32(self, a: float32x2_t) -> int32x2_t {
@@ -1654,16 +1634,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcvtaq_s64_f64(self, a: float64x2_t) -> int64x2_t {
         unsafe { vcvtaq_s64_f64(a) }
-    }
-    #[doc = "See [`arch::vcvta_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvta_u16_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vcvta_u16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtaq_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtaq_u16_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vcvtaq_u16_f16(a) }
     }
     #[doc = "See [`arch::vcvta_u32_f32`]."]
     #[inline(always)]
@@ -1715,16 +1685,6 @@ impl Neon {
     pub fn vcvts_f32_s32(self, a: i32) -> f32 {
         unsafe { vcvts_f32_s32(a) }
     }
-    #[doc = "See [`arch::vcvtm_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtm_s16_f16(self, a: float16x4_t) -> int16x4_t {
-        unsafe { vcvtm_s16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtmq_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtmq_s16_f16(self, a: float16x8_t) -> int16x8_t {
-        unsafe { vcvtmq_s16_f16(a) }
-    }
     #[doc = "See [`arch::vcvtm_s32_f32`]."]
     #[inline(always)]
     pub fn vcvtm_s32_f32(self, a: float32x2_t) -> int32x2_t {
@@ -1744,16 +1704,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcvtmq_s64_f64(self, a: float64x2_t) -> int64x2_t {
         unsafe { vcvtmq_s64_f64(a) }
-    }
-    #[doc = "See [`arch::vcvtm_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtm_u16_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vcvtm_u16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtmq_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtmq_u16_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vcvtmq_u16_f16(a) }
     }
     #[doc = "See [`arch::vcvtm_u32_f32`]."]
     #[inline(always)]
@@ -1795,16 +1745,6 @@ impl Neon {
     pub fn vcvtmd_u64_f64(self, a: f64) -> u64 {
         unsafe { vcvtmd_u64_f64(a) }
     }
-    #[doc = "See [`arch::vcvtn_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtn_s16_f16(self, a: float16x4_t) -> int16x4_t {
-        unsafe { vcvtn_s16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtnq_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtnq_s16_f16(self, a: float16x8_t) -> int16x8_t {
-        unsafe { vcvtnq_s16_f16(a) }
-    }
     #[doc = "See [`arch::vcvtn_s32_f32`]."]
     #[inline(always)]
     pub fn vcvtn_s32_f32(self, a: float32x2_t) -> int32x2_t {
@@ -1824,16 +1764,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcvtnq_s64_f64(self, a: float64x2_t) -> int64x2_t {
         unsafe { vcvtnq_s64_f64(a) }
-    }
-    #[doc = "See [`arch::vcvtn_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtn_u16_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vcvtn_u16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtnq_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtnq_u16_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vcvtnq_u16_f16(a) }
     }
     #[doc = "See [`arch::vcvtn_u32_f32`]."]
     #[inline(always)]
@@ -1875,16 +1805,6 @@ impl Neon {
     pub fn vcvtnd_u64_f64(self, a: f64) -> u64 {
         unsafe { vcvtnd_u64_f64(a) }
     }
-    #[doc = "See [`arch::vcvtp_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtp_s16_f16(self, a: float16x4_t) -> int16x4_t {
-        unsafe { vcvtp_s16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtpq_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtpq_s16_f16(self, a: float16x8_t) -> int16x8_t {
-        unsafe { vcvtpq_s16_f16(a) }
-    }
     #[doc = "See [`arch::vcvtp_s32_f32`]."]
     #[inline(always)]
     pub fn vcvtp_s32_f32(self, a: float32x2_t) -> int32x2_t {
@@ -1904,16 +1824,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcvtpq_s64_f64(self, a: float64x2_t) -> int64x2_t {
         unsafe { vcvtpq_s64_f64(a) }
-    }
-    #[doc = "See [`arch::vcvtp_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtp_u16_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vcvtp_u16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtpq_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtpq_u16_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vcvtpq_u16_f16(a) }
     }
     #[doc = "See [`arch::vcvtp_u32_f32`]."]
     #[inline(always)]
@@ -2039,16 +1949,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcvtxd_f32_f64(self, a: f64) -> f32 {
         unsafe { vcvtxd_f32_f64(a) }
-    }
-    #[doc = "See [`arch::vdiv_f16`]."]
-    #[inline(always)]
-    pub fn vdiv_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vdiv_f16(a, b) }
-    }
-    #[doc = "See [`arch::vdivq_f16`]."]
-    #[inline(always)]
-    pub fn vdivq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vdivq_f16(a, b) }
     }
     #[doc = "See [`arch::vdiv_f32`]."]
     #[inline(always)]
@@ -2285,46 +2185,6 @@ impl Neon {
     pub fn vfma_f64(self, a: float64x1_t, b: float64x1_t, c: float64x1_t) -> float64x1_t {
         unsafe { vfma_f64(a, b, c) }
     }
-    #[doc = "See [`arch::vfma_lane_f16`]."]
-    #[inline(always)]
-    pub fn vfma_lane_f16<const LANE: i32>(
-        self,
-        a: float16x4_t,
-        b: float16x4_t,
-        c: float16x4_t,
-    ) -> float16x4_t {
-        unsafe { vfma_lane_f16::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vfma_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vfma_laneq_f16<const LANE: i32>(
-        self,
-        a: float16x4_t,
-        b: float16x4_t,
-        c: float16x8_t,
-    ) -> float16x4_t {
-        unsafe { vfma_laneq_f16::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vfmaq_lane_f16`]."]
-    #[inline(always)]
-    pub fn vfmaq_lane_f16<const LANE: i32>(
-        self,
-        a: float16x8_t,
-        b: float16x8_t,
-        c: float16x4_t,
-    ) -> float16x8_t {
-        unsafe { vfmaq_lane_f16::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vfmaq_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vfmaq_laneq_f16<const LANE: i32>(
-        self,
-        a: float16x8_t,
-        b: float16x8_t,
-        c: float16x8_t,
-    ) -> float16x8_t {
-        unsafe { vfmaq_laneq_f16::<LANE>(a, b, c) }
-    }
     #[doc = "See [`arch::vfma_lane_f32`]."]
     #[inline(always)]
     pub fn vfma_lane_f32<const LANE: i32>(
@@ -2440,250 +2300,10 @@ impl Neon {
     pub fn vfmad_laneq_f64<const LANE: i32>(self, a: f64, b: f64, c: float64x2_t) -> f64 {
         unsafe { vfmad_laneq_f64::<LANE>(a, b, c) }
     }
-    #[doc = "See [`arch::vfmlal_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlal_high_f16(self, r: float32x2_t, a: float16x4_t, b: float16x4_t) -> float32x2_t {
-        unsafe { vfmlal_high_f16(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlalq_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlalq_high_f16(self, r: float32x4_t, a: float16x8_t, b: float16x8_t) -> float32x4_t {
-        unsafe { vfmlalq_high_f16(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlal_lane_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlal_lane_high_f16<const LANE: i32>(
-        self,
-        r: float32x2_t,
-        a: float16x4_t,
-        b: float16x4_t,
-    ) -> float32x2_t {
-        unsafe { vfmlal_lane_high_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlal_laneq_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlal_laneq_high_f16<const LANE: i32>(
-        self,
-        r: float32x2_t,
-        a: float16x4_t,
-        b: float16x8_t,
-    ) -> float32x2_t {
-        unsafe { vfmlal_laneq_high_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlalq_lane_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlalq_lane_high_f16<const LANE: i32>(
-        self,
-        r: float32x4_t,
-        a: float16x8_t,
-        b: float16x4_t,
-    ) -> float32x4_t {
-        unsafe { vfmlalq_lane_high_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlalq_laneq_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlalq_laneq_high_f16<const LANE: i32>(
-        self,
-        r: float32x4_t,
-        a: float16x8_t,
-        b: float16x8_t,
-    ) -> float32x4_t {
-        unsafe { vfmlalq_laneq_high_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlal_lane_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlal_lane_low_f16<const LANE: i32>(
-        self,
-        r: float32x2_t,
-        a: float16x4_t,
-        b: float16x4_t,
-    ) -> float32x2_t {
-        unsafe { vfmlal_lane_low_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlal_laneq_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlal_laneq_low_f16<const LANE: i32>(
-        self,
-        r: float32x2_t,
-        a: float16x4_t,
-        b: float16x8_t,
-    ) -> float32x2_t {
-        unsafe { vfmlal_laneq_low_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlalq_lane_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlalq_lane_low_f16<const LANE: i32>(
-        self,
-        r: float32x4_t,
-        a: float16x8_t,
-        b: float16x4_t,
-    ) -> float32x4_t {
-        unsafe { vfmlalq_lane_low_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlalq_laneq_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlalq_laneq_low_f16<const LANE: i32>(
-        self,
-        r: float32x4_t,
-        a: float16x8_t,
-        b: float16x8_t,
-    ) -> float32x4_t {
-        unsafe { vfmlalq_laneq_low_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlal_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlal_low_f16(self, r: float32x2_t, a: float16x4_t, b: float16x4_t) -> float32x2_t {
-        unsafe { vfmlal_low_f16(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlalq_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlalq_low_f16(self, r: float32x4_t, a: float16x8_t, b: float16x8_t) -> float32x4_t {
-        unsafe { vfmlalq_low_f16(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlsl_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlsl_high_f16(self, r: float32x2_t, a: float16x4_t, b: float16x4_t) -> float32x2_t {
-        unsafe { vfmlsl_high_f16(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlslq_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlslq_high_f16(self, r: float32x4_t, a: float16x8_t, b: float16x8_t) -> float32x4_t {
-        unsafe { vfmlslq_high_f16(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlsl_lane_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlsl_lane_high_f16<const LANE: i32>(
-        self,
-        r: float32x2_t,
-        a: float16x4_t,
-        b: float16x4_t,
-    ) -> float32x2_t {
-        unsafe { vfmlsl_lane_high_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlsl_laneq_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlsl_laneq_high_f16<const LANE: i32>(
-        self,
-        r: float32x2_t,
-        a: float16x4_t,
-        b: float16x8_t,
-    ) -> float32x2_t {
-        unsafe { vfmlsl_laneq_high_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlslq_lane_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlslq_lane_high_f16<const LANE: i32>(
-        self,
-        r: float32x4_t,
-        a: float16x8_t,
-        b: float16x4_t,
-    ) -> float32x4_t {
-        unsafe { vfmlslq_lane_high_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlslq_laneq_high_f16`]."]
-    #[inline(always)]
-    pub fn vfmlslq_laneq_high_f16<const LANE: i32>(
-        self,
-        r: float32x4_t,
-        a: float16x8_t,
-        b: float16x8_t,
-    ) -> float32x4_t {
-        unsafe { vfmlslq_laneq_high_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlsl_lane_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlsl_lane_low_f16<const LANE: i32>(
-        self,
-        r: float32x2_t,
-        a: float16x4_t,
-        b: float16x4_t,
-    ) -> float32x2_t {
-        unsafe { vfmlsl_lane_low_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlsl_laneq_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlsl_laneq_low_f16<const LANE: i32>(
-        self,
-        r: float32x2_t,
-        a: float16x4_t,
-        b: float16x8_t,
-    ) -> float32x2_t {
-        unsafe { vfmlsl_laneq_low_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlslq_lane_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlslq_lane_low_f16<const LANE: i32>(
-        self,
-        r: float32x4_t,
-        a: float16x8_t,
-        b: float16x4_t,
-    ) -> float32x4_t {
-        unsafe { vfmlslq_lane_low_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlslq_laneq_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlslq_laneq_low_f16<const LANE: i32>(
-        self,
-        r: float32x4_t,
-        a: float16x8_t,
-        b: float16x8_t,
-    ) -> float32x4_t {
-        unsafe { vfmlslq_laneq_low_f16::<LANE>(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlsl_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlsl_low_f16(self, r: float32x2_t, a: float16x4_t, b: float16x4_t) -> float32x2_t {
-        unsafe { vfmlsl_low_f16(r, a, b) }
-    }
-    #[doc = "See [`arch::vfmlslq_low_f16`]."]
-    #[inline(always)]
-    pub fn vfmlslq_low_f16(self, r: float32x4_t, a: float16x8_t, b: float16x8_t) -> float32x4_t {
-        unsafe { vfmlslq_low_f16(r, a, b) }
-    }
     #[doc = "See [`arch::vfms_f64`]."]
     #[inline(always)]
     pub fn vfms_f64(self, a: float64x1_t, b: float64x1_t, c: float64x1_t) -> float64x1_t {
         unsafe { vfms_f64(a, b, c) }
-    }
-    #[doc = "See [`arch::vfms_lane_f16`]."]
-    #[inline(always)]
-    pub fn vfms_lane_f16<const LANE: i32>(
-        self,
-        a: float16x4_t,
-        b: float16x4_t,
-        c: float16x4_t,
-    ) -> float16x4_t {
-        unsafe { vfms_lane_f16::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vfms_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vfms_laneq_f16<const LANE: i32>(
-        self,
-        a: float16x4_t,
-        b: float16x4_t,
-        c: float16x8_t,
-    ) -> float16x4_t {
-        unsafe { vfms_laneq_f16::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vfmsq_lane_f16`]."]
-    #[inline(always)]
-    pub fn vfmsq_lane_f16<const LANE: i32>(
-        self,
-        a: float16x8_t,
-        b: float16x8_t,
-        c: float16x4_t,
-    ) -> float16x8_t {
-        unsafe { vfmsq_lane_f16::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vfmsq_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vfmsq_laneq_f16<const LANE: i32>(
-        self,
-        a: float16x8_t,
-        b: float16x8_t,
-        c: float16x8_t,
-    ) -> float16x8_t {
-        unsafe { vfmsq_laneq_f16::<LANE>(a, b, c) }
     }
     #[doc = "See [`arch::vfms_lane_f32`]."]
     #[inline(always)]
@@ -3982,16 +3602,6 @@ impl Neon {
     pub fn vmul_lane_f64<const LANE: i32>(self, a: float64x1_t, b: float64x1_t) -> float64x1_t {
         unsafe { vmul_lane_f64::<LANE>(a, b) }
     }
-    #[doc = "See [`arch::vmul_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vmul_laneq_f16<const LANE: i32>(self, a: float16x4_t, b: float16x8_t) -> float16x4_t {
-        unsafe { vmul_laneq_f16::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vmulq_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vmulq_laneq_f16<const LANE: i32>(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vmulq_laneq_f16::<LANE>(a, b) }
-    }
     #[doc = "See [`arch::vmul_laneq_f64`]."]
     #[inline(always)]
     pub fn vmul_laneq_f64<const LANE: i32>(self, a: float64x1_t, b: float64x2_t) -> float64x1_t {
@@ -4142,16 +3752,6 @@ impl Neon {
     pub fn vmuld_laneq_f64<const LANE: i32>(self, a: f64, b: float64x2_t) -> f64 {
         unsafe { vmuld_laneq_f64::<LANE>(a, b) }
     }
-    #[doc = "See [`arch::vmulx_f16`]."]
-    #[inline(always)]
-    pub fn vmulx_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vmulx_f16(a, b) }
-    }
-    #[doc = "See [`arch::vmulxq_f16`]."]
-    #[inline(always)]
-    pub fn vmulxq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vmulxq_f16(a, b) }
-    }
     #[doc = "See [`arch::vmulx_f32`]."]
     #[inline(always)]
     pub fn vmulx_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -4171,26 +3771,6 @@ impl Neon {
     #[inline(always)]
     pub fn vmulxq_f64(self, a: float64x2_t, b: float64x2_t) -> float64x2_t {
         unsafe { vmulxq_f64(a, b) }
-    }
-    #[doc = "See [`arch::vmulx_lane_f16`]."]
-    #[inline(always)]
-    pub fn vmulx_lane_f16<const LANE: i32>(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vmulx_lane_f16::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vmulx_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vmulx_laneq_f16<const LANE: i32>(self, a: float16x4_t, b: float16x8_t) -> float16x4_t {
-        unsafe { vmulx_laneq_f16::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vmulxq_lane_f16`]."]
-    #[inline(always)]
-    pub fn vmulxq_lane_f16<const LANE: i32>(self, a: float16x8_t, b: float16x4_t) -> float16x8_t {
-        unsafe { vmulxq_lane_f16::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vmulxq_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vmulxq_laneq_f16<const LANE: i32>(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vmulxq_laneq_f16::<LANE>(a, b) }
     }
     #[doc = "See [`arch::vmulx_lane_f32`]."]
     #[inline(always)]
@@ -4307,11 +3887,6 @@ impl Neon {
     pub fn vpaddd_u64(self, a: uint64x2_t) -> u64 {
         unsafe { vpaddd_u64(a) }
     }
-    #[doc = "See [`arch::vpaddq_f16`]."]
-    #[inline(always)]
-    pub fn vpaddq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vpaddq_f16(a, b) }
-    }
     #[doc = "See [`arch::vpaddq_f32`]."]
     #[inline(always)]
     pub fn vpaddq_f32(self, a: float32x4_t, b: float32x4_t) -> float32x4_t {
@@ -4361,26 +3936,6 @@ impl Neon {
     #[inline(always)]
     pub fn vpaddq_u64(self, a: uint64x2_t, b: uint64x2_t) -> uint64x2_t {
         unsafe { vpaddq_u64(a, b) }
-    }
-    #[doc = "See [`arch::vpmax_f16`]."]
-    #[inline(always)]
-    pub fn vpmax_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vpmax_f16(a, b) }
-    }
-    #[doc = "See [`arch::vpmaxq_f16`]."]
-    #[inline(always)]
-    pub fn vpmaxq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vpmaxq_f16(a, b) }
-    }
-    #[doc = "See [`arch::vpmaxnm_f16`]."]
-    #[inline(always)]
-    pub fn vpmaxnm_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vpmaxnm_f16(a, b) }
-    }
-    #[doc = "See [`arch::vpmaxnmq_f16`]."]
-    #[inline(always)]
-    pub fn vpmaxnmq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vpmaxnmq_f16(a, b) }
     }
     #[doc = "See [`arch::vpmaxnm_f32`]."]
     #[inline(always)]
@@ -4456,26 +4011,6 @@ impl Neon {
     #[inline(always)]
     pub fn vpmaxs_f32(self, a: float32x2_t) -> f32 {
         unsafe { vpmaxs_f32(a) }
-    }
-    #[doc = "See [`arch::vpmin_f16`]."]
-    #[inline(always)]
-    pub fn vpmin_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vpmin_f16(a, b) }
-    }
-    #[doc = "See [`arch::vpminq_f16`]."]
-    #[inline(always)]
-    pub fn vpminq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vpminq_f16(a, b) }
-    }
-    #[doc = "See [`arch::vpminnm_f16`]."]
-    #[inline(always)]
-    pub fn vpminnm_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vpminnm_f16(a, b) }
-    }
-    #[doc = "See [`arch::vpminnmq_f16`]."]
-    #[inline(always)]
-    pub fn vpminnmq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vpminnmq_f16(a, b) }
     }
     #[doc = "See [`arch::vpminnm_f32`]."]
     #[inline(always)]
@@ -6137,16 +5672,6 @@ impl Neon {
     pub fn vreinterpretq_u64_p64(self, a: poly64x2_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_p64(a) }
     }
-    #[doc = "See [`arch::vrnd_f16`]."]
-    #[inline(always)]
-    pub fn vrnd_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrnd_f16(a) }
-    }
-    #[doc = "See [`arch::vrndq_f16`]."]
-    #[inline(always)]
-    pub fn vrndq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrndq_f16(a) }
-    }
     #[doc = "See [`arch::vrnd_f32`]."]
     #[inline(always)]
     pub fn vrnd_f32(self, a: float32x2_t) -> float32x2_t {
@@ -6166,16 +5691,6 @@ impl Neon {
     #[inline(always)]
     pub fn vrndq_f64(self, a: float64x2_t) -> float64x2_t {
         unsafe { vrndq_f64(a) }
-    }
-    #[doc = "See [`arch::vrnda_f16`]."]
-    #[inline(always)]
-    pub fn vrnda_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrnda_f16(a) }
-    }
-    #[doc = "See [`arch::vrndaq_f16`]."]
-    #[inline(always)]
-    pub fn vrndaq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrndaq_f16(a) }
     }
     #[doc = "See [`arch::vrnda_f32`]."]
     #[inline(always)]
@@ -6197,16 +5712,6 @@ impl Neon {
     pub fn vrndaq_f64(self, a: float64x2_t) -> float64x2_t {
         unsafe { vrndaq_f64(a) }
     }
-    #[doc = "See [`arch::vrndi_f16`]."]
-    #[inline(always)]
-    pub fn vrndi_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrndi_f16(a) }
-    }
-    #[doc = "See [`arch::vrndiq_f16`]."]
-    #[inline(always)]
-    pub fn vrndiq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrndiq_f16(a) }
-    }
     #[doc = "See [`arch::vrndi_f32`]."]
     #[inline(always)]
     pub fn vrndi_f32(self, a: float32x2_t) -> float32x2_t {
@@ -6226,16 +5731,6 @@ impl Neon {
     #[inline(always)]
     pub fn vrndiq_f64(self, a: float64x2_t) -> float64x2_t {
         unsafe { vrndiq_f64(a) }
-    }
-    #[doc = "See [`arch::vrndm_f16`]."]
-    #[inline(always)]
-    pub fn vrndm_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrndm_f16(a) }
-    }
-    #[doc = "See [`arch::vrndmq_f16`]."]
-    #[inline(always)]
-    pub fn vrndmq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrndmq_f16(a) }
     }
     #[doc = "See [`arch::vrndm_f32`]."]
     #[inline(always)]
@@ -6272,16 +5767,6 @@ impl Neon {
     pub fn vrndns_f32(self, a: f32) -> f32 {
         unsafe { vrndns_f32(a) }
     }
-    #[doc = "See [`arch::vrndp_f16`]."]
-    #[inline(always)]
-    pub fn vrndp_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrndp_f16(a) }
-    }
-    #[doc = "See [`arch::vrndpq_f16`]."]
-    #[inline(always)]
-    pub fn vrndpq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrndpq_f16(a) }
-    }
     #[doc = "See [`arch::vrndp_f32`]."]
     #[inline(always)]
     pub fn vrndp_f32(self, a: float32x2_t) -> float32x2_t {
@@ -6301,16 +5786,6 @@ impl Neon {
     #[inline(always)]
     pub fn vrndpq_f64(self, a: float64x2_t) -> float64x2_t {
         unsafe { vrndpq_f64(a) }
-    }
-    #[doc = "See [`arch::vrndx_f16`]."]
-    #[inline(always)]
-    pub fn vrndx_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrndx_f16(a) }
-    }
-    #[doc = "See [`arch::vrndxq_f16`]."]
-    #[inline(always)]
-    pub fn vrndxq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrndxq_f16(a) }
     }
     #[doc = "See [`arch::vrndx_f32`]."]
     #[inline(always)]
@@ -6741,16 +6216,6 @@ impl Neon {
     #[inline(always)]
     pub fn vsqadds_u32(self, a: u32, b: i32) -> u32 {
         unsafe { vsqadds_u32(a, b) }
-    }
-    #[doc = "See [`arch::vsqrt_f16`]."]
-    #[inline(always)]
-    pub fn vsqrt_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vsqrt_f16(a) }
-    }
-    #[doc = "See [`arch::vsqrtq_f16`]."]
-    #[inline(always)]
-    pub fn vsqrtq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vsqrtq_f16(a) }
     }
     #[doc = "See [`arch::vsqrt_f32`]."]
     #[inline(always)]
@@ -7528,16 +6993,6 @@ impl Neon {
     pub fn vtbx4_p8(self, a: poly8x8_t, b: poly8x8x4_t, c: uint8x8_t) -> poly8x8_t {
         unsafe { vtbx4_p8(a, b, c) }
     }
-    #[doc = "See [`arch::vtrn1_f16`]."]
-    #[inline(always)]
-    pub fn vtrn1_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vtrn1_f16(a, b) }
-    }
-    #[doc = "See [`arch::vtrn1q_f16`]."]
-    #[inline(always)]
-    pub fn vtrn1q_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vtrn1q_f16(a, b) }
-    }
     #[doc = "See [`arch::vtrn1_f32`]."]
     #[inline(always)]
     pub fn vtrn1_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -7647,16 +7102,6 @@ impl Neon {
     #[inline(always)]
     pub fn vtrn1q_p16(self, a: poly16x8_t, b: poly16x8_t) -> poly16x8_t {
         unsafe { vtrn1q_p16(a, b) }
-    }
-    #[doc = "See [`arch::vtrn2_f16`]."]
-    #[inline(always)]
-    pub fn vtrn2_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vtrn2_f16(a, b) }
-    }
-    #[doc = "See [`arch::vtrn2q_f16`]."]
-    #[inline(always)]
-    pub fn vtrn2q_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vtrn2q_f16(a, b) }
     }
     #[doc = "See [`arch::vtrn2_f32`]."]
     #[inline(always)]
@@ -7868,16 +7313,6 @@ impl Neon {
     pub fn vuqadds_s32(self, a: i32, b: u32) -> i32 {
         unsafe { vuqadds_s32(a, b) }
     }
-    #[doc = "See [`arch::vuzp1_f16`]."]
-    #[inline(always)]
-    pub fn vuzp1_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vuzp1_f16(a, b) }
-    }
-    #[doc = "See [`arch::vuzp1q_f16`]."]
-    #[inline(always)]
-    pub fn vuzp1q_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vuzp1q_f16(a, b) }
-    }
     #[doc = "See [`arch::vuzp1_f32`]."]
     #[inline(always)]
     pub fn vuzp1_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -7987,16 +7422,6 @@ impl Neon {
     #[inline(always)]
     pub fn vuzp1q_p16(self, a: poly16x8_t, b: poly16x8_t) -> poly16x8_t {
         unsafe { vuzp1q_p16(a, b) }
-    }
-    #[doc = "See [`arch::vuzp2_f16`]."]
-    #[inline(always)]
-    pub fn vuzp2_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vuzp2_f16(a, b) }
-    }
-    #[doc = "See [`arch::vuzp2q_f16`]."]
-    #[inline(always)]
-    pub fn vuzp2q_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vuzp2q_f16(a, b) }
     }
     #[doc = "See [`arch::vuzp2_f32`]."]
     #[inline(always)]
@@ -8113,16 +7538,6 @@ impl Neon {
     pub fn vxarq_u64<const IMM6: i32>(self, a: uint64x2_t, b: uint64x2_t) -> uint64x2_t {
         unsafe { vxarq_u64::<IMM6>(a, b) }
     }
-    #[doc = "See [`arch::vzip1_f16`]."]
-    #[inline(always)]
-    pub fn vzip1_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vzip1_f16(a, b) }
-    }
-    #[doc = "See [`arch::vzip1q_f16`]."]
-    #[inline(always)]
-    pub fn vzip1q_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vzip1q_f16(a, b) }
-    }
     #[doc = "See [`arch::vzip1_f32`]."]
     #[inline(always)]
     pub fn vzip1_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -8232,16 +7647,6 @@ impl Neon {
     #[inline(always)]
     pub fn vzip1q_p64(self, a: poly64x2_t, b: poly64x2_t) -> poly64x2_t {
         unsafe { vzip1q_p64(a, b) }
-    }
-    #[doc = "See [`arch::vzip2_f16`]."]
-    #[inline(always)]
-    pub fn vzip2_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vzip2_f16(a, b) }
-    }
-    #[doc = "See [`arch::vzip2q_f16`]."]
-    #[inline(always)]
-    pub fn vzip2q_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vzip2q_f16(a, b) }
     }
     #[doc = "See [`arch::vzip2_f32`]."]
     #[inline(always)]
@@ -8443,16 +7848,6 @@ impl Neon {
     pub fn vabaq_u8(self, a: uint8x16_t, b: uint8x16_t, c: uint8x16_t) -> uint8x16_t {
         unsafe { vabaq_u8(a, b, c) }
     }
-    #[doc = "See [`arch::vabd_f16`]."]
-    #[inline(always)]
-    pub fn vabd_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vabd_f16(a, b) }
-    }
-    #[doc = "See [`arch::vabdq_f16`]."]
-    #[inline(always)]
-    pub fn vabdq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vabdq_f16(a, b) }
-    }
     #[doc = "See [`arch::vabd_f32`]."]
     #[inline(always)]
     pub fn vabd_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -8553,16 +7948,6 @@ impl Neon {
     pub fn vabdl_u32(self, a: uint32x2_t, b: uint32x2_t) -> uint64x2_t {
         unsafe { vabdl_u32(a, b) }
     }
-    #[doc = "See [`arch::vabs_f16`]."]
-    #[inline(always)]
-    pub fn vabs_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vabs_f16(a) }
-    }
-    #[doc = "See [`arch::vabsq_f16`]."]
-    #[inline(always)]
-    pub fn vabsq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vabsq_f16(a) }
-    }
     #[doc = "See [`arch::vabs_f32`]."]
     #[inline(always)]
     pub fn vabs_f32(self, a: float32x2_t) -> float32x2_t {
@@ -8602,16 +7987,6 @@ impl Neon {
     #[inline(always)]
     pub fn vabsq_s32(self, a: int32x4_t) -> int32x4_t {
         unsafe { vabsq_s32(a) }
-    }
-    #[doc = "See [`arch::vadd_f16`]."]
-    #[inline(always)]
-    pub fn vadd_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vadd_f16(a, b) }
-    }
-    #[doc = "See [`arch::vaddq_f16`]."]
-    #[inline(always)]
-    pub fn vaddq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vaddq_f16(a, b) }
     }
     #[doc = "See [`arch::vadd_f32`]."]
     #[inline(always)]
@@ -9068,16 +8443,6 @@ impl Neon {
     pub fn vbicq_u8(self, a: uint8x16_t, b: uint8x16_t) -> uint8x16_t {
         unsafe { vbicq_u8(a, b) }
     }
-    #[doc = "See [`arch::vbsl_f16`]."]
-    #[inline(always)]
-    pub fn vbsl_f16(self, a: uint16x4_t, b: float16x4_t, c: float16x4_t) -> float16x4_t {
-        unsafe { vbsl_f16(a, b, c) }
-    }
-    #[doc = "See [`arch::vbslq_f16`]."]
-    #[inline(always)]
-    pub fn vbslq_f16(self, a: uint16x8_t, b: float16x8_t, c: float16x8_t) -> float16x8_t {
-        unsafe { vbslq_f16(a, b, c) }
-    }
     #[doc = "See [`arch::vbsl_f32`]."]
     #[inline(always)]
     pub fn vbsl_f32(self, a: uint32x2_t, b: float32x2_t, c: float32x2_t) -> float32x2_t {
@@ -9188,16 +8553,6 @@ impl Neon {
     pub fn vbslq_u8(self, a: uint8x16_t, b: uint8x16_t, c: uint8x16_t) -> uint8x16_t {
         unsafe { vbslq_u8(a, b, c) }
     }
-    #[doc = "See [`arch::vcage_f16`]."]
-    #[inline(always)]
-    pub fn vcage_f16(self, a: float16x4_t, b: float16x4_t) -> uint16x4_t {
-        unsafe { vcage_f16(a, b) }
-    }
-    #[doc = "See [`arch::vcageq_f16`]."]
-    #[inline(always)]
-    pub fn vcageq_f16(self, a: float16x8_t, b: float16x8_t) -> uint16x8_t {
-        unsafe { vcageq_f16(a, b) }
-    }
     #[doc = "See [`arch::vcage_f32`]."]
     #[inline(always)]
     pub fn vcage_f32(self, a: float32x2_t, b: float32x2_t) -> uint32x2_t {
@@ -9207,16 +8562,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcageq_f32(self, a: float32x4_t, b: float32x4_t) -> uint32x4_t {
         unsafe { vcageq_f32(a, b) }
-    }
-    #[doc = "See [`arch::vcagt_f16`]."]
-    #[inline(always)]
-    pub fn vcagt_f16(self, a: float16x4_t, b: float16x4_t) -> uint16x4_t {
-        unsafe { vcagt_f16(a, b) }
-    }
-    #[doc = "See [`arch::vcagtq_f16`]."]
-    #[inline(always)]
-    pub fn vcagtq_f16(self, a: float16x8_t, b: float16x8_t) -> uint16x8_t {
-        unsafe { vcagtq_f16(a, b) }
     }
     #[doc = "See [`arch::vcagt_f32`]."]
     #[inline(always)]
@@ -9228,16 +8573,6 @@ impl Neon {
     pub fn vcagtq_f32(self, a: float32x4_t, b: float32x4_t) -> uint32x4_t {
         unsafe { vcagtq_f32(a, b) }
     }
-    #[doc = "See [`arch::vcale_f16`]."]
-    #[inline(always)]
-    pub fn vcale_f16(self, a: float16x4_t, b: float16x4_t) -> uint16x4_t {
-        unsafe { vcale_f16(a, b) }
-    }
-    #[doc = "See [`arch::vcaleq_f16`]."]
-    #[inline(always)]
-    pub fn vcaleq_f16(self, a: float16x8_t, b: float16x8_t) -> uint16x8_t {
-        unsafe { vcaleq_f16(a, b) }
-    }
     #[doc = "See [`arch::vcale_f32`]."]
     #[inline(always)]
     pub fn vcale_f32(self, a: float32x2_t, b: float32x2_t) -> uint32x2_t {
@@ -9248,16 +8583,6 @@ impl Neon {
     pub fn vcaleq_f32(self, a: float32x4_t, b: float32x4_t) -> uint32x4_t {
         unsafe { vcaleq_f32(a, b) }
     }
-    #[doc = "See [`arch::vcalt_f16`]."]
-    #[inline(always)]
-    pub fn vcalt_f16(self, a: float16x4_t, b: float16x4_t) -> uint16x4_t {
-        unsafe { vcalt_f16(a, b) }
-    }
-    #[doc = "See [`arch::vcaltq_f16`]."]
-    #[inline(always)]
-    pub fn vcaltq_f16(self, a: float16x8_t, b: float16x8_t) -> uint16x8_t {
-        unsafe { vcaltq_f16(a, b) }
-    }
     #[doc = "See [`arch::vcalt_f32`]."]
     #[inline(always)]
     pub fn vcalt_f32(self, a: float32x2_t, b: float32x2_t) -> uint32x2_t {
@@ -9267,16 +8592,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcaltq_f32(self, a: float32x4_t, b: float32x4_t) -> uint32x4_t {
         unsafe { vcaltq_f32(a, b) }
-    }
-    #[doc = "See [`arch::vceq_f16`]."]
-    #[inline(always)]
-    pub fn vceq_f16(self, a: float16x4_t, b: float16x4_t) -> uint16x4_t {
-        unsafe { vceq_f16(a, b) }
-    }
-    #[doc = "See [`arch::vceqq_f16`]."]
-    #[inline(always)]
-    pub fn vceqq_f16(self, a: float16x8_t, b: float16x8_t) -> uint16x8_t {
-        unsafe { vceqq_f16(a, b) }
     }
     #[doc = "See [`arch::vceq_f32`]."]
     #[inline(always)]
@@ -9358,16 +8673,6 @@ impl Neon {
     pub fn vceqq_p8(self, a: poly8x16_t, b: poly8x16_t) -> uint8x16_t {
         unsafe { vceqq_p8(a, b) }
     }
-    #[doc = "See [`arch::vcge_f16`]."]
-    #[inline(always)]
-    pub fn vcge_f16(self, a: float16x4_t, b: float16x4_t) -> uint16x4_t {
-        unsafe { vcge_f16(a, b) }
-    }
-    #[doc = "See [`arch::vcgeq_f16`]."]
-    #[inline(always)]
-    pub fn vcgeq_f16(self, a: float16x8_t, b: float16x8_t) -> uint16x8_t {
-        unsafe { vcgeq_f16(a, b) }
-    }
     #[doc = "See [`arch::vcge_f32`]."]
     #[inline(always)]
     pub fn vcge_f32(self, a: float32x2_t, b: float32x2_t) -> uint32x2_t {
@@ -9437,26 +8742,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcgeq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
         unsafe { vcgeq_u32(a, b) }
-    }
-    #[doc = "See [`arch::vcgez_f16`]."]
-    #[inline(always)]
-    pub fn vcgez_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vcgez_f16(a) }
-    }
-    #[doc = "See [`arch::vcgezq_f16`]."]
-    #[inline(always)]
-    pub fn vcgezq_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vcgezq_f16(a) }
-    }
-    #[doc = "See [`arch::vcgt_f16`]."]
-    #[inline(always)]
-    pub fn vcgt_f16(self, a: float16x4_t, b: float16x4_t) -> uint16x4_t {
-        unsafe { vcgt_f16(a, b) }
-    }
-    #[doc = "See [`arch::vcgtq_f16`]."]
-    #[inline(always)]
-    pub fn vcgtq_f16(self, a: float16x8_t, b: float16x8_t) -> uint16x8_t {
-        unsafe { vcgtq_f16(a, b) }
     }
     #[doc = "See [`arch::vcgt_f32`]."]
     #[inline(always)]
@@ -9528,26 +8813,6 @@ impl Neon {
     pub fn vcgtq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
         unsafe { vcgtq_u32(a, b) }
     }
-    #[doc = "See [`arch::vcgtz_f16`]."]
-    #[inline(always)]
-    pub fn vcgtz_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vcgtz_f16(a) }
-    }
-    #[doc = "See [`arch::vcgtzq_f16`]."]
-    #[inline(always)]
-    pub fn vcgtzq_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vcgtzq_f16(a) }
-    }
-    #[doc = "See [`arch::vcle_f16`]."]
-    #[inline(always)]
-    pub fn vcle_f16(self, a: float16x4_t, b: float16x4_t) -> uint16x4_t {
-        unsafe { vcle_f16(a, b) }
-    }
-    #[doc = "See [`arch::vcleq_f16`]."]
-    #[inline(always)]
-    pub fn vcleq_f16(self, a: float16x8_t, b: float16x8_t) -> uint16x8_t {
-        unsafe { vcleq_f16(a, b) }
-    }
     #[doc = "See [`arch::vcle_f32`]."]
     #[inline(always)]
     pub fn vcle_f32(self, a: float32x2_t, b: float32x2_t) -> uint32x2_t {
@@ -9618,16 +8883,6 @@ impl Neon {
     pub fn vcleq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
         unsafe { vcleq_u32(a, b) }
     }
-    #[doc = "See [`arch::vclez_f16`]."]
-    #[inline(always)]
-    pub fn vclez_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vclez_f16(a) }
-    }
-    #[doc = "See [`arch::vclezq_f16`]."]
-    #[inline(always)]
-    pub fn vclezq_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vclezq_f16(a) }
-    }
     #[doc = "See [`arch::vcls_s8`]."]
     #[inline(always)]
     pub fn vcls_s8(self, a: int8x8_t) -> int8x8_t {
@@ -9687,16 +8942,6 @@ impl Neon {
     #[inline(always)]
     pub fn vclsq_u32(self, a: uint32x4_t) -> int32x4_t {
         unsafe { vclsq_u32(a) }
-    }
-    #[doc = "See [`arch::vclt_f16`]."]
-    #[inline(always)]
-    pub fn vclt_f16(self, a: float16x4_t, b: float16x4_t) -> uint16x4_t {
-        unsafe { vclt_f16(a, b) }
-    }
-    #[doc = "See [`arch::vcltq_f16`]."]
-    #[inline(always)]
-    pub fn vcltq_f16(self, a: float16x8_t, b: float16x8_t) -> uint16x8_t {
-        unsafe { vcltq_f16(a, b) }
     }
     #[doc = "See [`arch::vclt_f32`]."]
     #[inline(always)]
@@ -9767,16 +9012,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcltq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
         unsafe { vcltq_u32(a, b) }
-    }
-    #[doc = "See [`arch::vcltz_f16`]."]
-    #[inline(always)]
-    pub fn vcltz_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vcltz_f16(a) }
-    }
-    #[doc = "See [`arch::vcltzq_f16`]."]
-    #[inline(always)]
-    pub fn vcltzq_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vcltzq_f16(a) }
     }
     #[doc = "See [`arch::vclz_s8`]."]
     #[inline(always)]
@@ -10003,26 +9238,6 @@ impl Neon {
     pub fn vcvt_f16_f32(self, a: float32x4_t) -> float16x4_t {
         unsafe { vcvt_f16_f32(a) }
     }
-    #[doc = "See [`arch::vcvt_f16_s16`]."]
-    #[inline(always)]
-    pub fn vcvt_f16_s16(self, a: int16x4_t) -> float16x4_t {
-        unsafe { vcvt_f16_s16(a) }
-    }
-    #[doc = "See [`arch::vcvtq_f16_s16`]."]
-    #[inline(always)]
-    pub fn vcvtq_f16_s16(self, a: int16x8_t) -> float16x8_t {
-        unsafe { vcvtq_f16_s16(a) }
-    }
-    #[doc = "See [`arch::vcvt_f16_u16`]."]
-    #[inline(always)]
-    pub fn vcvt_f16_u16(self, a: uint16x4_t) -> float16x4_t {
-        unsafe { vcvt_f16_u16(a) }
-    }
-    #[doc = "See [`arch::vcvtq_f16_u16`]."]
-    #[inline(always)]
-    pub fn vcvtq_f16_u16(self, a: uint16x8_t) -> float16x8_t {
-        unsafe { vcvtq_f16_u16(a) }
-    }
     #[doc = "See [`arch::vcvt_f32_f16`]."]
     #[inline(always)]
     pub fn vcvt_f32_f16(self, a: float16x4_t) -> float32x4_t {
@@ -10048,56 +9263,6 @@ impl Neon {
     pub fn vcvtq_f32_u32(self, a: uint32x4_t) -> float32x4_t {
         unsafe { vcvtq_f32_u32(a) }
     }
-    #[doc = "See [`arch::vcvt_n_f16_s16`]."]
-    #[inline(always)]
-    pub fn vcvt_n_f16_s16<const N: i32>(self, a: int16x4_t) -> float16x4_t {
-        unsafe { vcvt_n_f16_s16::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvtq_n_f16_s16`]."]
-    #[inline(always)]
-    pub fn vcvtq_n_f16_s16<const N: i32>(self, a: int16x8_t) -> float16x8_t {
-        unsafe { vcvtq_n_f16_s16::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvt_n_f16_u16`]."]
-    #[inline(always)]
-    pub fn vcvt_n_f16_u16<const N: i32>(self, a: uint16x4_t) -> float16x4_t {
-        unsafe { vcvt_n_f16_u16::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvtq_n_f16_u16`]."]
-    #[inline(always)]
-    pub fn vcvtq_n_f16_u16<const N: i32>(self, a: uint16x8_t) -> float16x8_t {
-        unsafe { vcvtq_n_f16_u16::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvt_n_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvt_n_s16_f16<const N: i32>(self, a: float16x4_t) -> int16x4_t {
-        unsafe { vcvt_n_s16_f16::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvtq_n_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtq_n_s16_f16<const N: i32>(self, a: float16x8_t) -> int16x8_t {
-        unsafe { vcvtq_n_s16_f16::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvt_n_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvt_n_u16_f16<const N: i32>(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vcvt_n_u16_f16::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvtq_n_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtq_n_u16_f16<const N: i32>(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vcvtq_n_u16_f16::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvt_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvt_s16_f16(self, a: float16x4_t) -> int16x4_t {
-        unsafe { vcvt_s16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtq_s16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtq_s16_f16(self, a: float16x8_t) -> int16x8_t {
-        unsafe { vcvtq_s16_f16(a) }
-    }
     #[doc = "See [`arch::vcvt_s32_f32`]."]
     #[inline(always)]
     pub fn vcvt_s32_f32(self, a: float32x2_t) -> int32x2_t {
@@ -10107,16 +9272,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcvtq_s32_f32(self, a: float32x4_t) -> int32x4_t {
         unsafe { vcvtq_s32_f32(a) }
-    }
-    #[doc = "See [`arch::vcvt_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvt_u16_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vcvt_u16_f16(a) }
-    }
-    #[doc = "See [`arch::vcvtq_u16_f16`]."]
-    #[inline(always)]
-    pub fn vcvtq_u16_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vcvtq_u16_f16(a) }
     }
     #[doc = "See [`arch::vcvt_u32_f32`]."]
     #[inline(always)]
@@ -10618,11 +9773,6 @@ impl Neon {
     pub fn veorq_u64(self, a: uint64x2_t, b: uint64x2_t) -> uint64x2_t {
         unsafe { veorq_u64(a, b) }
     }
-    #[doc = "See [`arch::vext_f16`]."]
-    #[inline(always)]
-    pub fn vext_f16<const N: i32>(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vext_f16::<N>(a, b) }
-    }
     #[doc = "See [`arch::vext_f32`]."]
     #[inline(always)]
     pub fn vext_f32<const N: i32>(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -10677,11 +9827,6 @@ impl Neon {
     #[inline(always)]
     pub fn vextq_p16<const N: i32>(self, a: poly16x8_t, b: poly16x8_t) -> poly16x8_t {
         unsafe { vextq_p16::<N>(a, b) }
-    }
-    #[doc = "See [`arch::vextq_f16`]."]
-    #[inline(always)]
-    pub fn vextq_f16<const N: i32>(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vextq_f16::<N>(a, b) }
     }
     #[doc = "See [`arch::vextq_f32`]."]
     #[inline(always)]
@@ -10738,16 +9883,6 @@ impl Neon {
     pub fn vextq_p8<const N: i32>(self, a: poly8x16_t, b: poly8x16_t) -> poly8x16_t {
         unsafe { vextq_p8::<N>(a, b) }
     }
-    #[doc = "See [`arch::vfma_f16`]."]
-    #[inline(always)]
-    pub fn vfma_f16(self, a: float16x4_t, b: float16x4_t, c: float16x4_t) -> float16x4_t {
-        unsafe { vfma_f16(a, b, c) }
-    }
-    #[doc = "See [`arch::vfmaq_f16`]."]
-    #[inline(always)]
-    pub fn vfmaq_f16(self, a: float16x8_t, b: float16x8_t, c: float16x8_t) -> float16x8_t {
-        unsafe { vfmaq_f16(a, b, c) }
-    }
     #[doc = "See [`arch::vfma_f32`]."]
     #[inline(always)]
     pub fn vfma_f32(self, a: float32x2_t, b: float32x2_t, c: float32x2_t) -> float32x2_t {
@@ -10767,16 +9902,6 @@ impl Neon {
     #[inline(always)]
     pub fn vfmaq_n_f32(self, a: float32x4_t, b: float32x4_t, c: f32) -> float32x4_t {
         unsafe { vfmaq_n_f32(a, b, c) }
-    }
-    #[doc = "See [`arch::vfms_f16`]."]
-    #[inline(always)]
-    pub fn vfms_f16(self, a: float16x4_t, b: float16x4_t, c: float16x4_t) -> float16x4_t {
-        unsafe { vfms_f16(a, b, c) }
-    }
-    #[doc = "See [`arch::vfmsq_f16`]."]
-    #[inline(always)]
-    pub fn vfmsq_f16(self, a: float16x8_t, b: float16x8_t, c: float16x8_t) -> float16x8_t {
-        unsafe { vfmsq_f16(a, b, c) }
     }
     #[doc = "See [`arch::vfms_f32`]."]
     #[inline(always)]
@@ -12716,16 +11841,6 @@ impl Neon {
     pub unsafe fn vldrq_p128(self, a: *const p128) -> p128 {
         unsafe { vldrq_p128(a) }
     }
-    #[doc = "See [`arch::vmax_f16`]."]
-    #[inline(always)]
-    pub fn vmax_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vmax_f16(a, b) }
-    }
-    #[doc = "See [`arch::vmaxq_f16`]."]
-    #[inline(always)]
-    pub fn vmaxq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vmaxq_f16(a, b) }
-    }
     #[doc = "See [`arch::vmax_f32`]."]
     #[inline(always)]
     pub fn vmax_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -12796,16 +11911,6 @@ impl Neon {
     pub fn vmaxq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
         unsafe { vmaxq_u32(a, b) }
     }
-    #[doc = "See [`arch::vmaxnm_f16`]."]
-    #[inline(always)]
-    pub fn vmaxnm_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vmaxnm_f16(a, b) }
-    }
-    #[doc = "See [`arch::vmaxnmq_f16`]."]
-    #[inline(always)]
-    pub fn vmaxnmq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vmaxnmq_f16(a, b) }
-    }
     #[doc = "See [`arch::vmaxnm_f32`]."]
     #[inline(always)]
     pub fn vmaxnm_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -12815,16 +11920,6 @@ impl Neon {
     #[inline(always)]
     pub fn vmaxnmq_f32(self, a: float32x4_t, b: float32x4_t) -> float32x4_t {
         unsafe { vmaxnmq_f32(a, b) }
-    }
-    #[doc = "See [`arch::vmin_f16`]."]
-    #[inline(always)]
-    pub fn vmin_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vmin_f16(a, b) }
-    }
-    #[doc = "See [`arch::vminq_f16`]."]
-    #[inline(always)]
-    pub fn vminq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vminq_f16(a, b) }
     }
     #[doc = "See [`arch::vmin_f32`]."]
     #[inline(always)]
@@ -12895,16 +11990,6 @@ impl Neon {
     #[inline(always)]
     pub fn vminq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
         unsafe { vminq_u32(a, b) }
-    }
-    #[doc = "See [`arch::vminnm_f16`]."]
-    #[inline(always)]
-    pub fn vminnm_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vminnm_f16(a, b) }
-    }
-    #[doc = "See [`arch::vminnmq_f16`]."]
-    #[inline(always)]
-    pub fn vminnmq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vminnmq_f16(a, b) }
     }
     #[doc = "See [`arch::vminnm_f32`]."]
     #[inline(always)]
@@ -13996,16 +13081,6 @@ impl Neon {
     pub fn vmovn_u64(self, a: uint64x2_t) -> uint32x2_t {
         unsafe { vmovn_u64(a) }
     }
-    #[doc = "See [`arch::vmul_f16`]."]
-    #[inline(always)]
-    pub fn vmul_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vmul_f16(a, b) }
-    }
-    #[doc = "See [`arch::vmulq_f16`]."]
-    #[inline(always)]
-    pub fn vmulq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vmulq_f16(a, b) }
-    }
     #[doc = "See [`arch::vmul_f32`]."]
     #[inline(always)]
     pub fn vmul_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -14015,16 +13090,6 @@ impl Neon {
     #[inline(always)]
     pub fn vmulq_f32(self, a: float32x4_t, b: float32x4_t) -> float32x4_t {
         unsafe { vmulq_f32(a, b) }
-    }
-    #[doc = "See [`arch::vmul_lane_f16`]."]
-    #[inline(always)]
-    pub fn vmul_lane_f16<const LANE: i32>(self, a: float16x4_t, v: float16x4_t) -> float16x4_t {
-        unsafe { vmul_lane_f16::<LANE>(a, v) }
-    }
-    #[doc = "See [`arch::vmulq_lane_f16`]."]
-    #[inline(always)]
-    pub fn vmulq_lane_f16<const LANE: i32>(self, a: float16x8_t, v: float16x4_t) -> float16x8_t {
-        unsafe { vmulq_lane_f16::<LANE>(a, v) }
     }
     #[doc = "See [`arch::vmul_lane_f32`]."]
     #[inline(always)]
@@ -14411,16 +13476,6 @@ impl Neon {
     pub fn vmvnq_u8(self, a: uint8x16_t) -> uint8x16_t {
         unsafe { vmvnq_u8(a) }
     }
-    #[doc = "See [`arch::vneg_f16`]."]
-    #[inline(always)]
-    pub fn vneg_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vneg_f16(a) }
-    }
-    #[doc = "See [`arch::vnegq_f16`]."]
-    #[inline(always)]
-    pub fn vnegq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vnegq_f16(a) }
-    }
     #[doc = "See [`arch::vneg_f32`]."]
     #[inline(always)]
     pub fn vneg_f32(self, a: float32x2_t) -> float32x2_t {
@@ -14680,11 +13735,6 @@ impl Neon {
     #[inline(always)]
     pub fn vpadalq_u32(self, a: uint64x2_t, b: uint32x4_t) -> uint64x2_t {
         unsafe { vpadalq_u32(a, b) }
-    }
-    #[doc = "See [`arch::vpadd_f16`]."]
-    #[inline(always)]
-    pub fn vpadd_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vpadd_f16(a, b) }
     }
     #[doc = "See [`arch::vpadd_f32`]."]
     #[inline(always)]
@@ -15666,16 +14716,6 @@ impl Neon {
     pub fn vraddhn_u64(self, a: uint64x2_t, b: uint64x2_t) -> uint32x2_t {
         unsafe { vraddhn_u64(a, b) }
     }
-    #[doc = "See [`arch::vrecpe_f16`]."]
-    #[inline(always)]
-    pub fn vrecpe_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrecpe_f16(a) }
-    }
-    #[doc = "See [`arch::vrecpeq_f16`]."]
-    #[inline(always)]
-    pub fn vrecpeq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrecpeq_f16(a) }
-    }
     #[doc = "See [`arch::vrecpe_f32`]."]
     #[inline(always)]
     pub fn vrecpe_f32(self, a: float32x2_t) -> float32x2_t {
@@ -15695,16 +14735,6 @@ impl Neon {
     #[inline(always)]
     pub fn vrecpeq_u32(self, a: uint32x4_t) -> uint32x4_t {
         unsafe { vrecpeq_u32(a) }
-    }
-    #[doc = "See [`arch::vrecps_f16`]."]
-    #[inline(always)]
-    pub fn vrecps_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vrecps_f16(a, b) }
-    }
-    #[doc = "See [`arch::vrecpsq_f16`]."]
-    #[inline(always)]
-    pub fn vrecpsq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vrecpsq_f16(a, b) }
     }
     #[doc = "See [`arch::vrecps_f32`]."]
     #[inline(always)]
@@ -17526,16 +16556,6 @@ impl Neon {
     pub fn vrev64q_u8(self, a: uint8x16_t) -> uint8x16_t {
         unsafe { vrev64q_u8(a) }
     }
-    #[doc = "See [`arch::vrev64_f16`]."]
-    #[inline(always)]
-    pub fn vrev64_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrev64_f16(a) }
-    }
-    #[doc = "See [`arch::vrev64q_f16`]."]
-    #[inline(always)]
-    pub fn vrev64q_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrev64q_f16(a) }
-    }
     #[doc = "See [`arch::vrhadd_s8`]."]
     #[inline(always)]
     pub fn vrhadd_s8(self, a: int8x8_t, b: int8x8_t) -> int8x8_t {
@@ -17595,16 +16615,6 @@ impl Neon {
     #[inline(always)]
     pub fn vrhaddq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
         unsafe { vrhaddq_u32(a, b) }
-    }
-    #[doc = "See [`arch::vrndn_f16`]."]
-    #[inline(always)]
-    pub fn vrndn_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrndn_f16(a) }
-    }
-    #[doc = "See [`arch::vrndnq_f16`]."]
-    #[inline(always)]
-    pub fn vrndnq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrndnq_f16(a) }
     }
     #[doc = "See [`arch::vrndn_f32`]."]
     #[inline(always)]
@@ -17791,16 +16801,6 @@ impl Neon {
     pub fn vrshrn_n_u64<const N: i32>(self, a: uint64x2_t) -> uint32x2_t {
         unsafe { vrshrn_n_u64::<N>(a) }
     }
-    #[doc = "See [`arch::vrsqrte_f16`]."]
-    #[inline(always)]
-    pub fn vrsqrte_f16(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vrsqrte_f16(a) }
-    }
-    #[doc = "See [`arch::vrsqrteq_f16`]."]
-    #[inline(always)]
-    pub fn vrsqrteq_f16(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vrsqrteq_f16(a) }
-    }
     #[doc = "See [`arch::vrsqrte_f32`]."]
     #[inline(always)]
     pub fn vrsqrte_f32(self, a: float32x2_t) -> float32x2_t {
@@ -17820,16 +16820,6 @@ impl Neon {
     #[inline(always)]
     pub fn vrsqrteq_u32(self, a: uint32x4_t) -> uint32x4_t {
         unsafe { vrsqrteq_u32(a) }
-    }
-    #[doc = "See [`arch::vrsqrts_f16`]."]
-    #[inline(always)]
-    pub fn vrsqrts_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vrsqrts_f16(a, b) }
-    }
-    #[doc = "See [`arch::vrsqrtsq_f16`]."]
-    #[inline(always)]
-    pub fn vrsqrtsq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vrsqrtsq_f16(a, b) }
     }
     #[doc = "See [`arch::vrsqrts_f32`]."]
     #[inline(always)]
@@ -19296,16 +18286,6 @@ impl Neon {
     pub unsafe fn vstrq_p128(self, a: *mut p128, b: p128) {
         unsafe { vstrq_p128(a, b) }
     }
-    #[doc = "See [`arch::vsub_f16`]."]
-    #[inline(always)]
-    pub fn vsub_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4_t {
-        unsafe { vsub_f16(a, b) }
-    }
-    #[doc = "See [`arch::vsubq_f16`]."]
-    #[inline(always)]
-    pub fn vsubq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8_t {
-        unsafe { vsubq_f16(a, b) }
-    }
     #[doc = "See [`arch::vsub_f32`]."]
     #[inline(always)]
     pub fn vsub_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2_t {
@@ -19536,16 +18516,6 @@ impl Neon {
     ) -> int32x4_t {
         unsafe { vsudotq_lane_s32::<LANE>(a, b, c) }
     }
-    #[doc = "See [`arch::vtrn_f16`]."]
-    #[inline(always)]
-    pub fn vtrn_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4x2_t {
-        unsafe { vtrn_f16(a, b) }
-    }
-    #[doc = "See [`arch::vtrnq_f16`]."]
-    #[inline(always)]
-    pub fn vtrnq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8x2_t {
-        unsafe { vtrnq_f16(a, b) }
-    }
     #[doc = "See [`arch::vtrn_f32`]."]
     #[inline(always)]
     pub fn vtrn_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2x2_t {
@@ -19751,16 +18721,6 @@ impl Neon {
     pub fn vusmmlaq_s32(self, a: int32x4_t, b: uint8x16_t, c: int8x16_t) -> int32x4_t {
         unsafe { vusmmlaq_s32(a, b, c) }
     }
-    #[doc = "See [`arch::vuzp_f16`]."]
-    #[inline(always)]
-    pub fn vuzp_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4x2_t {
-        unsafe { vuzp_f16(a, b) }
-    }
-    #[doc = "See [`arch::vuzpq_f16`]."]
-    #[inline(always)]
-    pub fn vuzpq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8x2_t {
-        unsafe { vuzpq_f16(a, b) }
-    }
     #[doc = "See [`arch::vuzp_f32`]."]
     #[inline(always)]
     pub fn vuzp_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2x2_t {
@@ -19850,16 +18810,6 @@ impl Neon {
     #[inline(always)]
     pub fn vuzpq_p16(self, a: poly16x8_t, b: poly16x8_t) -> poly16x8x2_t {
         unsafe { vuzpq_p16(a, b) }
-    }
-    #[doc = "See [`arch::vzip_f16`]."]
-    #[inline(always)]
-    pub fn vzip_f16(self, a: float16x4_t, b: float16x4_t) -> float16x4x2_t {
-        unsafe { vzip_f16(a, b) }
-    }
-    #[doc = "See [`arch::vzipq_f16`]."]
-    #[inline(always)]
-    pub fn vzipq_f16(self, a: float16x8_t, b: float16x8_t) -> float16x8x2_t {
-        unsafe { vzipq_f16(a, b) }
     }
     #[doc = "See [`arch::vzip_f32`]."]
     #[inline(always)]
