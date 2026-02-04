@@ -39,6 +39,11 @@ impl<'ast> Visit<'ast> for IntrinsicVisitor {
         // Skip functions that don't enable the target feature we're looking for. This should filter out non-intrinsics.
         let mut target_features = Vec::new();
         for attr in &node.attrs {
+            // Skip unstable intrinsics
+            if attr.path().is_ident("unstable") {
+                return;
+            }
+
             if !attr.path().is_ident("target_feature") {
                 continue;
             }
