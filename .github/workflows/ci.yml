@@ -255,6 +255,7 @@ jobs:
       - name: install Intel Software Development Emulator
         run: wget 'https://downloadmirror.intel.com/873619/sde-external-10.5.0-2026-01-13-lin.tar.xz' && tar -xf 'sde-external-10.5.0-2026-01-13-lin.tar.xz'
 
+      # build the tests outside the emulator, otherwise this job would be very slow
       - name: build tests
         # doc tests take a long time to run in the emulator and are already tested elsewhere, so exclude them with --lib --bins --tests
         run: cargo test --no-run --lib --bins --tests --workspace --locked --all-features
