@@ -16,6 +16,9 @@ use syn::{ItemFn, LitStr, visit::Visit};
 /// A visitor that extracts intrinsic functions from a Rust file.
 struct IntrinsicVisitor {
     intrinsics: Vec<ItemFn>,
+    /// Set of all previously-visited intrinsic names. Some modules contain duplicate intrinsics (e.g. NEON sometimes
+    /// defines intrinsics once per endianness).
+    visited: HashSet<String>,
     /// The target feature for the file/module being parsed.
     module_feature: String,
 }
@@ -24,6 +27,7 @@ impl IntrinsicVisitor {
     fn new(module_feature: String) -> Self {
         Self {
             intrinsics: Vec::new(),
+            visited: HashSet::new(),
             module_feature,
         }
     }
@@ -33,6 +37,11 @@ impl<'ast> Visit<'ast> for IntrinsicVisitor {
     fn visit_item_fn(&mut self, node: &'ast ItemFn) {
         // Skip non-public functions
         if !matches!(node.vis, syn::Visibility::Public(_)) {
+            return;
+        }
+
+        let name = node.sig.ident.to_string();
+        if !self.visited.insert(name) {
             return;
         }
 

@@ -3021,16 +3021,6 @@ impl Neon {
     pub unsafe fn vld2q_dup_p64(self, a: *const p64) -> poly64x2x2_t {
         unsafe { vld2q_dup_p64(a) }
     }
-    #[doc = "See [`arch::vld2q_dup_p64`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_p64(self, a: *const p64) -> poly64x2x2_t {
-        unsafe { vld2q_dup_p64(a) }
-    }
-    #[doc = "See [`arch::vld2q_dup_u64`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_u64(self, a: *const u64) -> uint64x2x2_t {
-        unsafe { vld2q_dup_u64(a) }
-    }
     #[doc = "See [`arch::vld2q_dup_u64`]."]
     #[inline(always)]
     pub unsafe fn vld2q_dup_u64(self, a: *const u64) -> uint64x2x2_t {
@@ -3114,16 +3104,6 @@ impl Neon {
     pub unsafe fn vld2q_p64(self, a: *const p64) -> poly64x2x2_t {
         unsafe { vld2q_p64(a) }
     }
-    #[doc = "See [`arch::vld2q_p64`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_p64(self, a: *const p64) -> poly64x2x2_t {
-        unsafe { vld2q_p64(a) }
-    }
-    #[doc = "See [`arch::vld2q_u64`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_u64(self, a: *const u64) -> uint64x2x2_t {
-        unsafe { vld2q_u64(a) }
-    }
     #[doc = "See [`arch::vld2q_u64`]."]
     #[inline(always)]
     pub unsafe fn vld2q_u64(self, a: *const u64) -> uint64x2x2_t {
@@ -3189,16 +3169,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vld3q_dup_p64(self, a: *const p64) -> poly64x2x3_t {
         unsafe { vld3q_dup_p64(a) }
-    }
-    #[doc = "See [`arch::vld3q_dup_p64`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_dup_p64(self, a: *const p64) -> poly64x2x3_t {
-        unsafe { vld3q_dup_p64(a) }
-    }
-    #[doc = "See [`arch::vld3q_dup_u64`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_dup_u64(self, a: *const u64) -> uint64x2x3_t {
-        unsafe { vld3q_dup_u64(a) }
     }
     #[doc = "See [`arch::vld3q_dup_u64`]."]
     #[inline(always)]
@@ -3283,16 +3253,6 @@ impl Neon {
     pub unsafe fn vld3q_p64(self, a: *const p64) -> poly64x2x3_t {
         unsafe { vld3q_p64(a) }
     }
-    #[doc = "See [`arch::vld3q_p64`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_p64(self, a: *const p64) -> poly64x2x3_t {
-        unsafe { vld3q_p64(a) }
-    }
-    #[doc = "See [`arch::vld3q_u64`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_u64(self, a: *const u64) -> uint64x2x3_t {
-        unsafe { vld3q_u64(a) }
-    }
     #[doc = "See [`arch::vld3q_u64`]."]
     #[inline(always)]
     pub unsafe fn vld3q_u64(self, a: *const u64) -> uint64x2x3_t {
@@ -3358,16 +3318,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vld4q_dup_p64(self, a: *const p64) -> poly64x2x4_t {
         unsafe { vld4q_dup_p64(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_p64`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_p64(self, a: *const p64) -> poly64x2x4_t {
-        unsafe { vld4q_dup_p64(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_u64`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_u64(self, a: *const u64) -> uint64x2x4_t {
-        unsafe { vld4q_dup_u64(a) }
     }
     #[doc = "See [`arch::vld4q_dup_u64`]."]
     #[inline(always)]
@@ -3451,16 +3401,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vld4q_p64(self, a: *const p64) -> poly64x2x4_t {
         unsafe { vld4q_p64(a) }
-    }
-    #[doc = "See [`arch::vld4q_p64`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_p64(self, a: *const p64) -> poly64x2x4_t {
-        unsafe { vld4q_p64(a) }
-    }
-    #[doc = "See [`arch::vld4q_u64`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_u64(self, a: *const u64) -> uint64x2x4_t {
-        unsafe { vld4q_u64(a) }
     }
     #[doc = "See [`arch::vld4q_u64`]."]
     #[inline(always)]
@@ -4407,16 +4347,6 @@ impl Neon {
     pub fn vpaddq_u8(self, a: uint8x16_t, b: uint8x16_t) -> uint8x16_t {
         unsafe { vpaddq_u8(a, b) }
     }
-    #[doc = "See [`arch::vpaddq_u8`]."]
-    #[inline(always)]
-    pub fn vpaddq_u8(self, a: uint8x16_t, b: uint8x16_t) -> uint8x16_t {
-        unsafe { vpaddq_u8(a, b) }
-    }
-    #[doc = "See [`arch::vpaddq_u16`]."]
-    #[inline(always)]
-    pub fn vpaddq_u16(self, a: uint16x8_t, b: uint16x8_t) -> uint16x8_t {
-        unsafe { vpaddq_u16(a, b) }
-    }
     #[doc = "See [`arch::vpaddq_u16`]."]
     #[inline(always)]
     pub fn vpaddq_u16(self, a: uint16x8_t, b: uint16x8_t) -> uint16x8_t {
@@ -4426,16 +4356,6 @@ impl Neon {
     #[inline(always)]
     pub fn vpaddq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
         unsafe { vpaddq_u32(a, b) }
-    }
-    #[doc = "See [`arch::vpaddq_u32`]."]
-    #[inline(always)]
-    pub fn vpaddq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
-        unsafe { vpaddq_u32(a, b) }
-    }
-    #[doc = "See [`arch::vpaddq_u64`]."]
-    #[inline(always)]
-    pub fn vpaddq_u64(self, a: uint64x2_t, b: uint64x2_t) -> uint64x2_t {
-        unsafe { vpaddq_u64(a, b) }
     }
     #[doc = "See [`arch::vpaddq_u64`]."]
     #[inline(always)]
@@ -5607,16 +5527,6 @@ impl Neon {
     pub fn vqtbl2_u8(self, a: uint8x16x2_t, b: uint8x8_t) -> uint8x8_t {
         unsafe { vqtbl2_u8(a, b) }
     }
-    #[doc = "See [`arch::vqtbl2_u8`]."]
-    #[inline(always)]
-    pub fn vqtbl2_u8(self, a: uint8x16x2_t, b: uint8x8_t) -> uint8x8_t {
-        unsafe { vqtbl2_u8(a, b) }
-    }
-    #[doc = "See [`arch::vqtbl2q_u8`]."]
-    #[inline(always)]
-    pub fn vqtbl2q_u8(self, a: uint8x16x2_t, b: uint8x16_t) -> uint8x16_t {
-        unsafe { vqtbl2q_u8(a, b) }
-    }
     #[doc = "See [`arch::vqtbl2q_u8`]."]
     #[inline(always)]
     pub fn vqtbl2q_u8(self, a: uint8x16x2_t, b: uint8x16_t) -> uint8x16_t {
@@ -5626,16 +5536,6 @@ impl Neon {
     #[inline(always)]
     pub fn vqtbl2_p8(self, a: poly8x16x2_t, b: uint8x8_t) -> poly8x8_t {
         unsafe { vqtbl2_p8(a, b) }
-    }
-    #[doc = "See [`arch::vqtbl2_p8`]."]
-    #[inline(always)]
-    pub fn vqtbl2_p8(self, a: poly8x16x2_t, b: uint8x8_t) -> poly8x8_t {
-        unsafe { vqtbl2_p8(a, b) }
-    }
-    #[doc = "See [`arch::vqtbl2q_p8`]."]
-    #[inline(always)]
-    pub fn vqtbl2q_p8(self, a: poly8x16x2_t, b: uint8x16_t) -> poly8x16_t {
-        unsafe { vqtbl2q_p8(a, b) }
     }
     #[doc = "See [`arch::vqtbl2q_p8`]."]
     #[inline(always)]
@@ -5657,16 +5557,6 @@ impl Neon {
     pub fn vqtbl3_u8(self, a: uint8x16x3_t, b: uint8x8_t) -> uint8x8_t {
         unsafe { vqtbl3_u8(a, b) }
     }
-    #[doc = "See [`arch::vqtbl3_u8`]."]
-    #[inline(always)]
-    pub fn vqtbl3_u8(self, a: uint8x16x3_t, b: uint8x8_t) -> uint8x8_t {
-        unsafe { vqtbl3_u8(a, b) }
-    }
-    #[doc = "See [`arch::vqtbl3q_u8`]."]
-    #[inline(always)]
-    pub fn vqtbl3q_u8(self, a: uint8x16x3_t, b: uint8x16_t) -> uint8x16_t {
-        unsafe { vqtbl3q_u8(a, b) }
-    }
     #[doc = "See [`arch::vqtbl3q_u8`]."]
     #[inline(always)]
     pub fn vqtbl3q_u8(self, a: uint8x16x3_t, b: uint8x16_t) -> uint8x16_t {
@@ -5676,16 +5566,6 @@ impl Neon {
     #[inline(always)]
     pub fn vqtbl3_p8(self, a: poly8x16x3_t, b: uint8x8_t) -> poly8x8_t {
         unsafe { vqtbl3_p8(a, b) }
-    }
-    #[doc = "See [`arch::vqtbl3_p8`]."]
-    #[inline(always)]
-    pub fn vqtbl3_p8(self, a: poly8x16x3_t, b: uint8x8_t) -> poly8x8_t {
-        unsafe { vqtbl3_p8(a, b) }
-    }
-    #[doc = "See [`arch::vqtbl3q_p8`]."]
-    #[inline(always)]
-    pub fn vqtbl3q_p8(self, a: poly8x16x3_t, b: uint8x16_t) -> poly8x16_t {
-        unsafe { vqtbl3q_p8(a, b) }
     }
     #[doc = "See [`arch::vqtbl3q_p8`]."]
     #[inline(always)]
@@ -5707,16 +5587,6 @@ impl Neon {
     pub fn vqtbl4_u8(self, a: uint8x16x4_t, b: uint8x8_t) -> uint8x8_t {
         unsafe { vqtbl4_u8(a, b) }
     }
-    #[doc = "See [`arch::vqtbl4_u8`]."]
-    #[inline(always)]
-    pub fn vqtbl4_u8(self, a: uint8x16x4_t, b: uint8x8_t) -> uint8x8_t {
-        unsafe { vqtbl4_u8(a, b) }
-    }
-    #[doc = "See [`arch::vqtbl4q_u8`]."]
-    #[inline(always)]
-    pub fn vqtbl4q_u8(self, a: uint8x16x4_t, b: uint8x16_t) -> uint8x16_t {
-        unsafe { vqtbl4q_u8(a, b) }
-    }
     #[doc = "See [`arch::vqtbl4q_u8`]."]
     #[inline(always)]
     pub fn vqtbl4q_u8(self, a: uint8x16x4_t, b: uint8x16_t) -> uint8x16_t {
@@ -5726,16 +5596,6 @@ impl Neon {
     #[inline(always)]
     pub fn vqtbl4_p8(self, a: poly8x16x4_t, b: uint8x8_t) -> poly8x8_t {
         unsafe { vqtbl4_p8(a, b) }
-    }
-    #[doc = "See [`arch::vqtbl4_p8`]."]
-    #[inline(always)]
-    pub fn vqtbl4_p8(self, a: poly8x16x4_t, b: uint8x8_t) -> poly8x8_t {
-        unsafe { vqtbl4_p8(a, b) }
-    }
-    #[doc = "See [`arch::vqtbl4q_p8`]."]
-    #[inline(always)]
-    pub fn vqtbl4q_p8(self, a: poly8x16x4_t, b: uint8x16_t) -> poly8x16_t {
-        unsafe { vqtbl4q_p8(a, b) }
     }
     #[doc = "See [`arch::vqtbl4q_p8`]."]
     #[inline(always)]
@@ -5787,16 +5647,6 @@ impl Neon {
     pub fn vqtbx2_u8(self, a: uint8x8_t, b: uint8x16x2_t, c: uint8x8_t) -> uint8x8_t {
         unsafe { vqtbx2_u8(a, b, c) }
     }
-    #[doc = "See [`arch::vqtbx2_u8`]."]
-    #[inline(always)]
-    pub fn vqtbx2_u8(self, a: uint8x8_t, b: uint8x16x2_t, c: uint8x8_t) -> uint8x8_t {
-        unsafe { vqtbx2_u8(a, b, c) }
-    }
-    #[doc = "See [`arch::vqtbx2q_u8`]."]
-    #[inline(always)]
-    pub fn vqtbx2q_u8(self, a: uint8x16_t, b: uint8x16x2_t, c: uint8x16_t) -> uint8x16_t {
-        unsafe { vqtbx2q_u8(a, b, c) }
-    }
     #[doc = "See [`arch::vqtbx2q_u8`]."]
     #[inline(always)]
     pub fn vqtbx2q_u8(self, a: uint8x16_t, b: uint8x16x2_t, c: uint8x16_t) -> uint8x16_t {
@@ -5806,16 +5656,6 @@ impl Neon {
     #[inline(always)]
     pub fn vqtbx2_p8(self, a: poly8x8_t, b: poly8x16x2_t, c: uint8x8_t) -> poly8x8_t {
         unsafe { vqtbx2_p8(a, b, c) }
-    }
-    #[doc = "See [`arch::vqtbx2_p8`]."]
-    #[inline(always)]
-    pub fn vqtbx2_p8(self, a: poly8x8_t, b: poly8x16x2_t, c: uint8x8_t) -> poly8x8_t {
-        unsafe { vqtbx2_p8(a, b, c) }
-    }
-    #[doc = "See [`arch::vqtbx2q_p8`]."]
-    #[inline(always)]
-    pub fn vqtbx2q_p8(self, a: poly8x16_t, b: poly8x16x2_t, c: uint8x16_t) -> poly8x16_t {
-        unsafe { vqtbx2q_p8(a, b, c) }
     }
     #[doc = "See [`arch::vqtbx2q_p8`]."]
     #[inline(always)]
@@ -5837,16 +5677,6 @@ impl Neon {
     pub fn vqtbx3_u8(self, a: uint8x8_t, b: uint8x16x3_t, c: uint8x8_t) -> uint8x8_t {
         unsafe { vqtbx3_u8(a, b, c) }
     }
-    #[doc = "See [`arch::vqtbx3_u8`]."]
-    #[inline(always)]
-    pub fn vqtbx3_u8(self, a: uint8x8_t, b: uint8x16x3_t, c: uint8x8_t) -> uint8x8_t {
-        unsafe { vqtbx3_u8(a, b, c) }
-    }
-    #[doc = "See [`arch::vqtbx3q_u8`]."]
-    #[inline(always)]
-    pub fn vqtbx3q_u8(self, a: uint8x16_t, b: uint8x16x3_t, c: uint8x16_t) -> uint8x16_t {
-        unsafe { vqtbx3q_u8(a, b, c) }
-    }
     #[doc = "See [`arch::vqtbx3q_u8`]."]
     #[inline(always)]
     pub fn vqtbx3q_u8(self, a: uint8x16_t, b: uint8x16x3_t, c: uint8x16_t) -> uint8x16_t {
@@ -5856,16 +5686,6 @@ impl Neon {
     #[inline(always)]
     pub fn vqtbx3_p8(self, a: poly8x8_t, b: poly8x16x3_t, c: uint8x8_t) -> poly8x8_t {
         unsafe { vqtbx3_p8(a, b, c) }
-    }
-    #[doc = "See [`arch::vqtbx3_p8`]."]
-    #[inline(always)]
-    pub fn vqtbx3_p8(self, a: poly8x8_t, b: poly8x16x3_t, c: uint8x8_t) -> poly8x8_t {
-        unsafe { vqtbx3_p8(a, b, c) }
-    }
-    #[doc = "See [`arch::vqtbx3q_p8`]."]
-    #[inline(always)]
-    pub fn vqtbx3q_p8(self, a: poly8x16_t, b: poly8x16x3_t, c: uint8x16_t) -> poly8x16_t {
-        unsafe { vqtbx3q_p8(a, b, c) }
     }
     #[doc = "See [`arch::vqtbx3q_p8`]."]
     #[inline(always)]
@@ -5887,16 +5707,6 @@ impl Neon {
     pub fn vqtbx4_u8(self, a: uint8x8_t, b: uint8x16x4_t, c: uint8x8_t) -> uint8x8_t {
         unsafe { vqtbx4_u8(a, b, c) }
     }
-    #[doc = "See [`arch::vqtbx4_u8`]."]
-    #[inline(always)]
-    pub fn vqtbx4_u8(self, a: uint8x8_t, b: uint8x16x4_t, c: uint8x8_t) -> uint8x8_t {
-        unsafe { vqtbx4_u8(a, b, c) }
-    }
-    #[doc = "See [`arch::vqtbx4q_u8`]."]
-    #[inline(always)]
-    pub fn vqtbx4q_u8(self, a: uint8x16_t, b: uint8x16x4_t, c: uint8x16_t) -> uint8x16_t {
-        unsafe { vqtbx4q_u8(a, b, c) }
-    }
     #[doc = "See [`arch::vqtbx4q_u8`]."]
     #[inline(always)]
     pub fn vqtbx4q_u8(self, a: uint8x16_t, b: uint8x16x4_t, c: uint8x16_t) -> uint8x16_t {
@@ -5906,16 +5716,6 @@ impl Neon {
     #[inline(always)]
     pub fn vqtbx4_p8(self, a: poly8x8_t, b: poly8x16x4_t, c: uint8x8_t) -> poly8x8_t {
         unsafe { vqtbx4_p8(a, b, c) }
-    }
-    #[doc = "See [`arch::vqtbx4_p8`]."]
-    #[inline(always)]
-    pub fn vqtbx4_p8(self, a: poly8x8_t, b: poly8x16x4_t, c: uint8x8_t) -> poly8x8_t {
-        unsafe { vqtbx4_p8(a, b, c) }
-    }
-    #[doc = "See [`arch::vqtbx4q_p8`]."]
-    #[inline(always)]
-    pub fn vqtbx4q_p8(self, a: poly8x16_t, b: poly8x16x4_t, c: uint8x16_t) -> poly8x16_t {
-        unsafe { vqtbx4q_p8(a, b, c) }
     }
     #[doc = "See [`arch::vqtbx4q_p8`]."]
     #[inline(always)]
@@ -5942,16 +5742,6 @@ impl Neon {
     pub fn vrbit_u8(self, a: uint8x8_t) -> uint8x8_t {
         unsafe { vrbit_u8(a) }
     }
-    #[doc = "See [`arch::vrbit_u8`]."]
-    #[inline(always)]
-    pub fn vrbit_u8(self, a: uint8x8_t) -> uint8x8_t {
-        unsafe { vrbit_u8(a) }
-    }
-    #[doc = "See [`arch::vrbitq_u8`]."]
-    #[inline(always)]
-    pub fn vrbitq_u8(self, a: uint8x16_t) -> uint8x16_t {
-        unsafe { vrbitq_u8(a) }
-    }
     #[doc = "See [`arch::vrbitq_u8`]."]
     #[inline(always)]
     pub fn vrbitq_u8(self, a: uint8x16_t) -> uint8x16_t {
@@ -5961,16 +5751,6 @@ impl Neon {
     #[inline(always)]
     pub fn vrbit_p8(self, a: poly8x8_t) -> poly8x8_t {
         unsafe { vrbit_p8(a) }
-    }
-    #[doc = "See [`arch::vrbit_p8`]."]
-    #[inline(always)]
-    pub fn vrbit_p8(self, a: poly8x8_t) -> poly8x8_t {
-        unsafe { vrbit_p8(a) }
-    }
-    #[doc = "See [`arch::vrbitq_p8`]."]
-    #[inline(always)]
-    pub fn vrbitq_p8(self, a: poly8x16_t) -> poly8x16_t {
-        unsafe { vrbitq_p8(a) }
     }
     #[doc = "See [`arch::vrbitq_p8`]."]
     #[inline(always)]
@@ -6032,25 +5812,10 @@ impl Neon {
     pub fn vreinterpret_f64_f16(self, a: float16x4_t) -> float64x1_t {
         unsafe { vreinterpret_f64_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_f16(self, a: float16x4_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f64_f16`]."]
     #[inline(always)]
     pub fn vreinterpretq_f64_f16(self, a: float16x8_t) -> float64x2_t {
         unsafe { vreinterpretq_f64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_f16(self, a: float16x8_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_f64(self, a: float64x1_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_f64(a) }
     }
     #[doc = "See [`arch::vreinterpret_f16_f64`]."]
     #[inline(always)]
@@ -6062,25 +5827,10 @@ impl Neon {
     pub fn vreinterpretq_f16_f64(self, a: float64x2_t) -> float16x8_t {
         unsafe { vreinterpretq_f16_f64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_f64(self, a: float64x2_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f64_p128`]."]
     #[inline(always)]
     pub fn vreinterpretq_f64_p128(self, a: p128) -> float64x2_t {
         unsafe { vreinterpretq_f64_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_p128(self, a: p128) -> float64x2_t {
-        unsafe { vreinterpretq_f64_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f64_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_f32(self, a: float32x2_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_f32(a) }
     }
     #[doc = "See [`arch::vreinterpret_f64_f32`]."]
     #[inline(always)]
@@ -6092,25 +5842,10 @@ impl Neon {
     pub fn vreinterpret_p64_f32(self, a: float32x2_t) -> poly64x1_t {
         unsafe { vreinterpret_p64_f32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p64_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_f32(self, a: float32x2_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_f32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f64_f32`]."]
     #[inline(always)]
     pub fn vreinterpretq_f64_f32(self, a: float32x4_t) -> float64x2_t {
         unsafe { vreinterpretq_f64_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_f32(self, a: float32x4_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_f32(self, a: float32x4_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_f32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p64_f32`]."]
     #[inline(always)]
@@ -6122,16 +5857,6 @@ impl Neon {
     pub fn vreinterpret_f32_f64(self, a: float64x1_t) -> float32x2_t {
         unsafe { vreinterpret_f32_f64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f32_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_f64(self, a: float64x1_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_f64(self, a: float64x1_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s8_f64`]."]
     #[inline(always)]
     pub fn vreinterpret_s8_f64(self, a: float64x1_t) -> int8x8_t {
@@ -6141,16 +5866,6 @@ impl Neon {
     #[inline(always)]
     pub fn vreinterpret_s16_f64(self, a: float64x1_t) -> int16x4_t {
         unsafe { vreinterpret_s16_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_f64(self, a: float64x1_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_f64(self, a: float64x1_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_f64(a) }
     }
     #[doc = "See [`arch::vreinterpret_s32_f64`]."]
     #[inline(always)]
@@ -6167,25 +5882,10 @@ impl Neon {
     pub fn vreinterpret_u8_f64(self, a: float64x1_t) -> uint8x8_t {
         unsafe { vreinterpret_u8_f64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u8_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_f64(self, a: float64x1_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u16_f64`]."]
     #[inline(always)]
     pub fn vreinterpret_u16_f64(self, a: float64x1_t) -> uint16x4_t {
         unsafe { vreinterpret_u16_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_f64(self, a: float64x1_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_f64(self, a: float64x1_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_f64(a) }
     }
     #[doc = "See [`arch::vreinterpret_u32_f64`]."]
     #[inline(always)]
@@ -6202,16 +5902,6 @@ impl Neon {
     pub fn vreinterpret_p8_f64(self, a: float64x1_t) -> poly8x8_t {
         unsafe { vreinterpret_p8_f64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p8_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_f64(self, a: float64x1_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_f64(self, a: float64x1_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p16_f64`]."]
     #[inline(always)]
     pub fn vreinterpret_p16_f64(self, a: float64x1_t) -> poly16x4_t {
@@ -6227,25 +5917,10 @@ impl Neon {
     pub fn vreinterpretq_p128_f64(self, a: float64x2_t) -> p128 {
         unsafe { vreinterpretq_p128_f64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p128_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_f64(self, a: float64x2_t) -> p128 {
-        unsafe { vreinterpretq_p128_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f32_f64`]."]
     #[inline(always)]
     pub fn vreinterpretq_f32_f64(self, a: float64x2_t) -> float32x4_t {
         unsafe { vreinterpretq_f32_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_f64(self, a: float64x2_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_f64(self, a: float64x2_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_f64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s8_f64`]."]
     #[inline(always)]
@@ -6257,25 +5932,10 @@ impl Neon {
     pub fn vreinterpretq_s16_f64(self, a: float64x2_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_f64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_f64(self, a: float64x2_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s32_f64`]."]
     #[inline(always)]
     pub fn vreinterpretq_s32_f64(self, a: float64x2_t) -> int32x4_t {
         unsafe { vreinterpretq_s32_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_f64(self, a: float64x2_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_f64(self, a: float64x2_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_f64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s64_f64`]."]
     #[inline(always)]
@@ -6287,25 +5947,10 @@ impl Neon {
     pub fn vreinterpretq_u8_f64(self, a: float64x2_t) -> uint8x16_t {
         unsafe { vreinterpretq_u8_f64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u8_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_f64(self, a: float64x2_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u16_f64`]."]
     #[inline(always)]
     pub fn vreinterpretq_u16_f64(self, a: float64x2_t) -> uint16x8_t {
         unsafe { vreinterpretq_u16_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_f64(self, a: float64x2_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_f64(self, a: float64x2_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_f64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u32_f64`]."]
     #[inline(always)]
@@ -6317,25 +5962,10 @@ impl Neon {
     pub fn vreinterpretq_u64_f64(self, a: float64x2_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_f64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u64_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_f64(self, a: float64x2_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p8_f64`]."]
     #[inline(always)]
     pub fn vreinterpretq_p8_f64(self, a: float64x2_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_f64(self, a: float64x2_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_f64(self, a: float64x2_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_f64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p16_f64`]."]
     #[inline(always)]
@@ -6347,25 +5977,10 @@ impl Neon {
     pub fn vreinterpretq_p64_f64(self, a: float64x2_t) -> poly64x2_t {
         unsafe { vreinterpretq_p64_f64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p64_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_f64(self, a: float64x2_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f64_s8`]."]
     #[inline(always)]
     pub fn vreinterpret_f64_s8(self, a: int8x8_t) -> float64x1_t {
         unsafe { vreinterpret_f64_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f64_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_s8(self, a: int8x8_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_s8(self, a: int8x16_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_s8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f64_s8`]."]
     #[inline(always)]
@@ -6377,16 +5992,6 @@ impl Neon {
     pub fn vreinterpret_f64_s16(self, a: int16x4_t) -> float64x1_t {
         unsafe { vreinterpret_f64_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f64_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_s16(self, a: int16x4_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_s16(self, a: int16x8_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f64_s16`]."]
     #[inline(always)]
     pub fn vreinterpretq_f64_s16(self, a: int16x8_t) -> float64x2_t {
@@ -6396,16 +6001,6 @@ impl Neon {
     #[inline(always)]
     pub fn vreinterpret_f64_s32(self, a: int32x2_t) -> float64x1_t {
         unsafe { vreinterpret_f64_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f64_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_s32(self, a: int32x2_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_s32(self, a: int32x4_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_s32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f64_s32`]."]
     #[inline(always)]
@@ -6427,25 +6022,10 @@ impl Neon {
     pub fn vreinterpretq_f64_s64(self, a: int64x2_t) -> float64x2_t {
         unsafe { vreinterpretq_f64_s64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f64_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_s64(self, a: int64x2_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_s64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p64_s64`]."]
     #[inline(always)]
     pub fn vreinterpretq_p64_s64(self, a: int64x2_t) -> poly64x2_t {
         unsafe { vreinterpretq_p64_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_s64(self, a: int64x2_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f64_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_u8(self, a: uint8x8_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_u8(a) }
     }
     #[doc = "See [`arch::vreinterpret_f64_u8`]."]
     #[inline(always)]
@@ -6457,16 +6037,6 @@ impl Neon {
     pub fn vreinterpretq_f64_u8(self, a: uint8x16_t) -> float64x2_t {
         unsafe { vreinterpretq_f64_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f64_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_u8(self, a: uint8x16_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f64_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_u16(self, a: uint16x4_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f64_u16`]."]
     #[inline(always)]
     pub fn vreinterpret_f64_u16(self, a: uint16x4_t) -> float64x1_t {
@@ -6477,25 +6047,10 @@ impl Neon {
     pub fn vreinterpretq_f64_u16(self, a: uint16x8_t) -> float64x2_t {
         unsafe { vreinterpretq_f64_u16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f64_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_u16(self, a: uint16x8_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f64_u32`]."]
     #[inline(always)]
     pub fn vreinterpret_f64_u32(self, a: uint32x2_t) -> float64x1_t {
         unsafe { vreinterpret_f64_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f64_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_u32(self, a: uint32x2_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_u32(self, a: uint32x4_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_u32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f64_u32`]."]
     #[inline(always)]
@@ -6517,25 +6072,10 @@ impl Neon {
     pub fn vreinterpretq_f64_u64(self, a: uint64x2_t) -> float64x2_t {
         unsafe { vreinterpretq_f64_u64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f64_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_u64(self, a: uint64x2_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_u64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p64_u64`]."]
     #[inline(always)]
     pub fn vreinterpretq_p64_u64(self, a: uint64x2_t) -> poly64x2_t {
         unsafe { vreinterpretq_p64_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_u64(self, a: uint64x2_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f64_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_p8(self, a: poly8x8_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_p8(a) }
     }
     #[doc = "See [`arch::vreinterpret_f64_p8`]."]
     #[inline(always)]
@@ -6547,16 +6087,6 @@ impl Neon {
     pub fn vreinterpretq_f64_p8(self, a: poly8x16_t) -> float64x2_t {
         unsafe { vreinterpretq_f64_p8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f64_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_p8(self, a: poly8x16_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f64_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_p16(self, a: poly16x4_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f64_p16`]."]
     #[inline(always)]
     pub fn vreinterpret_f64_p16(self, a: poly16x4_t) -> float64x1_t {
@@ -6566,16 +6096,6 @@ impl Neon {
     #[inline(always)]
     pub fn vreinterpretq_f64_p16(self, a: poly16x8_t) -> float64x2_t {
         unsafe { vreinterpretq_f64_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_p16(self, a: poly16x8_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f32_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_p64(self, a: poly64x1_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_p64(a) }
     }
     #[doc = "See [`arch::vreinterpret_f32_p64`]."]
     #[inline(always)]
@@ -6602,16 +6122,6 @@ impl Neon {
     pub fn vreinterpretq_f32_p64(self, a: poly64x2_t) -> float32x4_t {
         unsafe { vreinterpretq_f32_p64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f32_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_p64(self, a: poly64x2_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_p64(self, a: poly64x2_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_p64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f64_p64`]."]
     #[inline(always)]
     pub fn vreinterpretq_f64_p64(self, a: poly64x2_t) -> float64x2_t {
@@ -6621,16 +6131,6 @@ impl Neon {
     #[inline(always)]
     pub fn vreinterpretq_s64_p64(self, a: poly64x2_t) -> int64x2_t {
         unsafe { vreinterpretq_s64_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_p64(self, a: poly64x2_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u64_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_p64(self, a: poly64x2_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_p64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u64_p64`]."]
     #[inline(always)]
@@ -6931,36 +6431,6 @@ impl Neon {
     #[inline(always)]
     pub fn vrsrad_n_u64<const N: i32>(self, a: u64, b: u64) -> u64 {
         unsafe { vrsrad_n_u64::<N>(a, b) }
-    }
-    #[doc = "See [`arch::vrsubhn_high_s16`]."]
-    #[inline(always)]
-    pub fn vrsubhn_high_s16(self, a: int8x8_t, b: int16x8_t, c: int16x8_t) -> int8x16_t {
-        unsafe { vrsubhn_high_s16(a, b, c) }
-    }
-    #[doc = "See [`arch::vrsubhn_high_s32`]."]
-    #[inline(always)]
-    pub fn vrsubhn_high_s32(self, a: int16x4_t, b: int32x4_t, c: int32x4_t) -> int16x8_t {
-        unsafe { vrsubhn_high_s32(a, b, c) }
-    }
-    #[doc = "See [`arch::vrsubhn_high_s64`]."]
-    #[inline(always)]
-    pub fn vrsubhn_high_s64(self, a: int32x2_t, b: int64x2_t, c: int64x2_t) -> int32x4_t {
-        unsafe { vrsubhn_high_s64(a, b, c) }
-    }
-    #[doc = "See [`arch::vrsubhn_high_u16`]."]
-    #[inline(always)]
-    pub fn vrsubhn_high_u16(self, a: uint8x8_t, b: uint16x8_t, c: uint16x8_t) -> uint8x16_t {
-        unsafe { vrsubhn_high_u16(a, b, c) }
-    }
-    #[doc = "See [`arch::vrsubhn_high_u32`]."]
-    #[inline(always)]
-    pub fn vrsubhn_high_u32(self, a: uint16x4_t, b: uint32x4_t, c: uint32x4_t) -> uint16x8_t {
-        unsafe { vrsubhn_high_u32(a, b, c) }
-    }
-    #[doc = "See [`arch::vrsubhn_high_u64`]."]
-    #[inline(always)]
-    pub fn vrsubhn_high_u64(self, a: uint32x2_t, b: uint64x2_t, c: uint64x2_t) -> uint32x4_t {
-        unsafe { vrsubhn_high_u64(a, b, c) }
     }
     #[doc = "See [`arch::vrsubhn_high_s16`]."]
     #[inline(always)]
@@ -7963,16 +7433,6 @@ impl Neon {
     pub fn vtbl2_u8(self, a: uint8x8x2_t, b: uint8x8_t) -> uint8x8_t {
         unsafe { vtbl2_u8(a, b) }
     }
-    #[doc = "See [`arch::vtbl2_u8`]."]
-    #[inline(always)]
-    pub fn vtbl2_u8(self, a: uint8x8x2_t, b: uint8x8_t) -> uint8x8_t {
-        unsafe { vtbl2_u8(a, b) }
-    }
-    #[doc = "See [`arch::vtbl2_p8`]."]
-    #[inline(always)]
-    pub fn vtbl2_p8(self, a: poly8x8x2_t, b: uint8x8_t) -> poly8x8_t {
-        unsafe { vtbl2_p8(a, b) }
-    }
     #[doc = "See [`arch::vtbl2_p8`]."]
     #[inline(always)]
     pub fn vtbl2_p8(self, a: poly8x8x2_t, b: uint8x8_t) -> poly8x8_t {
@@ -7988,16 +7448,6 @@ impl Neon {
     pub fn vtbl3_u8(self, a: uint8x8x3_t, b: uint8x8_t) -> uint8x8_t {
         unsafe { vtbl3_u8(a, b) }
     }
-    #[doc = "See [`arch::vtbl3_u8`]."]
-    #[inline(always)]
-    pub fn vtbl3_u8(self, a: uint8x8x3_t, b: uint8x8_t) -> uint8x8_t {
-        unsafe { vtbl3_u8(a, b) }
-    }
-    #[doc = "See [`arch::vtbl3_p8`]."]
-    #[inline(always)]
-    pub fn vtbl3_p8(self, a: poly8x8x3_t, b: uint8x8_t) -> poly8x8_t {
-        unsafe { vtbl3_p8(a, b) }
-    }
     #[doc = "See [`arch::vtbl3_p8`]."]
     #[inline(always)]
     pub fn vtbl3_p8(self, a: poly8x8x3_t, b: uint8x8_t) -> poly8x8_t {
@@ -8012,16 +7462,6 @@ impl Neon {
     #[inline(always)]
     pub fn vtbl4_u8(self, a: uint8x8x4_t, b: uint8x8_t) -> uint8x8_t {
         unsafe { vtbl4_u8(a, b) }
-    }
-    #[doc = "See [`arch::vtbl4_u8`]."]
-    #[inline(always)]
-    pub fn vtbl4_u8(self, a: uint8x8x4_t, b: uint8x8_t) -> uint8x8_t {
-        unsafe { vtbl4_u8(a, b) }
-    }
-    #[doc = "See [`arch::vtbl4_p8`]."]
-    #[inline(always)]
-    pub fn vtbl4_p8(self, a: poly8x8x4_t, b: uint8x8_t) -> poly8x8_t {
-        unsafe { vtbl4_p8(a, b) }
     }
     #[doc = "See [`arch::vtbl4_p8`]."]
     #[inline(always)]
@@ -8053,16 +7493,6 @@ impl Neon {
     pub fn vtbx2_u8(self, a: uint8x8_t, b: uint8x8x2_t, c: uint8x8_t) -> uint8x8_t {
         unsafe { vtbx2_u8(a, b, c) }
     }
-    #[doc = "See [`arch::vtbx2_u8`]."]
-    #[inline(always)]
-    pub fn vtbx2_u8(self, a: uint8x8_t, b: uint8x8x2_t, c: uint8x8_t) -> uint8x8_t {
-        unsafe { vtbx2_u8(a, b, c) }
-    }
-    #[doc = "See [`arch::vtbx2_p8`]."]
-    #[inline(always)]
-    pub fn vtbx2_p8(self, a: poly8x8_t, b: poly8x8x2_t, c: uint8x8_t) -> poly8x8_t {
-        unsafe { vtbx2_p8(a, b, c) }
-    }
     #[doc = "See [`arch::vtbx2_p8`]."]
     #[inline(always)]
     pub fn vtbx2_p8(self, a: poly8x8_t, b: poly8x8x2_t, c: uint8x8_t) -> poly8x8_t {
@@ -8078,16 +7508,6 @@ impl Neon {
     pub fn vtbx3_u8(self, a: uint8x8_t, b: uint8x8x3_t, c: uint8x8_t) -> uint8x8_t {
         unsafe { vtbx3_u8(a, b, c) }
     }
-    #[doc = "See [`arch::vtbx3_u8`]."]
-    #[inline(always)]
-    pub fn vtbx3_u8(self, a: uint8x8_t, b: uint8x8x3_t, c: uint8x8_t) -> uint8x8_t {
-        unsafe { vtbx3_u8(a, b, c) }
-    }
-    #[doc = "See [`arch::vtbx3_p8`]."]
-    #[inline(always)]
-    pub fn vtbx3_p8(self, a: poly8x8_t, b: poly8x8x3_t, c: uint8x8_t) -> poly8x8_t {
-        unsafe { vtbx3_p8(a, b, c) }
-    }
     #[doc = "See [`arch::vtbx3_p8`]."]
     #[inline(always)]
     pub fn vtbx3_p8(self, a: poly8x8_t, b: poly8x8x3_t, c: uint8x8_t) -> poly8x8_t {
@@ -8102,16 +7522,6 @@ impl Neon {
     #[inline(always)]
     pub fn vtbx4_u8(self, a: uint8x8_t, b: uint8x8x4_t, c: uint8x8_t) -> uint8x8_t {
         unsafe { vtbx4_u8(a, b, c) }
-    }
-    #[doc = "See [`arch::vtbx4_u8`]."]
-    #[inline(always)]
-    pub fn vtbx4_u8(self, a: uint8x8_t, b: uint8x8x4_t, c: uint8x8_t) -> uint8x8_t {
-        unsafe { vtbx4_u8(a, b, c) }
-    }
-    #[doc = "See [`arch::vtbx4_p8`]."]
-    #[inline(always)]
-    pub fn vtbx4_p8(self, a: poly8x8_t, b: poly8x8x4_t, c: uint8x8_t) -> poly8x8_t {
-        unsafe { vtbx4_p8(a, b, c) }
     }
     #[doc = "See [`arch::vtbx4_p8`]."]
     #[inline(always)]
@@ -10403,25 +9813,10 @@ impl Neon {
     pub fn vclz_u16(self, a: uint16x4_t) -> uint16x4_t {
         unsafe { vclz_u16(a) }
     }
-    #[doc = "See [`arch::vclz_u16`]."]
-    #[inline(always)]
-    pub fn vclz_u16(self, a: uint16x4_t) -> uint16x4_t {
-        unsafe { vclz_u16(a) }
-    }
     #[doc = "See [`arch::vclzq_u16`]."]
     #[inline(always)]
     pub fn vclzq_u16(self, a: uint16x8_t) -> uint16x8_t {
         unsafe { vclzq_u16(a) }
-    }
-    #[doc = "See [`arch::vclzq_u16`]."]
-    #[inline(always)]
-    pub fn vclzq_u16(self, a: uint16x8_t) -> uint16x8_t {
-        unsafe { vclzq_u16(a) }
-    }
-    #[doc = "See [`arch::vclz_u32`]."]
-    #[inline(always)]
-    pub fn vclz_u32(self, a: uint32x2_t) -> uint32x2_t {
-        unsafe { vclz_u32(a) }
     }
     #[doc = "See [`arch::vclz_u32`]."]
     #[inline(always)]
@@ -10433,25 +9828,10 @@ impl Neon {
     pub fn vclzq_u32(self, a: uint32x4_t) -> uint32x4_t {
         unsafe { vclzq_u32(a) }
     }
-    #[doc = "See [`arch::vclzq_u32`]."]
-    #[inline(always)]
-    pub fn vclzq_u32(self, a: uint32x4_t) -> uint32x4_t {
-        unsafe { vclzq_u32(a) }
-    }
     #[doc = "See [`arch::vclz_u8`]."]
     #[inline(always)]
     pub fn vclz_u8(self, a: uint8x8_t) -> uint8x8_t {
         unsafe { vclz_u8(a) }
-    }
-    #[doc = "See [`arch::vclz_u8`]."]
-    #[inline(always)]
-    pub fn vclz_u8(self, a: uint8x8_t) -> uint8x8_t {
-        unsafe { vclz_u8(a) }
-    }
-    #[doc = "See [`arch::vclzq_u8`]."]
-    #[inline(always)]
-    pub fn vclzq_u8(self, a: uint8x16_t) -> uint8x16_t {
-        unsafe { vclzq_u8(a) }
     }
     #[doc = "See [`arch::vclzq_u8`]."]
     #[inline(always)]
@@ -10473,16 +9853,6 @@ impl Neon {
     pub fn vcnt_u8(self, a: uint8x8_t) -> uint8x8_t {
         unsafe { vcnt_u8(a) }
     }
-    #[doc = "See [`arch::vcnt_u8`]."]
-    #[inline(always)]
-    pub fn vcnt_u8(self, a: uint8x8_t) -> uint8x8_t {
-        unsafe { vcnt_u8(a) }
-    }
-    #[doc = "See [`arch::vcntq_u8`]."]
-    #[inline(always)]
-    pub fn vcntq_u8(self, a: uint8x16_t) -> uint8x16_t {
-        unsafe { vcntq_u8(a) }
-    }
     #[doc = "See [`arch::vcntq_u8`]."]
     #[inline(always)]
     pub fn vcntq_u8(self, a: uint8x16_t) -> uint8x16_t {
@@ -10492,16 +9862,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcnt_p8(self, a: poly8x8_t) -> poly8x8_t {
         unsafe { vcnt_p8(a) }
-    }
-    #[doc = "See [`arch::vcnt_p8`]."]
-    #[inline(always)]
-    pub fn vcnt_p8(self, a: poly8x8_t) -> poly8x8_t {
-        unsafe { vcnt_p8(a) }
-    }
-    #[doc = "See [`arch::vcntq_p8`]."]
-    #[inline(always)]
-    pub fn vcntq_p8(self, a: poly8x16_t) -> poly8x16_t {
-        unsafe { vcntq_p8(a) }
     }
     #[doc = "See [`arch::vcntq_p8`]."]
     #[inline(always)]
@@ -10578,16 +9938,6 @@ impl Neon {
     pub fn vcreate_f16(self, a: u64) -> float16x4_t {
         unsafe { vcreate_f16(a) }
     }
-    #[doc = "See [`arch::vcreate_f16`]."]
-    #[inline(always)]
-    pub fn vcreate_f16(self, a: u64) -> float16x4_t {
-        unsafe { vcreate_f16(a) }
-    }
-    #[doc = "See [`arch::vcreate_f32`]."]
-    #[inline(always)]
-    pub fn vcreate_f32(self, a: u64) -> float32x2_t {
-        unsafe { vcreate_f32(a) }
-    }
     #[doc = "See [`arch::vcreate_f32`]."]
     #[inline(always)]
     pub fn vcreate_f32(self, a: u64) -> float32x2_t {
@@ -10598,25 +9948,10 @@ impl Neon {
     pub fn vcreate_s8(self, a: u64) -> int8x8_t {
         unsafe { vcreate_s8(a) }
     }
-    #[doc = "See [`arch::vcreate_s8`]."]
-    #[inline(always)]
-    pub fn vcreate_s8(self, a: u64) -> int8x8_t {
-        unsafe { vcreate_s8(a) }
-    }
     #[doc = "See [`arch::vcreate_s16`]."]
     #[inline(always)]
     pub fn vcreate_s16(self, a: u64) -> int16x4_t {
         unsafe { vcreate_s16(a) }
-    }
-    #[doc = "See [`arch::vcreate_s16`]."]
-    #[inline(always)]
-    pub fn vcreate_s16(self, a: u64) -> int16x4_t {
-        unsafe { vcreate_s16(a) }
-    }
-    #[doc = "See [`arch::vcreate_s32`]."]
-    #[inline(always)]
-    pub fn vcreate_s32(self, a: u64) -> int32x2_t {
-        unsafe { vcreate_s32(a) }
     }
     #[doc = "See [`arch::vcreate_s32`]."]
     #[inline(always)]
@@ -10633,25 +9968,10 @@ impl Neon {
     pub fn vcreate_u8(self, a: u64) -> uint8x8_t {
         unsafe { vcreate_u8(a) }
     }
-    #[doc = "See [`arch::vcreate_u8`]."]
-    #[inline(always)]
-    pub fn vcreate_u8(self, a: u64) -> uint8x8_t {
-        unsafe { vcreate_u8(a) }
-    }
     #[doc = "See [`arch::vcreate_u16`]."]
     #[inline(always)]
     pub fn vcreate_u16(self, a: u64) -> uint16x4_t {
         unsafe { vcreate_u16(a) }
-    }
-    #[doc = "See [`arch::vcreate_u16`]."]
-    #[inline(always)]
-    pub fn vcreate_u16(self, a: u64) -> uint16x4_t {
-        unsafe { vcreate_u16(a) }
-    }
-    #[doc = "See [`arch::vcreate_u32`]."]
-    #[inline(always)]
-    pub fn vcreate_u32(self, a: u64) -> uint32x2_t {
-        unsafe { vcreate_u32(a) }
     }
     #[doc = "See [`arch::vcreate_u32`]."]
     #[inline(always)]
@@ -10667,16 +9987,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcreate_p8(self, a: u64) -> poly8x8_t {
         unsafe { vcreate_p8(a) }
-    }
-    #[doc = "See [`arch::vcreate_p8`]."]
-    #[inline(always)]
-    pub fn vcreate_p8(self, a: u64) -> poly8x8_t {
-        unsafe { vcreate_p8(a) }
-    }
-    #[doc = "See [`arch::vcreate_p16`]."]
-    #[inline(always)]
-    pub fn vcreate_p16(self, a: u64) -> poly16x4_t {
-        unsafe { vcreate_p16(a) }
     }
     #[doc = "See [`arch::vcreate_p16`]."]
     #[inline(always)]
@@ -10758,26 +10068,6 @@ impl Neon {
     pub fn vcvtq_n_f16_u16<const N: i32>(self, a: uint16x8_t) -> float16x8_t {
         unsafe { vcvtq_n_f16_u16::<N>(a) }
     }
-    #[doc = "See [`arch::vcvt_n_f32_s32`]."]
-    #[inline(always)]
-    pub fn vcvt_n_f32_s32<const N: i32>(self, a: int32x2_t) -> float32x2_t {
-        unsafe { vcvt_n_f32_s32::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvtq_n_f32_s32`]."]
-    #[inline(always)]
-    pub fn vcvtq_n_f32_s32<const N: i32>(self, a: int32x4_t) -> float32x4_t {
-        unsafe { vcvtq_n_f32_s32::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvt_n_f32_u32`]."]
-    #[inline(always)]
-    pub fn vcvt_n_f32_u32<const N: i32>(self, a: uint32x2_t) -> float32x2_t {
-        unsafe { vcvt_n_f32_u32::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvtq_n_f32_u32`]."]
-    #[inline(always)]
-    pub fn vcvtq_n_f32_u32<const N: i32>(self, a: uint32x4_t) -> float32x4_t {
-        unsafe { vcvtq_n_f32_u32::<N>(a) }
-    }
     #[doc = "See [`arch::vcvt_n_s16_f16`]."]
     #[inline(always)]
     pub fn vcvt_n_s16_f16<const N: i32>(self, a: float16x4_t) -> int16x4_t {
@@ -10788,16 +10078,6 @@ impl Neon {
     pub fn vcvtq_n_s16_f16<const N: i32>(self, a: float16x8_t) -> int16x8_t {
         unsafe { vcvtq_n_s16_f16::<N>(a) }
     }
-    #[doc = "See [`arch::vcvt_n_s32_f32`]."]
-    #[inline(always)]
-    pub fn vcvt_n_s32_f32<const N: i32>(self, a: float32x2_t) -> int32x2_t {
-        unsafe { vcvt_n_s32_f32::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvtq_n_s32_f32`]."]
-    #[inline(always)]
-    pub fn vcvtq_n_s32_f32<const N: i32>(self, a: float32x4_t) -> int32x4_t {
-        unsafe { vcvtq_n_s32_f32::<N>(a) }
-    }
     #[doc = "See [`arch::vcvt_n_u16_f16`]."]
     #[inline(always)]
     pub fn vcvt_n_u16_f16<const N: i32>(self, a: float16x4_t) -> uint16x4_t {
@@ -10807,16 +10087,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcvtq_n_u16_f16<const N: i32>(self, a: float16x8_t) -> uint16x8_t {
         unsafe { vcvtq_n_u16_f16::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvt_n_u32_f32`]."]
-    #[inline(always)]
-    pub fn vcvt_n_u32_f32<const N: i32>(self, a: float32x2_t) -> uint32x2_t {
-        unsafe { vcvt_n_u32_f32::<N>(a) }
-    }
-    #[doc = "See [`arch::vcvtq_n_u32_f32`]."]
-    #[inline(always)]
-    pub fn vcvtq_n_u32_f32<const N: i32>(self, a: float32x4_t) -> uint32x4_t {
-        unsafe { vcvtq_n_u32_f32::<N>(a) }
     }
     #[doc = "See [`arch::vcvt_s16_f16`]."]
     #[inline(always)]
@@ -10868,26 +10138,6 @@ impl Neon {
     ) -> int32x2_t {
         unsafe { vdot_lane_s32::<LANE>(a, b, c) }
     }
-    #[doc = "See [`arch::vdot_lane_s32`]."]
-    #[inline(always)]
-    pub fn vdot_lane_s32<const LANE: i32>(
-        self,
-        a: int32x2_t,
-        b: int8x8_t,
-        c: int8x8_t,
-    ) -> int32x2_t {
-        unsafe { vdot_lane_s32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vdotq_lane_s32`]."]
-    #[inline(always)]
-    pub fn vdotq_lane_s32<const LANE: i32>(
-        self,
-        a: int32x4_t,
-        b: int8x16_t,
-        c: int8x8_t,
-    ) -> int32x4_t {
-        unsafe { vdotq_lane_s32::<LANE>(a, b, c) }
-    }
     #[doc = "See [`arch::vdotq_lane_s32`]."]
     #[inline(always)]
     pub fn vdotq_lane_s32<const LANE: i32>(
@@ -10907,26 +10157,6 @@ impl Neon {
         c: uint8x8_t,
     ) -> uint32x2_t {
         unsafe { vdot_lane_u32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vdot_lane_u32`]."]
-    #[inline(always)]
-    pub fn vdot_lane_u32<const LANE: i32>(
-        self,
-        a: uint32x2_t,
-        b: uint8x8_t,
-        c: uint8x8_t,
-    ) -> uint32x2_t {
-        unsafe { vdot_lane_u32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vdotq_lane_u32`]."]
-    #[inline(always)]
-    pub fn vdotq_lane_u32<const LANE: i32>(
-        self,
-        a: uint32x4_t,
-        b: uint8x16_t,
-        c: uint8x8_t,
-    ) -> uint32x4_t {
-        unsafe { vdotq_lane_u32::<LANE>(a, b, c) }
     }
     #[doc = "See [`arch::vdotq_lane_u32`]."]
     #[inline(always)]
@@ -12612,55 +11842,10 @@ impl Neon {
     pub unsafe fn vld1q_dup_p64(self, ptr: *const p64) -> poly64x2_t {
         unsafe { vld1q_dup_p64(ptr) }
     }
-    #[doc = "See [`arch::vld2_dup_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_f32(self, a: *const f32) -> float32x2x2_t {
-        unsafe { vld2_dup_f32(a) }
-    }
-    #[doc = "See [`arch::vld2q_dup_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_f32(self, a: *const f32) -> float32x4x2_t {
-        unsafe { vld2q_dup_f32(a) }
-    }
-    #[doc = "See [`arch::vld2_dup_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_s8(self, a: *const i8) -> int8x8x2_t {
-        unsafe { vld2_dup_s8(a) }
-    }
-    #[doc = "See [`arch::vld2q_dup_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_s8(self, a: *const i8) -> int8x16x2_t {
-        unsafe { vld2q_dup_s8(a) }
-    }
-    #[doc = "See [`arch::vld2_dup_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_s16(self, a: *const i16) -> int16x4x2_t {
-        unsafe { vld2_dup_s16(a) }
-    }
-    #[doc = "See [`arch::vld2q_dup_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_s16(self, a: *const i16) -> int16x8x2_t {
-        unsafe { vld2q_dup_s16(a) }
-    }
-    #[doc = "See [`arch::vld2_dup_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_s32(self, a: *const i32) -> int32x2x2_t {
-        unsafe { vld2_dup_s32(a) }
-    }
-    #[doc = "See [`arch::vld2q_dup_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_s32(self, a: *const i32) -> int32x4x2_t {
-        unsafe { vld2q_dup_s32(a) }
-    }
     #[doc = "See [`arch::vld2_dup_p64`]."]
     #[inline(always)]
     pub unsafe fn vld2_dup_p64(self, a: *const p64) -> poly64x1x2_t {
         unsafe { vld2_dup_p64(a) }
-    }
-    #[doc = "See [`arch::vld2_dup_s64`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_s64(self, a: *const i64) -> int64x1x2_t {
-        unsafe { vld2_dup_s64(a) }
     }
     #[doc = "See [`arch::vld2_dup_u64`]."]
     #[inline(always)]
@@ -12672,25 +11857,10 @@ impl Neon {
     pub unsafe fn vld2_dup_u8(self, a: *const u8) -> uint8x8x2_t {
         unsafe { vld2_dup_u8(a) }
     }
-    #[doc = "See [`arch::vld2_dup_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_u8(self, a: *const u8) -> uint8x8x2_t {
-        unsafe { vld2_dup_u8(a) }
-    }
     #[doc = "See [`arch::vld2q_dup_u8`]."]
     #[inline(always)]
     pub unsafe fn vld2q_dup_u8(self, a: *const u8) -> uint8x16x2_t {
         unsafe { vld2q_dup_u8(a) }
-    }
-    #[doc = "See [`arch::vld2q_dup_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_u8(self, a: *const u8) -> uint8x16x2_t {
-        unsafe { vld2q_dup_u8(a) }
-    }
-    #[doc = "See [`arch::vld2_dup_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_u16(self, a: *const u16) -> uint16x4x2_t {
-        unsafe { vld2_dup_u16(a) }
     }
     #[doc = "See [`arch::vld2_dup_u16`]."]
     #[inline(always)]
@@ -12702,25 +11872,10 @@ impl Neon {
     pub unsafe fn vld2q_dup_u16(self, a: *const u16) -> uint16x8x2_t {
         unsafe { vld2q_dup_u16(a) }
     }
-    #[doc = "See [`arch::vld2q_dup_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_u16(self, a: *const u16) -> uint16x8x2_t {
-        unsafe { vld2q_dup_u16(a) }
-    }
     #[doc = "See [`arch::vld2_dup_u32`]."]
     #[inline(always)]
     pub unsafe fn vld2_dup_u32(self, a: *const u32) -> uint32x2x2_t {
         unsafe { vld2_dup_u32(a) }
-    }
-    #[doc = "See [`arch::vld2_dup_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_u32(self, a: *const u32) -> uint32x2x2_t {
-        unsafe { vld2_dup_u32(a) }
-    }
-    #[doc = "See [`arch::vld2q_dup_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_u32(self, a: *const u32) -> uint32x4x2_t {
-        unsafe { vld2q_dup_u32(a) }
     }
     #[doc = "See [`arch::vld2q_dup_u32`]."]
     #[inline(always)]
@@ -12732,16 +11887,6 @@ impl Neon {
     pub unsafe fn vld2_dup_p8(self, a: *const p8) -> poly8x8x2_t {
         unsafe { vld2_dup_p8(a) }
     }
-    #[doc = "See [`arch::vld2_dup_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_p8(self, a: *const p8) -> poly8x8x2_t {
-        unsafe { vld2_dup_p8(a) }
-    }
-    #[doc = "See [`arch::vld2q_dup_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_p8(self, a: *const p8) -> poly8x16x2_t {
-        unsafe { vld2q_dup_p8(a) }
-    }
     #[doc = "See [`arch::vld2q_dup_p8`]."]
     #[inline(always)]
     pub unsafe fn vld2q_dup_p8(self, a: *const p8) -> poly8x16x2_t {
@@ -12752,60 +11897,10 @@ impl Neon {
     pub unsafe fn vld2_dup_p16(self, a: *const p16) -> poly16x4x2_t {
         unsafe { vld2_dup_p16(a) }
     }
-    #[doc = "See [`arch::vld2_dup_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_dup_p16(self, a: *const p16) -> poly16x4x2_t {
-        unsafe { vld2_dup_p16(a) }
-    }
     #[doc = "See [`arch::vld2q_dup_p16`]."]
     #[inline(always)]
     pub unsafe fn vld2q_dup_p16(self, a: *const p16) -> poly16x8x2_t {
         unsafe { vld2q_dup_p16(a) }
-    }
-    #[doc = "See [`arch::vld2q_dup_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_dup_p16(self, a: *const p16) -> poly16x8x2_t {
-        unsafe { vld2q_dup_p16(a) }
-    }
-    #[doc = "See [`arch::vld2_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_f32(self, a: *const f32) -> float32x2x2_t {
-        unsafe { vld2_f32(a) }
-    }
-    #[doc = "See [`arch::vld2q_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_f32(self, a: *const f32) -> float32x4x2_t {
-        unsafe { vld2q_f32(a) }
-    }
-    #[doc = "See [`arch::vld2_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_s8(self, a: *const i8) -> int8x8x2_t {
-        unsafe { vld2_s8(a) }
-    }
-    #[doc = "See [`arch::vld2q_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_s8(self, a: *const i8) -> int8x16x2_t {
-        unsafe { vld2q_s8(a) }
-    }
-    #[doc = "See [`arch::vld2_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_s16(self, a: *const i16) -> int16x4x2_t {
-        unsafe { vld2_s16(a) }
-    }
-    #[doc = "See [`arch::vld2q_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_s16(self, a: *const i16) -> int16x8x2_t {
-        unsafe { vld2q_s16(a) }
-    }
-    #[doc = "See [`arch::vld2_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_s32(self, a: *const i32) -> int32x2x2_t {
-        unsafe { vld2_s32(a) }
-    }
-    #[doc = "See [`arch::vld2q_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_s32(self, a: *const i32) -> int32x4x2_t {
-        unsafe { vld2q_s32(a) }
     }
     #[doc = "See [`arch::vld2_lane_f32`]."]
     #[inline(always)]
@@ -12935,11 +12030,6 @@ impl Neon {
     pub unsafe fn vld2_p64(self, a: *const p64) -> poly64x1x2_t {
         unsafe { vld2_p64(a) }
     }
-    #[doc = "See [`arch::vld2_s64`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_s64(self, a: *const i64) -> int64x1x2_t {
-        unsafe { vld2_s64(a) }
-    }
     #[doc = "See [`arch::vld2_u64`]."]
     #[inline(always)]
     pub unsafe fn vld2_u64(self, a: *const u64) -> uint64x1x2_t {
@@ -12950,25 +12040,10 @@ impl Neon {
     pub unsafe fn vld2_u8(self, a: *const u8) -> uint8x8x2_t {
         unsafe { vld2_u8(a) }
     }
-    #[doc = "See [`arch::vld2_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_u8(self, a: *const u8) -> uint8x8x2_t {
-        unsafe { vld2_u8(a) }
-    }
     #[doc = "See [`arch::vld2q_u8`]."]
     #[inline(always)]
     pub unsafe fn vld2q_u8(self, a: *const u8) -> uint8x16x2_t {
         unsafe { vld2q_u8(a) }
-    }
-    #[doc = "See [`arch::vld2q_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_u8(self, a: *const u8) -> uint8x16x2_t {
-        unsafe { vld2q_u8(a) }
-    }
-    #[doc = "See [`arch::vld2_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_u16(self, a: *const u16) -> uint16x4x2_t {
-        unsafe { vld2_u16(a) }
     }
     #[doc = "See [`arch::vld2_u16`]."]
     #[inline(always)]
@@ -12980,25 +12055,10 @@ impl Neon {
     pub unsafe fn vld2q_u16(self, a: *const u16) -> uint16x8x2_t {
         unsafe { vld2q_u16(a) }
     }
-    #[doc = "See [`arch::vld2q_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_u16(self, a: *const u16) -> uint16x8x2_t {
-        unsafe { vld2q_u16(a) }
-    }
     #[doc = "See [`arch::vld2_u32`]."]
     #[inline(always)]
     pub unsafe fn vld2_u32(self, a: *const u32) -> uint32x2x2_t {
         unsafe { vld2_u32(a) }
-    }
-    #[doc = "See [`arch::vld2_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_u32(self, a: *const u32) -> uint32x2x2_t {
-        unsafe { vld2_u32(a) }
-    }
-    #[doc = "See [`arch::vld2q_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_u32(self, a: *const u32) -> uint32x4x2_t {
-        unsafe { vld2q_u32(a) }
     }
     #[doc = "See [`arch::vld2q_u32`]."]
     #[inline(always)]
@@ -13010,16 +12070,6 @@ impl Neon {
     pub unsafe fn vld2_p8(self, a: *const p8) -> poly8x8x2_t {
         unsafe { vld2_p8(a) }
     }
-    #[doc = "See [`arch::vld2_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_p8(self, a: *const p8) -> poly8x8x2_t {
-        unsafe { vld2_p8(a) }
-    }
-    #[doc = "See [`arch::vld2q_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_p8(self, a: *const p8) -> poly8x16x2_t {
-        unsafe { vld2q_p8(a) }
-    }
     #[doc = "See [`arch::vld2q_p8`]."]
     #[inline(always)]
     pub unsafe fn vld2q_p8(self, a: *const p8) -> poly8x16x2_t {
@@ -13029,16 +12079,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vld2_p16(self, a: *const p16) -> poly16x4x2_t {
         unsafe { vld2_p16(a) }
-    }
-    #[doc = "See [`arch::vld2_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2_p16(self, a: *const p16) -> poly16x4x2_t {
-        unsafe { vld2_p16(a) }
-    }
-    #[doc = "See [`arch::vld2q_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld2q_p16(self, a: *const p16) -> poly16x8x2_t {
-        unsafe { vld2q_p16(a) }
     }
     #[doc = "See [`arch::vld2q_p16`]."]
     #[inline(always)]
@@ -13105,25 +12145,10 @@ impl Neon {
     pub unsafe fn vld3_dup_u8(self, a: *const u8) -> uint8x8x3_t {
         unsafe { vld3_dup_u8(a) }
     }
-    #[doc = "See [`arch::vld3_dup_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_dup_u8(self, a: *const u8) -> uint8x8x3_t {
-        unsafe { vld3_dup_u8(a) }
-    }
     #[doc = "See [`arch::vld3q_dup_u8`]."]
     #[inline(always)]
     pub unsafe fn vld3q_dup_u8(self, a: *const u8) -> uint8x16x3_t {
         unsafe { vld3q_dup_u8(a) }
-    }
-    #[doc = "See [`arch::vld3q_dup_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_dup_u8(self, a: *const u8) -> uint8x16x3_t {
-        unsafe { vld3q_dup_u8(a) }
-    }
-    #[doc = "See [`arch::vld3_dup_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_dup_u16(self, a: *const u16) -> uint16x4x3_t {
-        unsafe { vld3_dup_u16(a) }
     }
     #[doc = "See [`arch::vld3_dup_u16`]."]
     #[inline(always)]
@@ -13135,25 +12160,10 @@ impl Neon {
     pub unsafe fn vld3q_dup_u16(self, a: *const u16) -> uint16x8x3_t {
         unsafe { vld3q_dup_u16(a) }
     }
-    #[doc = "See [`arch::vld3q_dup_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_dup_u16(self, a: *const u16) -> uint16x8x3_t {
-        unsafe { vld3q_dup_u16(a) }
-    }
     #[doc = "See [`arch::vld3_dup_u32`]."]
     #[inline(always)]
     pub unsafe fn vld3_dup_u32(self, a: *const u32) -> uint32x2x3_t {
         unsafe { vld3_dup_u32(a) }
-    }
-    #[doc = "See [`arch::vld3_dup_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_dup_u32(self, a: *const u32) -> uint32x2x3_t {
-        unsafe { vld3_dup_u32(a) }
-    }
-    #[doc = "See [`arch::vld3q_dup_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_dup_u32(self, a: *const u32) -> uint32x4x3_t {
-        unsafe { vld3q_dup_u32(a) }
     }
     #[doc = "See [`arch::vld3q_dup_u32`]."]
     #[inline(always)]
@@ -13165,16 +12175,6 @@ impl Neon {
     pub unsafe fn vld3_dup_p8(self, a: *const p8) -> poly8x8x3_t {
         unsafe { vld3_dup_p8(a) }
     }
-    #[doc = "See [`arch::vld3_dup_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_dup_p8(self, a: *const p8) -> poly8x8x3_t {
-        unsafe { vld3_dup_p8(a) }
-    }
-    #[doc = "See [`arch::vld3q_dup_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_dup_p8(self, a: *const p8) -> poly8x16x3_t {
-        unsafe { vld3q_dup_p8(a) }
-    }
     #[doc = "See [`arch::vld3q_dup_p8`]."]
     #[inline(always)]
     pub unsafe fn vld3q_dup_p8(self, a: *const p8) -> poly8x16x3_t {
@@ -13184,16 +12184,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vld3_dup_p16(self, a: *const p16) -> poly16x4x3_t {
         unsafe { vld3_dup_p16(a) }
-    }
-    #[doc = "See [`arch::vld3_dup_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_dup_p16(self, a: *const p16) -> poly16x4x3_t {
-        unsafe { vld3_dup_p16(a) }
-    }
-    #[doc = "See [`arch::vld3q_dup_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_dup_p16(self, a: *const p16) -> poly16x8x3_t {
-        unsafe { vld3q_dup_p16(a) }
     }
     #[doc = "See [`arch::vld3q_dup_p16`]."]
     #[inline(always)]
@@ -13383,25 +12373,10 @@ impl Neon {
     pub unsafe fn vld3_u8(self, a: *const u8) -> uint8x8x3_t {
         unsafe { vld3_u8(a) }
     }
-    #[doc = "See [`arch::vld3_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_u8(self, a: *const u8) -> uint8x8x3_t {
-        unsafe { vld3_u8(a) }
-    }
     #[doc = "See [`arch::vld3q_u8`]."]
     #[inline(always)]
     pub unsafe fn vld3q_u8(self, a: *const u8) -> uint8x16x3_t {
         unsafe { vld3q_u8(a) }
-    }
-    #[doc = "See [`arch::vld3q_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_u8(self, a: *const u8) -> uint8x16x3_t {
-        unsafe { vld3q_u8(a) }
-    }
-    #[doc = "See [`arch::vld3_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_u16(self, a: *const u16) -> uint16x4x3_t {
-        unsafe { vld3_u16(a) }
     }
     #[doc = "See [`arch::vld3_u16`]."]
     #[inline(always)]
@@ -13413,25 +12388,10 @@ impl Neon {
     pub unsafe fn vld3q_u16(self, a: *const u16) -> uint16x8x3_t {
         unsafe { vld3q_u16(a) }
     }
-    #[doc = "See [`arch::vld3q_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_u16(self, a: *const u16) -> uint16x8x3_t {
-        unsafe { vld3q_u16(a) }
-    }
     #[doc = "See [`arch::vld3_u32`]."]
     #[inline(always)]
     pub unsafe fn vld3_u32(self, a: *const u32) -> uint32x2x3_t {
         unsafe { vld3_u32(a) }
-    }
-    #[doc = "See [`arch::vld3_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_u32(self, a: *const u32) -> uint32x2x3_t {
-        unsafe { vld3_u32(a) }
-    }
-    #[doc = "See [`arch::vld3q_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_u32(self, a: *const u32) -> uint32x4x3_t {
-        unsafe { vld3q_u32(a) }
     }
     #[doc = "See [`arch::vld3q_u32`]."]
     #[inline(always)]
@@ -13443,16 +12403,6 @@ impl Neon {
     pub unsafe fn vld3_p8(self, a: *const p8) -> poly8x8x3_t {
         unsafe { vld3_p8(a) }
     }
-    #[doc = "See [`arch::vld3_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_p8(self, a: *const p8) -> poly8x8x3_t {
-        unsafe { vld3_p8(a) }
-    }
-    #[doc = "See [`arch::vld3q_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_p8(self, a: *const p8) -> poly8x16x3_t {
-        unsafe { vld3q_p8(a) }
-    }
     #[doc = "See [`arch::vld3q_p8`]."]
     #[inline(always)]
     pub unsafe fn vld3q_p8(self, a: *const p8) -> poly8x16x3_t {
@@ -13463,60 +12413,10 @@ impl Neon {
     pub unsafe fn vld3_p16(self, a: *const p16) -> poly16x4x3_t {
         unsafe { vld3_p16(a) }
     }
-    #[doc = "See [`arch::vld3_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld3_p16(self, a: *const p16) -> poly16x4x3_t {
-        unsafe { vld3_p16(a) }
-    }
     #[doc = "See [`arch::vld3q_p16`]."]
     #[inline(always)]
     pub unsafe fn vld3q_p16(self, a: *const p16) -> poly16x8x3_t {
         unsafe { vld3q_p16(a) }
-    }
-    #[doc = "See [`arch::vld3q_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld3q_p16(self, a: *const p16) -> poly16x8x3_t {
-        unsafe { vld3q_p16(a) }
-    }
-    #[doc = "See [`arch::vld4_dup_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_dup_f32(self, a: *const f32) -> float32x2x4_t {
-        unsafe { vld4_dup_f32(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_f32(self, a: *const f32) -> float32x4x4_t {
-        unsafe { vld4q_dup_f32(a) }
-    }
-    #[doc = "See [`arch::vld4_dup_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_dup_s8(self, a: *const i8) -> int8x8x4_t {
-        unsafe { vld4_dup_s8(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_s8(self, a: *const i8) -> int8x16x4_t {
-        unsafe { vld4q_dup_s8(a) }
-    }
-    #[doc = "See [`arch::vld4_dup_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_dup_s16(self, a: *const i16) -> int16x4x4_t {
-        unsafe { vld4_dup_s16(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_s16(self, a: *const i16) -> int16x8x4_t {
-        unsafe { vld4q_dup_s16(a) }
-    }
-    #[doc = "See [`arch::vld4_dup_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_dup_s32(self, a: *const i32) -> int32x2x4_t {
-        unsafe { vld4_dup_s32(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_s32(self, a: *const i32) -> int32x4x4_t {
-        unsafe { vld4q_dup_s32(a) }
     }
     #[doc = "See [`arch::vld4_dup_s64`]."]
     #[inline(always)]
@@ -13538,25 +12438,10 @@ impl Neon {
     pub unsafe fn vld4_dup_u8(self, a: *const u8) -> uint8x8x4_t {
         unsafe { vld4_dup_u8(a) }
     }
-    #[doc = "See [`arch::vld4_dup_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_dup_u8(self, a: *const u8) -> uint8x8x4_t {
-        unsafe { vld4_dup_u8(a) }
-    }
     #[doc = "See [`arch::vld4q_dup_u8`]."]
     #[inline(always)]
     pub unsafe fn vld4q_dup_u8(self, a: *const u8) -> uint8x16x4_t {
         unsafe { vld4q_dup_u8(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_u8(self, a: *const u8) -> uint8x16x4_t {
-        unsafe { vld4q_dup_u8(a) }
-    }
-    #[doc = "See [`arch::vld4_dup_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_dup_u16(self, a: *const u16) -> uint16x4x4_t {
-        unsafe { vld4_dup_u16(a) }
     }
     #[doc = "See [`arch::vld4_dup_u16`]."]
     #[inline(always)]
@@ -13568,25 +12453,10 @@ impl Neon {
     pub unsafe fn vld4q_dup_u16(self, a: *const u16) -> uint16x8x4_t {
         unsafe { vld4q_dup_u16(a) }
     }
-    #[doc = "See [`arch::vld4q_dup_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_u16(self, a: *const u16) -> uint16x8x4_t {
-        unsafe { vld4q_dup_u16(a) }
-    }
     #[doc = "See [`arch::vld4_dup_u32`]."]
     #[inline(always)]
     pub unsafe fn vld4_dup_u32(self, a: *const u32) -> uint32x2x4_t {
         unsafe { vld4_dup_u32(a) }
-    }
-    #[doc = "See [`arch::vld4_dup_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_dup_u32(self, a: *const u32) -> uint32x2x4_t {
-        unsafe { vld4_dup_u32(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_u32(self, a: *const u32) -> uint32x4x4_t {
-        unsafe { vld4q_dup_u32(a) }
     }
     #[doc = "See [`arch::vld4q_dup_u32`]."]
     #[inline(always)]
@@ -13598,16 +12468,6 @@ impl Neon {
     pub unsafe fn vld4_dup_p8(self, a: *const p8) -> poly8x8x4_t {
         unsafe { vld4_dup_p8(a) }
     }
-    #[doc = "See [`arch::vld4_dup_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_dup_p8(self, a: *const p8) -> poly8x8x4_t {
-        unsafe { vld4_dup_p8(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_p8(self, a: *const p8) -> poly8x16x4_t {
-        unsafe { vld4q_dup_p8(a) }
-    }
     #[doc = "See [`arch::vld4q_dup_p8`]."]
     #[inline(always)]
     pub unsafe fn vld4q_dup_p8(self, a: *const p8) -> poly8x16x4_t {
@@ -13617,16 +12477,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vld4_dup_p16(self, a: *const p16) -> poly16x4x4_t {
         unsafe { vld4_dup_p16(a) }
-    }
-    #[doc = "See [`arch::vld4_dup_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_dup_p16(self, a: *const p16) -> poly16x4x4_t {
-        unsafe { vld4_dup_p16(a) }
-    }
-    #[doc = "See [`arch::vld4q_dup_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_dup_p16(self, a: *const p16) -> poly16x8x4_t {
-        unsafe { vld4q_dup_p16(a) }
     }
     #[doc = "See [`arch::vld4q_dup_p16`]."]
     #[inline(always)]
@@ -13816,25 +12666,10 @@ impl Neon {
     pub unsafe fn vld4_u8(self, a: *const u8) -> uint8x8x4_t {
         unsafe { vld4_u8(a) }
     }
-    #[doc = "See [`arch::vld4_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_u8(self, a: *const u8) -> uint8x8x4_t {
-        unsafe { vld4_u8(a) }
-    }
     #[doc = "See [`arch::vld4q_u8`]."]
     #[inline(always)]
     pub unsafe fn vld4q_u8(self, a: *const u8) -> uint8x16x4_t {
         unsafe { vld4q_u8(a) }
-    }
-    #[doc = "See [`arch::vld4q_u8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_u8(self, a: *const u8) -> uint8x16x4_t {
-        unsafe { vld4q_u8(a) }
-    }
-    #[doc = "See [`arch::vld4_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_u16(self, a: *const u16) -> uint16x4x4_t {
-        unsafe { vld4_u16(a) }
     }
     #[doc = "See [`arch::vld4_u16`]."]
     #[inline(always)]
@@ -13846,25 +12681,10 @@ impl Neon {
     pub unsafe fn vld4q_u16(self, a: *const u16) -> uint16x8x4_t {
         unsafe { vld4q_u16(a) }
     }
-    #[doc = "See [`arch::vld4q_u16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_u16(self, a: *const u16) -> uint16x8x4_t {
-        unsafe { vld4q_u16(a) }
-    }
     #[doc = "See [`arch::vld4_u32`]."]
     #[inline(always)]
     pub unsafe fn vld4_u32(self, a: *const u32) -> uint32x2x4_t {
         unsafe { vld4_u32(a) }
-    }
-    #[doc = "See [`arch::vld4_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_u32(self, a: *const u32) -> uint32x2x4_t {
-        unsafe { vld4_u32(a) }
-    }
-    #[doc = "See [`arch::vld4q_u32`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_u32(self, a: *const u32) -> uint32x4x4_t {
-        unsafe { vld4q_u32(a) }
     }
     #[doc = "See [`arch::vld4q_u32`]."]
     #[inline(always)]
@@ -13876,16 +12696,6 @@ impl Neon {
     pub unsafe fn vld4_p8(self, a: *const p8) -> poly8x8x4_t {
         unsafe { vld4_p8(a) }
     }
-    #[doc = "See [`arch::vld4_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_p8(self, a: *const p8) -> poly8x8x4_t {
-        unsafe { vld4_p8(a) }
-    }
-    #[doc = "See [`arch::vld4q_p8`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_p8(self, a: *const p8) -> poly8x16x4_t {
-        unsafe { vld4q_p8(a) }
-    }
     #[doc = "See [`arch::vld4q_p8`]."]
     #[inline(always)]
     pub unsafe fn vld4q_p8(self, a: *const p8) -> poly8x16x4_t {
@@ -13895,16 +12705,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vld4_p16(self, a: *const p16) -> poly16x4x4_t {
         unsafe { vld4_p16(a) }
-    }
-    #[doc = "See [`arch::vld4_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4_p16(self, a: *const p16) -> poly16x4x4_t {
-        unsafe { vld4_p16(a) }
-    }
-    #[doc = "See [`arch::vld4q_p16`]."]
-    #[inline(always)]
-    pub unsafe fn vld4q_p16(self, a: *const p16) -> poly16x8x4_t {
-        unsafe { vld4q_p16(a) }
     }
     #[doc = "See [`arch::vld4q_p16`]."]
     #[inline(always)]
@@ -15911,25 +14711,10 @@ impl Neon {
     pub fn vpadd_u8(self, a: uint8x8_t, b: uint8x8_t) -> uint8x8_t {
         unsafe { vpadd_u8(a, b) }
     }
-    #[doc = "See [`arch::vpadd_u8`]."]
-    #[inline(always)]
-    pub fn vpadd_u8(self, a: uint8x8_t, b: uint8x8_t) -> uint8x8_t {
-        unsafe { vpadd_u8(a, b) }
-    }
     #[doc = "See [`arch::vpadd_u16`]."]
     #[inline(always)]
     pub fn vpadd_u16(self, a: uint16x4_t, b: uint16x4_t) -> uint16x4_t {
         unsafe { vpadd_u16(a, b) }
-    }
-    #[doc = "See [`arch::vpadd_u16`]."]
-    #[inline(always)]
-    pub fn vpadd_u16(self, a: uint16x4_t, b: uint16x4_t) -> uint16x4_t {
-        unsafe { vpadd_u16(a, b) }
-    }
-    #[doc = "See [`arch::vpadd_u32`]."]
-    #[inline(always)]
-    pub fn vpadd_u32(self, a: uint32x2_t, b: uint32x2_t) -> uint32x2_t {
-        unsafe { vpadd_u32(a, b) }
     }
     #[doc = "See [`arch::vpadd_u32`]."]
     #[inline(always)]
@@ -16581,51 +15366,6 @@ impl Neon {
     pub fn vqrshlq_u64(self, a: uint64x2_t, b: int64x2_t) -> uint64x2_t {
         unsafe { vqrshlq_u64(a, b) }
     }
-    #[doc = "See [`arch::vqrshrn_n_s16`]."]
-    #[inline(always)]
-    pub fn vqrshrn_n_s16<const N: i32>(self, a: int16x8_t) -> int8x8_t {
-        unsafe { vqrshrn_n_s16::<N>(a) }
-    }
-    #[doc = "See [`arch::vqrshrn_n_s32`]."]
-    #[inline(always)]
-    pub fn vqrshrn_n_s32<const N: i32>(self, a: int32x4_t) -> int16x4_t {
-        unsafe { vqrshrn_n_s32::<N>(a) }
-    }
-    #[doc = "See [`arch::vqrshrn_n_s64`]."]
-    #[inline(always)]
-    pub fn vqrshrn_n_s64<const N: i32>(self, a: int64x2_t) -> int32x2_t {
-        unsafe { vqrshrn_n_s64::<N>(a) }
-    }
-    #[doc = "See [`arch::vqrshrn_n_u16`]."]
-    #[inline(always)]
-    pub fn vqrshrn_n_u16<const N: i32>(self, a: uint16x8_t) -> uint8x8_t {
-        unsafe { vqrshrn_n_u16::<N>(a) }
-    }
-    #[doc = "See [`arch::vqrshrn_n_u32`]."]
-    #[inline(always)]
-    pub fn vqrshrn_n_u32<const N: i32>(self, a: uint32x4_t) -> uint16x4_t {
-        unsafe { vqrshrn_n_u32::<N>(a) }
-    }
-    #[doc = "See [`arch::vqrshrn_n_u64`]."]
-    #[inline(always)]
-    pub fn vqrshrn_n_u64<const N: i32>(self, a: uint64x2_t) -> uint32x2_t {
-        unsafe { vqrshrn_n_u64::<N>(a) }
-    }
-    #[doc = "See [`arch::vqrshrun_n_s16`]."]
-    #[inline(always)]
-    pub fn vqrshrun_n_s16<const N: i32>(self, a: int16x8_t) -> uint8x8_t {
-        unsafe { vqrshrun_n_s16::<N>(a) }
-    }
-    #[doc = "See [`arch::vqrshrun_n_s32`]."]
-    #[inline(always)]
-    pub fn vqrshrun_n_s32<const N: i32>(self, a: int32x4_t) -> uint16x4_t {
-        unsafe { vqrshrun_n_s32::<N>(a) }
-    }
-    #[doc = "See [`arch::vqrshrun_n_s64`]."]
-    #[inline(always)]
-    pub fn vqrshrun_n_s64<const N: i32>(self, a: int64x2_t) -> uint32x2_t {
-        unsafe { vqrshrun_n_s64::<N>(a) }
-    }
     #[doc = "See [`arch::vqshl_n_s8`]."]
     #[inline(always)]
     pub fn vqshl_n_s8<const N: i32>(self, a: int8x8_t) -> int8x8_t {
@@ -16786,91 +15526,6 @@ impl Neon {
     pub fn vqshlq_u64(self, a: uint64x2_t, b: int64x2_t) -> uint64x2_t {
         unsafe { vqshlq_u64(a, b) }
     }
-    #[doc = "See [`arch::vqshlu_n_s8`]."]
-    #[inline(always)]
-    pub fn vqshlu_n_s8<const N: i32>(self, a: int8x8_t) -> uint8x8_t {
-        unsafe { vqshlu_n_s8::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshluq_n_s8`]."]
-    #[inline(always)]
-    pub fn vqshluq_n_s8<const N: i32>(self, a: int8x16_t) -> uint8x16_t {
-        unsafe { vqshluq_n_s8::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshlu_n_s16`]."]
-    #[inline(always)]
-    pub fn vqshlu_n_s16<const N: i32>(self, a: int16x4_t) -> uint16x4_t {
-        unsafe { vqshlu_n_s16::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshluq_n_s16`]."]
-    #[inline(always)]
-    pub fn vqshluq_n_s16<const N: i32>(self, a: int16x8_t) -> uint16x8_t {
-        unsafe { vqshluq_n_s16::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshlu_n_s32`]."]
-    #[inline(always)]
-    pub fn vqshlu_n_s32<const N: i32>(self, a: int32x2_t) -> uint32x2_t {
-        unsafe { vqshlu_n_s32::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshluq_n_s32`]."]
-    #[inline(always)]
-    pub fn vqshluq_n_s32<const N: i32>(self, a: int32x4_t) -> uint32x4_t {
-        unsafe { vqshluq_n_s32::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshlu_n_s64`]."]
-    #[inline(always)]
-    pub fn vqshlu_n_s64<const N: i32>(self, a: int64x1_t) -> uint64x1_t {
-        unsafe { vqshlu_n_s64::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshluq_n_s64`]."]
-    #[inline(always)]
-    pub fn vqshluq_n_s64<const N: i32>(self, a: int64x2_t) -> uint64x2_t {
-        unsafe { vqshluq_n_s64::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshrn_n_s16`]."]
-    #[inline(always)]
-    pub fn vqshrn_n_s16<const N: i32>(self, a: int16x8_t) -> int8x8_t {
-        unsafe { vqshrn_n_s16::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshrn_n_s32`]."]
-    #[inline(always)]
-    pub fn vqshrn_n_s32<const N: i32>(self, a: int32x4_t) -> int16x4_t {
-        unsafe { vqshrn_n_s32::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshrn_n_s64`]."]
-    #[inline(always)]
-    pub fn vqshrn_n_s64<const N: i32>(self, a: int64x2_t) -> int32x2_t {
-        unsafe { vqshrn_n_s64::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshrn_n_u16`]."]
-    #[inline(always)]
-    pub fn vqshrn_n_u16<const N: i32>(self, a: uint16x8_t) -> uint8x8_t {
-        unsafe { vqshrn_n_u16::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshrn_n_u32`]."]
-    #[inline(always)]
-    pub fn vqshrn_n_u32<const N: i32>(self, a: uint32x4_t) -> uint16x4_t {
-        unsafe { vqshrn_n_u32::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshrn_n_u64`]."]
-    #[inline(always)]
-    pub fn vqshrn_n_u64<const N: i32>(self, a: uint64x2_t) -> uint32x2_t {
-        unsafe { vqshrn_n_u64::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshrun_n_s16`]."]
-    #[inline(always)]
-    pub fn vqshrun_n_s16<const N: i32>(self, a: int16x8_t) -> uint8x8_t {
-        unsafe { vqshrun_n_s16::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshrun_n_s32`]."]
-    #[inline(always)]
-    pub fn vqshrun_n_s32<const N: i32>(self, a: int32x4_t) -> uint16x4_t {
-        unsafe { vqshrun_n_s32::<N>(a) }
-    }
-    #[doc = "See [`arch::vqshrun_n_s64`]."]
-    #[inline(always)]
-    pub fn vqshrun_n_s64<const N: i32>(self, a: int64x2_t) -> uint32x2_t {
-        unsafe { vqshrun_n_s64::<N>(a) }
-    }
     #[doc = "See [`arch::vqsub_s8`]."]
     #[inline(always)]
     pub fn vqsub_s8(self, a: int8x8_t, b: int8x8_t) -> int8x8_t {
@@ -17001,25 +15656,10 @@ impl Neon {
     pub fn vraddhn_u16(self, a: uint16x8_t, b: uint16x8_t) -> uint8x8_t {
         unsafe { vraddhn_u16(a, b) }
     }
-    #[doc = "See [`arch::vraddhn_u16`]."]
-    #[inline(always)]
-    pub fn vraddhn_u16(self, a: uint16x8_t, b: uint16x8_t) -> uint8x8_t {
-        unsafe { vraddhn_u16(a, b) }
-    }
     #[doc = "See [`arch::vraddhn_u32`]."]
     #[inline(always)]
     pub fn vraddhn_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint16x4_t {
         unsafe { vraddhn_u32(a, b) }
-    }
-    #[doc = "See [`arch::vraddhn_u32`]."]
-    #[inline(always)]
-    pub fn vraddhn_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint16x4_t {
-        unsafe { vraddhn_u32(a, b) }
-    }
-    #[doc = "See [`arch::vraddhn_u64`]."]
-    #[inline(always)]
-    pub fn vraddhn_u64(self, a: uint64x2_t, b: uint64x2_t) -> uint32x2_t {
-        unsafe { vraddhn_u64(a, b) }
     }
     #[doc = "See [`arch::vraddhn_u64`]."]
     #[inline(always)]
@@ -17081,25 +15721,10 @@ impl Neon {
     pub fn vreinterpret_f32_f16(self, a: float16x4_t) -> float32x2_t {
         unsafe { vreinterpret_f32_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_f16(self, a: float16x4_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s8_f16`]."]
     #[inline(always)]
     pub fn vreinterpret_s8_f16(self, a: float16x4_t) -> int8x8_t {
         unsafe { vreinterpret_s8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_f16(self, a: float16x4_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_f16(self, a: float16x4_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_f16(a) }
     }
     #[doc = "See [`arch::vreinterpret_s16_f16`]."]
     #[inline(always)]
@@ -17111,25 +15736,10 @@ impl Neon {
     pub fn vreinterpret_s32_f16(self, a: float16x4_t) -> int32x2_t {
         unsafe { vreinterpret_s32_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_f16(self, a: float16x4_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s64_f16`]."]
     #[inline(always)]
     pub fn vreinterpret_s64_f16(self, a: float16x4_t) -> int64x1_t {
         unsafe { vreinterpret_s64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_f16(self, a: float16x4_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_f16(self, a: float16x4_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_f16(a) }
     }
     #[doc = "See [`arch::vreinterpret_u8_f16`]."]
     #[inline(always)]
@@ -17141,25 +15751,10 @@ impl Neon {
     pub fn vreinterpret_u16_f16(self, a: float16x4_t) -> uint16x4_t {
         unsafe { vreinterpret_u16_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u32_f16`]."]
     #[inline(always)]
     pub fn vreinterpret_u32_f16(self, a: float16x4_t) -> uint32x2_t {
         unsafe { vreinterpret_u32_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_f16(self, a: float16x4_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_f16(self, a: float16x4_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_f16(a) }
     }
     #[doc = "See [`arch::vreinterpret_u64_f16`]."]
     #[inline(always)]
@@ -17171,25 +15766,10 @@ impl Neon {
     pub fn vreinterpret_p8_f16(self, a: float16x4_t) -> poly8x8_t {
         unsafe { vreinterpret_p8_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_f16(self, a: float16x4_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p16_f16`]."]
     #[inline(always)]
     pub fn vreinterpret_p16_f16(self, a: float16x4_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_f16(self, a: float16x4_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_f16(self, a: float16x8_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_f16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f32_f16`]."]
     #[inline(always)]
@@ -17201,25 +15781,10 @@ impl Neon {
     pub fn vreinterpretq_s8_f16(self, a: float16x8_t) -> int8x16_t {
         unsafe { vreinterpretq_s8_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_f16(self, a: float16x8_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s16_f16`]."]
     #[inline(always)]
     pub fn vreinterpretq_s16_f16(self, a: float16x8_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_f16(self, a: float16x8_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_f16(self, a: float16x8_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_f16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s32_f16`]."]
     #[inline(always)]
@@ -17231,25 +15796,10 @@ impl Neon {
     pub fn vreinterpretq_s64_f16(self, a: float16x8_t) -> int64x2_t {
         unsafe { vreinterpretq_s64_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_f16(self, a: float16x8_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u8_f16`]."]
     #[inline(always)]
     pub fn vreinterpretq_u8_f16(self, a: float16x8_t) -> uint8x16_t {
         unsafe { vreinterpretq_u8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_f16(self, a: float16x8_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_f16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u16_f16`]."]
     #[inline(always)]
@@ -17261,25 +15811,10 @@ impl Neon {
     pub fn vreinterpretq_u32_f16(self, a: float16x8_t) -> uint32x4_t {
         unsafe { vreinterpretq_u32_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_f16(self, a: float16x8_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u64_f16`]."]
     #[inline(always)]
     pub fn vreinterpretq_u64_f16(self, a: float16x8_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_f16(self, a: float16x8_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_f16(self, a: float16x8_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_f16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p8_f16`]."]
     #[inline(always)]
@@ -17291,25 +15826,10 @@ impl Neon {
     pub fn vreinterpretq_p16_f16(self, a: float16x8_t) -> poly16x8_t {
         unsafe { vreinterpretq_p16_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_f16(self, a: float16x8_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f16_f32`]."]
     #[inline(always)]
     pub fn vreinterpret_f16_f32(self, a: float32x2_t) -> float16x4_t {
         unsafe { vreinterpret_f16_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_f32(self, a: float32x2_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_f32(self, a: float32x4_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_f32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f16_f32`]."]
     #[inline(always)]
@@ -17321,25 +15841,10 @@ impl Neon {
     pub fn vreinterpret_f16_s8(self, a: int8x8_t) -> float16x4_t {
         unsafe { vreinterpret_f16_s8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_s8(self, a: int8x8_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_s8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f16_s8`]."]
     #[inline(always)]
     pub fn vreinterpretq_f16_s8(self, a: int8x16_t) -> float16x8_t {
         unsafe { vreinterpretq_f16_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_s8(self, a: int8x16_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_s16(self, a: int16x4_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_s16(a) }
     }
     #[doc = "See [`arch::vreinterpret_f16_s16`]."]
     #[inline(always)]
@@ -17351,25 +15856,10 @@ impl Neon {
     pub fn vreinterpretq_f16_s16(self, a: int16x8_t) -> float16x8_t {
         unsafe { vreinterpretq_f16_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f16_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_s16(self, a: int16x8_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f16_s32`]."]
     #[inline(always)]
     pub fn vreinterpret_f16_s32(self, a: int32x2_t) -> float16x4_t {
         unsafe { vreinterpret_f16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_s32(self, a: int32x2_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_s32(self, a: int32x4_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_s32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f16_s32`]."]
     #[inline(always)]
@@ -17381,25 +15871,10 @@ impl Neon {
     pub fn vreinterpret_f16_s64(self, a: int64x1_t) -> float16x4_t {
         unsafe { vreinterpret_f16_s64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_s64(self, a: int64x1_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_s64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f16_s64`]."]
     #[inline(always)]
     pub fn vreinterpretq_f16_s64(self, a: int64x2_t) -> float16x8_t {
         unsafe { vreinterpretq_f16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_s64(self, a: int64x2_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_u8(self, a: uint8x8_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_u8(a) }
     }
     #[doc = "See [`arch::vreinterpret_f16_u8`]."]
     #[inline(always)]
@@ -17411,25 +15886,10 @@ impl Neon {
     pub fn vreinterpretq_f16_u8(self, a: uint8x16_t) -> float16x8_t {
         unsafe { vreinterpretq_f16_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_u8(self, a: uint8x16_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_u8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f16_u16`]."]
     #[inline(always)]
     pub fn vreinterpret_f16_u16(self, a: uint16x4_t) -> float16x4_t {
         unsafe { vreinterpret_f16_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_u16(self, a: uint16x4_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_u16(self, a: uint16x8_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_u16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f16_u16`]."]
     #[inline(always)]
@@ -17441,25 +15901,10 @@ impl Neon {
     pub fn vreinterpret_f16_u32(self, a: uint32x2_t) -> float16x4_t {
         unsafe { vreinterpret_f16_u32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_u32(self, a: uint32x2_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_u32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f16_u32`]."]
     #[inline(always)]
     pub fn vreinterpretq_f16_u32(self, a: uint32x4_t) -> float16x8_t {
         unsafe { vreinterpretq_f16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_u32(self, a: uint32x4_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_u64(self, a: uint64x1_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_u64(a) }
     }
     #[doc = "See [`arch::vreinterpret_f16_u64`]."]
     #[inline(always)]
@@ -17471,25 +15916,10 @@ impl Neon {
     pub fn vreinterpretq_f16_u64(self, a: uint64x2_t) -> float16x8_t {
         unsafe { vreinterpretq_f16_u64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_u64(self, a: uint64x2_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_u64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f16_p8`]."]
     #[inline(always)]
     pub fn vreinterpret_f16_p8(self, a: poly8x8_t) -> float16x4_t {
         unsafe { vreinterpret_f16_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_p8(self, a: poly8x8_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_p8(self, a: poly8x16_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_p8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f16_p8`]."]
     #[inline(always)]
@@ -17501,25 +15931,10 @@ impl Neon {
     pub fn vreinterpret_f16_p16(self, a: poly16x4_t) -> float16x4_t {
         unsafe { vreinterpret_f16_p16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f16_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_p16(self, a: poly16x4_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f16_p16`]."]
     #[inline(always)]
     pub fn vreinterpretq_f16_p16(self, a: poly16x8_t) -> float16x8_t {
         unsafe { vreinterpretq_f16_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_p16(self, a: poly16x8_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_p128(self, a: p128) -> float16x8_t {
-        unsafe { vreinterpretq_f16_p128(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f16_p128`]."]
     #[inline(always)]
@@ -17531,25 +15946,10 @@ impl Neon {
     pub fn vreinterpret_p64_f16(self, a: float16x4_t) -> poly64x1_t {
         unsafe { vreinterpret_p64_f16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_f16(self, a: float16x4_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_f16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p128_f16`]."]
     #[inline(always)]
     pub fn vreinterpretq_p128_f16(self, a: float16x8_t) -> p128 {
         unsafe { vreinterpretq_p128_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_f16(self, a: float16x8_t) -> p128 {
-        unsafe { vreinterpretq_p128_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_f16(self, a: float16x8_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_f16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p64_f16`]."]
     #[inline(always)]
@@ -17561,25 +15961,10 @@ impl Neon {
     pub fn vreinterpret_f16_p64(self, a: poly64x1_t) -> float16x4_t {
         unsafe { vreinterpret_f16_p64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_p64(self, a: poly64x1_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_p64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f16_p64`]."]
     #[inline(always)]
     pub fn vreinterpretq_f16_p64(self, a: poly64x2_t) -> float16x8_t {
         unsafe { vreinterpretq_f16_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_p64(self, a: poly64x2_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_p128(self, a: p128) -> float32x4_t {
-        unsafe { vreinterpretq_f32_p128(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f32_p128`]."]
     #[inline(always)]
@@ -17591,25 +15976,10 @@ impl Neon {
     pub fn vreinterpret_s8_f32(self, a: float32x2_t) -> int8x8_t {
         unsafe { vreinterpret_s8_f32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s8_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_f32(self, a: float32x2_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_f32(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s16_f32`]."]
     #[inline(always)]
     pub fn vreinterpret_s16_f32(self, a: float32x2_t) -> int16x4_t {
         unsafe { vreinterpret_s16_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_f32(self, a: float32x2_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_f32(self, a: float32x2_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_f32(a) }
     }
     #[doc = "See [`arch::vreinterpret_s32_f32`]."]
     #[inline(always)]
@@ -17621,25 +15991,10 @@ impl Neon {
     pub fn vreinterpret_s64_f32(self, a: float32x2_t) -> int64x1_t {
         unsafe { vreinterpret_s64_f32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s64_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_f32(self, a: float32x2_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_f32(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u8_f32`]."]
     #[inline(always)]
     pub fn vreinterpret_u8_f32(self, a: float32x2_t) -> uint8x8_t {
         unsafe { vreinterpret_u8_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_f32(self, a: float32x2_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_f32(self, a: float32x2_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_f32(a) }
     }
     #[doc = "See [`arch::vreinterpret_u16_f32`]."]
     #[inline(always)]
@@ -17651,25 +16006,10 @@ impl Neon {
     pub fn vreinterpret_u32_f32(self, a: float32x2_t) -> uint32x2_t {
         unsafe { vreinterpret_u32_f32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u32_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_f32(self, a: float32x2_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_f32(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u64_f32`]."]
     #[inline(always)]
     pub fn vreinterpret_u64_f32(self, a: float32x2_t) -> uint64x1_t {
         unsafe { vreinterpret_u64_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u64_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_f32(self, a: float32x2_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p8_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_f32(self, a: float32x2_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_f32(a) }
     }
     #[doc = "See [`arch::vreinterpret_p8_f32`]."]
     #[inline(always)]
@@ -17681,25 +16021,10 @@ impl Neon {
     pub fn vreinterpret_p16_f32(self, a: float32x2_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_f32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_f32(self, a: float32x2_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_f32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p128_f32`]."]
     #[inline(always)]
     pub fn vreinterpretq_p128_f32(self, a: float32x4_t) -> p128 {
         unsafe { vreinterpretq_p128_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_f32(self, a: float32x4_t) -> p128 {
-        unsafe { vreinterpretq_p128_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_f32(self, a: float32x4_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_f32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s8_f32`]."]
     #[inline(always)]
@@ -17711,25 +16036,10 @@ impl Neon {
     pub fn vreinterpretq_s16_f32(self, a: float32x4_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_f32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_f32(self, a: float32x4_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_f32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s32_f32`]."]
     #[inline(always)]
     pub fn vreinterpretq_s32_f32(self, a: float32x4_t) -> int32x4_t {
         unsafe { vreinterpretq_s32_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_f32(self, a: float32x4_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_f32(self, a: float32x4_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_f32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s64_f32`]."]
     #[inline(always)]
@@ -17741,25 +16051,10 @@ impl Neon {
     pub fn vreinterpretq_u8_f32(self, a: float32x4_t) -> uint8x16_t {
         unsafe { vreinterpretq_u8_f32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u8_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_f32(self, a: float32x4_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_f32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u16_f32`]."]
     #[inline(always)]
     pub fn vreinterpretq_u16_f32(self, a: float32x4_t) -> uint16x8_t {
         unsafe { vreinterpretq_u16_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_f32(self, a: float32x4_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_f32(self, a: float32x4_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_f32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u32_f32`]."]
     #[inline(always)]
@@ -17771,25 +16066,10 @@ impl Neon {
     pub fn vreinterpretq_u64_f32(self, a: float32x4_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_f32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u64_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_f32(self, a: float32x4_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_f32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p8_f32`]."]
     #[inline(always)]
     pub fn vreinterpretq_p8_f32(self, a: float32x4_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_f32(self, a: float32x4_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_f32(self, a: float32x4_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_f32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p16_f32`]."]
     #[inline(always)]
@@ -17801,25 +16081,10 @@ impl Neon {
     pub fn vreinterpret_f32_s8(self, a: int8x8_t) -> float32x2_t {
         unsafe { vreinterpret_f32_s8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f32_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_s8(self, a: int8x8_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_s8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s16_s8`]."]
     #[inline(always)]
     pub fn vreinterpret_s16_s8(self, a: int8x8_t) -> int16x4_t {
         unsafe { vreinterpret_s16_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_s8(self, a: int8x8_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_s8(self, a: int8x8_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_s8(a) }
     }
     #[doc = "See [`arch::vreinterpret_s32_s8`]."]
     #[inline(always)]
@@ -17831,25 +16096,10 @@ impl Neon {
     pub fn vreinterpret_s64_s8(self, a: int8x8_t) -> int64x1_t {
         unsafe { vreinterpret_s64_s8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s64_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_s8(self, a: int8x8_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_s8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u8_s8`]."]
     #[inline(always)]
     pub fn vreinterpret_u8_s8(self, a: int8x8_t) -> uint8x8_t {
         unsafe { vreinterpret_u8_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_s8(self, a: int8x8_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_s8(self, a: int8x8_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_s8(a) }
     }
     #[doc = "See [`arch::vreinterpret_u16_s8`]."]
     #[inline(always)]
@@ -17861,25 +16111,10 @@ impl Neon {
     pub fn vreinterpret_u32_s8(self, a: int8x8_t) -> uint32x2_t {
         unsafe { vreinterpret_u32_s8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u32_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_s8(self, a: int8x8_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_s8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u64_s8`]."]
     #[inline(always)]
     pub fn vreinterpret_u64_s8(self, a: int8x8_t) -> uint64x1_t {
         unsafe { vreinterpret_u64_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u64_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_s8(self, a: int8x8_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p8_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_s8(self, a: int8x8_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_s8(a) }
     }
     #[doc = "See [`arch::vreinterpret_p8_s8`]."]
     #[inline(always)]
@@ -17891,25 +16126,10 @@ impl Neon {
     pub fn vreinterpret_p16_s8(self, a: int8x8_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_s8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_s8(self, a: int8x8_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_s8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f32_s8`]."]
     #[inline(always)]
     pub fn vreinterpretq_f32_s8(self, a: int8x16_t) -> float32x4_t {
         unsafe { vreinterpretq_f32_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_s8(self, a: int8x16_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_s8(self, a: int8x16_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_s8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s16_s8`]."]
     #[inline(always)]
@@ -17921,25 +16141,10 @@ impl Neon {
     pub fn vreinterpretq_s32_s8(self, a: int8x16_t) -> int32x4_t {
         unsafe { vreinterpretq_s32_s8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s32_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_s8(self, a: int8x16_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_s8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s64_s8`]."]
     #[inline(always)]
     pub fn vreinterpretq_s64_s8(self, a: int8x16_t) -> int64x2_t {
         unsafe { vreinterpretq_s64_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_s8(self, a: int8x16_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_s8(self, a: int8x16_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_s8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u8_s8`]."]
     #[inline(always)]
@@ -17951,25 +16156,10 @@ impl Neon {
     pub fn vreinterpretq_u16_s8(self, a: int8x16_t) -> uint16x8_t {
         unsafe { vreinterpretq_u16_s8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_s8(self, a: int8x16_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_s8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u32_s8`]."]
     #[inline(always)]
     pub fn vreinterpretq_u32_s8(self, a: int8x16_t) -> uint32x4_t {
         unsafe { vreinterpretq_u32_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_s8(self, a: int8x16_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u64_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_s8(self, a: int8x16_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_s8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u64_s8`]."]
     #[inline(always)]
@@ -17981,25 +16171,10 @@ impl Neon {
     pub fn vreinterpretq_p8_s8(self, a: int8x16_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_s8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p8_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_s8(self, a: int8x16_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_s8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p16_s8`]."]
     #[inline(always)]
     pub fn vreinterpretq_p16_s8(self, a: int8x16_t) -> poly16x8_t {
         unsafe { vreinterpretq_p16_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_s8(self, a: int8x16_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f32_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_s16(self, a: int16x4_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_s16(a) }
     }
     #[doc = "See [`arch::vreinterpret_f32_s16`]."]
     #[inline(always)]
@@ -18011,25 +16186,10 @@ impl Neon {
     pub fn vreinterpret_s8_s16(self, a: int16x4_t) -> int8x8_t {
         unsafe { vreinterpret_s8_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s8_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_s16(self, a: int16x4_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s32_s16`]."]
     #[inline(always)]
     pub fn vreinterpret_s32_s16(self, a: int16x4_t) -> int32x2_t {
         unsafe { vreinterpret_s32_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_s16(self, a: int16x4_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s64_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_s16(self, a: int16x4_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_s16(a) }
     }
     #[doc = "See [`arch::vreinterpret_s64_s16`]."]
     #[inline(always)]
@@ -18041,25 +16201,10 @@ impl Neon {
     pub fn vreinterpret_u8_s16(self, a: int16x4_t) -> uint8x8_t {
         unsafe { vreinterpret_u8_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u8_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_s16(self, a: int16x4_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u16_s16`]."]
     #[inline(always)]
     pub fn vreinterpret_u16_s16(self, a: int16x4_t) -> uint16x4_t {
         unsafe { vreinterpret_u16_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_s16(self, a: int16x4_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_s16(self, a: int16x4_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_s16(a) }
     }
     #[doc = "See [`arch::vreinterpret_u32_s16`]."]
     #[inline(always)]
@@ -18071,25 +16216,10 @@ impl Neon {
     pub fn vreinterpret_u64_s16(self, a: int16x4_t) -> uint64x1_t {
         unsafe { vreinterpret_u64_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u64_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_s16(self, a: int16x4_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p8_s16`]."]
     #[inline(always)]
     pub fn vreinterpret_p8_s16(self, a: int16x4_t) -> poly8x8_t {
         unsafe { vreinterpret_p8_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p8_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_s16(self, a: int16x4_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p16_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_s16(self, a: int16x4_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_s16(a) }
     }
     #[doc = "See [`arch::vreinterpret_p16_s16`]."]
     #[inline(always)]
@@ -18101,25 +16231,10 @@ impl Neon {
     pub fn vreinterpretq_f32_s16(self, a: int16x8_t) -> float32x4_t {
         unsafe { vreinterpretq_f32_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f32_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_s16(self, a: int16x8_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s8_s16`]."]
     #[inline(always)]
     pub fn vreinterpretq_s8_s16(self, a: int16x8_t) -> int8x16_t {
         unsafe { vreinterpretq_s8_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_s16(self, a: int16x8_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_s16(self, a: int16x8_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_s16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s32_s16`]."]
     #[inline(always)]
@@ -18131,25 +16246,10 @@ impl Neon {
     pub fn vreinterpretq_s64_s16(self, a: int16x8_t) -> int64x2_t {
         unsafe { vreinterpretq_s64_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s64_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_s16(self, a: int16x8_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u8_s16`]."]
     #[inline(always)]
     pub fn vreinterpretq_u8_s16(self, a: int16x8_t) -> uint8x16_t {
         unsafe { vreinterpretq_u8_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_s16(self, a: int16x8_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_s16(self, a: int16x8_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_s16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u16_s16`]."]
     #[inline(always)]
@@ -18161,25 +16261,10 @@ impl Neon {
     pub fn vreinterpretq_u32_s16(self, a: int16x8_t) -> uint32x4_t {
         unsafe { vreinterpretq_u32_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u32_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_s16(self, a: int16x8_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u64_s16`]."]
     #[inline(always)]
     pub fn vreinterpretq_u64_s16(self, a: int16x8_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u64_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_s16(self, a: int16x8_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_s16(self, a: int16x8_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_s16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p8_s16`]."]
     #[inline(always)]
@@ -18191,25 +16276,10 @@ impl Neon {
     pub fn vreinterpretq_p16_s16(self, a: int16x8_t) -> poly16x8_t {
         unsafe { vreinterpretq_p16_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p16_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_s16(self, a: int16x8_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f32_s32`]."]
     #[inline(always)]
     pub fn vreinterpret_f32_s32(self, a: int32x2_t) -> float32x2_t {
         unsafe { vreinterpret_f32_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f32_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_s32(self, a: int32x2_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_s32(self, a: int32x2_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_s32(a) }
     }
     #[doc = "See [`arch::vreinterpret_s8_s32`]."]
     #[inline(always)]
@@ -18221,25 +16291,10 @@ impl Neon {
     pub fn vreinterpret_s16_s32(self, a: int32x2_t) -> int16x4_t {
         unsafe { vreinterpret_s16_s32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_s32(self, a: int32x2_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_s32(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s64_s32`]."]
     #[inline(always)]
     pub fn vreinterpret_s64_s32(self, a: int32x2_t) -> int64x1_t {
         unsafe { vreinterpret_s64_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s64_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_s32(self, a: int32x2_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_s32(self, a: int32x2_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_s32(a) }
     }
     #[doc = "See [`arch::vreinterpret_u8_s32`]."]
     #[inline(always)]
@@ -18251,25 +16306,10 @@ impl Neon {
     pub fn vreinterpret_u16_s32(self, a: int32x2_t) -> uint16x4_t {
         unsafe { vreinterpret_u16_s32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_s32(self, a: int32x2_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_s32(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u32_s32`]."]
     #[inline(always)]
     pub fn vreinterpret_u32_s32(self, a: int32x2_t) -> uint32x2_t {
         unsafe { vreinterpret_u32_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_s32(self, a: int32x2_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u64_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_s32(self, a: int32x2_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_s32(a) }
     }
     #[doc = "See [`arch::vreinterpret_u64_s32`]."]
     #[inline(always)]
@@ -18281,25 +16321,10 @@ impl Neon {
     pub fn vreinterpret_p8_s32(self, a: int32x2_t) -> poly8x8_t {
         unsafe { vreinterpret_p8_s32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p8_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_s32(self, a: int32x2_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_s32(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p16_s32`]."]
     #[inline(always)]
     pub fn vreinterpret_p16_s32(self, a: int32x2_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_s32(self, a: int32x2_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_s32(self, a: int32x4_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_s32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f32_s32`]."]
     #[inline(always)]
@@ -18311,25 +16336,10 @@ impl Neon {
     pub fn vreinterpretq_s8_s32(self, a: int32x4_t) -> int8x16_t {
         unsafe { vreinterpretq_s8_s32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s8_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_s32(self, a: int32x4_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_s32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s16_s32`]."]
     #[inline(always)]
     pub fn vreinterpretq_s16_s32(self, a: int32x4_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_s32(self, a: int32x4_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_s32(self, a: int32x4_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_s32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s64_s32`]."]
     #[inline(always)]
@@ -18341,25 +16351,10 @@ impl Neon {
     pub fn vreinterpretq_u8_s32(self, a: int32x4_t) -> uint8x16_t {
         unsafe { vreinterpretq_u8_s32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u8_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_s32(self, a: int32x4_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_s32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u16_s32`]."]
     #[inline(always)]
     pub fn vreinterpretq_u16_s32(self, a: int32x4_t) -> uint16x8_t {
         unsafe { vreinterpretq_u16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_s32(self, a: int32x4_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_s32(self, a: int32x4_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_s32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u32_s32`]."]
     #[inline(always)]
@@ -18371,25 +16366,10 @@ impl Neon {
     pub fn vreinterpretq_u64_s32(self, a: int32x4_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_s32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u64_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_s32(self, a: int32x4_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_s32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p8_s32`]."]
     #[inline(always)]
     pub fn vreinterpretq_p8_s32(self, a: int32x4_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_s32(self, a: int32x4_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_s32(self, a: int32x4_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_s32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p16_s32`]."]
     #[inline(always)]
@@ -18401,25 +16381,10 @@ impl Neon {
     pub fn vreinterpret_f32_s64(self, a: int64x1_t) -> float32x2_t {
         unsafe { vreinterpret_f32_s64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f32_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_s64(self, a: int64x1_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_s64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s8_s64`]."]
     #[inline(always)]
     pub fn vreinterpret_s8_s64(self, a: int64x1_t) -> int8x8_t {
         unsafe { vreinterpret_s8_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_s64(self, a: int64x1_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_s64(self, a: int64x1_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_s64(a) }
     }
     #[doc = "See [`arch::vreinterpret_s16_s64`]."]
     #[inline(always)]
@@ -18431,16 +16396,6 @@ impl Neon {
     pub fn vreinterpret_s32_s64(self, a: int64x1_t) -> int32x2_t {
         unsafe { vreinterpret_s32_s64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s32_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_s64(self, a: int64x1_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_s64(self, a: int64x1_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_s64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u8_s64`]."]
     #[inline(always)]
     pub fn vreinterpret_u8_s64(self, a: int64x1_t) -> uint8x8_t {
@@ -18450,16 +16405,6 @@ impl Neon {
     #[inline(always)]
     pub fn vreinterpret_u16_s64(self, a: int64x1_t) -> uint16x4_t {
         unsafe { vreinterpret_u16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_s64(self, a: int64x1_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_s64(self, a: int64x1_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_s64(a) }
     }
     #[doc = "See [`arch::vreinterpret_u32_s64`]."]
     #[inline(always)]
@@ -18476,25 +16421,10 @@ impl Neon {
     pub fn vreinterpret_p8_s64(self, a: int64x1_t) -> poly8x8_t {
         unsafe { vreinterpret_p8_s64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p8_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_s64(self, a: int64x1_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_s64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p16_s64`]."]
     #[inline(always)]
     pub fn vreinterpret_p16_s64(self, a: int64x1_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_s64(self, a: int64x1_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_s64(self, a: int64x2_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_s64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f32_s64`]."]
     #[inline(always)]
@@ -18506,25 +16436,10 @@ impl Neon {
     pub fn vreinterpretq_s8_s64(self, a: int64x2_t) -> int8x16_t {
         unsafe { vreinterpretq_s8_s64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s8_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_s64(self, a: int64x2_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_s64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s16_s64`]."]
     #[inline(always)]
     pub fn vreinterpretq_s16_s64(self, a: int64x2_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_s64(self, a: int64x2_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_s64(self, a: int64x2_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_s64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s32_s64`]."]
     #[inline(always)]
@@ -18536,25 +16451,10 @@ impl Neon {
     pub fn vreinterpretq_u8_s64(self, a: int64x2_t) -> uint8x16_t {
         unsafe { vreinterpretq_u8_s64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u8_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_s64(self, a: int64x2_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_s64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u16_s64`]."]
     #[inline(always)]
     pub fn vreinterpretq_u16_s64(self, a: int64x2_t) -> uint16x8_t {
         unsafe { vreinterpretq_u16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_s64(self, a: int64x2_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_s64(self, a: int64x2_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_s64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u32_s64`]."]
     #[inline(always)]
@@ -18566,25 +16466,10 @@ impl Neon {
     pub fn vreinterpretq_u64_s64(self, a: int64x2_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_s64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u64_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_s64(self, a: int64x2_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_s64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p8_s64`]."]
     #[inline(always)]
     pub fn vreinterpretq_p8_s64(self, a: int64x2_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_s64(self, a: int64x2_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_s64(self, a: int64x2_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_s64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p16_s64`]."]
     #[inline(always)]
@@ -18596,25 +16481,10 @@ impl Neon {
     pub fn vreinterpret_f32_u8(self, a: uint8x8_t) -> float32x2_t {
         unsafe { vreinterpret_f32_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f32_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_u8(self, a: uint8x8_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_u8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s8_u8`]."]
     #[inline(always)]
     pub fn vreinterpret_s8_u8(self, a: uint8x8_t) -> int8x8_t {
         unsafe { vreinterpret_s8_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_u8(self, a: uint8x8_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_u8(self, a: uint8x8_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_u8(a) }
     }
     #[doc = "See [`arch::vreinterpret_s16_u8`]."]
     #[inline(always)]
@@ -18626,25 +16496,10 @@ impl Neon {
     pub fn vreinterpret_s32_u8(self, a: uint8x8_t) -> int32x2_t {
         unsafe { vreinterpret_s32_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s32_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_u8(self, a: uint8x8_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_u8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s64_u8`]."]
     #[inline(always)]
     pub fn vreinterpret_s64_u8(self, a: uint8x8_t) -> int64x1_t {
         unsafe { vreinterpret_s64_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s64_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_u8(self, a: uint8x8_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_u8(self, a: uint8x8_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_u8(a) }
     }
     #[doc = "See [`arch::vreinterpret_u16_u8`]."]
     #[inline(always)]
@@ -18656,25 +16511,10 @@ impl Neon {
     pub fn vreinterpret_u32_u8(self, a: uint8x8_t) -> uint32x2_t {
         unsafe { vreinterpret_u32_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u32_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_u8(self, a: uint8x8_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_u8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u64_u8`]."]
     #[inline(always)]
     pub fn vreinterpret_u64_u8(self, a: uint8x8_t) -> uint64x1_t {
         unsafe { vreinterpret_u64_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u64_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_u8(self, a: uint8x8_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p8_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_u8(self, a: uint8x8_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_u8(a) }
     }
     #[doc = "See [`arch::vreinterpret_p8_u8`]."]
     #[inline(always)]
@@ -18686,25 +16526,10 @@ impl Neon {
     pub fn vreinterpret_p16_u8(self, a: uint8x8_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_u8(self, a: uint8x8_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_u8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f32_u8`]."]
     #[inline(always)]
     pub fn vreinterpretq_f32_u8(self, a: uint8x16_t) -> float32x4_t {
         unsafe { vreinterpretq_f32_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_u8(self, a: uint8x16_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_u8(self, a: uint8x16_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_u8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s8_u8`]."]
     #[inline(always)]
@@ -18716,25 +16541,10 @@ impl Neon {
     pub fn vreinterpretq_s16_u8(self, a: uint8x16_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_u8(self, a: uint8x16_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_u8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s32_u8`]."]
     #[inline(always)]
     pub fn vreinterpretq_s32_u8(self, a: uint8x16_t) -> int32x4_t {
         unsafe { vreinterpretq_s32_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_u8(self, a: uint8x16_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_u8(self, a: uint8x16_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_u8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s64_u8`]."]
     #[inline(always)]
@@ -18746,25 +16556,10 @@ impl Neon {
     pub fn vreinterpretq_u16_u8(self, a: uint8x16_t) -> uint16x8_t {
         unsafe { vreinterpretq_u16_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_u8(self, a: uint8x16_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_u8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u32_u8`]."]
     #[inline(always)]
     pub fn vreinterpretq_u32_u8(self, a: uint8x16_t) -> uint32x4_t {
         unsafe { vreinterpretq_u32_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_u8(self, a: uint8x16_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u64_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_u8(self, a: uint8x16_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_u8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u64_u8`]."]
     #[inline(always)]
@@ -18776,25 +16571,10 @@ impl Neon {
     pub fn vreinterpretq_p8_u8(self, a: uint8x16_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p8_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_u8(self, a: uint8x16_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_u8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p16_u8`]."]
     #[inline(always)]
     pub fn vreinterpretq_p16_u8(self, a: uint8x16_t) -> poly16x8_t {
         unsafe { vreinterpretq_p16_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_u8(self, a: uint8x16_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f32_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_u16(self, a: uint16x4_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_u16(a) }
     }
     #[doc = "See [`arch::vreinterpret_f32_u16`]."]
     #[inline(always)]
@@ -18806,25 +16586,10 @@ impl Neon {
     pub fn vreinterpret_s8_u16(self, a: uint16x4_t) -> int8x8_t {
         unsafe { vreinterpret_s8_u16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s8_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_u16(self, a: uint16x4_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s16_u16`]."]
     #[inline(always)]
     pub fn vreinterpret_s16_u16(self, a: uint16x4_t) -> int16x4_t {
         unsafe { vreinterpret_s16_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_u16(self, a: uint16x4_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_u16(self, a: uint16x4_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_u16(a) }
     }
     #[doc = "See [`arch::vreinterpret_s32_u16`]."]
     #[inline(always)]
@@ -18836,25 +16601,10 @@ impl Neon {
     pub fn vreinterpret_s64_u16(self, a: uint16x4_t) -> int64x1_t {
         unsafe { vreinterpret_s64_u16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s64_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_u16(self, a: uint16x4_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u8_u16`]."]
     #[inline(always)]
     pub fn vreinterpret_u8_u16(self, a: uint16x4_t) -> uint8x8_t {
         unsafe { vreinterpret_u8_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_u16(self, a: uint16x4_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_u16(self, a: uint16x4_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_u16(a) }
     }
     #[doc = "See [`arch::vreinterpret_u32_u16`]."]
     #[inline(always)]
@@ -18866,25 +16616,10 @@ impl Neon {
     pub fn vreinterpret_u64_u16(self, a: uint16x4_t) -> uint64x1_t {
         unsafe { vreinterpret_u64_u16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u64_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_u16(self, a: uint16x4_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p8_u16`]."]
     #[inline(always)]
     pub fn vreinterpret_p8_u16(self, a: uint16x4_t) -> poly8x8_t {
         unsafe { vreinterpret_p8_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p8_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_u16(self, a: uint16x4_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p16_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_u16(self, a: uint16x4_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_u16(a) }
     }
     #[doc = "See [`arch::vreinterpret_p16_u16`]."]
     #[inline(always)]
@@ -18896,25 +16631,10 @@ impl Neon {
     pub fn vreinterpretq_f32_u16(self, a: uint16x8_t) -> float32x4_t {
         unsafe { vreinterpretq_f32_u16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f32_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_u16(self, a: uint16x8_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s8_u16`]."]
     #[inline(always)]
     pub fn vreinterpretq_s8_u16(self, a: uint16x8_t) -> int8x16_t {
         unsafe { vreinterpretq_s8_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_u16(self, a: uint16x8_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_u16(self, a: uint16x8_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_u16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s16_u16`]."]
     #[inline(always)]
@@ -18926,25 +16646,10 @@ impl Neon {
     pub fn vreinterpretq_s32_u16(self, a: uint16x8_t) -> int32x4_t {
         unsafe { vreinterpretq_s32_u16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s32_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_u16(self, a: uint16x8_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s64_u16`]."]
     #[inline(always)]
     pub fn vreinterpretq_s64_u16(self, a: uint16x8_t) -> int64x2_t {
         unsafe { vreinterpretq_s64_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_u16(self, a: uint16x8_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_u16(self, a: uint16x8_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_u16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u8_u16`]."]
     #[inline(always)]
@@ -18956,25 +16661,10 @@ impl Neon {
     pub fn vreinterpretq_u32_u16(self, a: uint16x8_t) -> uint32x4_t {
         unsafe { vreinterpretq_u32_u16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u32_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_u16(self, a: uint16x8_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u64_u16`]."]
     #[inline(always)]
     pub fn vreinterpretq_u64_u16(self, a: uint16x8_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u64_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_u16(self, a: uint16x8_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_u16(self, a: uint16x8_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_u16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p8_u16`]."]
     #[inline(always)]
@@ -18986,25 +16676,10 @@ impl Neon {
     pub fn vreinterpretq_p16_u16(self, a: uint16x8_t) -> poly16x8_t {
         unsafe { vreinterpretq_p16_u16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p16_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_u16(self, a: uint16x8_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_f32_u32`]."]
     #[inline(always)]
     pub fn vreinterpret_f32_u32(self, a: uint32x2_t) -> float32x2_t {
         unsafe { vreinterpret_f32_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f32_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_u32(self, a: uint32x2_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_u32(self, a: uint32x2_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_u32(a) }
     }
     #[doc = "See [`arch::vreinterpret_s8_u32`]."]
     #[inline(always)]
@@ -19016,25 +16691,10 @@ impl Neon {
     pub fn vreinterpret_s16_u32(self, a: uint32x2_t) -> int16x4_t {
         unsafe { vreinterpret_s16_u32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_u32(self, a: uint32x2_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_u32(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s32_u32`]."]
     #[inline(always)]
     pub fn vreinterpret_s32_u32(self, a: uint32x2_t) -> int32x2_t {
         unsafe { vreinterpret_s32_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_u32(self, a: uint32x2_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s64_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_u32(self, a: uint32x2_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_u32(a) }
     }
     #[doc = "See [`arch::vreinterpret_s64_u32`]."]
     #[inline(always)]
@@ -19046,25 +16706,10 @@ impl Neon {
     pub fn vreinterpret_u8_u32(self, a: uint32x2_t) -> uint8x8_t {
         unsafe { vreinterpret_u8_u32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u8_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_u32(self, a: uint32x2_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_u32(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u16_u32`]."]
     #[inline(always)]
     pub fn vreinterpret_u16_u32(self, a: uint32x2_t) -> uint16x4_t {
         unsafe { vreinterpret_u16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_u32(self, a: uint32x2_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u64_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_u32(self, a: uint32x2_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_u32(a) }
     }
     #[doc = "See [`arch::vreinterpret_u64_u32`]."]
     #[inline(always)]
@@ -19076,25 +16721,10 @@ impl Neon {
     pub fn vreinterpret_p8_u32(self, a: uint32x2_t) -> poly8x8_t {
         unsafe { vreinterpret_p8_u32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p8_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_u32(self, a: uint32x2_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_u32(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p16_u32`]."]
     #[inline(always)]
     pub fn vreinterpret_p16_u32(self, a: uint32x2_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_u32(self, a: uint32x2_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_u32(self, a: uint32x4_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_u32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f32_u32`]."]
     #[inline(always)]
@@ -19106,25 +16736,10 @@ impl Neon {
     pub fn vreinterpretq_s8_u32(self, a: uint32x4_t) -> int8x16_t {
         unsafe { vreinterpretq_s8_u32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s8_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_u32(self, a: uint32x4_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_u32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s16_u32`]."]
     #[inline(always)]
     pub fn vreinterpretq_s16_u32(self, a: uint32x4_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_u32(self, a: uint32x4_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_u32(self, a: uint32x4_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_u32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s32_u32`]."]
     #[inline(always)]
@@ -19136,25 +16751,10 @@ impl Neon {
     pub fn vreinterpretq_s64_u32(self, a: uint32x4_t) -> int64x2_t {
         unsafe { vreinterpretq_s64_u32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s64_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_u32(self, a: uint32x4_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_u32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u8_u32`]."]
     #[inline(always)]
     pub fn vreinterpretq_u8_u32(self, a: uint32x4_t) -> uint8x16_t {
         unsafe { vreinterpretq_u8_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_u32(self, a: uint32x4_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_u32(self, a: uint32x4_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_u32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u16_u32`]."]
     #[inline(always)]
@@ -19166,25 +16766,10 @@ impl Neon {
     pub fn vreinterpretq_u64_u32(self, a: uint32x4_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_u32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u64_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_u32(self, a: uint32x4_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_u32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p8_u32`]."]
     #[inline(always)]
     pub fn vreinterpretq_p8_u32(self, a: uint32x4_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_u32(self, a: uint32x4_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_u32(self, a: uint32x4_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_u32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p16_u32`]."]
     #[inline(always)]
@@ -19196,16 +16781,6 @@ impl Neon {
     pub fn vreinterpret_f32_u64(self, a: uint64x1_t) -> float32x2_t {
         unsafe { vreinterpret_f32_u64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f32_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_u64(self, a: uint64x1_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_u64(self, a: uint64x1_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_u64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s8_u64`]."]
     #[inline(always)]
     pub fn vreinterpret_s8_u64(self, a: uint64x1_t) -> int8x8_t {
@@ -19215,16 +16790,6 @@ impl Neon {
     #[inline(always)]
     pub fn vreinterpret_s16_u64(self, a: uint64x1_t) -> int16x4_t {
         unsafe { vreinterpret_s16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_u64(self, a: uint64x1_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_u64(self, a: uint64x1_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_u64(a) }
     }
     #[doc = "See [`arch::vreinterpret_s32_u64`]."]
     #[inline(always)]
@@ -19241,25 +16806,10 @@ impl Neon {
     pub fn vreinterpret_u8_u64(self, a: uint64x1_t) -> uint8x8_t {
         unsafe { vreinterpret_u8_u64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u8_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_u64(self, a: uint64x1_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_u64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u16_u64`]."]
     #[inline(always)]
     pub fn vreinterpret_u16_u64(self, a: uint64x1_t) -> uint16x4_t {
         unsafe { vreinterpret_u16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_u64(self, a: uint64x1_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_u64(self, a: uint64x1_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_u64(a) }
     }
     #[doc = "See [`arch::vreinterpret_u32_u64`]."]
     #[inline(always)]
@@ -19271,25 +16821,10 @@ impl Neon {
     pub fn vreinterpret_p8_u64(self, a: uint64x1_t) -> poly8x8_t {
         unsafe { vreinterpret_p8_u64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p8_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_u64(self, a: uint64x1_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_u64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p16_u64`]."]
     #[inline(always)]
     pub fn vreinterpret_p16_u64(self, a: uint64x1_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_u64(self, a: uint64x1_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_u64(self, a: uint64x2_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_u64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f32_u64`]."]
     #[inline(always)]
@@ -19301,25 +16836,10 @@ impl Neon {
     pub fn vreinterpretq_s8_u64(self, a: uint64x2_t) -> int8x16_t {
         unsafe { vreinterpretq_s8_u64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s8_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_u64(self, a: uint64x2_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_u64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s16_u64`]."]
     #[inline(always)]
     pub fn vreinterpretq_s16_u64(self, a: uint64x2_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_u64(self, a: uint64x2_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_u64(self, a: uint64x2_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_u64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s32_u64`]."]
     #[inline(always)]
@@ -19331,25 +16851,10 @@ impl Neon {
     pub fn vreinterpretq_s64_u64(self, a: uint64x2_t) -> int64x2_t {
         unsafe { vreinterpretq_s64_u64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s64_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_u64(self, a: uint64x2_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_u64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u8_u64`]."]
     #[inline(always)]
     pub fn vreinterpretq_u8_u64(self, a: uint64x2_t) -> uint8x16_t {
         unsafe { vreinterpretq_u8_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_u64(self, a: uint64x2_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_u64(self, a: uint64x2_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_u64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u16_u64`]."]
     #[inline(always)]
@@ -19361,25 +16866,10 @@ impl Neon {
     pub fn vreinterpretq_u32_u64(self, a: uint64x2_t) -> uint32x4_t {
         unsafe { vreinterpretq_u32_u64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u32_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_u64(self, a: uint64x2_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_u64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p8_u64`]."]
     #[inline(always)]
     pub fn vreinterpretq_p8_u64(self, a: uint64x2_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_u64(self, a: uint64x2_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_u64(self, a: uint64x2_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_u64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p16_u64`]."]
     #[inline(always)]
@@ -19391,25 +16881,10 @@ impl Neon {
     pub fn vreinterpret_f32_p8(self, a: poly8x8_t) -> float32x2_t {
         unsafe { vreinterpret_f32_p8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f32_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_p8(self, a: poly8x8_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_p8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s8_p8`]."]
     #[inline(always)]
     pub fn vreinterpret_s8_p8(self, a: poly8x8_t) -> int8x8_t {
         unsafe { vreinterpret_s8_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_p8(self, a: poly8x8_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_p8(self, a: poly8x8_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_p8(a) }
     }
     #[doc = "See [`arch::vreinterpret_s16_p8`]."]
     #[inline(always)]
@@ -19421,25 +16896,10 @@ impl Neon {
     pub fn vreinterpret_s32_p8(self, a: poly8x8_t) -> int32x2_t {
         unsafe { vreinterpret_s32_p8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s32_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_p8(self, a: poly8x8_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_p8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s64_p8`]."]
     #[inline(always)]
     pub fn vreinterpret_s64_p8(self, a: poly8x8_t) -> int64x1_t {
         unsafe { vreinterpret_s64_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s64_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_p8(self, a: poly8x8_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_p8(self, a: poly8x8_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_p8(a) }
     }
     #[doc = "See [`arch::vreinterpret_u8_p8`]."]
     #[inline(always)]
@@ -19451,25 +16911,10 @@ impl Neon {
     pub fn vreinterpret_u16_p8(self, a: poly8x8_t) -> uint16x4_t {
         unsafe { vreinterpret_u16_p8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_p8(self, a: poly8x8_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_p8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u32_p8`]."]
     #[inline(always)]
     pub fn vreinterpret_u32_p8(self, a: poly8x8_t) -> uint32x2_t {
         unsafe { vreinterpret_u32_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_p8(self, a: poly8x8_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u64_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_p8(self, a: poly8x8_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_p8(a) }
     }
     #[doc = "See [`arch::vreinterpret_u64_p8`]."]
     #[inline(always)]
@@ -19481,25 +16926,10 @@ impl Neon {
     pub fn vreinterpret_p16_p8(self, a: poly8x8_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_p8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_p8(self, a: poly8x8_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_p8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f32_p8`]."]
     #[inline(always)]
     pub fn vreinterpretq_f32_p8(self, a: poly8x16_t) -> float32x4_t {
         unsafe { vreinterpretq_f32_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_p8(self, a: poly8x16_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_p8(self, a: poly8x16_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_p8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s8_p8`]."]
     #[inline(always)]
@@ -19511,25 +16941,10 @@ impl Neon {
     pub fn vreinterpretq_s16_p8(self, a: poly8x16_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_p8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_p8(self, a: poly8x16_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_p8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s32_p8`]."]
     #[inline(always)]
     pub fn vreinterpretq_s32_p8(self, a: poly8x16_t) -> int32x4_t {
         unsafe { vreinterpretq_s32_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_p8(self, a: poly8x16_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_p8(self, a: poly8x16_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_p8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s64_p8`]."]
     #[inline(always)]
@@ -19541,25 +16956,10 @@ impl Neon {
     pub fn vreinterpretq_u8_p8(self, a: poly8x16_t) -> uint8x16_t {
         unsafe { vreinterpretq_u8_p8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u8_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_p8(self, a: poly8x16_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_p8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u16_p8`]."]
     #[inline(always)]
     pub fn vreinterpretq_u16_p8(self, a: poly8x16_t) -> uint16x8_t {
         unsafe { vreinterpretq_u16_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_p8(self, a: poly8x16_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_p8(self, a: poly8x16_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_p8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u32_p8`]."]
     #[inline(always)]
@@ -19571,25 +16971,10 @@ impl Neon {
     pub fn vreinterpretq_u64_p8(self, a: poly8x16_t) -> uint64x2_t {
         unsafe { vreinterpretq_u64_p8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u64_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_p8(self, a: poly8x16_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_p8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p16_p8`]."]
     #[inline(always)]
     pub fn vreinterpretq_p16_p8(self, a: poly8x16_t) -> poly16x8_t {
         unsafe { vreinterpretq_p16_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_p8(self, a: poly8x16_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f32_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_p16(self, a: poly16x4_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_p16(a) }
     }
     #[doc = "See [`arch::vreinterpret_f32_p16`]."]
     #[inline(always)]
@@ -19601,25 +16986,10 @@ impl Neon {
     pub fn vreinterpret_s8_p16(self, a: poly16x4_t) -> int8x8_t {
         unsafe { vreinterpret_s8_p16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s8_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_p16(self, a: poly16x4_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s16_p16`]."]
     #[inline(always)]
     pub fn vreinterpret_s16_p16(self, a: poly16x4_t) -> int16x4_t {
         unsafe { vreinterpret_s16_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_p16(self, a: poly16x4_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_p16(self, a: poly16x4_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_p16(a) }
     }
     #[doc = "See [`arch::vreinterpret_s32_p16`]."]
     #[inline(always)]
@@ -19631,25 +17001,10 @@ impl Neon {
     pub fn vreinterpret_s64_p16(self, a: poly16x4_t) -> int64x1_t {
         unsafe { vreinterpret_s64_p16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s64_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_p16(self, a: poly16x4_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u8_p16`]."]
     #[inline(always)]
     pub fn vreinterpret_u8_p16(self, a: poly16x4_t) -> uint8x8_t {
         unsafe { vreinterpret_u8_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_p16(self, a: poly16x4_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_p16(self, a: poly16x4_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_p16(a) }
     }
     #[doc = "See [`arch::vreinterpret_u16_p16`]."]
     #[inline(always)]
@@ -19661,25 +17016,10 @@ impl Neon {
     pub fn vreinterpret_u32_p16(self, a: poly16x4_t) -> uint32x2_t {
         unsafe { vreinterpret_u32_p16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u32_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_p16(self, a: poly16x4_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u64_p16`]."]
     #[inline(always)]
     pub fn vreinterpret_u64_p16(self, a: poly16x4_t) -> uint64x1_t {
         unsafe { vreinterpret_u64_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u64_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_p16(self, a: poly16x4_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p8_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_p16(self, a: poly16x4_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_p16(a) }
     }
     #[doc = "See [`arch::vreinterpret_p8_p16`]."]
     #[inline(always)]
@@ -19691,25 +17031,10 @@ impl Neon {
     pub fn vreinterpretq_f32_p16(self, a: poly16x8_t) -> float32x4_t {
         unsafe { vreinterpretq_f32_p16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_f32_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_p16(self, a: poly16x8_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s8_p16`]."]
     #[inline(always)]
     pub fn vreinterpretq_s8_p16(self, a: poly16x8_t) -> int8x16_t {
         unsafe { vreinterpretq_s8_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_p16(self, a: poly16x8_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_p16(self, a: poly16x8_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_p16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s16_p16`]."]
     #[inline(always)]
@@ -19721,25 +17046,10 @@ impl Neon {
     pub fn vreinterpretq_s32_p16(self, a: poly16x8_t) -> int32x4_t {
         unsafe { vreinterpretq_s32_p16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s32_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_p16(self, a: poly16x8_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s64_p16`]."]
     #[inline(always)]
     pub fn vreinterpretq_s64_p16(self, a: poly16x8_t) -> int64x2_t {
         unsafe { vreinterpretq_s64_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_p16(self, a: poly16x8_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_p16(self, a: poly16x8_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_p16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u8_p16`]."]
     #[inline(always)]
@@ -19751,25 +17061,10 @@ impl Neon {
     pub fn vreinterpretq_u16_p16(self, a: poly16x8_t) -> uint16x8_t {
         unsafe { vreinterpretq_u16_p16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u16_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_p16(self, a: poly16x8_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u32_p16`]."]
     #[inline(always)]
     pub fn vreinterpretq_u32_p16(self, a: poly16x8_t) -> uint32x4_t {
         unsafe { vreinterpretq_u32_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_p16(self, a: poly16x8_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u64_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_p16(self, a: poly16x8_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_p16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u64_p16`]."]
     #[inline(always)]
@@ -19781,25 +17076,10 @@ impl Neon {
     pub fn vreinterpretq_p8_p16(self, a: poly16x8_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_p16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p8_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_p16(self, a: poly16x8_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s8_p128`]."]
     #[inline(always)]
     pub fn vreinterpretq_s8_p128(self, a: p128) -> int8x16_t {
         unsafe { vreinterpretq_s8_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_p128(self, a: p128) -> int8x16_t {
-        unsafe { vreinterpretq_s8_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_p128(self, a: p128) -> int16x8_t {
-        unsafe { vreinterpretq_s16_p128(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s16_p128`]."]
     #[inline(always)]
@@ -19811,25 +17091,10 @@ impl Neon {
     pub fn vreinterpretq_s32_p128(self, a: p128) -> int32x4_t {
         unsafe { vreinterpretq_s32_p128(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s32_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_p128(self, a: p128) -> int32x4_t {
-        unsafe { vreinterpretq_s32_p128(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s64_p128`]."]
     #[inline(always)]
     pub fn vreinterpretq_s64_p128(self, a: p128) -> int64x2_t {
         unsafe { vreinterpretq_s64_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_p128(self, a: p128) -> int64x2_t {
-        unsafe { vreinterpretq_s64_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_p128(self, a: p128) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_p128(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u8_p128`]."]
     #[inline(always)]
@@ -19841,25 +17106,10 @@ impl Neon {
     pub fn vreinterpretq_u16_p128(self, a: p128) -> uint16x8_t {
         unsafe { vreinterpretq_u16_p128(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u16_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_p128(self, a: p128) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_p128(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u32_p128`]."]
     #[inline(always)]
     pub fn vreinterpretq_u32_p128(self, a: p128) -> uint32x4_t {
         unsafe { vreinterpretq_u32_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_p128(self, a: p128) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u64_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_p128(self, a: p128) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_p128(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u64_p128`]."]
     #[inline(always)]
@@ -19871,25 +17121,10 @@ impl Neon {
     pub fn vreinterpretq_p8_p128(self, a: p128) -> poly8x16_t {
         unsafe { vreinterpretq_p8_p128(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p8_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_p128(self, a: p128) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_p128(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p16_p128`]."]
     #[inline(always)]
     pub fn vreinterpretq_p16_p128(self, a: p128) -> poly16x8_t {
         unsafe { vreinterpretq_p16_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_p128(self, a: p128) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_p128(self, a: p128) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_p128(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p64_p128`]."]
     #[inline(always)]
@@ -19901,25 +17136,10 @@ impl Neon {
     pub fn vreinterpret_p64_s8(self, a: int8x8_t) -> poly64x1_t {
         unsafe { vreinterpret_p64_s8(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p64_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_s8(self, a: int8x8_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_s8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p128_s8`]."]
     #[inline(always)]
     pub fn vreinterpretq_p128_s8(self, a: int8x16_t) -> p128 {
         unsafe { vreinterpretq_p128_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_s8(self, a: int8x16_t) -> p128 {
-        unsafe { vreinterpretq_p128_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_s8(self, a: int8x16_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_s8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p64_s8`]."]
     #[inline(always)]
@@ -19931,25 +17151,10 @@ impl Neon {
     pub fn vreinterpret_p64_s16(self, a: int16x4_t) -> poly64x1_t {
         unsafe { vreinterpret_p64_s16(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p64_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_s16(self, a: int16x4_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_s16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p128_s16`]."]
     #[inline(always)]
     pub fn vreinterpretq_p128_s16(self, a: int16x8_t) -> p128 {
         unsafe { vreinterpretq_p128_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_s16(self, a: int16x8_t) -> p128 {
-        unsafe { vreinterpretq_p128_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_s16(self, a: int16x8_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_s16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p64_s16`]."]
     #[inline(always)]
@@ -19961,25 +17166,10 @@ impl Neon {
     pub fn vreinterpret_p64_s32(self, a: int32x2_t) -> poly64x1_t {
         unsafe { vreinterpret_p64_s32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p64_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_s32(self, a: int32x2_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_s32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p128_s32`]."]
     #[inline(always)]
     pub fn vreinterpretq_p128_s32(self, a: int32x4_t) -> p128 {
         unsafe { vreinterpretq_p128_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_s32(self, a: int32x4_t) -> p128 {
-        unsafe { vreinterpretq_p128_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_s32(self, a: int32x4_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_s32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p64_s32`]."]
     #[inline(always)]
@@ -19991,25 +17181,10 @@ impl Neon {
     pub fn vreinterpretq_p128_s64(self, a: int64x2_t) -> p128 {
         unsafe { vreinterpretq_p128_s64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p128_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_s64(self, a: int64x2_t) -> p128 {
-        unsafe { vreinterpretq_p128_s64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p64_u8`]."]
     #[inline(always)]
     pub fn vreinterpret_p64_u8(self, a: uint8x8_t) -> poly64x1_t {
         unsafe { vreinterpret_p64_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p64_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_u8(self, a: uint8x8_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_u8(self, a: uint8x16_t) -> p128 {
-        unsafe { vreinterpretq_p128_u8(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p128_u8`]."]
     #[inline(always)]
@@ -20021,25 +17196,10 @@ impl Neon {
     pub fn vreinterpretq_p64_u8(self, a: uint8x16_t) -> poly64x2_t {
         unsafe { vreinterpretq_p64_u8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p64_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_u8(self, a: uint8x16_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_u8(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p64_u16`]."]
     #[inline(always)]
     pub fn vreinterpret_p64_u16(self, a: uint16x4_t) -> poly64x1_t {
         unsafe { vreinterpret_p64_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p64_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_u16(self, a: uint16x4_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_u16(self, a: uint16x8_t) -> p128 {
-        unsafe { vreinterpretq_p128_u16(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p128_u16`]."]
     #[inline(always)]
@@ -20051,25 +17211,10 @@ impl Neon {
     pub fn vreinterpretq_p64_u16(self, a: uint16x8_t) -> poly64x2_t {
         unsafe { vreinterpretq_p64_u16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p64_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_u16(self, a: uint16x8_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_u16(a) }
-    }
     #[doc = "See [`arch::vreinterpret_p64_u32`]."]
     #[inline(always)]
     pub fn vreinterpret_p64_u32(self, a: uint32x2_t) -> poly64x1_t {
         unsafe { vreinterpret_p64_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p64_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_u32(self, a: uint32x2_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_u32(self, a: uint32x4_t) -> p128 {
-        unsafe { vreinterpretq_p128_u32(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p128_u32`]."]
     #[inline(always)]
@@ -20081,25 +17226,10 @@ impl Neon {
     pub fn vreinterpretq_p64_u32(self, a: uint32x4_t) -> poly64x2_t {
         unsafe { vreinterpretq_p64_u32(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p64_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_u32(self, a: uint32x4_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_u32(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p128_u64`]."]
     #[inline(always)]
     pub fn vreinterpretq_p128_u64(self, a: uint64x2_t) -> p128 {
         unsafe { vreinterpretq_p128_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_u64(self, a: uint64x2_t) -> p128 {
-        unsafe { vreinterpretq_p128_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p64_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_p8(self, a: poly8x8_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_p8(a) }
     }
     #[doc = "See [`arch::vreinterpret_p64_p8`]."]
     #[inline(always)]
@@ -20111,25 +17241,10 @@ impl Neon {
     pub fn vreinterpretq_p128_p8(self, a: poly8x16_t) -> p128 {
         unsafe { vreinterpretq_p128_p8(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p128_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_p8(self, a: poly8x16_t) -> p128 {
-        unsafe { vreinterpretq_p128_p8(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p64_p8`]."]
     #[inline(always)]
     pub fn vreinterpretq_p64_p8(self, a: poly8x16_t) -> poly64x2_t {
         unsafe { vreinterpretq_p64_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_p8(self, a: poly8x16_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p64_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_p16(self, a: poly16x4_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_p16(a) }
     }
     #[doc = "See [`arch::vreinterpret_p64_p16`]."]
     #[inline(always)]
@@ -20141,25 +17256,10 @@ impl Neon {
     pub fn vreinterpretq_p128_p16(self, a: poly16x8_t) -> p128 {
         unsafe { vreinterpretq_p128_p16(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_p128_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_p16(self, a: poly16x8_t) -> p128 {
-        unsafe { vreinterpretq_p128_p16(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p64_p16`]."]
     #[inline(always)]
     pub fn vreinterpretq_p64_p16(self, a: poly16x8_t) -> poly64x2_t {
         unsafe { vreinterpretq_p64_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_p16(self, a: poly16x8_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_p64(self, a: poly64x1_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_p64(a) }
     }
     #[doc = "See [`arch::vreinterpret_s8_p64`]."]
     #[inline(always)]
@@ -20171,25 +17271,10 @@ impl Neon {
     pub fn vreinterpret_s16_p64(self, a: poly64x1_t) -> int16x4_t {
         unsafe { vreinterpret_s16_p64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_s16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_p64(self, a: poly64x1_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_p64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_s32_p64`]."]
     #[inline(always)]
     pub fn vreinterpret_s32_p64(self, a: poly64x1_t) -> int32x2_t {
         unsafe { vreinterpret_s32_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_p64(self, a: poly64x1_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_p64(self, a: poly64x1_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_p64(a) }
     }
     #[doc = "See [`arch::vreinterpret_u8_p64`]."]
     #[inline(always)]
@@ -20201,25 +17286,10 @@ impl Neon {
     pub fn vreinterpret_u16_p64(self, a: poly64x1_t) -> uint16x4_t {
         unsafe { vreinterpret_u16_p64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_u16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_p64(self, a: poly64x1_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_p64(a) }
-    }
     #[doc = "See [`arch::vreinterpret_u32_p64`]."]
     #[inline(always)]
     pub fn vreinterpret_u32_p64(self, a: poly64x1_t) -> uint32x2_t {
         unsafe { vreinterpret_u32_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_p64(self, a: poly64x1_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p8_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_p64(self, a: poly64x1_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_p64(a) }
     }
     #[doc = "See [`arch::vreinterpret_p8_p64`]."]
     #[inline(always)]
@@ -20231,25 +17301,10 @@ impl Neon {
     pub fn vreinterpret_p16_p64(self, a: poly64x1_t) -> poly16x4_t {
         unsafe { vreinterpret_p16_p64(a) }
     }
-    #[doc = "See [`arch::vreinterpret_p16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_p64(self, a: poly64x1_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_p64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_p128_p64`]."]
     #[inline(always)]
     pub fn vreinterpretq_p128_p64(self, a: poly64x2_t) -> p128 {
         unsafe { vreinterpretq_p128_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_p64(self, a: poly64x2_t) -> p128 {
-        unsafe { vreinterpretq_p128_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_p64(self, a: poly64x2_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_p64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_s8_p64`]."]
     #[inline(always)]
@@ -20261,25 +17316,10 @@ impl Neon {
     pub fn vreinterpretq_s16_p64(self, a: poly64x2_t) -> int16x8_t {
         unsafe { vreinterpretq_s16_p64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_s16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_p64(self, a: poly64x2_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_p64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_s32_p64`]."]
     #[inline(always)]
     pub fn vreinterpretq_s32_p64(self, a: poly64x2_t) -> int32x4_t {
         unsafe { vreinterpretq_s32_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_p64(self, a: poly64x2_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_p64(self, a: poly64x2_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_p64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_u8_p64`]."]
     #[inline(always)]
@@ -20291,16 +17331,6 @@ impl Neon {
     pub fn vreinterpretq_u16_p64(self, a: poly64x2_t) -> uint16x8_t {
         unsafe { vreinterpretq_u16_p64(a) }
     }
-    #[doc = "See [`arch::vreinterpretq_u16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_p64(self, a: poly64x2_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_p64(self, a: poly64x2_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_p64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_u32_p64`]."]
     #[inline(always)]
     pub fn vreinterpretq_u32_p64(self, a: poly64x2_t) -> uint32x4_t {
@@ -20310,16 +17340,6 @@ impl Neon {
     #[inline(always)]
     pub fn vreinterpretq_p8_p64(self, a: poly64x2_t) -> poly8x16_t {
         unsafe { vreinterpretq_p8_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_p64(self, a: poly64x2_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_p64(self, a: poly64x2_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_p64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_p16_p64`]."]
     #[inline(always)]
@@ -20756,21 +17776,6 @@ impl Neon {
     pub fn vrshrq_n_u64<const N: i32>(self, a: uint64x2_t) -> uint64x2_t {
         unsafe { vrshrq_n_u64::<N>(a) }
     }
-    #[doc = "See [`arch::vrshrn_n_s16`]."]
-    #[inline(always)]
-    pub fn vrshrn_n_s16<const N: i32>(self, a: int16x8_t) -> int8x8_t {
-        unsafe { vrshrn_n_s16::<N>(a) }
-    }
-    #[doc = "See [`arch::vrshrn_n_s32`]."]
-    #[inline(always)]
-    pub fn vrshrn_n_s32<const N: i32>(self, a: int32x4_t) -> int16x4_t {
-        unsafe { vrshrn_n_s32::<N>(a) }
-    }
-    #[doc = "See [`arch::vrshrn_n_s64`]."]
-    #[inline(always)]
-    pub fn vrshrn_n_s64<const N: i32>(self, a: int64x2_t) -> int32x2_t {
-        unsafe { vrshrn_n_s64::<N>(a) }
-    }
     #[doc = "See [`arch::vrshrn_n_u16`]."]
     #[inline(always)]
     pub fn vrshrn_n_u16<const N: i32>(self, a: uint16x8_t) -> uint8x8_t {
@@ -20936,25 +17941,10 @@ impl Neon {
     pub fn vrsubhn_u16(self, a: uint16x8_t, b: uint16x8_t) -> uint8x8_t {
         unsafe { vrsubhn_u16(a, b) }
     }
-    #[doc = "See [`arch::vrsubhn_u16`]."]
-    #[inline(always)]
-    pub fn vrsubhn_u16(self, a: uint16x8_t, b: uint16x8_t) -> uint8x8_t {
-        unsafe { vrsubhn_u16(a, b) }
-    }
     #[doc = "See [`arch::vrsubhn_u32`]."]
     #[inline(always)]
     pub fn vrsubhn_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint16x4_t {
         unsafe { vrsubhn_u32(a, b) }
-    }
-    #[doc = "See [`arch::vrsubhn_u32`]."]
-    #[inline(always)]
-    pub fn vrsubhn_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint16x4_t {
-        unsafe { vrsubhn_u32(a, b) }
-    }
-    #[doc = "See [`arch::vrsubhn_u64`]."]
-    #[inline(always)]
-    pub fn vrsubhn_u64(self, a: uint64x2_t, b: uint64x2_t) -> uint32x2_t {
-        unsafe { vrsubhn_u64(a, b) }
     }
     #[doc = "See [`arch::vrsubhn_u64`]."]
     #[inline(always)]
@@ -21461,16 +18451,6 @@ impl Neon {
     pub fn vsraq_n_u64<const N: i32>(self, a: uint64x2_t, b: uint64x2_t) -> uint64x2_t {
         unsafe { vsraq_n_u64::<N>(a, b) }
     }
-    #[doc = "See [`arch::vst1_f32_x2`]."]
-    #[inline(always)]
-    pub unsafe fn vst1_f32_x2(self, a: *mut f32, b: float32x2x2_t) {
-        unsafe { vst1_f32_x2(a, b) }
-    }
-    #[doc = "See [`arch::vst1q_f32_x2`]."]
-    #[inline(always)]
-    pub unsafe fn vst1q_f32_x2(self, a: *mut f32, b: float32x4x2_t) {
-        unsafe { vst1q_f32_x2(a, b) }
-    }
     #[doc = "See [`arch::vst1_f32_x3`]."]
     #[inline(always)]
     pub unsafe fn vst1_f32_x3(self, a: *mut f32, b: float32x2x3_t) {
@@ -21480,16 +18460,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vst1q_f32_x3(self, a: *mut f32, b: float32x4x3_t) {
         unsafe { vst1q_f32_x3(a, b) }
-    }
-    #[doc = "See [`arch::vst1_f32_x4`]."]
-    #[inline(always)]
-    pub unsafe fn vst1_f32_x4(self, a: *mut f32, b: float32x2x4_t) {
-        unsafe { vst1_f32_x4(a, b) }
-    }
-    #[doc = "See [`arch::vst1q_f32_x4`]."]
-    #[inline(always)]
-    pub unsafe fn vst1q_f32_x4(self, a: *mut f32, b: float32x4x4_t) {
-        unsafe { vst1q_f32_x4(a, b) }
     }
     #[doc = "See [`arch::vst1_lane_f32`]."]
     #[inline(always)]
@@ -22061,11 +19031,6 @@ impl Neon {
     pub unsafe fn vst2_p64(self, a: *mut p64, b: poly64x1x2_t) {
         unsafe { vst2_p64(a, b) }
     }
-    #[doc = "See [`arch::vst2_s64`]."]
-    #[inline(always)]
-    pub unsafe fn vst2_s64(self, a: *mut i64, b: int64x1x2_t) {
-        unsafe { vst2_s64(a, b) }
-    }
     #[doc = "See [`arch::vst2_u64`]."]
     #[inline(always)]
     pub unsafe fn vst2_u64(self, a: *mut u64, b: uint64x1x2_t) {
@@ -22120,81 +19085,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vst2q_p16(self, a: *mut p16, b: poly16x8x2_t) {
         unsafe { vst2q_p16(a, b) }
-    }
-    #[doc = "See [`arch::vst3_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vst3_f32(self, a: *mut f32, b: float32x2x3_t) {
-        unsafe { vst3_f32(a, b) }
-    }
-    #[doc = "See [`arch::vst3q_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vst3q_f32(self, a: *mut f32, b: float32x4x3_t) {
-        unsafe { vst3q_f32(a, b) }
-    }
-    #[doc = "See [`arch::vst3_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vst3_s8(self, a: *mut i8, b: int8x8x3_t) {
-        unsafe { vst3_s8(a, b) }
-    }
-    #[doc = "See [`arch::vst3q_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vst3q_s8(self, a: *mut i8, b: int8x16x3_t) {
-        unsafe { vst3q_s8(a, b) }
-    }
-    #[doc = "See [`arch::vst3_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vst3_s16(self, a: *mut i16, b: int16x4x3_t) {
-        unsafe { vst3_s16(a, b) }
-    }
-    #[doc = "See [`arch::vst3q_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vst3q_s16(self, a: *mut i16, b: int16x8x3_t) {
-        unsafe { vst3q_s16(a, b) }
-    }
-    #[doc = "See [`arch::vst3_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vst3_s32(self, a: *mut i32, b: int32x2x3_t) {
-        unsafe { vst3_s32(a, b) }
-    }
-    #[doc = "See [`arch::vst3q_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vst3q_s32(self, a: *mut i32, b: int32x4x3_t) {
-        unsafe { vst3q_s32(a, b) }
-    }
-    #[doc = "See [`arch::vst3_lane_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vst3_lane_f32<const LANE: i32>(self, a: *mut f32, b: float32x2x3_t) {
-        unsafe { vst3_lane_f32::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst3q_lane_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vst3q_lane_f32<const LANE: i32>(self, a: *mut f32, b: float32x4x3_t) {
-        unsafe { vst3q_lane_f32::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst3_lane_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vst3_lane_s8<const LANE: i32>(self, a: *mut i8, b: int8x8x3_t) {
-        unsafe { vst3_lane_s8::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst3_lane_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vst3_lane_s16<const LANE: i32>(self, a: *mut i16, b: int16x4x3_t) {
-        unsafe { vst3_lane_s16::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst3q_lane_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vst3q_lane_s16<const LANE: i32>(self, a: *mut i16, b: int16x8x3_t) {
-        unsafe { vst3q_lane_s16::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst3_lane_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vst3_lane_s32<const LANE: i32>(self, a: *mut i32, b: int32x2x3_t) {
-        unsafe { vst3_lane_s32::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst3q_lane_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vst3q_lane_s32<const LANE: i32>(self, a: *mut i32, b: int32x4x3_t) {
-        unsafe { vst3q_lane_s32::<LANE>(a, b) }
     }
     #[doc = "See [`arch::vst3_lane_u8`]."]
     #[inline(always)]
@@ -22301,81 +19191,6 @@ impl Neon {
     pub unsafe fn vst3q_p16(self, a: *mut p16, b: poly16x8x3_t) {
         unsafe { vst3q_p16(a, b) }
     }
-    #[doc = "See [`arch::vst4_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vst4_f32(self, a: *mut f32, b: float32x2x4_t) {
-        unsafe { vst4_f32(a, b) }
-    }
-    #[doc = "See [`arch::vst4q_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vst4q_f32(self, a: *mut f32, b: float32x4x4_t) {
-        unsafe { vst4q_f32(a, b) }
-    }
-    #[doc = "See [`arch::vst4_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vst4_s8(self, a: *mut i8, b: int8x8x4_t) {
-        unsafe { vst4_s8(a, b) }
-    }
-    #[doc = "See [`arch::vst4q_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vst4q_s8(self, a: *mut i8, b: int8x16x4_t) {
-        unsafe { vst4q_s8(a, b) }
-    }
-    #[doc = "See [`arch::vst4_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vst4_s16(self, a: *mut i16, b: int16x4x4_t) {
-        unsafe { vst4_s16(a, b) }
-    }
-    #[doc = "See [`arch::vst4q_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vst4q_s16(self, a: *mut i16, b: int16x8x4_t) {
-        unsafe { vst4q_s16(a, b) }
-    }
-    #[doc = "See [`arch::vst4_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vst4_s32(self, a: *mut i32, b: int32x2x4_t) {
-        unsafe { vst4_s32(a, b) }
-    }
-    #[doc = "See [`arch::vst4q_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vst4q_s32(self, a: *mut i32, b: int32x4x4_t) {
-        unsafe { vst4q_s32(a, b) }
-    }
-    #[doc = "See [`arch::vst4_lane_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vst4_lane_f32<const LANE: i32>(self, a: *mut f32, b: float32x2x4_t) {
-        unsafe { vst4_lane_f32::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst4q_lane_f32`]."]
-    #[inline(always)]
-    pub unsafe fn vst4q_lane_f32<const LANE: i32>(self, a: *mut f32, b: float32x4x4_t) {
-        unsafe { vst4q_lane_f32::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst4_lane_s8`]."]
-    #[inline(always)]
-    pub unsafe fn vst4_lane_s8<const LANE: i32>(self, a: *mut i8, b: int8x8x4_t) {
-        unsafe { vst4_lane_s8::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst4_lane_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vst4_lane_s16<const LANE: i32>(self, a: *mut i16, b: int16x4x4_t) {
-        unsafe { vst4_lane_s16::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst4q_lane_s16`]."]
-    #[inline(always)]
-    pub unsafe fn vst4q_lane_s16<const LANE: i32>(self, a: *mut i16, b: int16x8x4_t) {
-        unsafe { vst4q_lane_s16::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst4_lane_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vst4_lane_s32<const LANE: i32>(self, a: *mut i32, b: int32x2x4_t) {
-        unsafe { vst4_lane_s32::<LANE>(a, b) }
-    }
-    #[doc = "See [`arch::vst4q_lane_s32`]."]
-    #[inline(always)]
-    pub unsafe fn vst4q_lane_s32<const LANE: i32>(self, a: *mut i32, b: int32x4x4_t) {
-        unsafe { vst4q_lane_s32::<LANE>(a, b) }
-    }
     #[doc = "See [`arch::vst4_lane_u8`]."]
     #[inline(always)]
     pub unsafe fn vst4_lane_u8<const LANE: i32>(self, a: *mut u8, b: uint8x8x4_t) {
@@ -22420,11 +19235,6 @@ impl Neon {
     #[inline(always)]
     pub unsafe fn vst4_p64(self, a: *mut p64, b: poly64x1x4_t) {
         unsafe { vst4_p64(a, b) }
-    }
-    #[doc = "See [`arch::vst4_s64`]."]
-    #[inline(always)]
-    pub unsafe fn vst4_s64(self, a: *mut i64, b: int64x1x4_t) {
-        unsafe { vst4_s64(a, b) }
     }
     #[doc = "See [`arch::vst4_u64`]."]
     #[inline(always)]
@@ -22716,26 +19526,6 @@ impl Neon {
     ) -> int32x2_t {
         unsafe { vsudot_lane_s32::<LANE>(a, b, c) }
     }
-    #[doc = "See [`arch::vsudot_lane_s32`]."]
-    #[inline(always)]
-    pub fn vsudot_lane_s32<const LANE: i32>(
-        self,
-        a: int32x2_t,
-        b: int8x8_t,
-        c: uint8x8_t,
-    ) -> int32x2_t {
-        unsafe { vsudot_lane_s32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vsudotq_lane_s32`]."]
-    #[inline(always)]
-    pub fn vsudotq_lane_s32<const LANE: i32>(
-        self,
-        a: int32x4_t,
-        b: int8x16_t,
-        c: uint8x8_t,
-    ) -> int32x4_t {
-        unsafe { vsudotq_lane_s32::<LANE>(a, b, c) }
-    }
     #[doc = "See [`arch::vsudotq_lane_s32`]."]
     #[inline(always)]
     pub fn vsudotq_lane_s32<const LANE: i32>(
@@ -22935,26 +19725,6 @@ impl Neon {
         c: int8x8_t,
     ) -> int32x2_t {
         unsafe { vusdot_lane_s32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vusdot_lane_s32`]."]
-    #[inline(always)]
-    pub fn vusdot_lane_s32<const LANE: i32>(
-        self,
-        a: int32x2_t,
-        b: uint8x8_t,
-        c: int8x8_t,
-    ) -> int32x2_t {
-        unsafe { vusdot_lane_s32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vusdotq_lane_s32`]."]
-    #[inline(always)]
-    pub fn vusdotq_lane_s32<const LANE: i32>(
-        self,
-        a: int32x4_t,
-        b: uint8x16_t,
-        c: int8x8_t,
-    ) -> int32x4_t {
-        unsafe { vusdotq_lane_s32::<LANE>(a, b, c) }
     }
     #[doc = "See [`arch::vusdotq_lane_s32`]."]
     #[inline(always)]
