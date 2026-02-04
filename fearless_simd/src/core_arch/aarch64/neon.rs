@@ -5,6 +5,10 @@
 
 use arch::*;
 use core::arch::aarch64 as arch;
+type p8 = u8;
+type p16 = u16;
+type p64 = u64;
+type p128 = u128;
 #[doc = "A token for `Neon` intrinsics on `aarch64`."]
 #[derive(Clone, Copy, Debug)]
 pub struct Neon {

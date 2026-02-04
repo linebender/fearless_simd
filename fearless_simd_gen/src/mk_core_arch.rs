@@ -52,8 +52,8 @@ impl TargetArch {
         }
     }
 
-    /// Generate the arch import statements for this target.
-    fn gen_arch_imports(self) -> TokenStream {
+    /// Generate the arch import statements (and any other necessary setup) for this target.
+    fn gen_prelude(self) -> TokenStream {
         match self {
             Self::X86 => quote! {
                 #[cfg(target_arch = "x86")]
@@ -66,6 +66,11 @@ impl TargetArch {
             Self::Aarch64 => quote! {
                 use core::arch::aarch64 as arch;
                 use arch::*;
+
+                type p8 = u8;
+                type p16 = u16;
+                type p64 = u64;
+                type p128 = u128;
             },
             Self::Wasm32 => quote! {
                 use core::arch::wasm32 as arch;
@@ -166,8 +171,8 @@ impl FeatureModuleConfig {
         // Generate method implementations
         let methods: Vec<TokenStream> = intrinsics.iter().map(gen_method).collect();
 
-        // Architecture-specific imports
-        let arch_imports = self.arch.gen_arch_imports();
+        // Architecture-specific imports + other setup
+        let prelude = self.arch.gen_prelude();
 
         // Architecture-specific constructor
         let constructor = self.arch.gen_constructor();
@@ -175,7 +180,7 @@ impl FeatureModuleConfig {
         let doc = format!("A token for `{struct_name_str}` intrinsics on {arch_doc_suffix}.");
 
         quote! {
-            #arch_imports
+            #prelude
 
             #[doc = #doc]
             #[derive(Clone, Copy, Debug)]
