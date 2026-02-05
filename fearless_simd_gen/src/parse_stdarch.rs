@@ -10,8 +10,25 @@ use std::{
 };
 
 use anyhow::{Context, Result};
+use proc_macro2::{TokenStream, TokenTree};
 use quote::ToTokens;
 use syn::{ItemFn, LitStr, visit::Visit};
+
+/// Recursively check if a token stream contains a specific literal string.
+fn contains_literal(tokens: &TokenStream, target: &str) -> bool {
+    for token in tokens.clone() {
+        match token {
+            TokenTree::Literal(lit) if lit.to_string() == target => return true,
+            TokenTree::Group(group) => {
+                if contains_literal(&group.stream(), target) {
+                    return true;
+                }
+            }
+            _ => {}
+        }
+    }
+    false
+}
 
 /// A visitor that extracts intrinsic functions from a Rust file.
 struct IntrinsicVisitor {
@@ -53,6 +70,14 @@ impl<'ast> Visit<'ast> for IntrinsicVisitor {
                 return;
             }
 
+            // Skip intrinsics that aren't usable on stable Rust yet.
+            // Check for `since = "CURRENT_RUSTC_VERSION"` in both direct #[stable] and #[cfg_attr(..., stable(...))]
+            if attr.path().is_ident("stable") || attr.path().is_ident("cfg_attr") {
+                if contains_literal(&attr.meta.to_token_stream(), "\"CURRENT_RUSTC_VERSION\"") {
+                    return;
+                }
+            }
+
             if !attr.path().is_ident("target_feature") {
                 continue;
             }
@@ -76,8 +101,6 @@ impl<'ast> Visit<'ast> for IntrinsicVisitor {
             || !target_features
                 .iter()
                 .any(|feature| feature == &self.module_feature)
-            // These will be stabilized at *some* point and are hence marked as stable, but we can't use them yet
-            || target_features.iter().any(|feature| feature == "fp16")
         {
             return;
         }

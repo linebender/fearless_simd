@@ -1539,16 +1539,6 @@ impl Neon {
     pub fn vcvtq_f64_u64(self, a: uint64x2_t) -> float64x2_t {
         unsafe { vcvtq_f64_u64(a) }
     }
-    #[doc = "See [`arch::vcvt_high_f16_f32`]."]
-    #[inline(always)]
-    pub fn vcvt_high_f16_f32(self, a: float16x4_t, b: float32x4_t) -> float16x8_t {
-        unsafe { vcvt_high_f16_f32(a, b) }
-    }
-    #[doc = "See [`arch::vcvt_high_f32_f16`]."]
-    #[inline(always)]
-    pub fn vcvt_high_f32_f16(self, a: float16x8_t) -> float32x4_t {
-        unsafe { vcvt_high_f32_f16(a) }
-    }
     #[doc = "See [`arch::vcvt_high_f32_f64`]."]
     #[inline(always)]
     pub fn vcvt_high_f32_f64(self, a: float32x2_t, b: float64x2_t) -> float32x4_t {
@@ -5346,26 +5336,6 @@ impl Neon {
     pub fn vrecpxs_f32(self, a: f32) -> f32 {
         unsafe { vrecpxs_f32(a) }
     }
-    #[doc = "See [`arch::vreinterpret_f64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f64_f16(self, a: float16x4_t) -> float64x1_t {
-        unsafe { vreinterpret_f64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f64_f16(self, a: float16x8_t) -> float64x2_t {
-        unsafe { vreinterpretq_f64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_f64(self, a: float64x1_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_f64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_f64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_f64(self, a: float64x2_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_f64(a) }
-    }
     #[doc = "See [`arch::vreinterpretq_f64_p128`]."]
     #[inline(always)]
     pub fn vreinterpretq_f64_p128(self, a: p128) -> float64x2_t {
@@ -9107,11 +9077,6 @@ impl Neon {
     pub fn vcntq_p8(self, a: poly8x16_t) -> poly8x16_t {
         unsafe { vcntq_p8(a) }
     }
-    #[doc = "See [`arch::vcombine_f16`]."]
-    #[inline(always)]
-    pub fn vcombine_f16(self, a: float16x4_t, b: float16x4_t) -> float16x8_t {
-        unsafe { vcombine_f16(a, b) }
-    }
     #[doc = "See [`arch::vcombine_f32`]."]
     #[inline(always)]
     pub fn vcombine_f32(self, a: float32x2_t, b: float32x2_t) -> float32x4_t {
@@ -9172,11 +9137,6 @@ impl Neon {
     pub fn vcombine_p64(self, a: poly64x1_t, b: poly64x1_t) -> poly64x2_t {
         unsafe { vcombine_p64(a, b) }
     }
-    #[doc = "See [`arch::vcreate_f16`]."]
-    #[inline(always)]
-    pub fn vcreate_f16(self, a: u64) -> float16x4_t {
-        unsafe { vcreate_f16(a) }
-    }
     #[doc = "See [`arch::vcreate_f32`]."]
     #[inline(always)]
     pub fn vcreate_f32(self, a: u64) -> float32x2_t {
@@ -9236,16 +9196,6 @@ impl Neon {
     #[inline(always)]
     pub fn vcreate_p64(self, a: u64) -> poly64x1_t {
         unsafe { vcreate_p64(a) }
-    }
-    #[doc = "See [`arch::vcvt_f16_f32`]."]
-    #[inline(always)]
-    pub fn vcvt_f16_f32(self, a: float32x4_t) -> float16x4_t {
-        unsafe { vcvt_f16_f32(a) }
-    }
-    #[doc = "See [`arch::vcvt_f32_f16`]."]
-    #[inline(always)]
-    pub fn vcvt_f32_f16(self, a: float16x4_t) -> float32x4_t {
-        unsafe { vcvt_f32_f16(a) }
     }
     #[doc = "See [`arch::vcvt_f32_s32`]."]
     #[inline(always)]
@@ -9347,16 +9297,6 @@ impl Neon {
     pub fn vdotq_u32(self, a: uint32x4_t, b: uint8x16_t, c: uint8x16_t) -> uint32x4_t {
         unsafe { vdotq_u32(a, b, c) }
     }
-    #[doc = "See [`arch::vdup_lane_f16`]."]
-    #[inline(always)]
-    pub fn vdup_lane_f16<const N: i32>(self, a: float16x4_t) -> float16x4_t {
-        unsafe { vdup_lane_f16::<N>(a) }
-    }
-    #[doc = "See [`arch::vdupq_lane_f16`]."]
-    #[inline(always)]
-    pub fn vdupq_lane_f16<const N: i32>(self, a: float16x4_t) -> float16x8_t {
-        unsafe { vdupq_lane_f16::<N>(a) }
-    }
     #[doc = "See [`arch::vdup_lane_f32`]."]
     #[inline(always)]
     pub fn vdup_lane_f32<const N: i32>(self, a: float32x2_t) -> float32x2_t {
@@ -9456,16 +9396,6 @@ impl Neon {
     #[inline(always)]
     pub fn vdup_lane_u64<const N: i32>(self, a: uint64x1_t) -> uint64x1_t {
         unsafe { vdup_lane_u64::<N>(a) }
-    }
-    #[doc = "See [`arch::vdup_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vdup_laneq_f16<const N: i32>(self, a: float16x8_t) -> float16x4_t {
-        unsafe { vdup_laneq_f16::<N>(a) }
-    }
-    #[doc = "See [`arch::vdupq_laneq_f16`]."]
-    #[inline(always)]
-    pub fn vdupq_laneq_f16<const N: i32>(self, a: float16x8_t) -> float16x8_t {
-        unsafe { vdupq_laneq_f16::<N>(a) }
     }
     #[doc = "See [`arch::vdup_laneq_f32`]."]
     #[inline(always)]
@@ -9926,16 +9856,6 @@ impl Neon {
     #[inline(always)]
     pub fn vfmsq_n_f32(self, a: float32x4_t, b: float32x4_t, c: f32) -> float32x4_t {
         unsafe { vfmsq_n_f32(a, b, c) }
-    }
-    #[doc = "See [`arch::vget_high_f16`]."]
-    #[inline(always)]
-    pub fn vget_high_f16(self, a: float16x8_t) -> float16x4_t {
-        unsafe { vget_high_f16(a) }
-    }
-    #[doc = "See [`arch::vget_low_f16`]."]
-    #[inline(always)]
-    pub fn vget_low_f16(self, a: float16x8_t) -> float16x4_t {
-        unsafe { vget_low_f16(a) }
     }
     #[doc = "See [`arch::vget_high_f32`]."]
     #[inline(always)]
@@ -14749,256 +14669,6 @@ impl Neon {
     #[inline(always)]
     pub fn vrecpsq_f32(self, a: float32x4_t, b: float32x4_t) -> float32x4_t {
         unsafe { vrecpsq_f32(a, b) }
-    }
-    #[doc = "See [`arch::vreinterpret_f32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f32_f16(self, a: float16x4_t) -> float32x2_t {
-        unsafe { vreinterpret_f32_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s8_f16(self, a: float16x4_t) -> int8x8_t {
-        unsafe { vreinterpret_s8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s16_f16(self, a: float16x4_t) -> int16x4_t {
-        unsafe { vreinterpret_s16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s32_f16(self, a: float16x4_t) -> int32x2_t {
-        unsafe { vreinterpret_s32_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_s64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_s64_f16(self, a: float16x4_t) -> int64x1_t {
-        unsafe { vreinterpret_s64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u8_f16(self, a: float16x4_t) -> uint8x8_t {
-        unsafe { vreinterpret_u8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u16_f16(self, a: float16x4_t) -> uint16x4_t {
-        unsafe { vreinterpret_u16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u32_f16(self, a: float16x4_t) -> uint32x2_t {
-        unsafe { vreinterpret_u32_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_u64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_u64_f16(self, a: float16x4_t) -> uint64x1_t {
-        unsafe { vreinterpret_u64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p8_f16(self, a: float16x4_t) -> poly8x8_t {
-        unsafe { vreinterpret_p8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p16_f16(self, a: float16x4_t) -> poly16x4_t {
-        unsafe { vreinterpret_p16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f32_f16(self, a: float16x8_t) -> float32x4_t {
-        unsafe { vreinterpretq_f32_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s8_f16(self, a: float16x8_t) -> int8x16_t {
-        unsafe { vreinterpretq_s8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s16_f16(self, a: float16x8_t) -> int16x8_t {
-        unsafe { vreinterpretq_s16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s32_f16(self, a: float16x8_t) -> int32x4_t {
-        unsafe { vreinterpretq_s32_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_s64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_s64_f16(self, a: float16x8_t) -> int64x2_t {
-        unsafe { vreinterpretq_s64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u8_f16(self, a: float16x8_t) -> uint8x16_t {
-        unsafe { vreinterpretq_u8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u16_f16(self, a: float16x8_t) -> uint16x8_t {
-        unsafe { vreinterpretq_u16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u32_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u32_f16(self, a: float16x8_t) -> uint32x4_t {
-        unsafe { vreinterpretq_u32_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_u64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_u64_f16(self, a: float16x8_t) -> uint64x2_t {
-        unsafe { vreinterpretq_u64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p8_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p8_f16(self, a: float16x8_t) -> poly8x16_t {
-        unsafe { vreinterpretq_p8_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p16_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p16_f16(self, a: float16x8_t) -> poly16x8_t {
-        unsafe { vreinterpretq_p16_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_f32(self, a: float32x2_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_f32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_f32(self, a: float32x4_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_f32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_s8(self, a: int8x8_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_s8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_s8(self, a: int8x16_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_s8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_s16(self, a: int16x4_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_s16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_s16(self, a: int16x8_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_s16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_s32(self, a: int32x2_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_s32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_s32(self, a: int32x4_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_s32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_s64(self, a: int64x1_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_s64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_s64(self, a: int64x2_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_s64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_u8(self, a: uint8x8_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_u8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_u8(self, a: uint8x16_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_u8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_u16(self, a: uint16x4_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_u16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_u16(self, a: uint16x8_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_u16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_u32(self, a: uint32x2_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_u32`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_u32(self, a: uint32x4_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_u32(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_u64(self, a: uint64x1_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_u64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_u64(self, a: uint64x2_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_u64(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_p8(self, a: poly8x8_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_p8`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_p8(self, a: poly8x16_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_p8(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_p16(self, a: poly16x4_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_p16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_p16(self, a: poly16x8_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_p16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_p128`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_p128(self, a: p128) -> float16x8_t {
-        unsafe { vreinterpretq_f16_p128(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_p64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpret_p64_f16(self, a: float16x4_t) -> poly64x1_t {
-        unsafe { vreinterpret_p64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p128_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p128_f16(self, a: float16x8_t) -> p128 {
-        unsafe { vreinterpretq_p128_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_p64_f16`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_p64_f16(self, a: float16x8_t) -> poly64x2_t {
-        unsafe { vreinterpretq_p64_f16(a) }
-    }
-    #[doc = "See [`arch::vreinterpret_f16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpret_f16_p64(self, a: poly64x1_t) -> float16x4_t {
-        unsafe { vreinterpret_f16_p64(a) }
-    }
-    #[doc = "See [`arch::vreinterpretq_f16_p64`]."]
-    #[inline(always)]
-    pub fn vreinterpretq_f16_p64(self, a: poly64x2_t) -> float16x8_t {
-        unsafe { vreinterpretq_f16_p64(a) }
     }
     #[doc = "See [`arch::vreinterpretq_f32_p128`]."]
     #[inline(always)]
