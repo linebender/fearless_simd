@@ -278,8 +278,10 @@ jobs:
         run: ${SDE_PKG}/sde64 -hsw -- cargo test $CARGO_TEST_ARGS
 
       - name: run tests on CPU with AVX-512
-        # Github Actions doesn't give us AVX-512 so this is the only way to exercise AVX-512 codepaths on CI
-        # -icl stands for Ice Lake; technically Skylake added AVX-512 first but it's mostly useless there due to downclocking
+        # Github Actions doesn't give us AVX-512 so this is the only way to exercise AVX-512 codepaths on CI.
+        # -icl stands for Ice Lake. Technically Skylake added AVX-512 first, but it's mostly useless there due to
+        # downclocking. When we do eventually add explicit AVX-512 support, we'll likely target the Ice Lake feature
+        # level.
         run: ${SDE_PKG}/sde64 -icl -- cargo test $CARGO_TEST_ARGS
 
   test-nightly-asan:
