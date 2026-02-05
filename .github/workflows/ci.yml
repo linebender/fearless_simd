@@ -194,7 +194,7 @@ jobs:
       - name: run code generator
         run: |
           cargo run --bin fearless_simd_gen --release
-          cargo run --bin fearless_simd_gen --release -- core_arch
+          cargo run --bin fearless_simd_gen --release -- core-arch
 
       - name: check for uncommitted changes
         run: git diff --exit-code
