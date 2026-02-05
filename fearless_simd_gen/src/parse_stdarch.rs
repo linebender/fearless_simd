@@ -115,9 +115,10 @@ impl<'ast> Visit<'ast> for IntrinsicVisitor {
             // Skip intrinsics that aren't usable on stable Rust yet.
             // Check for `since = "CURRENT_RUSTC_VERSION"` in both direct #[stable] and #[cfg_attr(..., stable(...))]
             if (attr.path().is_ident("stable") || attr.path().is_ident("cfg_attr"))
-                && contains_literal(&attr.meta.to_token_stream(), "\"CURRENT_RUSTC_VERSION\"") {
-                    return;
-                }
+                && contains_literal(&attr.meta.to_token_stream(), "\"CURRENT_RUSTC_VERSION\"")
+            {
+                return;
+            }
 
             // Skip intrinsics that are unstable on non-ARM32 platforms:
             // #[cfg_attr(not(target_arch = "arm"), unstable(...))]
