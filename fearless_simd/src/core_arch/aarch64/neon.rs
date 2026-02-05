@@ -9237,66 +9237,6 @@ impl Neon {
     pub fn vcvtq_u32_f32(self, a: float32x4_t) -> uint32x4_t {
         unsafe { vcvtq_u32_f32(a) }
     }
-    #[doc = "See [`arch::vdot_lane_s32`]."]
-    #[inline(always)]
-    pub fn vdot_lane_s32<const LANE: i32>(
-        self,
-        a: int32x2_t,
-        b: int8x8_t,
-        c: int8x8_t,
-    ) -> int32x2_t {
-        unsafe { vdot_lane_s32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vdotq_lane_s32`]."]
-    #[inline(always)]
-    pub fn vdotq_lane_s32<const LANE: i32>(
-        self,
-        a: int32x4_t,
-        b: int8x16_t,
-        c: int8x8_t,
-    ) -> int32x4_t {
-        unsafe { vdotq_lane_s32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vdot_lane_u32`]."]
-    #[inline(always)]
-    pub fn vdot_lane_u32<const LANE: i32>(
-        self,
-        a: uint32x2_t,
-        b: uint8x8_t,
-        c: uint8x8_t,
-    ) -> uint32x2_t {
-        unsafe { vdot_lane_u32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vdotq_lane_u32`]."]
-    #[inline(always)]
-    pub fn vdotq_lane_u32<const LANE: i32>(
-        self,
-        a: uint32x4_t,
-        b: uint8x16_t,
-        c: uint8x8_t,
-    ) -> uint32x4_t {
-        unsafe { vdotq_lane_u32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vdot_s32`]."]
-    #[inline(always)]
-    pub fn vdot_s32(self, a: int32x2_t, b: int8x8_t, c: int8x8_t) -> int32x2_t {
-        unsafe { vdot_s32(a, b, c) }
-    }
-    #[doc = "See [`arch::vdotq_s32`]."]
-    #[inline(always)]
-    pub fn vdotq_s32(self, a: int32x4_t, b: int8x16_t, c: int8x16_t) -> int32x4_t {
-        unsafe { vdotq_s32(a, b, c) }
-    }
-    #[doc = "See [`arch::vdot_u32`]."]
-    #[inline(always)]
-    pub fn vdot_u32(self, a: uint32x2_t, b: uint8x8_t, c: uint8x8_t) -> uint32x2_t {
-        unsafe { vdot_u32(a, b, c) }
-    }
-    #[doc = "See [`arch::vdotq_u32`]."]
-    #[inline(always)]
-    pub fn vdotq_u32(self, a: uint32x4_t, b: uint8x16_t, c: uint8x16_t) -> uint32x4_t {
-        unsafe { vdotq_u32(a, b, c) }
-    }
     #[doc = "See [`arch::vdup_lane_f32`]."]
     #[inline(always)]
     pub fn vdup_lane_f32<const N: i32>(self, a: float32x2_t) -> float32x2_t {
@@ -12824,16 +12764,6 @@ impl Neon {
     #[inline(always)]
     pub fn vmlsl_u32(self, a: uint64x2_t, b: uint32x2_t, c: uint32x2_t) -> uint64x2_t {
         unsafe { vmlsl_u32(a, b, c) }
-    }
-    #[doc = "See [`arch::vmmlaq_s32`]."]
-    #[inline(always)]
-    pub fn vmmlaq_s32(self, a: int32x4_t, b: int8x16_t, c: int8x16_t) -> int32x4_t {
-        unsafe { vmmlaq_s32(a, b, c) }
-    }
-    #[doc = "See [`arch::vmmlaq_u32`]."]
-    #[inline(always)]
-    pub fn vmmlaq_u32(self, a: uint32x4_t, b: uint8x16_t, c: uint8x16_t) -> uint32x4_t {
-        unsafe { vmmlaq_u32(a, b, c) }
     }
     #[doc = "See [`arch::vmov_n_f32`]."]
     #[inline(always)]
@@ -18170,26 +18100,6 @@ impl Neon {
     pub fn vsubw_u32(self, a: uint64x2_t, b: uint32x2_t) -> uint64x2_t {
         unsafe { vsubw_u32(a, b) }
     }
-    #[doc = "See [`arch::vsudot_lane_s32`]."]
-    #[inline(always)]
-    pub fn vsudot_lane_s32<const LANE: i32>(
-        self,
-        a: int32x2_t,
-        b: int8x8_t,
-        c: uint8x8_t,
-    ) -> int32x2_t {
-        unsafe { vsudot_lane_s32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vsudotq_lane_s32`]."]
-    #[inline(always)]
-    pub fn vsudotq_lane_s32<const LANE: i32>(
-        self,
-        a: int32x4_t,
-        b: int8x16_t,
-        c: uint8x8_t,
-    ) -> int32x4_t {
-        unsafe { vsudotq_lane_s32::<LANE>(a, b, c) }
-    }
     #[doc = "See [`arch::vtrn_f32`]."]
     #[inline(always)]
     pub fn vtrn_f32(self, a: float32x2_t, b: float32x2_t) -> float32x2x2_t {
@@ -18359,41 +18269,6 @@ impl Neon {
     #[inline(always)]
     pub fn vtstq_u32(self, a: uint32x4_t, b: uint32x4_t) -> uint32x4_t {
         unsafe { vtstq_u32(a, b) }
-    }
-    #[doc = "See [`arch::vusdot_lane_s32`]."]
-    #[inline(always)]
-    pub fn vusdot_lane_s32<const LANE: i32>(
-        self,
-        a: int32x2_t,
-        b: uint8x8_t,
-        c: int8x8_t,
-    ) -> int32x2_t {
-        unsafe { vusdot_lane_s32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vusdotq_lane_s32`]."]
-    #[inline(always)]
-    pub fn vusdotq_lane_s32<const LANE: i32>(
-        self,
-        a: int32x4_t,
-        b: uint8x16_t,
-        c: int8x8_t,
-    ) -> int32x4_t {
-        unsafe { vusdotq_lane_s32::<LANE>(a, b, c) }
-    }
-    #[doc = "See [`arch::vusdot_s32`]."]
-    #[inline(always)]
-    pub fn vusdot_s32(self, a: int32x2_t, b: uint8x8_t, c: int8x8_t) -> int32x2_t {
-        unsafe { vusdot_s32(a, b, c) }
-    }
-    #[doc = "See [`arch::vusdotq_s32`]."]
-    #[inline(always)]
-    pub fn vusdotq_s32(self, a: int32x4_t, b: uint8x16_t, c: int8x16_t) -> int32x4_t {
-        unsafe { vusdotq_s32(a, b, c) }
-    }
-    #[doc = "See [`arch::vusmmlaq_s32`]."]
-    #[inline(always)]
-    pub fn vusmmlaq_s32(self, a: int32x4_t, b: uint8x16_t, c: int8x16_t) -> int32x4_t {
-        unsafe { vusmmlaq_s32(a, b, c) }
     }
     #[doc = "See [`arch::vuzp_f32`]."]
     #[inline(always)]

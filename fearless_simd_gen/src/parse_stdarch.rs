@@ -30,6 +30,48 @@ fn contains_literal(tokens: &TokenStream, target: &str) -> bool {
     false
 }
 
+/// Recursively check if a token stream contains a specific identifier.
+fn contains_ident(tokens: &TokenStream, target: &str) -> bool {
+    for token in tokens.clone() {
+        match token {
+            TokenTree::Ident(ident) if ident == target => return true,
+            TokenTree::Group(group) => {
+                if contains_ident(&group.stream(), target) {
+                    return true;
+                }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
+/// Recursively check if a token stream contains `not(target_arch = "arm")`.
+fn contains_not_target_arch_arm(tokens: &TokenStream) -> bool {
+    let tokens: Vec<_> = tokens.clone().into_iter().collect();
+    for (i, token) in tokens.iter().enumerate() {
+        match token {
+            TokenTree::Ident(ident) if ident == "not" => {
+                // Check the next token is a group with target_arch = "arm"
+                if let Some(TokenTree::Group(group)) = tokens.get(i + 1) {
+                    let inner = group.stream();
+                    if contains_ident(&inner, "target_arch") && contains_literal(&inner, "\"arm\"")
+                    {
+                        return true;
+                    }
+                }
+            }
+            TokenTree::Group(group) => {
+                if contains_not_target_arch_arm(&group.stream()) {
+                    return true;
+                }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
 /// A visitor that extracts intrinsic functions from a Rust file.
 struct IntrinsicVisitor {
     intrinsics: Vec<ItemFn>,
@@ -65,7 +107,7 @@ impl<'ast> Visit<'ast> for IntrinsicVisitor {
         // Skip functions that don't enable the target feature we're looking for. This should filter out non-intrinsics.
         let mut target_features = Vec::new();
         for attr in &node.attrs {
-            // Skip unstable intrinsics
+            // Skip directly unstable intrinsics
             if attr.path().is_ident("unstable") {
                 return;
             }
@@ -74,6 +116,17 @@ impl<'ast> Visit<'ast> for IntrinsicVisitor {
             // Check for `since = "CURRENT_RUSTC_VERSION"` in both direct #[stable] and #[cfg_attr(..., stable(...))]
             if attr.path().is_ident("stable") || attr.path().is_ident("cfg_attr") {
                 if contains_literal(&attr.meta.to_token_stream(), "\"CURRENT_RUSTC_VERSION\"") {
+                    return;
+                }
+            }
+
+            // Skip intrinsics that are unstable on non-ARM32 platforms:
+            // #[cfg_attr(not(target_arch = "arm"), unstable(...))]
+            // But keep intrinsics that are only unstable on ARM32:
+            // #[cfg_attr(target_arch = "arm", unstable(...))]
+            if attr.path().is_ident("cfg_attr") {
+                let tokens = attr.meta.to_token_stream();
+                if contains_not_target_arch_arm(&tokens) && contains_ident(&tokens, "unstable") {
                     return;
                 }
             }
