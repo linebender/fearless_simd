@@ -107,17 +107,26 @@ pub(crate) trait Level {
         let vectorize_body = if let Some(target_features) = self.enabled_target_features() {
             let vectorize = format_ident!("vectorize_{}", self.name().to_ascii_lowercase());
             quote! {
+                // This function is deliberately not marked #[inline]:
+                // The closure passed to it is already required to be #[inline(always)],
+                // so this wrapper is the only opportunity for the compiler to make inlining decisions.
                 #[target_feature(enable = #target_features)]
-                #[inline]
                 unsafe fn #vectorize<F: FnOnce() -> R, R>(f: F) -> R {
                     f()
                 }
                 unsafe { #vectorize(f) }
             }
         } else {
-            // If this SIMD level doesn't do runtime feature detection/enabling, just call the inner function as-is
+            // This SIMD level doesn't do runtime feature detection/enabling, so we could just call the passed closure as-is.
+            //
+            // But the inner function is required to be annotated `#[inline(always)]`,
+            // so we wrap it in a function that isn't `#[inline(always)]`
+            // to let the compiler make its own inlining decisions, as opposed to forcing it to inline everything.
             quote! {
-                f()
+                fn vectorize_inner<F: FnOnce() -> R, R>(f: F) -> R {
+                    f()
+                }
+                vectorize_inner(f)
             }
         };
 
