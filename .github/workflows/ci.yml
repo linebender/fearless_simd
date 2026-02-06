@@ -322,7 +322,7 @@ jobs:
         # cortex-a53 is the baseline Aarch64 chip
         run: cargo test $CARGO_TEST_ARGS
         env:
-          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: "qemu-aarch64 -cpu cortex-a53"
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER: "qemu-x86_64"
 
   test-nightly-asan:
     name: cargo test with Address Sanitizer
