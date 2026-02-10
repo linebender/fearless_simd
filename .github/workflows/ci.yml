@@ -312,7 +312,7 @@ jobs:
           save-if: ${{ github.event_name != 'merge_group' }}
 
       - name: install QEMU
-        run: sudo apt install qemu-user
+        run: sudo apt-get update && sudo apt-get install -y qemu-user
 
       # build the tests outside the emulator, otherwise this job would be very slow
       - name: build tests
