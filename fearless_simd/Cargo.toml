@@ -1,6 +1,6 @@
 [package]
 name = "fearless_simd"
-version = "0.3.0"
+version = "0.4.0"
 license.workspace = true
 edition.workspace = true
 repository.workspace = true
