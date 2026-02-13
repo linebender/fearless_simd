@@ -6,12 +6,14 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-# Changelog
-
-The latest published Fearless SIMD release is [0.3.0](#030-2025-10-14) which was released on 2025-10-14.
-You can find its changes [documented below](#030-2025-10-14).
+The latest published Fearless SIMD release is [0.4.0](#040-2026-02-13) which was released on 2026-02-13.
+You can find its changes [documented below](#040-2026-02-13).
 
 ## [Unreleased]
+
+This release has an [MSRV][] of 1.88.
+
+## [0.4.0][] (2026-02-13)
 
 This release has an [MSRV][] of 1.88.
 
@@ -24,17 +26,19 @@ This release has an [MSRV][] of 1.88.
 - The bitwise "not" operation on integer vector types. ([#130][] by [@valadaptive][])
 - The `from_fn` method on vector types. ([#137][] by [@valadaptive][])
 - The `load_interleaved` and `store_interleaved` operations now use native intrinsics on x86, instead of using the fallback implementations. ([#140][] by [@valadaptive][])
+- Add support for `relaxed_simd` operations in WebAssembly. ([#143][] by [@valadaptive][])
 - The `ceil` and `round_ties_even` operations on floating-point vector types. (Rust's `round` operation rounds away from zero in the case of ties. Many architectures do not natively implement that behavior, so it's omitted.) ([#145][] by [@valadaptive][])
 - A `prelude` module, which exports all the traits in the library but not the types. ([#149][] by [@valadaptive][])
 - The `any_true`, `all_true`, `any_false`, and `all_false` methods on mask types. ([#141][] by [@valadaptive][])
 - Documentation for most traits, vector types, and operations. ([#154][] by [@valadaptive][])
 - A "shift left by vector" operation, to go with the existing "shift right by vector". ([#155][] by [@valadaptive][])
 - "Precise" float-to-integer conversions, which saturate out-of-bounds results and convert NaN to 0 across all platforms. ([#167][] by [@valadaptive][])
+- Add the `slide` and `slide_within_blocks` methods for shifting elements within a vector. ([#164][] by [@valadaptive][])
 - The `Level::is_fallback` method, which lets you check if the current SIMD level is the scalar fallback. This works even if `Level::Fallback` is not compiled in, always returning false in that case. ([#168][] by [@valadaptive][])
 - Added `store_array` methods to store SIMD vectors back to memory explicitly using intrinsics. ([#181][] by [@LaurenzV][])
 
 ### Fixed
-
+- Improved the performance for load/store operations of vectors. ([#185][] by [@valadaptive][])
 - Integer equality comparisons now function properly on x86. Previously, they performed "greater than" comparisons.
   ([#115][] by [@valadaptive][])
 - All float-to-integer and integer-to-float conversions are implemented properly on x86, including the precise versions. ([#134][] by [@valadaptive][])
@@ -42,6 +46,7 @@ This release has an [MSRV][] of 1.88.
 
 ### Changed
 
+- Breaking change: The AVX2 level now requires all features from the x86-64-v3 baseline. ([#188][] by [@Shnatsel][])
 - Breaking change: `Level::fallback` has been removed, replaced with `Level::baseline`. ([#105][] by [@DJMcNab][])
   This corresponds with a change to avoid compiling in support for the fallback level on compilation targets which don't
   require it; this is most impactful for binary size on WASM, Apple Silicon Macs or Android.
@@ -158,20 +163,25 @@ No changelog was kept for this release.
 [#137]: https://github.com/linebender/fearless_simd/pull/137
 [#140]: https://github.com/linebender/fearless_simd/pull/140
 [#141]: https://github.com/linebender/fearless_simd/pull/141
+[#143]: https://github.com/linebender/fearless_simd/pull/143
 [#145]: https://github.com/linebender/fearless_simd/pull/145
 [#149]: https://github.com/linebender/fearless_simd/pull/149
 [#154]: https://github.com/linebender/fearless_simd/pull/154
 [#155]: https://github.com/linebender/fearless_simd/pull/155
 [#158]: https://github.com/linebender/fearless_simd/pull/158
 [#159]: https://github.com/linebender/fearless_simd/pull/159
+[#164]: https://github.com/linebender/fearless_simd/pull/164
 [#167]: https://github.com/linebender/fearless_simd/pull/167
 [#168]: https://github.com/linebender/fearless_simd/pull/168
 [#170]: https://github.com/linebender/fearless_simd/pull/170
 [#176]: https://github.com/linebender/fearless_simd/pull/176
 [#180]: https://github.com/linebender/fearless_simd/pull/180
 [#181]: https://github.com/linebender/fearless_simd/pull/181
+[#185]: https://github.com/linebender/fearless_simd/pull/185
+[#188]: https://github.com/linebender/fearless_simd/pull/188
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/linebender/fearless_simd/compare/v0.4.0...v0.3.0
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0
 [0.1.1]: https://github.com/linebender/fearless_simd/compare/d683506b50721d35745cfc098527e007f1cb3425...e54304c66fc3e42d9604ddc7775b3345b589ce1a
