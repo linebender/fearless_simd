@@ -179,6 +179,7 @@ pub mod wasm32 {
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub mod x86 {
     pub use crate::generated::Avx2;
+    pub use crate::generated::Avx512;
     pub use crate::generated::Sse4_2;
 }
 
@@ -245,8 +246,47 @@ pub enum Level {
     Sse4_2(Sse4_2),
     /// The AVX2 and FMA instruction set on (32 and 64 bit) x86, plus the other instructions
     /// guaranteed to be available on AVX2+FMA CPUs. Also known as x86-64-v3.
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    // We don't need to support this if the compilation target definitely supports something better.
+    #[cfg(all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        not(all(
+            target_feature = "adx",
+            target_feature = "aes",
+            target_feature = "avx512bitalg",
+            target_feature = "avx512bw",
+            target_feature = "avx512cd",
+            target_feature = "avx512dq",
+            target_feature = "avx512f",
+            target_feature = "avx512ifma",
+            target_feature = "avx512vbmi",
+            target_feature = "avx512vbmi2",
+            target_feature = "avx512vl",
+            target_feature = "avx512vnni",
+            target_feature = "avx512vpopcntdq",
+            target_feature = "bmi1",
+            target_feature = "bmi2",
+            target_feature = "cmpxchg16b",
+            target_feature = "fma",
+            target_feature = "gfni",
+            target_feature = "lzcnt",
+            target_feature = "movbe",
+            target_feature = "pclmulqdq",
+            target_feature = "popcnt",
+            target_feature = "rdrand",
+            target_feature = "rdseed",
+            target_feature = "sha",
+            target_feature = "vaes",
+            target_feature = "vpclmulqdq",
+            target_feature = "xsave",
+            target_feature = "xsavec",
+            target_feature = "xsaveopt",
+            target_feature = "xsaves",
+        ))
+    ))]
     Avx2(Avx2),
+    /// The AVX-512 instruction set on (32 and 64 bit) x86 with the Ice Lake feature set.
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    Avx512(Avx512),
     // If new variants are added, make sure to handle them in `Level::dispatch`
     // and `dispatch!()`
 }
@@ -295,12 +335,47 @@ impl Level {
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
+            // Ice Lake AVX-512 feature set. The following features are implied by avx512f
+            // and do not need to be spelled out: avx, avx2, f16c, fxsr, sse, sse2, sse3, sse4.1, sse4.2, ssse3
+            if std::arch::is_x86_feature_detected!("adx")
+                && std::arch::is_x86_feature_detected!("aes")
+                && std::arch::is_x86_feature_detected!("avx512bitalg")
+                && std::arch::is_x86_feature_detected!("avx512bw")
+                && std::arch::is_x86_feature_detected!("avx512cd")
+                && std::arch::is_x86_feature_detected!("avx512dq")
+                && std::arch::is_x86_feature_detected!("avx512f")
+                && std::arch::is_x86_feature_detected!("avx512ifma")
+                && std::arch::is_x86_feature_detected!("avx512vbmi")
+                && std::arch::is_x86_feature_detected!("avx512vbmi2")
+                && std::arch::is_x86_feature_detected!("avx512vl")
+                && std::arch::is_x86_feature_detected!("avx512vnni")
+                && std::arch::is_x86_feature_detected!("avx512vpopcntdq")
+                && std::arch::is_x86_feature_detected!("bmi1")
+                && std::arch::is_x86_feature_detected!("bmi2")
+                && std::arch::is_x86_feature_detected!("cmpxchg16b")
+                && std::arch::is_x86_feature_detected!("fma")
+                && std::arch::is_x86_feature_detected!("gfni")
+                && std::arch::is_x86_feature_detected!("lzcnt")
+                && std::arch::is_x86_feature_detected!("movbe")
+                && std::arch::is_x86_feature_detected!("pclmulqdq")
+                && std::arch::is_x86_feature_detected!("popcnt")
+                && std::arch::is_x86_feature_detected!("rdrand")
+                && std::arch::is_x86_feature_detected!("rdseed")
+                && std::arch::is_x86_feature_detected!("sha")
+                && std::arch::is_x86_feature_detected!("vaes")
+                && std::arch::is_x86_feature_detected!("vpclmulqdq")
+                && std::arch::is_x86_feature_detected!("xsave")
+                && std::arch::is_x86_feature_detected!("xsavec")
+                && std::arch::is_x86_feature_detected!("xsaveopt")
+                && std::arch::is_x86_feature_detected!("xsaves")
+            {
+                return unsafe { Self::Avx512(Avx512::new_unchecked()) };
             // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
             // However, the following features are implied by avx2 and do not need to be spelled out:
             // avx,fxsr,sse,sse2,sse3,sse4.1,sse4.2,ssse3
             // This can be verified by running:
             // rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'
-            if std::arch::is_x86_feature_detected!("avx2")
+            } else if std::arch::is_x86_feature_detected!("avx2")
                 && std::arch::is_x86_feature_detected!("bmi1")
                 && std::arch::is_x86_feature_detected!("bmi2")
                 && std::arch::is_x86_feature_detected!("cmpxchg16b")
@@ -311,6 +386,7 @@ impl Level {
                 && std::arch::is_x86_feature_detected!("popcnt")
                 && std::arch::is_x86_feature_detected!("xsave")
             {
+                #[cfg(not(target_feature = "avx512f"))]
                 return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
             // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
@@ -506,7 +582,33 @@ impl Level {
             reason = "On machines which statically support `avx2`, there is only one variant."
         )]
         match self {
+            // Safety: The Avx512 struct represents AVX-512 target features being enabled.
+            // AVX-512 implicitly enables the "avx2" target feature, which is
+            // the only target feature required to make our Avx2 token.
+            Self::Avx512(_avx512) => unsafe { Some(Avx2::new_unchecked()) },
+            #[cfg(not(target_feature = "avx512f"))]
             Self::Avx2(avx2) => Some(avx2),
+            _ => None,
+        }
+    }
+
+    /// If this is a proof that AVX-512 (or better) is available, access that instruction set.
+    ///
+    /// This method should be preferred over matching against the `Avx512` variant of self,
+    /// because if Fearless SIMD gets support for an instruction set which is a superset of AVX-512,
+    /// this method will return a value even if that "better" instruction set is available.
+    ///
+    /// This can be used in combination with the `safe_wrappers` feature to gain checked access to
+    /// the level-specific SIMD capabilities.
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[inline]
+    pub fn as_avx512(self) -> Option<Avx512> {
+        #[allow(
+            unreachable_patterns,
+            reason = "On machines which statically support `avx512f`, there is only one variant."
+        )]
+        match self {
+            Self::Avx512(avx512) => Some(avx512),
             _ => None,
         }
     }
@@ -553,6 +655,8 @@ impl Level {
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
+            #[cfg(target_feature = "avx512f")]
+            return unsafe { Self::Avx512(Avx512::new_unchecked()) };
             #[cfg(all(
                 target_feature = "avx2",
                 target_feature = "bmi1",
@@ -563,7 +667,8 @@ impl Level {
                 target_feature = "lzcnt",
                 target_feature = "movbe",
                 target_feature = "popcnt",
-                target_feature = "xsave"
+                target_feature = "xsave",
+                not(target_feature = "avx512f")
             ))]
             return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             #[cfg(all(

@@ -39,6 +39,13 @@ pub(crate) trait Level {
     /// The full path to the `core_arch` token wrapped by this SIMD level token.
     fn token_inner(&self) -> TokenStream;
 
+    /// Whether to generate From/SimdFrom conversions for arch types at this level.
+    /// This should return false if another level already provides these conversions
+    /// (e.g., AVX-512 with native_width=256 should return false since AVX2 provides them).
+    fn generate_arch_conversions(&self) -> bool {
+        true
+    }
+
     /// Any additional imports or supporting code necessary for the module (for instance, importing
     /// implementation-specific functions from `core::arch`).
     fn make_module_prelude(&self) -> TokenStream;
@@ -178,6 +185,10 @@ pub(crate) trait Level {
     }
 
     fn make_type_impl(&self) -> TokenStream {
+        // Skip generating conversions if another level already provides them
+        if !self.generate_arch_conversions() {
+            return quote! {};
+        }
         let native_width = self.native_width();
         let max_block_size = self.max_block_size();
         let mut result = vec![];

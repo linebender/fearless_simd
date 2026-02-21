@@ -20,6 +20,7 @@ use quote::{ToTokens as _, format_ident, quote};
 pub(crate) enum X86 {
     Sse4_2,
     Avx2,
+    Avx512,
 }
 
 impl Level for X86 {
@@ -27,6 +28,7 @@ impl Level for X86 {
         match self {
             Self::Sse4_2 => "Sse4_2",
             Self::Avx2 => "Avx2",
+            Self::Avx512 => "Avx512",
         }
     }
 
@@ -34,6 +36,9 @@ impl Level for X86 {
         match self {
             Self::Sse4_2 => 128,
             Self::Avx2 => 256,
+            // TODO: Use 512-bit native width once AVX-512 specific operations are implemented.
+            // For now, keep the same as AVX2 to generate equivalent code.
+            Self::Avx512 => 256,
         }
     }
 
@@ -45,7 +50,19 @@ impl Level for X86 {
         Some(match self {
             Self::Sse4_2 => "sse4.2,cmpxchg16b,popcnt",
             Self::Avx2 => "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave",
+            // Ice Lake feature set (avx512f implies avx, avx2, f16c, fxsr, sse, sse2, sse3, sse4.1, sse4.2, ssse3)
+            Self::Avx512 => "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves",
         })
+    }
+
+    fn generate_arch_conversions(&self) -> bool {
+        match self {
+            Self::Sse4_2 => true,
+            Self::Avx2 => true,
+            // AVX-512 uses the same native_width as AVX2 (256), so AVX2 already provides
+            // the From/SimdFrom conversions for the arch types.
+            Self::Avx512 => false,
+        }
     }
 
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
@@ -63,6 +80,7 @@ impl Level for X86 {
         match self {
             Self::Sse4_2 => r#"The SIMD token for the "SSE4.2" level."#,
             Self::Avx2 => r#"The SIMD token for the "AVX2" and "FMA" level."#,
+            Self::Avx512 => r#"The SIMD token for the "AVX-512" level (Ice Lake feature set)."#,
         }
     }
 
@@ -70,6 +88,7 @@ impl Level for X86 {
         match self {
             Self::Sse4_2 => quote!(crate::core_arch::x86::Sse4_2),
             Self::Avx2 => quote!(crate::core_arch::x86::Avx2),
+            Self::Avx512 => quote!(crate::core_arch::x86::Avx512),
         }
     }
 
@@ -86,7 +105,7 @@ impl Level for X86 {
         let alignr_helpers = self.dyn_alignr_helpers();
         let slide_helpers = match self {
             Self::Sse4_2 => Self::sse42_slide_helpers(),
-            Self::Avx2 => Self::avx2_slide_helpers(),
+            Self::Avx2 | Self::Avx512 => Self::avx2_slide_helpers(),
         };
 
         quote! {
@@ -107,6 +126,14 @@ impl Level for X86 {
                 }
             },
             Self::Avx2 => quote! {
+                #[cfg(not(target_feature = "avx512f"))]
+                return Level::#level_tok(self);
+                #[cfg(target_feature = "avx512f")]
+                {
+                    Level::baseline()
+                }
+            },
+            Self::Avx512 => quote! {
                 Level::#level_tok(self)
             },
         }
@@ -137,6 +164,19 @@ impl Level for X86 {
                 pub const unsafe fn new_unchecked() -> Self {
                     Self {
                         avx2: unsafe { crate::core_arch::x86::Avx2::new_unchecked() },
+                    }
+                }
+            },
+            Self::Avx512 => quote! {
+                /// Create a SIMD token.
+                ///
+                /// # Safety
+                ///
+                /// The AVX-512 (Ice Lake feature set) CPU features must be available.
+                #[inline]
+                pub const unsafe fn new_unchecked() -> Self {
+                    Self {
+                        avx512: unsafe { crate::core_arch::x86::Avx512::new_unchecked() },
                     }
                 }
             },
@@ -339,7 +379,7 @@ impl X86 {
         let expr = match method {
             "widen" => {
                 match (self, dst_width, vec_ty.n_bits()) {
-                    (Self::Avx2, 256, 128) => {
+                    (Self::Avx2 | Self::Avx512, 256, 128) => {
                         let extend = extend_intrinsic(
                             vec_ty.scalar,
                             vec_ty.scalar_bits,
@@ -352,7 +392,7 @@ impl X86 {
                             }
                         }
                     }
-                    (Self::Avx2, 512, 256) => {
+                    (Self::Avx2 | Self::Avx512, 512, 256) => {
                         let extend = extend_intrinsic(
                             vec_ty.scalar,
                             vec_ty.scalar_bits,
@@ -400,7 +440,7 @@ impl X86 {
             }
             "narrow" => {
                 match (self, dst_width, vec_ty.n_bits()) {
-                    (Self::Avx2, 128, 256) => {
+                    (Self::Avx2 | Self::Avx512, 128, 256) => {
                         let mask = match target_ty.scalar_bits {
                             8 => {
                                 quote! { 0, 2, 4, 6, 8, 10, 12, 14, -1, -1, -1, -1, -1, -1, -1, -1 }
@@ -418,7 +458,7 @@ impl X86 {
                             }
                         }
                     }
-                    (Self::Avx2, 256, 512) => {
+                    (Self::Avx2 | Self::Avx512, 256, 512) => {
                         let mask = set1_intrinsic(&VecType::new(
                             vec_ty.scalar,
                             vec_ty.scalar_bits,
@@ -506,7 +546,7 @@ impl X86 {
                     }
                 }
             }
-            "shlv" | "shrv" if *self == Self::Avx2 && vec_ty.scalar_bits >= 32 => {
+            "shlv" | "shrv" if (*self == Self::Avx2 || *self == Self::Avx512) && vec_ty.scalar_bits >= 32 => {
                 let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
                 let name = match (method, vec_ty.scalar) {
                     ("shrv", ScalarType::Int) => "srav",
@@ -610,7 +650,7 @@ impl X86 {
         vec_ty: &VecType,
     ) -> TokenStream {
         match method {
-            "mul_add" if *self == Self::Avx2 => {
+            "mul_add" if *self == Self::Avx2 || *self == Self::Avx512 => {
                 let intrinsic = simple_intrinsic("fmadd", vec_ty);
                 quote! {
                     #method_sig {
@@ -618,7 +658,7 @@ impl X86 {
                     }
                 }
             }
-            "mul_sub" if *self == Self::Avx2 => {
+            "mul_sub" if *self == Self::Avx2 || *self == Self::Avx512 => {
                 let intrinsic = simple_intrinsic("fmsub", vec_ty);
                 quote! {
                     #method_sig {
@@ -691,7 +731,7 @@ impl X86 {
         vec_ty: &VecType,
         half_ty: &VecType,
     ) -> TokenStream {
-        if *self == Self::Avx2 && half_ty.n_bits() == 128 {
+        if (*self == Self::Avx2 || *self == Self::Avx512) && half_ty.n_bits() == 128 {
             let extract_op = match vec_ty.scalar {
                 ScalarType::Float => "extractf128",
                 _ => "extracti128",
@@ -718,7 +758,7 @@ impl X86 {
         vec_ty: &VecType,
         combined_ty: &VecType,
     ) -> TokenStream {
-        if *self == Self::Avx2 && combined_ty.n_bits() == 256 {
+        if (*self == Self::Avx2 || *self == Self::Avx512) && combined_ty.n_bits() == 256 {
             let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
                 (ScalarType::Float, 32) => "m128",
                 (ScalarType::Float, 64) => "m128d",
@@ -981,7 +1021,7 @@ impl X86 {
 
                 format_ident!("cross_block_alignr_128x{}", vec_ty.n_bits() / 128)
             }
-            (AcrossBlocks, 256 | 512, Self::Avx2) => {
+            (AcrossBlocks, 256 | 512, Self::Avx2 | Self::Avx512) => {
                 format_ident!("cross_block_alignr_256x{}", vec_ty.n_bits() / 256)
             }
             _ => unimplemented!(),
@@ -1567,7 +1607,7 @@ impl X86 {
 
         let vec_widths: &[usize] = match self {
             Self::Sse4_2 => &[128],
-            Self::Avx2 => &[128, 256],
+            Self::Avx2 | Self::Avx512 => &[128, 256],
         };
 
         for vec_ty in vec_widths

@@ -86,7 +86,12 @@ impl Simd for Avx2 {
     type mask64s = mask64x4<Self>;
     #[inline(always)]
     fn level(self) -> Level {
-        Level::Avx2(self)
+        #[cfg(not(target_feature = "avx512f"))]
+        return Level::Avx2(self);
+        #[cfg(target_feature = "avx512f")]
+        {
+            Level::baseline()
+        }
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
