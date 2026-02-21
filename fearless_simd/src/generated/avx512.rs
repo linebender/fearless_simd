@@ -5900,10 +5900,10 @@ impl Simd for Avx512 {
     fn unzip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         unsafe {
             let mask = _mm512_set4_epi64(
-                0x0F0D0B0907050301u64 as i64,
-                0x0E0C0A0806040200u64 as i64,
-                0x0F0D0B0907050301u64 as i64,
-                0x0E0C0A0806040200u64 as i64,
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
             );
             let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
             let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
@@ -5916,10 +5916,10 @@ impl Simd for Avx512 {
     fn unzip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         unsafe {
             let mask = _mm512_set4_epi64(
-                0x0F0D0B0907050301u64 as i64,
-                0x0E0C0A0806040200u64 as i64,
-                0x0F0D0B0907050301u64 as i64,
-                0x0E0C0A0806040200u64 as i64,
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
             );
             let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
             let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
@@ -6190,10 +6190,10 @@ impl Simd for Avx512 {
     fn unzip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         unsafe {
             let mask = _mm512_set4_epi64(
-                0x0F0D0B0907050301u64 as i64,
-                0x0E0C0A0806040200u64 as i64,
-                0x0F0D0B0907050301u64 as i64,
-                0x0E0C0A0806040200u64 as i64,
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
             );
             let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
             let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
@@ -6206,10 +6206,10 @@ impl Simd for Avx512 {
     fn unzip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         unsafe {
             let mask = _mm512_set4_epi64(
-                0x0F0D0B0907050301u64 as i64,
-                0x0E0C0A0806040200u64 as i64,
-                0x0F0D0B0907050301u64 as i64,
-                0x0E0C0A0806040200u64 as i64,
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
             );
             let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
             let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
@@ -6660,10 +6660,10 @@ impl Simd for Avx512 {
     fn unzip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         unsafe {
             let mask = _mm512_set4_epi64(
-                0x0F0E0B0A07060302u64 as i64,
-                0x0D0C090805040100u64 as i64,
-                0x0F0E0B0A07060302u64 as i64,
-                0x0D0C090805040100u64 as i64,
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
             );
             let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
             let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
@@ -6676,10 +6676,10 @@ impl Simd for Avx512 {
     fn unzip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         unsafe {
             let mask = _mm512_set4_epi64(
-                0x0F0E0B0A07060302u64 as i64,
-                0x0D0C090805040100u64 as i64,
-                0x0F0E0B0A07060302u64 as i64,
-                0x0D0C090805040100u64 as i64,
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
             );
             let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
             let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
@@ -6923,10 +6923,10 @@ impl Simd for Avx512 {
     fn unzip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         unsafe {
             let mask = _mm512_set4_epi64(
-                0x0F0E0B0A07060302u64 as i64,
-                0x0D0C090805040100u64 as i64,
-                0x0F0E0B0A07060302u64 as i64,
-                0x0D0C090805040100u64 as i64,
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
             );
             let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
             let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
@@ -6939,10 +6939,10 @@ impl Simd for Avx512 {
     fn unzip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         unsafe {
             let mask = _mm512_set4_epi64(
-                0x0F0E0B0A07060302u64 as i64,
-                0x0D0C090805040100u64 as i64,
-                0x0F0E0B0A07060302u64 as i64,
-                0x0D0C090805040100u64 as i64,
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
             );
             let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
             let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);

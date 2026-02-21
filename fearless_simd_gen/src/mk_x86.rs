@@ -1414,8 +1414,8 @@ impl X86 {
                         // For 8-bit elements: move even indices to low half, odd to high half
                         quote! {
                             _mm512_set4_epi64(
-                                0x0F0D0B0907050301u64 as i64, 0x0E0C0A0806040200u64 as i64,
-                                0x0F0D0B0907050301u64 as i64, 0x0E0C0A0806040200u64 as i64
+                                0x0F0D0B0907050301u64.cast_signed(), 0x0E0C0A0806040200u64.cast_signed(),
+                                0x0F0D0B0907050301u64.cast_signed(), 0x0E0C0A0806040200u64.cast_signed()
                             )
                         }
                     }
@@ -1423,8 +1423,8 @@ impl X86 {
                         // For 16-bit elements: move even indices to low half, odd to high half
                         quote! {
                             _mm512_set4_epi64(
-                                0x0F0E0B0A07060302u64 as i64, 0x0D0C090805040100u64 as i64,
-                                0x0F0E0B0A07060302u64 as i64, 0x0D0C090805040100u64 as i64
+                                0x0F0E0B0A07060302u64.cast_signed(), 0x0D0C090805040100u64.cast_signed(),
+                                0x0F0E0B0A07060302u64.cast_signed(), 0x0D0C090805040100u64.cast_signed()
                             )
                         }
                     }
