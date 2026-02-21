@@ -3348,12 +3348,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
-        unsafe {
-            let (a0, a1) = self.split_u8x32(a);
-            let high = _mm256_cvtepu8_epi16(a0.into()).simd_into(self);
-            let low = _mm256_cvtepu8_epi16(a1.into()).simd_into(self);
-            self.combine_u16x16(high, low)
-        }
+        unsafe { _mm512_cvtepu8_epi16(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self> {
@@ -5575,10 +5570,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(self.select_f32x8(a0, b0, c0), self.select_f32x8(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi32_mask(a.into());
+            _mm512_mask_blend_ps(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>) {
@@ -5591,19 +5586,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f64x4(
-            self.reinterpret_f64_f32x8(a0),
-            self.reinterpret_f64_f32x8(a1),
-        )
+        unsafe { _mm512_castps_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(
-            self.reinterpret_i32_f32x8(a0),
-            self.reinterpret_i32_f32x8(a1),
-        )
+        unsafe { _mm512_castps_si512(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
@@ -5652,16 +5639,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_f32x8(a0), self.reinterpret_u8_f32x8(a1))
+        unsafe { _mm512_castps_si512(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_f32x8(a0),
-            self.reinterpret_u32_f32x8(a1),
-        )
+        unsafe { _mm512_castps_si512(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
@@ -5808,8 +5790,17 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.shl_i8x32(a0, shift), self.shl_i8x32(a1, shift))
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+            let lo_256 = _mm512_castsi512_si256(val);
+            let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
+            let lo_16 = _mm512_cvtepi8_epi16(lo_256);
+            let hi_16 = _mm512_cvtepi8_epi16(hi_256);
+            let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
+            let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
+            _mm512_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -5817,8 +5808,17 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.shr_i8x32(a0, shift), self.shr_i8x32(a1, shift))
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+            let lo_256 = _mm512_castsi512_si256(val);
+            let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
+            let lo_16 = _mm512_cvtepi8_epi16(lo_256);
+            let hi_16 = _mm512_cvtepi8_epi16(hi_256);
+            let lo_shifted = _mm512_sra_epi16(lo_16, shift_count);
+            let hi_shifted = _mm512_sra_epi16(hi_16, shift_count);
+            _mm512_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -5904,10 +5904,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn select_i8x64(self, a: mask8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        let (c0, c1) = self.split_i8x64(c);
-        self.combine_i8x32(self.select_i8x32(a0, b0, c0), self.select_i8x32(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi8_mask(a.into());
+            _mm512_mask_blend_epi8(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -5932,16 +5932,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u8x32(self.reinterpret_u8_i8x32(a0), self.reinterpret_u8_i8x32(a1))
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i8x32(a0),
-            self.reinterpret_u32_i8x32(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
@@ -6072,8 +6067,17 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.shl_u8x32(a0, shift), self.shl_u8x32(a1, shift))
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+            let lo_256 = _mm512_castsi512_si256(val);
+            let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
+            let lo_16 = _mm512_cvtepu8_epi16(lo_256);
+            let hi_16 = _mm512_cvtepu8_epi16(hi_256);
+            let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
+            let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
+            _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -6081,8 +6085,17 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.shr_u8x32(a0, shift), self.shr_u8x32(a1, shift))
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+            let lo_256 = _mm512_castsi512_si256(val);
+            let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
+            let lo_16 = _mm512_cvtepu8_epi16(lo_256);
+            let hi_16 = _mm512_cvtepu8_epi16(hi_256);
+            let lo_shifted = _mm512_srl_epi16(lo_16, shift_count);
+            let hi_shifted = _mm512_srl_epi16(hi_16, shift_count);
+            _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -6168,10 +6181,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn select_u8x64(self, a: mask8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        let (c0, c1) = self.split_u8x64(c);
-        self.combine_u8x32(self.select_u8x32(a0, b0, c0), self.select_u8x32(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi8_mask(a.into());
+            _mm512_mask_blend_epi8(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -6247,11 +6260,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u8x32(a0),
-            self.reinterpret_u32_u8x32(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_mask8x64(self, val: i8) -> mask8x64<Self> {
@@ -6368,13 +6377,10 @@ impl Simd for Avx512 {
         b: mask8x64<Self>,
         c: mask8x64<Self>,
     ) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        let (c0, c1) = self.split_mask8x64(c);
-        self.combine_mask8x32(
-            self.select_mask8x32(a0, b0, c0),
-            self.select_mask8x32(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi8_mask(a.into());
+            _mm512_mask_blend_epi8(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -6525,8 +6531,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.shl_i16x16(a0, shift), self.shl_i16x16(a1, shift))
+        unsafe {
+            _mm512_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -6534,8 +6541,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.shr_i16x16(a0, shift), self.shr_i16x16(a1, shift))
+        unsafe {
+            _mm512_sra_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -6621,13 +6629,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn select_i16x32(self, a: mask16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        let (c0, c1) = self.split_i16x32(c);
-        self.combine_i16x16(
-            self.select_i16x16(a0, b0, c0),
-            self.select_i16x16(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi16_mask(a.into());
+            _mm512_mask_blend_epi16(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -6652,19 +6657,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_i16x16(a0),
-            self.reinterpret_u8_i16x16(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i16x16(a0),
-            self.reinterpret_u32_i16x16(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
@@ -6784,8 +6781,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.shl_u16x16(a0, shift), self.shl_u16x16(a1, shift))
+        unsafe {
+            _mm512_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -6793,8 +6791,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.shr_u16x16(a0, shift), self.shr_u16x16(a1, shift))
+        unsafe {
+            _mm512_srl_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -6880,13 +6879,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn select_u16x32(self, a: mask16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        let (c0, c1) = self.split_u16x32(c);
-        self.combine_u16x16(
-            self.select_u16x16(a0, b0, c0),
-            self.select_u16x16(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi16_mask(a.into());
+            _mm512_mask_blend_epi16(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -6962,24 +6958,15 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
+        unsafe { _mm512_cvtepi16_epi8(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_u16x16(a0),
-            self.reinterpret_u8_u16x16(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u16x16(a0),
-            self.reinterpret_u32_u16x16(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: i16) -> mask16x32<Self> {
@@ -7096,13 +7083,10 @@ impl Simd for Avx512 {
         b: mask16x32<Self>,
         c: mask16x32<Self>,
     ) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        let (c0, c1) = self.split_mask16x32(c);
-        self.combine_mask16x16(
-            self.select_mask16x16(a0, b0, c0),
-            self.select_mask16x16(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi16_mask(a.into());
+            _mm512_mask_blend_epi16(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -7256,8 +7240,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.shl_i32x8(a0, shift), self.shl_i32x8(a1, shift))
+        unsafe {
+            _mm512_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -7265,8 +7250,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.shr_i32x8(a0, shift), self.shr_i32x8(a1, shift))
+        unsafe {
+            _mm512_sra_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -7348,10 +7334,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn select_i32x16(self, a: mask32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        let (c0, c1) = self.split_i32x16(c);
-        self.combine_i32x8(self.select_i32x8(a0, b0, c0), self.select_i32x8(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi32_mask(a.into());
+            _mm512_mask_blend_epi32(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -7376,16 +7362,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_i32x8(a0), self.reinterpret_u8_i32x8(a1))
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i32x8(a0),
-            self.reinterpret_u32_i32x8(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
@@ -7509,8 +7490,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.shl_u32x8(a0, shift), self.shl_u32x8(a1, shift))
+        unsafe {
+            _mm512_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -7518,8 +7500,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.shr_u32x8(a0, shift), self.shr_u32x8(a1, shift))
+        unsafe {
+            _mm512_srl_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -7601,10 +7584,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn select_u32x16(self, a: mask32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        let (c0, c1) = self.split_u32x16(c);
-        self.combine_u32x8(self.select_u32x8(a0, b0, c0), self.select_u32x8(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi32_mask(a.into());
+            _mm512_mask_blend_epi32(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -7670,8 +7653,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_u32x8(a0), self.reinterpret_u8_u32x8(a1))
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
@@ -7792,13 +7774,10 @@ impl Simd for Avx512 {
         b: mask32x16<Self>,
         c: mask32x16<Self>,
     ) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        let (c0, c1) = self.split_mask32x16(c);
-        self.combine_mask32x8(
-            self.select_mask32x8(a0, b0, c0),
-            self.select_mask32x8(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi32_mask(a.into());
+            _mm512_mask_blend_epi32(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -8074,10 +8053,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(self.select_f64x4(a0, b0, c0), self.select_f64x4(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi64_mask(a.into());
+            _mm512_mask_blend_pd(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
@@ -8090,11 +8069,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f32x8(
-            self.reinterpret_f32_f64x4(a0),
-            self.reinterpret_f32_f64x4(a1),
-        )
+        unsafe { _mm512_castpd_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: i64) -> mask64x8<Self> {
@@ -8211,13 +8186,10 @@ impl Simd for Avx512 {
         b: mask64x8<Self>,
         c: mask64x8<Self>,
     ) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        let (c0, c1) = self.split_mask64x8(c);
-        self.combine_mask64x4(
-            self.select_mask64x4(a0, b0, c0),
-            self.select_mask64x4(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi64_mask(a.into());
+            _mm512_mask_blend_epi64(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {

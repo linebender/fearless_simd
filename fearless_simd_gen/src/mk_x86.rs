@@ -49,7 +49,9 @@ impl Level for X86 {
             Self::Sse4_2 => "sse4.2,cmpxchg16b,popcnt",
             Self::Avx2 => "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave",
             // Ice Lake feature set (avx512f implies avx, avx2, f16c, fxsr, sse, sse2, sse3, sse4.1, sse4.2, ssse3)
-            Self::Avx512 => "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves",
+            Self::Avx512 => {
+                "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
+            }
         })
     }
 
@@ -61,21 +63,40 @@ impl Level for X86 {
             use OpSig::*;
             match &op.sig {
                 // These are implemented natively for 512-bit
-                Splat | Split { .. } | Combine { .. } | Cvt { .. } | MaskReduce { .. }
-                | Zip { .. } | Unzip { .. } | FromArray { .. } | AsArray { .. }
-                | StoreArray | FromBytes | ToBytes
-                | LoadInterleaved { .. } | StoreInterleaved { .. } => None,
+                Splat
+                | Split { .. }
+                | Combine { .. }
+                | Cvt { .. }
+                | MaskReduce { .. }
+                | Zip { .. }
+                | Unzip { .. }
+                | FromArray { .. }
+                | AsArray { .. }
+                | StoreArray
+                | FromBytes
+                | ToBytes
+                | LoadInterleaved { .. }
+                | StoreInterleaved { .. } => None,
 
                 // Slide operations - WithinBlocks can use generic, AcrossBlocks needs native impl
-                Slide { granularity: SlideGranularity::WithinBlocks } => Some(true),
-                Slide { granularity: SlideGranularity::AcrossBlocks } => None,
+                Slide {
+                    granularity: SlideGranularity::WithinBlocks,
+                } => Some(true),
+                Slide {
+                    granularity: SlideGranularity::AcrossBlocks,
+                } => None,
 
-                // Binary and unary ops use native AVX-512 intrinsics
-                Binary | Unary | Ternary => None,
+                // Binary, unary, ternary, shift, select, reinterpret, and widen/narrow use native AVX-512 intrinsics
+                Binary
+                | Unary
+                | Ternary
+                | Shift
+                | Select
+                | Reinterpret { .. }
+                | WidenNarrow { .. } => None,
 
-                // Comparisons and other ops - use generic for now
-                // until we implement proper AVX-512 mask-based comparisons
-                Compare | Select | Shift | Reinterpret { .. } | WidenNarrow { .. } => Some(true),
+                // Comparisons use generic for now - they return mask registers which need different handling
+                Compare => Some(true),
             }
         } else {
             None
@@ -417,7 +438,21 @@ impl X86 {
                             }
                         }
                     }
-                    (Self::Avx2 | Self::Avx512, 512, 256) => {
+                    (Self::Avx512, 512, 256) => {
+                        // AVX-512 has native _mm512_cvt* intrinsics that extend 256-bit to 512-bit directly
+                        let extend = extend_intrinsic(
+                            vec_ty.scalar,
+                            vec_ty.scalar_bits,
+                            target_ty.scalar_bits,
+                            dst_width, // Use 512-bit intrinsic directly
+                        );
+                        quote! {
+                            unsafe {
+                                #extend(a.into()).simd_into(self)
+                            }
+                        }
+                    }
+                    (Self::Avx2, 512, 256) => {
                         let extend = extend_intrinsic(
                             vec_ty.scalar,
                             vec_ty.scalar_bits,
@@ -483,7 +518,26 @@ impl X86 {
                             }
                         }
                     }
-                    (Self::Avx2 | Self::Avx512, 256, 512) => {
+                    (Self::Avx512, 256, 512) => {
+                        // AVX-512 has native truncation intrinsics: _mm512_cvtepi16_epi8 etc.
+                        // These directly narrow 512-bit to 256-bit with truncation
+                        let narrow = match (vec_ty.scalar_bits, target_ty.scalar_bits) {
+                            (16, 8) => format_ident!("_mm512_cvtepi16_epi8"),
+                            (32, 16) => format_ident!("_mm512_cvtepi32_epi16"),
+                            (64, 32) => format_ident!("_mm512_cvtepi64_epi32"),
+                            _ => unimplemented!(
+                                "narrow from {} to {} bits",
+                                vec_ty.scalar_bits,
+                                target_ty.scalar_bits
+                            ),
+                        };
+                        quote! {
+                            unsafe {
+                                #narrow(a.into()).simd_into(self)
+                            }
+                        }
+                    }
+                    (Self::Avx2, 256, 512) => {
                         let mask = set1_intrinsic(&VecType::new(
                             vec_ty.scalar,
                             vec_ty.scalar_bits,
@@ -571,7 +625,9 @@ impl X86 {
                     }
                 }
             }
-            "shlv" | "shrv" if (*self == Self::Avx2 || *self == Self::Avx512) && vec_ty.scalar_bits >= 32 => {
+            "shlv" | "shrv"
+                if (*self == Self::Avx2 || *self == Self::Avx512) && vec_ty.scalar_bits >= 32 =>
+            {
                 let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
                 let name = match (method, vec_ty.scalar) {
                     ("shrv", ScalarType::Int) => "srav",
@@ -621,6 +677,49 @@ impl X86 {
 
         if vec_ty.scalar_bits == 8 {
             // x86 doesn't have shifting for 8-bit, so we first convert into 16-bit, shift, and then back to 8-bit.
+
+            // AVX-512 uses different intrinsics - cmpgt returns a mask, not a vector
+            if *self == Self::Avx512 && ty_bits == 512 {
+                // For AVX-512, use cvtepi8_epi16 for sign extension (simpler than unpack + cmpgt)
+                // We split 512-bit into two 256-bit halves, extend each to 512-bit, shift, then narrow back
+                let pack = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int, ty_bits);
+
+                let (extend_lo, extend_hi) = match vec_ty.scalar {
+                    ScalarType::Unsigned => (
+                        format_ident!("_mm512_cvtepu8_epi16"),
+                        format_ident!("_mm512_cvtepu8_epi16"),
+                    ),
+                    ScalarType::Int => (
+                        format_ident!("_mm512_cvtepi8_epi16"),
+                        format_ident!("_mm512_cvtepi8_epi16"),
+                    ),
+                    _ => unimplemented!(),
+                };
+
+                return quote! {
+                    #method_sig {
+                        unsafe {
+                            let val = a.into();
+                            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+
+                            // Split into low and high 256-bit halves
+                            let lo_256 = _mm512_castsi512_si256(val);
+                            let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
+
+                            // Extend each half from 8-bit to 16-bit (256-bit -> 512-bit)
+                            let lo_16 = #extend_lo(lo_256);
+                            let hi_16 = #extend_hi(hi_256);
+
+                            // Shift
+                            let lo_shifted = #shift_intrinsic(lo_16, shift_count);
+                            let hi_shifted = #shift_intrinsic(hi_16, shift_count);
+
+                            // Pack back to 8-bit
+                            #pack(lo_shifted, hi_shifted).simd_into(self)
+                        }
+                    }
+                };
+            }
 
             let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
             let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
@@ -723,6 +822,56 @@ impl X86 {
     }
 
     pub(crate) fn handle_select(&self, method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+        // AVX-512 uses mask registers instead of blendv
+        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
+            // Convert vector mask to __mmask* using movepi*_mask, then use mask_blend
+            // select(mask, a, b) = where mask is true, take a; else take b
+            // _mm512_mask_blend_*(k, a, b) = where k bit is 0, take a; where 1, take b
+            // So we need: mask_blend(mask, c, b) where c is "false" value, b is "true" value
+            let (move_mask, blend) = match (vec_ty.scalar, vec_ty.scalar_bits) {
+                (ScalarType::Float, 32) => (
+                    format_ident!("_mm512_movepi32_mask"),
+                    format_ident!("_mm512_mask_blend_ps"),
+                ),
+                (ScalarType::Float, 64) => (
+                    format_ident!("_mm512_movepi64_mask"),
+                    format_ident!("_mm512_mask_blend_pd"),
+                ),
+                (_, 8) => (
+                    format_ident!("_mm512_movepi8_mask"),
+                    format_ident!("_mm512_mask_blend_epi8"),
+                ),
+                (_, 16) => (
+                    format_ident!("_mm512_movepi16_mask"),
+                    format_ident!("_mm512_mask_blend_epi16"),
+                ),
+                (_, 32) => (
+                    format_ident!("_mm512_movepi32_mask"),
+                    format_ident!("_mm512_mask_blend_epi32"),
+                ),
+                (_, 64) => (
+                    format_ident!("_mm512_movepi64_mask"),
+                    format_ident!("_mm512_mask_blend_epi64"),
+                ),
+                _ => unreachable!(),
+            };
+
+            // The mask 'a' is a mask type (mask32x16, etc.) which stores as __m512i
+            // We just need to convert it to __m512i and call movepi*_mask
+            let mask_expr = quote! { #move_mask(a.into()) };
+
+            return quote! {
+                #method_sig {
+                    unsafe {
+                        // a is the mask, b is the "true" value, c is the "false" value
+                        // mask_blend: where mask bit is 0, take first arg; where 1, take second
+                        let k = #mask_expr;
+                        #blend(k, c.into(), b.into()).simd_into(self)
+                    }
+                }
+            };
+        }
+
         // Our select ops' argument order is mask, a, b; Intel's intrinsics are b, a, mask
         let args = [
             quote! { c.into() },
@@ -1354,7 +1503,11 @@ impl X86 {
                         }
                     }
                 }
-                _ => unimplemented!("512-bit conversion from {:?} to {:?}", vec_ty.scalar, target_scalar),
+                _ => unimplemented!(
+                    "512-bit conversion from {:?} to {:?}",
+                    vec_ty.scalar,
+                    target_scalar
+                ),
             };
 
             return quote! {
@@ -1605,14 +1758,8 @@ impl X86 {
                     format_ident!("_mm512_movepi16_mask"),
                     quote! { 0xFFFFFFFFu32 },
                 ),
-                32 => (
-                    format_ident!("_mm512_movepi32_mask"),
-                    quote! { 0xFFFFu16 },
-                ),
-                64 => (
-                    format_ident!("_mm512_movepi64_mask"),
-                    quote! { 0xFFu8 },
-                ),
+                32 => (format_ident!("_mm512_movepi32_mask"), quote! { 0xFFFFu16 }),
+                64 => (format_ident!("_mm512_movepi64_mask"), quote! { 0xFFu8 }),
                 _ => unreachable!(),
             };
 

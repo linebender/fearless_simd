@@ -46,10 +46,10 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                 // AVX-512 uses roundscale instead of round, with scale in bits 7:4 (0 for integers)
                 // and rounding mode in bits 3:0
                 let rounding_mode = match op {
-                    "floor" => 0x01, // _MM_FROUND_TO_NEG_INF
-                    "ceil" => 0x02,  // _MM_FROUND_TO_POS_INF
+                    "floor" => 0x01,           // _MM_FROUND_TO_NEG_INF
+                    "ceil" => 0x02,            // _MM_FROUND_TO_POS_INF
                     "round_ties_even" => 0x00, // _MM_FROUND_TO_NEAREST_INT
-                    "trunc" => 0x03, // _MM_FROUND_TO_ZERO
+                    "trunc" => 0x03,           // _MM_FROUND_TO_ZERO
                     _ => unreachable!(),
                 };
                 if ty.n_bits() == 512 {
