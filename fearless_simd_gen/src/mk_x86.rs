@@ -55,45 +55,6 @@ impl Level for X86 {
         })
     }
 
-    // TODO: change the mask API to use native masks, so that this workaround is no longer needed
-    fn force_generic_op(&self, op: &Op, vec_ty: &VecType) -> Option<bool> {
-        // For AVX-512 with 512-bit vectors, force generic (split/combine) for operations
-        // that aren't implemented yet with native AVX-512 intrinsics.
-        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
-            use OpSig::*;
-            match &op.sig {
-                // These are implemented natively for 512-bit
-                Splat
-                | Split { .. }
-                | Combine { .. }
-                | Cvt { .. }
-                | MaskReduce { .. }
-                | Zip { .. }
-                | Unzip { .. }
-                | FromArray { .. }
-                | AsArray { .. }
-                | StoreArray
-                | FromBytes
-                | ToBytes
-                | LoadInterleaved { .. }
-                | StoreInterleaved { .. } => None,
-
-                // All operations use native AVX-512 intrinsics for 512-bit vectors
-                Binary
-                | Unary
-                | Ternary
-                | Shift
-                | Select
-                | Compare
-                | Reinterpret { .. }
-                | WidenNarrow { .. }
-                | Slide { .. } => None,
-            }
-        } else {
-            None
-        }
-    }
-
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
         let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
             (ScalarType::Float, 32) => "",
