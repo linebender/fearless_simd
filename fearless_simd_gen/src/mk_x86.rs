@@ -776,17 +776,11 @@ impl X86 {
             if *self == Self::Avx512 && ty_bits == 512 {
                 // For AVX-512, use cvtepi8_epi16 for sign extension (simpler than unpack + cmpgt)
                 // We split 512-bit into two 256-bit halves, extend each to 512-bit, shift, then narrow back
-                let pack = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int, ty_bits);
+                // Use _mm512_cvtepi16_epi8 to truncate (not packs which interleaves within lanes)
 
-                let (extend_lo, extend_hi) = match vec_ty.scalar {
-                    ScalarType::Unsigned => (
-                        format_ident!("_mm512_cvtepu8_epi16"),
-                        format_ident!("_mm512_cvtepu8_epi16"),
-                    ),
-                    ScalarType::Int => (
-                        format_ident!("_mm512_cvtepi8_epi16"),
-                        format_ident!("_mm512_cvtepi8_epi16"),
-                    ),
+                let extend = match vec_ty.scalar {
+                    ScalarType::Unsigned => format_ident!("_mm512_cvtepu8_epi16"),
+                    ScalarType::Int => format_ident!("_mm512_cvtepi8_epi16"),
                     _ => unimplemented!(),
                 };
 
@@ -801,15 +795,21 @@ impl X86 {
                             let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
 
                             // Extend each half from 8-bit to 16-bit (256-bit -> 512-bit)
-                            let lo_16 = #extend_lo(lo_256);
-                            let hi_16 = #extend_hi(hi_256);
+                            let lo_16 = #extend(lo_256);
+                            let hi_16 = #extend(hi_256);
 
                             // Shift
                             let lo_shifted = #shift_intrinsic(lo_16, shift_count);
                             let hi_shifted = #shift_intrinsic(hi_16, shift_count);
 
-                            // Pack back to 8-bit
-                            #pack(lo_shifted, hi_shifted).simd_into(self)
+                            // Truncate back to 8-bit using cvtepi16_epi8 (not packs which interleaves)
+                            // cvtepi16_epi8 takes 512-bit and returns 256-bit, so we combine the results
+                            let lo_narrow = _mm512_cvtepi16_epi8(lo_shifted);
+                            let hi_narrow = _mm512_cvtepi16_epi8(hi_shifted);
+
+                            // Combine the two 256-bit results into a 512-bit result
+                            let result = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(lo_narrow), hi_narrow);
+                            result.simd_into(self)
                         }
                     }
                 };
@@ -1140,41 +1140,94 @@ impl X86 {
                 }
             }
             512 => {
-                // AVX-512 zip: unpack within 128-bit lanes, then shuffle across 256-bit lanes
+                // AVX-512 zip: zip_low takes lower 256-bit from each vector and fully zips them;
+                // zip_high takes upper 256-bit from each vector and fully zips them.
+                // This produces a 512-bit result from the interleaved 256-bit halves.
+                let half_bits = vec_ty.n_bits() / 2;
                 let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
-                let lo = intrinsic_ident("unpacklo", suffix, vec_ty.n_bits());
-                let hi = intrinsic_ident("unpackhi", suffix, vec_ty.n_bits());
-                // Shuffle control: for zip_low we want lanes [0, 0, 2, 2], for zip_high [1, 1, 3, 3]
-                // _mm512_shuffle_i64x2 takes 4 2-bit indices (one for each 128-bit lane)
-                // zip_low: take lane 0 from lo, lane 0 from hi, lane 2 from lo, lane 2 from hi
-                // = 0b_10_10_00_00 = 0xA0 for the first arg, but we need to interleave...
-                // Actually we need to use shuffle_f64x2 or shuffle_i64x2 which shuffles 128-bit lanes
-                let shuffle_immediate = if select_low {
-                    // lo has unpacked low halves of each 128-bit lane: [0, 0', 2, 2']
-                    // hi has unpacked high halves of each 128-bit lane: [1, 1', 3, 3']
-                    // We want: [0, 0', 1, 1'] - take lanes 0,1 from lo and lanes 0,1 from hi
-                    // shuffle_i64x2::<0b_01_00_01_00>(lo, hi) = [lo[0], lo[1], hi[0], hi[1]]
-                    quote! { 0b_01_00_01_00 }
-                } else {
-                    // We want: [2, 2', 3, 3'] - take lanes 2,3 from lo and lanes 2,3 from hi
-                    // shuffle_i64x2::<0b_11_10_11_10>(lo, hi) = [lo[2], lo[3], hi[2], hi[3]]
-                    quote! { 0b_11_10_11_10 }
-                };
+                let lo = intrinsic_ident("unpacklo", suffix, half_bits);
+                let hi = intrinsic_ident("unpackhi", suffix, half_bits);
 
-                let shuffle = match vec_ty.scalar {
-                    ScalarType::Float if vec_ty.scalar_bits == 32 => {
-                        format_ident!("_mm512_shuffle_f32x4")
+                let shuffle = intrinsic_ident(
+                    match vec_ty.scalar {
+                        ScalarType::Float => "permute2f128",
+                        _ => "permute2x128",
+                    },
+                    match (vec_ty.scalar, vec_ty.scalar_bits) {
+                        (ScalarType::Float, 32) => "ps",
+                        (ScalarType::Float, 64) => "pd",
+                        _ => "si256",
+                    },
+                    half_bits,
+                );
+
+                // For float types, we need float cast/insert intrinsics
+                let (cast_512_to_256, extract_256, cast_256_to_512, insert_256) =
+                    match (vec_ty.scalar, vec_ty.scalar_bits) {
+                        (ScalarType::Float, 32) => (
+                            format_ident!("_mm512_castps512_ps256"),
+                            format_ident!("_mm512_extractf32x8_ps"),
+                            format_ident!("_mm512_castps256_ps512"),
+                            format_ident!("_mm512_insertf32x8"),
+                        ),
+                        (ScalarType::Float, 64) => (
+                            format_ident!("_mm512_castpd512_pd256"),
+                            format_ident!("_mm512_extractf64x4_pd"),
+                            format_ident!("_mm512_castpd256_pd512"),
+                            format_ident!("_mm512_insertf64x4"),
+                        ),
+                        _ => (
+                            format_ident!("_mm512_castsi512_si256"),
+                            format_ident!("_mm512_extracti64x4_epi64"),
+                            format_ident!("_mm512_castsi256_si512"),
+                            format_ident!("_mm512_inserti64x4"),
+                        ),
+                    };
+
+                if select_low {
+                    // zip_low: take lower 256-bit from each, fully zip them to produce 512-bit result
+                    quote! {
+                        unsafe {
+                            // Extract lower 256-bit halves
+                            let a_half = #cast_512_to_256(a.into());
+                            let b_half = #cast_512_to_256(b.into());
+
+                            // Perform full 256-bit zip (produces 256-bit interleaved result)
+                            // unpacklo + unpackhi work on 128-bit lanes, then permute combines
+                            let lo_unpacked = #lo(a_half, b_half);
+                            let hi_unpacked = #hi(a_half, b_half);
+
+                            // Combine: lower 128 bits of lo_unpacked, lower 128 bits of hi_unpacked
+                            let result_lo = #shuffle::<0b0010_0000>(lo_unpacked, hi_unpacked);
+                            // Combine: upper 128 bits of lo_unpacked, upper 128 bits of hi_unpacked
+                            let result_hi = #shuffle::<0b0011_0001>(lo_unpacked, hi_unpacked);
+
+                            // Combine back to 512-bit
+                            let combined = #insert_256::<1>(#cast_256_to_512(result_lo), result_hi);
+                            combined.simd_into(self)
+                        }
                     }
-                    ScalarType::Float => format_ident!("_mm512_shuffle_f64x2"),
-                    _ => format_ident!("_mm512_shuffle_i64x2"),
-                };
+                } else {
+                    // zip_high: take upper 256-bit from each, fully zip them to produce 512-bit result
+                    quote! {
+                        unsafe {
+                            // Extract upper 256-bit halves
+                            let a_half = #extract_256::<1>(a.into());
+                            let b_half = #extract_256::<1>(b.into());
 
-                quote! {
-                    unsafe {
-                        let lo = #lo(a.into(), b.into());
-                        let hi = #hi(a.into(), b.into());
+                            // Perform full 256-bit zip
+                            let lo_unpacked = #lo(a_half, b_half);
+                            let hi_unpacked = #hi(a_half, b_half);
 
-                        #shuffle::<#shuffle_immediate>(lo, hi).simd_into(self)
+                            // Combine: lower 128 bits of lo_unpacked, lower 128 bits of hi_unpacked
+                            let result_lo = #shuffle::<0b0010_0000>(lo_unpacked, hi_unpacked);
+                            // Combine: upper 128 bits of lo_unpacked, upper 128 bits of hi_unpacked
+                            let result_hi = #shuffle::<0b0011_0001>(lo_unpacked, hi_unpacked);
+
+                            // Combine back to 512-bit
+                            let combined = #insert_256::<1>(#cast_256_to_512(result_lo), result_hi);
+                            combined.simd_into(self)
+                        }
                     }
                 }
             }
@@ -1563,21 +1616,67 @@ impl X86 {
         // AVX-512 has native unsigned conversion intrinsics, so handle it specially
         if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
             let expr = match (vec_ty.scalar, target_scalar, precise) {
-                (ScalarType::Float, ScalarType::Int, _) => {
+                (ScalarType::Float, ScalarType::Int, false) => {
                     // f32 -> i32: _mm512_cvttps_epi32
-                    // TODO: precise mode should handle out-of-range values
                     quote! {
                         unsafe {
                             _mm512_cvttps_epi32(a.into()).simd_into(self)
                         }
                     }
                 }
-                (ScalarType::Float, ScalarType::Unsigned, _) => {
+                (ScalarType::Float, ScalarType::Int, true) => {
+                    // f32 -> i32 precise: handle out-of-range values and NaN
+                    // Saturate to i32::MAX if >= 2147483648.0, NaN becomes 0
+                    quote! {
+                        unsafe {
+                            let a = a.into();
+                            let mut converted = _mm512_cvttps_epi32(a);
+
+                            // In the common case where everything is in range, we don't need to do anything else.
+                            let in_range_mask = _mm512_cmp_ps_mask::<{ _CMP_LT_OQ }>(a, _mm512_set1_ps(2147483648.0));
+                            let all_in_range = in_range_mask == 0xFFFF;
+
+                            if !all_in_range {
+                                // If we are above i32::MAX (2147483647), clamp to it.
+                                converted = _mm512_mask_blend_epi32(in_range_mask, _mm512_set1_epi32(i32::MAX), converted);
+                                // Set NaN to 0.
+                                let is_not_nan_mask = _mm512_cmp_ps_mask::<{ _CMP_ORD_Q }>(a, a);
+                                converted = _mm512_maskz_mov_epi32(is_not_nan_mask, converted);
+                                // We don't need to handle negative overflow because Intel's "invalid result" sentinel
+                                // value is -2147483648, which is what we want anyway.
+                            }
+
+                            converted.simd_into(self)
+                        }
+                    }
+                }
+                (ScalarType::Float, ScalarType::Unsigned, false) => {
                     // f32 -> u32: _mm512_cvttps_epu32 (native unsigned support!)
-                    // TODO: precise mode should handle out-of-range values
                     quote! {
                         unsafe {
                             _mm512_cvttps_epu32(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                (ScalarType::Float, ScalarType::Unsigned, true) => {
+                    // f32 -> u32 precise: handle out-of-range values and NaN
+                    // Saturate to u32::MAX if >= 4294967040.0, NaN and negative become 0
+                    quote! {
+                        unsafe {
+                            // Clamp negative values and NaN to 0. Intel's `_mm512_max_ps` always takes the second
+                            // operand if the first is NaN.
+                            let a = _mm512_max_ps(a.into(), _mm512_setzero_ps());
+                            let mut converted = _mm512_cvttps_epu32(a);
+
+                            // Check if any value exceeds u32::MAX representable in f32 (4294967040.0)
+                            let exceeds_range_mask = _mm512_cmp_ps_mask::<{ _CMP_GT_OQ }>(a, _mm512_set1_ps(4294967040.0));
+
+                            if exceeds_range_mask != 0 {
+                                // Clamp to u32::MAX.
+                                converted = _mm512_mask_blend_epi32(exceeds_range_mask, converted, _mm512_set1_epi32(u32::MAX.cast_signed()));
+                            }
+
+                            converted.simd_into(self)
                         }
                     }
                 }
