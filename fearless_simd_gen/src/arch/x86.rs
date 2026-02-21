@@ -43,15 +43,31 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
         let suffix = op_suffix(ty.scalar, ty.scalar_bits, true);
         match op {
             "floor" | "ceil" | "round_ties_even" | "trunc" => {
-                let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
+                // AVX-512 uses roundscale instead of round, with scale in bits 7:4 (0 for integers)
+                // and rounding mode in bits 3:0
                 let rounding_mode = match op {
-                    "floor" => quote! { _MM_FROUND_TO_NEG_INF },
-                    "ceil" => quote! { _MM_FROUND_TO_POS_INF },
-                    "round_ties_even" => quote! { _MM_FROUND_TO_NEAREST_INT },
-                    "trunc" => quote! { _MM_FROUND_TO_ZERO },
+                    "floor" => 0x01, // _MM_FROUND_TO_NEG_INF
+                    "ceil" => 0x02,  // _MM_FROUND_TO_POS_INF
+                    "round_ties_even" => 0x00, // _MM_FROUND_TO_NEAREST_INT
+                    "trunc" => 0x03, // _MM_FROUND_TO_ZERO
                     _ => unreachable!(),
                 };
-                quote! { #intrinsic::<{#rounding_mode | _MM_FROUND_NO_EXC}>( #( #args, )* ) }
+                if ty.n_bits() == 512 {
+                    // AVX-512 uses _mm512_roundscale_ps/pd with imm8 encoding:
+                    // bits 7:4 = scale (0 for integer rounding), bits 3:0 = rounding mode
+                    let intrinsic = intrinsic_ident("roundscale", suffix, ty.n_bits());
+                    quote! { #intrinsic::<#rounding_mode>( #( #args, )* ) }
+                } else {
+                    let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
+                    let rounding_const = match op {
+                        "floor" => quote! { _MM_FROUND_TO_NEG_INF },
+                        "ceil" => quote! { _MM_FROUND_TO_POS_INF },
+                        "round_ties_even" => quote! { _MM_FROUND_TO_NEAREST_INT },
+                        "trunc" => quote! { _MM_FROUND_TO_ZERO },
+                        _ => unreachable!(),
+                    };
+                    quote! { #intrinsic::<{#rounding_const | _MM_FROUND_NO_EXC}>( #( #args, )* ) }
+                }
             }
             "neg" => match ty.scalar {
                 ScalarType::Float => {
@@ -112,19 +128,46 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                     suffix,
                     ty.n_bits(),
                 );
-                let cmpunord = float_compare_method("unord", ty);
-                let blend = intrinsic_ident("blendv", suffix, ty.n_bits());
                 let a = &args[0];
                 let b = &args[1];
 
-                quote! {
-                    let intermediate = #intrinsic(#a, #b);
-                    // The x86 min/max intrinsics behave like `a < b ? a : b` and `a > b ? a : b` respectively. That
-                    // means that if either `a` or `b` is NaN, they return the second argument `b`. So to implement a
-                    // min/max where we always return the non-NaN argument, we add an additional check if `b` is NaN,
-                    // and select `a` if so.
-                    let b_is_nan = #cmpunord(#b, #b);
-                    #blend(intermediate, #a, b_is_nan)
+                if ty.n_bits() == 512 {
+                    // AVX-512 uses mask registers for comparisons and mask-based blending
+                    // _mm512_cmp_ps_mask returns __mmask16/__mmask8, _mm512_mask_blend_ps uses it
+                    let cmp_mask = match ty.scalar_bits {
+                        32 => format_ident!("_mm512_cmp_ps_mask"),
+                        64 => format_ident!("_mm512_cmp_pd_mask"),
+                        _ => unreachable!(),
+                    };
+                    let blend = match ty.scalar_bits {
+                        32 => format_ident!("_mm512_mask_blend_ps"),
+                        64 => format_ident!("_mm512_mask_blend_pd"),
+                        _ => unreachable!(),
+                    };
+                    // CMP_UNORD_Q predicate = 0x03
+                    quote! {
+                        let intermediate = #intrinsic(#a, #b);
+                        // The x86 min/max intrinsics behave like `a < b ? a : b` and `a > b ? a : b` respectively. That
+                        // means that if either `a` or `b` is NaN, they return the second argument `b`. So to implement a
+                        // min/max where we always return the non-NaN argument, we add an additional check if `b` is NaN,
+                        // and select `a` if so.
+                        let b_is_nan = #cmp_mask::<0x03>(#b, #b);
+                        // mask_blend: where mask bit is 0, take from first arg; where 1, take from second
+                        #blend(b_is_nan, intermediate, #a)
+                    }
+                } else {
+                    let cmpunord = float_compare_method("unord", ty);
+                    let blend = intrinsic_ident("blendv", suffix, ty.n_bits());
+
+                    quote! {
+                        let intermediate = #intrinsic(#a, #b);
+                        // The x86 min/max intrinsics behave like `a < b ? a : b` and `a > b ? a : b` respectively. That
+                        // means that if either `a` or `b` is NaN, they return the second argument `b`. So to implement a
+                        // min/max where we always return the non-NaN argument, we add an additional check if `b` is NaN,
+                        // and select `a` if so.
+                        let b_is_nan = #cmpunord(#b, #b);
+                        #blend(intermediate, #a, b_is_nan)
+                    }
                 }
             }
             _ => unimplemented!("{}", op),

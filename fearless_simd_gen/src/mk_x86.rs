@@ -70,10 +70,12 @@ impl Level for X86 {
                 Slide { granularity: SlideGranularity::WithinBlocks } => Some(true),
                 Slide { granularity: SlideGranularity::AcrossBlocks } => None,
 
-                // Comparisons, binary ops, unary ops, etc. - use generic for now
+                // Binary and unary ops use native AVX-512 intrinsics
+                Binary | Unary | Ternary => None,
+
+                // Comparisons and other ops - use generic for now
                 // until we implement proper AVX-512 mask-based comparisons
-                Compare | Binary | Unary | Ternary | Select | Shift | Reinterpret { .. }
-                | WidenNarrow { .. } => Some(true),
+                Compare | Select | Shift | Reinterpret { .. } | WidenNarrow { .. } => Some(true),
             }
         } else {
             None

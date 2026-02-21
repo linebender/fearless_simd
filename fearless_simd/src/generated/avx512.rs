@@ -5410,48 +5410,42 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.abs_f32x8(a0), self.abs_f32x8(a1))
+        unsafe { _mm512_andnot_ps(_mm512_set1_ps(-0.0), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.neg_f32x8(a0), self.neg_f32x8(a1))
+        unsafe { _mm512_xor_ps(a.into(), _mm512_set1_ps(-0.0)).simd_into(self) }
     }
     #[inline(always)]
     fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.sqrt_f32x8(a0), self.sqrt_f32x8(a1))
+        unsafe { _mm512_sqrt_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.add_f32x8(a0, b0), self.add_f32x8(a1, b1))
+        unsafe { _mm512_add_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.sub_f32x8(a0, b0), self.sub_f32x8(a1, b1))
+        unsafe { _mm512_sub_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.mul_f32x8(a0, b0), self.mul_f32x8(a1, b1))
+        unsafe { _mm512_mul_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn div_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.div_f32x8(a0, b0), self.div_f32x8(a1, b1))
+        unsafe { _mm512_div_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn copysign_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.copysign_f32x8(a0, b0), self.copysign_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_set1_ps(-0.0);
+            _mm512_or_ps(
+                _mm512_and_ps(mask, b.into()),
+                _mm512_andnot_ps(mask, a.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
@@ -5529,81 +5523,55 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
+        unsafe { _mm512_max_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
+        unsafe { _mm512_min_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.max_precise_f32x8(a0, b0),
-            self.max_precise_f32x8(a1, b1),
-        )
+        unsafe {
+            let intermediate = _mm512_max_ps(a.into(), b.into());
+            let b_is_nan = _mm512_cmp_ps_mask::<0x03>(b.into(), b.into());
+            _mm512_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.min_precise_f32x8(a0, b0),
-            self.min_precise_f32x8(a1, b1),
-        )
+        unsafe {
+            let intermediate = _mm512_min_ps(a.into(), b.into());
+            let b_is_nan = _mm512_cmp_ps_mask::<0x03>(b.into(), b.into());
+            _mm512_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn mul_add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(
-            self.mul_add_f32x8(a0, b0, c0),
-            self.mul_add_f32x8(a1, b1, c1),
-        )
+        unsafe { _mm512_fmadd_ps(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(
-            self.mul_sub_f32x8(a0, b0, c0),
-            self.mul_sub_f32x8(a1, b1, c1),
-        )
+        unsafe { _mm512_fmsub_ps(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.floor_f32x8(a0), self.floor_f32x8(a1))
+        unsafe { _mm512_roundscale_ps::<1i32>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.ceil_f32x8(a0), self.ceil_f32x8(a1))
+        unsafe { _mm512_roundscale_ps::<2i32>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(
-            self.round_ties_even_f32x8(a0),
-            self.round_ties_even_f32x8(a1),
-        )
+        unsafe { _mm512_roundscale_ps::<0i32>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.fract_f32x8(a0), self.fract_f32x8(a1))
+        a - self.trunc_f32x16(a)
     }
     #[inline(always)]
     fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.trunc_f32x8(a0), self.trunc_f32x8(a1))
+        unsafe { _mm512_roundscale_ps::<3i32>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
@@ -5801,44 +5769,42 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.add_i8x32(a0, b0), self.add_i8x32(a1, b1))
+        unsafe { _mm512_add_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.sub_i8x32(a0, b0), self.sub_i8x32(a1, b1))
+        unsafe { _mm512_sub_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.mul_i8x32(a0, b0), self.mul_i8x32(a1, b1))
+        unsafe {
+            let dst_even = _mm512_mullo_epi16(a.into(), b.into());
+            let dst_odd = _mm512_mullo_epi16(
+                _mm512_srli_epi16::<8>(a.into()),
+                _mm512_srli_epi16::<8>(b.into()),
+            );
+            _mm512_or_si512(
+                _mm512_slli_epi16(dst_odd, 8),
+                _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn and_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.and_i8x32(a0, b0), self.and_i8x32(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.or_i8x32(a0, b0), self.or_i8x32(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.xor_i8x32(a0, b0), self.xor_i8x32(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.not_i8x32(a0), self.not_i8x32(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
@@ -5847,9 +5813,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.shlv_i8x32(a0, b0), self.shlv_i8x32(a1, b1))
+        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
@@ -5858,9 +5822,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.shrv_i8x32(a0, b0), self.shrv_i8x32(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
@@ -5949,15 +5911,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.min_i8x32(a0, b0), self.min_i8x32(a1, b1))
+        unsafe { _mm512_min_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.max_i8x32(a0, b0), self.max_i8x32(a1, b1))
+        unsafe { _mm512_max_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
@@ -5970,8 +5928,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
+        unsafe { _mm512_sub_epi8(_mm512_setzero_si512(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
@@ -6076,44 +6033,42 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.add_u8x32(a0, b0), self.add_u8x32(a1, b1))
+        unsafe { _mm512_add_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.sub_u8x32(a0, b0), self.sub_u8x32(a1, b1))
+        unsafe { _mm512_sub_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.mul_u8x32(a0, b0), self.mul_u8x32(a1, b1))
+        unsafe {
+            let dst_even = _mm512_mullo_epi16(a.into(), b.into());
+            let dst_odd = _mm512_mullo_epi16(
+                _mm512_srli_epi16::<8>(a.into()),
+                _mm512_srli_epi16::<8>(b.into()),
+            );
+            _mm512_or_si512(
+                _mm512_slli_epi16(dst_odd, 8),
+                _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn and_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.and_u8x32(a0, b0), self.and_u8x32(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.or_u8x32(a0, b0), self.or_u8x32(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.xor_u8x32(a0, b0), self.xor_u8x32(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.not_u8x32(a0), self.not_u8x32(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
@@ -6122,9 +6077,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.shlv_u8x32(a0, b0), self.shlv_u8x32(a1, b1))
+        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
@@ -6133,9 +6086,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.shrv_u8x32(a0, b0), self.shrv_u8x32(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
@@ -6224,15 +6175,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.min_u8x32(a0, b0), self.min_u8x32(a1, b1))
+        unsafe { _mm512_min_epu8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.max_u8x32(a0, b0), self.max_u8x32(a1, b1))
+        unsafe { _mm512_max_epu8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {
@@ -6400,26 +6347,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.and_mask8x32(a0, b0), self.and_mask8x32(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.or_mask8x32(a0, b0), self.or_mask8x32(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.xor_mask8x32(a0, b0), self.xor_mask8x32(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn select_mask8x64(
@@ -6557,44 +6497,31 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.add_i16x16(a0, b0), self.add_i16x16(a1, b1))
+        unsafe { _mm512_add_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.sub_i16x16(a0, b0), self.sub_i16x16(a1, b1))
+        unsafe { _mm512_sub_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.mul_i16x16(a0, b0), self.mul_i16x16(a1, b1))
+        unsafe { _mm512_mullo_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.and_i16x16(a0, b0), self.and_i16x16(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.or_i16x16(a0, b0), self.or_i16x16(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.xor_i16x16(a0, b0), self.xor_i16x16(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.not_i16x16(a0), self.not_i16x16(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
@@ -6603,9 +6530,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.shlv_i16x16(a0, b0), self.shlv_i16x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
@@ -6614,9 +6539,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.shrv_i16x16(a0, b0), self.shrv_i16x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
@@ -6708,15 +6631,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.min_i16x16(a0, b0), self.min_i16x16(a1, b1))
+        unsafe { _mm512_min_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.max_i16x16(a0, b0), self.max_i16x16(a1, b1))
+        unsafe { _mm512_max_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
@@ -6729,8 +6648,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
+        unsafe { _mm512_sub_epi16(_mm512_setzero_si512(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
@@ -6838,44 +6756,31 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.add_u16x16(a0, b0), self.add_u16x16(a1, b1))
+        unsafe { _mm512_add_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.sub_u16x16(a0, b0), self.sub_u16x16(a1, b1))
+        unsafe { _mm512_sub_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.mul_u16x16(a0, b0), self.mul_u16x16(a1, b1))
+        unsafe { _mm512_mullo_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.and_u16x16(a0, b0), self.and_u16x16(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.or_u16x16(a0, b0), self.or_u16x16(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.xor_u16x16(a0, b0), self.xor_u16x16(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.not_u16x16(a0), self.not_u16x16(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
@@ -6884,9 +6789,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.shlv_u16x16(a0, b0), self.shlv_u16x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
@@ -6895,9 +6798,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.shrv_u16x16(a0, b0), self.shrv_u16x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
@@ -6989,15 +6890,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.min_u16x16(a0, b0), self.min_u16x16(a1, b1))
+        unsafe { _mm512_min_epu16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.max_u16x16(a0, b0), self.max_u16x16(a1, b1))
+        unsafe { _mm512_max_epu16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
@@ -7178,26 +7075,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.and_mask16x16(a0, b0), self.and_mask16x16(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.or_mask16x16(a0, b0), self.or_mask16x16(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.xor_mask16x16(a0, b0), self.xor_mask16x16(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn select_mask16x32(
@@ -7338,44 +7228,31 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.add_i32x8(a0, b0), self.add_i32x8(a1, b1))
+        unsafe { _mm512_add_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.sub_i32x8(a0, b0), self.sub_i32x8(a1, b1))
+        unsafe { _mm512_sub_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.mul_i32x8(a0, b0), self.mul_i32x8(a1, b1))
+        unsafe { _mm512_mullo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.and_i32x8(a0, b0), self.and_i32x8(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.or_i32x8(a0, b0), self.or_i32x8(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.xor_i32x8(a0, b0), self.xor_i32x8(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.not_i32x8(a0), self.not_i32x8(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
@@ -7384,9 +7261,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.shlv_i32x8(a0, b0), self.shlv_i32x8(a1, b1))
+        unsafe { _mm512_sllv_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
@@ -7395,9 +7270,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.shrv_i32x8(a0, b0), self.shrv_i32x8(a1, b1))
+        unsafe { _mm512_srav_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
@@ -7482,15 +7355,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.min_i32x8(a0, b0), self.min_i32x8(a1, b1))
+        unsafe { _mm512_min_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.max_i32x8(a0, b0), self.max_i32x8(a1, b1))
+        unsafe { _mm512_max_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
@@ -7503,8 +7372,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
+        unsafe { _mm512_sub_epi32(_mm512_setzero_si512(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
@@ -7613,44 +7481,31 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.add_u32x8(a0, b0), self.add_u32x8(a1, b1))
+        unsafe { _mm512_add_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.sub_u32x8(a0, b0), self.sub_u32x8(a1, b1))
+        unsafe { _mm512_sub_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.mul_u32x8(a0, b0), self.mul_u32x8(a1, b1))
+        unsafe { _mm512_mullo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.and_u32x8(a0, b0), self.and_u32x8(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.or_u32x8(a0, b0), self.or_u32x8(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.xor_u32x8(a0, b0), self.xor_u32x8(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.not_u32x8(a0), self.not_u32x8(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
@@ -7659,9 +7514,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.shlv_u32x8(a0, b0), self.shlv_u32x8(a1, b1))
+        unsafe { _mm512_sllv_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
@@ -7670,9 +7523,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.shrv_u32x8(a0, b0), self.shrv_u32x8(a1, b1))
+        unsafe { _mm512_srlv_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
@@ -7757,15 +7608,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.min_u32x8(a0, b0), self.min_u32x8(a1, b1))
+        unsafe { _mm512_min_epu32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.max_u32x8(a0, b0), self.max_u32x8(a1, b1))
+        unsafe { _mm512_max_epu32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
@@ -7924,26 +7771,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.and_mask32x8(a0, b0), self.and_mask32x8(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.or_mask32x8(a0, b0), self.or_mask32x8(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.xor_mask32x8(a0, b0), self.xor_mask32x8(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn select_mask32x16(
@@ -8081,48 +7921,42 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.abs_f64x4(a0), self.abs_f64x4(a1))
+        unsafe { _mm512_andnot_pd(_mm512_set1_pd(-0.0), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.neg_f64x4(a0), self.neg_f64x4(a1))
+        unsafe { _mm512_xor_pd(a.into(), _mm512_set1_pd(-0.0)).simd_into(self) }
     }
     #[inline(always)]
     fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.sqrt_f64x4(a0), self.sqrt_f64x4(a1))
+        unsafe { _mm512_sqrt_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.add_f64x4(a0, b0), self.add_f64x4(a1, b1))
+        unsafe { _mm512_add_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.sub_f64x4(a0, b0), self.sub_f64x4(a1, b1))
+        unsafe { _mm512_sub_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.mul_f64x4(a0, b0), self.mul_f64x4(a1, b1))
+        unsafe { _mm512_mul_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn div_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.div_f64x4(a0, b0), self.div_f64x4(a1, b1))
+        unsafe { _mm512_div_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn copysign_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.copysign_f64x4(a0, b0), self.copysign_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_set1_pd(-0.0);
+            _mm512_or_pd(
+                _mm512_and_pd(mask, b.into()),
+                _mm512_andnot_pd(mask, a.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
@@ -8188,81 +8022,55 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
+        unsafe { _mm512_max_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
+        unsafe { _mm512_min_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.max_precise_f64x4(a0, b0),
-            self.max_precise_f64x4(a1, b1),
-        )
+        unsafe {
+            let intermediate = _mm512_max_pd(a.into(), b.into());
+            let b_is_nan = _mm512_cmp_pd_mask::<0x03>(b.into(), b.into());
+            _mm512_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.min_precise_f64x4(a0, b0),
-            self.min_precise_f64x4(a1, b1),
-        )
+        unsafe {
+            let intermediate = _mm512_min_pd(a.into(), b.into());
+            let b_is_nan = _mm512_cmp_pd_mask::<0x03>(b.into(), b.into());
+            _mm512_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn mul_add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(
-            self.mul_add_f64x4(a0, b0, c0),
-            self.mul_add_f64x4(a1, b1, c1),
-        )
+        unsafe { _mm512_fmadd_pd(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(
-            self.mul_sub_f64x4(a0, b0, c0),
-            self.mul_sub_f64x4(a1, b1, c1),
-        )
+        unsafe { _mm512_fmsub_pd(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.floor_f64x4(a0), self.floor_f64x4(a1))
+        unsafe { _mm512_roundscale_pd::<1i32>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.ceil_f64x4(a0), self.ceil_f64x4(a1))
+        unsafe { _mm512_roundscale_pd::<2i32>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(
-            self.round_ties_even_f64x4(a0),
-            self.round_ties_even_f64x4(a1),
-        )
+        unsafe { _mm512_roundscale_pd::<0i32>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.fract_f64x4(a0), self.fract_f64x4(a1))
+        a - self.trunc_f64x8(a)
     }
     #[inline(always)]
     fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.trunc_f64x4(a0), self.trunc_f64x4(a1))
+        unsafe { _mm512_roundscale_pd::<3i32>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
@@ -8382,26 +8190,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.and_mask64x4(a0, b0), self.and_mask64x4(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.or_mask64x4(a0, b0), self.or_mask64x4(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.xor_mask64x4(a0, b0), self.xor_mask64x4(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn select_mask64x8(
