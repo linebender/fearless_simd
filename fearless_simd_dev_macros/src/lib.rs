@@ -21,6 +21,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     let neon_name = get_ident("neon");
     let sse4_name = get_ident("sse4");
     let avx2_name = get_ident("avx2");
+    let avx512_name = get_ident("avx512");
     let wasm_name = get_ident("wasm");
 
     let ignore_attr = |f: fn(&str) -> bool| {
@@ -40,6 +41,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
     let ignore_neon = ignore_attr(exclude_neon);
     let ignore_sse4 = ignore_attr(exclude_sse4);
     let ignore_avx2 = ignore_attr(exclude_avx2);
+    let ignore_avx512 = ignore_attr(exclude_avx512);
     let ignore_wasm = ignore_attr(exclude_wasm);
 
     let fallback_snippet = quote! {
@@ -105,6 +107,36 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
 
+    // Ice Lake AVX-512 feature set
+    let avx512_snippet = quote! {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #[test]
+        #ignore_avx512
+        fn #avx512_name() {
+            if std::arch::is_x86_feature_detected!("avx512f")
+                && std::arch::is_x86_feature_detected!("avx512bw")
+                && std::arch::is_x86_feature_detected!("avx512cd")
+                && std::arch::is_x86_feature_detected!("avx512dq")
+                && std::arch::is_x86_feature_detected!("avx512vl")
+                && std::arch::is_x86_feature_detected!("avx512bitalg")
+                && std::arch::is_x86_feature_detected!("avx512ifma")
+                && std::arch::is_x86_feature_detected!("avx512vbmi")
+                && std::arch::is_x86_feature_detected!("avx512vbmi2")
+                && std::arch::is_x86_feature_detected!("avx512vnni")
+                && std::arch::is_x86_feature_detected!("avx512vpopcntdq")
+                && std::arch::is_x86_feature_detected!("gfni")
+                && std::arch::is_x86_feature_detected!("vaes")
+                && std::arch::is_x86_feature_detected!("vpclmulqdq")
+            {
+                let avx512 = unsafe { fearless_simd::x86::Avx512::new_unchecked() };
+                avx512.vectorize(
+                    #[inline(always)]
+                    || #input_fn_name(avx512)
+                );
+            }
+        }
+    };
+
     let wasm_snippet = quote! {
         #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
         #[test]
@@ -124,6 +156,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #wasm_snippet
         #sse4_snippet
         #avx2_snippet
+        #avx512_snippet
     }
     .into()
 }
@@ -144,6 +177,10 @@ fn exclude_sse4(_test_name: &str) -> bool {
 }
 
 fn exclude_avx2(_test_name: &str) -> bool {
+    false
+}
+
+fn exclude_avx512(_test_name: &str) -> bool {
     false
 }
 
