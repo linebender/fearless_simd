@@ -39,11 +39,11 @@ pub(crate) trait Level {
     /// The full path to the `core_arch` token wrapped by this SIMD level token.
     fn token_inner(&self) -> TokenStream;
 
-    /// Whether to generate From/SimdFrom conversions for arch types at this level.
-    /// This should return false if another level already provides these conversions
-    /// (e.g., AVX-512 with native_width=256 should return false since AVX2 provides them).
-    fn generate_arch_conversions(&self) -> bool {
-        true
+    /// Override the default logic for whether to use the generic split/combine implementation
+    /// for an operation. Returns `Some(true)` to force generic, `Some(false)` to force native,
+    /// or `None` to use the default logic based on native_width.
+    fn force_generic_op(&self, _op: &Op, _vec_ty: &VecType) -> Option<bool> {
+        None
     }
 
     /// Any additional imports or supporting code necessary for the module (for instance, importing
@@ -101,7 +101,13 @@ pub(crate) trait Level {
         let mut methods = vec![];
         for vec_ty in SIMD_TYPES {
             for op in ops_for_type(vec_ty) {
-                if op.sig.should_use_generic_op(vec_ty, native_width) {
+                // Check if the level wants to override the generic op decision
+                let use_generic = match self.force_generic_op(&op, vec_ty) {
+                    Some(force) => force,
+                    None => op.sig.should_use_generic_op(vec_ty, native_width),
+                };
+
+                if use_generic {
                     methods.push(generic_op(&op, vec_ty));
                     continue;
                 }
@@ -185,10 +191,6 @@ pub(crate) trait Level {
     }
 
     fn make_type_impl(&self) -> TokenStream {
-        // Skip generating conversions if another level already provides them
-        if !self.generate_arch_conversions() {
-            return quote! {};
-        }
         let native_width = self.native_width();
         let max_block_size = self.max_block_size();
         let mut result = vec![];

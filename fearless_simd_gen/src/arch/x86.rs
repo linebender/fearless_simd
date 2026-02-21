@@ -166,9 +166,11 @@ pub(crate) fn coarse_type(vec_ty: &VecType) -> &'static str {
 
 pub(crate) fn set1_intrinsic(vec_ty: &VecType) -> Ident {
     use ScalarType::*;
-    let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
-        (Int | Unsigned | Mask, 64) => "epi64x",
-        (scalar, bits) => op_suffix(scalar, bits, false),
+    let suffix = match (vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
+        // For 128/256-bit, use epi64x; for 512-bit, use epi64 (AVX-512 naming)
+        (Int | Unsigned | Mask, 64, 512) => "epi64",
+        (Int | Unsigned | Mask, 64, _) => "epi64x",
+        (scalar, bits, _) => op_suffix(scalar, bits, false),
     };
 
     intrinsic_ident("set1", suffix, vec_ty.n_bits())
@@ -273,7 +275,7 @@ pub(crate) fn float_compare_method(method: &str, vec_ty: &VecType) -> TokenStrea
             };
             quote! { #ident }
         }
-        256 => {
+        256 | 512 => {
             // For AVX2 and up, Intel gives us a generic comparison intrinsic that takes a predicate. There are 32,
             // of which only a few are useful and the rest will violate IEEE754 and/or raise a SIGFPE on NaN.
             //

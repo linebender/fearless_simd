@@ -36,9 +36,7 @@ impl Level for X86 {
         match self {
             Self::Sse4_2 => 128,
             Self::Avx2 => 256,
-            // TODO: Use 512-bit native width once AVX-512 specific operations are implemented.
-            // For now, keep the same as AVX2 to generate equivalent code.
-            Self::Avx512 => 256,
+            Self::Avx512 => 512,
         }
     }
 
@@ -55,13 +53,30 @@ impl Level for X86 {
         })
     }
 
-    fn generate_arch_conversions(&self) -> bool {
-        match self {
-            Self::Sse4_2 => true,
-            Self::Avx2 => true,
-            // AVX-512 uses the same native_width as AVX2 (256), so AVX2 already provides
-            // the From/SimdFrom conversions for the arch types.
-            Self::Avx512 => false,
+    // TODO: change the mask API to use native masks, so that this workaround is no longer needed
+    fn force_generic_op(&self, op: &Op, vec_ty: &VecType) -> Option<bool> {
+        // For AVX-512 with 512-bit vectors, force generic (split/combine) for operations
+        // that aren't implemented yet with native AVX-512 intrinsics.
+        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
+            use OpSig::*;
+            match &op.sig {
+                // These are implemented natively for 512-bit
+                Splat | Split { .. } | Combine { .. } | Cvt { .. } | MaskReduce { .. }
+                | Zip { .. } | Unzip { .. } | FromArray { .. } | AsArray { .. }
+                | StoreArray | FromBytes | ToBytes
+                | LoadInterleaved { .. } | StoreInterleaved { .. } => None,
+
+                // Slide operations - WithinBlocks can use generic, AcrossBlocks needs native impl
+                Slide { granularity: SlideGranularity::WithinBlocks } => Some(true),
+                Slide { granularity: SlideGranularity::AcrossBlocks } => None,
+
+                // Comparisons, binary ops, unary ops, etc. - use generic for now
+                // until we implement proper AVX-512 mask-based comparisons
+                Compare | Binary | Unary | Ternary | Select | Shift | Reinterpret { .. }
+                | WidenNarrow { .. } => Some(true),
+            }
+        } else {
+            None
         }
     }
 
@@ -105,7 +120,15 @@ impl Level for X86 {
         let alignr_helpers = self.dyn_alignr_helpers();
         let slide_helpers = match self {
             Self::Sse4_2 => Self::sse42_slide_helpers(),
-            Self::Avx2 | Self::Avx512 => Self::avx2_slide_helpers(),
+            Self::Avx2 => Self::avx2_slide_helpers(),
+            Self::Avx512 => {
+                let avx2_helpers = Self::avx2_slide_helpers();
+                let avx512_helpers = Self::avx512_slide_helpers();
+                quote! {
+                    #avx2_helpers
+                    #avx512_helpers
+                }
+            }
         };
 
         quote! {
@@ -747,6 +770,32 @@ impl X86 {
                     }
                 }
             }
+        } else if *self == Self::Avx512 && half_ty.n_bits() == 256 {
+            // Split a 512-bit vector into two 256-bit halves using AVX-512 intrinsics
+            let (cast_intrinsic, extract_intrinsic) = match vec_ty.scalar {
+                ScalarType::Float if vec_ty.scalar_bits == 32 => (
+                    format_ident!("_mm512_castps512_ps256"),
+                    format_ident!("_mm512_extractf32x8_ps"),
+                ),
+                ScalarType::Float => (
+                    format_ident!("_mm512_castpd512_pd256"),
+                    format_ident!("_mm512_extractf64x4_pd"),
+                ),
+                _ => (
+                    format_ident!("_mm512_castsi512_si256"),
+                    format_ident!("_mm512_extracti64x4_epi64"),
+                ),
+            };
+            quote! {
+                #method_sig {
+                    unsafe {
+                        (
+                            #cast_intrinsic(a.into()).simd_into(self),
+                            #extract_intrinsic::<1>(a.into()).simd_into(self),
+                        )
+                    }
+                }
+            }
         } else {
             generic_block_split(method_sig, half_ty, self.max_block_size())
         }
@@ -769,6 +818,30 @@ impl X86 {
                 #method_sig {
                     unsafe {
                         #set_intrinsic(a.into(), b.into()).simd_into(self)
+                    }
+                }
+            }
+        } else if *self == Self::Avx512 && combined_ty.n_bits() == 512 {
+            // Combine two 256-bit vectors into one 512-bit vector using AVX-512 intrinsics
+            let (cast_intrinsic, insert_intrinsic) = match (vec_ty.scalar, vec_ty.scalar_bits) {
+                (ScalarType::Float, 32) => (
+                    format_ident!("_mm512_castps256_ps512"),
+                    format_ident!("_mm512_insertf32x8"),
+                ),
+                (ScalarType::Float, 64) => (
+                    format_ident!("_mm512_castpd256_pd512"),
+                    format_ident!("_mm512_insertf64x4"),
+                ),
+                _ => (
+                    format_ident!("_mm512_castsi256_si512"),
+                    format_ident!("_mm512_inserti64x4"),
+                ),
+            };
+            quote! {
+                #method_sig {
+                    unsafe {
+                        let lo = #cast_intrinsic(a.into());
+                        #insert_intrinsic::<1>(lo, b.into()).simd_into(self)
                     }
                 }
             }
@@ -811,6 +884,45 @@ impl X86 {
                     coarse_type(vec_ty),
                     256,
                 );
+
+                quote! {
+                    unsafe {
+                        let lo = #lo(a.into(), b.into());
+                        let hi = #hi(a.into(), b.into());
+
+                        #shuffle::<#shuffle_immediate>(lo, hi).simd_into(self)
+                    }
+                }
+            }
+            512 => {
+                // AVX-512 zip: unpack within 128-bit lanes, then shuffle across 256-bit lanes
+                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+                let lo = intrinsic_ident("unpacklo", suffix, vec_ty.n_bits());
+                let hi = intrinsic_ident("unpackhi", suffix, vec_ty.n_bits());
+                // Shuffle control: for zip_low we want lanes [0, 0, 2, 2], for zip_high [1, 1, 3, 3]
+                // _mm512_shuffle_i64x2 takes 4 2-bit indices (one for each 128-bit lane)
+                // zip_low: take lane 0 from lo, lane 0 from hi, lane 2 from lo, lane 2 from hi
+                // = 0b_10_10_00_00 = 0xA0 for the first arg, but we need to interleave...
+                // Actually we need to use shuffle_f64x2 or shuffle_i64x2 which shuffles 128-bit lanes
+                let shuffle_immediate = if select_low {
+                    // lo has unpacked low halves of each 128-bit lane: [0, 0', 2, 2']
+                    // hi has unpacked high halves of each 128-bit lane: [1, 1', 3, 3']
+                    // We want: [0, 0', 1, 1'] - take lanes 0,1 from lo and lanes 0,1 from hi
+                    // shuffle_i64x2::<0b_01_00_01_00>(lo, hi) = [lo[0], lo[1], hi[0], hi[1]]
+                    quote! { 0b_01_00_01_00 }
+                } else {
+                    // We want: [2, 2', 3, 3'] - take lanes 2,3 from lo and lanes 2,3 from hi
+                    // shuffle_i64x2::<0b_11_10_11_10>(lo, hi) = [lo[2], lo[3], hi[2], hi[3]]
+                    quote! { 0b_11_10_11_10 }
+                };
+
+                let shuffle = match vec_ty.scalar {
+                    ScalarType::Float if vec_ty.scalar_bits == 32 => {
+                        format_ident!("_mm512_shuffle_f32x4")
+                    }
+                    ScalarType::Float => format_ident!("_mm512_shuffle_f64x2"),
+                    _ => format_ident!("_mm512_shuffle_i64x2"),
+                };
 
                 quote! {
                     unsafe {
@@ -980,6 +1092,119 @@ impl X86 {
                     }
                 }
             }
+            (ScalarType::Float, 512, 32) => {
+                // 512-bit shuffle of 32-bit floats
+                // First permute within each 256-bit half to group evens/odds
+                let permute_mask = quote! { _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15) };
+                let shuffle_immediate = if select_even {
+                    quote! { 0b01_00_01_00 }
+                } else {
+                    quote! { 0b11_10_11_10 }
+                };
+
+                quote! {
+                    unsafe {
+                        let t1 = _mm512_permutexvar_ps(#permute_mask, a.into());
+                        let t2 = _mm512_permutexvar_ps(#permute_mask, b.into());
+                        _mm512_shuffle_f32x4::<#shuffle_immediate>(t1, t2).simd_into(self)
+                    }
+                }
+            }
+            (ScalarType::Float, 512, 64) => {
+                // 512-bit shuffle of 64-bit floats
+                let permute_mask = quote! { _mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7) };
+                let shuffle_immediate = if select_even {
+                    quote! { 0b01_00_01_00 }
+                } else {
+                    quote! { 0b11_10_11_10 }
+                };
+
+                quote! {
+                    unsafe {
+                        let t1 = _mm512_permutexvar_pd(#permute_mask, a.into());
+                        let t2 = _mm512_permutexvar_pd(#permute_mask, b.into());
+                        _mm512_shuffle_f64x2::<#shuffle_immediate>(t1, t2).simd_into(self)
+                    }
+                }
+            }
+            (_, 512, 64) => {
+                // 512-bit shuffle of 64-bit integers
+                let permute_mask = quote! { _mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7) };
+                let shuffle_immediate = if select_even {
+                    quote! { 0b01_00_01_00 }
+                } else {
+                    quote! { 0b11_10_11_10 }
+                };
+
+                quote! {
+                    unsafe {
+                        let t1 = _mm512_permutexvar_epi64(#permute_mask, a.into());
+                        let t2 = _mm512_permutexvar_epi64(#permute_mask, b.into());
+                        _mm512_shuffle_i64x2::<#shuffle_immediate>(t1, t2).simd_into(self)
+                    }
+                }
+            }
+            (_, 512, 32) => {
+                // 512-bit shuffle of 32-bit integers
+                let permute_mask = quote! { _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15) };
+                let shuffle_immediate = if select_even {
+                    quote! { 0b01_00_01_00 }
+                } else {
+                    quote! { 0b11_10_11_10 }
+                };
+
+                quote! {
+                    unsafe {
+                        let t1 = _mm512_permutexvar_epi32(#permute_mask, a.into());
+                        let t2 = _mm512_permutexvar_epi32(#permute_mask, b.into());
+                        _mm512_shuffle_i32x4::<#shuffle_immediate>(t1, t2).simd_into(self)
+                    }
+                }
+            }
+            (_, 512, 16 | 8) => {
+                // 512-bit shuffle of 8 or 16-bit integers
+                // Separate out the even-indexed and odd-indexed elements within each 128-bit lane
+                let mask = match vec_ty.scalar_bits {
+                    8 => {
+                        // For 8-bit elements: move even indices to low half, odd to high half
+                        quote! {
+                            _mm512_set4_epi64(
+                                0x0F0D0B0907050301u64 as i64, 0x0E0C0A0806040200u64 as i64,
+                                0x0F0D0B0907050301u64 as i64, 0x0E0C0A0806040200u64 as i64
+                            )
+                        }
+                    }
+                    16 => {
+                        // For 16-bit elements: move even indices to low half, odd to high half
+                        quote! {
+                            _mm512_set4_epi64(
+                                0x0F0E0B0A07060302u64 as i64, 0x0D0C090805040100u64 as i64,
+                                0x0F0E0B0A07060302u64 as i64, 0x0D0C090805040100u64 as i64
+                            )
+                        }
+                    }
+                    _ => unreachable!(),
+                };
+
+                let shuffle_immediate = if select_even {
+                    quote! { 0b01_00_01_00 }
+                } else {
+                    quote! { 0b11_10_11_10 }
+                };
+
+                quote! {
+                    unsafe {
+                        let mask = #mask;
+                        let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
+                        let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
+
+                        let a_packed = _mm512_permutex_epi64::<0b11_01_10_00>(a_shuffled);
+                        let b_packed = _mm512_permutex_epi64::<0b11_01_10_00>(b_shuffled);
+
+                        _mm512_shuffle_i64x2::<#shuffle_immediate>(a_packed, b_packed).simd_into(self)
+                    }
+                }
+            }
             _ => unimplemented!(),
         };
 
@@ -1007,6 +1232,32 @@ impl X86 {
         };
         let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
         let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+        let byte_shift = if scalar_bytes == 1 {
+            quote! { SHIFT }
+        } else {
+            quote! { SHIFT * #scalar_bytes }
+        };
+
+        // For AVX-512 with 512-bit AcrossBlocks, we need special handling since we have __m512i directly
+        if *self == Self::Avx512 && vec_ty.n_bits() == 512 && granularity == AcrossBlocks {
+            return quote! {
+                #method_sig {
+                    unsafe {
+                        if SHIFT >= #max_shift {
+                            return b;
+                        }
+
+                        // b and a are swapped here to match ARM's vext semantics
+                        let result = cross_block_alignr_512(
+                            self.#to_bytes(b).val.0,
+                            self.#to_bytes(a).val.0,
+                            #byte_shift
+                        );
+                        self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                    }
+                }
+            };
+        }
 
         let alignr_op = match (granularity, vec_ty.n_bits(), self) {
             (WithinBlocks, 128, _) => {
@@ -1016,20 +1267,22 @@ impl X86 {
                 // For WithinBlocks, use elements per 128-bit block; for 128-bit vectors, use total elements
                 format_ident!("dyn_alignr_{}", vec_ty.n_bits())
             }
-            (AcrossBlocks, 256 | 512, Self::Sse4_2) => {
+            (AcrossBlocks, 256, Self::Sse4_2) => {
                 // Inter-block shift or rotate in SSE4.2: use cross_block_alignr
-
                 format_ident!("cross_block_alignr_128x{}", vec_ty.n_bits() / 128)
             }
-            (AcrossBlocks, 256 | 512, Self::Avx2 | Self::Avx512) => {
+            (AcrossBlocks, 256, Self::Avx2 | Self::Avx512) => {
+                format_ident!("cross_block_alignr_256x{}", vec_ty.n_bits() / 256)
+            }
+            (AcrossBlocks, 512, Self::Sse4_2) => {
+                // 512-bit AcrossBlocks for SSE4.2: use 128-bit blocks
+                format_ident!("cross_block_alignr_128x{}", vec_ty.n_bits() / 128)
+            }
+            (AcrossBlocks, 512, Self::Avx2) => {
+                // 512-bit AcrossBlocks for AVX2: use 256-bit blocks
                 format_ident!("cross_block_alignr_256x{}", vec_ty.n_bits() / 256)
             }
             _ => unimplemented!(),
-        };
-        let byte_shift = if scalar_bytes == 1 {
-            quote! { SHIFT }
-        } else {
-            quote! { SHIFT * #scalar_bytes }
         };
 
         quote! {
@@ -1061,6 +1314,54 @@ impl X86 {
             vec_ty.scalar_bits, target_scalar_bits,
             "we currently only support converting between types of the same width"
         );
+
+        // AVX-512 has native unsigned conversion intrinsics, so handle it specially
+        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
+            let expr = match (vec_ty.scalar, target_scalar, precise) {
+                (ScalarType::Float, ScalarType::Int, _) => {
+                    // f32 -> i32: _mm512_cvttps_epi32
+                    // TODO: precise mode should handle out-of-range values
+                    quote! {
+                        unsafe {
+                            _mm512_cvttps_epi32(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                (ScalarType::Float, ScalarType::Unsigned, _) => {
+                    // f32 -> u32: _mm512_cvttps_epu32 (native unsigned support!)
+                    // TODO: precise mode should handle out-of-range values
+                    quote! {
+                        unsafe {
+                            _mm512_cvttps_epu32(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                (ScalarType::Int, ScalarType::Float, _) => {
+                    // i32 -> f32: _mm512_cvtepi32_ps
+                    quote! {
+                        unsafe {
+                            _mm512_cvtepi32_ps(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                (ScalarType::Unsigned, ScalarType::Float, _) => {
+                    // u32 -> f32: _mm512_cvtepu32_ps (native unsigned support!)
+                    quote! {
+                        unsafe {
+                            _mm512_cvtepu32_ps(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                _ => unimplemented!("512-bit conversion from {:?} to {:?}", vec_ty.scalar, target_scalar),
+            };
+
+            return quote! {
+                #method_sig {
+                    #expr
+                }
+            };
+        }
+
         let expr = match (vec_ty.scalar, target_scalar) {
             (ScalarType::Float, ScalarType::Int | ScalarType::Unsigned) => {
                 let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
@@ -1284,6 +1585,50 @@ impl X86 {
             ScalarType::Mask,
             "mask reduce ops only operate on masks"
         );
+
+        // AVX-512 uses mask registers instead of movemask
+        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
+            // Use _mm512_movepi*_mask to convert to a mask register, then check the mask
+            // The mask return type depends on the element size:
+            // - 8-bit elements: __mmask64 (u64)
+            // - 16-bit elements: __mmask32 (u32)
+            // - 32-bit elements: __mmask16 (u16)
+            // - 64-bit elements: __mmask8 (u8)
+            let (move_mask, all_ones) = match vec_ty.scalar_bits {
+                8 => (
+                    format_ident!("_mm512_movepi8_mask"),
+                    quote! { 0xFFFFFFFFFFFFFFFFu64 },
+                ),
+                16 => (
+                    format_ident!("_mm512_movepi16_mask"),
+                    quote! { 0xFFFFFFFFu32 },
+                ),
+                32 => (
+                    format_ident!("_mm512_movepi32_mask"),
+                    quote! { 0xFFFFu16 },
+                ),
+                64 => (
+                    format_ident!("_mm512_movepi64_mask"),
+                    quote! { 0xFFu8 },
+                ),
+                _ => unreachable!(),
+            };
+
+            let op = match (quantifier, condition) {
+                (Quantifier::Any, true) => quote! { != 0 },
+                (Quantifier::Any, false) => quote! { != #all_ones },
+                (Quantifier::All, true) => quote! { == #all_ones },
+                (Quantifier::All, false) => quote! { == 0 },
+            };
+
+            return quote! {
+                #method_sig {
+                    unsafe {
+                        #move_mask(a.into()) #op
+                    }
+                }
+            };
+        }
 
         let (movemask, all_ones) = match vec_ty.scalar_bits {
             32 | 64 => {
@@ -1607,7 +1952,8 @@ impl X86 {
 
         let vec_widths: &[usize] = match self {
             Self::Sse4_2 => &[128],
-            Self::Avx2 | Self::Avx512 => &[128, 256],
+            Self::Avx2 => &[128, 256],
+            Self::Avx512 => &[128, 256, 512],
         };
 
         for vec_ty in vec_widths
@@ -1720,6 +2066,33 @@ impl X86 {
 
                 unsafe {
                     cross_block_alignr_one(&regs, 0, shift_bytes)
+                }
+            }
+        }
+    }
+
+    fn avx512_slide_helpers() -> TokenStream {
+        quote! {
+            /// Concatenates `b` and `a` (each __m512i = 4 x 128-bit blocks) and extracts 4 blocks starting at byte offset
+            /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+            #[inline(always)]
+            unsafe fn cross_block_alignr_512(a: __m512i, b: __m512i, shift_bytes: usize) -> __m512i {
+                // Split each __m512i into two __m256i halves
+                let a_lo = unsafe { _mm512_castsi512_si256(a) };
+                let a_hi = unsafe { _mm512_extracti64x4_epi64::<1>(a) };
+                let b_lo = unsafe { _mm512_castsi512_si256(b) };
+                let b_hi = unsafe { _mm512_extracti64x4_epi64::<1>(b) };
+
+                // Concatenation is [b : a], so b blocks come first (b_lo, b_hi, a_lo, a_hi)
+                let regs = [b_lo, b_hi, a_lo, a_hi];
+
+                // Get the two __m256i halves of the result
+                let result_lo = unsafe { cross_block_alignr_one(&regs, 0, shift_bytes) };
+                let result_hi = unsafe { cross_block_alignr_one(&regs, 2, shift_bytes) };
+
+                // Combine back into __m512i
+                unsafe {
+                    _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi)
                 }
             }
         }
