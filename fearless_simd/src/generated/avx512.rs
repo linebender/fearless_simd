@@ -5452,33 +5452,38 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_eq_f32x8(a0, b0), self.simd_eq_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<0i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_lt_f32x8(a0, b0), self.simd_lt_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<17i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_le_f32x8(a0, b0), self.simd_le_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<18i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_ge_f32x8(a0, b0), self.simd_ge_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<29i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_gt_f32x8(a0, b0), self.simd_gt_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<30i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -5842,33 +5847,38 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_eq_i8x32(a0, b0), self.simd_eq_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_lt_i8x32(a0, b0), self.simd_lt_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_le_i8x32(a0, b0), self.simd_le_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_ge_i8x32(a0, b0), self.simd_ge_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_gt_i8x32(a0, b0), self.simd_gt_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -6127,33 +6137,38 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_eq_u8x32(a0, b0), self.simd_eq_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_lt_u8x32(a0, b0), self.simd_lt_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epu8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_le_u8x32(a0, b0), self.simd_le_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epu8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_ge_u8x32(a0, b0), self.simd_ge_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epu8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_gt_u8x32(a0, b0), self.simd_gt_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epu8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -6416,9 +6431,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.simd_eq_mask8x32(a0, b0), self.simd_eq_mask8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool {
@@ -6591,33 +6607,38 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_eq_i16x16(a0, b0), self.simd_eq_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_lt_i16x16(a0, b0), self.simd_lt_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_le_i16x16(a0, b0), self.simd_le_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_ge_i16x16(a0, b0), self.simd_ge_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_gt_i16x16(a0, b0), self.simd_gt_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -6849,33 +6870,38 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_eq_u16x16(a0, b0), self.simd_eq_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_lt_u16x16(a0, b0), self.simd_lt_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epu16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_le_u16x16(a0, b0), self.simd_le_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epu16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_ge_u16x16(a0, b0), self.simd_ge_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epu16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_gt_u16x16(a0, b0), self.simd_gt_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epu16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -7146,12 +7172,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(
-            self.simd_eq_mask16x16(a0, b0),
-            self.simd_eq_mask16x16(a1, b1),
-        )
+        unsafe {
+            let mask = _mm512_cmpeq_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool {
@@ -7324,33 +7348,38 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_eq_i32x8(a0, b0), self.simd_eq_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_lt_i32x8(a0, b0), self.simd_lt_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_le_i32x8(a0, b0), self.simd_le_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_ge_i32x8(a0, b0), self.simd_ge_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_gt_i32x8(a0, b0), self.simd_gt_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -7582,33 +7611,38 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_eq_u32x8(a0, b0), self.simd_eq_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_lt_u32x8(a0, b0), self.simd_lt_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epu32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_le_u32x8(a0, b0), self.simd_le_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epu32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_ge_u32x8(a0, b0), self.simd_ge_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epu32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_gt_u32x8(a0, b0), self.simd_gt_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epu32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -7861,9 +7895,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.simd_eq_mask32x8(a0, b0), self.simd_eq_mask32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool {
@@ -8027,33 +8062,38 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_eq_f64x4(a0, b0), self.simd_eq_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<0i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_lt_f64x4(a0, b0), self.simd_lt_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<17i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_le_f64x4(a0, b0), self.simd_le_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<18i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_ge_f64x4(a0, b0), self.simd_ge_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<29i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_gt_f64x4(a0, b0), self.simd_gt_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<30i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -8289,9 +8329,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn simd_eq_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.simd_eq_mask64x4(a0, b0), self.simd_eq_mask64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi64_mask(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn any_true_mask64x8(self, a: mask64x8<Self>) -> bool {

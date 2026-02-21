@@ -78,19 +78,16 @@ impl Level for X86 {
                 | LoadInterleaved { .. }
                 | StoreInterleaved { .. } => None,
 
-                // Binary, unary, ternary, shift, select, reinterpret, widen/narrow, and slide
-                // all use native AVX-512 intrinsics
+                // All operations use native AVX-512 intrinsics for 512-bit vectors
                 Binary
                 | Unary
                 | Ternary
                 | Shift
                 | Select
+                | Compare
                 | Reinterpret { .. }
                 | WidenNarrow { .. }
                 | Slide { .. } => None,
-
-                // Comparisons use generic for now - they return mask registers which need different handling
-                Compare => Some(true),
             }
         } else {
             None
@@ -299,6 +296,12 @@ impl X86 {
         method: &str,
         vec_ty: &VecType,
     ) -> TokenStream {
+        // AVX-512 has native comparison intrinsics that return masks
+        // We then convert the mask back to a vector using movm intrinsics
+        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
+            return self.handle_compare_avx512(method_sig, method, vec_ty);
+        }
+
         let args = [quote! { a.into() }, quote! { b.into() }];
 
         let expr = if vec_ty.scalar != ScalarType::Float {
@@ -365,6 +368,142 @@ impl X86 {
                 vec_ty.n_bits(),
             );
             quote! { #ident(#compare_op(a.into(), b.into())) }
+        };
+
+        quote! {
+            #method_sig {
+                unsafe { #expr.simd_into(self) }
+            }
+        }
+    }
+
+    /// Handle AVX-512 comparisons using native mask-returning intrinsics
+    fn handle_compare_avx512(
+        &self,
+        method_sig: TokenStream,
+        method: &str,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        // AVX-512 comparisons return __mmask* types
+        // We need to convert back to vector masks using _mm512_movm_epi*
+
+        // Get the movm intrinsic to convert mask register to vector
+        let movm = match vec_ty.scalar_bits {
+            8 => format_ident!("_mm512_movm_epi8"),
+            16 => format_ident!("_mm512_movm_epi16"),
+            32 => format_ident!("_mm512_movm_epi32"),
+            64 => format_ident!("_mm512_movm_epi64"),
+            _ => unreachable!(),
+        };
+
+        let expr = if vec_ty.scalar == ScalarType::Float {
+            // Float comparisons use _mm512_cmp_ps_mask / _mm512_cmp_pd_mask with predicates
+            let cmp_mask = match vec_ty.scalar_bits {
+                32 => format_ident!("_mm512_cmp_ps_mask"),
+                64 => format_ident!("_mm512_cmp_pd_mask"),
+                _ => unreachable!(),
+            };
+            // Predicate values from Intel docs (same as used in float_compare_method)
+            let predicate = match method {
+                "simd_eq" => 0x00,
+                "simd_lt" => 0x11,
+                "simd_le" => 0x12,
+                "simd_ge" => 0x1D,
+                "simd_gt" => 0x1E,
+                _ => unreachable!(),
+            };
+            // The mask type is stored as __m512i internally, so movm gives us what we need
+            quote! {
+                let mask = #cmp_mask::<#predicate>(a.into(), b.into());
+                #movm(mask)
+            }
+        } else {
+            // Integer comparisons
+            let suffix = match vec_ty.scalar_bits {
+                8 => "epi8",
+                16 => "epi16",
+                32 => "epi32",
+                64 => "epi64",
+                _ => unreachable!(),
+            };
+            let unsigned_suffix = match vec_ty.scalar_bits {
+                8 => "epu8",
+                16 => "epu16",
+                32 => "epu32",
+                64 => "epu64",
+                _ => unreachable!(),
+            };
+
+            match method {
+                "simd_eq" => {
+                    let cmp = format_ident!("_mm512_cmpeq_{}_mask", suffix);
+                    quote! {
+                        let mask = #cmp(a.into(), b.into());
+                        #movm(mask)
+                    }
+                }
+                "simd_lt" => {
+                    if vec_ty.scalar == ScalarType::Unsigned {
+                        let cmp = format_ident!("_mm512_cmplt_{}_mask", unsigned_suffix);
+                        quote! {
+                            let mask = #cmp(a.into(), b.into());
+                            #movm(mask)
+                        }
+                    } else {
+                        let cmp = format_ident!("_mm512_cmplt_{}_mask", suffix);
+                        quote! {
+                            let mask = #cmp(a.into(), b.into());
+                            #movm(mask)
+                        }
+                    }
+                }
+                "simd_le" => {
+                    if vec_ty.scalar == ScalarType::Unsigned {
+                        let cmp = format_ident!("_mm512_cmple_{}_mask", unsigned_suffix);
+                        quote! {
+                            let mask = #cmp(a.into(), b.into());
+                            #movm(mask)
+                        }
+                    } else {
+                        let cmp = format_ident!("_mm512_cmple_{}_mask", suffix);
+                        quote! {
+                            let mask = #cmp(a.into(), b.into());
+                            #movm(mask)
+                        }
+                    }
+                }
+                "simd_gt" => {
+                    if vec_ty.scalar == ScalarType::Unsigned {
+                        let cmp = format_ident!("_mm512_cmpgt_{}_mask", unsigned_suffix);
+                        quote! {
+                            let mask = #cmp(a.into(), b.into());
+                            #movm(mask)
+                        }
+                    } else {
+                        let cmp = format_ident!("_mm512_cmpgt_{}_mask", suffix);
+                        quote! {
+                            let mask = #cmp(a.into(), b.into());
+                            #movm(mask)
+                        }
+                    }
+                }
+                "simd_ge" => {
+                    if vec_ty.scalar == ScalarType::Unsigned {
+                        let cmp = format_ident!("_mm512_cmpge_{}_mask", unsigned_suffix);
+                        quote! {
+                            let mask = #cmp(a.into(), b.into());
+                            #movm(mask)
+                        }
+                    } else {
+                        let cmp = format_ident!("_mm512_cmpge_{}_mask", suffix);
+                        quote! {
+                            let mask = #cmp(a.into(), b.into());
+                            #movm(mask)
+                        }
+                    }
+                }
+                _ => unreachable!(),
+            }
         };
 
         quote! {
