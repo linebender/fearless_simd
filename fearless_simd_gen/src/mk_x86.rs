@@ -78,22 +78,16 @@ impl Level for X86 {
                 | LoadInterleaved { .. }
                 | StoreInterleaved { .. } => None,
 
-                // Slide operations - WithinBlocks can use generic, AcrossBlocks needs native impl
-                Slide {
-                    granularity: SlideGranularity::WithinBlocks,
-                } => Some(true),
-                Slide {
-                    granularity: SlideGranularity::AcrossBlocks,
-                } => None,
-
-                // Binary, unary, ternary, shift, select, reinterpret, and widen/narrow use native AVX-512 intrinsics
+                // Binary, unary, ternary, shift, select, reinterpret, widen/narrow, and slide
+                // all use native AVX-512 intrinsics
                 Binary
                 | Unary
                 | Ternary
                 | Shift
                 | Select
                 | Reinterpret { .. }
-                | WidenNarrow { .. } => None,
+                | WidenNarrow { .. }
+                | Slide { .. } => None,
 
                 // Comparisons use generic for now - they return mask registers which need different handling
                 Compare => Some(true),

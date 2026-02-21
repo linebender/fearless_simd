@@ -5396,12 +5396,20 @@ impl Simd for Avx512 {
         a: f32x16<Self>,
         b: f32x16<Self>,
     ) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.slide_within_blocks_f32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_f32x8::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_f32x16(b).val.0,
+                self.cvt_to_bytes_f32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_f32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -5742,12 +5750,20 @@ impl Simd for Avx512 {
         a: i8x64<Self>,
         b: i8x64<Self>,
     ) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(
-            self.slide_within_blocks_i8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i8x32::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_i8x64(b).val.0,
+                self.cvt_to_bytes_i8x64(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_i8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -6019,12 +6035,20 @@ impl Simd for Avx512 {
         a: u8x64<Self>,
         b: u8x64<Self>,
     ) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(
-            self.slide_within_blocks_u8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u8x32::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_u8x64(b).val.0,
+                self.cvt_to_bytes_u8x64(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_u8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -6347,12 +6371,20 @@ impl Simd for Avx512 {
         a: mask8x64<Self>,
         b: mask8x64<Self>,
     ) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(
-            self.slide_within_blocks_mask8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask8x32::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_mask8x64(b).val.0,
+                self.cvt_to_bytes_mask8x64(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_mask8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -6494,12 +6526,20 @@ impl Simd for Avx512 {
         a: i16x32<Self>,
         b: i16x32<Self>,
     ) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(
-            self.slide_within_blocks_i16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i16x16::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_i16x32(b).val.0,
+                self.cvt_to_bytes_i16x32(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_i16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -6744,12 +6784,20 @@ impl Simd for Avx512 {
         a: u16x32<Self>,
         b: u16x32<Self>,
     ) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(
-            self.slide_within_blocks_u16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u16x16::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_u16x32(b).val.0,
+                self.cvt_to_bytes_u16x32(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_u16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -7053,12 +7101,20 @@ impl Simd for Avx512 {
         a: mask16x32<Self>,
         b: mask16x32<Self>,
     ) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(
-            self.slide_within_blocks_mask16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask16x16::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_mask16x32(b).val.0,
+                self.cvt_to_bytes_mask16x32(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_mask16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -7203,12 +7259,20 @@ impl Simd for Avx512 {
         a: i32x16<Self>,
         b: i32x16<Self>,
     ) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(
-            self.slide_within_blocks_i32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i32x8::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_i32x16(b).val.0,
+                self.cvt_to_bytes_i32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_i32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -7453,12 +7517,20 @@ impl Simd for Avx512 {
         a: u32x16<Self>,
         b: u32x16<Self>,
     ) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(
-            self.slide_within_blocks_u32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u32x8::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_u32x16(b).val.0,
+                self.cvt_to_bytes_u32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_u32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -7744,12 +7816,20 @@ impl Simd for Avx512 {
         a: mask32x16<Self>,
         b: mask32x16<Self>,
     ) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(
-            self.slide_within_blocks_mask32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask32x8::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_mask32x16(b).val.0,
+                self.cvt_to_bytes_mask32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_mask32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -7891,12 +7971,20 @@ impl Simd for Avx512 {
         a: f64x8<Self>,
         b: f64x8<Self>,
     ) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.slide_within_blocks_f64x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_f64x4::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 2usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_f64x8(b).val.0,
+                self.cvt_to_bytes_f64x8(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_f64x8(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -8156,12 +8244,20 @@ impl Simd for Avx512 {
         a: mask64x8<Self>,
         b: mask64x8<Self>,
     ) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(
-            self.slide_within_blocks_mask64x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask64x4::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 2usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_mask64x8(b).val.0,
+                self.cvt_to_bytes_mask64x8(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_mask64x8(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
