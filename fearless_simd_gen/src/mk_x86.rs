@@ -2415,28 +2415,42 @@ impl X86 {
     }
 
     fn avx512_slide_helpers() -> TokenStream {
+        // Generate index vectors for each possible shift amount (0..64).
+        // For shift S, we want to extract bytes [S..S+64) from the concatenation [b : a].
+        // In _mm512_permutex2var_epi8, indices 0-63 select from the first arg, 64-127 from the second.
+        // Since we want [b : a] with b in low bytes: b is first arg, a is second arg.
+        // So index i in result should get byte (S + i) from [b : a]:
+        //   - if (S + i) < 64: from b at position (S + i), index = S + i
+        //   - if (S + i) >= 64: from a at position (S + i - 64), index = 64 + (S + i - 64) = S + i
+        // So the index is simply (S + i) for all cases, which works because indices wrap at 128.
+        let match_arms: Vec<_> = (0usize..64)
+            .map(|shift| {
+                let indices: Vec<_> = (0u8..64)
+                    .map(|i| (shift as u8).wrapping_add(i) as i8)
+                    .collect();
+                // _mm512_set_epi8 takes arguments in reverse order (element 63 first, element 0 last)
+                let indices_rev: Vec<_> = indices.into_iter().rev().collect();
+                quote! {
+                    #shift => _mm512_set_epi8(#(#indices_rev),*)
+                }
+            })
+            .collect();
+
         quote! {
             /// Concatenates `b` and `a` (each __m512i = 4 x 128-bit blocks) and extracts 4 blocks starting at byte offset
             /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+            /// Uses AVX-512 VBMI's permutex2var for efficient cross-lane byte shuffling.
             #[inline(always)]
             unsafe fn cross_block_alignr_512(a: __m512i, b: __m512i, shift_bytes: usize) -> __m512i {
-                // Split each __m512i into two __m256i halves
-                let a_lo = unsafe { _mm512_castsi512_si256(a) };
-                let a_hi = unsafe { _mm512_extracti64x4_epi64::<1>(a) };
-                let b_lo = unsafe { _mm512_castsi512_si256(b) };
-                let b_hi = unsafe { _mm512_extracti64x4_epi64::<1>(b) };
-
-                // Concatenation is [b : a], so b blocks come first (b_lo, b_hi, a_lo, a_hi)
-                let regs = [b_lo, b_hi, a_lo, a_hi];
-
-                // Get the two __m256i halves of the result
-                let result_lo = unsafe { cross_block_alignr_one(&regs, 0, shift_bytes) };
-                let result_hi = unsafe { cross_block_alignr_one(&regs, 2, shift_bytes) };
-
-                // Combine back into __m512i
-                unsafe {
-                    _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi)
-                }
+                // Use _mm512_permutex2var_epi8 (VBMI) to select 64 bytes from the 128-byte concatenation.
+                // The index vector specifies which byte to select: 0-63 from b, 64-127 from a.
+                let idx = unsafe {
+                    match shift_bytes {
+                        #(#match_arms,)*
+                        _ => unreachable!()
+                    }
+                };
+                unsafe { _mm512_permutex2var_epi8(b, idx, a) }
             }
         }
     }
