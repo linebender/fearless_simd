@@ -1140,94 +1140,95 @@ impl X86 {
                 }
             }
             512 => {
-                // AVX-512 zip: zip_low takes lower 256-bit from each vector and fully zips them;
-                // zip_high takes upper 256-bit from each vector and fully zips them.
-                // This produces a 512-bit result from the interleaved 256-bit halves.
-                let half_bits = vec_ty.n_bits() / 2;
-                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
-                let lo = intrinsic_ident("unpacklo", suffix, half_bits);
-                let hi = intrinsic_ident("unpackhi", suffix, half_bits);
+                // AVX-512 zip using permutex2var instructions for efficient single-instruction interleaving.
+                // The control mask selects elements from `a` (indices 0..n-1) and `b` (indices n..2n-1).
+                let half_len = vec_ty.len / 2;
 
-                let shuffle = intrinsic_ident(
-                    match vec_ty.scalar {
-                        ScalarType::Float => "permute2f128",
-                        _ => "permute2x128",
-                    },
-                    match (vec_ty.scalar, vec_ty.scalar_bits) {
-                        (ScalarType::Float, 32) => "ps",
-                        (ScalarType::Float, 64) => "pd",
-                        _ => "si256",
-                    },
-                    half_bits,
-                );
+                // Generate the index pattern for zip_low or zip_high
+                // For zip_low with 16 elements: interleave elements 0-7 from each vector
+                // For zip_high with 16 elements: interleave elements 8-15 from each vector
+                let base_offset = if select_low { 0usize } else { half_len };
+                let b_offset = vec_ty.len; // b's elements are at indices n..2n-1
 
-                // For float types, we need float cast/insert intrinsics
-                let (cast_512_to_256, extract_256, cast_256_to_512, insert_256) =
+                // Build index array: [base, base+b_offset, base+1, base+1+b_offset, ...]
+                let indices: Vec<_> = (0..half_len)
+                    .flat_map(|i| {
+                        let a_idx = base_offset + i;
+                        let b_idx = base_offset + i + b_offset;
+                        [a_idx, b_idx]
+                    })
+                    .collect();
+
+                // Choose the appropriate permutex2var intrinsic based on element type
+                // Note: for floats, use the epi32/epi64 set intrinsic since idx is always __m512i
+                let (permute_intrinsic, set_intrinsic, index_bits) =
                     match (vec_ty.scalar, vec_ty.scalar_bits) {
                         (ScalarType::Float, 32) => (
-                            format_ident!("_mm512_castps512_ps256"),
-                            format_ident!("_mm512_extractf32x8_ps"),
-                            format_ident!("_mm512_castps256_ps512"),
-                            format_ident!("_mm512_insertf32x8"),
+                            format_ident!("_mm512_permutex2var_ps"),
+                            format_ident!("_mm512_set_epi32"),
+                            32usize,
                         ),
                         (ScalarType::Float, 64) => (
-                            format_ident!("_mm512_castpd512_pd256"),
-                            format_ident!("_mm512_extractf64x4_pd"),
-                            format_ident!("_mm512_castpd256_pd512"),
-                            format_ident!("_mm512_insertf64x4"),
+                            format_ident!("_mm512_permutex2var_pd"),
+                            format_ident!("_mm512_set_epi64"),
+                            64usize,
                         ),
-                        _ => (
-                            format_ident!("_mm512_castsi512_si256"),
-                            format_ident!("_mm512_extracti64x4_epi64"),
-                            format_ident!("_mm512_castsi256_si512"),
-                            format_ident!("_mm512_inserti64x4"),
+                        (_, 8) => (
+                            format_ident!("_mm512_permutex2var_epi8"),
+                            format_ident!("_mm512_set_epi8"),
+                            8usize,
                         ),
+                        (_, 16) => (
+                            format_ident!("_mm512_permutex2var_epi16"),
+                            format_ident!("_mm512_set_epi16"),
+                            16usize,
+                        ),
+                        (_, 32) => (
+                            format_ident!("_mm512_permutex2var_epi32"),
+                            format_ident!("_mm512_set_epi32"),
+                            32usize,
+                        ),
+                        (_, 64) => (
+                            format_ident!("_mm512_permutex2var_epi64"),
+                            format_ident!("_mm512_set_epi64"),
+                            64usize,
+                        ),
+                        _ => unreachable!(),
                     };
 
-                if select_low {
-                    // zip_low: take lower 256-bit from each, fully zip them to produce 512-bit result
-                    quote! {
-                        unsafe {
-                            // Extract lower 256-bit halves
-                            let a_half = #cast_512_to_256(a.into());
-                            let b_half = #cast_512_to_256(b.into());
-
-                            // Perform full 256-bit zip (produces 256-bit interleaved result)
-                            // unpacklo + unpackhi work on 128-bit lanes, then permute combines
-                            let lo_unpacked = #lo(a_half, b_half);
-                            let hi_unpacked = #hi(a_half, b_half);
-
-                            // Combine: lower 128 bits of lo_unpacked, lower 128 bits of hi_unpacked
-                            let result_lo = #shuffle::<0b0010_0000>(lo_unpacked, hi_unpacked);
-                            // Combine: upper 128 bits of lo_unpacked, upper 128 bits of hi_unpacked
-                            let result_hi = #shuffle::<0b0011_0001>(lo_unpacked, hi_unpacked);
-
-                            // Combine back to 512-bit
-                            let combined = #insert_256::<1>(#cast_256_to_512(result_lo), result_hi);
-                            combined.simd_into(self)
+                // _mm512_set_* takes arguments from most-significant to least-significant,
+                // so we need to reverse the indices
+                let reversed_indices: Vec<_> = indices.iter().rev().copied().collect();
+                let index_literals: Vec<_> = reversed_indices
+                    .iter()
+                    .map(|&i| {
+                        // Use the appropriate integer type for each set intrinsic
+                        match index_bits {
+                            8 => {
+                                let i = i as i8;
+                                quote! { #i }
+                            }
+                            16 => {
+                                let i = i as i16;
+                                quote! { #i }
+                            }
+                            32 => {
+                                let i = i as i32;
+                                quote! { #i }
+                            }
+                            64 => {
+                                let i = i as i64;
+                                quote! { #i }
+                            }
+                            _ => unreachable!(),
                         }
-                    }
-                } else {
-                    // zip_high: take upper 256-bit from each, fully zip them to produce 512-bit result
-                    quote! {
-                        unsafe {
-                            // Extract upper 256-bit halves
-                            let a_half = #extract_256::<1>(a.into());
-                            let b_half = #extract_256::<1>(b.into());
+                    })
+                    .collect();
 
-                            // Perform full 256-bit zip
-                            let lo_unpacked = #lo(a_half, b_half);
-                            let hi_unpacked = #hi(a_half, b_half);
-
-                            // Combine: lower 128 bits of lo_unpacked, lower 128 bits of hi_unpacked
-                            let result_lo = #shuffle::<0b0010_0000>(lo_unpacked, hi_unpacked);
-                            // Combine: upper 128 bits of lo_unpacked, upper 128 bits of hi_unpacked
-                            let result_hi = #shuffle::<0b0011_0001>(lo_unpacked, hi_unpacked);
-
-                            // Combine back to 512-bit
-                            let combined = #insert_256::<1>(#cast_256_to_512(result_lo), result_hi);
-                            combined.simd_into(self)
-                        }
+                quote! {
+                    unsafe {
+                        let idx = #set_intrinsic(#(#index_literals),*);
+                        #permute_intrinsic(a.into(), idx, b.into()).simd_into(self)
                     }
                 }
             }

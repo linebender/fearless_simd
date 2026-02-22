@@ -5488,27 +5488,21 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn zip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         unsafe {
-            let a_half = _mm512_castps512_ps256(a.into());
-            let b_half = _mm512_castps512_ps256(b.into());
-            let lo_unpacked = _mm256_unpacklo_ps(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_ps(a_half, b_half);
-            let result_lo = _mm256_permute2f128_ps::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2f128_ps::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_insertf32x8::<1>(_mm512_castps256_ps512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi32(
+                23i32, 7i32, 22i32, 6i32, 21i32, 5i32, 20i32, 4i32, 19i32, 3i32, 18i32, 2i32,
+                17i32, 1i32, 16i32, 0i32,
+            );
+            _mm512_permutex2var_ps(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
     fn zip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         unsafe {
-            let a_half = _mm512_extractf32x8_ps::<1>(a.into());
-            let b_half = _mm512_extractf32x8_ps::<1>(b.into());
-            let lo_unpacked = _mm256_unpacklo_ps(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_ps(a_half, b_half);
-            let result_lo = _mm256_permute2f128_ps::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2f128_ps::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_insertf32x8::<1>(_mm512_castps256_ps512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi32(
+                31i32, 15i32, 30i32, 14i32, 29i32, 13i32, 28i32, 12i32, 27i32, 11i32, 26i32, 10i32,
+                25i32, 9i32, 24i32, 8i32,
+            );
+            _mm512_permutex2var_ps(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -5925,27 +5919,28 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn zip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         unsafe {
-            let a_half = _mm512_castsi512_si256(a.into());
-            let b_half = _mm512_castsi512_si256(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi8(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi8(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi8(
+                95i8, 31i8, 94i8, 30i8, 93i8, 29i8, 92i8, 28i8, 91i8, 27i8, 90i8, 26i8, 89i8, 25i8,
+                88i8, 24i8, 87i8, 23i8, 86i8, 22i8, 85i8, 21i8, 84i8, 20i8, 83i8, 19i8, 82i8, 18i8,
+                81i8, 17i8, 80i8, 16i8, 79i8, 15i8, 78i8, 14i8, 77i8, 13i8, 76i8, 12i8, 75i8, 11i8,
+                74i8, 10i8, 73i8, 9i8, 72i8, 8i8, 71i8, 7i8, 70i8, 6i8, 69i8, 5i8, 68i8, 4i8, 67i8,
+                3i8, 66i8, 2i8, 65i8, 1i8, 64i8, 0i8,
+            );
+            _mm512_permutex2var_epi8(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
     fn zip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         unsafe {
-            let a_half = _mm512_extracti64x4_epi64::<1>(a.into());
-            let b_half = _mm512_extracti64x4_epi64::<1>(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi8(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi8(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi8(
+                127i8, 63i8, 126i8, 62i8, 125i8, 61i8, 124i8, 60i8, 123i8, 59i8, 122i8, 58i8,
+                121i8, 57i8, 120i8, 56i8, 119i8, 55i8, 118i8, 54i8, 117i8, 53i8, 116i8, 52i8,
+                115i8, 51i8, 114i8, 50i8, 113i8, 49i8, 112i8, 48i8, 111i8, 47i8, 110i8, 46i8,
+                109i8, 45i8, 108i8, 44i8, 107i8, 43i8, 106i8, 42i8, 105i8, 41i8, 104i8, 40i8,
+                103i8, 39i8, 102i8, 38i8, 101i8, 37i8, 100i8, 36i8, 99i8, 35i8, 98i8, 34i8, 97i8,
+                33i8, 96i8, 32i8,
+            );
+            _mm512_permutex2var_epi8(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -6231,27 +6226,28 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn zip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         unsafe {
-            let a_half = _mm512_castsi512_si256(a.into());
-            let b_half = _mm512_castsi512_si256(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi8(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi8(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi8(
+                95i8, 31i8, 94i8, 30i8, 93i8, 29i8, 92i8, 28i8, 91i8, 27i8, 90i8, 26i8, 89i8, 25i8,
+                88i8, 24i8, 87i8, 23i8, 86i8, 22i8, 85i8, 21i8, 84i8, 20i8, 83i8, 19i8, 82i8, 18i8,
+                81i8, 17i8, 80i8, 16i8, 79i8, 15i8, 78i8, 14i8, 77i8, 13i8, 76i8, 12i8, 75i8, 11i8,
+                74i8, 10i8, 73i8, 9i8, 72i8, 8i8, 71i8, 7i8, 70i8, 6i8, 69i8, 5i8, 68i8, 4i8, 67i8,
+                3i8, 66i8, 2i8, 65i8, 1i8, 64i8, 0i8,
+            );
+            _mm512_permutex2var_epi8(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
     fn zip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         unsafe {
-            let a_half = _mm512_extracti64x4_epi64::<1>(a.into());
-            let b_half = _mm512_extracti64x4_epi64::<1>(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi8(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi8(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi8(
+                127i8, 63i8, 126i8, 62i8, 125i8, 61i8, 124i8, 60i8, 123i8, 59i8, 122i8, 58i8,
+                121i8, 57i8, 120i8, 56i8, 119i8, 55i8, 118i8, 54i8, 117i8, 53i8, 116i8, 52i8,
+                115i8, 51i8, 114i8, 50i8, 113i8, 49i8, 112i8, 48i8, 111i8, 47i8, 110i8, 46i8,
+                109i8, 45i8, 108i8, 44i8, 107i8, 43i8, 106i8, 42i8, 105i8, 41i8, 104i8, 40i8,
+                103i8, 39i8, 102i8, 38i8, 101i8, 37i8, 100i8, 36i8, 99i8, 35i8, 98i8, 34i8, 97i8,
+                33i8, 96i8, 32i8,
+            );
+            _mm512_permutex2var_epi8(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -6711,27 +6707,23 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn zip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         unsafe {
-            let a_half = _mm512_castsi512_si256(a.into());
-            let b_half = _mm512_castsi512_si256(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi16(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi16(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi16(
+                47i16, 15i16, 46i16, 14i16, 45i16, 13i16, 44i16, 12i16, 43i16, 11i16, 42i16, 10i16,
+                41i16, 9i16, 40i16, 8i16, 39i16, 7i16, 38i16, 6i16, 37i16, 5i16, 36i16, 4i16,
+                35i16, 3i16, 34i16, 2i16, 33i16, 1i16, 32i16, 0i16,
+            );
+            _mm512_permutex2var_epi16(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
     fn zip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         unsafe {
-            let a_half = _mm512_extracti64x4_epi64::<1>(a.into());
-            let b_half = _mm512_extracti64x4_epi64::<1>(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi16(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi16(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi16(
+                63i16, 31i16, 62i16, 30i16, 61i16, 29i16, 60i16, 28i16, 59i16, 27i16, 58i16, 26i16,
+                57i16, 25i16, 56i16, 24i16, 55i16, 23i16, 54i16, 22i16, 53i16, 21i16, 52i16, 20i16,
+                51i16, 19i16, 50i16, 18i16, 49i16, 17i16, 48i16, 16i16,
+            );
+            _mm512_permutex2var_epi16(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -6984,27 +6976,23 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn zip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         unsafe {
-            let a_half = _mm512_castsi512_si256(a.into());
-            let b_half = _mm512_castsi512_si256(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi16(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi16(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi16(
+                47i16, 15i16, 46i16, 14i16, 45i16, 13i16, 44i16, 12i16, 43i16, 11i16, 42i16, 10i16,
+                41i16, 9i16, 40i16, 8i16, 39i16, 7i16, 38i16, 6i16, 37i16, 5i16, 36i16, 4i16,
+                35i16, 3i16, 34i16, 2i16, 33i16, 1i16, 32i16, 0i16,
+            );
+            _mm512_permutex2var_epi16(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
     fn zip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         unsafe {
-            let a_half = _mm512_extracti64x4_epi64::<1>(a.into());
-            let b_half = _mm512_extracti64x4_epi64::<1>(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi16(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi16(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi16(
+                63i16, 31i16, 62i16, 30i16, 61i16, 29i16, 60i16, 28i16, 59i16, 27i16, 58i16, 26i16,
+                57i16, 25i16, 56i16, 24i16, 55i16, 23i16, 54i16, 22i16, 53i16, 21i16, 52i16, 20i16,
+                51i16, 19i16, 50i16, 18i16, 49i16, 17i16, 48i16, 16i16,
+            );
+            _mm512_permutex2var_epi16(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -7472,27 +7460,21 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn zip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         unsafe {
-            let a_half = _mm512_castsi512_si256(a.into());
-            let b_half = _mm512_castsi512_si256(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi32(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi32(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi32(
+                23i32, 7i32, 22i32, 6i32, 21i32, 5i32, 20i32, 4i32, 19i32, 3i32, 18i32, 2i32,
+                17i32, 1i32, 16i32, 0i32,
+            );
+            _mm512_permutex2var_epi32(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
     fn zip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         unsafe {
-            let a_half = _mm512_extracti64x4_epi64::<1>(a.into());
-            let b_half = _mm512_extracti64x4_epi64::<1>(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi32(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi32(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi32(
+                31i32, 15i32, 30i32, 14i32, 29i32, 13i32, 28i32, 12i32, 27i32, 11i32, 26i32, 10i32,
+                25i32, 9i32, 24i32, 8i32,
+            );
+            _mm512_permutex2var_epi32(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -7745,27 +7727,21 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn zip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         unsafe {
-            let a_half = _mm512_castsi512_si256(a.into());
-            let b_half = _mm512_castsi512_si256(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi32(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi32(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi32(
+                23i32, 7i32, 22i32, 6i32, 21i32, 5i32, 20i32, 4i32, 19i32, 3i32, 18i32, 2i32,
+                17i32, 1i32, 16i32, 0i32,
+            );
+            _mm512_permutex2var_epi32(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
     fn zip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         unsafe {
-            let a_half = _mm512_extracti64x4_epi64::<1>(a.into());
-            let b_half = _mm512_extracti64x4_epi64::<1>(b.into());
-            let lo_unpacked = _mm256_unpacklo_epi32(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_epi32(a_half, b_half);
-            let result_lo = _mm256_permute2x128_si256::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2x128_si256::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi32(
+                31i32, 15i32, 30i32, 14i32, 29i32, 13i32, 28i32, 12i32, 27i32, 11i32, 26i32, 10i32,
+                25i32, 9i32, 24i32, 8i32,
+            );
+            _mm512_permutex2var_epi32(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -8206,27 +8182,15 @@ impl Simd for Avx512 {
     #[inline(always)]
     fn zip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
         unsafe {
-            let a_half = _mm512_castpd512_pd256(a.into());
-            let b_half = _mm512_castpd512_pd256(b.into());
-            let lo_unpacked = _mm256_unpacklo_pd(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_pd(a_half, b_half);
-            let result_lo = _mm256_permute2f128_pd::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2f128_pd::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_insertf64x4::<1>(_mm512_castpd256_pd512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi64(11i64, 3i64, 10i64, 2i64, 9i64, 1i64, 8i64, 0i64);
+            _mm512_permutex2var_pd(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
     fn zip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
         unsafe {
-            let a_half = _mm512_extractf64x4_pd::<1>(a.into());
-            let b_half = _mm512_extractf64x4_pd::<1>(b.into());
-            let lo_unpacked = _mm256_unpacklo_pd(a_half, b_half);
-            let hi_unpacked = _mm256_unpackhi_pd(a_half, b_half);
-            let result_lo = _mm256_permute2f128_pd::<0b0010_0000>(lo_unpacked, hi_unpacked);
-            let result_hi = _mm256_permute2f128_pd::<0b0011_0001>(lo_unpacked, hi_unpacked);
-            let combined = _mm512_insertf64x4::<1>(_mm512_castpd256_pd512(result_lo), result_hi);
-            combined.simd_into(self)
+            let idx = _mm512_set_epi64(15i64, 7i64, 14i64, 6i64, 13i64, 5i64, 12i64, 4i64);
+            _mm512_permutex2var_pd(a.into(), idx, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
