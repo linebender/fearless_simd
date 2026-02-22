@@ -1147,7 +1147,7 @@ impl X86 {
                 // Generate the index pattern for zip_low or zip_high
                 // For zip_low with 16 elements: interleave elements 0-7 from each vector
                 // For zip_high with 16 elements: interleave elements 8-15 from each vector
-                let base_offset = if select_low { 0usize } else { half_len };
+                let base_offset = if select_low { 0_usize } else { half_len };
                 let b_offset = vec_ty.len; // b's elements are at indices n..2n-1
 
                 // Build index array: [base, base+b_offset, base+1, base+1+b_offset, ...]
@@ -1166,32 +1166,32 @@ impl X86 {
                         (ScalarType::Float, 32) => (
                             format_ident!("_mm512_permutex2var_ps"),
                             format_ident!("_mm512_set_epi32"),
-                            32usize,
+                            32_usize,
                         ),
                         (ScalarType::Float, 64) => (
                             format_ident!("_mm512_permutex2var_pd"),
                             format_ident!("_mm512_set_epi64"),
-                            64usize,
+                            64_usize,
                         ),
                         (_, 8) => (
                             format_ident!("_mm512_permutex2var_epi8"),
                             format_ident!("_mm512_set_epi8"),
-                            8usize,
+                            8_usize,
                         ),
                         (_, 16) => (
                             format_ident!("_mm512_permutex2var_epi16"),
                             format_ident!("_mm512_set_epi16"),
-                            16usize,
+                            16_usize,
                         ),
                         (_, 32) => (
                             format_ident!("_mm512_permutex2var_epi32"),
                             format_ident!("_mm512_set_epi32"),
-                            32usize,
+                            32_usize,
                         ),
                         (_, 64) => (
                             format_ident!("_mm512_permutex2var_epi64"),
                             format_ident!("_mm512_set_epi64"),
-                            64usize,
+                            64_usize,
                         ),
                         _ => unreachable!(),
                     };
@@ -1205,19 +1205,19 @@ impl X86 {
                         // Use the appropriate integer type for each set intrinsic
                         match index_bits {
                             8 => {
-                                let i = i as i8;
+                                let i: i8 = i.try_into().unwrap();
                                 quote! { #i }
                             }
                             16 => {
-                                let i = i as i16;
+                                let i: i16 = i.try_into().unwrap();
                                 quote! { #i }
                             }
                             32 => {
-                                let i = i as i32;
+                                let i: i32 = i.try_into().unwrap();
                                 quote! { #i }
                             }
                             64 => {
-                                let i = i as i64;
+                                let i: i64 = i.try_into().unwrap();
                                 quote! { #i }
                             }
                             _ => unreachable!(),
@@ -2358,7 +2358,7 @@ impl X86 {
         }
     }
 
-    /// Helpers shared between AVX2 and AVX-512 (cross_block_alignr_one and cross_block_alignr_256x1).
+    /// Helpers shared between AVX2 and AVX-512 (`cross_block_alignr_one` and `cross_block_alignr_256x1`).
     fn avx2_slide_helpers_common() -> TokenStream {
         quote! {
             /// Computes one output __m256i for `cross_block_alignr_*` operations.
@@ -2431,10 +2431,11 @@ impl X86 {
         //   - if (S + i) < 64: from b at position (S + i), index = S + i
         //   - if (S + i) >= 64: from a at position (S + i - 64), index = 64 + (S + i - 64) = S + i
         // So the index is simply (S + i) for all cases, which works because indices wrap at 128.
-        let match_arms: Vec<_> = (0usize..64)
+        let match_arms: Vec<_> = (0_usize..64)
             .map(|shift| {
-                let indices: Vec<_> = (0u8..64)
-                    .map(|i| (shift as u8).wrapping_add(i) as i8)
+                let shift_u8: u8 = shift.try_into().unwrap();
+                let indices: Vec<i8> = (0_u8..64)
+                    .map(|i| shift_u8.wrapping_add(i).cast_signed())
                     .collect();
                 // _mm512_set_epi8 takes arguments in reverse order (element 63 first, element 0 last)
                 let indices_rev: Vec<_> = indices.into_iter().rev().collect();
