@@ -177,6 +177,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: install stable toolchain
         uses: dtolnay/rust-toolchain@master
@@ -190,7 +192,9 @@ jobs:
           save-if: ${{ github.event_name != 'merge_group' }}
 
       - name: run code generator
-        run: cargo run --bin fearless_simd_gen
+        run: |
+          cargo run --bin fearless_simd_gen --release
+          cargo run --bin fearless_simd_gen --release -- core-arch
 
       - name: check for uncommitted changes
         run: git diff --exit-code
