@@ -97,10 +97,10 @@ impl Level for X86 {
             Self::Sse4_2 => Self::sse42_slide_helpers(),
             Self::Avx2 => Self::avx2_slide_helpers(),
             Self::Avx512 => {
-                let avx2_helpers = Self::avx2_slide_helpers();
+                let avx2_common_helpers = Self::avx2_slide_helpers_common();
                 let avx512_helpers = Self::avx512_slide_helpers();
                 quote! {
-                    #avx2_helpers
+                    #avx2_common_helpers
                     #avx512_helpers
                 }
             }
@@ -2358,7 +2358,8 @@ impl X86 {
         }
     }
 
-    fn avx2_slide_helpers() -> TokenStream {
+    /// Helpers shared between AVX2 and AVX-512 (cross_block_alignr_one and cross_block_alignr_256x1).
+    fn avx2_slide_helpers_common() -> TokenStream {
         quote! {
             /// Computes one output __m256i for `cross_block_alignr_*` operations.
             ///
@@ -2385,6 +2386,25 @@ impl X86 {
                 unsafe { dyn_alignr_256(hi_blocks, lo_blocks, intra_shift) }
             }
 
+            /// Concatenates `b` and `a` (each 1 x __m256i = 2 blocks) and extracts 2 blocks starting at byte offset
+            /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+            #[inline(always)]
+            unsafe fn cross_block_alignr_256x1(a: __m256i, b: __m256i, shift_bytes: usize) -> __m256i {
+                // Concatenation is [b : a], so b comes first
+                let regs = [b, a];
+
+                unsafe {
+                    cross_block_alignr_one(&regs, 0, shift_bytes)
+                }
+            }
+        }
+    }
+
+    fn avx2_slide_helpers() -> TokenStream {
+        let common = Self::avx2_slide_helpers_common();
+        quote! {
+            #common
+
             /// Concatenates `b` and `a` (each 2 x __m256i = 4 blocks) and extracts 4 blocks starting at byte offset
             /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
             #[inline(always)]
@@ -2397,18 +2417,6 @@ impl X86 {
                         cross_block_alignr_one(&regs, 0, shift_bytes),
                         cross_block_alignr_one(&regs, 2, shift_bytes),
                     ]
-                }
-            }
-
-            /// Concatenates `b` and `a` (each 1 x __m256i = 2 blocks) and extracts 2 blocks starting at byte offset
-            /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
-            #[inline(always)]
-            unsafe fn cross_block_alignr_256x1(a: __m256i, b: __m256i, shift_bytes: usize) -> __m256i {
-                // Concatenation is [b : a], so b comes first
-                let regs = [b, a];
-
-                unsafe {
-                    cross_block_alignr_one(&regs, 0, shift_bytes)
                 }
             }
         }

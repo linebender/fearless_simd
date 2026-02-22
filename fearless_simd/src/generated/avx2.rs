@@ -8645,6 +8645,13 @@ unsafe fn cross_block_alignr_one(
     };
     unsafe { dyn_alignr_256(hi_blocks, lo_blocks, intra_shift) }
 }
+#[doc = r" Concatenates `b` and `a` (each 1 x __m256i = 2 blocks) and extracts 2 blocks starting at byte offset"]
+#[doc = r" `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics."]
+#[inline(always)]
+unsafe fn cross_block_alignr_256x1(a: __m256i, b: __m256i, shift_bytes: usize) -> __m256i {
+    let regs = [b, a];
+    unsafe { cross_block_alignr_one(&regs, 0, shift_bytes) }
+}
 #[doc = r" Concatenates `b` and `a` (each 2 x __m256i = 4 blocks) and extracts 4 blocks starting at byte offset"]
 #[doc = r" `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics."]
 #[inline(always)]
@@ -8660,11 +8667,4 @@ unsafe fn cross_block_alignr_256x2(
             cross_block_alignr_one(&regs, 2, shift_bytes),
         ]
     }
-}
-#[doc = r" Concatenates `b` and `a` (each 1 x __m256i = 2 blocks) and extracts 2 blocks starting at byte offset"]
-#[doc = r" `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics."]
-#[inline(always)]
-unsafe fn cross_block_alignr_256x1(a: __m256i, b: __m256i, shift_bytes: usize) -> __m256i {
-    let regs = [b, a];
-    unsafe { cross_block_alignr_one(&regs, 0, shift_bytes) }
 }
