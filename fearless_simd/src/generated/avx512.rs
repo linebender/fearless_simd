@@ -5567,15 +5567,15 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_roundscale_ps::<1i32>(a.into()).simd_into(self) }
+        unsafe { _mm512_roundscale_ps::<_MM_FROUND_TO_NEG_INF>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_roundscale_ps::<2i32>(a.into()).simd_into(self) }
+        unsafe { _mm512_roundscale_ps::<_MM_FROUND_TO_POS_INF>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_roundscale_ps::<0i32>(a.into()).simd_into(self) }
+        unsafe { _mm512_roundscale_ps::<_MM_FROUND_TO_NEAREST_INT>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -5583,7 +5583,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_roundscale_ps::<3i32>(a.into()).simd_into(self) }
+        unsafe { _mm512_roundscale_ps::<_MM_FROUND_TO_ZERO>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
@@ -8243,15 +8243,15 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_roundscale_pd::<1i32>(a.into()).simd_into(self) }
+        unsafe { _mm512_roundscale_pd::<_MM_FROUND_TO_NEG_INF>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_roundscale_pd::<2i32>(a.into()).simd_into(self) }
+        unsafe { _mm512_roundscale_pd::<_MM_FROUND_TO_POS_INF>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_roundscale_pd::<0i32>(a.into()).simd_into(self) }
+        unsafe { _mm512_roundscale_pd::<_MM_FROUND_TO_NEAREST_INT>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -8259,7 +8259,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_roundscale_pd::<3i32>(a.into()).simd_into(self) }
+        unsafe { _mm512_roundscale_pd::<_MM_FROUND_TO_ZERO>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {

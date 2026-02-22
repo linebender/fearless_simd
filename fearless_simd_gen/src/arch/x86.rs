@@ -43,13 +43,11 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
         let suffix = op_suffix(ty.scalar, ty.scalar_bits, true);
         match op {
             "floor" | "ceil" | "round_ties_even" | "trunc" => {
-                // AVX-512 uses roundscale instead of round, with scale in bits 7:4 (0 for integers)
-                // and rounding mode in bits 3:0
                 let rounding_mode = match op {
-                    "floor" => 0x01,           // _MM_FROUND_TO_NEG_INF
-                    "ceil" => 0x02,            // _MM_FROUND_TO_POS_INF
-                    "round_ties_even" => 0x00, // _MM_FROUND_TO_NEAREST_INT
-                    "trunc" => 0x03,           // _MM_FROUND_TO_ZERO
+                    "floor" => quote! { _MM_FROUND_TO_NEG_INF },
+                    "ceil" => quote! { _MM_FROUND_TO_POS_INF },
+                    "round_ties_even" => quote! { _MM_FROUND_TO_NEAREST_INT },
+                    "trunc" => quote! { _MM_FROUND_TO_ZERO },
                     _ => unreachable!(),
                 };
                 if ty.n_bits() == 512 {
@@ -59,14 +57,7 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                     quote! { #intrinsic::<#rounding_mode>( #( #args, )* ) }
                 } else {
                     let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
-                    let rounding_const = match op {
-                        "floor" => quote! { _MM_FROUND_TO_NEG_INF },
-                        "ceil" => quote! { _MM_FROUND_TO_POS_INF },
-                        "round_ties_even" => quote! { _MM_FROUND_TO_NEAREST_INT },
-                        "trunc" => quote! { _MM_FROUND_TO_ZERO },
-                        _ => unreachable!(),
-                    };
-                    quote! { #intrinsic::<{#rounding_const | _MM_FROUND_NO_EXC}>( #( #args, )* ) }
+                    quote! { #intrinsic::<{#rounding_mode | _MM_FROUND_NO_EXC}>( #( #args, )* ) }
                 }
             }
             "neg" => match ty.scalar {
