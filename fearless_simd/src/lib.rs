@@ -666,7 +666,6 @@ impl Level {
                 target_feature = "movbe",
                 target_feature = "popcnt",
                 target_feature = "xsave",
-                not(target_feature = "avx512f")
             ))]
             return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             #[cfg(all(

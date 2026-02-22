@@ -93,7 +93,6 @@ macro_rules! dispatch {
             }
             #[cfg(all(
                 any(target_arch = "x86", target_arch = "x86_64"),
-                not(target_feature = "avx512f")
             ))]
             $crate::Level::Avx2(avx2) => {
                 let $simd = launder(avx2);
