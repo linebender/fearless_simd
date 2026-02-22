@@ -74,11 +74,11 @@ fn test_f32_to_i32_exhaustive<S: Simd>(simd: S) {
         || {
             for i in (0..u32::MAX).step_by(4) {
                 let floats = f32x4::from_fn(simd, |n| f32::from_bits(n as u32 + i));
-                let ints = floats.to_int::<i32x4<_>>();
+                let ints = floats.to_int_precise::<i32x4<_>>();
                 let ints_ref = (*floats).map(|f| f as i32);
                 assert_eq!(
                     *ints, ints_ref,
-                    "f32x4::to_int::<i32x4<_>>() returns the same results as Rust's `as i32`"
+                    "f32x4::to_int_precise::<i32x4<_>>() returns the same results as Rust's `as i32`"
                 );
             }
         },
@@ -98,11 +98,11 @@ fn test_f32_to_u32_exhaustive<S: Simd>(simd: S) {
         || {
             for i in (0..u32::MAX).step_by(4) {
                 let floats = f32x4::from_fn(simd, |n| f32::from_bits(n as u32 + i));
-                let ints = floats.to_int::<u32x4<_>>();
+                let ints = floats.to_int_precise::<u32x4<_>>();
                 let ints_ref = (*floats).map(|f| f as u32);
                 assert_eq!(
                     *ints, ints_ref,
-                    "f32x4::to_int::<u32x4<_>>() returns the same results as Rust's `as u32`"
+                    "f32x4::to_int_precise::<u32x4<_>>() returns the same results as Rust's `as u32`"
                 );
             }
         },
