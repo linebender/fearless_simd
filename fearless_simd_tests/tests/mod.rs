@@ -140,7 +140,7 @@ fn test_f32_to_u32_exhaustive<S: Simd>(simd: S) {
 
 #[simd_test]
 #[ignore]
-fn test_f32_to_i32<S: Simd>(simd: S) {
+fn test_f32_to_i32_exhaustive<S: Simd>(simd: S) {
     // The vectorize call doesn't affect the outcome of the test, but does make it complete far more quickly
     #[expect(
         clippy::cast_possible_truncation,
