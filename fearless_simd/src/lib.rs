@@ -386,7 +386,6 @@ impl Level {
                 && std::arch::is_x86_feature_detected!("popcnt")
                 && std::arch::is_x86_feature_detected!("xsave")
             {
-                #[cfg(not(target_feature = "avx512f"))]
                 return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
             // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
@@ -586,7 +585,6 @@ impl Level {
             // AVX-512 implicitly enables the "avx2" target feature, which is
             // the only target feature required to make our Avx2 token.
             Self::Avx512(_avx512) => unsafe { Some(Avx2::new_unchecked()) },
-            #[cfg(not(target_feature = "avx512f"))]
             Self::Avx2(avx2) => Some(avx2),
             _ => None,
         }
