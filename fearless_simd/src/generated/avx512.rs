@@ -5850,9 +5850,15 @@ impl Simd for Avx512 {
             let hi_16 = _mm512_cvtepi8_epi16(hi_256);
             let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
             let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
-            let lo_narrow = _mm512_cvtepi16_epi8(lo_shifted);
-            let hi_narrow = _mm512_cvtepi16_epi8(hi_shifted);
-            let result = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(lo_narrow), hi_narrow);
+            const PACK_LO_BYTES: __m512i = unsafe {
+                core::mem::transmute([
+                    0u8, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+                    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78,
+                    80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114,
+                    116, 118, 120, 122, 124, 126,
+                ])
+            };
+            let result = _mm512_permutex2var_epi8(lo_shifted, PACK_LO_BYTES, hi_shifted);
             result.simd_into(self)
         }
     }
@@ -5871,9 +5877,15 @@ impl Simd for Avx512 {
             let hi_16 = _mm512_cvtepi8_epi16(hi_256);
             let lo_shifted = _mm512_sra_epi16(lo_16, shift_count);
             let hi_shifted = _mm512_sra_epi16(hi_16, shift_count);
-            let lo_narrow = _mm512_cvtepi16_epi8(lo_shifted);
-            let hi_narrow = _mm512_cvtepi16_epi8(hi_shifted);
-            let result = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(lo_narrow), hi_narrow);
+            const PACK_LO_BYTES: __m512i = unsafe {
+                core::mem::transmute([
+                    0u8, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+                    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78,
+                    80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114,
+                    116, 118, 120, 122, 124, 126,
+                ])
+            };
+            let result = _mm512_permutex2var_epi8(lo_shifted, PACK_LO_BYTES, hi_shifted);
             result.simd_into(self)
         }
     }
@@ -6157,9 +6169,15 @@ impl Simd for Avx512 {
             let hi_16 = _mm512_cvtepu8_epi16(hi_256);
             let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
             let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
-            let lo_narrow = _mm512_cvtepi16_epi8(lo_shifted);
-            let hi_narrow = _mm512_cvtepi16_epi8(hi_shifted);
-            let result = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(lo_narrow), hi_narrow);
+            const PACK_LO_BYTES: __m512i = unsafe {
+                core::mem::transmute([
+                    0u8, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+                    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78,
+                    80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114,
+                    116, 118, 120, 122, 124, 126,
+                ])
+            };
+            let result = _mm512_permutex2var_epi8(lo_shifted, PACK_LO_BYTES, hi_shifted);
             result.simd_into(self)
         }
     }
@@ -6178,9 +6196,15 @@ impl Simd for Avx512 {
             let hi_16 = _mm512_cvtepu8_epi16(hi_256);
             let lo_shifted = _mm512_srl_epi16(lo_16, shift_count);
             let hi_shifted = _mm512_srl_epi16(hi_16, shift_count);
-            let lo_narrow = _mm512_cvtepi16_epi8(lo_shifted);
-            let hi_narrow = _mm512_cvtepi16_epi8(hi_shifted);
-            let result = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(lo_narrow), hi_narrow);
+            const PACK_LO_BYTES: __m512i = unsafe {
+                core::mem::transmute([
+                    0u8, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+                    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78,
+                    80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114,
+                    116, 118, 120, 122, 124, 126,
+                ])
+            };
+            let result = _mm512_permutex2var_epi8(lo_shifted, PACK_LO_BYTES, hi_shifted);
             result.simd_into(self)
         }
     }

@@ -771,7 +771,8 @@ impl X86 {
             if *self == Self::Avx512 && ty_bits == 512 {
                 // For AVX-512, use cvtepi8_epi16 for sign extension (simpler than unpack + cmpgt)
                 // We split 512-bit into two 256-bit halves, extend each to 512-bit, shift, then narrow back
-                // Use _mm512_cvtepi16_epi8 to truncate (not packs which interleaves within lanes)
+                // Use VBMI's permutex2var_epi8 to pack the results efficiently (faster than cvtepi16_epi8)
+                // See: https://github.com/llvm/llvm-project/issues/34219
 
                 let extend = match vec_ty.scalar {
                     ScalarType::Unsigned => format_ident!("_mm512_cvtepu8_epi16"),
@@ -797,13 +798,17 @@ impl X86 {
                             let lo_shifted = #shift_intrinsic(lo_16, shift_count);
                             let hi_shifted = #shift_intrinsic(hi_16, shift_count);
 
-                            // Truncate back to 8-bit using cvtepi16_epi8 (not packs which interleaves)
-                            // cvtepi16_epi8 takes 512-bit and returns 256-bit, so we combine the results
-                            let lo_narrow = _mm512_cvtepi16_epi8(lo_shifted);
-                            let hi_narrow = _mm512_cvtepi16_epi8(hi_shifted);
-
-                            // Combine the two 256-bit results into a 512-bit result
-                            let result = _mm512_inserti64x4::<1>(_mm512_castsi256_si512(lo_narrow), hi_narrow);
+                            // Truncate back to 8-bit using permutex2var to select low bytes from each 16-bit element.
+                            // This is more efficient than cvtepi16_epi8 which is 2 uops producing only 256-bit output.
+                            // Index vector: select bytes 0,2,4,...,62 from lo_shifted (indices 0-31 in output)
+                            // and bytes 0,2,4,...,62 from hi_shifted (indices 64,66,... -> output indices 32-63)
+                            const PACK_LO_BYTES: __m512i = unsafe { core::mem::transmute([
+                                0u8, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30,
+                                32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62,
+                                64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94,
+                                96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126,
+                            ]) };
+                            let result = _mm512_permutex2var_epi8(lo_shifted, PACK_LO_BYTES, hi_shifted);
                             result.simd_into(self)
                         }
                     }
