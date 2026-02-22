@@ -14,26 +14,26 @@ use crate::{
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
-#[doc = "The SIMD token for the \"AVX2\" and \"FMA\" level."]
+#[doc = "The SIMD token for the \"AVX-512\" level (Ice Lake feature set)."]
 #[derive(Clone, Copy, Debug)]
-pub struct Avx2 {
-    pub avx2: crate::core_arch::x86::Avx2,
+pub struct Avx512 {
+    pub avx512: crate::core_arch::x86::Avx512,
 }
-impl Avx2 {
+impl Avx512 {
     #[doc = r" Create a SIMD token."]
     #[doc = r""]
     #[doc = r" # Safety"]
     #[doc = r""]
-    #[doc = r" The AVX2 and FMA CPU features must be available."]
+    #[doc = r" The AVX-512 (Ice Lake feature set) CPU features must be available."]
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
         Self {
-            avx2: unsafe { crate::core_arch::x86::Avx2::new_unchecked() },
+            avx512: unsafe { crate::core_arch::x86::Avx512::new_unchecked() },
         }
     }
 }
-impl Seal for Avx2 {}
-impl ArchTypes for Avx2 {
+impl Seal for Avx512 {}
+impl ArchTypes for Avx512 {
     type f32x4 = crate::support::Aligned128<__m128>;
     type i8x16 = crate::support::Aligned128<__m128i>;
     type u8x16 = crate::support::Aligned128<__m128i>;
@@ -58,43 +58,45 @@ impl ArchTypes for Avx2 {
     type mask32x8 = crate::support::Aligned256<__m256i>;
     type f64x4 = crate::support::Aligned256<__m256d>;
     type mask64x4 = crate::support::Aligned256<__m256i>;
-    type f32x16 = crate::support::Aligned512<[__m256; 2usize]>;
-    type i8x64 = crate::support::Aligned512<[__m256i; 2usize]>;
-    type u8x64 = crate::support::Aligned512<[__m256i; 2usize]>;
-    type mask8x64 = crate::support::Aligned512<[__m256i; 2usize]>;
-    type i16x32 = crate::support::Aligned512<[__m256i; 2usize]>;
-    type u16x32 = crate::support::Aligned512<[__m256i; 2usize]>;
-    type mask16x32 = crate::support::Aligned512<[__m256i; 2usize]>;
-    type i32x16 = crate::support::Aligned512<[__m256i; 2usize]>;
-    type u32x16 = crate::support::Aligned512<[__m256i; 2usize]>;
-    type mask32x16 = crate::support::Aligned512<[__m256i; 2usize]>;
-    type f64x8 = crate::support::Aligned512<[__m256d; 2usize]>;
-    type mask64x8 = crate::support::Aligned512<[__m256i; 2usize]>;
+    type f32x16 = crate::support::Aligned512<__m512>;
+    type i8x64 = crate::support::Aligned512<__m512i>;
+    type u8x64 = crate::support::Aligned512<__m512i>;
+    type mask8x64 = crate::support::Aligned512<__m512i>;
+    type i16x32 = crate::support::Aligned512<__m512i>;
+    type u16x32 = crate::support::Aligned512<__m512i>;
+    type mask16x32 = crate::support::Aligned512<__m512i>;
+    type i32x16 = crate::support::Aligned512<__m512i>;
+    type u32x16 = crate::support::Aligned512<__m512i>;
+    type mask32x16 = crate::support::Aligned512<__m512i>;
+    type f64x8 = crate::support::Aligned512<__m512d>;
+    type mask64x8 = crate::support::Aligned512<__m512i>;
 }
-impl Simd for Avx2 {
-    type f32s = f32x8<Self>;
-    type f64s = f64x4<Self>;
-    type u8s = u8x32<Self>;
-    type i8s = i8x32<Self>;
-    type u16s = u16x16<Self>;
-    type i16s = i16x16<Self>;
-    type u32s = u32x8<Self>;
-    type i32s = i32x8<Self>;
-    type mask8s = mask8x32<Self>;
-    type mask16s = mask16x16<Self>;
-    type mask32s = mask32x8<Self>;
-    type mask64s = mask64x4<Self>;
+impl Simd for Avx512 {
+    type f32s = f32x16<Self>;
+    type f64s = f64x8<Self>;
+    type u8s = u8x64<Self>;
+    type i8s = i8x64<Self>;
+    type u16s = u16x32<Self>;
+    type i16s = i16x32<Self>;
+    type u32s = u32x16<Self>;
+    type i32s = i32x16<Self>;
+    type mask8s = mask8x64<Self>;
+    type mask16s = mask16x32<Self>;
+    type mask32s = mask32x16<Self>;
+    type mask64s = mask64x8<Self>;
     #[inline(always)]
     fn level(self) -> Level {
-        Level::Avx2(self)
+        Level::Avx512(self)
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-        #[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave")]
-        unsafe fn vectorize_avx2<F: FnOnce() -> R, R>(f: F) -> R {
+        #[target_feature(
+            enable = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
+        )]
+        unsafe fn vectorize_avx512<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }
-        unsafe { vectorize_avx2(f) }
+        unsafe { vectorize_avx512(f) }
     }
     #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
@@ -2707,9 +2709,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self> {
-        f32x16 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castps256_ps512(a.into());
+            _mm512_insertf32x8::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -3045,9 +3047,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self> {
-        i8x64 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -3330,9 +3332,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -3346,12 +3348,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
-        unsafe {
-            let (a0, a1) = self.split_u8x32(a);
-            let high = _mm256_cvtepu8_epi16(a0.into()).simd_into(self);
-            let low = _mm256_cvtepu8_epi16(a1.into()).simd_into(self);
-            self.combine_u16x16(high, low)
-        }
+        unsafe { _mm512_cvtepu8_epi16(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self> {
@@ -3504,9 +3501,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self> {
-        mask8x64 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -3748,9 +3745,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self> {
-        i16x32 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -4014,9 +4011,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self> {
-        u16x32 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -4195,9 +4192,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self> {
-        mask16x32 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -4427,9 +4424,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self> {
-        i32x16 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -4685,9 +4682,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self> {
-        u32x16 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -4867,9 +4864,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self> {
-        mask32x16 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -5139,9 +5136,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self> {
-        f64x8 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castpd256_pd512(a.into());
+            _mm512_insertf64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -5304,9 +5301,9 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self> {
-        mask64x8 {
-            val: crate::support::Aligned512([a.val.0, b.val.0]),
-            simd: self,
+        unsafe {
+            let lo = _mm512_castsi256_si512(a.into());
+            _mm512_inserti64x4::<1>(lo, b.into()).simd_into(self)
         }
     }
     #[inline(always)]
@@ -5320,8 +5317,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn splat_f32x16(self, val: f32) -> f32x16<Self> {
-        let half = self.splat_f32x8(val);
-        self.combine_f32x8(half, half)
+        unsafe { _mm512_set1_ps(val).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self> {
@@ -5339,15 +5335,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_f32x16(self, a: f32x16<Self>) -> [f32; 16usize] {
-        unsafe { core::mem::transmute::<[__m256; 2usize], [f32; 16usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512, [f32; 16usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_f32x16(self, a: &f32x16<Self>) -> &[f32; 16usize] {
-        unsafe { core::mem::transmute::<&[__m256; 2usize], &[f32; 16usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512, &[f32; 16usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize] {
-        unsafe { core::mem::transmute::<&mut [__m256; 2usize], &mut [f32; 16usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512, &mut [f32; 16usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
@@ -5383,7 +5379,7 @@ impl Simd for Avx2 {
             if SHIFT >= 16usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_f32x16(b).val.0,
                 self.cvt_to_bytes_f32x16(a).val.0,
                 SHIFT * 4usize,
@@ -5400,225 +5396,218 @@ impl Simd for Avx2 {
         a: f32x16<Self>,
         b: f32x16<Self>,
     ) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.slide_within_blocks_f32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_f32x8::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_f32x16(b).val.0,
+                self.cvt_to_bytes_f32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_f32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.abs_f32x8(a0), self.abs_f32x8(a1))
+        unsafe { _mm512_andnot_ps(_mm512_set1_ps(-0.0), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.neg_f32x8(a0), self.neg_f32x8(a1))
+        unsafe { _mm512_xor_ps(a.into(), _mm512_set1_ps(-0.0)).simd_into(self) }
     }
     #[inline(always)]
     fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.sqrt_f32x8(a0), self.sqrt_f32x8(a1))
+        unsafe { _mm512_sqrt_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.add_f32x8(a0, b0), self.add_f32x8(a1, b1))
+        unsafe { _mm512_add_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.sub_f32x8(a0, b0), self.sub_f32x8(a1, b1))
+        unsafe { _mm512_sub_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.mul_f32x8(a0, b0), self.mul_f32x8(a1, b1))
+        unsafe { _mm512_mul_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn div_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.div_f32x8(a0, b0), self.div_f32x8(a1, b1))
+        unsafe { _mm512_div_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn copysign_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.copysign_f32x8(a0, b0), self.copysign_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_set1_ps(-0.0);
+            _mm512_or_ps(
+                _mm512_and_ps(mask, b.into()),
+                _mm512_andnot_ps(mask, a.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_eq_f32x8(a0, b0), self.simd_eq_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<0i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_lt_f32x8(a0, b0), self.simd_lt_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<17i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_le_f32x8(a0, b0), self.simd_le_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<18i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_ge_f32x8(a0, b0), self.simd_ge_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<29i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_mask32x8(self.simd_gt_f32x8(a0, b0), self.simd_gt_f32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_ps_mask::<30i32>(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, _) = self.split_f32x16(a);
-        let (b0, _) = self.split_f32x16(b);
-        self.combine_f32x8(self.zip_low_f32x8(a0, b0), self.zip_high_f32x8(a0, b0))
+        unsafe {
+            let idx = _mm512_set_epi32(
+                23i32, 7i32, 22i32, 6i32, 21i32, 5i32, 20i32, 4i32, 19i32, 3i32, 18i32, 2i32,
+                17i32, 1i32, 16i32, 0i32,
+            );
+            _mm512_permutex2var_ps(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (_, a1) = self.split_f32x16(a);
-        let (_, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.zip_low_f32x8(a1, b1), self.zip_high_f32x8(a1, b1))
+        unsafe {
+            let idx = _mm512_set_epi32(
+                31i32, 15i32, 30i32, 14i32, 29i32, 13i32, 28i32, 12i32, 27i32, 11i32, 26i32, 10i32,
+                25i32, 9i32, 24i32, 8i32,
+            );
+            _mm512_permutex2var_ps(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.unzip_low_f32x8(a0, a1), self.unzip_low_f32x8(b0, b1))
+        unsafe {
+            let t1 = _mm512_permutexvar_ps(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                a.into(),
+            );
+            let t2 = _mm512_permutexvar_ps(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                b.into(),
+            );
+            _mm512_shuffle_f32x4::<0b01_00_01_00>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.unzip_high_f32x8(a0, a1), self.unzip_high_f32x8(b0, b1))
+        unsafe {
+            let t1 = _mm512_permutexvar_ps(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                a.into(),
+            );
+            let t2 = _mm512_permutexvar_ps(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                b.into(),
+            );
+            _mm512_shuffle_f32x4::<0b11_10_11_10>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.max_f32x8(a0, b0), self.max_f32x8(a1, b1))
+        unsafe { _mm512_max_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(self.min_f32x8(a0, b0), self.min_f32x8(a1, b1))
+        unsafe { _mm512_min_ps(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.max_precise_f32x8(a0, b0),
-            self.max_precise_f32x8(a1, b1),
-        )
+        unsafe {
+            let intermediate = _mm512_max_ps(a.into(), b.into());
+            let b_is_nan = _mm512_cmp_ps_mask::<0x03>(b.into(), b.into());
+            _mm512_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        self.combine_f32x8(
-            self.min_precise_f32x8(a0, b0),
-            self.min_precise_f32x8(a1, b1),
-        )
+        unsafe {
+            let intermediate = _mm512_min_ps(a.into(), b.into());
+            let b_is_nan = _mm512_cmp_ps_mask::<0x03>(b.into(), b.into());
+            _mm512_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn mul_add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(
-            self.mul_add_f32x8(a0, b0, c0),
-            self.mul_add_f32x8(a1, b1, c1),
-        )
+        unsafe { _mm512_fmadd_ps(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(
-            self.mul_sub_f32x8(a0, b0, c0),
-            self.mul_sub_f32x8(a1, b1, c1),
-        )
+        unsafe { _mm512_fmsub_ps(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.floor_f32x8(a0), self.floor_f32x8(a1))
+        unsafe { _mm512_roundscale_ps::<_MM_FROUND_TO_NEG_INF>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.ceil_f32x8(a0), self.ceil_f32x8(a1))
+        unsafe { _mm512_roundscale_ps::<_MM_FROUND_TO_POS_INF>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(
-            self.round_ties_even_f32x8(a0),
-            self.round_ties_even_f32x8(a1),
-        )
+        unsafe { _mm512_roundscale_ps::<_MM_FROUND_TO_NEAREST_INT>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.fract_f32x8(a0), self.fract_f32x8(a1))
+        a - self.trunc_f32x16(a)
     }
     #[inline(always)]
     fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.trunc_f32x8(a0), self.trunc_f32x8(a1))
+        unsafe { _mm512_roundscale_ps::<_MM_FROUND_TO_ZERO>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_f32x16(b);
-        let (c0, c1) = self.split_f32x16(c);
-        self.combine_f32x8(self.select_f32x8(a0, b0, c0), self.select_f32x8(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi32_mask(a.into());
+            _mm512_mask_blend_ps(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>) {
-        (
-            f32x8 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            f32x8 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castps512_ps256(a.into()).simd_into(self),
+                _mm512_extractf32x8_ps::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f64x4(
-            self.reinterpret_f64_f32x8(a0),
-            self.reinterpret_f64_f32x8(a1),
-        )
+        unsafe { _mm512_castps_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(
-            self.reinterpret_i32_f32x8(a0),
-            self.reinterpret_i32_f32x8(a1),
-        )
+        unsafe { _mm512_castps_si512(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
@@ -5667,47 +5656,57 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_f32x8(a0), self.reinterpret_u8_f32x8(a1))
+        unsafe { _mm512_castps_si512(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_f32x8(a0),
-            self.reinterpret_u32_f32x8(a1),
-        )
+        unsafe { _mm512_castps_si512(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u32x8(self.cvt_u32_f32x8(a0), self.cvt_u32_f32x8(a1))
+        unsafe { _mm512_cvttps_epu32(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn cvt_u32_precise_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u32x8(
-            self.cvt_u32_precise_f32x8(a0),
-            self.cvt_u32_precise_f32x8(a1),
-        )
+        unsafe {
+            let a = _mm512_max_ps(a.into(), _mm512_setzero_ps());
+            let mut converted = _mm512_cvttps_epu32(a);
+            let exceeds_range_mask =
+                _mm512_cmp_ps_mask::<{ _CMP_GT_OQ }>(a, _mm512_set1_ps(4294967040.0));
+            if exceeds_range_mask != 0 {
+                converted = _mm512_mask_blend_epi32(
+                    exceeds_range_mask,
+                    converted,
+                    _mm512_set1_epi32(u32::MAX.cast_signed()),
+                );
+            }
+            converted.simd_into(self)
+        }
     }
     #[inline(always)]
     fn cvt_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(self.cvt_i32_f32x8(a0), self.cvt_i32_f32x8(a1))
+        unsafe { _mm512_cvttps_epi32(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn cvt_i32_precise_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(
-            self.cvt_i32_precise_f32x8(a0),
-            self.cvt_i32_precise_f32x8(a1),
-        )
+        unsafe {
+            let a = a.into();
+            let mut converted = _mm512_cvttps_epi32(a);
+            let in_range_mask =
+                _mm512_cmp_ps_mask::<{ _CMP_LT_OQ }>(a, _mm512_set1_ps(2147483648.0));
+            let all_in_range = in_range_mask == 0xFFFF;
+            if !all_in_range {
+                converted =
+                    _mm512_mask_blend_epi32(in_range_mask, _mm512_set1_epi32(i32::MAX), converted);
+                let is_not_nan_mask = _mm512_cmp_ps_mask::<{ _CMP_ORD_Q }>(a, a);
+                converted = _mm512_maskz_mov_epi32(is_not_nan_mask, converted);
+            }
+            converted.simd_into(self)
+        }
     }
     #[inline(always)]
     fn splat_i8x64(self, val: i8) -> i8x64<Self> {
-        let half = self.splat_i8x32(val);
-        self.combine_i8x32(half, half)
+        unsafe { _mm512_set1_epi8(val).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self> {
@@ -5725,15 +5724,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_i8x64(self, a: i8x64<Self>) -> [i8; 64usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [i8; 64usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [i8; 64usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_i8x64(self, a: &i8x64<Self>) -> &[i8; 64usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[i8; 64usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[i8; 64usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_i8x64(self, a: &mut i8x64<Self>) -> &mut [i8; 64usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [i8; 64usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [i8; 64usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
@@ -5769,7 +5768,7 @@ impl Simd for Avx2 {
             if SHIFT >= 64usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_i8x64(b).val.0,
                 self.cvt_to_bytes_i8x64(a).val.0,
                 SHIFT,
@@ -5786,184 +5785,247 @@ impl Simd for Avx2 {
         a: i8x64<Self>,
         b: i8x64<Self>,
     ) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(
-            self.slide_within_blocks_i8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i8x32::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_i8x64(b).val.0,
+                self.cvt_to_bytes_i8x64(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_i8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.add_i8x32(a0, b0), self.add_i8x32(a1, b1))
+        unsafe { _mm512_add_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.sub_i8x32(a0, b0), self.sub_i8x32(a1, b1))
+        unsafe { _mm512_sub_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.mul_i8x32(a0, b0), self.mul_i8x32(a1, b1))
+        unsafe {
+            let dst_even = _mm512_mullo_epi16(a.into(), b.into());
+            let dst_odd = _mm512_mullo_epi16(
+                _mm512_srli_epi16::<8>(a.into()),
+                _mm512_srli_epi16::<8>(b.into()),
+            );
+            _mm512_or_si512(
+                _mm512_slli_epi16(dst_odd, 8),
+                _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn and_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.and_i8x32(a0, b0), self.and_i8x32(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.or_i8x32(a0, b0), self.or_i8x32(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.xor_i8x32(a0, b0), self.xor_i8x32(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.not_i8x32(a0), self.not_i8x32(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.shl_i8x32(a0, shift), self.shl_i8x32(a1, shift))
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+            let lo_256 = _mm512_castsi512_si256(val);
+            let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
+            let lo_16 = _mm512_cvtepi8_epi16(lo_256);
+            let hi_16 = _mm512_cvtepi8_epi16(hi_256);
+            let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
+            let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
+            const PACK_LO_BYTES: __m512i = unsafe {
+                core::mem::transmute([
+                    0u8, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+                    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78,
+                    80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114,
+                    116, 118, 120, 122, 124, 126,
+                ])
+            };
+            let result = _mm512_permutex2var_epi8(lo_shifted, PACK_LO_BYTES, hi_shifted);
+            result.simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.shlv_i8x32(a0, b0), self.shlv_i8x32(a1, b1))
+        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.shr_i8x32(a0, shift), self.shr_i8x32(a1, shift))
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+            let lo_256 = _mm512_castsi512_si256(val);
+            let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
+            let lo_16 = _mm512_cvtepi8_epi16(lo_256);
+            let hi_16 = _mm512_cvtepi8_epi16(hi_256);
+            let lo_shifted = _mm512_sra_epi16(lo_16, shift_count);
+            let hi_shifted = _mm512_sra_epi16(hi_16, shift_count);
+            const PACK_LO_BYTES: __m512i = unsafe {
+                core::mem::transmute([
+                    0u8, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+                    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78,
+                    80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114,
+                    116, 118, 120, 122, 124, 126,
+                ])
+            };
+            let result = _mm512_permutex2var_epi8(lo_shifted, PACK_LO_BYTES, hi_shifted);
+            result.simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.shrv_i8x32(a0, b0), self.shrv_i8x32(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_eq_i8x32(a0, b0), self.simd_eq_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_lt_i8x32(a0, b0), self.simd_lt_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_le_i8x32(a0, b0), self.simd_le_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_ge_i8x32(a0, b0), self.simd_ge_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_mask8x32(self.simd_gt_i8x32(a0, b0), self.simd_gt_i8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, _) = self.split_i8x64(a);
-        let (b0, _) = self.split_i8x64(b);
-        self.combine_i8x32(self.zip_low_i8x32(a0, b0), self.zip_high_i8x32(a0, b0))
+        unsafe {
+            let idx = _mm512_set_epi8(
+                95i8, 31i8, 94i8, 30i8, 93i8, 29i8, 92i8, 28i8, 91i8, 27i8, 90i8, 26i8, 89i8, 25i8,
+                88i8, 24i8, 87i8, 23i8, 86i8, 22i8, 85i8, 21i8, 84i8, 20i8, 83i8, 19i8, 82i8, 18i8,
+                81i8, 17i8, 80i8, 16i8, 79i8, 15i8, 78i8, 14i8, 77i8, 13i8, 76i8, 12i8, 75i8, 11i8,
+                74i8, 10i8, 73i8, 9i8, 72i8, 8i8, 71i8, 7i8, 70i8, 6i8, 69i8, 5i8, 68i8, 4i8, 67i8,
+                3i8, 66i8, 2i8, 65i8, 1i8, 64i8, 0i8,
+            );
+            _mm512_permutex2var_epi8(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (_, a1) = self.split_i8x64(a);
-        let (_, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.zip_low_i8x32(a1, b1), self.zip_high_i8x32(a1, b1))
+        unsafe {
+            let idx = _mm512_set_epi8(
+                127i8, 63i8, 126i8, 62i8, 125i8, 61i8, 124i8, 60i8, 123i8, 59i8, 122i8, 58i8,
+                121i8, 57i8, 120i8, 56i8, 119i8, 55i8, 118i8, 54i8, 117i8, 53i8, 116i8, 52i8,
+                115i8, 51i8, 114i8, 50i8, 113i8, 49i8, 112i8, 48i8, 111i8, 47i8, 110i8, 46i8,
+                109i8, 45i8, 108i8, 44i8, 107i8, 43i8, 106i8, 42i8, 105i8, 41i8, 104i8, 40i8,
+                103i8, 39i8, 102i8, 38i8, 101i8, 37i8, 100i8, 36i8, 99i8, 35i8, 98i8, 34i8, 97i8,
+                33i8, 96i8, 32i8,
+            );
+            _mm512_permutex2var_epi8(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.unzip_low_i8x32(a0, a1), self.unzip_low_i8x32(b0, b1))
+        unsafe {
+            let mask = _mm512_set4_epi64(
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+            );
+            let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
+            let a_packed = _mm512_permutex_epi64::<0b11_01_10_00>(a_shuffled);
+            let b_packed = _mm512_permutex_epi64::<0b11_01_10_00>(b_shuffled);
+            _mm512_shuffle_i64x2::<0b01_00_01_00>(a_packed, b_packed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.unzip_high_i8x32(a0, a1), self.unzip_high_i8x32(b0, b1))
+        unsafe {
+            let mask = _mm512_set4_epi64(
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+            );
+            let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
+            let a_packed = _mm512_permutex_epi64::<0b11_01_10_00>(a_shuffled);
+            let b_packed = _mm512_permutex_epi64::<0b11_01_10_00>(b_shuffled);
+            _mm512_shuffle_i64x2::<0b11_10_11_10>(a_packed, b_packed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_i8x64(self, a: mask8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        let (c0, c1) = self.split_i8x64(c);
-        self.combine_i8x32(self.select_i8x32(a0, b0, c0), self.select_i8x32(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi8_mask(a.into());
+            _mm512_mask_blend_epi8(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.min_i8x32(a0, b0), self.min_i8x32(a1, b1))
+        unsafe { _mm512_min_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        let (b0, b1) = self.split_i8x64(b);
-        self.combine_i8x32(self.max_i8x32(a0, b0), self.max_i8x32(a1, b1))
+        unsafe { _mm512_max_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
-        (
-            i8x32 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            i8x32 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
+        unsafe { _mm512_sub_epi8(_mm512_setzero_si512(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u8x32(self.reinterpret_u8_i8x32(a0), self.reinterpret_u8_i8x32(a1))
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i8x32(a0),
-            self.reinterpret_u32_i8x32(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
-        let half = self.splat_u8x32(val);
-        self.combine_u8x32(half, half)
+        unsafe { _mm512_set1_epi8(val.cast_signed()).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self> {
@@ -5981,15 +6043,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_u8x64(self, a: u8x64<Self>) -> [u8; 64usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [u8; 64usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [u8; 64usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_u8x64(self, a: &u8x64<Self>) -> &[u8; 64usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[u8; 64usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[u8; 64usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [u8; 64usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [u8; 64usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
@@ -6025,7 +6087,7 @@ impl Simd for Avx2 {
             if SHIFT >= 64usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_u8x64(b).val.0,
                 self.cvt_to_bytes_u8x64(a).val.0,
                 SHIFT,
@@ -6042,161 +6104,231 @@ impl Simd for Avx2 {
         a: u8x64<Self>,
         b: u8x64<Self>,
     ) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(
-            self.slide_within_blocks_u8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u8x32::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_u8x64(b).val.0,
+                self.cvt_to_bytes_u8x64(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_u8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.add_u8x32(a0, b0), self.add_u8x32(a1, b1))
+        unsafe { _mm512_add_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.sub_u8x32(a0, b0), self.sub_u8x32(a1, b1))
+        unsafe { _mm512_sub_epi8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.mul_u8x32(a0, b0), self.mul_u8x32(a1, b1))
+        unsafe {
+            let dst_even = _mm512_mullo_epi16(a.into(), b.into());
+            let dst_odd = _mm512_mullo_epi16(
+                _mm512_srli_epi16::<8>(a.into()),
+                _mm512_srli_epi16::<8>(b.into()),
+            );
+            _mm512_or_si512(
+                _mm512_slli_epi16(dst_odd, 8),
+                _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn and_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.and_u8x32(a0, b0), self.and_u8x32(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.or_u8x32(a0, b0), self.or_u8x32(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.xor_u8x32(a0, b0), self.xor_u8x32(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.not_u8x32(a0), self.not_u8x32(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.shl_u8x32(a0, shift), self.shl_u8x32(a1, shift))
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+            let lo_256 = _mm512_castsi512_si256(val);
+            let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
+            let lo_16 = _mm512_cvtepu8_epi16(lo_256);
+            let hi_16 = _mm512_cvtepu8_epi16(hi_256);
+            let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
+            let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
+            const PACK_LO_BYTES: __m512i = unsafe {
+                core::mem::transmute([
+                    0u8, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+                    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78,
+                    80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114,
+                    116, 118, 120, 122, 124, 126,
+                ])
+            };
+            let result = _mm512_permutex2var_epi8(lo_shifted, PACK_LO_BYTES, hi_shifted);
+            result.simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.shlv_u8x32(a0, b0), self.shlv_u8x32(a1, b1))
+        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u8x32(self.shr_u8x32(a0, shift), self.shr_u8x32(a1, shift))
+        unsafe {
+            let val = a.into();
+            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+            let lo_256 = _mm512_castsi512_si256(val);
+            let hi_256 = _mm512_extracti64x4_epi64::<1>(val);
+            let lo_16 = _mm512_cvtepu8_epi16(lo_256);
+            let hi_16 = _mm512_cvtepu8_epi16(hi_256);
+            let lo_shifted = _mm512_srl_epi16(lo_16, shift_count);
+            let hi_shifted = _mm512_srl_epi16(hi_16, shift_count);
+            const PACK_LO_BYTES: __m512i = unsafe {
+                core::mem::transmute([
+                    0u8, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+                    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78,
+                    80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114,
+                    116, 118, 120, 122, 124, 126,
+                ])
+            };
+            let result = _mm512_permutex2var_epi8(lo_shifted, PACK_LO_BYTES, hi_shifted);
+            result.simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.shrv_u8x32(a0, b0), self.shrv_u8x32(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_eq_u8x32(a0, b0), self.simd_eq_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_lt_u8x32(a0, b0), self.simd_lt_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epu8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_le_u8x32(a0, b0), self.simd_le_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epu8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_ge_u8x32(a0, b0), self.simd_ge_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epu8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_mask8x32(self.simd_gt_u8x32(a0, b0), self.simd_gt_u8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epu8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, _) = self.split_u8x64(a);
-        let (b0, _) = self.split_u8x64(b);
-        self.combine_u8x32(self.zip_low_u8x32(a0, b0), self.zip_high_u8x32(a0, b0))
+        unsafe {
+            let idx = _mm512_set_epi8(
+                95i8, 31i8, 94i8, 30i8, 93i8, 29i8, 92i8, 28i8, 91i8, 27i8, 90i8, 26i8, 89i8, 25i8,
+                88i8, 24i8, 87i8, 23i8, 86i8, 22i8, 85i8, 21i8, 84i8, 20i8, 83i8, 19i8, 82i8, 18i8,
+                81i8, 17i8, 80i8, 16i8, 79i8, 15i8, 78i8, 14i8, 77i8, 13i8, 76i8, 12i8, 75i8, 11i8,
+                74i8, 10i8, 73i8, 9i8, 72i8, 8i8, 71i8, 7i8, 70i8, 6i8, 69i8, 5i8, 68i8, 4i8, 67i8,
+                3i8, 66i8, 2i8, 65i8, 1i8, 64i8, 0i8,
+            );
+            _mm512_permutex2var_epi8(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (_, a1) = self.split_u8x64(a);
-        let (_, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.zip_low_u8x32(a1, b1), self.zip_high_u8x32(a1, b1))
+        unsafe {
+            let idx = _mm512_set_epi8(
+                127i8, 63i8, 126i8, 62i8, 125i8, 61i8, 124i8, 60i8, 123i8, 59i8, 122i8, 58i8,
+                121i8, 57i8, 120i8, 56i8, 119i8, 55i8, 118i8, 54i8, 117i8, 53i8, 116i8, 52i8,
+                115i8, 51i8, 114i8, 50i8, 113i8, 49i8, 112i8, 48i8, 111i8, 47i8, 110i8, 46i8,
+                109i8, 45i8, 108i8, 44i8, 107i8, 43i8, 106i8, 42i8, 105i8, 41i8, 104i8, 40i8,
+                103i8, 39i8, 102i8, 38i8, 101i8, 37i8, 100i8, 36i8, 99i8, 35i8, 98i8, 34i8, 97i8,
+                33i8, 96i8, 32i8,
+            );
+            _mm512_permutex2var_epi8(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.unzip_low_u8x32(a0, a1), self.unzip_low_u8x32(b0, b1))
+        unsafe {
+            let mask = _mm512_set4_epi64(
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+            );
+            let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
+            let a_packed = _mm512_permutex_epi64::<0b11_01_10_00>(a_shuffled);
+            let b_packed = _mm512_permutex_epi64::<0b11_01_10_00>(b_shuffled);
+            _mm512_shuffle_i64x2::<0b01_00_01_00>(a_packed, b_packed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.unzip_high_u8x32(a0, a1), self.unzip_high_u8x32(b0, b1))
+        unsafe {
+            let mask = _mm512_set4_epi64(
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+                0x0F0D0B0907050301u64.cast_signed(),
+                0x0E0C0A0806040200u64.cast_signed(),
+            );
+            let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
+            let a_packed = _mm512_permutex_epi64::<0b11_01_10_00>(a_shuffled);
+            let b_packed = _mm512_permutex_epi64::<0b11_01_10_00>(b_shuffled);
+            _mm512_shuffle_i64x2::<0b11_10_11_10>(a_packed, b_packed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_u8x64(self, a: mask8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        let (c0, c1) = self.split_u8x64(c);
-        self.combine_u8x32(self.select_u8x32(a0, b0, c0), self.select_u8x32(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi8_mask(a.into());
+            _mm512_mask_blend_epi8(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.min_u8x32(a0, b0), self.min_u8x32(a1, b1))
+        unsafe { _mm512_min_epu8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        let (b0, b1) = self.split_u8x64(b);
-        self.combine_u8x32(self.max_u8x32(a0, b0), self.max_u8x32(a1, b1))
+        unsafe { _mm512_max_epu8(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {
-        (
-            u8x32 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            u8x32 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
@@ -6255,16 +6387,11 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u8x32(a0),
-            self.reinterpret_u32_u8x32(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_mask8x64(self, val: i8) -> mask8x64<Self> {
-        let half = self.splat_mask8x32(val);
-        self.combine_mask8x32(half, half)
+        unsafe { _mm512_set1_epi8(val).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self> {
@@ -6282,15 +6409,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [i8; 64usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [i8; 64usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_mask8x64(self, a: &mask8x64<Self>) -> &[i8; 64usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[i8; 64usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[i8; 64usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_mask8x64(self, a: &mut mask8x64<Self>) -> &mut [i8; 64usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [i8; 64usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [i8; 64usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_mask8x64(self, a: mask8x64<Self>, dest: &mut [i8; 64usize]) -> () {
@@ -6330,7 +6457,7 @@ impl Simd for Avx2 {
             if SHIFT >= 64usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_mask8x64(b).val.0,
                 self.cvt_to_bytes_mask8x64(a).val.0,
                 SHIFT,
@@ -6347,35 +6474,36 @@ impl Simd for Avx2 {
         a: mask8x64<Self>,
         b: mask8x64<Self>,
     ) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(
-            self.slide_within_blocks_mask8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask8x32::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 16usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_mask8x64(b).val.0,
+                self.cvt_to_bytes_mask8x64(a).val.0,
+                SHIFT,
+            );
+            self.cvt_from_bytes_mask8x64(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.and_mask8x32(a0, b0), self.and_mask8x32(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.or_mask8x32(a0, b0), self.or_mask8x32(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.xor_mask8x32(a0, b0), self.xor_mask8x32(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.combine_mask8x32(self.not_mask8x32(a0), self.not_mask8x32(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn select_mask8x64(
@@ -6384,57 +6512,46 @@ impl Simd for Avx2 {
         b: mask8x64<Self>,
         c: mask8x64<Self>,
     ) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        let (c0, c1) = self.split_mask8x64(c);
-        self.combine_mask8x32(
-            self.select_mask8x32(a0, b0, c0),
-            self.select_mask8x32(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi8_mask(a.into());
+            _mm512_mask_blend_epi8(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(self.simd_eq_mask8x32(a0, b0), self.simd_eq_mask8x32(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi8_mask(a.into(), b.into());
+            _mm512_movm_epi8(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.any_true_mask8x32(a0) || self.any_true_mask8x32(a1)
+        unsafe { _mm512_movepi8_mask(a.into()) != 0 }
     }
     #[inline(always)]
     fn all_true_mask8x64(self, a: mask8x64<Self>) -> bool {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.all_true_mask8x32(a0) && self.all_true_mask8x32(a1)
+        unsafe { _mm512_movepi8_mask(a.into()) == 0xFFFFFFFFFFFFFFFFu64 }
     }
     #[inline(always)]
     fn any_false_mask8x64(self, a: mask8x64<Self>) -> bool {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.any_false_mask8x32(a0) || self.any_false_mask8x32(a1)
+        unsafe { _mm512_movepi8_mask(a.into()) != 0xFFFFFFFFFFFFFFFFu64 }
     }
     #[inline(always)]
     fn all_false_mask8x64(self, a: mask8x64<Self>) -> bool {
-        let (a0, a1) = self.split_mask8x64(a);
-        self.all_false_mask8x32(a0) && self.all_false_mask8x32(a1)
+        unsafe { _mm512_movepi8_mask(a.into()) == 0 }
     }
     #[inline(always)]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>) {
-        (
-            mask8x32 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            mask8x32 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn splat_i16x32(self, val: i16) -> i16x32<Self> {
-        let half = self.splat_i16x16(val);
-        self.combine_i16x16(half, half)
+        unsafe { _mm512_set1_epi16(val).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self> {
@@ -6452,15 +6569,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_i16x32(self, a: i16x32<Self>) -> [i16; 32usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [i16; 32usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [i16; 32usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_i16x32(self, a: &i16x32<Self>) -> &[i16; 32usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[i16; 32usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[i16; 32usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [i16; 32usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [i16; 32usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
@@ -6496,7 +6613,7 @@ impl Simd for Avx2 {
             if SHIFT >= 32usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_i16x32(b).val.0,
                 self.cvt_to_bytes_i16x32(a).val.0,
                 SHIFT * 2usize,
@@ -6513,193 +6630,197 @@ impl Simd for Avx2 {
         a: i16x32<Self>,
         b: i16x32<Self>,
     ) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(
-            self.slide_within_blocks_i16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i16x16::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_i16x32(b).val.0,
+                self.cvt_to_bytes_i16x32(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_i16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.add_i16x16(a0, b0), self.add_i16x16(a1, b1))
+        unsafe { _mm512_add_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.sub_i16x16(a0, b0), self.sub_i16x16(a1, b1))
+        unsafe { _mm512_sub_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.mul_i16x16(a0, b0), self.mul_i16x16(a1, b1))
+        unsafe { _mm512_mullo_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.and_i16x16(a0, b0), self.and_i16x16(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.or_i16x16(a0, b0), self.or_i16x16(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.xor_i16x16(a0, b0), self.xor_i16x16(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.not_i16x16(a0), self.not_i16x16(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.shl_i16x16(a0, shift), self.shl_i16x16(a1, shift))
+        unsafe {
+            _mm512_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.shlv_i16x16(a0, b0), self.shlv_i16x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.shr_i16x16(a0, shift), self.shr_i16x16(a1, shift))
+        unsafe {
+            _mm512_sra_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.shrv_i16x16(a0, b0), self.shrv_i16x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_eq_i16x16(a0, b0), self.simd_eq_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_lt_i16x16(a0, b0), self.simd_lt_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_le_i16x16(a0, b0), self.simd_le_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_ge_i16x16(a0, b0), self.simd_ge_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_mask16x16(self.simd_gt_i16x16(a0, b0), self.simd_gt_i16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, _) = self.split_i16x32(a);
-        let (b0, _) = self.split_i16x32(b);
-        self.combine_i16x16(self.zip_low_i16x16(a0, b0), self.zip_high_i16x16(a0, b0))
+        unsafe {
+            let idx = _mm512_set_epi16(
+                47i16, 15i16, 46i16, 14i16, 45i16, 13i16, 44i16, 12i16, 43i16, 11i16, 42i16, 10i16,
+                41i16, 9i16, 40i16, 8i16, 39i16, 7i16, 38i16, 6i16, 37i16, 5i16, 36i16, 4i16,
+                35i16, 3i16, 34i16, 2i16, 33i16, 1i16, 32i16, 0i16,
+            );
+            _mm512_permutex2var_epi16(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (_, a1) = self.split_i16x32(a);
-        let (_, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.zip_low_i16x16(a1, b1), self.zip_high_i16x16(a1, b1))
+        unsafe {
+            let idx = _mm512_set_epi16(
+                63i16, 31i16, 62i16, 30i16, 61i16, 29i16, 60i16, 28i16, 59i16, 27i16, 58i16, 26i16,
+                57i16, 25i16, 56i16, 24i16, 55i16, 23i16, 54i16, 22i16, 53i16, 21i16, 52i16, 20i16,
+                51i16, 19i16, 50i16, 18i16, 49i16, 17i16, 48i16, 16i16,
+            );
+            _mm512_permutex2var_epi16(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.unzip_low_i16x16(a0, a1), self.unzip_low_i16x16(b0, b1))
+        unsafe {
+            let mask = _mm512_set4_epi64(
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+            );
+            let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
+            let a_packed = _mm512_permutex_epi64::<0b11_01_10_00>(a_shuffled);
+            let b_packed = _mm512_permutex_epi64::<0b11_01_10_00>(b_shuffled);
+            _mm512_shuffle_i64x2::<0b01_00_01_00>(a_packed, b_packed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(
-            self.unzip_high_i16x16(a0, a1),
-            self.unzip_high_i16x16(b0, b1),
-        )
+        unsafe {
+            let mask = _mm512_set4_epi64(
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+            );
+            let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
+            let a_packed = _mm512_permutex_epi64::<0b11_01_10_00>(a_shuffled);
+            let b_packed = _mm512_permutex_epi64::<0b11_01_10_00>(b_shuffled);
+            _mm512_shuffle_i64x2::<0b11_10_11_10>(a_packed, b_packed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_i16x32(self, a: mask16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        let (c0, c1) = self.split_i16x32(c);
-        self.combine_i16x16(
-            self.select_i16x16(a0, b0, c0),
-            self.select_i16x16(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi16_mask(a.into());
+            _mm512_mask_blend_epi16(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.min_i16x16(a0, b0), self.min_i16x16(a1, b1))
+        unsafe { _mm512_min_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        let (b0, b1) = self.split_i16x32(b);
-        self.combine_i16x16(self.max_i16x16(a0, b0), self.max_i16x16(a1, b1))
+        unsafe { _mm512_max_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
-        (
-            i16x16 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            i16x16 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
+        unsafe { _mm512_sub_epi16(_mm512_setzero_si512(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_i16x16(a0),
-            self.reinterpret_u8_i16x16(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i16x16(a0),
-            self.reinterpret_u32_i16x16(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
-        let half = self.splat_u16x16(val);
-        self.combine_u16x16(half, half)
+        unsafe { _mm512_set1_epi16(val.cast_signed()).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self> {
@@ -6717,15 +6838,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_u16x32(self, a: u16x32<Self>) -> [u16; 32usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [u16; 32usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [u16; 32usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_u16x32(self, a: &u16x32<Self>) -> &[u16; 32usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[u16; 32usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[u16; 32usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [u16; 32usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [u16; 32usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
@@ -6761,7 +6882,7 @@ impl Simd for Avx2 {
             if SHIFT >= 32usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_u16x32(b).val.0,
                 self.cvt_to_bytes_u16x32(a).val.0,
                 SHIFT * 2usize,
@@ -6778,167 +6899,181 @@ impl Simd for Avx2 {
         a: u16x32<Self>,
         b: u16x32<Self>,
     ) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(
-            self.slide_within_blocks_u16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u16x16::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_u16x32(b).val.0,
+                self.cvt_to_bytes_u16x32(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_u16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.add_u16x16(a0, b0), self.add_u16x16(a1, b1))
+        unsafe { _mm512_add_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.sub_u16x16(a0, b0), self.sub_u16x16(a1, b1))
+        unsafe { _mm512_sub_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.mul_u16x16(a0, b0), self.mul_u16x16(a1, b1))
+        unsafe { _mm512_mullo_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.and_u16x16(a0, b0), self.and_u16x16(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.or_u16x16(a0, b0), self.or_u16x16(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.xor_u16x16(a0, b0), self.xor_u16x16(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.not_u16x16(a0), self.not_u16x16(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.shl_u16x16(a0, shift), self.shl_u16x16(a1, shift))
+        unsafe {
+            _mm512_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.shlv_u16x16(a0, b0), self.shlv_u16x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u16x16(self.shr_u16x16(a0, shift), self.shr_u16x16(a1, shift))
+        unsafe {
+            _mm512_srl_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.shrv_u16x16(a0, b0), self.shrv_u16x16(a1, b1))
+        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_eq_u16x16(a0, b0), self.simd_eq_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_lt_u16x16(a0, b0), self.simd_lt_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epu16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_le_u16x16(a0, b0), self.simd_le_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epu16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_ge_u16x16(a0, b0), self.simd_ge_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epu16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_mask16x16(self.simd_gt_u16x16(a0, b0), self.simd_gt_u16x16(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epu16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, _) = self.split_u16x32(a);
-        let (b0, _) = self.split_u16x32(b);
-        self.combine_u16x16(self.zip_low_u16x16(a0, b0), self.zip_high_u16x16(a0, b0))
+        unsafe {
+            let idx = _mm512_set_epi16(
+                47i16, 15i16, 46i16, 14i16, 45i16, 13i16, 44i16, 12i16, 43i16, 11i16, 42i16, 10i16,
+                41i16, 9i16, 40i16, 8i16, 39i16, 7i16, 38i16, 6i16, 37i16, 5i16, 36i16, 4i16,
+                35i16, 3i16, 34i16, 2i16, 33i16, 1i16, 32i16, 0i16,
+            );
+            _mm512_permutex2var_epi16(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (_, a1) = self.split_u16x32(a);
-        let (_, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.zip_low_u16x16(a1, b1), self.zip_high_u16x16(a1, b1))
+        unsafe {
+            let idx = _mm512_set_epi16(
+                63i16, 31i16, 62i16, 30i16, 61i16, 29i16, 60i16, 28i16, 59i16, 27i16, 58i16, 26i16,
+                57i16, 25i16, 56i16, 24i16, 55i16, 23i16, 54i16, 22i16, 53i16, 21i16, 52i16, 20i16,
+                51i16, 19i16, 50i16, 18i16, 49i16, 17i16, 48i16, 16i16,
+            );
+            _mm512_permutex2var_epi16(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.unzip_low_u16x16(a0, a1), self.unzip_low_u16x16(b0, b1))
+        unsafe {
+            let mask = _mm512_set4_epi64(
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+            );
+            let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
+            let a_packed = _mm512_permutex_epi64::<0b11_01_10_00>(a_shuffled);
+            let b_packed = _mm512_permutex_epi64::<0b11_01_10_00>(b_shuffled);
+            _mm512_shuffle_i64x2::<0b01_00_01_00>(a_packed, b_packed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(
-            self.unzip_high_u16x16(a0, a1),
-            self.unzip_high_u16x16(b0, b1),
-        )
+        unsafe {
+            let mask = _mm512_set4_epi64(
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+                0x0F0E0B0A07060302u64.cast_signed(),
+                0x0D0C090805040100u64.cast_signed(),
+            );
+            let a_shuffled = _mm512_shuffle_epi8(a.into(), mask);
+            let b_shuffled = _mm512_shuffle_epi8(b.into(), mask);
+            let a_packed = _mm512_permutex_epi64::<0b11_01_10_00>(a_shuffled);
+            let b_packed = _mm512_permutex_epi64::<0b11_01_10_00>(b_shuffled);
+            _mm512_shuffle_i64x2::<0b11_10_11_10>(a_packed, b_packed).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_u16x32(self, a: mask16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        let (c0, c1) = self.split_u16x32(c);
-        self.combine_u16x16(
-            self.select_u16x16(a0, b0, c0),
-            self.select_u16x16(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi16_mask(a.into());
+            _mm512_mask_blend_epi16(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.min_u16x16(a0, b0), self.min_u16x16(a1, b1))
+        unsafe { _mm512_min_epu16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        let (b0, b1) = self.split_u16x32(b);
-        self.combine_u16x16(self.max_u16x16(a0, b0), self.max_u16x16(a1, b1))
+        unsafe { _mm512_max_epu16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
-        (
-            u16x16 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            u16x16 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
@@ -6997,37 +7132,19 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
-        let (a, b) = self.split_u16x32(a);
-        unsafe {
-            let mask = _mm256_set1_epi16(0xFF);
-            let lo_masked = _mm256_and_si256(a.into(), mask);
-            let hi_masked = _mm256_and_si256(b.into(), mask);
-            let result = _mm256_permute4x64_epi64::<0b_11_01_10_00>(_mm256_packus_epi16(
-                lo_masked, hi_masked,
-            ));
-            result.simd_into(self)
-        }
+        unsafe { _mm512_cvtepi16_epi8(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_u16x16(a0),
-            self.reinterpret_u8_u16x16(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u16x16(a0),
-            self.reinterpret_u32_u16x16(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: i16) -> mask16x32<Self> {
-        let half = self.splat_mask16x16(val);
-        self.combine_mask16x16(half, half)
+        unsafe { _mm512_set1_epi16(val).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self> {
@@ -7045,15 +7162,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [i16; 32usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [i16; 32usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_mask16x32(self, a: &mask16x32<Self>) -> &[i16; 32usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[i16; 32usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[i16; 32usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_mask16x32(self, a: &mut mask16x32<Self>) -> &mut [i16; 32usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [i16; 32usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [i16; 32usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_mask16x32(self, a: mask16x32<Self>, dest: &mut [i16; 32usize]) -> () {
@@ -7093,7 +7210,7 @@ impl Simd for Avx2 {
             if SHIFT >= 32usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_mask16x32(b).val.0,
                 self.cvt_to_bytes_mask16x32(a).val.0,
                 SHIFT * 2usize,
@@ -7110,35 +7227,36 @@ impl Simd for Avx2 {
         a: mask16x32<Self>,
         b: mask16x32<Self>,
     ) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(
-            self.slide_within_blocks_mask16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask16x16::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 8usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_mask16x32(b).val.0,
+                self.cvt_to_bytes_mask16x32(a).val.0,
+                SHIFT * 2usize,
+            );
+            self.cvt_from_bytes_mask16x32(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.and_mask16x16(a0, b0), self.and_mask16x16(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.or_mask16x16(a0, b0), self.or_mask16x16(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(self.xor_mask16x16(a0, b0), self.xor_mask16x16(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.combine_mask16x16(self.not_mask16x16(a0), self.not_mask16x16(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn select_mask16x32(
@@ -7147,60 +7265,46 @@ impl Simd for Avx2 {
         b: mask16x32<Self>,
         c: mask16x32<Self>,
     ) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        let (c0, c1) = self.split_mask16x32(c);
-        self.combine_mask16x16(
-            self.select_mask16x16(a0, b0, c0),
-            self.select_mask16x16(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi16_mask(a.into());
+            _mm512_mask_blend_epi16(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(
-            self.simd_eq_mask16x16(a0, b0),
-            self.simd_eq_mask16x16(a1, b1),
-        )
+        unsafe {
+            let mask = _mm512_cmpeq_epi16_mask(a.into(), b.into());
+            _mm512_movm_epi16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.any_true_mask16x16(a0) || self.any_true_mask16x16(a1)
+        unsafe { _mm512_movepi16_mask(a.into()) != 0 }
     }
     #[inline(always)]
     fn all_true_mask16x32(self, a: mask16x32<Self>) -> bool {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.all_true_mask16x16(a0) && self.all_true_mask16x16(a1)
+        unsafe { _mm512_movepi16_mask(a.into()) == 0xFFFFFFFFu32 }
     }
     #[inline(always)]
     fn any_false_mask16x32(self, a: mask16x32<Self>) -> bool {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.any_false_mask16x16(a0) || self.any_false_mask16x16(a1)
+        unsafe { _mm512_movepi16_mask(a.into()) != 0xFFFFFFFFu32 }
     }
     #[inline(always)]
     fn all_false_mask16x32(self, a: mask16x32<Self>) -> bool {
-        let (a0, a1) = self.split_mask16x32(a);
-        self.all_false_mask16x16(a0) && self.all_false_mask16x16(a1)
+        unsafe { _mm512_movepi16_mask(a.into()) == 0 }
     }
     #[inline(always)]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>) {
-        (
-            mask16x16 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            mask16x16 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn splat_i32x16(self, val: i32) -> i32x16<Self> {
-        let half = self.splat_i32x8(val);
-        self.combine_i32x8(half, half)
+        unsafe { _mm512_set1_epi32(val).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self> {
@@ -7218,15 +7322,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_i32x16(self, a: i32x16<Self>) -> [i32; 16usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [i32; 16usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [i32; 16usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_i32x16(self, a: &i32x16<Self>) -> &[i32; 16usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[i32; 16usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[i32; 16usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [i32; 16usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [i32; 16usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
@@ -7262,7 +7366,7 @@ impl Simd for Avx2 {
             if SHIFT >= 16usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_i32x16(b).val.0,
                 self.cvt_to_bytes_i32x16(a).val.0,
                 SHIFT * 4usize,
@@ -7279,189 +7383,195 @@ impl Simd for Avx2 {
         a: i32x16<Self>,
         b: i32x16<Self>,
     ) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(
-            self.slide_within_blocks_i32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_i32x8::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_i32x16(b).val.0,
+                self.cvt_to_bytes_i32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_i32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.add_i32x8(a0, b0), self.add_i32x8(a1, b1))
+        unsafe { _mm512_add_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.sub_i32x8(a0, b0), self.sub_i32x8(a1, b1))
+        unsafe { _mm512_sub_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.mul_i32x8(a0, b0), self.mul_i32x8(a1, b1))
+        unsafe { _mm512_mullo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.and_i32x8(a0, b0), self.and_i32x8(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.or_i32x8(a0, b0), self.or_i32x8(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.xor_i32x8(a0, b0), self.xor_i32x8(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.not_i32x8(a0), self.not_i32x8(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.shl_i32x8(a0, shift), self.shl_i32x8(a1, shift))
+        unsafe {
+            _mm512_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.shlv_i32x8(a0, b0), self.shlv_i32x8(a1, b1))
+        unsafe { _mm512_sllv_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.shr_i32x8(a0, shift), self.shr_i32x8(a1, shift))
+        unsafe {
+            _mm512_sra_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.shrv_i32x8(a0, b0), self.shrv_i32x8(a1, b1))
+        unsafe { _mm512_srav_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_eq_i32x8(a0, b0), self.simd_eq_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_lt_i32x8(a0, b0), self.simd_lt_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_le_i32x8(a0, b0), self.simd_le_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_ge_i32x8(a0, b0), self.simd_ge_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_mask32x8(self.simd_gt_i32x8(a0, b0), self.simd_gt_i32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, _) = self.split_i32x16(a);
-        let (b0, _) = self.split_i32x16(b);
-        self.combine_i32x8(self.zip_low_i32x8(a0, b0), self.zip_high_i32x8(a0, b0))
+        unsafe {
+            let idx = _mm512_set_epi32(
+                23i32, 7i32, 22i32, 6i32, 21i32, 5i32, 20i32, 4i32, 19i32, 3i32, 18i32, 2i32,
+                17i32, 1i32, 16i32, 0i32,
+            );
+            _mm512_permutex2var_epi32(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (_, a1) = self.split_i32x16(a);
-        let (_, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.zip_low_i32x8(a1, b1), self.zip_high_i32x8(a1, b1))
+        unsafe {
+            let idx = _mm512_set_epi32(
+                31i32, 15i32, 30i32, 14i32, 29i32, 13i32, 28i32, 12i32, 27i32, 11i32, 26i32, 10i32,
+                25i32, 9i32, 24i32, 8i32,
+            );
+            _mm512_permutex2var_epi32(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.unzip_low_i32x8(a0, a1), self.unzip_low_i32x8(b0, b1))
+        unsafe {
+            let t1 = _mm512_permutexvar_epi32(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                a.into(),
+            );
+            let t2 = _mm512_permutexvar_epi32(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                b.into(),
+            );
+            _mm512_shuffle_i32x4::<0b01_00_01_00>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.unzip_high_i32x8(a0, a1), self.unzip_high_i32x8(b0, b1))
+        unsafe {
+            let t1 = _mm512_permutexvar_epi32(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                a.into(),
+            );
+            let t2 = _mm512_permutexvar_epi32(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                b.into(),
+            );
+            _mm512_shuffle_i32x4::<0b11_10_11_10>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_i32x16(self, a: mask32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        let (c0, c1) = self.split_i32x16(c);
-        self.combine_i32x8(self.select_i32x8(a0, b0, c0), self.select_i32x8(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi32_mask(a.into());
+            _mm512_mask_blend_epi32(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.min_i32x8(a0, b0), self.min_i32x8(a1, b1))
+        unsafe { _mm512_min_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        let (b0, b1) = self.split_i32x16(b);
-        self.combine_i32x8(self.max_i32x8(a0, b0), self.max_i32x8(a1, b1))
+        unsafe { _mm512_max_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
-        (
-            i32x8 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            i32x8 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
+        unsafe { _mm512_sub_epi32(_mm512_setzero_si512(), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_i32x8(a0), self.reinterpret_u8_i32x8(a1))
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i32x8(a0),
-            self.reinterpret_u32_i32x8(a1),
-        )
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
+        unsafe { _mm512_cvtepi32_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_u32x16(self, val: u32) -> u32x16<Self> {
-        let half = self.splat_u32x8(val);
-        self.combine_u32x8(half, half)
+        unsafe { _mm512_set1_epi32(val.cast_signed()).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self> {
@@ -7479,15 +7589,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_u32x16(self, a: u32x16<Self>) -> [u32; 16usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [u32; 16usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [u32; 16usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_u32x16(self, a: &u32x16<Self>) -> &[u32; 16usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[u32; 16usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[u32; 16usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [u32; 16usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [u32; 16usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
@@ -7523,7 +7633,7 @@ impl Simd for Avx2 {
             if SHIFT >= 16usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_u32x16(b).val.0,
                 self.cvt_to_bytes_u32x16(a).val.0,
                 SHIFT * 4usize,
@@ -7540,161 +7650,175 @@ impl Simd for Avx2 {
         a: u32x16<Self>,
         b: u32x16<Self>,
     ) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(
-            self.slide_within_blocks_u32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_u32x8::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_u32x16(b).val.0,
+                self.cvt_to_bytes_u32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_u32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.add_u32x8(a0, b0), self.add_u32x8(a1, b1))
+        unsafe { _mm512_add_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.sub_u32x8(a0, b0), self.sub_u32x8(a1, b1))
+        unsafe { _mm512_sub_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.mul_u32x8(a0, b0), self.mul_u32x8(a1, b1))
+        unsafe { _mm512_mullo_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn and_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.and_u32x8(a0, b0), self.and_u32x8(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.or_u32x8(a0, b0), self.or_u32x8(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.xor_u32x8(a0, b0), self.xor_u32x8(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.not_u32x8(a0), self.not_u32x8(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.shl_u32x8(a0, shift), self.shl_u32x8(a1, shift))
+        unsafe {
+            _mm512_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shlv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.shlv_u32x8(a0, b0), self.shlv_u32x8(a1, b1))
+        unsafe { _mm512_sllv_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u32x8(self.shr_u32x8(a0, shift), self.shr_u32x8(a1, shift))
+        unsafe {
+            _mm512_srl_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.shrv_u32x8(a0, b0), self.shrv_u32x8(a1, b1))
+        unsafe { _mm512_srlv_epi32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_eq_u32x8(a0, b0), self.simd_eq_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_lt_u32x8(a0, b0), self.simd_lt_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmplt_epu32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_le_u32x8(a0, b0), self.simd_le_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmple_epu32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_ge_u32x8(a0, b0), self.simd_ge_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpge_epu32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_mask32x8(self.simd_gt_u32x8(a0, b0), self.simd_gt_u32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpgt_epu32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, _) = self.split_u32x16(a);
-        let (b0, _) = self.split_u32x16(b);
-        self.combine_u32x8(self.zip_low_u32x8(a0, b0), self.zip_high_u32x8(a0, b0))
+        unsafe {
+            let idx = _mm512_set_epi32(
+                23i32, 7i32, 22i32, 6i32, 21i32, 5i32, 20i32, 4i32, 19i32, 3i32, 18i32, 2i32,
+                17i32, 1i32, 16i32, 0i32,
+            );
+            _mm512_permutex2var_epi32(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (_, a1) = self.split_u32x16(a);
-        let (_, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.zip_low_u32x8(a1, b1), self.zip_high_u32x8(a1, b1))
+        unsafe {
+            let idx = _mm512_set_epi32(
+                31i32, 15i32, 30i32, 14i32, 29i32, 13i32, 28i32, 12i32, 27i32, 11i32, 26i32, 10i32,
+                25i32, 9i32, 24i32, 8i32,
+            );
+            _mm512_permutex2var_epi32(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.unzip_low_u32x8(a0, a1), self.unzip_low_u32x8(b0, b1))
+        unsafe {
+            let t1 = _mm512_permutexvar_epi32(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                a.into(),
+            );
+            let t2 = _mm512_permutexvar_epi32(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                b.into(),
+            );
+            _mm512_shuffle_i32x4::<0b01_00_01_00>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.unzip_high_u32x8(a0, a1), self.unzip_high_u32x8(b0, b1))
+        unsafe {
+            let t1 = _mm512_permutexvar_epi32(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                a.into(),
+            );
+            let t2 = _mm512_permutexvar_epi32(
+                _mm512_setr_epi32(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15),
+                b.into(),
+            );
+            _mm512_shuffle_i32x4::<0b11_10_11_10>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_u32x16(self, a: mask32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        let (c0, c1) = self.split_u32x16(c);
-        self.combine_u32x8(self.select_u32x8(a0, b0, c0), self.select_u32x8(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi32_mask(a.into());
+            _mm512_mask_blend_epi32(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.min_u32x8(a0, b0), self.min_u32x8(a1, b1))
+        unsafe { _mm512_min_epu32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        let (b0, b1) = self.split_u32x16(b);
-        self.combine_u32x8(self.max_u32x8(a0, b0), self.max_u32x8(a1, b1))
+        unsafe { _mm512_max_epu32(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
-        (
-            u32x8 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            u32x8 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
@@ -7743,18 +7867,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_u32x8(a0), self.reinterpret_u8_u32x8(a1))
+        __m512i::from(a).simd_into(self)
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_f32x8(self.cvt_f32_u32x8(a0), self.cvt_f32_u32x8(a1))
+        unsafe { _mm512_cvtepu32_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_mask32x16(self, val: i32) -> mask32x16<Self> {
-        let half = self.splat_mask32x8(val);
-        self.combine_mask32x8(half, half)
+        unsafe { _mm512_set1_epi32(val).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self> {
@@ -7772,15 +7893,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [i32; 16usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [i32; 16usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_mask32x16(self, a: &mask32x16<Self>) -> &[i32; 16usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[i32; 16usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[i32; 16usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_mask32x16(self, a: &mut mask32x16<Self>) -> &mut [i32; 16usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [i32; 16usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [i32; 16usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_mask32x16(self, a: mask32x16<Self>, dest: &mut [i32; 16usize]) -> () {
@@ -7820,7 +7941,7 @@ impl Simd for Avx2 {
             if SHIFT >= 16usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_mask32x16(b).val.0,
                 self.cvt_to_bytes_mask32x16(a).val.0,
                 SHIFT * 4usize,
@@ -7837,35 +7958,36 @@ impl Simd for Avx2 {
         a: mask32x16<Self>,
         b: mask32x16<Self>,
     ) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(
-            self.slide_within_blocks_mask32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask32x8::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 4usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_mask32x16(b).val.0,
+                self.cvt_to_bytes_mask32x16(a).val.0,
+                SHIFT * 4usize,
+            );
+            self.cvt_from_bytes_mask32x16(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.and_mask32x8(a0, b0), self.and_mask32x8(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.or_mask32x8(a0, b0), self.or_mask32x8(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.xor_mask32x8(a0, b0), self.xor_mask32x8(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.combine_mask32x8(self.not_mask32x8(a0), self.not_mask32x8(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn select_mask32x16(
@@ -7874,57 +7996,46 @@ impl Simd for Avx2 {
         b: mask32x16<Self>,
         c: mask32x16<Self>,
     ) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        let (c0, c1) = self.split_mask32x16(c);
-        self.combine_mask32x8(
-            self.select_mask32x8(a0, b0, c0),
-            self.select_mask32x8(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi32_mask(a.into());
+            _mm512_mask_blend_epi32(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(self.simd_eq_mask32x8(a0, b0), self.simd_eq_mask32x8(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi32_mask(a.into(), b.into());
+            _mm512_movm_epi32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.any_true_mask32x8(a0) || self.any_true_mask32x8(a1)
+        unsafe { _mm512_movepi32_mask(a.into()) != 0 }
     }
     #[inline(always)]
     fn all_true_mask32x16(self, a: mask32x16<Self>) -> bool {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.all_true_mask32x8(a0) && self.all_true_mask32x8(a1)
+        unsafe { _mm512_movepi32_mask(a.into()) == 0xFFFFu16 }
     }
     #[inline(always)]
     fn any_false_mask32x16(self, a: mask32x16<Self>) -> bool {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.any_false_mask32x8(a0) || self.any_false_mask32x8(a1)
+        unsafe { _mm512_movepi32_mask(a.into()) != 0xFFFFu16 }
     }
     #[inline(always)]
     fn all_false_mask32x16(self, a: mask32x16<Self>) -> bool {
-        let (a0, a1) = self.split_mask32x16(a);
-        self.all_false_mask32x8(a0) && self.all_false_mask32x8(a1)
+        unsafe { _mm512_movepi32_mask(a.into()) == 0 }
     }
     #[inline(always)]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>) {
-        (
-            mask32x8 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            mask32x8 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn splat_f64x8(self, val: f64) -> f64x8<Self> {
-        let half = self.splat_f64x4(val);
-        self.combine_f64x4(half, half)
+        unsafe { _mm512_set1_pd(val).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self> {
@@ -7942,15 +8053,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_f64x8(self, a: f64x8<Self>) -> [f64; 8usize] {
-        unsafe { core::mem::transmute::<[__m256d; 2usize], [f64; 8usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512d, [f64; 8usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_f64x8(self, a: &f64x8<Self>) -> &[f64; 8usize] {
-        unsafe { core::mem::transmute::<&[__m256d; 2usize], &[f64; 8usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512d, &[f64; 8usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize] {
-        unsafe { core::mem::transmute::<&mut [__m256d; 2usize], &mut [f64; 8usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512d, &mut [f64; 8usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
@@ -7986,7 +8097,7 @@ impl Simd for Avx2 {
             if SHIFT >= 8usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_f64x8(b).val.0,
                 self.cvt_to_bytes_f64x8(a).val.0,
                 SHIFT * 8usize,
@@ -8003,222 +8114,200 @@ impl Simd for Avx2 {
         a: f64x8<Self>,
         b: f64x8<Self>,
     ) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.slide_within_blocks_f64x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_f64x4::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 2usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_f64x8(b).val.0,
+                self.cvt_to_bytes_f64x8(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_f64x8(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.abs_f64x4(a0), self.abs_f64x4(a1))
+        unsafe { _mm512_andnot_pd(_mm512_set1_pd(-0.0), a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.neg_f64x4(a0), self.neg_f64x4(a1))
+        unsafe { _mm512_xor_pd(a.into(), _mm512_set1_pd(-0.0)).simd_into(self) }
     }
     #[inline(always)]
     fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.sqrt_f64x4(a0), self.sqrt_f64x4(a1))
+        unsafe { _mm512_sqrt_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.add_f64x4(a0, b0), self.add_f64x4(a1, b1))
+        unsafe { _mm512_add_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.sub_f64x4(a0, b0), self.sub_f64x4(a1, b1))
+        unsafe { _mm512_sub_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.mul_f64x4(a0, b0), self.mul_f64x4(a1, b1))
+        unsafe { _mm512_mul_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn div_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.div_f64x4(a0, b0), self.div_f64x4(a1, b1))
+        unsafe { _mm512_div_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn copysign_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.copysign_f64x4(a0, b0), self.copysign_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_set1_pd(-0.0);
+            _mm512_or_pd(
+                _mm512_and_pd(mask, b.into()),
+                _mm512_andnot_pd(mask, a.into()),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_eq_f64x4(a0, b0), self.simd_eq_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<0i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_lt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_lt_f64x4(a0, b0), self.simd_lt_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<17i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_le_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_le_f64x4(a0, b0), self.simd_le_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<18i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_ge_f64x4(a0, b0), self.simd_ge_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<29i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_mask64x4(self.simd_gt_f64x4(a0, b0), self.simd_gt_f64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmp_pd_mask::<30i32>(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, _) = self.split_f64x8(a);
-        let (b0, _) = self.split_f64x8(b);
-        self.combine_f64x4(self.zip_low_f64x4(a0, b0), self.zip_high_f64x4(a0, b0))
+        unsafe {
+            let idx = _mm512_set_epi64(11i64, 3i64, 10i64, 2i64, 9i64, 1i64, 8i64, 0i64);
+            _mm512_permutex2var_pd(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn zip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (_, a1) = self.split_f64x8(a);
-        let (_, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.zip_low_f64x4(a1, b1), self.zip_high_f64x4(a1, b1))
+        unsafe {
+            let idx = _mm512_set_epi64(15i64, 7i64, 14i64, 6i64, 13i64, 5i64, 12i64, 4i64);
+            _mm512_permutex2var_pd(a.into(), idx, b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.unzip_low_f64x4(a0, a1), self.unzip_low_f64x4(b0, b1))
+        unsafe {
+            let t1 = _mm512_permutexvar_pd(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), a.into());
+            let t2 = _mm512_permutexvar_pd(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), b.into());
+            _mm512_shuffle_f64x2::<0b01_00_01_00>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn unzip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.unzip_high_f64x4(a0, a1), self.unzip_high_f64x4(b0, b1))
+        unsafe {
+            let t1 = _mm512_permutexvar_pd(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), a.into());
+            let t2 = _mm512_permutexvar_pd(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), b.into());
+            _mm512_shuffle_f64x2::<0b11_10_11_10>(t1, t2).simd_into(self)
+        }
     }
     #[inline(always)]
     fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.max_f64x4(a0, b0), self.max_f64x4(a1, b1))
+        unsafe { _mm512_max_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(self.min_f64x4(a0, b0), self.min_f64x4(a1, b1))
+        unsafe { _mm512_min_pd(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.max_precise_f64x4(a0, b0),
-            self.max_precise_f64x4(a1, b1),
-        )
+        unsafe {
+            let intermediate = _mm512_max_pd(a.into(), b.into());
+            let b_is_nan = _mm512_cmp_pd_mask::<0x03>(b.into(), b.into());
+            _mm512_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        self.combine_f64x4(
-            self.min_precise_f64x4(a0, b0),
-            self.min_precise_f64x4(a1, b1),
-        )
+        unsafe {
+            let intermediate = _mm512_min_pd(a.into(), b.into());
+            let b_is_nan = _mm512_cmp_pd_mask::<0x03>(b.into(), b.into());
+            _mm512_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn mul_add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(
-            self.mul_add_f64x4(a0, b0, c0),
-            self.mul_add_f64x4(a1, b1, c1),
-        )
+        unsafe { _mm512_fmadd_pd(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(
-            self.mul_sub_f64x4(a0, b0, c0),
-            self.mul_sub_f64x4(a1, b1, c1),
-        )
+        unsafe { _mm512_fmsub_pd(a.into(), b.into(), c.into()).simd_into(self) }
     }
     #[inline(always)]
     fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.floor_f64x4(a0), self.floor_f64x4(a1))
+        unsafe { _mm512_roundscale_pd::<_MM_FROUND_TO_NEG_INF>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.ceil_f64x4(a0), self.ceil_f64x4(a1))
+        unsafe { _mm512_roundscale_pd::<_MM_FROUND_TO_POS_INF>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(
-            self.round_ties_even_f64x4(a0),
-            self.round_ties_even_f64x4(a1),
-        )
+        unsafe { _mm512_roundscale_pd::<_MM_FROUND_TO_NEAREST_INT>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.fract_f64x4(a0), self.fract_f64x4(a1))
+        a - self.trunc_f64x8(a)
     }
     #[inline(always)]
     fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.trunc_f64x4(a0), self.trunc_f64x4(a1))
+        unsafe { _mm512_roundscale_pd::<_MM_FROUND_TO_ZERO>(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_f64x8(b);
-        let (c0, c1) = self.split_f64x8(c);
-        self.combine_f64x4(self.select_f64x4(a0, b0, c0), self.select_f64x4(a1, b1, c1))
+        unsafe {
+            let k = _mm512_movepi64_mask(a.into());
+            _mm512_mask_blend_pd(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
-        (
-            f64x4 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            f64x4 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castpd512_pd256(a.into()).simd_into(self),
+                _mm512_extractf64x4_pd::<1>(a.into()).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f32x8(
-            self.reinterpret_f32_f64x4(a0),
-            self.reinterpret_f32_f64x4(a1),
-        )
+        unsafe { _mm512_castpd_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: i64) -> mask64x8<Self> {
-        let half = self.splat_mask64x4(val);
-        self.combine_mask64x4(half, half)
+        unsafe { _mm512_set1_epi64(val).simd_into(self) }
     }
     #[inline(always)]
     fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self> {
@@ -8236,15 +8325,15 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
-        unsafe { core::mem::transmute::<[__m256i; 2usize], [i64; 8usize]>(a.val.0) }
+        unsafe { core::mem::transmute::<__m512i, [i64; 8usize]>(a.val.0) }
     }
     #[inline(always)]
     fn as_array_ref_mask64x8(self, a: &mask64x8<Self>) -> &[i64; 8usize] {
-        unsafe { core::mem::transmute::<&[__m256i; 2usize], &[i64; 8usize]>(&a.val.0) }
+        unsafe { core::mem::transmute::<&__m512i, &[i64; 8usize]>(&a.val.0) }
     }
     #[inline(always)]
     fn as_array_mut_mask64x8(self, a: &mut mask64x8<Self>) -> &mut [i64; 8usize] {
-        unsafe { core::mem::transmute::<&mut [__m256i; 2usize], &mut [i64; 8usize]>(&mut a.val.0) }
+        unsafe { core::mem::transmute::<&mut __m512i, &mut [i64; 8usize]>(&mut a.val.0) }
     }
     #[inline(always)]
     fn store_array_mask64x8(self, a: mask64x8<Self>, dest: &mut [i64; 8usize]) -> () {
@@ -8284,7 +8373,7 @@ impl Simd for Avx2 {
             if SHIFT >= 8usize {
                 return b;
             }
-            let result = cross_block_alignr_256x2(
+            let result = cross_block_alignr_512(
                 self.cvt_to_bytes_mask64x8(b).val.0,
                 self.cvt_to_bytes_mask64x8(a).val.0,
                 SHIFT * 8usize,
@@ -8301,35 +8390,36 @@ impl Simd for Avx2 {
         a: mask64x8<Self>,
         b: mask64x8<Self>,
     ) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(
-            self.slide_within_blocks_mask64x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask64x4::<SHIFT>(a1, b1),
-        )
+        unsafe {
+            if SHIFT >= 2usize {
+                return b;
+            }
+            let result = dyn_alignr_512(
+                self.cvt_to_bytes_mask64x8(b).val.0,
+                self.cvt_to_bytes_mask64x8(a).val.0,
+                SHIFT * 8usize,
+            );
+            self.cvt_from_bytes_mask64x8(u8x64 {
+                val: crate::support::Aligned512(result),
+                simd: self,
+            })
+        }
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.and_mask64x4(a0, b0), self.and_mask64x4(a1, b1))
+        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn or_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.or_mask64x4(a0, b0), self.or_mask64x4(a1, b1))
+        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn xor_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.xor_mask64x4(a0, b0), self.xor_mask64x4(a1, b1))
+        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.combine_mask64x4(self.not_mask64x4(a0), self.not_mask64x4(a1))
+        a ^ !0
     }
     #[inline(always)]
     fn select_mask64x8(
@@ -8338,231 +8428,221 @@ impl Simd for Avx2 {
         b: mask64x8<Self>,
         c: mask64x8<Self>,
     ) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        let (c0, c1) = self.split_mask64x8(c);
-        self.combine_mask64x4(
-            self.select_mask64x4(a0, b0, c0),
-            self.select_mask64x4(a1, b1, c1),
-        )
+        unsafe {
+            let k = _mm512_movepi64_mask(a.into());
+            _mm512_mask_blend_epi64(k, c.into(), b.into()).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(self.simd_eq_mask64x4(a0, b0), self.simd_eq_mask64x4(a1, b1))
+        unsafe {
+            let mask = _mm512_cmpeq_epi64_mask(a.into(), b.into());
+            _mm512_movm_epi64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn any_true_mask64x8(self, a: mask64x8<Self>) -> bool {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.any_true_mask64x4(a0) || self.any_true_mask64x4(a1)
+        unsafe { _mm512_movepi64_mask(a.into()) != 0 }
     }
     #[inline(always)]
     fn all_true_mask64x8(self, a: mask64x8<Self>) -> bool {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.all_true_mask64x4(a0) && self.all_true_mask64x4(a1)
+        unsafe { _mm512_movepi64_mask(a.into()) == 0xFFu8 }
     }
     #[inline(always)]
     fn any_false_mask64x8(self, a: mask64x8<Self>) -> bool {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.any_false_mask64x4(a0) || self.any_false_mask64x4(a1)
+        unsafe { _mm512_movepi64_mask(a.into()) != 0xFFu8 }
     }
     #[inline(always)]
     fn all_false_mask64x8(self, a: mask64x8<Self>) -> bool {
-        let (a0, a1) = self.split_mask64x8(a);
-        self.all_false_mask64x4(a0) && self.all_false_mask64x4(a1)
+        unsafe { _mm512_movepi64_mask(a.into()) == 0 }
     }
     #[inline(always)]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>) {
-        (
-            mask64x4 {
-                val: crate::support::Aligned256(a.val.0[0]),
-                simd: self,
-            },
-            mask64x4 {
-                val: crate::support::Aligned256(a.val.0[1]),
-                simd: self,
-            },
-        )
+        unsafe {
+            (
+                _mm512_castsi512_si256(a.into()).simd_into(self),
+                _mm512_extracti64x4_epi64::<1>(a.into()).simd_into(self),
+            )
+        }
     }
 }
-impl<S: Simd> SimdFrom<__m256, S> for f32x8<S> {
+impl<S: Simd> SimdFrom<__m512, S> for f32x16<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256) -> Self {
+    fn simd_from(simd: S, arch: __m512) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<f32x8<S>> for __m256 {
+impl<S: Simd> From<f32x16<S>> for __m512 {
     #[inline(always)]
-    fn from(value: f32x8<S>) -> Self {
+    fn from(value: f32x16<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for i8x32<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for i8x64<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<i8x32<S>> for __m256i {
+impl<S: Simd> From<i8x64<S>> for __m512i {
     #[inline(always)]
-    fn from(value: i8x32<S>) -> Self {
+    fn from(value: i8x64<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for u8x32<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for u8x64<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<u8x32<S>> for __m256i {
+impl<S: Simd> From<u8x64<S>> for __m512i {
     #[inline(always)]
-    fn from(value: u8x32<S>) -> Self {
+    fn from(value: u8x64<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for mask8x32<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for mask8x64<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<mask8x32<S>> for __m256i {
+impl<S: Simd> From<mask8x64<S>> for __m512i {
     #[inline(always)]
-    fn from(value: mask8x32<S>) -> Self {
+    fn from(value: mask8x64<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for i16x16<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for i16x32<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<i16x16<S>> for __m256i {
+impl<S: Simd> From<i16x32<S>> for __m512i {
     #[inline(always)]
-    fn from(value: i16x16<S>) -> Self {
+    fn from(value: i16x32<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for u16x16<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for u16x32<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<u16x16<S>> for __m256i {
+impl<S: Simd> From<u16x32<S>> for __m512i {
     #[inline(always)]
-    fn from(value: u16x16<S>) -> Self {
+    fn from(value: u16x32<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for mask16x16<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for mask16x32<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<mask16x16<S>> for __m256i {
+impl<S: Simd> From<mask16x32<S>> for __m512i {
     #[inline(always)]
-    fn from(value: mask16x16<S>) -> Self {
+    fn from(value: mask16x32<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for i32x8<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for i32x16<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<i32x8<S>> for __m256i {
+impl<S: Simd> From<i32x16<S>> for __m512i {
     #[inline(always)]
-    fn from(value: i32x8<S>) -> Self {
+    fn from(value: i32x16<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for u32x8<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for u32x16<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<u32x8<S>> for __m256i {
+impl<S: Simd> From<u32x16<S>> for __m512i {
     #[inline(always)]
-    fn from(value: u32x8<S>) -> Self {
+    fn from(value: u32x16<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for mask32x8<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for mask32x16<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<mask32x8<S>> for __m256i {
+impl<S: Simd> From<mask32x16<S>> for __m512i {
     #[inline(always)]
-    fn from(value: mask32x8<S>) -> Self {
+    fn from(value: mask32x16<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256d, S> for f64x4<S> {
+impl<S: Simd> SimdFrom<__m512d, S> for f64x8<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256d) -> Self {
+    fn simd_from(simd: S, arch: __m512d) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<f64x4<S>> for __m256d {
+impl<S: Simd> From<f64x8<S>> for __m512d {
     #[inline(always)]
-    fn from(value: f64x4<S>) -> Self {
+    fn from(value: f64x8<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
-impl<S: Simd> SimdFrom<__m256i, S> for mask64x4<S> {
+impl<S: Simd> SimdFrom<__m512i, S> for mask64x8<S> {
     #[inline(always)]
-    fn simd_from(simd: S, arch: __m256i) -> Self {
+    fn simd_from(simd: S, arch: __m512i) -> Self {
         Self {
             val: unsafe { core::mem::transmute_copy(&arch) },
             simd,
         }
     }
 }
-impl<S: Simd> From<mask64x4<S>> for __m256i {
+impl<S: Simd> From<mask64x8<S>> for __m512i {
     #[inline(always)]
-    fn from(value: mask64x4<S>) -> Self {
+    fn from(value: mask64x8<S>) -> Self {
         unsafe { core::mem::transmute_copy(&value.val) }
     }
 }
@@ -8620,6 +8700,33 @@ unsafe fn dyn_alignr_256(a: __m256i, b: __m256i, shift: usize) -> __m256i {
         }
     }
 }
+#[doc = r" This is a version of the `alignr` intrinsic that takes a non-const shift argument. The shift is still"]
+#[doc = r" expected to be constant in practice, so the match statement will be optimized out. This exists because"]
+#[doc = r" Rust doesn't currently let you do math on const generics."]
+#[inline(always)]
+unsafe fn dyn_alignr_512(a: __m512i, b: __m512i, shift: usize) -> __m512i {
+    unsafe {
+        match shift {
+            0usize => _mm512_alignr_epi8::<0i32>(a, b),
+            1usize => _mm512_alignr_epi8::<1i32>(a, b),
+            2usize => _mm512_alignr_epi8::<2i32>(a, b),
+            3usize => _mm512_alignr_epi8::<3i32>(a, b),
+            4usize => _mm512_alignr_epi8::<4i32>(a, b),
+            5usize => _mm512_alignr_epi8::<5i32>(a, b),
+            6usize => _mm512_alignr_epi8::<6i32>(a, b),
+            7usize => _mm512_alignr_epi8::<7i32>(a, b),
+            8usize => _mm512_alignr_epi8::<8i32>(a, b),
+            9usize => _mm512_alignr_epi8::<9i32>(a, b),
+            10usize => _mm512_alignr_epi8::<10i32>(a, b),
+            11usize => _mm512_alignr_epi8::<11i32>(a, b),
+            12usize => _mm512_alignr_epi8::<12i32>(a, b),
+            13usize => _mm512_alignr_epi8::<13i32>(a, b),
+            14usize => _mm512_alignr_epi8::<14i32>(a, b),
+            15usize => _mm512_alignr_epi8::<15i32>(a, b),
+            _ => unreachable!(),
+        }
+    }
+}
 #[doc = r" Computes one output __m256i for `cross_block_alignr_*` operations."]
 #[doc = r""]
 #[doc = r" Given an array of registers, each containing two 128-bit blocks, extracts two adjacent blocks (`lo_idx` and"]
@@ -8652,19 +8759,463 @@ unsafe fn cross_block_alignr_256x1(a: __m256i, b: __m256i, shift_bytes: usize) -
     let regs = [b, a];
     unsafe { cross_block_alignr_one(&regs, 0, shift_bytes) }
 }
-#[doc = r" Concatenates `b` and `a` (each 2 x __m256i = 4 blocks) and extracts 4 blocks starting at byte offset"]
+#[doc = r" Concatenates `b` and `a` (each __m512i = 4 x 128-bit blocks) and extracts 4 blocks starting at byte offset"]
 #[doc = r" `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics."]
+#[doc = r" Uses AVX-512 VBMI's permutex2var for efficient cross-lane byte shuffling."]
 #[inline(always)]
-unsafe fn cross_block_alignr_256x2(
-    a: [__m256i; 2],
-    b: [__m256i; 2],
-    shift_bytes: usize,
-) -> [__m256i; 2] {
-    let regs = [b[0], b[1], a[0], a[1]];
-    unsafe {
-        [
-            cross_block_alignr_one(&regs, 0, shift_bytes),
-            cross_block_alignr_one(&regs, 2, shift_bytes),
-        ]
-    }
+unsafe fn cross_block_alignr_512(a: __m512i, b: __m512i, shift_bytes: usize) -> __m512i {
+    let idx = unsafe {
+        match shift_bytes {
+            0usize => _mm512_set_epi8(
+                63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8,
+                49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8,
+                35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8,
+                21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8, 14i8, 13i8, 12i8, 11i8, 10i8, 9i8, 8i8,
+                7i8, 6i8, 5i8, 4i8, 3i8, 2i8, 1i8, 0i8,
+            ),
+            1usize => _mm512_set_epi8(
+                64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8,
+                50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8,
+                36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8,
+                22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8, 14i8, 13i8, 12i8, 11i8, 10i8, 9i8,
+                8i8, 7i8, 6i8, 5i8, 4i8, 3i8, 2i8, 1i8,
+            ),
+            2usize => _mm512_set_epi8(
+                65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8,
+                51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8,
+                37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8,
+                23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8, 14i8, 13i8, 12i8, 11i8, 10i8,
+                9i8, 8i8, 7i8, 6i8, 5i8, 4i8, 3i8, 2i8,
+            ),
+            3usize => _mm512_set_epi8(
+                66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8,
+                52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8,
+                38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8,
+                24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8, 14i8, 13i8, 12i8, 11i8,
+                10i8, 9i8, 8i8, 7i8, 6i8, 5i8, 4i8, 3i8,
+            ),
+            4usize => _mm512_set_epi8(
+                67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8,
+                53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8,
+                39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8,
+                25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8, 14i8, 13i8, 12i8,
+                11i8, 10i8, 9i8, 8i8, 7i8, 6i8, 5i8, 4i8,
+            ),
+            5usize => _mm512_set_epi8(
+                68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8,
+                54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8,
+                40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8,
+                26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8, 14i8, 13i8,
+                12i8, 11i8, 10i8, 9i8, 8i8, 7i8, 6i8, 5i8,
+            ),
+            6usize => _mm512_set_epi8(
+                69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8,
+                55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8,
+                41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8,
+                27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8, 14i8,
+                13i8, 12i8, 11i8, 10i8, 9i8, 8i8, 7i8, 6i8,
+            ),
+            7usize => _mm512_set_epi8(
+                70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8,
+                56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8,
+                42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8,
+                28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8,
+                14i8, 13i8, 12i8, 11i8, 10i8, 9i8, 8i8, 7i8,
+            ),
+            8usize => _mm512_set_epi8(
+                71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8,
+                57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8,
+                43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8,
+                29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8,
+                15i8, 14i8, 13i8, 12i8, 11i8, 10i8, 9i8, 8i8,
+            ),
+            9usize => _mm512_set_epi8(
+                72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8,
+                58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8,
+                44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8,
+                30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8,
+                16i8, 15i8, 14i8, 13i8, 12i8, 11i8, 10i8, 9i8,
+            ),
+            10usize => _mm512_set_epi8(
+                73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8,
+                59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8,
+                45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8,
+                31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8,
+                17i8, 16i8, 15i8, 14i8, 13i8, 12i8, 11i8, 10i8,
+            ),
+            11usize => _mm512_set_epi8(
+                74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8,
+                60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8,
+                46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8,
+                32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8,
+                18i8, 17i8, 16i8, 15i8, 14i8, 13i8, 12i8, 11i8,
+            ),
+            12usize => _mm512_set_epi8(
+                75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8,
+                61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8,
+                47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8,
+                33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8,
+                19i8, 18i8, 17i8, 16i8, 15i8, 14i8, 13i8, 12i8,
+            ),
+            13usize => _mm512_set_epi8(
+                76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8,
+                62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8,
+                48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8,
+                34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8,
+                20i8, 19i8, 18i8, 17i8, 16i8, 15i8, 14i8, 13i8,
+            ),
+            14usize => _mm512_set_epi8(
+                77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8,
+                63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8,
+                49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8,
+                35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8,
+                21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8, 14i8,
+            ),
+            15usize => _mm512_set_epi8(
+                78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8,
+                64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8,
+                50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8,
+                36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8,
+                22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8, 15i8,
+            ),
+            16usize => _mm512_set_epi8(
+                79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8,
+                65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8,
+                51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8,
+                37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8,
+                23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8, 16i8,
+            ),
+            17usize => _mm512_set_epi8(
+                80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8,
+                66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8,
+                52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8,
+                38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8,
+                24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8, 17i8,
+            ),
+            18usize => _mm512_set_epi8(
+                81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8,
+                67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8,
+                53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8,
+                39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8,
+                25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8, 18i8,
+            ),
+            19usize => _mm512_set_epi8(
+                82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8,
+                68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8,
+                54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8,
+                40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8,
+                26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8, 19i8,
+            ),
+            20usize => _mm512_set_epi8(
+                83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8,
+                69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8,
+                55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8,
+                41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8,
+                27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8, 20i8,
+            ),
+            21usize => _mm512_set_epi8(
+                84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8,
+                70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8,
+                56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8,
+                42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8,
+                28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8, 21i8,
+            ),
+            22usize => _mm512_set_epi8(
+                85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8,
+                71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8,
+                57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8,
+                43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8,
+                29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8, 22i8,
+            ),
+            23usize => _mm512_set_epi8(
+                86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8,
+                72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8,
+                58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8,
+                44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8,
+                30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8, 23i8,
+            ),
+            24usize => _mm512_set_epi8(
+                87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8,
+                73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8,
+                59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8,
+                45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8,
+                31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8, 24i8,
+            ),
+            25usize => _mm512_set_epi8(
+                88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8,
+                74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8,
+                60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8,
+                46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8,
+                32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8, 25i8,
+            ),
+            26usize => _mm512_set_epi8(
+                89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8,
+                75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8,
+                61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8,
+                47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8,
+                33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8, 26i8,
+            ),
+            27usize => _mm512_set_epi8(
+                90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8,
+                76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8,
+                62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8,
+                48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8,
+                34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8, 27i8,
+            ),
+            28usize => _mm512_set_epi8(
+                91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8,
+                77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8,
+                63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8,
+                49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8,
+                35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8, 28i8,
+            ),
+            29usize => _mm512_set_epi8(
+                92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8,
+                78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8,
+                64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8,
+                50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8,
+                36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8, 29i8,
+            ),
+            30usize => _mm512_set_epi8(
+                93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8,
+                79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8,
+                65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8,
+                51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8,
+                37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8, 30i8,
+            ),
+            31usize => _mm512_set_epi8(
+                94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8,
+                80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8,
+                66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8,
+                52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8,
+                38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8, 31i8,
+            ),
+            32usize => _mm512_set_epi8(
+                95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8,
+                81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8,
+                67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8,
+                53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8,
+                39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8, 32i8,
+            ),
+            33usize => _mm512_set_epi8(
+                96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8,
+                82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8,
+                68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8,
+                54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8,
+                40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8, 33i8,
+            ),
+            34usize => _mm512_set_epi8(
+                97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8,
+                83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8,
+                69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8,
+                55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8,
+                41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8, 34i8,
+            ),
+            35usize => _mm512_set_epi8(
+                98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8,
+                84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8,
+                70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8,
+                56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8,
+                42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8, 35i8,
+            ),
+            36usize => _mm512_set_epi8(
+                99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8,
+                85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8,
+                71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8,
+                57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8,
+                43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8, 36i8,
+            ),
+            37usize => _mm512_set_epi8(
+                100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8,
+                87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8,
+                73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8,
+                59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8,
+                45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8, 37i8,
+            ),
+            38usize => _mm512_set_epi8(
+                101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8,
+                88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8,
+                74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8,
+                60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8,
+                46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8, 38i8,
+            ),
+            39usize => _mm512_set_epi8(
+                102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8,
+                89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8,
+                75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8,
+                61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8,
+                47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8, 39i8,
+            ),
+            40usize => _mm512_set_epi8(
+                103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8,
+                90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8,
+                76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8,
+                62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8,
+                48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8, 40i8,
+            ),
+            41usize => _mm512_set_epi8(
+                104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8,
+                91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8,
+                77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8,
+                63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8,
+                49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8, 41i8,
+            ),
+            42usize => _mm512_set_epi8(
+                105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8,
+                92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8,
+                78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8,
+                64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8,
+                50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8, 42i8,
+            ),
+            43usize => _mm512_set_epi8(
+                106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8,
+                94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8,
+                80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8,
+                66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8,
+                52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8, 43i8,
+            ),
+            44usize => _mm512_set_epi8(
+                107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8,
+                95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8,
+                81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8,
+                67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8,
+                53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8, 44i8,
+            ),
+            45usize => _mm512_set_epi8(
+                108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8,
+                96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8,
+                82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8,
+                68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8,
+                54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8, 45i8,
+            ),
+            46usize => _mm512_set_epi8(
+                109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8,
+                97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8,
+                83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8,
+                69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8,
+                55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8, 46i8,
+            ),
+            47usize => _mm512_set_epi8(
+                110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8,
+                98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8,
+                84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8,
+                70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8,
+                56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8, 47i8,
+            ),
+            48usize => _mm512_set_epi8(
+                111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8,
+                99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8,
+                85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8,
+                71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8,
+                57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8, 48i8,
+            ),
+            49usize => _mm512_set_epi8(
+                112i8, 111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8,
+                100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8,
+                87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8,
+                73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8,
+                59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8, 49i8,
+            ),
+            50usize => _mm512_set_epi8(
+                113i8, 112i8, 111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8,
+                101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8,
+                88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8,
+                74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8,
+                60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8, 50i8,
+            ),
+            51usize => _mm512_set_epi8(
+                114i8, 113i8, 112i8, 111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8,
+                102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8,
+                89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8,
+                75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8,
+                61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8, 51i8,
+            ),
+            52usize => _mm512_set_epi8(
+                115i8, 114i8, 113i8, 112i8, 111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8,
+                103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8,
+                90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8,
+                76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8,
+                62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8, 52i8,
+            ),
+            53usize => _mm512_set_epi8(
+                116i8, 115i8, 114i8, 113i8, 112i8, 111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8,
+                104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8,
+                91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8,
+                77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8,
+                63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8, 53i8,
+            ),
+            54usize => _mm512_set_epi8(
+                117i8, 116i8, 115i8, 114i8, 113i8, 112i8, 111i8, 110i8, 109i8, 108i8, 107i8, 106i8,
+                105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8,
+                92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8,
+                78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8,
+                64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8, 54i8,
+            ),
+            55usize => _mm512_set_epi8(
+                118i8, 117i8, 116i8, 115i8, 114i8, 113i8, 112i8, 111i8, 110i8, 109i8, 108i8, 107i8,
+                106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8,
+                94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8,
+                80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8,
+                66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8, 55i8,
+            ),
+            56usize => _mm512_set_epi8(
+                119i8, 118i8, 117i8, 116i8, 115i8, 114i8, 113i8, 112i8, 111i8, 110i8, 109i8, 108i8,
+                107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8,
+                95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8,
+                81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8,
+                67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8, 56i8,
+            ),
+            57usize => _mm512_set_epi8(
+                120i8, 119i8, 118i8, 117i8, 116i8, 115i8, 114i8, 113i8, 112i8, 111i8, 110i8, 109i8,
+                108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8, 97i8,
+                96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8,
+                82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8,
+                68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8, 57i8,
+            ),
+            58usize => _mm512_set_epi8(
+                121i8, 120i8, 119i8, 118i8, 117i8, 116i8, 115i8, 114i8, 113i8, 112i8, 111i8, 110i8,
+                109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8, 98i8,
+                97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8, 84i8,
+                83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8, 70i8,
+                69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8, 58i8,
+            ),
+            59usize => _mm512_set_epi8(
+                122i8, 121i8, 120i8, 119i8, 118i8, 117i8, 116i8, 115i8, 114i8, 113i8, 112i8, 111i8,
+                110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8, 99i8,
+                98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8, 85i8,
+                84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8, 71i8,
+                70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8, 59i8,
+            ),
+            60usize => _mm512_set_epi8(
+                123i8, 122i8, 121i8, 120i8, 119i8, 118i8, 117i8, 116i8, 115i8, 114i8, 113i8, 112i8,
+                111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8, 100i8,
+                99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8, 87i8, 86i8,
+                85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8, 73i8, 72i8,
+                71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8, 60i8,
+            ),
+            61usize => _mm512_set_epi8(
+                124i8, 123i8, 122i8, 121i8, 120i8, 119i8, 118i8, 117i8, 116i8, 115i8, 114i8, 113i8,
+                112i8, 111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8, 101i8,
+                100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8, 88i8,
+                87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8, 74i8,
+                73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8, 61i8,
+            ),
+            62usize => _mm512_set_epi8(
+                125i8, 124i8, 123i8, 122i8, 121i8, 120i8, 119i8, 118i8, 117i8, 116i8, 115i8, 114i8,
+                113i8, 112i8, 111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8, 102i8,
+                101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8, 89i8,
+                88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8, 75i8,
+                74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8, 62i8,
+            ),
+            63usize => _mm512_set_epi8(
+                126i8, 125i8, 124i8, 123i8, 122i8, 121i8, 120i8, 119i8, 118i8, 117i8, 116i8, 115i8,
+                114i8, 113i8, 112i8, 111i8, 110i8, 109i8, 108i8, 107i8, 106i8, 105i8, 104i8, 103i8,
+                102i8, 101i8, 100i8, 99i8, 98i8, 97i8, 96i8, 95i8, 94i8, 93i8, 92i8, 91i8, 90i8,
+                89i8, 88i8, 87i8, 86i8, 85i8, 84i8, 83i8, 82i8, 81i8, 80i8, 79i8, 78i8, 77i8, 76i8,
+                75i8, 74i8, 73i8, 72i8, 71i8, 70i8, 69i8, 68i8, 67i8, 66i8, 65i8, 64i8, 63i8,
+            ),
+            _ => unreachable!(),
+        }
+    };
+    unsafe { _mm512_permutex2var_epi8(b, idx, a) }
 }

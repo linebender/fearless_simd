@@ -13,7 +13,7 @@ license = "Apache-2.0 OR MIT"
 repository = "https://github.com/linebender/fearless_simd"
 # Keep in sync with RUST_MIN_VER in .github/workflows/ci.yml, with the relevant README.md files
 # and with the MSRV in the `Unreleased` section of CHANGELOG.md.
-rust-version = "1.88"
+rust-version = "1.89"
 
 [workspace.lints]
 
@@ -47,7 +47,7 @@ clippy.debug_assert_with_mut_call = "warn"
 clippy.doc_markdown = "warn"
 clippy.fn_to_numeric_cast_any = "warn"
 clippy.infinite_loop = "warn"
-clippy.large_stack_arrays = "warn"
+clippy.large_stack_arrays = "allow"             # appears to be buggy as of 1.93, fixed in nightly. TODO: re-enable
 clippy.mismatching_type_param_order = "warn"
 clippy.missing_assert_message = "warn"
 clippy.missing_fields_in_debug = "warn"

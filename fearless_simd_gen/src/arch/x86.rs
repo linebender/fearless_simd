@@ -43,7 +43,6 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
         let suffix = op_suffix(ty.scalar, ty.scalar_bits, true);
         match op {
             "floor" | "ceil" | "round_ties_even" | "trunc" => {
-                let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
                 let rounding_mode = match op {
                     "floor" => quote! { _MM_FROUND_TO_NEG_INF },
                     "ceil" => quote! { _MM_FROUND_TO_POS_INF },
@@ -51,7 +50,15 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                     "trunc" => quote! { _MM_FROUND_TO_ZERO },
                     _ => unreachable!(),
                 };
-                quote! { #intrinsic::<{#rounding_mode | _MM_FROUND_NO_EXC}>( #( #args, )* ) }
+                if ty.n_bits() == 512 {
+                    // AVX-512 uses _mm512_roundscale_ps/pd with imm8 encoding:
+                    // bits 7:4 = scale (0 for integer rounding), bits 3:0 = rounding mode
+                    let intrinsic = intrinsic_ident("roundscale", suffix, ty.n_bits());
+                    quote! { #intrinsic::<#rounding_mode>( #( #args, )* ) }
+                } else {
+                    let intrinsic = intrinsic_ident("round", suffix, ty.n_bits());
+                    quote! { #intrinsic::<{#rounding_mode | _MM_FROUND_NO_EXC}>( #( #args, )* ) }
+                }
             }
             "neg" => match ty.scalar {
                 ScalarType::Float => {
@@ -112,19 +119,46 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                     suffix,
                     ty.n_bits(),
                 );
-                let cmpunord = float_compare_method("unord", ty);
-                let blend = intrinsic_ident("blendv", suffix, ty.n_bits());
                 let a = &args[0];
                 let b = &args[1];
 
-                quote! {
-                    let intermediate = #intrinsic(#a, #b);
-                    // The x86 min/max intrinsics behave like `a < b ? a : b` and `a > b ? a : b` respectively. That
-                    // means that if either `a` or `b` is NaN, they return the second argument `b`. So to implement a
-                    // min/max where we always return the non-NaN argument, we add an additional check if `b` is NaN,
-                    // and select `a` if so.
-                    let b_is_nan = #cmpunord(#b, #b);
-                    #blend(intermediate, #a, b_is_nan)
+                if ty.n_bits() == 512 {
+                    // AVX-512 uses mask registers for comparisons and mask-based blending
+                    // _mm512_cmp_ps_mask returns __mmask16/__mmask8, _mm512_mask_blend_ps uses it
+                    let cmp_mask = match ty.scalar_bits {
+                        32 => format_ident!("_mm512_cmp_ps_mask"),
+                        64 => format_ident!("_mm512_cmp_pd_mask"),
+                        _ => unreachable!(),
+                    };
+                    let blend = match ty.scalar_bits {
+                        32 => format_ident!("_mm512_mask_blend_ps"),
+                        64 => format_ident!("_mm512_mask_blend_pd"),
+                        _ => unreachable!(),
+                    };
+                    // CMP_UNORD_Q predicate = 0x03
+                    quote! {
+                        let intermediate = #intrinsic(#a, #b);
+                        // The x86 min/max intrinsics behave like `a < b ? a : b` and `a > b ? a : b` respectively. That
+                        // means that if either `a` or `b` is NaN, they return the second argument `b`. So to implement a
+                        // min/max where we always return the non-NaN argument, we add an additional check if `b` is NaN,
+                        // and select `a` if so.
+                        let b_is_nan = #cmp_mask::<0x03>(#b, #b);
+                        // mask_blend: where mask bit is 0, take from first arg; where 1, take from second
+                        #blend(b_is_nan, intermediate, #a)
+                    }
+                } else {
+                    let cmpunord = float_compare_method("unord", ty);
+                    let blend = intrinsic_ident("blendv", suffix, ty.n_bits());
+
+                    quote! {
+                        let intermediate = #intrinsic(#a, #b);
+                        // The x86 min/max intrinsics behave like `a < b ? a : b` and `a > b ? a : b` respectively. That
+                        // means that if either `a` or `b` is NaN, they return the second argument `b`. So to implement a
+                        // min/max where we always return the non-NaN argument, we add an additional check if `b` is NaN,
+                        // and select `a` if so.
+                        let b_is_nan = #cmpunord(#b, #b);
+                        #blend(intermediate, #a, b_is_nan)
+                    }
                 }
             }
             _ => unimplemented!("{}", op),
@@ -166,9 +200,11 @@ pub(crate) fn coarse_type(vec_ty: &VecType) -> &'static str {
 
 pub(crate) fn set1_intrinsic(vec_ty: &VecType) -> Ident {
     use ScalarType::*;
-    let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
-        (Int | Unsigned | Mask, 64) => "epi64x",
-        (scalar, bits) => op_suffix(scalar, bits, false),
+    let suffix = match (vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
+        // For 128/256-bit, use epi64x; for 512-bit, use epi64 (AVX-512 naming)
+        (Int | Unsigned | Mask, 64, 512) => "epi64",
+        (Int | Unsigned | Mask, 64, _) => "epi64x",
+        (scalar, bits, _) => op_suffix(scalar, bits, false),
     };
 
     intrinsic_ident("set1", suffix, vec_ty.n_bits())
@@ -273,7 +309,7 @@ pub(crate) fn float_compare_method(method: &str, vec_ty: &VecType) -> TokenStrea
             };
             quote! { #ident }
         }
-        256 => {
+        256 | 512 => {
             // For AVX2 and up, Intel gives us a generic comparison intrinsic that takes a predicate. There are 32,
             // of which only a few are useful and the rest will violate IEEE754 and/or raise a SIGFPE on NaN.
             //
