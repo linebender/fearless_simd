@@ -338,6 +338,14 @@ impl X86 {
                     }
                 }
             }
+            "approximate_recip" if vec_ty.scalar_bits == 64 => {
+                let splat_op = generic_op_name("splat", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#splat_op(1.0) / a
+                    }
+                }
+            }
             "not" if vec_ty.scalar == ScalarType::Mask => {
                 let xor_op = generic_op_name("xor", vec_ty);
                 let splat_op = generic_op_name("splat", vec_ty);
