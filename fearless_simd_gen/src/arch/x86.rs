@@ -90,6 +90,11 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                     #or(#and(mask, #b), #andnot(mask, #a))
                 }
             }
+            "approximate_recip" => {
+                // f32 only; f64 handled in mk_x86.rs
+                let intrinsic = simple_intrinsic("rcp", ty);
+                quote! { #intrinsic ( #( #args ),* ) }
+            }
             "mul" => {
                 let suffix = op_suffix(ty.scalar, ty.scalar_bits, false);
                 let intrinsic = if matches!(ty.scalar, ScalarType::Int | ScalarType::Unsigned) {
