@@ -39,13 +39,6 @@ pub(crate) trait Level {
     /// The full path to the `core_arch` token wrapped by this SIMD level token.
     fn token_inner(&self) -> TokenStream;
 
-    /// Override the default logic for whether to use the generic split/combine implementation
-    /// for an operation. Returns `Some(true)` to force generic, `Some(false)` to force native,
-    /// or `None` to use the default logic based on native_width.
-    fn force_generic_op(&self, _op: &Op, _vec_ty: &VecType) -> Option<bool> {
-        None
-    }
-
     /// Any additional imports or supporting code necessary for the module (for instance, importing
     /// implementation-specific functions from `core::arch`).
     fn make_module_prelude(&self) -> TokenStream;
@@ -101,13 +94,7 @@ pub(crate) trait Level {
         let mut methods = vec![];
         for vec_ty in SIMD_TYPES {
             for op in ops_for_type(vec_ty) {
-                // Check if the level wants to override the generic op decision
-                let use_generic = match self.force_generic_op(&op, vec_ty) {
-                    Some(force) => force,
-                    None => op.sig.should_use_generic_op(vec_ty, native_width),
-                };
-
-                if use_generic {
+                if op.sig.should_use_generic_op(vec_ty, native_width) {
                     methods.push(generic_op(&op, vec_ty));
                     continue;
                 }
