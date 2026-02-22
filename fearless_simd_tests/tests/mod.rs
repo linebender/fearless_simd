@@ -63,7 +63,7 @@ fn supports_highest_level() {
 
 #[simd_test]
 #[ignore]
-fn test_f32_to_i32_exhaustive<S: Simd>(simd: S) {
+fn test_f32_to_i32_precise_exhaustive<S: Simd>(simd: S) {
     // The vectorize call doesn't affect the outcome of the test, but does make it complete far more quickly
     #[expect(
         clippy::cast_possible_truncation,
@@ -132,6 +132,39 @@ fn test_f32_to_u32_exhaustive<S: Simd>(simd: S) {
                 assert_eq!(
                     *ints, ints_ref,
                     "f32x4::to_int::<u32x4<_>>() returns the same results as Rust's `as u32` (input: {:?})", floats.as_slice()
+                );
+            }
+        },
+    );
+}
+
+#[simd_test]
+#[ignore]
+fn test_f32_to_i32<S: Simd>(simd: S) {
+    // The vectorize call doesn't affect the outcome of the test, but does make it complete far more quickly
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "that's the exact behavior we're testing"
+    )]
+    simd.vectorize(
+        #[inline(always)]
+        || {
+            for i in (0..u32::MAX).step_by(4) {
+                let floats = f32x4::from_fn(simd, |n| f32::from_bits(n as u32 + i));
+                // If the value is out of range of i32 because f32 cannot represent it exactly, skip the value
+                // The out-of-range semantics are explicitly implementation-defined in the non-precise version.
+                if !(*floats)
+                    .iter()
+                    .all(|val| !val.is_nan() && *val > i32::MIN as f32 && *val < i32::MAX as f32)
+                {
+                    continue;
+                }
+                let ints = floats.to_int::<i32x4<_>>();
+                let ints_ref = (*floats).map(|f| f as i32);
+                assert_eq!(
+                    *ints, ints_ref,
+                    "f32x4::to_int::<i32x4<_>>() returns the same results as Rust's `as i32` (input: {:?})",
+                    floats.as_slice()
                 );
             }
         },
