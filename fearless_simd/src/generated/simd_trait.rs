@@ -152,6 +152,8 @@ pub trait Simd:
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    fn approximate_recip_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Subtract two vectors element-wise."]
@@ -901,6 +903,8 @@ pub trait Simd:
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    fn approximate_recip_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Subtract two vectors element-wise."]
@@ -1046,6 +1050,8 @@ pub trait Simd:
     fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    fn approximate_recip_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Subtract two vectors element-wise."]
@@ -1817,6 +1823,8 @@ pub trait Simd:
     fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    fn approximate_recip_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Subtract two vectors element-wise."]
@@ -1966,6 +1974,8 @@ pub trait Simd:
     fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    fn approximate_recip_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Subtract two vectors element-wise."]
@@ -2731,6 +2741,8 @@ pub trait Simd:
     fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    fn approximate_recip_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Subtract two vectors element-wise."]
@@ -2996,6 +3008,8 @@ pub trait SimdFloat<S: Simd>:
     fn abs(self) -> Self;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt(self) -> Self;
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    fn approximate_recip(self) -> Self;
     #[doc = "Return a vector with the magnitude of `self` and the sign of `rhs` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
