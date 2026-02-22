@@ -124,12 +124,7 @@ impl Level for X86 {
                 }
             },
             Self::Avx2 => quote! {
-                #[cfg(not(target_feature = "avx512f"))]
-                return Level::#level_tok(self);
-                #[cfg(target_feature = "avx512f")]
-                {
-                    Level::baseline()
-                }
+                Level::#level_tok(self)
             },
             Self::Avx512 => quote! {
                 Level::#level_tok(self)
