@@ -617,28 +617,40 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: true },
         "Interleave the lower half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
     ),
     Op::new(
         "zip_high",
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: false },
         "Interleave the upper half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.\
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
     ),
     Op::new(
         "unzip_low",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: true },
         "Extract even-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
     ),
     Op::new(
         "unzip_high",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: false },
         "Extract odd-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
     ),
     Op::new(
         "interleave",
@@ -863,28 +875,40 @@ const INT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: true },
         "Interleave the lower half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
     ),
     Op::new(
         "zip_high",
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: false },
         "Interleave the upper half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.\
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
     ),
     Op::new(
         "unzip_low",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: true },
         "Extract even-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
     ),
     Op::new(
         "unzip_high",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: false },
         "Extract odd-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
     ),
     Op::new(
         "interleave",
