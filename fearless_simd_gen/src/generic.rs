@@ -204,6 +204,50 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         }
         OpSig::FromBytes => generic_from_bytes(method_sig, ty),
         OpSig::ToBytes => generic_to_bytes(method_sig, ty),
+        OpSig::Interleave => {
+            // interleave(a, b) = (zip_low(a, b), zip_high(a, b))
+            // For wider vectors, we split each input, interleave the halves separately,
+            // then combine the low parts and high parts.
+            let zip_low_half = generic_op_name("zip_low", &half);
+            let zip_high_half = generic_op_name("zip_high", &half);
+            quote! {
+                #method_sig {
+                    let (a0, a1) = self.#split(a);
+                    let (b0, b1) = self.#split(b);
+                    // Interleave lower halves of inputs
+                    let lo_lo = self.#zip_low_half(a0, b0);
+                    let lo_hi = self.#zip_high_half(a0, b0);
+                    // Interleave upper halves of inputs
+                    let hi_lo = self.#zip_low_half(a1, b1);
+                    let hi_hi = self.#zip_high_half(a1, b1);
+                    // Combine: first result is full interleave of lower halves,
+                    // second result is full interleave of upper halves
+                    (self.#combine(lo_lo, lo_hi), self.#combine(hi_lo, hi_hi))
+                }
+            }
+        }
+        OpSig::Deinterleave => {
+            // deinterleave(a, b) = (unzip_low(a, b), unzip_high(a, b))
+            // For wider vectors, we split each input, deinterleave the halves separately,
+            // then combine the even parts and odd parts.
+            let unzip_low_half = generic_op_name("unzip_low", &half);
+            let unzip_high_half = generic_op_name("unzip_high", &half);
+            quote! {
+                #method_sig {
+                    let (a0, a1) = self.#split(a);
+                    let (b0, b1) = self.#split(b);
+                    // Deinterleave lower halves of inputs
+                    let lo_even = self.#unzip_low_half(a0, a1);
+                    let lo_odd = self.#unzip_high_half(a0, a1);
+                    // Deinterleave upper halves of inputs
+                    let hi_even = self.#unzip_low_half(b0, b1);
+                    let hi_odd = self.#unzip_high_half(b0, b1);
+                    // Combine: first result is all even elements,
+                    // second result is all odd elements
+                    (self.#combine(lo_even, hi_even), self.#combine(lo_odd, hi_odd))
+                }
+            }
+        }
         OpSig::Slide { granularity, .. } => {
             match (granularity, ty.n_bits()) {
                 (SlideGranularity::WithinBlocks, 128) => {

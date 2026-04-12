@@ -172,14 +172,18 @@ pub trait Simd:
     fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>);
     #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -280,14 +284,18 @@ pub trait Simd:
     fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -360,14 +368,18 @@ pub trait Simd:
     fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -495,14 +507,18 @@ pub trait Simd:
     fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -575,14 +591,18 @@ pub trait Simd:
     fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -710,14 +730,18 @@ pub trait Simd:
     fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -792,14 +816,18 @@ pub trait Simd:
     fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -921,14 +949,18 @@ pub trait Simd:
     fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>);
     #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -1066,14 +1098,18 @@ pub trait Simd:
     fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> (f32x8<Self>, f32x8<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> (f32x8<Self>, f32x8<Self>);
     #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -1176,14 +1212,18 @@ pub trait Simd:
     fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i8x32(self, a: mask8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -1258,14 +1298,18 @@ pub trait Simd:
     fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u8x32(self, a: mask8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -1397,14 +1441,18 @@ pub trait Simd:
     fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i16x16(self, a: mask16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -1479,14 +1527,18 @@ pub trait Simd:
     fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u16x16(self, a: mask16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -1620,14 +1672,18 @@ pub trait Simd:
     fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i32x8(self, a: mask32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -1704,14 +1760,18 @@ pub trait Simd:
     fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u32x8(self, a: mask32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -1837,14 +1897,18 @@ pub trait Simd:
     fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> (f64x4<Self>, f64x4<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> (f64x4<Self>, f64x4<Self>);
     #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -1986,14 +2050,18 @@ pub trait Simd:
     fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> (f32x16<Self>, f32x16<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> (f32x16<Self>, f32x16<Self>);
     #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -2098,14 +2166,18 @@ pub trait Simd:
     fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i8x64(self, a: mask8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -2178,14 +2250,18 @@ pub trait Simd:
     fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u8x64(self, a: mask8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -2315,14 +2391,18 @@ pub trait Simd:
     fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i16x32(self, a: mask16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -2395,14 +2475,18 @@ pub trait Simd:
     fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u16x32(self, a: mask16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -2536,14 +2620,18 @@ pub trait Simd:
     fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_i32x16(self, a: mask32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -2618,14 +2706,18 @@ pub trait Simd:
     fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>);
     #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
     fn select_u32x16(self, a: mask32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
@@ -2751,14 +2843,18 @@ pub trait Simd:
     fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
     fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> (f64x8<Self>, f64x8<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> (f64x8<Self>, f64x8<Self>);
     #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -3008,14 +3104,18 @@ pub trait SimdFloat<S: Simd>:
     fn simd_ge(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `self` is greater than `rhs`, and all zeroes if not."]
     fn simd_gt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `self` and `rhs`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave(self, rhs: impl SimdInto<Self, S>) -> (Self, Self);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `self` followed by all even-indexed elements from `rhs`. The second result contains all odd-indexed elements from `self` followed by all odd-indexed elements from `rhs`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave(self, rhs: impl SimdInto<Self, S>) -> (Self, Self);
     #[doc = "Return the element-wise maximum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `max_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Return the element-wise minimum of two vectors.\n\nIf either operand is NaN, the result for that lane is implementation-defined-- it could be either the first or second operand. See `min_precise` for a version that returns the non-NaN operand if only one is NaN.\n\nIf one operand is positive zero and the other is negative zero, the result is also implementation-defined, and it could be either one."]
@@ -3093,14 +3193,18 @@ pub trait SimdInt<S: Simd>:
     fn simd_ge(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `self` is greater than `rhs`, and all zeroes if not."]
     fn simd_gt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`."]
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`."]
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_high(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`."]
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`."]
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
     fn unzip_high(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `self` and `rhs`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave(self, rhs: impl SimdInto<Self, S>) -> (Self, Self);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `self` followed by all even-indexed elements from `rhs`. The second result contains all odd-indexed elements from `self` followed by all odd-indexed elements from `rhs`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave(self, rhs: impl SimdInto<Self, S>) -> (Self, Self);
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Return the element-wise maximum of two vectors."]
