@@ -148,7 +148,10 @@ impl Simd for Fallback {
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-        f()
+        fn vectorize_inner<F: FnOnce() -> R, R>(f: F) -> R {
+            f()
+        }
+        vectorize_inner(f)
     }
     #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
@@ -201,6 +204,21 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        let mut dest = [Default::default(); 4usize];
+        dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x4<const SHIFT: usize>(
+        self,
+        a: f32x4<Self>,
+        b: f32x4<Self>,
+    ) -> f32x4<Self> {
+        self.slide_f32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -564,6 +582,21 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x16<const SHIFT: usize>(
+        self,
+        a: i8x16<Self>,
+        b: i8x16<Self>,
+    ) -> i8x16<Self> {
+        self.slide_i8x16::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         [
             i8::wrapping_add(a[0usize], b[0usize]),
@@ -720,22 +753,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         [
-            i8::shl(a[0usize], shift as i8),
-            i8::shl(a[1usize], shift as i8),
-            i8::shl(a[2usize], shift as i8),
-            i8::shl(a[3usize], shift as i8),
-            i8::shl(a[4usize], shift as i8),
-            i8::shl(a[5usize], shift as i8),
-            i8::shl(a[6usize], shift as i8),
-            i8::shl(a[7usize], shift as i8),
-            i8::shl(a[8usize], shift as i8),
-            i8::shl(a[9usize], shift as i8),
-            i8::shl(a[10usize], shift as i8),
-            i8::shl(a[11usize], shift as i8),
-            i8::shl(a[12usize], shift as i8),
-            i8::shl(a[13usize], shift as i8),
-            i8::shl(a[14usize], shift as i8),
-            i8::shl(a[15usize], shift as i8),
+            i8::shl(a[0usize], shift),
+            i8::shl(a[1usize], shift),
+            i8::shl(a[2usize], shift),
+            i8::shl(a[3usize], shift),
+            i8::shl(a[4usize], shift),
+            i8::shl(a[5usize], shift),
+            i8::shl(a[6usize], shift),
+            i8::shl(a[7usize], shift),
+            i8::shl(a[8usize], shift),
+            i8::shl(a[9usize], shift),
+            i8::shl(a[10usize], shift),
+            i8::shl(a[11usize], shift),
+            i8::shl(a[12usize], shift),
+            i8::shl(a[13usize], shift),
+            i8::shl(a[14usize], shift),
+            i8::shl(a[15usize], shift),
         ]
         .simd_into(self)
     }
@@ -764,22 +797,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
         [
-            i8::shr(a[0usize], shift as i8),
-            i8::shr(a[1usize], shift as i8),
-            i8::shr(a[2usize], shift as i8),
-            i8::shr(a[3usize], shift as i8),
-            i8::shr(a[4usize], shift as i8),
-            i8::shr(a[5usize], shift as i8),
-            i8::shr(a[6usize], shift as i8),
-            i8::shr(a[7usize], shift as i8),
-            i8::shr(a[8usize], shift as i8),
-            i8::shr(a[9usize], shift as i8),
-            i8::shr(a[10usize], shift as i8),
-            i8::shr(a[11usize], shift as i8),
-            i8::shr(a[12usize], shift as i8),
-            i8::shr(a[13usize], shift as i8),
-            i8::shr(a[14usize], shift as i8),
-            i8::shr(a[15usize], shift as i8),
+            i8::shr(a[0usize], shift),
+            i8::shr(a[1usize], shift),
+            i8::shr(a[2usize], shift),
+            i8::shr(a[3usize], shift),
+            i8::shr(a[4usize], shift),
+            i8::shr(a[5usize], shift),
+            i8::shr(a[6usize], shift),
+            i8::shr(a[7usize], shift),
+            i8::shr(a[8usize], shift),
+            i8::shr(a[9usize], shift),
+            i8::shr(a[10usize], shift),
+            i8::shr(a[11usize], shift),
+            i8::shr(a[12usize], shift),
+            i8::shr(a[13usize], shift),
+            i8::shr(a[14usize], shift),
+            i8::shr(a[15usize], shift),
         ]
         .simd_into(self)
     }
@@ -1134,6 +1167,21 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x16<const SHIFT: usize>(
+        self,
+        a: u8x16<Self>,
+        b: u8x16<Self>,
+    ) -> u8x16<Self> {
+        self.slide_u8x16::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         [
             u8::wrapping_add(a[0usize], b[0usize]),
@@ -1290,22 +1338,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         [
-            u8::shl(a[0usize], shift as u8),
-            u8::shl(a[1usize], shift as u8),
-            u8::shl(a[2usize], shift as u8),
-            u8::shl(a[3usize], shift as u8),
-            u8::shl(a[4usize], shift as u8),
-            u8::shl(a[5usize], shift as u8),
-            u8::shl(a[6usize], shift as u8),
-            u8::shl(a[7usize], shift as u8),
-            u8::shl(a[8usize], shift as u8),
-            u8::shl(a[9usize], shift as u8),
-            u8::shl(a[10usize], shift as u8),
-            u8::shl(a[11usize], shift as u8),
-            u8::shl(a[12usize], shift as u8),
-            u8::shl(a[13usize], shift as u8),
-            u8::shl(a[14usize], shift as u8),
-            u8::shl(a[15usize], shift as u8),
+            u8::shl(a[0usize], shift),
+            u8::shl(a[1usize], shift),
+            u8::shl(a[2usize], shift),
+            u8::shl(a[3usize], shift),
+            u8::shl(a[4usize], shift),
+            u8::shl(a[5usize], shift),
+            u8::shl(a[6usize], shift),
+            u8::shl(a[7usize], shift),
+            u8::shl(a[8usize], shift),
+            u8::shl(a[9usize], shift),
+            u8::shl(a[10usize], shift),
+            u8::shl(a[11usize], shift),
+            u8::shl(a[12usize], shift),
+            u8::shl(a[13usize], shift),
+            u8::shl(a[14usize], shift),
+            u8::shl(a[15usize], shift),
         ]
         .simd_into(self)
     }
@@ -1334,22 +1382,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
         [
-            u8::shr(a[0usize], shift as u8),
-            u8::shr(a[1usize], shift as u8),
-            u8::shr(a[2usize], shift as u8),
-            u8::shr(a[3usize], shift as u8),
-            u8::shr(a[4usize], shift as u8),
-            u8::shr(a[5usize], shift as u8),
-            u8::shr(a[6usize], shift as u8),
-            u8::shr(a[7usize], shift as u8),
-            u8::shr(a[8usize], shift as u8),
-            u8::shr(a[9usize], shift as u8),
-            u8::shr(a[10usize], shift as u8),
-            u8::shr(a[11usize], shift as u8),
-            u8::shr(a[12usize], shift as u8),
-            u8::shr(a[13usize], shift as u8),
-            u8::shr(a[14usize], shift as u8),
-            u8::shr(a[15usize], shift as u8),
+            u8::shr(a[0usize], shift),
+            u8::shr(a[1usize], shift),
+            u8::shr(a[2usize], shift),
+            u8::shr(a[3usize], shift),
+            u8::shr(a[4usize], shift),
+            u8::shr(a[5usize], shift),
+            u8::shr(a[6usize], shift),
+            u8::shr(a[7usize], shift),
+            u8::shr(a[8usize], shift),
+            u8::shr(a[9usize], shift),
+            u8::shr(a[10usize], shift),
+            u8::shr(a[11usize], shift),
+            u8::shr(a[12usize], shift),
+            u8::shr(a[13usize], shift),
+            u8::shr(a[14usize], shift),
+            u8::shr(a[15usize], shift),
         ]
         .simd_into(self)
     }
@@ -1700,6 +1748,25 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask8x16<const SHIFT: usize>(
+        self,
+        a: mask8x16<Self>,
+        b: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x16<const SHIFT: usize>(
+        self,
+        a: mask8x16<Self>,
+        b: mask8x16<Self>,
+    ) -> mask8x16<Self> {
+        self.slide_mask8x16::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         [
             i8::bitand(a[0usize], &b[0usize]),
@@ -1996,6 +2063,21 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
+        let mut dest = [Default::default(); 8usize];
+        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x8<const SHIFT: usize>(
+        self,
+        a: i16x8<Self>,
+        b: i16x8<Self>,
+    ) -> i16x8<Self> {
+        self.slide_i16x8::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         [
             i16::wrapping_add(a[0usize], b[0usize]),
@@ -2096,14 +2178,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
         [
-            i16::shl(a[0usize], shift as i16),
-            i16::shl(a[1usize], shift as i16),
-            i16::shl(a[2usize], shift as i16),
-            i16::shl(a[3usize], shift as i16),
-            i16::shl(a[4usize], shift as i16),
-            i16::shl(a[5usize], shift as i16),
-            i16::shl(a[6usize], shift as i16),
-            i16::shl(a[7usize], shift as i16),
+            i16::shl(a[0usize], shift),
+            i16::shl(a[1usize], shift),
+            i16::shl(a[2usize], shift),
+            i16::shl(a[3usize], shift),
+            i16::shl(a[4usize], shift),
+            i16::shl(a[5usize], shift),
+            i16::shl(a[6usize], shift),
+            i16::shl(a[7usize], shift),
         ]
         .simd_into(self)
     }
@@ -2124,14 +2206,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
         [
-            i16::shr(a[0usize], shift as i16),
-            i16::shr(a[1usize], shift as i16),
-            i16::shr(a[2usize], shift as i16),
-            i16::shr(a[3usize], shift as i16),
-            i16::shr(a[4usize], shift as i16),
-            i16::shr(a[5usize], shift as i16),
-            i16::shr(a[6usize], shift as i16),
-            i16::shr(a[7usize], shift as i16),
+            i16::shr(a[0usize], shift),
+            i16::shr(a[1usize], shift),
+            i16::shr(a[2usize], shift),
+            i16::shr(a[3usize], shift),
+            i16::shr(a[4usize], shift),
+            i16::shr(a[5usize], shift),
+            i16::shr(a[6usize], shift),
+            i16::shr(a[7usize], shift),
         ]
         .simd_into(self)
     }
@@ -2375,6 +2457,21 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
+        let mut dest = [Default::default(); 8usize];
+        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x8<const SHIFT: usize>(
+        self,
+        a: u16x8<Self>,
+        b: u16x8<Self>,
+    ) -> u16x8<Self> {
+        self.slide_u16x8::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         [
             u16::wrapping_add(a[0usize], b[0usize]),
@@ -2475,14 +2572,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
         [
-            u16::shl(a[0usize], shift as u16),
-            u16::shl(a[1usize], shift as u16),
-            u16::shl(a[2usize], shift as u16),
-            u16::shl(a[3usize], shift as u16),
-            u16::shl(a[4usize], shift as u16),
-            u16::shl(a[5usize], shift as u16),
-            u16::shl(a[6usize], shift as u16),
-            u16::shl(a[7usize], shift as u16),
+            u16::shl(a[0usize], shift),
+            u16::shl(a[1usize], shift),
+            u16::shl(a[2usize], shift),
+            u16::shl(a[3usize], shift),
+            u16::shl(a[4usize], shift),
+            u16::shl(a[5usize], shift),
+            u16::shl(a[6usize], shift),
+            u16::shl(a[7usize], shift),
         ]
         .simd_into(self)
     }
@@ -2503,14 +2600,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
         [
-            u16::shr(a[0usize], shift as u16),
-            u16::shr(a[1usize], shift as u16),
-            u16::shr(a[2usize], shift as u16),
-            u16::shr(a[3usize], shift as u16),
-            u16::shr(a[4usize], shift as u16),
-            u16::shr(a[5usize], shift as u16),
-            u16::shr(a[6usize], shift as u16),
-            u16::shr(a[7usize], shift as u16),
+            u16::shr(a[0usize], shift),
+            u16::shr(a[1usize], shift),
+            u16::shr(a[2usize], shift),
+            u16::shr(a[3usize], shift),
+            u16::shr(a[4usize], shift),
+            u16::shr(a[5usize], shift),
+            u16::shr(a[6usize], shift),
+            u16::shr(a[7usize], shift),
         ]
         .simd_into(self)
     }
@@ -2740,6 +2837,25 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask16x8<const SHIFT: usize>(
+        self,
+        a: mask16x8<Self>,
+        b: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        let mut dest = [Default::default(); 8usize];
+        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x8<const SHIFT: usize>(
+        self,
+        a: mask16x8<Self>,
+        b: mask16x8<Self>,
+    ) -> mask16x8<Self> {
+        self.slide_mask16x8::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         [
             i16::bitand(a[0usize], &b[0usize]),
@@ -2932,6 +3048,21 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
+        let mut dest = [Default::default(); 4usize];
+        dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x4<const SHIFT: usize>(
+        self,
+        a: i32x4<Self>,
+        b: i32x4<Self>,
+    ) -> i32x4<Self> {
+        self.slide_i32x4::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         [
             i32::wrapping_add(a[0usize], b[0usize]),
@@ -3004,10 +3135,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
         [
-            i32::shl(a[0usize], shift as i32),
-            i32::shl(a[1usize], shift as i32),
-            i32::shl(a[2usize], shift as i32),
-            i32::shl(a[3usize], shift as i32),
+            i32::shl(a[0usize], shift),
+            i32::shl(a[1usize], shift),
+            i32::shl(a[2usize], shift),
+            i32::shl(a[3usize], shift),
         ]
         .simd_into(self)
     }
@@ -3024,10 +3155,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
         [
-            i32::shr(a[0usize], shift as i32),
-            i32::shr(a[1usize], shift as i32),
-            i32::shr(a[2usize], shift as i32),
-            i32::shr(a[3usize], shift as i32),
+            i32::shr(a[0usize], shift),
+            i32::shr(a[1usize], shift),
+            i32::shr(a[2usize], shift),
+            i32::shr(a[3usize], shift),
         ]
         .simd_into(self)
     }
@@ -3229,6 +3360,21 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
+        let mut dest = [Default::default(); 4usize];
+        dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x4<const SHIFT: usize>(
+        self,
+        a: u32x4<Self>,
+        b: u32x4<Self>,
+    ) -> u32x4<Self> {
+        self.slide_u32x4::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         [
             u32::wrapping_add(a[0usize], b[0usize]),
@@ -3301,10 +3447,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
         [
-            u32::shl(a[0usize], shift as u32),
-            u32::shl(a[1usize], shift as u32),
-            u32::shl(a[2usize], shift as u32),
-            u32::shl(a[3usize], shift as u32),
+            u32::shl(a[0usize], shift),
+            u32::shl(a[1usize], shift),
+            u32::shl(a[2usize], shift),
+            u32::shl(a[3usize], shift),
         ]
         .simd_into(self)
     }
@@ -3321,10 +3467,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
         [
-            u32::shr(a[0usize], shift as u32),
-            u32::shr(a[1usize], shift as u32),
-            u32::shr(a[2usize], shift as u32),
-            u32::shr(a[3usize], shift as u32),
+            u32::shr(a[0usize], shift),
+            u32::shr(a[1usize], shift),
+            u32::shr(a[2usize], shift),
+            u32::shr(a[3usize], shift),
         ]
         .simd_into(self)
     }
@@ -3512,6 +3658,25 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask32x4<const SHIFT: usize>(
+        self,
+        a: mask32x4<Self>,
+        b: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        let mut dest = [Default::default(); 4usize];
+        dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x4<const SHIFT: usize>(
+        self,
+        a: mask32x4<Self>,
+        b: mask32x4<Self>,
+    ) -> mask32x4<Self> {
+        self.slide_mask32x4::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         [
             i32::bitand(a[0usize], &b[0usize]),
@@ -3650,6 +3815,21 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
+        let mut dest = [Default::default(); 2usize];
+        dest[..2usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[2usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x2<const SHIFT: usize>(
+        self,
+        a: f64x2<Self>,
+        b: f64x2<Self>,
+    ) -> f64x2<Self> {
+        self.slide_f64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -3899,6 +4079,25 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask64x2<const SHIFT: usize>(
+        self,
+        a: mask64x2<Self>,
+        b: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        let mut dest = [Default::default(); 2usize];
+        dest[..2usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[2usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x2<const SHIFT: usize>(
+        self,
+        a: mask64x2<Self>,
+        b: mask64x2<Self>,
+    ) -> mask64x2<Self> {
+        self.slide_mask64x2::<SHIFT>(a, b)
+    }
+    #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         [
             i64::bitand(a[0usize], &b[0usize]),
@@ -4022,6 +4221,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
+        let mut dest = [Default::default(); 8usize];
+        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x8<const SHIFT: usize>(
+        self,
+        a: f32x8<Self>,
+        b: f32x8<Self>,
+    ) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        let (b0, b1) = self.split_f32x8(b);
+        self.combine_f32x4(
+            self.slide_within_blocks_f32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -4344,6 +4563,26 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
+        let mut dest = [Default::default(); 32usize];
+        dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x32<const SHIFT: usize>(
+        self,
+        a: i8x32<Self>,
+        b: i8x32<Self>,
+    ) -> i8x32<Self> {
+        let (a0, a1) = self.split_i8x32(a);
+        let (b0, b1) = self.split_i8x32(b);
+        self.combine_i8x16(
+            self.slide_within_blocks_i8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x16::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         let (b0, b1) = self.split_i8x32(b);
@@ -4579,6 +4818,26 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
+        let mut dest = [Default::default(); 32usize];
+        dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x32<const SHIFT: usize>(
+        self,
+        a: u8x32<Self>,
+        b: u8x32<Self>,
+    ) -> u8x32<Self> {
+        let (a0, a1) = self.split_u8x32(a);
+        let (b0, b1) = self.split_u8x32(b);
+        self.combine_u8x16(
+            self.slide_within_blocks_u8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x16::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         let (b0, b1) = self.split_u8x32(b);
@@ -4809,6 +5068,30 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask8x32<const SHIFT: usize>(
+        self,
+        a: mask8x32<Self>,
+        b: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        let mut dest = [Default::default(); 32usize];
+        dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x32<const SHIFT: usize>(
+        self,
+        a: mask8x32<Self>,
+        b: mask8x32<Self>,
+    ) -> mask8x32<Self> {
+        let (a0, a1) = self.split_mask8x32(a);
+        let (b0, b1) = self.split_mask8x32(b);
+        self.combine_mask8x16(
+            self.slide_within_blocks_mask8x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask8x16::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_mask8x32(b);
@@ -4939,6 +5222,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x16<const SHIFT: usize>(
+        self,
+        a: i16x16<Self>,
+        b: i16x16<Self>,
+    ) -> i16x16<Self> {
+        let (a0, a1) = self.split_i16x16(a);
+        let (b0, b1) = self.split_i16x16(b);
+        self.combine_i16x8(
+            self.slide_within_blocks_i16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -5174,6 +5477,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x16<const SHIFT: usize>(
+        self,
+        a: u16x16<Self>,
+        b: u16x16<Self>,
+    ) -> u16x16<Self> {
+        let (a0, a1) = self.split_u16x16(a);
+        let (b0, b1) = self.split_u16x16(b);
+        self.combine_u16x8(
+            self.slide_within_blocks_u16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -5428,6 +5751,30 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask16x16<const SHIFT: usize>(
+        self,
+        a: mask16x16<Self>,
+        b: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x16<const SHIFT: usize>(
+        self,
+        a: mask16x16<Self>,
+        b: mask16x16<Self>,
+    ) -> mask16x16<Self> {
+        let (a0, a1) = self.split_mask16x16(a);
+        let (b0, b1) = self.split_mask16x16(b);
+        self.combine_mask16x8(
+            self.slide_within_blocks_mask16x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask16x8::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_mask16x16(b);
@@ -5558,6 +5905,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
+        let mut dest = [Default::default(); 8usize];
+        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x8<const SHIFT: usize>(
+        self,
+        a: i32x8<Self>,
+        b: i32x8<Self>,
+    ) -> i32x8<Self> {
+        let (a0, a1) = self.split_i32x8(a);
+        let (b0, b1) = self.split_i32x8(b);
+        self.combine_i32x4(
+            self.slide_within_blocks_i32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -5800,6 +6167,26 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
+        let mut dest = [Default::default(); 8usize];
+        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x8<const SHIFT: usize>(
+        self,
+        a: u32x8<Self>,
+        b: u32x8<Self>,
+    ) -> u32x8<Self> {
+        let (a0, a1) = self.split_u32x8(a);
+        let (b0, b1) = self.split_u32x8(b);
+        self.combine_u32x4(
+            self.slide_within_blocks_u32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x4::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
         let (b0, b1) = self.split_u32x8(b);
@@ -6027,6 +6414,30 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask32x8<const SHIFT: usize>(
+        self,
+        a: mask32x8<Self>,
+        b: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        let mut dest = [Default::default(); 8usize];
+        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x8<const SHIFT: usize>(
+        self,
+        a: mask32x8<Self>,
+        b: mask32x8<Self>,
+    ) -> mask32x8<Self> {
+        let (a0, a1) = self.split_mask32x8(a);
+        let (b0, b1) = self.split_mask32x8(b);
+        self.combine_mask32x4(
+            self.slide_within_blocks_mask32x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask32x4::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_mask32x8(b);
@@ -6157,6 +6568,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
+        let mut dest = [Default::default(); 4usize];
+        dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x4<const SHIFT: usize>(
+        self,
+        a: f64x4<Self>,
+        b: f64x4<Self>,
+    ) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f64x2(
+            self.slide_within_blocks_f64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x2::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -6432,6 +6863,30 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask64x4<const SHIFT: usize>(
+        self,
+        a: mask64x4<Self>,
+        b: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        let mut dest = [Default::default(); 4usize];
+        dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x4<const SHIFT: usize>(
+        self,
+        a: mask64x4<Self>,
+        b: mask64x4<Self>,
+    ) -> mask64x4<Self> {
+        let (a0, a1) = self.split_mask64x4(a);
+        let (b0, b1) = self.split_mask64x4(b);
+        self.combine_mask64x2(
+            self.slide_within_blocks_mask64x2::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask64x2::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
         let (a0, a1) = self.split_mask64x4(a);
         let (b0, b1) = self.split_mask64x4(b);
@@ -6562,6 +7017,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f32x16<const SHIFT: usize>(
+        self,
+        a: f32x16<Self>,
+        b: f32x16<Self>,
+    ) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        let (b0, b1) = self.split_f32x16(b);
+        self.combine_f32x8(
+            self.slide_within_blocks_f32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -6907,6 +7382,26 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
+        let mut dest = [Default::default(); 64usize];
+        dest[..64usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[64usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i8x64<const SHIFT: usize>(
+        self,
+        a: i8x64<Self>,
+        b: i8x64<Self>,
+    ) -> i8x64<Self> {
+        let (a0, a1) = self.split_i8x64(a);
+        let (b0, b1) = self.split_i8x64(b);
+        self.combine_i8x32(
+            self.slide_within_blocks_i8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i8x32::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         let (b0, b1) = self.split_i8x64(b);
@@ -7133,6 +7628,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
+        let mut dest = [Default::default(); 64usize];
+        dest[..64usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[64usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u8x64<const SHIFT: usize>(
+        self,
+        a: u8x64<Self>,
+        b: u8x64<Self>,
+    ) -> u8x64<Self> {
+        let (a0, a1) = self.split_u8x64(a);
+        let (b0, b1) = self.split_u8x64(b);
+        self.combine_u8x32(
+            self.slide_within_blocks_u8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u8x32::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -7438,6 +7953,30 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask8x64<const SHIFT: usize>(
+        self,
+        a: mask8x64<Self>,
+        b: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        let mut dest = [Default::default(); 64usize];
+        dest[..64usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[64usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask8x64<const SHIFT: usize>(
+        self,
+        a: mask8x64<Self>,
+        b: mask8x64<Self>,
+    ) -> mask8x64<Self> {
+        let (a0, a1) = self.split_mask8x64(a);
+        let (b0, b1) = self.split_mask8x64(b);
+        self.combine_mask8x32(
+            self.slide_within_blocks_mask8x32::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask8x32::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_mask8x64(b);
@@ -7561,6 +8100,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
+        let mut dest = [Default::default(); 32usize];
+        dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i16x32<const SHIFT: usize>(
+        self,
+        a: i16x32<Self>,
+        b: i16x32<Self>,
+    ) -> i16x32<Self> {
+        let (a0, a1) = self.split_i16x32(a);
+        let (b0, b1) = self.split_i16x32(b);
+        self.combine_i16x16(
+            self.slide_within_blocks_i16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -7798,6 +8357,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
+        let mut dest = [Default::default(); 32usize];
+        dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u16x32<const SHIFT: usize>(
+        self,
+        a: u16x32<Self>,
+        b: u16x32<Self>,
+    ) -> u16x32<Self> {
+        let (a0, a1) = self.split_u16x32(a);
+        let (b0, b1) = self.split_u16x32(b);
+        self.combine_u16x16(
+            self.slide_within_blocks_u16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u16x16::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -8085,6 +8664,30 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask16x32<const SHIFT: usize>(
+        self,
+        a: mask16x32<Self>,
+        b: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        let mut dest = [Default::default(); 32usize];
+        dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask16x32<const SHIFT: usize>(
+        self,
+        a: mask16x32<Self>,
+        b: mask16x32<Self>,
+    ) -> mask16x32<Self> {
+        let (a0, a1) = self.split_mask16x32(a);
+        let (b0, b1) = self.split_mask16x32(b);
+        self.combine_mask16x16(
+            self.slide_within_blocks_mask16x16::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask16x16::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_mask16x32(b);
@@ -8211,6 +8814,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i32x16<const SHIFT: usize>(
+        self,
+        a: i32x16<Self>,
+        b: i32x16<Self>,
+    ) -> i32x16<Self> {
+        let (a0, a1) = self.split_i32x16(a);
+        let (b0, b1) = self.split_i32x16(b);
+        self.combine_i32x8(
+            self.slide_within_blocks_i32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -8444,6 +9067,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u32x16<const SHIFT: usize>(
+        self,
+        a: u32x16<Self>,
+        b: u32x16<Self>,
+    ) -> u32x16<Self> {
+        let (a0, a1) = self.split_u32x16(a);
+        let (b0, b1) = self.split_u32x16(b);
+        self.combine_u32x8(
+            self.slide_within_blocks_u32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u32x8::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -8696,6 +9339,30 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
+    fn slide_mask32x16<const SHIFT: usize>(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        let mut dest = [Default::default(); 16usize];
+        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask32x16<const SHIFT: usize>(
+        self,
+        a: mask32x16<Self>,
+        b: mask32x16<Self>,
+    ) -> mask32x16<Self> {
+        let (a0, a1) = self.split_mask32x16(a);
+        let (b0, b1) = self.split_mask32x16(b);
+        self.combine_mask32x8(
+            self.slide_within_blocks_mask32x8::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask32x8::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_mask32x16(b);
@@ -8819,6 +9486,26 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
+        let mut dest = [Default::default(); 8usize];
+        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_f64x8<const SHIFT: usize>(
+        self,
+        a: f64x8<Self>,
+        b: f64x8<Self>,
+    ) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f64x4(
+            self.slide_within_blocks_f64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_f64x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -9085,6 +9772,30 @@ impl Simd for Fallback {
                 simd: self,
             }
         }
+    }
+    #[inline(always)]
+    fn slide_mask64x8<const SHIFT: usize>(
+        self,
+        a: mask64x8<Self>,
+        b: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        let mut dest = [Default::default(); 8usize];
+        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
+        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
+        dest.simd_into(self)
+    }
+    #[inline(always)]
+    fn slide_within_blocks_mask64x8<const SHIFT: usize>(
+        self,
+        a: mask64x8<Self>,
+        b: mask64x8<Self>,
+    ) -> mask64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_mask64x8(b);
+        self.combine_mask64x4(
+            self.slide_within_blocks_mask64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_mask64x4::<SHIFT>(a1, b1),
+        )
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
