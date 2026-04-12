@@ -517,6 +517,16 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::Deinterleave => {
+                // deinterleave(a, b) = (unzip_low(a, b), unzip_high(a, b))
+                let unzip_low = generic_op_name("unzip_low", vec_ty);
+                let unzip_high = generic_op_name("unzip_high", vec_ty);
+                quote! {
+                    #method_sig {
+                        (self.#unzip_low(a, b), self.#unzip_high(a, b))
+                    }
+                }
+            }
         }
     }
 

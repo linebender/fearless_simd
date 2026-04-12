@@ -194,6 +194,7 @@ impl Level for X86 {
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             OpSig::Interleave => self.handle_interleave(method_sig, vec_ty),
+            OpSig::Deinterleave => self.handle_deinterleave(method_sig, vec_ty),
         }
     }
 }
@@ -836,6 +837,21 @@ impl X86 {
                         (self.#zip_low(a, b), self.#zip_high(a, b))
                     }
                 }
+            }
+        }
+    }
+
+    pub(crate) fn handle_deinterleave(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        // deinterleave(a, b) = (unzip_low(a, b), unzip_high(a, b))
+        let unzip_low = generic_op_name("unzip_low", vec_ty);
+        let unzip_high = generic_op_name("unzip_high", vec_ty);
+        quote! {
+            #method_sig {
+                (self.#unzip_low(a, b), self.#unzip_high(a, b))
             }
         }
     }
