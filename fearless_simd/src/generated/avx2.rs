@@ -2670,7 +2670,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn interleave_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> (f32x8<Self>, f32x8<Self>) {
-        (self.zip_low_f32x8(a, b), self.zip_high_f32x8(a, b))
+        unsafe {
+            let lo = _mm256_unpacklo_ps(a.into(), b.into());
+            let hi = _mm256_unpackhi_ps(a.into(), b.into());
+            (
+                _mm256_permute2f128_ps::<0b0010_0000>(lo, hi).simd_into(self),
+                _mm256_permute2f128_ps::<0b0011_0001>(lo, hi).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -3069,7 +3076,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn interleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>) {
-        (self.zip_low_i8x32(a, b), self.zip_high_i8x32(a, b))
+        unsafe {
+            let lo = _mm256_unpacklo_epi8(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi8(a.into(), b.into());
+            (
+                _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self),
+                _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn select_i8x32(self, a: mask8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self> {
@@ -3358,7 +3372,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn interleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>) {
-        (self.zip_low_u8x32(a, b), self.zip_high_u8x32(a, b))
+        unsafe {
+            let lo = _mm256_unpacklo_epi8(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi8(a.into(), b.into());
+            (
+                _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self),
+                _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn select_u8x32(self, a: mask8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self> {
@@ -3780,7 +3801,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn interleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>) {
-        (self.zip_low_i16x16(a, b), self.zip_high_i16x16(a, b))
+        unsafe {
+            let lo = _mm256_unpacklo_epi16(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi16(a.into(), b.into());
+            (
+                _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self),
+                _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn select_i16x16(self, a: mask16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self> {
@@ -4050,7 +4078,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn interleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>) {
-        (self.zip_low_u16x16(a, b), self.zip_high_u16x16(a, b))
+        unsafe {
+            let lo = _mm256_unpacklo_epi16(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi16(a.into(), b.into());
+            (
+                _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self),
+                _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn select_u16x16(self, a: mask16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self> {
@@ -4467,7 +4502,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn interleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>) {
-        (self.zip_low_i32x8(a, b), self.zip_high_i32x8(a, b))
+        unsafe {
+            let lo = _mm256_unpacklo_epi32(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi32(a.into(), b.into());
+            (
+                _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self),
+                _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn select_i32x8(self, a: mask32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self> {
@@ -4729,7 +4771,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn interleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>) {
-        (self.zip_low_u32x8(a, b), self.zip_high_u32x8(a, b))
+        unsafe {
+            let lo = _mm256_unpacklo_epi32(a.into(), b.into());
+            let hi = _mm256_unpackhi_epi32(a.into(), b.into());
+            (
+                _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(self),
+                _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn select_u32x8(self, a: mask32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self> {
@@ -5130,7 +5179,14 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn interleave_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> (f64x4<Self>, f64x4<Self>) {
-        (self.zip_low_f64x4(a, b), self.zip_high_f64x4(a, b))
+        unsafe {
+            let lo = _mm256_unpacklo_pd(a.into(), b.into());
+            let hi = _mm256_unpackhi_pd(a.into(), b.into());
+            (
+                _mm256_permute2f128_pd::<0b0010_0000>(lo, hi).simd_into(self),
+                _mm256_permute2f128_pd::<0b0011_0001>(lo, hi).simd_into(self),
+            )
+        }
     }
     #[inline(always)]
     fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
