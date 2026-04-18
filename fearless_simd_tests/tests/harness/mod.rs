@@ -1775,6 +1775,520 @@ fn unzip_high_f64x4<S: Simd>(simd: S) {
     assert_eq!(*simd.unzip_high_f64x4(a, b), [2.0, 4.0, 6.0, 8.0]);
 }
 
+// Interleave tests
+
+#[simd_test]
+fn interleave_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
+    let b = f32x4::from_slice(simd, &[4.0, 5.0, 6.0, 7.0]);
+    let (x, y) = simd.interleave_f32x4(a, b);
+    assert_eq!(*x, [0.0, 4.0, 1.0, 5.0]);
+    assert_eq!(*y, [2.0, 6.0, 3.0, 7.0]);
+}
+
+#[simd_test]
+fn interleave_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    let b = f32x8::from_slice(simd, &[8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]);
+    let (x, y) = simd.interleave_f32x8(a, b);
+    assert_eq!(*x, [0.0, 8.0, 1.0, 9.0, 2.0, 10.0, 3.0, 11.0]);
+    assert_eq!(*y, [4.0, 12.0, 5.0, 13.0, 6.0, 14.0, 7.0, 15.0]);
+}
+
+#[simd_test]
+fn interleave_i32x4<S: Simd>(simd: S) {
+    let a = i32x4::from_slice(simd, &[0, 1, 2, 3]);
+    let b = i32x4::from_slice(simd, &[4, 5, 6, 7]);
+    let (x, y) = simd.interleave_i32x4(a, b);
+    assert_eq!(*x, [0, 4, 1, 5]);
+    assert_eq!(*y, [2, 6, 3, 7]);
+}
+
+#[simd_test]
+fn interleave_i32x8<S: Simd>(simd: S) {
+    let a = i32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    let b = i32x8::from_slice(simd, &[8, 9, 10, 11, 12, 13, 14, 15]);
+    let (x, y) = simd.interleave_i32x8(a, b);
+    assert_eq!(*x, [0, 8, 1, 9, 2, 10, 3, 11]);
+    assert_eq!(*y, [4, 12, 5, 13, 6, 14, 7, 15]);
+}
+
+#[simd_test]
+fn interleave_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0, 1, 2, 3]);
+    let b = u32x4::from_slice(simd, &[4, 5, 6, 7]);
+    let (x, y) = simd.interleave_u32x4(a, b);
+    assert_eq!(*x, [0, 4, 1, 5]);
+    assert_eq!(*y, [2, 6, 3, 7]);
+}
+
+#[simd_test]
+fn interleave_u32x8<S: Simd>(simd: S) {
+    let a = u32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    let b = u32x8::from_slice(simd, &[8, 9, 10, 11, 12, 13, 14, 15]);
+    let (x, y) = simd.interleave_u32x8(a, b);
+    assert_eq!(*x, [0, 8, 1, 9, 2, 10, 3, 11]);
+    assert_eq!(*y, [4, 12, 5, 13, 6, 14, 7, 15]);
+}
+
+#[simd_test]
+fn interleave_u8x16<S: Simd>(simd: S) {
+    let a = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let b = u8x16::from_slice(
+        simd,
+        &[
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    let (x, y) = simd.interleave_u8x16(a, b);
+    assert_eq!(*x, [0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23]);
+    assert_eq!(
+        *y,
+        [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31]
+    );
+}
+
+#[simd_test]
+fn interleave_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[1.0, 2.0]);
+    let b = f64x2::from_slice(simd, &[3.0, 4.0]);
+    let (x, y) = simd.interleave_f64x2(a, b);
+    assert_eq!(*x, [1.0, 3.0]);
+    assert_eq!(*y, [2.0, 4.0]);
+}
+
+#[simd_test]
+fn interleave_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
+    let b = f64x4::from_slice(simd, &[5.0, 6.0, 7.0, 8.0]);
+    let (x, y) = simd.interleave_f64x4(a, b);
+    assert_eq!(*x, [1.0, 5.0, 2.0, 6.0]);
+    assert_eq!(*y, [3.0, 7.0, 4.0, 8.0]);
+}
+
+#[simd_test]
+fn interleave_trait_method_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
+    let b = f32x4::from_slice(simd, &[4.0, 5.0, 6.0, 7.0]);
+    let (x, y) = a.interleave(b);
+    assert_eq!(*x, [0.0, 4.0, 1.0, 5.0]);
+    assert_eq!(*y, [2.0, 6.0, 3.0, 7.0]);
+}
+
+#[simd_test]
+fn interleave_trait_method_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0, 1, 2, 3]);
+    let b = u32x4::from_slice(simd, &[4, 5, 6, 7]);
+    let (x, y) = a.interleave(b);
+    assert_eq!(*x, [0, 4, 1, 5]);
+    assert_eq!(*y, [2, 6, 3, 7]);
+}
+
+// Deinterleave tests
+
+#[simd_test]
+fn deinterleave_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 4.0, 1.0, 5.0]);
+    let b = f32x4::from_slice(simd, &[2.0, 6.0, 3.0, 7.0]);
+    let (x, y) = simd.deinterleave_f32x4(a, b);
+    assert_eq!(*x, [0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(*y, [4.0, 5.0, 6.0, 7.0]);
+}
+
+#[simd_test]
+fn deinterleave_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 8.0, 1.0, 9.0, 2.0, 10.0, 3.0, 11.0]);
+    let b = f32x8::from_slice(simd, &[4.0, 12.0, 5.0, 13.0, 6.0, 14.0, 7.0, 15.0]);
+    let (x, y) = simd.deinterleave_f32x8(a, b);
+    assert_eq!(*x, [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    assert_eq!(*y, [8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]);
+}
+
+#[simd_test]
+fn deinterleave_i32x4<S: Simd>(simd: S) {
+    let a = i32x4::from_slice(simd, &[0, 4, 1, 5]);
+    let b = i32x4::from_slice(simd, &[2, 6, 3, 7]);
+    let (x, y) = simd.deinterleave_i32x4(a, b);
+    assert_eq!(*x, [0, 1, 2, 3]);
+    assert_eq!(*y, [4, 5, 6, 7]);
+}
+
+#[simd_test]
+fn deinterleave_i32x8<S: Simd>(simd: S) {
+    let a = i32x8::from_slice(simd, &[0, 8, 1, 9, 2, 10, 3, 11]);
+    let b = i32x8::from_slice(simd, &[4, 12, 5, 13, 6, 14, 7, 15]);
+    let (x, y) = simd.deinterleave_i32x8(a, b);
+    assert_eq!(*x, [0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(*y, [8, 9, 10, 11, 12, 13, 14, 15]);
+}
+
+#[simd_test]
+fn deinterleave_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0, 4, 1, 5]);
+    let b = u32x4::from_slice(simd, &[2, 6, 3, 7]);
+    let (x, y) = simd.deinterleave_u32x4(a, b);
+    assert_eq!(*x, [0, 1, 2, 3]);
+    assert_eq!(*y, [4, 5, 6, 7]);
+}
+
+#[simd_test]
+fn deinterleave_u32x8<S: Simd>(simd: S) {
+    let a = u32x8::from_slice(simd, &[0, 8, 1, 9, 2, 10, 3, 11]);
+    let b = u32x8::from_slice(simd, &[4, 12, 5, 13, 6, 14, 7, 15]);
+    let (x, y) = simd.deinterleave_u32x8(a, b);
+    assert_eq!(*x, [0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(*y, [8, 9, 10, 11, 12, 13, 14, 15]);
+}
+
+#[simd_test]
+fn deinterleave_u8x16<S: Simd>(simd: S) {
+    let a = u8x16::from_slice(
+        simd,
+        &[0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23],
+    );
+    let b = u8x16::from_slice(
+        simd,
+        &[8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31],
+    );
+    let (x, y) = simd.deinterleave_u8x16(a, b);
+    assert_eq!(*x, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    assert_eq!(
+        *y,
+        [
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+        ]
+    );
+}
+
+#[simd_test]
+fn deinterleave_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[1.0, 3.0]);
+    let b = f64x2::from_slice(simd, &[2.0, 4.0]);
+    let (x, y) = simd.deinterleave_f64x2(a, b);
+    assert_eq!(*x, [1.0, 2.0]);
+    assert_eq!(*y, [3.0, 4.0]);
+}
+
+#[simd_test]
+fn deinterleave_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[1.0, 5.0, 2.0, 6.0]);
+    let b = f64x4::from_slice(simd, &[3.0, 7.0, 4.0, 8.0]);
+    let (x, y) = simd.deinterleave_f64x4(a, b);
+    assert_eq!(*x, [1.0, 2.0, 3.0, 4.0]);
+    assert_eq!(*y, [5.0, 6.0, 7.0, 8.0]);
+}
+
+#[simd_test]
+fn deinterleave_trait_method_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 4.0, 1.0, 5.0]);
+    let b = f32x4::from_slice(simd, &[2.0, 6.0, 3.0, 7.0]);
+    let (x, y) = a.deinterleave(b);
+    assert_eq!(*x, [0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(*y, [4.0, 5.0, 6.0, 7.0]);
+}
+
+#[simd_test]
+fn deinterleave_trait_method_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0, 4, 1, 5]);
+    let b = u32x4::from_slice(simd, &[2, 6, 3, 7]);
+    let (x, y) = a.deinterleave(b);
+    assert_eq!(*x, [0, 1, 2, 3]);
+    assert_eq!(*y, [4, 5, 6, 7]);
+}
+
+#[simd_test]
+fn interleave_i8x16<S: Simd>(simd: S) {
+    let a = i8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let b = i8x16::from_slice(
+        simd,
+        &[
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    let (x, y) = simd.interleave_i8x16(a, b);
+    assert_eq!(*x, [0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23]);
+    assert_eq!(
+        *y,
+        [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31]
+    );
+}
+
+#[simd_test]
+fn interleave_i8x32<S: Simd>(simd: S) {
+    let a = i8x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    let b = i8x32::from_slice(
+        simd,
+        &[
+            32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+            54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        ],
+    );
+    let (x, y) = simd.interleave_i8x32(a, b);
+    assert_eq!(
+        *x,
+        [
+            0, 32, 1, 33, 2, 34, 3, 35, 4, 36, 5, 37, 6, 38, 7, 39, 8, 40, 9, 41, 10, 42, 11, 43,
+            12, 44, 13, 45, 14, 46, 15, 47
+        ]
+    );
+    assert_eq!(
+        *y,
+        [
+            16, 48, 17, 49, 18, 50, 19, 51, 20, 52, 21, 53, 22, 54, 23, 55, 24, 56, 25, 57, 26, 58,
+            27, 59, 28, 60, 29, 61, 30, 62, 31, 63
+        ]
+    );
+}
+
+#[simd_test]
+fn interleave_u8x32<S: Simd>(simd: S) {
+    let a = u8x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    let b = u8x32::from_slice(
+        simd,
+        &[
+            32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+            54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        ],
+    );
+    let (x, y) = simd.interleave_u8x32(a, b);
+    assert_eq!(
+        *x,
+        [
+            0, 32, 1, 33, 2, 34, 3, 35, 4, 36, 5, 37, 6, 38, 7, 39, 8, 40, 9, 41, 10, 42, 11, 43,
+            12, 44, 13, 45, 14, 46, 15, 47
+        ]
+    );
+    assert_eq!(
+        *y,
+        [
+            16, 48, 17, 49, 18, 50, 19, 51, 20, 52, 21, 53, 22, 54, 23, 55, 24, 56, 25, 57, 26, 58,
+            27, 59, 28, 60, 29, 61, 30, 62, 31, 63
+        ]
+    );
+}
+
+#[simd_test]
+fn interleave_i16x8<S: Simd>(simd: S) {
+    let a = i16x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    let b = i16x8::from_slice(simd, &[8, 9, 10, 11, 12, 13, 14, 15]);
+    let (x, y) = simd.interleave_i16x8(a, b);
+    assert_eq!(*x, [0, 8, 1, 9, 2, 10, 3, 11]);
+    assert_eq!(*y, [4, 12, 5, 13, 6, 14, 7, 15]);
+}
+
+#[simd_test]
+fn interleave_i16x16<S: Simd>(simd: S) {
+    let a = i16x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let b = i16x16::from_slice(
+        simd,
+        &[
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    let (x, y) = simd.interleave_i16x16(a, b);
+    assert_eq!(*x, [0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23]);
+    assert_eq!(
+        *y,
+        [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31]
+    );
+}
+
+#[simd_test]
+fn interleave_u16x8<S: Simd>(simd: S) {
+    let a = u16x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    let b = u16x8::from_slice(simd, &[8, 9, 10, 11, 12, 13, 14, 15]);
+    let (x, y) = simd.interleave_u16x8(a, b);
+    assert_eq!(*x, [0, 8, 1, 9, 2, 10, 3, 11]);
+    assert_eq!(*y, [4, 12, 5, 13, 6, 14, 7, 15]);
+}
+
+#[simd_test]
+fn interleave_u16x16<S: Simd>(simd: S) {
+    let a = u16x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let b = u16x16::from_slice(
+        simd,
+        &[
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    let (x, y) = simd.interleave_u16x16(a, b);
+    assert_eq!(*x, [0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23]);
+    assert_eq!(
+        *y,
+        [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31]
+    );
+}
+
+// Additional deinterleave tests for types with unzip coverage but missing deinterleave tests
+
+#[simd_test]
+fn deinterleave_i8x16<S: Simd>(simd: S) {
+    let a = i8x16::from_slice(
+        simd,
+        &[0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23],
+    );
+    let b = i8x16::from_slice(
+        simd,
+        &[8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31],
+    );
+    let (x, y) = simd.deinterleave_i8x16(a, b);
+    assert_eq!(*x, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    assert_eq!(
+        *y,
+        [
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+        ]
+    );
+}
+
+#[simd_test]
+fn deinterleave_i8x32<S: Simd>(simd: S) {
+    let a = i8x32::from_slice(
+        simd,
+        &[
+            0, 32, 1, 33, 2, 34, 3, 35, 4, 36, 5, 37, 6, 38, 7, 39, 8, 40, 9, 41, 10, 42, 11, 43,
+            12, 44, 13, 45, 14, 46, 15, 47,
+        ],
+    );
+    let b = i8x32::from_slice(
+        simd,
+        &[
+            16, 48, 17, 49, 18, 50, 19, 51, 20, 52, 21, 53, 22, 54, 23, 55, 24, 56, 25, 57, 26, 58,
+            27, 59, 28, 60, 29, 61, 30, 62, 31, 63,
+        ],
+    );
+    let (x, y) = simd.deinterleave_i8x32(a, b);
+    assert_eq!(
+        *x,
+        [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31
+        ]
+    );
+    assert_eq!(
+        *y,
+        [
+            32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+            54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+        ]
+    );
+}
+
+#[simd_test]
+fn deinterleave_u8x32<S: Simd>(simd: S) {
+    let a = u8x32::from_slice(
+        simd,
+        &[
+            0, 32, 1, 33, 2, 34, 3, 35, 4, 36, 5, 37, 6, 38, 7, 39, 8, 40, 9, 41, 10, 42, 11, 43,
+            12, 44, 13, 45, 14, 46, 15, 47,
+        ],
+    );
+    let b = u8x32::from_slice(
+        simd,
+        &[
+            16, 48, 17, 49, 18, 50, 19, 51, 20, 52, 21, 53, 22, 54, 23, 55, 24, 56, 25, 57, 26, 58,
+            27, 59, 28, 60, 29, 61, 30, 62, 31, 63,
+        ],
+    );
+    let (x, y) = simd.deinterleave_u8x32(a, b);
+    assert_eq!(
+        *x,
+        [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31
+        ]
+    );
+    assert_eq!(
+        *y,
+        [
+            32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+            54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+        ]
+    );
+}
+
+#[simd_test]
+fn deinterleave_i16x8<S: Simd>(simd: S) {
+    let a = i16x8::from_slice(simd, &[0, 8, 1, 9, 2, 10, 3, 11]);
+    let b = i16x8::from_slice(simd, &[4, 12, 5, 13, 6, 14, 7, 15]);
+    let (x, y) = simd.deinterleave_i16x8(a, b);
+    assert_eq!(*x, [0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(*y, [8, 9, 10, 11, 12, 13, 14, 15]);
+}
+
+#[simd_test]
+fn deinterleave_i16x16<S: Simd>(simd: S) {
+    let a = i16x16::from_slice(
+        simd,
+        &[0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23],
+    );
+    let b = i16x16::from_slice(
+        simd,
+        &[8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31],
+    );
+    let (x, y) = simd.deinterleave_i16x16(a, b);
+    assert_eq!(*x, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    assert_eq!(
+        *y,
+        [
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+        ]
+    );
+}
+
+#[simd_test]
+fn deinterleave_u16x8<S: Simd>(simd: S) {
+    let a = u16x8::from_slice(simd, &[0, 8, 1, 9, 2, 10, 3, 11]);
+    let b = u16x8::from_slice(simd, &[4, 12, 5, 13, 6, 14, 7, 15]);
+    let (x, y) = simd.deinterleave_u16x8(a, b);
+    assert_eq!(*x, [0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(*y, [8, 9, 10, 11, 12, 13, 14, 15]);
+}
+
+#[simd_test]
+fn deinterleave_u16x16<S: Simd>(simd: S) {
+    let a = u16x16::from_slice(
+        simd,
+        &[0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23],
+    );
+    let b = u16x16::from_slice(
+        simd,
+        &[8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31],
+    );
+    let (x, y) = simd.deinterleave_u16x16(a, b);
+    assert_eq!(*x, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    assert_eq!(
+        *y,
+        [
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+        ]
+    );
+}
+
 #[simd_test]
 fn shr_i8x16<S: Simd>(simd: S) {
     let a = i8x16::from_slice(

@@ -193,6 +193,8 @@ impl Level for X86 {
             OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
+            OpSig::Interleave => self.handle_interleave(method_sig, vec_ty),
+            OpSig::Deinterleave => self.handle_deinterleave(method_sig, vec_ty),
         }
     }
 }
@@ -787,6 +789,68 @@ impl X86 {
         quote! {
             #method_sig {
                 #expr
+            }
+        }
+    }
+
+    pub(crate) fn handle_interleave(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        match vec_ty.n_bits() {
+            256 => {
+                // Optimized path: compute unpacklo and unpackhi once, then use permute2f128 to
+                // produce both zip_low and zip_high results. This avoids the redundant unpack
+                // operations that occur when zip_low and zip_high are called separately.
+                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+                let lo = intrinsic_ident("unpacklo", suffix, 256);
+                let hi = intrinsic_ident("unpackhi", suffix, 256);
+                let shuffle = intrinsic_ident(
+                    match vec_ty.scalar {
+                        ScalarType::Float => "permute2f128",
+                        _ => "permute2x128",
+                    },
+                    coarse_type(vec_ty),
+                    256,
+                );
+                quote! {
+                    #method_sig {
+                        unsafe {
+                            let lo = #lo(a.into(), b.into());
+                            let hi = #hi(a.into(), b.into());
+                            (
+                                #shuffle::<0b0010_0000>(lo, hi).simd_into(self),
+                                #shuffle::<0b0011_0001>(lo, hi).simd_into(self),
+                            )
+                        }
+                    }
+                }
+            }
+            _ => {
+                // For 128-bit vectors, zip_low/zip_high are single instructions (unpacklo/unpackhi),
+                // so there's no redundancy in calling them separately.
+                let zip_low = generic_op_name("zip_low", vec_ty);
+                let zip_high = generic_op_name("zip_high", vec_ty);
+                quote! {
+                    #method_sig {
+                        (self.#zip_low(a, b), self.#zip_high(a, b))
+                    }
+                }
+            }
+        }
+    }
+
+    pub(crate) fn handle_deinterleave(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        let unzip_low = generic_op_name("unzip_low", vec_ty);
+        let unzip_high = generic_op_name("unzip_high", vec_ty);
+        quote! {
+            #method_sig {
+                (self.#unzip_low(a, b), self.#unzip_high(a, b))
             }
         }
     }
