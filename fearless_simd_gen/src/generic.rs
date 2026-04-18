@@ -214,14 +214,13 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 #method_sig {
                     let (a0, a1) = self.#split(a);
                     let (b0, b1) = self.#split(b);
-                    // Interleave lower halves of inputs
+                    
                     let lo_lo = self.#zip_low_half(a0, b0);
                     let lo_hi = self.#zip_high_half(a0, b0);
-                    // Interleave upper halves of inputs
+                    
                     let hi_lo = self.#zip_low_half(a1, b1);
                     let hi_hi = self.#zip_high_half(a1, b1);
-                    // Combine: first result is full interleave of lower halves,
-                    // second result is full interleave of upper halves
+                    
                     (self.#combine(lo_lo, lo_hi), self.#combine(hi_lo, hi_hi))
                 }
             }
@@ -236,14 +235,13 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 #method_sig {
                     let (a0, a1) = self.#split(a);
                     let (b0, b1) = self.#split(b);
-                    // Deinterleave lower halves of inputs
+                    
                     let lo_even = self.#unzip_low_half(a0, a1);
                     let lo_odd = self.#unzip_high_half(a0, a1);
-                    // Deinterleave upper halves of inputs
+                    
                     let hi_even = self.#unzip_low_half(b0, b1);
                     let hi_odd = self.#unzip_high_half(b0, b1);
-                    // Combine: first result is all even elements,
-                    // second result is all odd elements
+                    
                     (self.#combine(lo_even, hi_even), self.#combine(lo_odd, hi_odd))
                 }
             }

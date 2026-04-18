@@ -544,7 +544,6 @@ impl Level for Neon {
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             OpSig::Interleave => {
-                // interleave(a, b) = (zip_low(a, b), zip_high(a, b))
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);
                 quote! {
@@ -554,7 +553,6 @@ impl Level for Neon {
                 }
             }
             OpSig::Deinterleave => {
-                // deinterleave(a, b) = (unzip_low(a, b), unzip_high(a, b))
                 let unzip_low = generic_op_name("unzip_low", vec_ty);
                 let unzip_high = generic_op_name("unzip_high", vec_ty);
                 quote! {
