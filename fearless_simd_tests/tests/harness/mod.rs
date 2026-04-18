@@ -1869,7 +1869,6 @@ fn interleave_f64x4<S: Simd>(simd: S) {
     assert_eq!(*y, [3.0, 7.0, 4.0, 8.0]);
 }
 
-// Test using trait method syntax (calling on the vector directly)
 #[simd_test]
 fn interleave_trait_method_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
@@ -1982,7 +1981,6 @@ fn deinterleave_f64x4<S: Simd>(simd: S) {
     assert_eq!(*y, [5.0, 6.0, 7.0, 8.0]);
 }
 
-// Test using trait method syntax (calling on the vector directly)
 #[simd_test]
 fn deinterleave_trait_method_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[0.0, 4.0, 1.0, 5.0]);
@@ -2000,8 +1998,6 @@ fn deinterleave_trait_method_u32x4<S: Simd>(simd: S) {
     assert_eq!(*x, [0, 1, 2, 3]);
     assert_eq!(*y, [4, 5, 6, 7]);
 }
-
-// Additional interleave tests for types with zip/unzip coverage but missing interleave tests
 
 #[simd_test]
 fn interleave_i8x16<S: Simd>(simd: S) {
