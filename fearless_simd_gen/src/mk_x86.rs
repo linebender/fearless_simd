@@ -846,7 +846,6 @@ impl X86 {
         method_sig: TokenStream,
         vec_ty: &VecType,
     ) -> TokenStream {
-        // deinterleave(a, b) = (unzip_low(a, b), unzip_high(a, b))
         let unzip_low = generic_op_name("unzip_low", vec_ty);
         let unzip_high = generic_op_name("unzip_high", vec_ty);
         quote! {
