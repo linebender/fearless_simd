@@ -36,6 +36,7 @@ enum Module {
     Fallback,
     Sse4_2,
     Avx2,
+    Avx512,
 }
 
 #[derive(Parser)]
@@ -66,6 +67,7 @@ impl Module {
             Self::Fallback => mk_fallback::Fallback.make_module(),
             Self::Sse4_2 => mk_x86::X86::Sse4_2.make_module(),
             Self::Avx2 => mk_x86::X86::Avx2.make_module(),
+            Self::Avx512 => mk_x86::X86::Avx512.make_module(),
         }
     }
 
@@ -105,6 +107,7 @@ impl Module {
             Self::Wasm => "wasm",
             Self::Sse4_2 => "sse4_2",
             Self::Avx2 => "avx2",
+            Self::Avx512 => "avx512",
         }
     }
 }
@@ -118,6 +121,7 @@ const MODULES: &[Module] = &[
     Module::Wasm,
     Module::Sse4_2,
     Module::Avx2,
+    Module::Avx512,
 ];
 
 const FILE_BASE: &str = "./fearless_simd/src/generated";
