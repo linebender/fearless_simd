@@ -184,6 +184,10 @@ impl Simd for Neon {
         unsafe { vsqrtq_f32(a.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn approximate_recip_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
+        unsafe { vrecpeq_f32(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
     fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         unsafe { vaddq_f32(a.into(), b.into()).simd_into(self) }
     }
@@ -2118,6 +2122,10 @@ impl Simd for Neon {
         unsafe { vsqrtq_f64(a.into()).simd_into(self) }
     }
     #[inline(always)]
+    fn approximate_recip_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
+        unsafe { vrecpeq_f64(a.into()).simd_into(self) }
+    }
+    #[inline(always)]
     fn add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         unsafe { vaddq_f64(a.into(), b.into()).simd_into(self) }
     }
@@ -2517,6 +2525,14 @@ impl Simd for Neon {
     fn sqrt_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_f32x4(self.sqrt_f32x4(a0), self.sqrt_f32x4(a1))
+    }
+    #[inline(always)]
+    fn approximate_recip_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f32x8(a);
+        self.combine_f32x4(
+            self.approximate_recip_f32x4(a0),
+            self.approximate_recip_f32x4(a1),
+        )
     }
     #[inline(always)]
     fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -5374,6 +5390,14 @@ impl Simd for Neon {
         self.combine_f64x2(self.sqrt_f64x2(a0), self.sqrt_f64x2(a1))
     }
     #[inline(always)]
+    fn approximate_recip_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        self.combine_f64x2(
+            self.approximate_recip_f64x2(a0),
+            self.approximate_recip_f64x2(a1),
+        )
+    }
+    #[inline(always)]
     fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
         let (b0, b1) = self.split_f64x4(b);
@@ -5938,6 +5962,14 @@ impl Simd for Neon {
     fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_f32x8(self.sqrt_f32x8(a0), self.sqrt_f32x8(a1))
+    }
+    #[inline(always)]
+    fn approximate_recip_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f32x16(a);
+        self.combine_f32x8(
+            self.approximate_recip_f32x8(a0),
+            self.approximate_recip_f32x8(a1),
+        )
     }
     #[inline(always)]
     fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -8927,6 +8959,14 @@ impl Simd for Neon {
     fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         self.combine_f64x4(self.sqrt_f64x4(a0), self.sqrt_f64x4(a1))
+    }
+    #[inline(always)]
+    fn approximate_recip_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        self.combine_f64x4(
+            self.approximate_recip_f64x4(a0),
+            self.approximate_recip_f64x4(a1),
+        )
     }
     #[inline(always)]
     fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {

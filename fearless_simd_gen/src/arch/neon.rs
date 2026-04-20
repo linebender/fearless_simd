@@ -69,6 +69,11 @@ pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream 
                 #sub(a.into(), c2)
             }
         }
+        "approximate_recip" => {
+            let vrecpe = simple_intrinsic("vrecpe", ty);
+            let a = &args[0];
+            quote! { #vrecpe(#a) }
+        }
         _ => unimplemented!("missing {op}"),
     }
 }

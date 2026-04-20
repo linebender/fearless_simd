@@ -137,6 +137,10 @@ impl<S: Simd> crate::SimdFloat<S> for f32x4<S> {
         self.simd.sqrt_f32x4(self)
     }
     #[inline(always)]
+    fn approximate_recip(self) -> Self {
+        self.simd.approximate_recip_f32x4(self)
+    }
+    #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.copysign_f32x4(self, rhs.simd_into(self.simd))
     }
@@ -1984,6 +1988,10 @@ impl<S: Simd> crate::SimdFloat<S> for f64x2<S> {
         self.simd.sqrt_f64x2(self)
     }
     #[inline(always)]
+    fn approximate_recip(self) -> Self {
+        self.simd.approximate_recip_f64x2(self)
+    }
+    #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.copysign_f64x2(self, rhs.simd_into(self.simd))
     }
@@ -2373,6 +2381,10 @@ impl<S: Simd> crate::SimdFloat<S> for f32x8<S> {
     #[inline(always)]
     fn sqrt(self) -> Self {
         self.simd.sqrt_f32x8(self)
+    }
+    #[inline(always)]
+    fn approximate_recip(self) -> Self {
+        self.simd.approximate_recip_f32x8(self)
     }
     #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4304,6 +4316,10 @@ impl<S: Simd> crate::SimdFloat<S> for f64x4<S> {
         self.simd.sqrt_f64x4(self)
     }
     #[inline(always)]
+    fn approximate_recip(self) -> Self {
+        self.simd.approximate_recip_f64x4(self)
+    }
+    #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.copysign_f64x4(self, rhs.simd_into(self.simd))
     }
@@ -4713,6 +4729,10 @@ impl<S: Simd> crate::SimdFloat<S> for f32x16<S> {
     #[inline(always)]
     fn sqrt(self) -> Self {
         self.simd.sqrt_f32x16(self)
+    }
+    #[inline(always)]
+    fn approximate_recip(self) -> Self {
+        self.simd.approximate_recip_f32x16(self)
     }
     #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -6595,6 +6615,10 @@ impl<S: Simd> crate::SimdFloat<S> for f64x8<S> {
     #[inline(always)]
     fn sqrt(self) -> Self {
         self.simd.sqrt_f64x8(self)
+    }
+    #[inline(always)]
+    fn approximate_recip(self) -> Self {
+        self.simd.approximate_recip_f64x8(self)
     }
     #[inline(always)]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self {
