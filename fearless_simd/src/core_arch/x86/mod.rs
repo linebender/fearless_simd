@@ -5,6 +5,7 @@
 
 mod avx;
 mod avx2;
+mod avx512;
 mod fma;
 mod sse;
 mod sse2;
@@ -15,6 +16,7 @@ mod ssse3;
 
 pub use avx::Avx;
 pub use avx2::Avx2;
+pub use avx512::Avx512;
 pub use fma::Fma;
 pub use sse::Sse;
 pub use sse2::Sse2;

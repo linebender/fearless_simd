@@ -46,6 +46,8 @@
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod avx2;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod avx512;
 mod fallback;
 #[cfg(target_arch = "aarch64")]
 mod neon;
@@ -59,6 +61,8 @@ mod wasm;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use avx2::*;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use avx512::*;
 pub use fallback::*;
 #[cfg(target_arch = "aarch64")]
 pub use neon::*;
