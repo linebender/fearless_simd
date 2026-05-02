@@ -24,6 +24,7 @@ macro_rules! delegate {
             #[inline(always)]
             pub $(unsafe $($placeholder)?)?
             fn $func $(<$(const $generic: $generic_ty),*>)?(self, $($arg: $ty),*) $(-> $ret)? {
+                #[allow(unused_unsafe, reason = "Some delegated intrinsics are safe, while others require unsafe.")]
                 unsafe { $func $(::<$($generic,)*>)?($($arg,)*) }
             }
         )*

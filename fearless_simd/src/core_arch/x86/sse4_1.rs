@@ -3,12 +3,14 @@
 
 //! Access to SSE4.1 intrinsics.
 
+#[cfg(feature = "safe_wrappers")]
 use crate::impl_macros::delegate;
-#[cfg(target_arch = "x86")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86"))]
 use core::arch::x86 as arch;
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86_64"))]
 use core::arch::x86_64 as arch;
 
+#[cfg(feature = "safe_wrappers")]
 use arch::*;
 
 /// A token for SSE4.1 intrinsics on `x86` and `x86_64`.
@@ -27,7 +29,10 @@ impl Sse4_1 {
     pub const unsafe fn new_unchecked() -> Self {
         Self { _private: () }
     }
+}
 
+#[cfg(feature = "safe_wrappers")]
+impl Sse4_1 {
     delegate! { arch:
         fn _mm_blendv_epi8(a: __m128i, b: __m128i, mask: __m128i) -> __m128i;
         fn _mm_blend_epi16<const IMM8: i32>(a: __m128i, b: __m128i) -> __m128i;
