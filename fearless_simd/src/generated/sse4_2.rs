@@ -14,7 +14,7 @@ use crate::{
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
-#[doc = "The SIMD token for the x86-64-v2 (`sse4.2`, `cmpxchg16b`, and `popcnt`) level."]
+#[doc = "The SIMD token for the x86-64-v2 level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Sse4_2 {
     pub sse4_2: crate::core_arch::x86::Sse4_2,
