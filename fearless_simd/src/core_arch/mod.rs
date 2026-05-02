@@ -5,8 +5,22 @@
 
 #![expect(
     missing_docs,
-    clippy::new_without_default,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+#![allow(
+    clippy::allow_attributes_without_reason,
+    reason = "these attributes are copied from stdarch"
+)]
+#![allow(
+    deprecated,
+    reason = "some intrinsics are deprecated, and hence their wrappers call deprecated functions"
+)]
+#![cfg_attr(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    expect(
+        clippy::not_unsafe_ptr_arg_deref,
+        reason = "_mm_prefetch is safe to call, but clippy thinks it dereferences the pointer for some reason"
+    )
 )]
 
 #[cfg(target_arch = "aarch64")]
