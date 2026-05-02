@@ -62,7 +62,7 @@ impl Level for X86 {
     fn token_doc(&self) -> &'static str {
         match self {
             Self::Sse4_2 => {
-                "The SIMD token for the x86-64-v2 (`sse4.2`, `cmpxchg16b`, and `popcnt`) level."
+                "The SIMD token for the x86-64-v2 level."
             }
             Self::Avx2 => "The SIMD token for the x86-64-v3 level.",
         }
