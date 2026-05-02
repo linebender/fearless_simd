@@ -14,7 +14,7 @@ use crate::{
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
-#[doc = "The SIMD token for the \"SSE4.2\" level."]
+#[doc = "The SIMD token for the x86-64-v2 level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Sse4_2 {
     pub sse4_2: crate::core_arch::x86::Sse4_2,
@@ -24,7 +24,8 @@ impl Sse4_2 {
     #[doc = r""]
     #[doc = r" # Safety"]
     #[doc = r""]
-    #[doc = r" The SSE4.2 CPU feature must be available."]
+    #[doc = r" The `sse4.2`, `cmpxchg16b`, and `popcnt` CPU features must"]
+    #[doc = r" be available."]
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
         Sse4_2 {
@@ -86,9 +87,31 @@ impl Simd for Sse4_2 {
     type mask64s = mask64x2<Self>;
     #[inline(always)]
     fn level(self) -> Level {
-        #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
+        #[cfg(not(all(
+            target_feature = "avx2",
+            target_feature = "bmi1",
+            target_feature = "bmi2",
+            target_feature = "cmpxchg16b",
+            target_feature = "f16c",
+            target_feature = "fma",
+            target_feature = "lzcnt",
+            target_feature = "movbe",
+            target_feature = "popcnt",
+            target_feature = "xsave"
+        )))]
         return Level::Sse4_2(self);
-        #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+        #[cfg(all(
+            target_feature = "avx2",
+            target_feature = "bmi1",
+            target_feature = "bmi2",
+            target_feature = "cmpxchg16b",
+            target_feature = "f16c",
+            target_feature = "fma",
+            target_feature = "lzcnt",
+            target_feature = "movbe",
+            target_feature = "popcnt",
+            target_feature = "xsave"
+        ))]
         {
             Level::baseline()
         }

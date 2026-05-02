@@ -61,8 +61,8 @@ impl Level for X86 {
 
     fn token_doc(&self) -> &'static str {
         match self {
-            Self::Sse4_2 => r#"The SIMD token for the "SSE4.2" level."#,
-            Self::Avx2 => r#"The SIMD token for the "AVX2" and "FMA" level."#,
+            Self::Sse4_2 => "The SIMD token for the x86-64-v2 level.",
+            Self::Avx2 => "The SIMD token for the x86-64-v3 level.",
         }
     }
 
@@ -99,9 +99,31 @@ impl Level for X86 {
         let level_tok = self.token();
         match self {
             Self::Sse4_2 => quote! {
-                #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
+                #[cfg(not(all(
+                    target_feature = "avx2",
+                    target_feature = "bmi1",
+                    target_feature = "bmi2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "f16c",
+                    target_feature = "fma",
+                    target_feature = "lzcnt",
+                    target_feature = "movbe",
+                    target_feature = "popcnt",
+                    target_feature = "xsave"
+                )))]
                 return Level::#level_tok(self);
-                #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+                #[cfg(all(
+                    target_feature = "avx2",
+                    target_feature = "bmi1",
+                    target_feature = "bmi2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "f16c",
+                    target_feature = "fma",
+                    target_feature = "lzcnt",
+                    target_feature = "movbe",
+                    target_feature = "popcnt",
+                    target_feature = "xsave"
+                ))]
                 {
                     Level::baseline()
                 }
@@ -119,7 +141,8 @@ impl Level for X86 {
                 ///
                 /// # Safety
                 ///
-                /// The SSE4.2 CPU feature must be available.
+                /// The `sse4.2`, `cmpxchg16b`, and `popcnt` CPU features must
+                /// be available.
                 #[inline]
                 pub const unsafe fn new_unchecked() -> Self {
                     Sse4_2 {
@@ -132,7 +155,9 @@ impl Level for X86 {
                 ///
                 /// # Safety
                 ///
-                /// The AVX2 and FMA CPU features must be available.
+                /// The `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`,
+                /// `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features must
+                /// be available.
                 #[inline]
                 pub const unsafe fn new_unchecked() -> Self {
                     Self {
