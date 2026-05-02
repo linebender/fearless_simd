@@ -243,8 +243,7 @@ pub enum Level {
         ))
     ))]
     Sse4_2(Sse4_2),
-    /// The AVX2 and FMA instruction set on (32 and 64 bit) x86, plus the other instructions
-    /// guaranteed to be available on AVX2+FMA CPUs. Also known as x86-64-v3.
+    /// The x86-64-v3 instruction set on (32 and 64 bit) x86, including AVX2 and FMA.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Avx2(Avx2),
     // If new variants are added, make sure to handle them in `Level::dispatch`
@@ -465,9 +464,8 @@ impl Level {
     #[inline]
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
         match self {
-            // Safety: The Avx2 struct represents the `avx2` and `fma` target features being enabled.
-            // The `avx2` target feature *also* implicitly enables the "sse4.2" target feature, which is
-            // the only target feature required to make our Sse4_2 token.
+            // Safety: The Avx2 struct represents the x86-64-v3 feature set being enabled, which
+            // includes the `sse4.2`, `cmpxchg16b`, and `popcnt` features required by Sse4_2.
             Self::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
             #[cfg(not(all(
                 target_feature = "avx2",
@@ -490,7 +488,8 @@ impl Level {
         }
     }
 
-    /// If this is a proof that AVX2 and FMA (or better) is available, access that instruction set.
+    /// If this is a proof that the x86-64-v3 feature set (or better) is available, access that
+    /// instruction set.
     ///
     /// This method should be preferred over matching against the `AVX2` variant of self,
     /// because if Fearless SIMD gets support for an instruction set which is a superset of AVX2,

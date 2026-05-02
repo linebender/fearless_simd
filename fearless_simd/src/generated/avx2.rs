@@ -14,7 +14,7 @@ use crate::{
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
-#[doc = "The SIMD token for the \"AVX2\" and \"FMA\" level."]
+#[doc = "The SIMD token for the x86-64-v3 level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Avx2 {
     pub avx2: crate::core_arch::x86::Avx2,
@@ -24,7 +24,9 @@ impl Avx2 {
     #[doc = r""]
     #[doc = r" # Safety"]
     #[doc = r""]
-    #[doc = r" The AVX2 and FMA CPU features must be available."]
+    #[doc = r" The `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`,"]
+    #[doc = r" `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features must"]
+    #[doc = r" be available."]
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
         Self {

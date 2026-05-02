@@ -78,7 +78,10 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #[test]
         #ignore_sse4
         fn #sse4_name() {
-            if std::arch::is_x86_feature_detected!("sse4.2") {
+            if std::arch::is_x86_feature_detected!("sse4.2")
+                && std::arch::is_x86_feature_detected!("cmpxchg16b")
+                && std::arch::is_x86_feature_detected!("popcnt")
+            {
                 let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
                 sse4.vectorize(
                     #[inline(always)]
@@ -94,7 +97,15 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #ignore_avx2
         fn #avx2_name() {
             if std::arch::is_x86_feature_detected!("avx2")
+                && std::arch::is_x86_feature_detected!("bmi1")
+                && std::arch::is_x86_feature_detected!("bmi2")
+                && std::arch::is_x86_feature_detected!("cmpxchg16b")
+                && std::arch::is_x86_feature_detected!("f16c")
                 && std::arch::is_x86_feature_detected!("fma")
+                && std::arch::is_x86_feature_detected!("lzcnt")
+                && std::arch::is_x86_feature_detected!("movbe")
+                && std::arch::is_x86_feature_detected!("popcnt")
+                && std::arch::is_x86_feature_detected!("xsave")
             {
                 let avx2 = unsafe { fearless_simd::x86::Avx2::new_unchecked() };
                 avx2.vectorize(
