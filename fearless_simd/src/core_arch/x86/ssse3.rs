@@ -3,12 +3,14 @@
 
 //! Access to SSSE3 intrinsics.
 
+#[cfg(feature = "safe_wrappers")]
 use crate::impl_macros::delegate;
-#[cfg(target_arch = "x86")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86"))]
 use core::arch::x86 as arch;
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86_64"))]
 use core::arch::x86_64 as arch;
 
+#[cfg(feature = "safe_wrappers")]
 use arch::*;
 
 /// A token for SSSE3 intrinsics on `x86` and `x86_64`.
@@ -27,7 +29,10 @@ impl Ssse3 {
     pub const unsafe fn new_unchecked() -> Self {
         Self { _private: () }
     }
+}
 
+#[cfg(feature = "safe_wrappers")]
+impl Ssse3 {
     delegate! { arch:
         fn _mm_abs_epi8(a: __m128i) -> __m128i;
         fn _mm_abs_epi16(a: __m128i) -> __m128i;

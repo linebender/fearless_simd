@@ -3,12 +3,14 @@
 
 //! Access to FMA intrinsics.
 
+#[cfg(feature = "safe_wrappers")]
 use crate::impl_macros::delegate;
-#[cfg(target_arch = "x86")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86"))]
 use core::arch::x86 as arch;
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86_64"))]
 use core::arch::x86_64 as arch;
 
+#[cfg(feature = "safe_wrappers")]
 use arch::*;
 
 /// A token for FMA intrinsics on `x86` and `x86_64`.
@@ -27,7 +29,10 @@ impl Fma {
     pub const unsafe fn new_unchecked() -> Self {
         Self { _private: () }
     }
+}
 
+#[cfg(feature = "safe_wrappers")]
+impl Fma {
     delegate! { arch:
         fn _mm_fmadd_pd(a: __m128d, b: __m128d, c: __m128d) -> __m128d;
         fn _mm256_fmadd_pd(a: __m256d, b: __m256d, c: __m256d) -> __m256d;

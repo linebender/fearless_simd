@@ -3,12 +3,14 @@
 
 //! Access to SSE intrinsics.
 
+#[cfg(feature = "safe_wrappers")]
 use crate::impl_macros::delegate;
-#[cfg(target_arch = "x86")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86"))]
 use core::arch::x86 as arch;
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86_64"))]
 use core::arch::x86_64 as arch;
 
+#[cfg(feature = "safe_wrappers")]
 use arch::*;
 
 /// A token for SSE intrinsics on `x86` and `x86_64`.
@@ -17,10 +19,6 @@ pub struct Sse {
     _private: (),
 }
 
-#[expect(
-    clippy::missing_safety_doc,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
 impl Sse {
     /// Create a SIMD token.
     ///
@@ -31,7 +29,14 @@ impl Sse {
     pub const unsafe fn new_unchecked() -> Self {
         Self { _private: () }
     }
+}
 
+#[cfg(feature = "safe_wrappers")]
+#[expect(
+    clippy::missing_safety_doc,
+    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+)]
+impl Sse {
     delegate! { arch:
         fn _mm_add_ss(a: __m128, b: __m128) -> __m128;
         fn _mm_add_ps(a: __m128, b: __m128) -> __m128;

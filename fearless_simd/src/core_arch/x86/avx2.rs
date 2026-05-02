@@ -8,12 +8,14 @@
 
 //! Access to AVX2 intrinsics.
 
+#[cfg(feature = "safe_wrappers")]
 use crate::impl_macros::delegate;
-#[cfg(target_arch = "x86")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86"))]
 use core::arch::x86 as arch;
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(feature = "safe_wrappers", target_arch = "x86_64"))]
 use core::arch::x86_64 as arch;
 
+#[cfg(feature = "safe_wrappers")]
 use arch::*;
 
 /// A token for AVX2 intrinsics on `x86` and `x86_64`.
@@ -31,7 +33,10 @@ impl Avx2 {
     pub const unsafe fn new_unchecked() -> Self {
         Self { _private: () }
     }
+}
 
+#[cfg(feature = "safe_wrappers")]
+impl Avx2 {
     delegate! { arch:
         fn _mm256_abs_epi32(a: __m256i) -> __m256i;
         fn _mm256_abs_epi16(a: __m256i) -> __m256i;
