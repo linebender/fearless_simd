@@ -5,10 +5,10 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-use crate::{Level, Simd, SimdBase};
+use crate::{Level, Simd, SimdBase, seal::Seal};
 
 /// Element-wise selection between two SIMD vectors using `self`.
-pub trait Select<T> {
+pub trait Select<T: Seal>: Seal {
     /// For each element of this mask, select the first operand if the element is all ones, and select the second
     /// operand if the element is all zeroes.
     ///
@@ -34,7 +34,7 @@ impl<R, F: FnOnce(Level) -> R> WithSimd for F {
 }
 
 /// Conversion of SIMD types to and from raw bytes.
-pub trait Bytes: Sized {
+pub trait Bytes: Sized + Seal {
     type Bytes;
 
     /// Convert this type to an array of bytes.
@@ -56,6 +56,16 @@ pub(crate) mod seal {
     )]
     pub trait Seal {}
 }
+
+impl Seal for f32 {}
+impl Seal for f64 {}
+impl Seal for u8 {}
+impl Seal for i8 {}
+impl Seal for u16 {}
+impl Seal for i16 {}
+impl Seal for u32 {}
+impl Seal for i32 {}
+impl Seal for i64 {}
 
 /// Value conversion, adding a SIMD blessing.
 ///
@@ -93,7 +103,7 @@ impl<T, S: Simd> SimdFrom<T, S> for T {
 }
 
 /// Types that can be used as elements in SIMD vectors.
-pub trait SimdElement {
+pub trait SimdElement: Seal {
     /// The associated mask lane type. This will be a signed integer of the same size as this type.
     type Mask: SimdElement;
 }
@@ -135,20 +145,20 @@ impl SimdElement for i64 {
 }
 
 /// Construction of integer vectors from floats by truncation
-pub trait SimdCvtTruncate<T> {
+pub trait SimdCvtTruncate<T: Seal>: Seal {
     fn truncate_from(x: T) -> Self;
     fn truncate_from_precise(x: T) -> Self;
 }
 
 /// Construction of floating point vectors from integers
-pub trait SimdCvtFloat<T> {
+pub trait SimdCvtFloat<T: Seal>: Seal {
     fn float_from(x: T) -> Self;
 }
 
 /// Concatenation of two SIMD vectors.
 ///
 /// This is implemented on all vectors 256 bits and lower, producing vectors of up to 512 bits.
-pub trait SimdCombine<S: Simd>: SimdBase<S> {
+pub trait SimdCombine<S: Simd>: SimdBase<S> + Seal {
     type Combined: SimdBase<S, Element = Self::Element, Block = Self::Block>;
 
     /// Concatenate two vectors into a new one that's twice as long.
@@ -158,7 +168,7 @@ pub trait SimdCombine<S: Simd>: SimdBase<S> {
 /// Splitting of one SIMD vector into two.
 ///
 /// This is implemented on all vectors 256 bits and higher, producing vectors of down to 128 bits.
-pub trait SimdSplit<S: Simd>: SimdBase<S> {
+pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
     type Split: SimdBase<S, Element = Self::Element, Block = Self::Block>;
 
     /// Split this vector into left and right halves.
