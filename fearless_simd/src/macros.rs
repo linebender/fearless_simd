@@ -81,7 +81,18 @@ macro_rules! dispatch {
             // This fallthrough logic is documented at the definition site of `Level`.
             #[cfg(all(
                 any(target_arch = "x86", target_arch = "x86_64"),
-                not(all(target_feature = "avx2", target_feature = "fma"))
+                not(all(
+                    target_feature = "avx2",
+                    target_feature = "bmi1",
+                    target_feature = "bmi2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "f16c",
+                    target_feature = "fma",
+                    target_feature = "lzcnt",
+                    target_feature = "movbe",
+                    target_feature = "popcnt",
+                    target_feature = "xsave"
+                ))
             ))]
             $crate::Level::Sse4_2(sse4_2) => {
                 let $simd = launder(sse4_2);
@@ -104,7 +115,11 @@ macro_rules! dispatch {
                 all(target_arch = "aarch64", not(target_feature = "neon")),
                 all(
                     any(target_arch = "x86", target_arch = "x86_64"),
-                    not(target_feature = "sse4.2")
+                    not(all(
+                        target_feature = "sse4.2",
+                        target_feature = "cmpxchg16b",
+                        target_feature = "popcnt"
+                    ))
                 ),
                 all(target_arch = "wasm32", not(target_feature = "simd128")),
                 not(any(

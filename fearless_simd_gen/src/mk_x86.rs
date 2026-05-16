@@ -61,8 +61,8 @@ impl Level for X86 {
 
     fn token_doc(&self) -> &'static str {
         match self {
-            Self::Sse4_2 => r#"The SIMD token for the "SSE4.2" level."#,
-            Self::Avx2 => r#"The SIMD token for the "AVX2" and "FMA" level."#,
+            Self::Sse4_2 => "The SIMD token for the x86-64-v2 level.",
+            Self::Avx2 => "The SIMD token for the x86-64-v3 level.",
         }
     }
 
@@ -99,9 +99,31 @@ impl Level for X86 {
         let level_tok = self.token();
         match self {
             Self::Sse4_2 => quote! {
-                #[cfg(not(all(target_feature = "avx2", target_feature = "fma")))]
+                #[cfg(not(all(
+                    target_feature = "avx2",
+                    target_feature = "bmi1",
+                    target_feature = "bmi2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "f16c",
+                    target_feature = "fma",
+                    target_feature = "lzcnt",
+                    target_feature = "movbe",
+                    target_feature = "popcnt",
+                    target_feature = "xsave"
+                )))]
                 return Level::#level_tok(self);
-                #[cfg(all(target_feature = "avx2", target_feature = "fma"))]
+                #[cfg(all(
+                    target_feature = "avx2",
+                    target_feature = "bmi1",
+                    target_feature = "bmi2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "f16c",
+                    target_feature = "fma",
+                    target_feature = "lzcnt",
+                    target_feature = "movbe",
+                    target_feature = "popcnt",
+                    target_feature = "xsave"
+                ))]
                 {
                     Level::baseline()
                 }
@@ -119,7 +141,8 @@ impl Level for X86 {
                 ///
                 /// # Safety
                 ///
-                /// The SSE4.2 CPU feature must be available.
+                /// The `sse4.2`, `cmpxchg16b`, and `popcnt` CPU features must
+                /// be available.
                 #[inline]
                 pub const unsafe fn new_unchecked() -> Self {
                     Sse4_2 {
@@ -132,7 +155,9 @@ impl Level for X86 {
                 ///
                 /// # Safety
                 ///
-                /// The AVX2 and FMA CPU features must be available.
+                /// The `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`,
+                /// `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features must
+                /// be available.
                 #[inline]
                 pub const unsafe fn new_unchecked() -> Self {
                     Self {
@@ -193,6 +218,8 @@ impl Level for X86 {
             OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
+            OpSig::Interleave => self.handle_interleave(method_sig, vec_ty),
+            OpSig::Deinterleave => self.handle_deinterleave(method_sig, vec_ty),
         }
     }
 }
@@ -791,6 +818,145 @@ impl X86 {
         }
     }
 
+    pub(crate) fn handle_interleave(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        match vec_ty.n_bits() {
+            256 => {
+                // Optimized path: compute unpacklo and unpackhi once, then use permute2f128 to
+                // produce both zip_low and zip_high results. This avoids the redundant unpack
+                // operations that occur when zip_low and zip_high are called separately.
+                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+                let lo = intrinsic_ident("unpacklo", suffix, 256);
+                let hi = intrinsic_ident("unpackhi", suffix, 256);
+                let shuffle = intrinsic_ident(
+                    match vec_ty.scalar {
+                        ScalarType::Float => "permute2f128",
+                        _ => "permute2x128",
+                    },
+                    coarse_type(vec_ty),
+                    256,
+                );
+                quote! {
+                    #method_sig {
+                        unsafe {
+                            let lo = #lo(a.into(), b.into());
+                            let hi = #hi(a.into(), b.into());
+                            (
+                                #shuffle::<0b0010_0000>(lo, hi).simd_into(self),
+                                #shuffle::<0b0011_0001>(lo, hi).simd_into(self),
+                            )
+                        }
+                    }
+                }
+            }
+            _ => {
+                // For 128-bit vectors, zip_low/zip_high are single instructions (unpacklo/unpackhi),
+                // so there's no redundancy in calling them separately.
+                let zip_low = generic_op_name("zip_low", vec_ty);
+                let zip_high = generic_op_name("zip_high", vec_ty);
+                quote! {
+                    #method_sig {
+                        (self.#zip_low(a, b), self.#zip_high(a, b))
+                    }
+                }
+            }
+        }
+    }
+
+    pub(crate) fn handle_deinterleave(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        match vec_ty.n_bits() {
+            256 => {
+                // Optimized path: compute the per-input shuffles once, then use permute2f128 /
+                // permute2x128 to produce both unzip_low and unzip_high results. This avoids
+                // the redundant shuffle operations that occur when unzip_low and unzip_high are
+                // called separately.
+                let (t1, t2, shuffle) = self.unzip256_intermediates(vec_ty);
+                quote! {
+                    #method_sig {
+                        unsafe {
+                            let t1 = #t1;
+                            let t2 = #t2;
+                            (
+                                #shuffle::<0b0010_0000>(t1, t2).simd_into(self),
+                                #shuffle::<0b0011_0001>(t1, t2).simd_into(self),
+                            )
+                        }
+                    }
+                }
+            }
+            _ => {
+                // For 128-bit vectors, unzip_low/unzip_high are cheap, so there's no
+                // redundancy in calling them separately.
+                let unzip_low = generic_op_name("unzip_low", vec_ty);
+                let unzip_high = generic_op_name("unzip_high", vec_ty);
+                quote! {
+                    #method_sig {
+                        (self.#unzip_low(a, b), self.#unzip_high(a, b))
+                    }
+                }
+            }
+        }
+    }
+
+    /// Returns `(t1_expr, t2_expr, shuffle_ident)` for 256-bit unzip operations.
+    ///
+    /// `t1` and `t2` are the per-input shuffles that separate even and odd elements.
+    /// `shuffle` is the `permute2f128` / `permute2x128` intrinsic used to select
+    /// the low or high halves via immediate `0b0010_0000` or `0b0011_0001`.
+    fn unzip256_intermediates(&self, vec_ty: &VecType) -> (TokenStream, TokenStream, Ident) {
+        let shuffle = intrinsic_ident(
+            match vec_ty.scalar {
+                ScalarType::Float => "permute2f128",
+                _ => "permute2x128",
+            },
+            coarse_type(vec_ty),
+            256,
+        );
+
+        let (t1, t2) = match vec_ty.scalar_bits {
+            32 | 64 => {
+                let kind = match vec_ty.scalar_bits {
+                    32 => "permutevar8x32",
+                    64 => "permute4x64",
+                    _ => unreachable!(),
+                };
+                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+                let intr = intrinsic_ident(kind, suffix, 256);
+                let shuf = |input: TokenStream| match vec_ty.scalar_bits {
+                    32 => quote! { #intr(#input, _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7)) },
+                    64 => quote! { #intr::<0b11_01_10_00>(#input) },
+                    _ => unreachable!(),
+                };
+                (shuf(quote! { a.into() }), shuf(quote! { b.into() }))
+            }
+            8 | 16 => {
+                let mask = match vec_ty.scalar_bits {
+                    8 => quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 },
+                    16 => quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 },
+                    _ => unreachable!(),
+                };
+                let shuf = |input: TokenStream| {
+                    quote! {
+                        _mm256_permute4x64_epi64::<0b11_01_10_00>(
+                            _mm256_shuffle_epi8(#input, _mm256_setr_epi8(#mask, #mask)),
+                        )
+                    }
+                };
+                (shuf(quote! { a.into() }), shuf(quote! { b.into() }))
+            }
+            _ => unreachable!(),
+        };
+
+        (t1, t2, shuffle)
+    }
+
     pub(crate) fn handle_unzip(
         &self,
         method_sig: TokenStream,
@@ -859,38 +1025,9 @@ impl X86 {
                     }
                 }
             }
-            (_, 256, 64 | 32) => {
-                // First we perform a lane-crossing shuffle to move the even-indexed elements of each input to the lower
-                // half, and the odd-indexed ones to the upper half.
-                // e.g. [0, 1, 2, 3, 4, 5, 6, 7] becomes [0, 2, 4, 6, 1, 3, 5, 7]).
-                let low_shuffle_kind = match vec_ty.scalar_bits {
-                    32 => "permutevar8x32",
-                    64 => "permute4x64",
-                    _ => unreachable!(),
-                };
-                let low_shuffle_suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
-                let low_shuffle_intrinsic =
-                    intrinsic_ident(low_shuffle_kind, low_shuffle_suffix, 256);
-                let low_shuffle = |input_name: TokenStream| match vec_ty.scalar_bits {
-                    32 => {
-                        quote! { #low_shuffle_intrinsic(#input_name, _mm256_setr_epi32(0, 2, 4, 6, 1, 3, 5, 7)) }
-                    }
-                    64 => quote! { #low_shuffle_intrinsic::<0b11_01_10_00>(#input_name) },
-                    _ => unreachable!(),
-                };
-                let shuf_t1 = low_shuffle(quote! { a.into() });
-                let shuf_t2 = low_shuffle(quote! { b.into() });
-
-                // Then we combine the lower or upper halves.
-                let high_shuffle = intrinsic_ident(
-                    match vec_ty.scalar {
-                        ScalarType::Float => "permute2f128",
-                        _ => "permute2x128",
-                    },
-                    coarse_type(vec_ty),
-                    256,
-                );
-                let high_shuffle_immediate = if select_even {
+            (_, 256, _) => {
+                let (t1, t2, shuffle) = self.unzip256_intermediates(vec_ty);
+                let shuffle_immediate = if select_even {
                     quote! { 0b0010_0000 }
                 } else {
                     quote! { 0b0011_0001 }
@@ -898,45 +1035,9 @@ impl X86 {
 
                 quote! {
                     unsafe {
-                        let t1 = #shuf_t1;
-                        let t2 = #shuf_t2;
-
-                        #high_shuffle::<#high_shuffle_immediate>(t1, t2).simd_into(self)
-                    }
-                }
-            }
-            (_, 256, 16 | 8) => {
-                // Separate out the even-indexed and odd-indexed elements within each 128-bit lane
-                let mask = match vec_ty.scalar_bits {
-                    8 => {
-                        quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 }
-                    }
-                    16 => {
-                        quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 }
-                    }
-                    _ => unreachable!(),
-                };
-
-                // We then permute the even-indexed and odd-indexed blocks across lanes, and finally do a 2x128 permute to
-                // select either the even- or odd-indexed elements
-                let high_shuffle_immediate = if select_even {
-                    quote! { 0b0010_0000 }
-                } else {
-                    quote! { 0b0011_0001 }
-                };
-
-                quote! {
-                    unsafe {
-                        let mask = _mm256_setr_epi8(#mask, #mask);
-                        let a_shuffled = _mm256_shuffle_epi8(a.into(), mask);
-                        let b_shuffled = _mm256_shuffle_epi8(b.into(), mask);
-
-                        let packed = _mm256_permute2x128_si256::<#high_shuffle_immediate>(
-                            _mm256_permute4x64_epi64::<0b11_01_10_00>(a_shuffled),
-                            _mm256_permute4x64_epi64::<0b11_01_10_00>(b_shuffled)
-                        );
-
-                        packed.simd_into(self)
+                        let t1 = #t1;
+                        let t2 = #t2;
+                        #shuffle::<#shuffle_immediate>(t1, t2).simd_into(self)
                     }
                 }
             }

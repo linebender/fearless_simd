@@ -72,6 +72,13 @@ pub(crate) enum OpSig {
     Zip { select_low: bool },
     /// Takes two arguments of a vector type, and returns that same vector type.
     Unzip { select_even: bool },
+    /// Takes two arguments of a vector type, and returns a tuple of two vectors of the same type.
+    /// This is equivalent to calling `zip_low` and `zip_high` and returning both results.
+    Interleave,
+    /// Takes two arguments of a vector type, and returns a tuple of two vectors of the same type.
+    /// This is equivalent to calling `unzip_low` and `unzip_high` and returning both results.
+    /// This is the inverse of `Interleave`.
+    Deinterleave,
     /// Takes two arguments of a vector type, plus a const generic shift amount, and returns that same vector type.
     Slide { granularity: SlideGranularity },
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
@@ -221,6 +228,11 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
             }
+            OpSig::Interleave | OpSig::Deinterleave => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> (#ty<Self>, #ty<Self>) }
+            }
             OpSig::Slide { .. } => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
@@ -343,6 +355,11 @@ impl Op {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
+            }
+            OpSig::Interleave | OpSig::Deinterleave => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> (Self, Self) }
             }
             OpSig::Slide { .. } => {
                 let arg0 = &arg_names[0];
@@ -600,28 +617,60 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: true },
         "Interleave the lower half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
     ),
     Op::new(
         "zip_high",
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: false },
         "Interleave the upper half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.\
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
     ),
     Op::new(
         "unzip_low",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: true },
         "Extract even-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
     ),
     Op::new(
         "unzip_high",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: false },
         "Extract odd-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
+    ),
+    Op::new(
+        "interleave",
+        OpKind::VecTraitMethod,
+        OpSig::Interleave,
+        "Interleave two vectors.\n\n\
+        The resulting vectors contain elements taken alternately from `{arg0}` and `{arg1}`, \
+        first filling the first result, and then the second.\n\n\
+        The reverse of this operation is `deinterleave`.\n\n\
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`.",
+    ),
+    Op::new(
+        "deinterleave",
+        OpKind::VecTraitMethod,
+        OpSig::Deinterleave,
+        "Deinterleave two vectors.\n\n\
+        The first result contains all even-indexed elements from `{arg0}` followed by all even-indexed elements from `{arg1}`. \
+        The second result contains all odd-indexed elements from `{arg0}` followed by all odd-indexed elements from `{arg1}`.\n\n\
+        The reverse of this operation is `interleave`.\n\n\
+        For vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`.",
     ),
     Op::new(
         "max",
@@ -826,28 +875,60 @@ const INT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: true },
         "Interleave the lower half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
     ),
     Op::new(
         "zip_high",
         OpKind::VecTraitMethod,
         OpSig::Zip { select_low: false },
         "Interleave the upper half elements of two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.\
+        For fully interleaving two vectors prefer `interleave`,
+        which is faster than `zip_low` followed by `zip_high` on some platforms.",
     ),
     Op::new(
         "unzip_low",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: true },
         "Extract even-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
     ),
     Op::new(
         "unzip_high",
         OpKind::VecTraitMethod,
         OpSig::Unzip { select_even: false },
         "Extract odd-indexed elements from two vectors.\n\n\
-        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.",
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n\
+        **Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.\
+        For fully deinterleaving two vectors prefer `deinterleave`,
+        which is faster than `unzip_low` followed by `unzip_high` on some platforms.",
+    ),
+    Op::new(
+        "interleave",
+        OpKind::VecTraitMethod,
+        OpSig::Interleave,
+        "Interleave two vectors.\n\n\
+        The resulting vectors contain elements taken alternately from `{arg0}` and `{arg1}`, \
+        first filling the first result, and then the second.\n\n\
+        The reverse of this operation is `deinterleave`.\n\n\
+        For vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`.",
+    ),
+    Op::new(
+        "deinterleave",
+        OpKind::VecTraitMethod,
+        OpSig::Deinterleave,
+        "Deinterleave two vectors.\n\n\
+        The first result contains all even-indexed elements from `{arg0}` followed by all even-indexed elements from `{arg1}`. \
+        The second result contains all odd-indexed elements from `{arg0}` followed by all odd-indexed elements from `{arg1}`.\n\n\
+        The reverse of this operation is `interleave`.\n\n\
+        For vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`.",
     ),
     Op::new(
         "select",
@@ -1394,6 +1475,8 @@ impl OpSig {
             | Self::Combine { .. }
             | Self::Zip { .. }
             | Self::Unzip { .. }
+            | Self::Interleave
+            | Self::Deinterleave
             | Self::Slide { .. } => &["a", "b"],
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
@@ -1420,6 +1503,8 @@ impl OpSig {
             | Self::Compare
             | Self::Zip { .. }
             | Self::Unzip { .. }
+            | Self::Interleave
+            | Self::Deinterleave
             | Self::Slide { .. } => &["self", "rhs"],
             Self::Shift => &["self", "shift"],
             Self::Ternary => &["self", "op1", "op2"],
@@ -1446,7 +1531,9 @@ impl OpSig {
             | Self::Compare
             | Self::Combine { .. }
             | Self::Zip { .. }
-            | Self::Unzip { .. } => {
+            | Self::Unzip { .. }
+            | Self::Interleave
+            | Self::Deinterleave => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { #arg0, #arg1.simd_into(self.simd) }
