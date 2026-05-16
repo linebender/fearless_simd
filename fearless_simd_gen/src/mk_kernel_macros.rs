@@ -3,6 +3,10 @@
 
 use crate::{level::Level, mk_neon::Neon, mk_wasm::WasmSimd128, mk_x86::X86};
 
+/// This emits a String rather than a TokenStream
+/// because rustfmt just gives up formatting macros
+/// and we end up with a completely unreadable token soup
+/// if we don't impose formatting on it manually.
 pub(crate) fn mk_kernel_macros() -> String {
     [
         kernel_macro(&Neon),
