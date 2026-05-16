@@ -209,4 +209,26 @@ mod tests {
             assert_eq!(res, 3);
         }
     }
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    mod x86_kernel {
+        use crate::Level;
+        #[cfg(target_arch = "x86")]
+        use core::arch::x86::{__m256i, _mm256_setzero_si256};
+        #[cfg(target_arch = "x86_64")]
+        use core::arch::x86_64::{__m256i, _mm256_setzero_si256};
+
+        crate::avx2_kernel! {
+            fn zero() -> __m256i {
+                _mm256_setzero_si256()
+            }
+        }
+
+        #[test]
+        fn avx2_kernel() {
+            if let Some(avx2) = Level::new().as_avx2() {
+                let _ = zero(avx2);
+            }
+        }
+    }
 }

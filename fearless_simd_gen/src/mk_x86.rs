@@ -48,6 +48,10 @@ impl Level for X86 {
         })
     }
 
+    fn availability_cfg(&self) -> Option<&'static str> {
+        Some(r#"any(target_arch = "x86", target_arch = "x86_64")"#)
+    }
+
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
         let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
             (ScalarType::Float, 32) => "",

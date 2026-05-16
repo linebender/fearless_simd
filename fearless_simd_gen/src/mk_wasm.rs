@@ -37,6 +37,10 @@ impl Level for WasmSimd128 {
         None
     }
 
+    fn availability_cfg(&self) -> Option<&'static str> {
+        Some(r#"all(target_arch = "wasm32", target_feature = "simd128")"#)
+    }
+
     fn arch_ty(&self, _vec_ty: &VecType) -> TokenStream {
         quote! { v128 }
     }

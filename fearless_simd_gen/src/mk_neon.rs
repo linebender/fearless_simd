@@ -36,6 +36,10 @@ impl Level for Neon {
         Some("neon")
     }
 
+    fn availability_cfg(&self) -> Option<&'static str> {
+        Some(r#"target_arch = "aarch64""#)
+    }
+
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
         let scalar = match vec_ty.scalar {
             ScalarType::Float => "float",

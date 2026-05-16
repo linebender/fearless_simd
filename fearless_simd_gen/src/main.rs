@@ -6,7 +6,7 @@
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 
-use std::{fs::File, io::Write, path::Path};
+use std::{fmt, fs::File, io::Write, path::Path};
 
 use clap::{Parser, ValueEnum};
 use proc_macro2::TokenStream;
@@ -17,6 +17,7 @@ mod arch;
 mod generic;
 mod level;
 mod mk_fallback;
+mod mk_kernel_macros;
 mod mk_neon;
 mod mk_ops;
 mod mk_simd_trait;
@@ -30,6 +31,7 @@ mod types;
 enum Module {
     SimdTypes,
     SimdTrait,
+    KernelMacros,
     Ops,
     Neon,
     Wasm,
@@ -56,16 +58,17 @@ struct Cli {
 }
 
 impl Module {
-    fn generate_code(self) -> TokenStream {
+    fn generate_code(self) -> GeneratedCode {
         match self {
-            Self::SimdTypes => mk_simd_types::mk_simd_types(),
-            Self::SimdTrait => mk_simd_trait::mk_simd_trait(),
-            Self::Ops => mk_ops::mk_ops(),
-            Self::Neon => mk_neon::Neon.make_module(),
-            Self::Wasm => mk_wasm::WasmSimd128.make_module(),
-            Self::Fallback => mk_fallback::Fallback.make_module(),
-            Self::Sse4_2 => mk_x86::X86::Sse4_2.make_module(),
-            Self::Avx2 => mk_x86::X86::Avx2.make_module(),
+            Self::SimdTypes => GeneratedCode::Tokens(mk_simd_types::mk_simd_types()),
+            Self::SimdTrait => GeneratedCode::Tokens(mk_simd_trait::mk_simd_trait()),
+            Self::KernelMacros => GeneratedCode::Source(mk_kernel_macros::mk_kernel_macros()),
+            Self::Ops => GeneratedCode::Tokens(mk_ops::mk_ops()),
+            Self::Neon => GeneratedCode::Tokens(mk_neon::Neon.make_module()),
+            Self::Wasm => GeneratedCode::Tokens(mk_wasm::WasmSimd128.make_module()),
+            Self::Fallback => GeneratedCode::Tokens(mk_fallback::Fallback.make_module()),
+            Self::Sse4_2 => GeneratedCode::Tokens(mk_x86::X86::Sse4_2.make_module()),
+            Self::Avx2 => GeneratedCode::Tokens(mk_x86::X86::Avx2.make_module()),
         }
     }
 
@@ -99,6 +102,7 @@ impl Module {
         match self {
             Self::SimdTypes => "simd_types",
             Self::SimdTrait => "simd_trait",
+            Self::KernelMacros => "kernel_macros",
             Self::Ops => "ops",
             Self::Neon => "neon",
             Self::Fallback => "fallback",
@@ -109,9 +113,24 @@ impl Module {
     }
 }
 
+enum GeneratedCode {
+    Tokens(TokenStream),
+    Source(String),
+}
+
+impl fmt::Display for GeneratedCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Tokens(tokens) => tokens.fmt(f),
+            Self::Source(source) => f.write_str(source),
+        }
+    }
+}
+
 const MODULES: &[Module] = &[
     Module::SimdTypes,
     Module::SimdTrait,
+    Module::KernelMacros,
     Module::Ops,
     Module::Neon,
     Module::Fallback,

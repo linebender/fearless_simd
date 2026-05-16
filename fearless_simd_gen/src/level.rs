@@ -29,6 +29,11 @@ pub(crate) trait Level {
     /// If this SIMD level is not runtime-toggleable (for instance, the fallback implementation or WASM SIMD128),
     /// returns `None`.
     fn enabled_target_features(&self) -> Option<&'static str>;
+    /// The `cfg` expression under which this SIMD level token is available to generated kernel
+    /// macros.
+    fn availability_cfg(&self) -> Option<&'static str> {
+        None
+    }
     /// A function that takes a given vector type and returns the corresponding native vector type. For instance,
     /// `f32x8` would map to `__m256` on `Avx2`, and to `[f32; 8]` on `Fallback`. This will never be passed a vector
     /// type *larger* than [`Level::max_block_size`], since [`VecType::aligned_wrapper_ty`] will split those up into
