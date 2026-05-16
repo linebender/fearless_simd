@@ -192,7 +192,6 @@ No changelog was kept for this release.
 [#185]: https://github.com/linebender/fearless_simd/pull/185
 [#188]: https://github.com/linebender/fearless_simd/pull/188
 [#206]: https://github.com/linebender/fearless_simd/pull/206
-[#207]: https://github.com/linebender/fearless_simd/pull/207
 [#208]: https://github.com/linebender/fearless_simd/pull/208
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.4.1...HEAD
