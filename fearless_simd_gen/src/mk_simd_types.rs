@@ -15,7 +15,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdCvtFloat, SimdCvtTruncate};
+        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdCvtFloat, SimdCvtTruncate, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -169,6 +169,8 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 pub(crate) val: S::#name,
                 pub simd: S,
             }
+
+            impl<S: Simd> Seal for #name<S> {}
 
             impl<S: Simd> SimdFrom<[#rust_scalar; #len], S> for #name<S> {
                 #[inline(always)]
