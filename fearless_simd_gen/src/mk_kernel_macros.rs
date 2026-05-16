@@ -77,7 +77,6 @@ macro_rules! @MACRO_NAME@ {
     ) => {
         #[cfg(@CFG@)]
         $(#[$meta])*
-        #[inline]
         $vis fn $name(
             _simd: $crate::@LEVEL_NAME@,
             $($arg: $arg_ty),*
@@ -88,7 +87,8 @@ macro_rules! @MACRO_NAME@ {
 }
 "#;
 
-const KERNEL_BODY_WITH_TARGET_FEATURES: &str = r#"            #[target_feature(enable = "@FEATURES@")]
+const KERNEL_BODY_WITH_TARGET_FEATURES: &str = r#"            #[inline]
+            #[target_feature(enable = "@FEATURES@")]
             fn __fearless_simd_kernel(
                 $($arg: $arg_ty),*
             ) $(-> $ret)? {
@@ -98,7 +98,8 @@ const KERNEL_BODY_WITH_TARGET_FEATURES: &str = r#"            #[target_feature(e
             // SAFETY: the `@LEVEL_NAME@` token proves that the required target features are available.
             unsafe { __fearless_simd_kernel($($arg),*) }"#;
 
-const KERNEL_BODY: &str = r#"            fn __fearless_simd_kernel(
+const KERNEL_BODY: &str = r#"            #[inline]
+            fn __fearless_simd_kernel(
                 $($arg: $arg_ty),*
             ) $(-> $ret)? {
                 $($kernel_body)*

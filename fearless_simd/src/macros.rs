@@ -219,6 +219,7 @@ mod tests {
         use core::arch::x86_64::{__m256i, _mm256_setzero_si256};
 
         crate::avx2_kernel! {
+            #[inline]
             fn zero() -> __m256i {
                 _mm256_setzero_si256()
             }

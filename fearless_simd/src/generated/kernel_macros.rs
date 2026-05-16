@@ -16,11 +16,11 @@ macro_rules! neon_kernel {
     ) => {
         #[cfg(target_arch = "aarch64")]
         $(#[$meta])*
-        #[inline]
         $vis fn $name(
             _simd: $crate::Neon,
             $($arg: $arg_ty),*
         ) $(-> $ret)? {
+            #[inline]
             #[target_feature(enable = "neon")]
             fn __fearless_simd_kernel(
                 $($arg: $arg_ty),*
@@ -47,11 +47,11 @@ macro_rules! wasm_simd128_kernel {
     ) => {
         #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
         $(#[$meta])*
-        #[inline]
         $vis fn $name(
             _simd: $crate::WasmSimd128,
             $($arg: $arg_ty),*
         ) $(-> $ret)? {
+            #[inline]
             fn __fearless_simd_kernel(
                 $($arg: $arg_ty),*
             ) $(-> $ret)? {
@@ -77,11 +77,11 @@ macro_rules! sse4_2_kernel {
     ) => {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         $(#[$meta])*
-        #[inline]
         $vis fn $name(
             _simd: $crate::Sse4_2,
             $($arg: $arg_ty),*
         ) $(-> $ret)? {
+            #[inline]
             #[target_feature(enable = "sse4.2,cmpxchg16b,popcnt")]
             fn __fearless_simd_kernel(
                 $($arg: $arg_ty),*
@@ -108,11 +108,11 @@ macro_rules! avx2_kernel {
     ) => {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         $(#[$meta])*
-        #[inline]
         $vis fn $name(
             _simd: $crate::Avx2,
             $($arg: $arg_ty),*
         ) $(-> $ret)? {
+            #[inline]
             #[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave")]
             fn __fearless_simd_kernel(
                 $($arg: $arg_ty),*
