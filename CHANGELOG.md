@@ -6,12 +6,24 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-The latest published Fearless SIMD release is [0.4.0](#040-2026-02-13) which was released on 2026-02-13.
-You can find its changes [documented below](#040-2026-02-13).
+The latest published Fearless SIMD release is [0.4.1](#041-2026-05-16) which was released on 2026-05-16.
+You can find its changes [documented below](#041-2026-05-16).
 
 ## [Unreleased]
 
 This release has an [MSRV][] of 1.88.
+
+## [0.4.1][] (2026-05-16)
+
+This release has an [MSRV][] of 1.88.
+
+### Added
+
+- The `interleave` and `deinterleave` methods on integer and floating-point SIMD vector types. ([#206][] by [@Shnatsel][])
+
+### Fixed
+
+- `Sse4_2` and `Avx2` now consistently use the x86-64-v2 and x86-64-v3 feature sets for detection, dispatch, and generated `target_feature` attributes. ([#208][] by [@Shnatsel][])
 
 ## [0.4.0][] (2026-02-13)
 
@@ -179,8 +191,11 @@ No changelog was kept for this release.
 [#181]: https://github.com/linebender/fearless_simd/pull/181
 [#185]: https://github.com/linebender/fearless_simd/pull/185
 [#188]: https://github.com/linebender/fearless_simd/pull/188
+[#207]: https://github.com/linebender/fearless_simd/pull/207
+[#208]: https://github.com/linebender/fearless_simd/pull/208
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/linebender/fearless_simd/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/linebender/fearless_simd/compare/v0.4.0...v0.3.0
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
 [0.2.0]: https://github.com/linebender/fearless_simd/compare/e54304c66fc3e42d9604ddc7775b3345b589ce1a...v0.2.0
