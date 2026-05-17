@@ -49,7 +49,7 @@ fn kernel_body(level: &dyn Level) -> String {
 fn target_feature_doc(level: &dyn Level) -> String {
     let body = if level.enabled_target_features().is_some() {
         r#"
-#[doc = "The generated wrapper takes a SIMD token (`@LEVEL_NAME@`) as its first argument."]
+#[doc = "The generated wrapper takes a SIMD token ([`@LEVEL_NAME@`](crate::@LEVEL_NAME@)) as its first argument."]
 #[doc = "The macro runs your body inside an inner function annotated with the appropriate"]
 #[doc = "`#[target_feature]` attributes. That makes platform-specific intrinsics from `core::arch` or"]
 #[doc = "`std::arch` safe to call in the body, as long as they do not have safety"]
@@ -57,7 +57,7 @@ fn target_feature_doc(level: &dyn Level) -> String {
 "#
     } else {
         r#"
-#[doc = "The generated wrapper takes a SIMD token (`@LEVEL_NAME@`) as its first argument and is"]
+#[doc = "The generated wrapper takes a SIMD token ([`@LEVEL_NAME@`](crate::@LEVEL_NAME@)) as its first argument and is"]
 #[doc = "compiled only when the required target features are enabled. That makes matching"]
 #[doc = "platform-specific intrinsics from `core::arch` or `std::arch` safe to call in the"]
 #[doc = "body, as long as they do not have safety requirements beyond those target features."]
@@ -238,10 +238,13 @@ fn snake_case(name: &str) -> String {
 
 const KERNEL_MACRO_TEMPLATE: &str = r#"
 #[cfg(@CFG@)]
-#[doc = "Creates a context where you can safely call intrinsics for `@LEVEL_NAME@`."]
+#[doc = "Creates a context where you can safely call intrinsics"]
+#[doc = "available at the [`@LEVEL_NAME@`](crate::@LEVEL_NAME@) SIMD level."]
 #[doc = ""]
 #[doc = "This is useful if the portable abstractions are not enough, and you need to"]
 #[doc = "use platform-specific intrinsics for parts of the computation."]
+#[doc = ""]
+#[doc = "See [`@LEVEL_NAME@`](crate::@LEVEL_NAME@) for the target features represented by this SIMD level."]
 #[doc = ""]
 @TARGET_FEATURE_DOC@
 #[doc = ""]
