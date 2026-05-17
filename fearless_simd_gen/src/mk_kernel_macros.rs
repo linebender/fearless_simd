@@ -238,7 +238,10 @@ fn snake_case(name: &str) -> String {
 }
 
 const KERNEL_MACRO_TEMPLATE: &str = r#"
-#[doc = "Defines a safe, non-generic kernel for `@LEVEL_NAME@`."]
+#[doc = "Creates a context where you can safely call intrinsics for `@LEVEL_NAME@`."]
+#[doc = ""]
+#[doc = "This is useful if the portable abstractions are not enough, and you need to"]
+#[doc = "use platform-specific intrinsics for parts of the computation."]
 #[doc = ""]
 @TARGET_FEATURE_DOC@
 #[doc = ""]
