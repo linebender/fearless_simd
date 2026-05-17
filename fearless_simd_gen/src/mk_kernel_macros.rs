@@ -237,6 +237,7 @@ fn snake_case(name: &str) -> String {
 }
 
 const KERNEL_MACRO_TEMPLATE: &str = r#"
+#[cfg(@CFG@)]
 #[doc = "Creates a context where you can safely call intrinsics for `@LEVEL_NAME@`."]
 #[doc = ""]
 #[doc = "This is useful if the portable abstractions are not enough, and you need to"]
