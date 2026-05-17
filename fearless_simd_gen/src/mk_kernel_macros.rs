@@ -74,7 +74,7 @@ fn example_doc(level: &dyn Level) -> String {
 ## Example
 
 ```rust
-#[cfg(target_arch = "aarch64")]
+# #[allow(unused_imports)]
 use fearless_simd::{f32x4, prelude::*};
 #[cfg(target_arch = "aarch64")]
 use std::arch::aarch64::{float32x4_t, vaddq_f32};
@@ -104,7 +104,7 @@ if let Some(neon) = fearless_simd::Level::new().as_neon() {
 ## Example
 
 ```rust
-#[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+# #[allow(unused_imports)]
 use fearless_simd::{f32x4, prelude::*};
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 use std::arch::wasm32::{f32x4_add, v128};
@@ -119,14 +119,13 @@ fearless_simd::wasm_simd128_kernel! {
 # fn main() {
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 {
-    let wasm = fearless_simd::Level::new()
-        .as_wasm_simd128()
-        .expect("simd128 is statically enabled");
-    let a: f32x4<_> = [1.0, 2.0, 3.0, 4.0].simd_into(wasm);
-    let b: f32x4<_> = [10.0, 20.0, 30.0, 40.0].simd_into(wasm);
-    let sum: f32x4<_> = add_f32x4(wasm, a.into(), b.into()).simd_into(wasm);
+    if let Some(wasm) = fearless_simd::Level::new().as_wasm_simd128() {
+        let a: f32x4<_> = [1.0, 2.0, 3.0, 4.0].simd_into(wasm);
+        let b: f32x4<_> = [10.0, 20.0, 30.0, 40.0].simd_into(wasm);
+        let sum: f32x4<_> = add_f32x4(wasm, a.into(), b.into()).simd_into(wasm);
 
-    assert_eq!(<[f32; 4]>::from(sum), [11.0, 22.0, 33.0, 44.0]);
+        assert_eq!(<[f32; 4]>::from(sum), [11.0, 22.0, 33.0, 44.0]);
+    }
 }
 # }
 ```
@@ -137,7 +136,7 @@ fearless_simd::wasm_simd128_kernel! {
 ## Example
 
 ```rust
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+# #[allow(unused_imports)]
 use fearless_simd::{f32x4, prelude::*};
 #[cfg(target_arch = "x86")]
 use std::arch::x86::{__m128, _mm_add_ps};
@@ -169,7 +168,7 @@ if let Some(sse4_2) = fearless_simd::Level::new().as_sse4_2() {
 ## Example
 
 ```rust
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+# #[allow(unused_imports)]
 use fearless_simd::{i32x8, prelude::*};
 #[cfg(target_arch = "x86")]
 use std::arch::x86::{__m256i, _mm256_add_epi32};
