@@ -65,6 +65,14 @@ fn snake_case(name: &str) -> String {
 
 const KERNEL_MACRO_TEMPLATE: &str = r#"
 #[doc = "Defines a safe, non-generic kernel for `@LEVEL_NAME@`."]
+#[doc = ""]
+#[doc = "Kernel macros only accept safe functions."]
+#[doc = ""]
+#[doc = "```compile_fail"]
+#[doc = "fearless_simd::@MACRO_NAME@! {"]
+#[doc = "    unsafe fn should_not_compile() {}"]
+#[doc = "}"]
+#[doc = "```"]
 #[macro_export]
 macro_rules! @MACRO_NAME@ {
     (
