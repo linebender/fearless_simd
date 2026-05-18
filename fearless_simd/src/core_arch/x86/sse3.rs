@@ -1,17 +1,7 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Access to SSE3 intrinsics.
-
-#[cfg(feature = "safe_wrappers")]
-use crate::impl_macros::delegate;
-#[cfg(all(feature = "safe_wrappers", target_arch = "x86"))]
-use core::arch::x86 as arch;
-#[cfg(all(feature = "safe_wrappers", target_arch = "x86_64"))]
-use core::arch::x86_64 as arch;
-
-#[cfg(feature = "safe_wrappers")]
-use arch::*;
+//! SIMD proof token for SSE3.
 
 /// A token for SSE3 intrinsics on `x86` and `x86_64`.
 #[derive(Clone, Copy, Debug)]
@@ -28,26 +18,5 @@ impl Sse3 {
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
         Self { _private: () }
-    }
-}
-
-#[cfg(feature = "safe_wrappers")]
-#[expect(
-    clippy::missing_safety_doc,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
-impl Sse3 {
-    delegate! { arch:
-        fn _mm_addsub_ps(a: __m128, b: __m128) -> __m128;
-        fn _mm_addsub_pd(a: __m128d, b: __m128d) -> __m128d;
-        fn _mm_hadd_pd(a: __m128d, b: __m128d) -> __m128d;
-        fn _mm_hadd_ps(a: __m128, b: __m128) -> __m128;
-        fn _mm_hsub_pd(a: __m128d, b: __m128d) -> __m128d;
-        fn _mm_hsub_ps(a: __m128, b: __m128) -> __m128;
-        unsafe fn _mm_lddqu_si128(mem_addr: *const __m128i) -> __m128i;
-        fn _mm_movedup_pd(a: __m128d) -> __m128d;
-        unsafe fn _mm_loaddup_pd(mem_addr: *const f64) -> __m128d;
-        fn _mm_movehdup_ps(a: __m128) -> __m128;
-        fn _mm_moveldup_ps(a: __m128) -> __m128;
     }
 }

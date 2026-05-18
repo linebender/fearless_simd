@@ -1,7 +1,7 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Access to architecture-specific intrinsics.
+//! Architecture-specific SIMD proof tokens.
 
 #![expect(
     missing_docs,
