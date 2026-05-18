@@ -148,6 +148,7 @@ pub mod core_arch;
 mod impl_macros;
 
 mod generated;
+mod kernel_macros;
 mod macros;
 mod support;
 mod traits;
