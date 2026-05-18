@@ -189,7 +189,7 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
             }
         }
         OpSig::StoreInterleaved { .. } => {
-            todo!("The generic fallback is not used for this operation")
+            panic!("The generic fallback is not implemented for this operation")
         }
         OpSig::Split { .. }
         | OpSig::Combine { .. }
