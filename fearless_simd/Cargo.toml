@@ -13,9 +13,17 @@ readme = "README.md"
 
 [package.metadata.docs.rs]
 all-features = true
-default-target = "x86_64-unknown-linux-gnu"
-targets = ["x86_64-unknown-linux-gnu", "i686-unknown-linux-gnu", "aarch64-apple-darwin", "wasm32-unknown-unknown"]
-rustdoc-args = ["--cfg", 'target_feature="simd128"'] # otherwise WASM docs only show the fallback level
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "i686-unknown-linux-gnu",
+  "aarch64-apple-darwin",
+  "wasm32-unknown-unknown",
+]
+rustdoc-args = [
+  "--cfg",
+  'target_feature="simd128"',
+] # otherwise WASM docs only show the fallback level
+
 
 [features]
 default = ["std"]
