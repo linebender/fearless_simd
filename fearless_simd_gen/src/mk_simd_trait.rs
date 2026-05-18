@@ -1,11 +1,14 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use proc_macro2::TokenStream;
-use quote::quote;
+use proc_macro2::{Ident, Span, TokenStream};
+use quote::{format_ident, quote};
 
 use crate::{
-    ops::{OpKind, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for, vec_trait_ops_for},
+    ops::{
+        CoreOpTrait, OpKind, OpSig, TyFlavor, base_trait_ops, ops_for_type, overloaded_ops_for,
+        vec_trait_ops_for,
+    },
     types::{SIMD_TYPES, ScalarType, type_imports},
 };
 
@@ -80,14 +83,13 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             type i32s: SimdInt<Self, Element = i32, Block = i32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtTruncate<Self::f32s>
                 + core::ops::Neg<Output = Self::i32s>;
             /// A native-width SIMD mask with 8-bit lanes.
-            type mask8s: SimdMask<Self, Element = i8, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
+            type mask8s: SimdMask<Self, Element = i8> + SimdFrom<i8, Self> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
             /// A native-width SIMD mask with 16-bit lanes.
-            type mask16s: SimdMask<Self, Element = i16, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes> + Select<Self::u16s> + Select<Self::i16s> + Select<Self::mask16s>;
+            type mask16s: SimdMask<Self, Element = i16> + SimdFrom<i16, Self> + Select<Self::u16s> + Select<Self::i16s> + Select<Self::mask16s>;
             /// A native-width SIMD mask with 32-bit lanes.
-            type mask32s: SimdMask<Self, Element = i32, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes>
-                + Select<Self::f32s> + Select<Self::u32s> + Select<Self::i32s> + Select<Self::mask32s>;
+            type mask32s: SimdMask<Self, Element = i32> + SimdFrom<i32, Self> + Select<Self::f32s> + Select<Self::u32s> + Select<Self::i32s> + Select<Self::mask32s>;
             /// A native-width SIMD mask with 64-bit lanes.
-            type mask64s: SimdMask<Self, Element = i64, Block = mask64x2<Self>> + Select<Self::f64s> + Select<Self::mask64s>;
+            type mask64s: SimdMask<Self, Element = i64> + SimdFrom<i64, Self> + Select<Self::f64s> + Select<Self::mask64s>;
 
             /// This SIMD token's feature level.
             fn level(self) -> Level;
@@ -156,14 +158,11 @@ fn mk_simd_base() -> TokenStream {
             /// working with a native-width vector (e.g. [`Simd::f32s`]) and
             /// want to process data in native-width chunks.
             const N: usize;
-            /// A SIMD vector mask with the same number of elements.
+            /// A SIMD vector mask with the same number of logical lanes.
             ///
-            /// The mask element is represented as an integer which is
-            /// all-0 for `false` and all-1 for `true`. When we get deep
-            /// into AVX-512, we need to think about predication masks.
-            ///
-            /// One possibility to consider is that the SIMD trait grows
-            /// `maskAxB` associated types.
+            /// Masks intentionally do not implement [`SimdBase`]. SSE, NEON, WASM, and the
+            /// fallback backend currently store masks as all-zero/all-one integer vectors, but
+            /// AVX-512/RVV/SVE-style targets use compact predicate registers instead.
             type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
             /// A 128-bit SIMD vector of the same scalar type.
             type Block: SimdBase<S, Element = Self::Element>;
@@ -271,12 +270,50 @@ fn mk_simd_mask() -> TokenStream {
             OpKind::Overloaded(core_op) => Some(core_op),
             _ => None,
         })
-        .flat_map(|core_op| core_op.trait_bounds());
+        .flat_map(|core_op| {
+            let trait_name = Ident::new(core_op.trait_name(), Span::call_site());
+            let trait_name_assign = format_ident!("{trait_name}Assign");
+            match core_op {
+                CoreOpTrait::Not => vec![quote! { core::ops::#trait_name<Output = Self> }],
+                _ => vec![
+                    quote! { core::ops::#trait_name<Output = Self> },
+                    quote! { core::ops::#trait_name_assign },
+                ],
+            }
+        });
     quote! {
         /// Functionality implemented by SIMD masks.
-        pub trait SimdMask<S: Simd>: SimdBase<S> + Seal
+        ///
+        /// A mask has one logical boolean lane per SIMD lane. Its storage is intentionally opaque:
+        /// current backends may use all-zero/all-one integer vectors internally, while future
+        /// predicate-register backends may use a compact representation.
+        pub trait SimdMask<S: Simd>:
+            Copy + Sync + Send + 'static
+            + Seal
+            + Select<Self>
             #(+ #op_traits)*
         {
+            /// The signed integer type used when converting this mask to and from lane values.
+            ///
+            /// False lanes are encoded as all zeroes, and true lanes are encoded as all ones.
+            type Element: SimdElement;
+
+            /// This mask type's lane count.
+            const N: usize;
+
+            /// Get the [`Simd`] implementation associated with this type.
+            fn witness(&self) -> S;
+
+            /// Create a SIMD mask from signed integer mask lanes.
+            ///
+            /// The slice must be exactly the size of the SIMD mask.
+            fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+
+            /// Store this SIMD mask as signed integer mask lanes.
+            ///
+            /// The slice must be exactly the size of the SIMD mask.
+            fn store_slice(&self, slice: &mut [Self::Element]);
+
             #( #methods )*
         }
     }
@@ -286,7 +323,12 @@ fn methods_for_vec_trait(scalar: ScalarType) -> Vec<TokenStream> {
     let mut methods = vec![];
     for op in vec_trait_ops_for(scalar) {
         let doc = op.format_docstring(TyFlavor::VecImpl);
-        if let Some(method_sig) = op.vec_trait_method_sig() {
+        let method_sig = if scalar == ScalarType::Mask && matches!(op.sig, OpSig::Compare) {
+            Some(quote! { fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self })
+        } else {
+            op.vec_trait_method_sig()
+        };
+        if let Some(method_sig) = method_sig {
             methods.push(quote! {
                 #[doc = #doc]
                 #method_sig;

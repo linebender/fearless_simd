@@ -625,12 +625,11 @@ impl<S: Simd> crate::SimdCombine<S> for u8x16<S> {
         self.simd.combine_u8x16(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 16 8-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 16 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(16))]
 pub struct mask8x16<S: Simd> {
     pub(crate) val: S::mask8x16,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask8x16<S> {}
 impl<S: Simd> SimdFrom<[i8; 16], S> for mask8x16<S> {
@@ -645,27 +644,10 @@ impl<S: Simd> From<mask8x16<S>> for [i8; 16] {
         value.simd.as_array_mask8x16(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask8x16<S> {
-    type Target = [i8; 16];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask8x16(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask8x16<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask8x16(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask8x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask8x16",
-            &self.simd,
-            self.simd.as_array_ref_mask8x16(self),
-        )
+        let lanes = self.simd.as_array_mask8x16(*self);
+        crate::support::simd_debug_impl(f, "mask8x16", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i8, S> for mask8x16<S> {
@@ -674,89 +656,31 @@ impl<S: Simd> SimdFrom<i8, S> for mask8x16<S> {
         simd.splat_mask8x16(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask8x16<S> {
-    type Output = i8;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask8x16(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask8x16<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask8x16(self)[i]
-    }
-}
 impl<S: Simd> Select<mask8x16<S>> for mask8x16<S> {
     #[inline(always)]
     fn select(self, if_true: mask8x16<S>, if_false: mask8x16<S>) -> mask8x16<S> {
         self.simd.select_mask8x16(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask8x16<S> {
-    type Bytes = u8x16<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask8x16(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask8x16(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask8x16<S> {
+impl<S: Simd> crate::SimdMask<S> for mask8x16<S> {
     type Element = i8;
     const N: usize = 16;
-    type Mask = mask8x16<S>;
-    type Block = mask8x16<S>;
-    type Array = [i8; 16];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i8] {
-        self.simd.as_array_ref_mask8x16(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.simd.as_array_mut_mask8x16(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
-        simd.load_array_ref_mask8x16(slice.try_into().unwrap())
+        let slice: &[i8; 16] = slice.try_into().unwrap();
+        simd.load_array_mask8x16(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i8]) {
-        self.simd
-            .store_array_mask8x16(*self, slice.try_into().unwrap());
+        let slice: &mut [i8; 16] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask8x16(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i8) -> Self {
-        simd.splat_mask8x16(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        block
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i8) -> Self {
-        simd.load_array_mask8x16(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask8x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask8x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask8x16<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask8x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -774,13 +698,6 @@ impl<S: Simd> crate::SimdMask<S> for mask8x16<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask8x16(self)
-    }
-}
-impl<S: Simd> crate::SimdCombine<S> for mask8x16<S> {
-    type Combined = mask8x32<S>;
-    #[inline(always)]
-    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
-        self.simd.combine_mask8x16(self, rhs.simd_into(self.simd))
     }
 }
 #[doc = "A SIMD vector of 8 [`i16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i16x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i16x8::splat(simd, 1);\n    let b = i16x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = i16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an element-wise function:\n    let e = i16x8::from_fn(simd, |i| i as i16);\n}\n```"]
@@ -1153,12 +1070,11 @@ impl<S: Simd> crate::SimdCombine<S> for u16x8<S> {
         self.simd.combine_u16x8(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 8 16-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 8 logical lanes corresponding to 16-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(16))]
 pub struct mask16x8<S: Simd> {
     pub(crate) val: S::mask16x8,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask16x8<S> {}
 impl<S: Simd> SimdFrom<[i16; 8], S> for mask16x8<S> {
@@ -1173,27 +1089,10 @@ impl<S: Simd> From<mask16x8<S>> for [i16; 8] {
         value.simd.as_array_mask16x8(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask16x8<S> {
-    type Target = [i16; 8];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask16x8(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask16x8<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask16x8(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask16x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask16x8",
-            &self.simd,
-            self.simd.as_array_ref_mask16x8(self),
-        )
+        let lanes = self.simd.as_array_mask16x8(*self);
+        crate::support::simd_debug_impl(f, "mask16x8", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i16, S> for mask16x8<S> {
@@ -1202,89 +1101,31 @@ impl<S: Simd> SimdFrom<i16, S> for mask16x8<S> {
         simd.splat_mask16x8(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask16x8<S> {
-    type Output = i16;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask16x8(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask16x8<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask16x8(self)[i]
-    }
-}
 impl<S: Simd> Select<mask16x8<S>> for mask16x8<S> {
     #[inline(always)]
     fn select(self, if_true: mask16x8<S>, if_false: mask16x8<S>) -> mask16x8<S> {
         self.simd.select_mask16x8(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask16x8<S> {
-    type Bytes = u8x16<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask16x8(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask16x8(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask16x8<S> {
+impl<S: Simd> crate::SimdMask<S> for mask16x8<S> {
     type Element = i16;
     const N: usize = 8;
-    type Mask = mask16x8<S>;
-    type Block = mask16x8<S>;
-    type Array = [i16; 8];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i16] {
-        self.simd.as_array_ref_mask16x8(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.simd.as_array_mut_mask16x8(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
-        simd.load_array_ref_mask16x8(slice.try_into().unwrap())
+        let slice: &[i16; 8] = slice.try_into().unwrap();
+        simd.load_array_mask16x8(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i16]) {
-        self.simd
-            .store_array_mask16x8(*self, slice.try_into().unwrap());
+        let slice: &mut [i16; 8] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask16x8(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i16) -> Self {
-        simd.splat_mask16x8(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        block
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i16) -> Self {
-        simd.load_array_mask16x8(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask16x8::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask16x8::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask16x8<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask16x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -1302,13 +1143,6 @@ impl<S: Simd> crate::SimdMask<S> for mask16x8<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask16x8(self)
-    }
-}
-impl<S: Simd> crate::SimdCombine<S> for mask16x8<S> {
-    type Combined = mask16x16<S>;
-    #[inline(always)]
-    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
-        self.simd.combine_mask16x8(self, rhs.simd_into(self.simd))
     }
 }
 #[doc = "A SIMD vector of 4 [`i32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i32x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i32x4::splat(simd, 1);\n    let b = i32x4::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i32x4::from_slice(simd, &[1, 2, 3, 4]);\n\n    // From an array:\n    let d = i32x4::simd_from(simd, [1, 2, 3, 4]);\n\n    // From an element-wise function:\n    let e = i32x4::from_fn(simd, |i| i as i32);\n}\n```"]
@@ -1705,12 +1539,11 @@ impl<S: Simd> crate::SimdCombine<S> for u32x4<S> {
         self.simd.combine_u32x4(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 4 32-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 4 logical lanes corresponding to 32-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(16))]
 pub struct mask32x4<S: Simd> {
     pub(crate) val: S::mask32x4,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask32x4<S> {}
 impl<S: Simd> SimdFrom<[i32; 4], S> for mask32x4<S> {
@@ -1725,27 +1558,10 @@ impl<S: Simd> From<mask32x4<S>> for [i32; 4] {
         value.simd.as_array_mask32x4(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask32x4<S> {
-    type Target = [i32; 4];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask32x4(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask32x4<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask32x4(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask32x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask32x4",
-            &self.simd,
-            self.simd.as_array_ref_mask32x4(self),
-        )
+        let lanes = self.simd.as_array_mask32x4(*self);
+        crate::support::simd_debug_impl(f, "mask32x4", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i32, S> for mask32x4<S> {
@@ -1754,89 +1570,31 @@ impl<S: Simd> SimdFrom<i32, S> for mask32x4<S> {
         simd.splat_mask32x4(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask32x4<S> {
-    type Output = i32;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask32x4(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask32x4<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask32x4(self)[i]
-    }
-}
 impl<S: Simd> Select<mask32x4<S>> for mask32x4<S> {
     #[inline(always)]
     fn select(self, if_true: mask32x4<S>, if_false: mask32x4<S>) -> mask32x4<S> {
         self.simd.select_mask32x4(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask32x4<S> {
-    type Bytes = u8x16<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask32x4(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask32x4(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask32x4<S> {
+impl<S: Simd> crate::SimdMask<S> for mask32x4<S> {
     type Element = i32;
     const N: usize = 4;
-    type Mask = mask32x4<S>;
-    type Block = mask32x4<S>;
-    type Array = [i32; 4];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i32] {
-        self.simd.as_array_ref_mask32x4(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.simd.as_array_mut_mask32x4(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
-        simd.load_array_ref_mask32x4(slice.try_into().unwrap())
+        let slice: &[i32; 4] = slice.try_into().unwrap();
+        simd.load_array_mask32x4(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i32]) {
-        self.simd
-            .store_array_mask32x4(*self, slice.try_into().unwrap());
+        let slice: &mut [i32; 4] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask32x4(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i32) -> Self {
-        simd.splat_mask32x4(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        block
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i32) -> Self {
-        simd.load_array_mask32x4(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask32x4::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask32x4::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask32x4<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask32x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -1854,13 +1612,6 @@ impl<S: Simd> crate::SimdMask<S> for mask32x4<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask32x4(self)
-    }
-}
-impl<S: Simd> crate::SimdCombine<S> for mask32x4<S> {
-    type Combined = mask32x8<S>;
-    #[inline(always)]
-    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
-        self.simd.combine_mask32x4(self, rhs.simd_into(self.simd))
     }
 }
 #[doc = "A SIMD vector of 2 [`f64`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f64x2};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f64x2::splat(simd, 1.0);\n    let b = f64x2::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f64x2::from_slice(simd, &[1.0, 2.0]);\n\n    // From an array:\n    let d = f64x2::simd_from(simd, [1.0, 2.0]);\n\n    // From an element-wise function:\n    let e = f64x2::from_fn(simd, |i| i as f64);\n}\n```"]
@@ -2098,12 +1849,11 @@ impl<S: Simd> crate::SimdCombine<S> for f64x2<S> {
         self.simd.combine_f64x2(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 2 64-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 2 logical lanes corresponding to 64-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(16))]
 pub struct mask64x2<S: Simd> {
     pub(crate) val: S::mask64x2,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask64x2<S> {}
 impl<S: Simd> SimdFrom<[i64; 2], S> for mask64x2<S> {
@@ -2118,27 +1868,10 @@ impl<S: Simd> From<mask64x2<S>> for [i64; 2] {
         value.simd.as_array_mask64x2(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask64x2<S> {
-    type Target = [i64; 2];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask64x2(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask64x2<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask64x2(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask64x2<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask64x2",
-            &self.simd,
-            self.simd.as_array_ref_mask64x2(self),
-        )
+        let lanes = self.simd.as_array_mask64x2(*self);
+        crate::support::simd_debug_impl(f, "mask64x2", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i64, S> for mask64x2<S> {
@@ -2147,89 +1880,31 @@ impl<S: Simd> SimdFrom<i64, S> for mask64x2<S> {
         simd.splat_mask64x2(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask64x2<S> {
-    type Output = i64;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask64x2(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask64x2<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask64x2(self)[i]
-    }
-}
 impl<S: Simd> Select<mask64x2<S>> for mask64x2<S> {
     #[inline(always)]
     fn select(self, if_true: mask64x2<S>, if_false: mask64x2<S>) -> mask64x2<S> {
         self.simd.select_mask64x2(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask64x2<S> {
-    type Bytes = u8x16<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask64x2(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask64x2(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask64x2<S> {
+impl<S: Simd> crate::SimdMask<S> for mask64x2<S> {
     type Element = i64;
     const N: usize = 2;
-    type Mask = mask64x2<S>;
-    type Block = mask64x2<S>;
-    type Array = [i64; 2];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i64] {
-        self.simd.as_array_ref_mask64x2(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.simd.as_array_mut_mask64x2(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
-        simd.load_array_ref_mask64x2(slice.try_into().unwrap())
+        let slice: &[i64; 2] = slice.try_into().unwrap();
+        simd.load_array_mask64x2(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i64]) {
-        self.simd
-            .store_array_mask64x2(*self, slice.try_into().unwrap());
+        let slice: &mut [i64; 2] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask64x2(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i64) -> Self {
-        simd.splat_mask64x2(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        block
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i64) -> Self {
-        simd.load_array_mask64x2(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask64x2::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask64x2::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask64x2<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask64x2(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -2247,13 +1922,6 @@ impl<S: Simd> crate::SimdMask<S> for mask64x2<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask64x2(self)
-    }
-}
-impl<S: Simd> crate::SimdCombine<S> for mask64x2<S> {
-    type Combined = mask64x4<S>;
-    #[inline(always)]
-    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
-        self.simd.combine_mask64x2(self, rhs.simd_into(self.simd))
     }
 }
 #[doc = "A SIMD vector of 8 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x8::splat(simd, 1.0);\n    let b = f32x8::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an array:\n    let d = f32x8::simd_from(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an element-wise function:\n    let e = f32x8::from_fn(simd, |i| i as f32);\n    # use fearless_simd::f32x4;\n    // From `Self::Block`:\n    let f = f32x8::block_splat(f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]));\n}\n```"]
@@ -2896,12 +2564,11 @@ impl<S: Simd> crate::SimdCombine<S> for u8x32<S> {
         self.simd.combine_u8x32(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 32 8-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 32 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(32))]
 pub struct mask8x32<S: Simd> {
     pub(crate) val: S::mask8x32,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask8x32<S> {}
 impl<S: Simd> SimdFrom<[i8; 32], S> for mask8x32<S> {
@@ -2916,27 +2583,10 @@ impl<S: Simd> From<mask8x32<S>> for [i8; 32] {
         value.simd.as_array_mask8x32(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask8x32<S> {
-    type Target = [i8; 32];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask8x32(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask8x32<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask8x32(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask8x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask8x32",
-            &self.simd,
-            self.simd.as_array_ref_mask8x32(self),
-        )
+        let lanes = self.simd.as_array_mask8x32(*self);
+        crate::support::simd_debug_impl(f, "mask8x32", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i8, S> for mask8x32<S> {
@@ -2945,89 +2595,31 @@ impl<S: Simd> SimdFrom<i8, S> for mask8x32<S> {
         simd.splat_mask8x32(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask8x32<S> {
-    type Output = i8;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask8x32(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask8x32<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask8x32(self)[i]
-    }
-}
 impl<S: Simd> Select<mask8x32<S>> for mask8x32<S> {
     #[inline(always)]
     fn select(self, if_true: mask8x32<S>, if_false: mask8x32<S>) -> mask8x32<S> {
         self.simd.select_mask8x32(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask8x32<S> {
-    type Bytes = u8x32<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask8x32(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask8x32(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask8x32<S> {
+impl<S: Simd> crate::SimdMask<S> for mask8x32<S> {
     type Element = i8;
     const N: usize = 32;
-    type Mask = mask8x32<S>;
-    type Block = mask8x16<S>;
-    type Array = [i8; 32];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i8] {
-        self.simd.as_array_ref_mask8x32(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.simd.as_array_mut_mask8x32(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
-        simd.load_array_ref_mask8x32(slice.try_into().unwrap())
+        let slice: &[i8; 32] = slice.try_into().unwrap();
+        simd.load_array_mask8x32(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i8]) {
-        self.simd
-            .store_array_mask8x32(*self, slice.try_into().unwrap());
+        let slice: &mut [i8; 32] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask8x32(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i8) -> Self {
-        simd.splat_mask8x32(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        block.simd.combine_mask8x16(block, block)
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i8) -> Self {
-        simd.load_array_mask8x32(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask8x32::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask8x32::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask8x32<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask8x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -3045,20 +2637,6 @@ impl<S: Simd> crate::SimdMask<S> for mask8x32<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask8x32(self)
-    }
-}
-impl<S: Simd> crate::SimdSplit<S> for mask8x32<S> {
-    type Split = mask8x16<S>;
-    #[inline(always)]
-    fn split(self) -> (Self::Split, Self::Split) {
-        self.simd.split_mask8x32(self)
-    }
-}
-impl<S: Simd> crate::SimdCombine<S> for mask8x32<S> {
-    type Combined = mask8x64<S>;
-    #[inline(always)]
-    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
-        self.simd.combine_mask8x32(self, rhs.simd_into(self.simd))
     }
 }
 #[doc = "A SIMD vector of 16 [`i16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i16x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i16x16::splat(simd, 1);\n    let b = i16x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i16x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = i16x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an element-wise function:\n    let e = i16x16::from_fn(simd, |i| i as i16);\n    # use fearless_simd::i16x8;\n    // From `Self::Block`:\n    let f = i16x16::block_splat(i16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
@@ -3457,12 +3035,11 @@ impl<S: Simd> crate::SimdCombine<S> for u16x16<S> {
         self.simd.combine_u16x16(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 16 16-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 16 logical lanes corresponding to 16-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(32))]
 pub struct mask16x16<S: Simd> {
     pub(crate) val: S::mask16x16,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask16x16<S> {}
 impl<S: Simd> SimdFrom<[i16; 16], S> for mask16x16<S> {
@@ -3477,27 +3054,10 @@ impl<S: Simd> From<mask16x16<S>> for [i16; 16] {
         value.simd.as_array_mask16x16(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask16x16<S> {
-    type Target = [i16; 16];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask16x16(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask16x16<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask16x16(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask16x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask16x16",
-            &self.simd,
-            self.simd.as_array_ref_mask16x16(self),
-        )
+        let lanes = self.simd.as_array_mask16x16(*self);
+        crate::support::simd_debug_impl(f, "mask16x16", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i16, S> for mask16x16<S> {
@@ -3506,89 +3066,31 @@ impl<S: Simd> SimdFrom<i16, S> for mask16x16<S> {
         simd.splat_mask16x16(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask16x16<S> {
-    type Output = i16;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask16x16(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask16x16<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask16x16(self)[i]
-    }
-}
 impl<S: Simd> Select<mask16x16<S>> for mask16x16<S> {
     #[inline(always)]
     fn select(self, if_true: mask16x16<S>, if_false: mask16x16<S>) -> mask16x16<S> {
         self.simd.select_mask16x16(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask16x16<S> {
-    type Bytes = u8x32<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask16x16(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask16x16(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask16x16<S> {
+impl<S: Simd> crate::SimdMask<S> for mask16x16<S> {
     type Element = i16;
     const N: usize = 16;
-    type Mask = mask16x16<S>;
-    type Block = mask16x8<S>;
-    type Array = [i16; 16];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i16] {
-        self.simd.as_array_ref_mask16x16(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.simd.as_array_mut_mask16x16(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
-        simd.load_array_ref_mask16x16(slice.try_into().unwrap())
+        let slice: &[i16; 16] = slice.try_into().unwrap();
+        simd.load_array_mask16x16(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i16]) {
-        self.simd
-            .store_array_mask16x16(*self, slice.try_into().unwrap());
+        let slice: &mut [i16; 16] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask16x16(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i16) -> Self {
-        simd.splat_mask16x16(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        block.simd.combine_mask16x8(block, block)
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i16) -> Self {
-        simd.load_array_mask16x16(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask16x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask16x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask16x16<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask16x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -3606,20 +3108,6 @@ impl<S: Simd> crate::SimdMask<S> for mask16x16<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask16x16(self)
-    }
-}
-impl<S: Simd> crate::SimdSplit<S> for mask16x16<S> {
-    type Split = mask16x8<S>;
-    #[inline(always)]
-    fn split(self) -> (Self::Split, Self::Split) {
-        self.simd.split_mask16x16(self)
-    }
-}
-impl<S: Simd> crate::SimdCombine<S> for mask16x16<S> {
-    type Combined = mask16x32<S>;
-    #[inline(always)]
-    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
-        self.simd.combine_mask16x16(self, rhs.simd_into(self.simd))
     }
 }
 #[doc = "A SIMD vector of 8 [`i32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i32x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i32x8::splat(simd, 1);\n    let b = i32x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = i32x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an element-wise function:\n    let e = i32x8::from_fn(simd, |i| i as i32);\n    # use fearless_simd::i32x4;\n    // From `Self::Block`:\n    let f = i32x8::block_splat(i32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
@@ -4030,12 +3518,11 @@ impl<S: Simd> crate::SimdCombine<S> for u32x8<S> {
         self.simd.combine_u32x8(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 8 32-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 8 logical lanes corresponding to 32-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(32))]
 pub struct mask32x8<S: Simd> {
     pub(crate) val: S::mask32x8,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask32x8<S> {}
 impl<S: Simd> SimdFrom<[i32; 8], S> for mask32x8<S> {
@@ -4050,27 +3537,10 @@ impl<S: Simd> From<mask32x8<S>> for [i32; 8] {
         value.simd.as_array_mask32x8(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask32x8<S> {
-    type Target = [i32; 8];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask32x8(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask32x8<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask32x8(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask32x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask32x8",
-            &self.simd,
-            self.simd.as_array_ref_mask32x8(self),
-        )
+        let lanes = self.simd.as_array_mask32x8(*self);
+        crate::support::simd_debug_impl(f, "mask32x8", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i32, S> for mask32x8<S> {
@@ -4079,89 +3549,31 @@ impl<S: Simd> SimdFrom<i32, S> for mask32x8<S> {
         simd.splat_mask32x8(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask32x8<S> {
-    type Output = i32;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask32x8(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask32x8<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask32x8(self)[i]
-    }
-}
 impl<S: Simd> Select<mask32x8<S>> for mask32x8<S> {
     #[inline(always)]
     fn select(self, if_true: mask32x8<S>, if_false: mask32x8<S>) -> mask32x8<S> {
         self.simd.select_mask32x8(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask32x8<S> {
-    type Bytes = u8x32<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask32x8(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask32x8(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask32x8<S> {
+impl<S: Simd> crate::SimdMask<S> for mask32x8<S> {
     type Element = i32;
     const N: usize = 8;
-    type Mask = mask32x8<S>;
-    type Block = mask32x4<S>;
-    type Array = [i32; 8];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i32] {
-        self.simd.as_array_ref_mask32x8(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.simd.as_array_mut_mask32x8(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
-        simd.load_array_ref_mask32x8(slice.try_into().unwrap())
+        let slice: &[i32; 8] = slice.try_into().unwrap();
+        simd.load_array_mask32x8(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i32]) {
-        self.simd
-            .store_array_mask32x8(*self, slice.try_into().unwrap());
+        let slice: &mut [i32; 8] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask32x8(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i32) -> Self {
-        simd.splat_mask32x8(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        block.simd.combine_mask32x4(block, block)
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i32) -> Self {
-        simd.load_array_mask32x8(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask32x8::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask32x8::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask32x8<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask32x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -4179,20 +3591,6 @@ impl<S: Simd> crate::SimdMask<S> for mask32x8<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask32x8(self)
-    }
-}
-impl<S: Simd> crate::SimdSplit<S> for mask32x8<S> {
-    type Split = mask32x4<S>;
-    #[inline(always)]
-    fn split(self) -> (Self::Split, Self::Split) {
-        self.simd.split_mask32x8(self)
-    }
-}
-impl<S: Simd> crate::SimdCombine<S> for mask32x8<S> {
-    type Combined = mask32x16<S>;
-    #[inline(always)]
-    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
-        self.simd.combine_mask32x8(self, rhs.simd_into(self.simd))
     }
 }
 #[doc = "A SIMD vector of 4 [`f64`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f64x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f64x4::splat(simd, 1.0);\n    let b = f64x4::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f64x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);\n\n    // From an array:\n    let d = f64x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]);\n\n    // From an element-wise function:\n    let e = f64x4::from_fn(simd, |i| i as f64);\n    # use fearless_simd::f64x2;\n    // From `Self::Block`:\n    let f = f64x4::block_splat(f64x2::simd_from(simd, [1.0, 2.0]));\n}\n```"]
@@ -4437,12 +3835,11 @@ impl<S: Simd> crate::SimdCombine<S> for f64x4<S> {
         self.simd.combine_f64x4(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 4 64-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 4 logical lanes corresponding to 64-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(32))]
 pub struct mask64x4<S: Simd> {
     pub(crate) val: S::mask64x4,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask64x4<S> {}
 impl<S: Simd> SimdFrom<[i64; 4], S> for mask64x4<S> {
@@ -4457,27 +3854,10 @@ impl<S: Simd> From<mask64x4<S>> for [i64; 4] {
         value.simd.as_array_mask64x4(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask64x4<S> {
-    type Target = [i64; 4];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask64x4(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask64x4<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask64x4(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask64x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask64x4",
-            &self.simd,
-            self.simd.as_array_ref_mask64x4(self),
-        )
+        let lanes = self.simd.as_array_mask64x4(*self);
+        crate::support::simd_debug_impl(f, "mask64x4", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i64, S> for mask64x4<S> {
@@ -4486,89 +3866,31 @@ impl<S: Simd> SimdFrom<i64, S> for mask64x4<S> {
         simd.splat_mask64x4(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask64x4<S> {
-    type Output = i64;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask64x4(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask64x4<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask64x4(self)[i]
-    }
-}
 impl<S: Simd> Select<mask64x4<S>> for mask64x4<S> {
     #[inline(always)]
     fn select(self, if_true: mask64x4<S>, if_false: mask64x4<S>) -> mask64x4<S> {
         self.simd.select_mask64x4(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask64x4<S> {
-    type Bytes = u8x32<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask64x4(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask64x4(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask64x4<S> {
+impl<S: Simd> crate::SimdMask<S> for mask64x4<S> {
     type Element = i64;
     const N: usize = 4;
-    type Mask = mask64x4<S>;
-    type Block = mask64x2<S>;
-    type Array = [i64; 4];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i64] {
-        self.simd.as_array_ref_mask64x4(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.simd.as_array_mut_mask64x4(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
-        simd.load_array_ref_mask64x4(slice.try_into().unwrap())
+        let slice: &[i64; 4] = slice.try_into().unwrap();
+        simd.load_array_mask64x4(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i64]) {
-        self.simd
-            .store_array_mask64x4(*self, slice.try_into().unwrap());
+        let slice: &mut [i64; 4] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask64x4(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i64) -> Self {
-        simd.splat_mask64x4(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        block.simd.combine_mask64x2(block, block)
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i64) -> Self {
-        simd.load_array_mask64x4(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask64x4::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask64x4::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask64x4<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask64x4(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -4586,20 +3908,6 @@ impl<S: Simd> crate::SimdMask<S> for mask64x4<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask64x4(self)
-    }
-}
-impl<S: Simd> crate::SimdSplit<S> for mask64x4<S> {
-    type Split = mask64x2<S>;
-    #[inline(always)]
-    fn split(self) -> (Self::Split, Self::Split) {
-        self.simd.split_mask64x4(self)
-    }
-}
-impl<S: Simd> crate::SimdCombine<S> for mask64x4<S> {
-    type Combined = mask64x8<S>;
-    #[inline(always)]
-    fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
-        self.simd.combine_mask64x4(self, rhs.simd_into(self.simd))
     }
 }
 #[doc = "A SIMD vector of 16 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x16::splat(simd, 1.0);\n    let b = f32x16::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x16::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);\n\n    // From an array:\n    let d = f32x16::simd_from(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);\n\n    // From an element-wise function:\n    let e = f32x16::from_fn(simd, |i| i as f32);\n    # use fearless_simd::f32x4;\n    // From `Self::Block`:\n    let f = f32x16::block_splat(f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]));\n}\n```"]
@@ -5230,12 +4538,11 @@ impl<S: Simd> crate::SimdSplit<S> for u8x64<S> {
         self.simd.split_u8x64(self)
     }
 }
-#[doc = "A SIMD mask of 64 8-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 64 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(64))]
 pub struct mask8x64<S: Simd> {
     pub(crate) val: S::mask8x64,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask8x64<S> {}
 impl<S: Simd> SimdFrom<[i8; 64], S> for mask8x64<S> {
@@ -5250,27 +4557,10 @@ impl<S: Simd> From<mask8x64<S>> for [i8; 64] {
         value.simd.as_array_mask8x64(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask8x64<S> {
-    type Target = [i8; 64];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask8x64(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask8x64<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask8x64(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask8x64<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask8x64",
-            &self.simd,
-            self.simd.as_array_ref_mask8x64(self),
-        )
+        let lanes = self.simd.as_array_mask8x64(*self);
+        crate::support::simd_debug_impl(f, "mask8x64", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i8, S> for mask8x64<S> {
@@ -5279,90 +4569,31 @@ impl<S: Simd> SimdFrom<i8, S> for mask8x64<S> {
         simd.splat_mask8x64(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask8x64<S> {
-    type Output = i8;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask8x64(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask8x64<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask8x64(self)[i]
-    }
-}
 impl<S: Simd> Select<mask8x64<S>> for mask8x64<S> {
     #[inline(always)]
     fn select(self, if_true: mask8x64<S>, if_false: mask8x64<S>) -> mask8x64<S> {
         self.simd.select_mask8x64(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask8x64<S> {
-    type Bytes = u8x64<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask8x64(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask8x64(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask8x64<S> {
+impl<S: Simd> crate::SimdMask<S> for mask8x64<S> {
     type Element = i8;
     const N: usize = 64;
-    type Mask = mask8x64<S>;
-    type Block = mask8x16<S>;
-    type Array = [i8; 64];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i8] {
-        self.simd.as_array_ref_mask8x64(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.simd.as_array_mut_mask8x64(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
-        simd.load_array_ref_mask8x64(slice.try_into().unwrap())
+        let slice: &[i8; 64] = slice.try_into().unwrap();
+        simd.load_array_mask8x64(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i8]) {
-        self.simd
-            .store_array_mask8x64(*self, slice.try_into().unwrap());
+        let slice: &mut [i8; 64] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask8x64(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i8) -> Self {
-        simd.splat_mask8x64(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        let block2 = block.simd.combine_mask8x16(block, block);
-        block2.simd.combine_mask8x32(block2, block2)
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i8) -> Self {
-        simd.load_array_mask8x64(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask8x64::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask8x64::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask8x64<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask8x64(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -5380,13 +4611,6 @@ impl<S: Simd> crate::SimdMask<S> for mask8x64<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask8x64(self)
-    }
-}
-impl<S: Simd> crate::SimdSplit<S> for mask8x64<S> {
-    type Split = mask8x32<S>;
-    #[inline(always)]
-    fn split(self) -> (Self::Split, Self::Split) {
-        self.simd.split_mask8x64(self)
     }
 }
 #[doc = "A SIMD vector of 32 [`i16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i16x32};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i16x32::splat(simd, 1);\n    let b = i16x32::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i16x32::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an array:\n    let d = i16x32::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an element-wise function:\n    let e = i16x32::from_fn(simd, |i| i as i16);\n    # use fearless_simd::i16x8;\n    // From `Self::Block`:\n    let f = i16x32::block_splat(i16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
@@ -5773,12 +4997,11 @@ impl<S: Simd> crate::SimdSplit<S> for u16x32<S> {
         self.simd.split_u16x32(self)
     }
 }
-#[doc = "A SIMD mask of 32 16-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 32 logical lanes corresponding to 16-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(64))]
 pub struct mask16x32<S: Simd> {
     pub(crate) val: S::mask16x32,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask16x32<S> {}
 impl<S: Simd> SimdFrom<[i16; 32], S> for mask16x32<S> {
@@ -5793,27 +5016,10 @@ impl<S: Simd> From<mask16x32<S>> for [i16; 32] {
         value.simd.as_array_mask16x32(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask16x32<S> {
-    type Target = [i16; 32];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask16x32(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask16x32<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask16x32(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask16x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask16x32",
-            &self.simd,
-            self.simd.as_array_ref_mask16x32(self),
-        )
+        let lanes = self.simd.as_array_mask16x32(*self);
+        crate::support::simd_debug_impl(f, "mask16x32", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i16, S> for mask16x32<S> {
@@ -5822,90 +5028,31 @@ impl<S: Simd> SimdFrom<i16, S> for mask16x32<S> {
         simd.splat_mask16x32(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask16x32<S> {
-    type Output = i16;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask16x32(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask16x32<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask16x32(self)[i]
-    }
-}
 impl<S: Simd> Select<mask16x32<S>> for mask16x32<S> {
     #[inline(always)]
     fn select(self, if_true: mask16x32<S>, if_false: mask16x32<S>) -> mask16x32<S> {
         self.simd.select_mask16x32(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask16x32<S> {
-    type Bytes = u8x64<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask16x32(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask16x32(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask16x32<S> {
+impl<S: Simd> crate::SimdMask<S> for mask16x32<S> {
     type Element = i16;
     const N: usize = 32;
-    type Mask = mask16x32<S>;
-    type Block = mask16x8<S>;
-    type Array = [i16; 32];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i16] {
-        self.simd.as_array_ref_mask16x32(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.simd.as_array_mut_mask16x32(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
-        simd.load_array_ref_mask16x32(slice.try_into().unwrap())
+        let slice: &[i16; 32] = slice.try_into().unwrap();
+        simd.load_array_mask16x32(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i16]) {
-        self.simd
-            .store_array_mask16x32(*self, slice.try_into().unwrap());
+        let slice: &mut [i16; 32] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask16x32(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i16) -> Self {
-        simd.splat_mask16x32(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        let block2 = block.simd.combine_mask16x8(block, block);
-        block2.simd.combine_mask16x16(block2, block2)
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i16) -> Self {
-        simd.load_array_mask16x32(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask16x32::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask16x32::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask16x32<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask16x32(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -5923,13 +5070,6 @@ impl<S: Simd> crate::SimdMask<S> for mask16x32<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask16x32(self)
-    }
-}
-impl<S: Simd> crate::SimdSplit<S> for mask16x32<S> {
-    type Split = mask16x16<S>;
-    #[inline(always)]
-    fn split(self) -> (Self::Split, Self::Split) {
-        self.simd.split_mask16x32(self)
     }
 }
 #[doc = "A SIMD vector of 16 [`i32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i32x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i32x16::splat(simd, 1);\n    let b = i32x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i32x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = i32x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an element-wise function:\n    let e = i32x16::from_fn(simd, |i| i as i32);\n    # use fearless_simd::i32x4;\n    // From `Self::Block`:\n    let f = i32x16::block_splat(i32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
@@ -6340,12 +5480,11 @@ impl<S: Simd> crate::SimdSplit<S> for u32x16<S> {
         self.simd.split_u32x16(self)
     }
 }
-#[doc = "A SIMD mask of 16 32-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 16 logical lanes corresponding to 32-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(64))]
 pub struct mask32x16<S: Simd> {
     pub(crate) val: S::mask32x16,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask32x16<S> {}
 impl<S: Simd> SimdFrom<[i32; 16], S> for mask32x16<S> {
@@ -6360,27 +5499,10 @@ impl<S: Simd> From<mask32x16<S>> for [i32; 16] {
         value.simd.as_array_mask32x16(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask32x16<S> {
-    type Target = [i32; 16];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask32x16(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask32x16<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask32x16(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask32x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask32x16",
-            &self.simd,
-            self.simd.as_array_ref_mask32x16(self),
-        )
+        let lanes = self.simd.as_array_mask32x16(*self);
+        crate::support::simd_debug_impl(f, "mask32x16", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i32, S> for mask32x16<S> {
@@ -6389,90 +5511,31 @@ impl<S: Simd> SimdFrom<i32, S> for mask32x16<S> {
         simd.splat_mask32x16(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask32x16<S> {
-    type Output = i32;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask32x16(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask32x16<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask32x16(self)[i]
-    }
-}
 impl<S: Simd> Select<mask32x16<S>> for mask32x16<S> {
     #[inline(always)]
     fn select(self, if_true: mask32x16<S>, if_false: mask32x16<S>) -> mask32x16<S> {
         self.simd.select_mask32x16(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask32x16<S> {
-    type Bytes = u8x64<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask32x16(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask32x16(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask32x16<S> {
+impl<S: Simd> crate::SimdMask<S> for mask32x16<S> {
     type Element = i32;
     const N: usize = 16;
-    type Mask = mask32x16<S>;
-    type Block = mask32x4<S>;
-    type Array = [i32; 16];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i32] {
-        self.simd.as_array_ref_mask32x16(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.simd.as_array_mut_mask32x16(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
-        simd.load_array_ref_mask32x16(slice.try_into().unwrap())
+        let slice: &[i32; 16] = slice.try_into().unwrap();
+        simd.load_array_mask32x16(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i32]) {
-        self.simd
-            .store_array_mask32x16(*self, slice.try_into().unwrap());
+        let slice: &mut [i32; 16] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask32x16(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i32) -> Self {
-        simd.splat_mask32x16(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        let block2 = block.simd.combine_mask32x4(block, block);
-        block2.simd.combine_mask32x8(block2, block2)
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i32) -> Self {
-        simd.load_array_mask32x16(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask32x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask32x16::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask32x16<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask32x16(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -6490,13 +5553,6 @@ impl<S: Simd> crate::SimdMask<S> for mask32x16<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask32x16(self)
-    }
-}
-impl<S: Simd> crate::SimdSplit<S> for mask32x16<S> {
-    type Split = mask32x8<S>;
-    #[inline(always)]
-    fn split(self) -> (Self::Split, Self::Split) {
-        self.simd.split_mask32x16(self)
     }
 }
 #[doc = "A SIMD vector of 8 [`f64`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f64x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f64x8::splat(simd, 1.0);\n    let b = f64x8::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f64x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an array:\n    let d = f64x8::simd_from(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an element-wise function:\n    let e = f64x8::from_fn(simd, |i| i as f64);\n    # use fearless_simd::f64x2;\n    // From `Self::Block`:\n    let f = f64x8::block_splat(f64x2::simd_from(simd, [1.0, 2.0]));\n}\n```"]
@@ -6735,12 +5791,11 @@ impl<S: Simd> crate::SimdSplit<S> for f64x8<S> {
         self.simd.split_f64x8(self)
     }
 }
-#[doc = "A SIMD mask of 8 64-bit elements.\n\nWhen created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\"."]
+#[doc = "A SIMD mask of 8 logical lanes corresponding to 64-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
 #[derive(Clone, Copy)]
-#[repr(C, align(64))]
 pub struct mask64x8<S: Simd> {
     pub(crate) val: S::mask64x8,
-    pub simd: S,
+    pub(crate) simd: S,
 }
 impl<S: Simd> Seal for mask64x8<S> {}
 impl<S: Simd> SimdFrom<[i64; 8], S> for mask64x8<S> {
@@ -6755,27 +5810,10 @@ impl<S: Simd> From<mask64x8<S>> for [i64; 8] {
         value.simd.as_array_mask64x8(value)
     }
 }
-impl<S: Simd> core::ops::Deref for mask64x8<S> {
-    type Target = [i64; 8];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_mask64x8(self)
-    }
-}
-impl<S: Simd> core::ops::DerefMut for mask64x8<S> {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_mask64x8(self)
-    }
-}
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask64x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "mask64x8",
-            &self.simd,
-            self.simd.as_array_ref_mask64x8(self),
-        )
+        let lanes = self.simd.as_array_mask64x8(*self);
+        crate::support::simd_debug_impl(f, "mask64x8", &self.simd, &lanes)
     }
 }
 impl<S: Simd> SimdFrom<i64, S> for mask64x8<S> {
@@ -6784,90 +5822,31 @@ impl<S: Simd> SimdFrom<i64, S> for mask64x8<S> {
         simd.splat_mask64x8(value)
     }
 }
-impl<S: Simd> core::ops::Index<usize> for mask64x8<S> {
-    type Output = i64;
-    #[inline(always)]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_mask64x8(self)[i]
-    }
-}
-impl<S: Simd> core::ops::IndexMut<usize> for mask64x8<S> {
-    #[inline(always)]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_mask64x8(self)[i]
-    }
-}
 impl<S: Simd> Select<mask64x8<S>> for mask64x8<S> {
     #[inline(always)]
     fn select(self, if_true: mask64x8<S>, if_false: mask64x8<S>) -> mask64x8<S> {
         self.simd.select_mask64x8(self, if_true, if_false)
     }
 }
-impl<S: Simd> Bytes for mask64x8<S> {
-    type Bytes = u8x64<S>;
-    #[inline(always)]
-    fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_mask64x8(self)
-    }
-    #[inline(always)]
-    fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_mask64x8(value)
-    }
-}
-impl<S: Simd> SimdBase<S> for mask64x8<S> {
+impl<S: Simd> crate::SimdMask<S> for mask64x8<S> {
     type Element = i64;
     const N: usize = 8;
-    type Mask = mask64x8<S>;
-    type Block = mask64x2<S>;
-    type Array = [i64; 8];
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
     }
     #[inline(always)]
-    fn as_slice(&self) -> &[i64] {
-        self.simd.as_array_ref_mask64x8(self).as_slice()
-    }
-    #[inline(always)]
-    fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.simd.as_array_mut_mask64x8(self).as_mut_slice()
-    }
-    #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
-        simd.load_array_ref_mask64x8(slice.try_into().unwrap())
+        let slice: &[i64; 8] = slice.try_into().unwrap();
+        simd.load_array_mask64x8(*slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i64]) {
-        self.simd
-            .store_array_mask64x8(*self, slice.try_into().unwrap());
+        let slice: &mut [i64; 8] = slice.try_into().unwrap();
+        *slice = self.simd.as_array_mask64x8(*self);
     }
     #[inline(always)]
-    fn splat(simd: S, val: i64) -> Self {
-        simd.splat_mask64x8(val)
-    }
-    #[inline(always)]
-    fn block_splat(block: Self::Block) -> Self {
-        let block2 = block.simd.combine_mask64x2(block, block);
-        block2.simd.combine_mask64x4(block2, block2)
-    }
-    #[inline(always)]
-    fn from_fn(simd: S, f: impl FnMut(usize) -> i64) -> Self {
-        simd.load_array_mask64x8(core::array::from_fn(f))
-    }
-    #[inline(always)]
-    fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_mask64x8::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-    #[inline(always)]
-    fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
-        self.simd
-            .slide_within_blocks_mask64x8::<SHIFT>(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> crate::SimdMask<S> for mask64x8<S> {
-    #[inline(always)]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask {
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
         self.simd.simd_eq_mask64x8(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
@@ -6885,12 +5864,5 @@ impl<S: Simd> crate::SimdMask<S> for mask64x8<S> {
     #[inline(always)]
     fn all_false(self) -> bool {
         self.simd.all_false_mask64x8(self)
-    }
-}
-impl<S: Simd> crate::SimdSplit<S> for mask64x8<S> {
-    type Split = mask64x4<S>;
-    #[inline(always)]
-    fn split(self) -> (Self::Split, Self::Split) {
-        self.simd.split_mask64x8(self)
     }
 }

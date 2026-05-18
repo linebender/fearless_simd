@@ -526,6 +526,31 @@ const BASE_OPS: &[Op] = &[
     ),
 ];
 
+const MASK_REPRESENTATION_OPS: &[Op] = &[
+    Op::new(
+        "splat",
+        OpKind::BaseTraitMethod,
+        OpSig::Splat,
+        "Create a SIMD mask with all lanes set from the given signed integer mask value.",
+    ),
+    Op::new(
+        "load_array",
+        OpKind::AssociatedOnly,
+        OpSig::FromArray {
+            kind: RefKind::Value,
+        },
+        "Create a SIMD mask from signed integer mask lanes.",
+    ),
+    Op::new(
+        "as_array",
+        OpKind::AssociatedOnly,
+        OpSig::AsArray {
+            kind: RefKind::Value,
+        },
+        "Convert a SIMD mask to signed integer mask lanes.",
+    ),
+];
+
 const FLOAT_OPS: &[Op] = &[
     Op::new(
         "abs",
@@ -582,35 +607,35 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for equality.\n\n\
-        Returns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not.",
+        Returns a mask where each logical lane is true if the corresponding elements are equal, and false if not.",
     ),
     Op::new(
         "simd_lt",
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for less than.\n\n\
-        Returns a mask where each element is all ones if `{arg0}` is less than `{arg1}`, and all zeroes if not.",
+        Returns a mask where each logical lane is true if `{arg0}` is less than `{arg1}`, and false if not.",
     ),
     Op::new(
         "simd_le",
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for less than or equal.\n\n\
-        Returns a mask where each element is all ones if `{arg0}` is less than or equal to `{arg1}`, and all zeroes if not.",
+        Returns a mask where each logical lane is true if `{arg0}` is less than or equal to `{arg1}`, and false if not.",
     ),
     Op::new(
         "simd_ge",
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for greater than or equal.\n\n\
-        Returns a mask where each element is all ones if `{arg0}` is greater than or equal to `{arg1}`, and all zeroes if not.",
+        Returns a mask where each logical lane is true if `{arg0}` is greater than or equal to `{arg1}`, and false if not.",
     ),
     Op::new(
         "simd_gt",
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for greater than.\n\n\
-        Returns a mask where each element is all ones if `{arg0}` is greater than `{arg1}`, and all zeroes if not.",
+        Returns a mask where each logical lane is true if `{arg0}` is greater than `{arg1}`, and false if not.",
     ),
     Op::new(
         "zip_low",
@@ -758,7 +783,7 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::OwnTrait,
         OpSig::Select,
         "Select elements from {arg1} and {arg2} based on the mask operand {arg0}.\n\n\
-    This operation's behavior is unspecified if each lane of {arg0} is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information.",
+    This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes nor all-ones. See the [`Select`] trait's documentation for more information.",
     ),
 ];
 
@@ -840,35 +865,35 @@ const INT_OPS: &[Op] = &[
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for equality.\n\n\
-        Returns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not.",
+        Returns a mask where each logical lane is true if the corresponding elements are equal, and false if not.",
     ),
     Op::new(
         "simd_lt",
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for less than.\n\n\
-        Returns a mask where each element is all ones if `{arg0}` is less than `{arg1}`, and all zeroes if not.",
+        Returns a mask where each logical lane is true if `{arg0}` is less than `{arg1}`, and false if not.",
     ),
     Op::new(
         "simd_le",
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for less than or equal.\n\n\
-        Returns a mask where each element is all ones if `{arg0}` is less than or equal to `{arg1}`, and all zeroes if not.",
+        Returns a mask where each logical lane is true if `{arg0}` is less than or equal to `{arg1}`, and false if not.",
     ),
     Op::new(
         "simd_ge",
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for greater than or equal.\n\n\
-        Returns a mask where each element is all ones if `{arg0}` is greater than or equal to `{arg1}`, and all zeroes if not.",
+        Returns a mask where each logical lane is true if `{arg0}` is greater than or equal to `{arg1}`, and false if not.",
     ),
     Op::new(
         "simd_gt",
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for greater than.\n\n\
-        Returns a mask where each element is all ones if `{arg0}` is greater than `{arg1}`, and all zeroes if not.",
+        Returns a mask where each logical lane is true if `{arg0}` is greater than `{arg1}`, and false if not.",
     ),
     Op::new(
         "zip_low",
@@ -935,7 +960,7 @@ const INT_OPS: &[Op] = &[
         OpKind::OwnTrait,
         OpSig::Select,
         "Select elements from {arg1} and {arg2} based on the mask operand {arg0}.\n\n\
-    This operation's behavior is unspecified if each lane of {arg0} is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information.",
+    This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes nor all-ones. See the [`Select`] trait's documentation for more information.",
     ),
     Op::new(
         "min",
@@ -955,9 +980,10 @@ const INT_OPS: &[Op] = &[
 // `concat!` macro.
 macro_rules! mask_reduce_blurb {
     () => {
-        "Behavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\n\
-        The behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\n\
-        The [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."
+        "Masks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes and true is encoded as all ones.\n\n\
+        Behavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\n\
+        The behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\n\
+        The [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."
     }
 }
 
@@ -991,14 +1017,14 @@ const MASK_OPS: &[Op] = &[
         OpKind::OwnTrait,
         OpSig::Select,
         "Select elements from `{arg1}` and `{arg2}` based on the mask operand `{arg0}`.\n\n\
-    This operation's behavior is unspecified if each lane of {arg0} is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information.",
+    This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes nor all-ones. See the [`Select`] trait's documentation for more information.",
     ),
     Op::new(
         "simd_eq",
         OpKind::VecTraitMethod,
         OpSig::Compare,
         "Compare two vectors element-wise for equality.\n\n\
-        Returns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not.",
+        Returns a mask where each logical lane is true if the corresponding elements are equal, and false if not.",
     ),
     Op::new(
         "any_true",
@@ -1008,7 +1034,7 @@ const MASK_OPS: &[Op] = &[
             condition: true,
         },
         concat!(
-            "Returns true if any elements in this mask are true (all ones).\n\n",
+            "Returns true if any logical lanes in this mask are true.\n\n",
             mask_reduce_blurb!()
         ),
     ),
@@ -1020,7 +1046,7 @@ const MASK_OPS: &[Op] = &[
             condition: true,
         },
         concat!(
-            "Returns true if all elements in this mask are true (all ones).\n\n",
+            "Returns true if all logical lanes in this mask are true.\n\n",
             mask_reduce_blurb!()
         ),
     ),
@@ -1032,7 +1058,7 @@ const MASK_OPS: &[Op] = &[
             condition: false,
         },
         concat!(
-            "Returns true if any elements in this mask are false (all zeroes).\n\n\
+            "Returns true if any logical lanes in this mask are false.\n\n\
             This is logically equivalent to `!all_true`, but may be faster.\n\n",
             mask_reduce_blurb!()
         ),
@@ -1045,7 +1071,7 @@ const MASK_OPS: &[Op] = &[
             condition: false,
         },
         concat!(
-            "Returns true if all elements in this mask are false (all zeroes).\n\n\
+            "Returns true if all logical lanes in this mask are false.\n\n\
             This is logically equivalent to `!any_true`, but may be faster.\n\n",
             mask_reduce_blurb!()
         ),
@@ -1171,7 +1197,15 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ScalarType::Int | ScalarType::Unsigned => INT_OPS,
         ScalarType::Mask => MASK_OPS,
     };
-    let mut ops: Vec<Op> = BASE_OPS.iter().chain(base.iter()).copied().collect();
+    let representation_ops = match ty.scalar {
+        ScalarType::Mask => MASK_REPRESENTATION_OPS,
+        _ => BASE_OPS,
+    };
+    let mut ops: Vec<Op> = representation_ops
+        .iter()
+        .chain(base.iter())
+        .copied()
+        .collect();
 
     if let Some(combined_ty) = ty.combine_operand() {
         ops.push(Op::new(

@@ -178,8 +178,8 @@ impl VecType {
         if self.scalar == ScalarType::Mask {
             let scalar_bits = self.scalar_bits;
             format!(
-                "A SIMD mask of {len} {scalar_bits}-bit elements.\n\n\
-                When created from a comparison operation, and as it should be used in a [`Self::select`] operation, each element will be all ones if it's \"true\", and all zeroes if it's \"false\".",
+                "A SIMD mask of {len} logical lanes corresponding to {scalar_bits}-bit vector elements.\n\n\
+                The storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones.",
             )
         } else {
             let scalar_name = self.scalar.rust_name(self.scalar_bits);

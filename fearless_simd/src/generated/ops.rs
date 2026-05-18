@@ -733,26 +733,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask8x16<S> {
         *self = self.simd.and_mask8x16(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i8> for mask8x16<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i8) -> Self::Output {
-        self.simd.and_mask8x16(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i8> for mask8x16<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i8) {
-        *self = self.simd.and_mask8x16(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask8x16<S>> for i8 {
-    type Output = mask8x16<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask8x16<S>) -> Self::Output {
-        rhs.simd.and_mask8x16(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask8x16<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -768,26 +748,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask8x16<S> {
         *self = self.simd.or_mask8x16(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i8> for mask8x16<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i8) -> Self::Output {
-        self.simd.or_mask8x16(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i8> for mask8x16<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i8) {
-        *self = self.simd.or_mask8x16(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask8x16<S>> for i8 {
-    type Output = mask8x16<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask8x16<S>) -> Self::Output {
-        rhs.simd.or_mask8x16(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask8x16<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -801,26 +761,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask8x16<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask8x16(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i8> for mask8x16<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i8) -> Self::Output {
-        self.simd.xor_mask8x16(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i8> for mask8x16<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i8) {
-        *self = self.simd.xor_mask8x16(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask8x16<S>> for i8 {
-    type Output = mask8x16<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask8x16<S>) -> Self::Output {
-        rhs.simd.xor_mask8x16(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask8x16<S> {
@@ -1406,26 +1346,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask16x8<S> {
         *self = self.simd.and_mask16x8(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i16> for mask16x8<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i16) -> Self::Output {
-        self.simd.and_mask16x8(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i16> for mask16x8<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i16) {
-        *self = self.simd.and_mask16x8(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask16x8<S>> for i16 {
-    type Output = mask16x8<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask16x8<S>) -> Self::Output {
-        rhs.simd.and_mask16x8(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask16x8<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -1441,26 +1361,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask16x8<S> {
         *self = self.simd.or_mask16x8(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i16> for mask16x8<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i16) -> Self::Output {
-        self.simd.or_mask16x8(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i16> for mask16x8<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i16) {
-        *self = self.simd.or_mask16x8(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask16x8<S>> for i16 {
-    type Output = mask16x8<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask16x8<S>) -> Self::Output {
-        rhs.simd.or_mask16x8(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask16x8<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -1474,26 +1374,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask16x8<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask16x8(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i16> for mask16x8<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i16) -> Self::Output {
-        self.simd.xor_mask16x8(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i16> for mask16x8<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i16) {
-        *self = self.simd.xor_mask16x8(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask16x8<S>> for i16 {
-    type Output = mask16x8<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask16x8<S>) -> Self::Output {
-        rhs.simd.xor_mask16x8(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask16x8<S> {
@@ -2079,26 +1959,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask32x4<S> {
         *self = self.simd.and_mask32x4(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i32> for mask32x4<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i32) -> Self::Output {
-        self.simd.and_mask32x4(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i32> for mask32x4<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i32) {
-        *self = self.simd.and_mask32x4(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask32x4<S>> for i32 {
-    type Output = mask32x4<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask32x4<S>) -> Self::Output {
-        rhs.simd.and_mask32x4(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask32x4<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -2114,26 +1974,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask32x4<S> {
         *self = self.simd.or_mask32x4(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i32> for mask32x4<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i32) -> Self::Output {
-        self.simd.or_mask32x4(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i32> for mask32x4<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i32) {
-        *self = self.simd.or_mask32x4(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask32x4<S>> for i32 {
-    type Output = mask32x4<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask32x4<S>) -> Self::Output {
-        rhs.simd.or_mask32x4(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask32x4<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -2147,26 +1987,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask32x4<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask32x4(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i32> for mask32x4<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i32) -> Self::Output {
-        self.simd.xor_mask32x4(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i32> for mask32x4<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i32) {
-        *self = self.simd.xor_mask32x4(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask32x4<S>> for i32 {
-    type Output = mask32x4<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask32x4<S>) -> Self::Output {
-        rhs.simd.xor_mask32x4(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask32x4<S> {
@@ -2340,26 +2160,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask64x2<S> {
         *self = self.simd.and_mask64x2(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i64> for mask64x2<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i64) -> Self::Output {
-        self.simd.and_mask64x2(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i64> for mask64x2<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i64) {
-        *self = self.simd.and_mask64x2(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask64x2<S>> for i64 {
-    type Output = mask64x2<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask64x2<S>) -> Self::Output {
-        rhs.simd.and_mask64x2(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask64x2<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -2375,26 +2175,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask64x2<S> {
         *self = self.simd.or_mask64x2(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i64> for mask64x2<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i64) -> Self::Output {
-        self.simd.or_mask64x2(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i64> for mask64x2<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i64) {
-        *self = self.simd.or_mask64x2(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask64x2<S>> for i64 {
-    type Output = mask64x2<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask64x2<S>) -> Self::Output {
-        rhs.simd.or_mask64x2(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask64x2<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -2408,26 +2188,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask64x2<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask64x2(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i64> for mask64x2<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i64) -> Self::Output {
-        self.simd.xor_mask64x2(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i64> for mask64x2<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i64) {
-        *self = self.simd.xor_mask64x2(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask64x2<S>> for i64 {
-    type Output = mask64x2<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask64x2<S>) -> Self::Output {
-        rhs.simd.xor_mask64x2(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask64x2<S> {
@@ -3161,26 +2921,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask8x32<S> {
         *self = self.simd.and_mask8x32(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i8> for mask8x32<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i8) -> Self::Output {
-        self.simd.and_mask8x32(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i8> for mask8x32<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i8) {
-        *self = self.simd.and_mask8x32(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask8x32<S>> for i8 {
-    type Output = mask8x32<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask8x32<S>) -> Self::Output {
-        rhs.simd.and_mask8x32(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask8x32<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -3196,26 +2936,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask8x32<S> {
         *self = self.simd.or_mask8x32(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i8> for mask8x32<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i8) -> Self::Output {
-        self.simd.or_mask8x32(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i8> for mask8x32<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i8) {
-        *self = self.simd.or_mask8x32(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask8x32<S>> for i8 {
-    type Output = mask8x32<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask8x32<S>) -> Self::Output {
-        rhs.simd.or_mask8x32(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask8x32<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -3229,26 +2949,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask8x32<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask8x32(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i8> for mask8x32<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i8) -> Self::Output {
-        self.simd.xor_mask8x32(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i8> for mask8x32<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i8) {
-        *self = self.simd.xor_mask8x32(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask8x32<S>> for i8 {
-    type Output = mask8x32<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask8x32<S>) -> Self::Output {
-        rhs.simd.xor_mask8x32(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask8x32<S> {
@@ -3834,26 +3534,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask16x16<S> {
         *self = self.simd.and_mask16x16(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i16> for mask16x16<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i16) -> Self::Output {
-        self.simd.and_mask16x16(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i16> for mask16x16<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i16) {
-        *self = self.simd.and_mask16x16(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask16x16<S>> for i16 {
-    type Output = mask16x16<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask16x16<S>) -> Self::Output {
-        rhs.simd.and_mask16x16(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask16x16<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -3869,26 +3549,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask16x16<S> {
         *self = self.simd.or_mask16x16(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i16> for mask16x16<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i16) -> Self::Output {
-        self.simd.or_mask16x16(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i16> for mask16x16<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i16) {
-        *self = self.simd.or_mask16x16(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask16x16<S>> for i16 {
-    type Output = mask16x16<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask16x16<S>) -> Self::Output {
-        rhs.simd.or_mask16x16(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask16x16<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -3902,26 +3562,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask16x16<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask16x16(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i16> for mask16x16<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i16) -> Self::Output {
-        self.simd.xor_mask16x16(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i16> for mask16x16<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i16) {
-        *self = self.simd.xor_mask16x16(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask16x16<S>> for i16 {
-    type Output = mask16x16<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask16x16<S>) -> Self::Output {
-        rhs.simd.xor_mask16x16(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask16x16<S> {
@@ -4507,26 +4147,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask32x8<S> {
         *self = self.simd.and_mask32x8(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i32> for mask32x8<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i32) -> Self::Output {
-        self.simd.and_mask32x8(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i32> for mask32x8<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i32) {
-        *self = self.simd.and_mask32x8(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask32x8<S>> for i32 {
-    type Output = mask32x8<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask32x8<S>) -> Self::Output {
-        rhs.simd.and_mask32x8(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask32x8<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -4542,26 +4162,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask32x8<S> {
         *self = self.simd.or_mask32x8(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i32> for mask32x8<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i32) -> Self::Output {
-        self.simd.or_mask32x8(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i32> for mask32x8<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i32) {
-        *self = self.simd.or_mask32x8(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask32x8<S>> for i32 {
-    type Output = mask32x8<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask32x8<S>) -> Self::Output {
-        rhs.simd.or_mask32x8(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask32x8<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -4575,26 +4175,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask32x8<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask32x8(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i32> for mask32x8<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i32) -> Self::Output {
-        self.simd.xor_mask32x8(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i32> for mask32x8<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i32) {
-        *self = self.simd.xor_mask32x8(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask32x8<S>> for i32 {
-    type Output = mask32x8<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask32x8<S>) -> Self::Output {
-        rhs.simd.xor_mask32x8(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask32x8<S> {
@@ -4768,26 +4348,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask64x4<S> {
         *self = self.simd.and_mask64x4(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i64> for mask64x4<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i64) -> Self::Output {
-        self.simd.and_mask64x4(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i64> for mask64x4<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i64) {
-        *self = self.simd.and_mask64x4(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask64x4<S>> for i64 {
-    type Output = mask64x4<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask64x4<S>) -> Self::Output {
-        rhs.simd.and_mask64x4(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask64x4<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -4803,26 +4363,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask64x4<S> {
         *self = self.simd.or_mask64x4(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i64> for mask64x4<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i64) -> Self::Output {
-        self.simd.or_mask64x4(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i64> for mask64x4<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i64) {
-        *self = self.simd.or_mask64x4(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask64x4<S>> for i64 {
-    type Output = mask64x4<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask64x4<S>) -> Self::Output {
-        rhs.simd.or_mask64x4(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask64x4<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -4836,26 +4376,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask64x4<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask64x4(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i64> for mask64x4<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i64) -> Self::Output {
-        self.simd.xor_mask64x4(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i64> for mask64x4<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i64) {
-        *self = self.simd.xor_mask64x4(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask64x4<S>> for i64 {
-    type Output = mask64x4<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask64x4<S>) -> Self::Output {
-        rhs.simd.xor_mask64x4(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask64x4<S> {
@@ -5589,26 +5109,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask8x64<S> {
         *self = self.simd.and_mask8x64(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i8> for mask8x64<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i8) -> Self::Output {
-        self.simd.and_mask8x64(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i8> for mask8x64<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i8) {
-        *self = self.simd.and_mask8x64(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask8x64<S>> for i8 {
-    type Output = mask8x64<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask8x64<S>) -> Self::Output {
-        rhs.simd.and_mask8x64(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask8x64<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -5624,26 +5124,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask8x64<S> {
         *self = self.simd.or_mask8x64(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i8> for mask8x64<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i8) -> Self::Output {
-        self.simd.or_mask8x64(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i8> for mask8x64<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i8) {
-        *self = self.simd.or_mask8x64(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask8x64<S>> for i8 {
-    type Output = mask8x64<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask8x64<S>) -> Self::Output {
-        rhs.simd.or_mask8x64(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask8x64<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -5657,26 +5137,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask8x64<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask8x64(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i8> for mask8x64<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i8) -> Self::Output {
-        self.simd.xor_mask8x64(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i8> for mask8x64<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i8) {
-        *self = self.simd.xor_mask8x64(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask8x64<S>> for i8 {
-    type Output = mask8x64<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask8x64<S>) -> Self::Output {
-        rhs.simd.xor_mask8x64(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask8x64<S> {
@@ -6262,26 +5722,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask16x32<S> {
         *self = self.simd.and_mask16x32(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i16> for mask16x32<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i16) -> Self::Output {
-        self.simd.and_mask16x32(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i16> for mask16x32<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i16) {
-        *self = self.simd.and_mask16x32(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask16x32<S>> for i16 {
-    type Output = mask16x32<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask16x32<S>) -> Self::Output {
-        rhs.simd.and_mask16x32(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask16x32<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -6297,26 +5737,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask16x32<S> {
         *self = self.simd.or_mask16x32(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i16> for mask16x32<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i16) -> Self::Output {
-        self.simd.or_mask16x32(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i16> for mask16x32<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i16) {
-        *self = self.simd.or_mask16x32(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask16x32<S>> for i16 {
-    type Output = mask16x32<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask16x32<S>) -> Self::Output {
-        rhs.simd.or_mask16x32(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask16x32<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -6330,26 +5750,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask16x32<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask16x32(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i16> for mask16x32<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i16) -> Self::Output {
-        self.simd.xor_mask16x32(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i16> for mask16x32<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i16) {
-        *self = self.simd.xor_mask16x32(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask16x32<S>> for i16 {
-    type Output = mask16x32<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask16x32<S>) -> Self::Output {
-        rhs.simd.xor_mask16x32(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask16x32<S> {
@@ -6935,26 +6335,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask32x16<S> {
         *self = self.simd.and_mask32x16(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i32> for mask32x16<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i32) -> Self::Output {
-        self.simd.and_mask32x16(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i32> for mask32x16<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i32) {
-        *self = self.simd.and_mask32x16(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask32x16<S>> for i32 {
-    type Output = mask32x16<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask32x16<S>) -> Self::Output {
-        rhs.simd.and_mask32x16(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask32x16<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -6970,26 +6350,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask32x16<S> {
         *self = self.simd.or_mask32x16(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i32> for mask32x16<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i32) -> Self::Output {
-        self.simd.or_mask32x16(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i32> for mask32x16<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i32) {
-        *self = self.simd.or_mask32x16(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask32x16<S>> for i32 {
-    type Output = mask32x16<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask32x16<S>) -> Self::Output {
-        rhs.simd.or_mask32x16(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask32x16<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -7003,26 +6363,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask32x16<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask32x16(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i32> for mask32x16<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i32) -> Self::Output {
-        self.simd.xor_mask32x16(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i32> for mask32x16<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i32) {
-        *self = self.simd.xor_mask32x16(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask32x16<S>> for i32 {
-    type Output = mask32x16<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask32x16<S>) -> Self::Output {
-        rhs.simd.xor_mask32x16(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask32x16<S> {
@@ -7196,26 +6536,6 @@ impl<S: Simd> core::ops::BitAndAssign for mask64x8<S> {
         *self = self.simd.and_mask64x8(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitAnd<i64> for mask64x8<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitand(self, rhs: i64) -> Self::Output {
-        self.simd.and_mask64x8(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitAndAssign<i64> for mask64x8<S> {
-    #[inline(always)]
-    fn bitand_assign(&mut self, rhs: i64) {
-        *self = self.simd.and_mask64x8(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitAnd<mask64x8<S>> for i64 {
-    type Output = mask64x8<S>;
-    #[inline(always)]
-    fn bitand(self, rhs: mask64x8<S>) -> Self::Output {
-        rhs.simd.and_mask64x8(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitOr for mask64x8<S> {
     type Output = Self;
     #[doc = "Compute the logical OR of two masks."]
@@ -7231,26 +6551,6 @@ impl<S: Simd> core::ops::BitOrAssign for mask64x8<S> {
         *self = self.simd.or_mask64x8(*self, rhs);
     }
 }
-impl<S: Simd> core::ops::BitOr<i64> for mask64x8<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitor(self, rhs: i64) -> Self::Output {
-        self.simd.or_mask64x8(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitOrAssign<i64> for mask64x8<S> {
-    #[inline(always)]
-    fn bitor_assign(&mut self, rhs: i64) {
-        *self = self.simd.or_mask64x8(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitOr<mask64x8<S>> for i64 {
-    type Output = mask64x8<S>;
-    #[inline(always)]
-    fn bitor(self, rhs: mask64x8<S>) -> Self::Output {
-        rhs.simd.or_mask64x8(self.simd_into(rhs.simd), rhs)
-    }
-}
 impl<S: Simd> core::ops::BitXor for mask64x8<S> {
     type Output = Self;
     #[doc = "Compute the logical XOR of two masks."]
@@ -7264,26 +6564,6 @@ impl<S: Simd> core::ops::BitXorAssign for mask64x8<S> {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         *self = self.simd.xor_mask64x8(*self, rhs);
-    }
-}
-impl<S: Simd> core::ops::BitXor<i64> for mask64x8<S> {
-    type Output = Self;
-    #[inline(always)]
-    fn bitxor(self, rhs: i64) -> Self::Output {
-        self.simd.xor_mask64x8(self, rhs.simd_into(self.simd))
-    }
-}
-impl<S: Simd> core::ops::BitXorAssign<i64> for mask64x8<S> {
-    #[inline(always)]
-    fn bitxor_assign(&mut self, rhs: i64) {
-        *self = self.simd.xor_mask64x8(*self, rhs.simd_into(self.simd));
-    }
-}
-impl<S: Simd> core::ops::BitXor<mask64x8<S>> for i64 {
-    type Output = mask64x8<S>;
-    #[inline(always)]
-    fn bitxor(self, rhs: mask64x8<S>) -> Self::Output {
-        rhs.simd.xor_mask64x8(self.simd_into(rhs.simd), rhs)
     }
 }
 impl<S: Simd> core::ops::Not for mask64x8<S> {

@@ -9,11 +9,12 @@ use crate::{Level, Simd, SimdBase, seal::Seal};
 
 /// Element-wise selection between two SIMD vectors using `self`.
 pub trait Select<T: Seal>: Seal {
-    /// For each element of this mask, select the first operand if the element is all ones, and select the second
-    /// operand if the element is all zeroes.
+    /// For each logical lane of this mask, select the first operand if the lane is true, and select the second
+    /// operand if the lane is false.
     ///
-    /// If a mask element is *not* all ones or all zeroes, the result is unspecified. It may vary depending on
-    /// architecture, feature level, the mask elements' width, the mask vector's width, or library version.
+    /// Masks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those
+    /// conversions, false is encoded as all zeroes and true is encoded as all ones. If a mask is constructed from any
+    /// other integer bit pattern, the result of this operation is unspecified.
     fn select(self, if_true: T, if_false: T) -> T;
 }
 

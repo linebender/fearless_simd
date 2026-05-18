@@ -83,35 +83,44 @@ fn copysign_f32x8<S: Simd>(simd: S) {
 fn simd_eq_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[4.0, 2.0, 1.0, 0.0, 5.0, 6.0, 7.0, 8.0]);
     let b = f32x8::from_slice(simd, &[4.0, 3.1, 1.0, 0.0, 5.0, 7.0, 7.0, 9.0]);
-    assert_eq!(*a.simd_eq(b), [-1, 0, -1, -1, -1, 0, -1, 0]);
+    assert_eq!(
+        <[i32; 8]>::from(a.simd_eq(b)),
+        [-1, 0, -1, -1, -1, 0, -1, 0]
+    );
 }
 
 #[simd_test]
 fn simd_lt_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[4.0, 3.0, 2.0, 1.0, 5.0, 6.0, 7.0, 8.0]);
     let b = f32x8::from_slice(simd, &[1.0, 2.0, 2.0, 4.0, 10.0, 5.0, 8.0, 7.0]);
-    assert_eq!(*a.simd_lt(b), [0, 0, 0, -1, -1, 0, -1, 0]);
+    assert_eq!(<[i32; 8]>::from(a.simd_lt(b)), [0, 0, 0, -1, -1, 0, -1, 0]);
 }
 
 #[simd_test]
 fn simd_le_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[4.0, 3.0, 2.0, 1.0, 5.0, 6.0, 7.0, 8.0]);
     let b = f32x8::from_slice(simd, &[1.0, 2.0, 2.0, 4.0, 5.0, 6.0, 8.0, 7.0]);
-    assert_eq!(*a.simd_le(b), [0, 0, -1, -1, -1, -1, -1, 0]);
+    assert_eq!(
+        <[i32; 8]>::from(a.simd_le(b)),
+        [0, 0, -1, -1, -1, -1, -1, 0]
+    );
 }
 
 #[simd_test]
 fn simd_ge_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[4.0, 3.0, 2.0, 1.0, 5.0, 6.0, 7.0, 8.0]);
     let b = f32x8::from_slice(simd, &[1.0, 2.0, 2.0, 4.0, 5.0, 6.0, 8.0, 7.0]);
-    assert_eq!(*a.simd_ge(b), [-1, -1, -1, 0, -1, -1, 0, -1]);
+    assert_eq!(
+        <[i32; 8]>::from(a.simd_ge(b)),
+        [-1, -1, -1, 0, -1, -1, 0, -1]
+    );
 }
 
 #[simd_test]
 fn simd_gt_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[4.0, 3.0, 2.0, 1.0, 5.0, 6.0, 7.0, 8.0]);
     let b = f32x8::from_slice(simd, &[1.0, 2.0, 2.0, 4.0, 5.0, 6.0, 8.0, 7.0]);
-    assert_eq!(*a.simd_gt(b), [-1, -1, 0, 0, 0, 0, 0, -1]);
+    assert_eq!(<[i32; 8]>::from(a.simd_gt(b)), [-1, -1, 0, 0, 0, 0, 0, -1]);
 }
 
 #[simd_test]
@@ -500,7 +509,7 @@ fn simd_eq_i8x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *a.simd_eq(b),
+        <[i8; 32]>::from(a.simd_eq(b)),
         [
             -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1,
             0, -1, 0, -1, 0, -1, 0
@@ -525,7 +534,7 @@ fn simd_lt_i8x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *a.simd_lt(b),
+        <[i8; 32]>::from(a.simd_lt(b)),
         [
             -1, 0, 0, -1, -1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0, -1, -1, 0, 0, -1, -1, -1, -1, -1,
             0, -1, 0, -1, 0, -1, 0, -1
@@ -550,7 +559,7 @@ fn simd_gt_i8x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *a.simd_gt(b),
+        <[i8; 32]>::from(a.simd_gt(b)),
         [
             -1, 0, 0, -1, -1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0, -1, -1, 0, 0, -1, -1, -1, -1, -1,
             0, -1, 0, -1, 0, -1, 0, -1
@@ -822,7 +831,7 @@ fn simd_eq_u8x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *a.simd_eq(b),
+        <[i8; 32]>::from(a.simd_eq(b)),
         [
             -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1,
             0, -1, 0, -1, 0, -1, 0
@@ -847,7 +856,7 @@ fn simd_lt_u8x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *a.simd_lt(b),
+        <[i8; 32]>::from(a.simd_lt(b)),
         [
             -1, 0, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, -1, 0, 0, -1, 0, -1, 0, -1, 0,
             -1, 0, -1, 0, -1, 0, -1
@@ -872,7 +881,7 @@ fn simd_gt_u8x32<S: Simd>(simd: S) {
         ],
     );
     assert_eq!(
-        *a.simd_gt(b),
+        <[i8; 32]>::from(a.simd_gt(b)),
         [
             -1, 0, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, -1, 0, 0, -1, 0, -1, 0, -1, 0,
             -1, 0, -1, 0, -1, 0, -1
@@ -945,7 +954,7 @@ fn simd_eq_i16x16<S: Simd>(simd: S) {
     let a = i16x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8]);
     let b = i16x16::from_slice(simd, &[1, 0, 3, 0, 5, 0, 7, 0, 1, 0, 3, 0, 5, 0, 7, 0]);
     assert_eq!(
-        *a.simd_eq(b),
+        <[i16; 16]>::from(a.simd_eq(b)),
         [-1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0]
     );
 }
@@ -961,7 +970,7 @@ fn simd_lt_i16x16<S: Simd>(simd: S) {
         &[2, 2, 2, 5, 0, 0, 0, 0, 5, 25, 25, 45, 45, 65, 65, 85],
     );
     assert_eq!(
-        *a.simd_lt(b),
+        <[i16; 16]>::from(a.simd_lt(b)),
         [-1, 0, 0, -1, -1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0, -1]
     );
 }
@@ -977,7 +986,7 @@ fn simd_gt_i16x16<S: Simd>(simd: S) {
         &[1, 2, 3, 4, -1, -2, -3, -4, 10, 20, 30, 40, 50, 60, 70, 80],
     );
     assert_eq!(
-        *a.simd_gt(b),
+        <[i16; 16]>::from(a.simd_gt(b)),
         [-1, 0, 0, -1, -1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0, -1]
     );
 }
@@ -1075,7 +1084,7 @@ fn simd_eq_u16x16<S: Simd>(simd: S) {
     let a = u16x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8]);
     let b = u16x16::from_slice(simd, &[1, 0, 3, 0, 5, 0, 7, 0, 1, 0, 3, 0, 5, 0, 7, 0]);
     assert_eq!(
-        *a.simd_eq(b),
+        <[i16; 16]>::from(a.simd_eq(b)),
         [-1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0]
     );
 }
@@ -1091,7 +1100,7 @@ fn simd_lt_u16x16<S: Simd>(simd: S) {
         &[2, 2, 2, 5, 4, 7, 6, 9, 5, 25, 25, 45, 45, 65, 65, 85],
     );
     assert_eq!(
-        *a.simd_lt(b),
+        <[i16; 16]>::from(a.simd_lt(b)),
         [-1, 0, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1]
     );
 }
@@ -1107,7 +1116,7 @@ fn simd_gt_u16x16<S: Simd>(simd: S) {
         &[1, 2, 3, 4, 5, 6, 7, 8, 10, 20, 30, 40, 50, 60, 70, 80],
     );
     assert_eq!(
-        *a.simd_gt(b),
+        <[i16; 16]>::from(a.simd_gt(b)),
         [-1, 0, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1]
     );
 }
@@ -1184,21 +1193,27 @@ fn neg_i32x8<S: Simd>(simd: S) {
 fn simd_eq_i32x8<S: Simd>(simd: S) {
     let a = i32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
     let b = i32x8::from_slice(simd, &[1, 0, 3, 0, 5, 0, 7, 0]);
-    assert_eq!(*a.simd_eq(b), [-1, 0, -1, 0, -1, 0, -1, 0]);
+    assert_eq!(<[i32; 8]>::from(a.simd_eq(b)), [-1, 0, -1, 0, -1, 0, -1, 0]);
 }
 
 #[simd_test]
 fn simd_lt_i32x8<S: Simd>(simd: S) {
     let a = i32x8::from_slice(simd, &[1, 2, 3, 4, -1, -2, -3, -4]);
     let b = i32x8::from_slice(simd, &[2, 2, 2, 5, 0, 0, 0, 0]);
-    assert_eq!(*a.simd_lt(b), [-1, 0, 0, -1, -1, -1, -1, -1]);
+    assert_eq!(
+        <[i32; 8]>::from(a.simd_lt(b)),
+        [-1, 0, 0, -1, -1, -1, -1, -1]
+    );
 }
 
 #[simd_test]
 fn simd_gt_i32x8<S: Simd>(simd: S) {
     let a = i32x8::from_slice(simd, &[2, 2, 2, 5, 0, 0, 0, 0]);
     let b = i32x8::from_slice(simd, &[1, 2, 3, 4, -1, -2, -3, -4]);
-    assert_eq!(*a.simd_gt(b), [-1, 0, 0, -1, -1, -1, -1, -1]);
+    assert_eq!(
+        <[i32; 8]>::from(a.simd_gt(b)),
+        [-1, 0, 0, -1, -1, -1, -1, -1]
+    );
 }
 
 #[simd_test]
@@ -1244,21 +1259,21 @@ fn sub_u32x8<S: Simd>(simd: S) {
 fn simd_eq_u32x8<S: Simd>(simd: S) {
     let a = u32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
     let b = u32x8::from_slice(simd, &[1, 0, 3, 0, 5, 0, 7, 0]);
-    assert_eq!(*a.simd_eq(b), [-1, 0, -1, 0, -1, 0, -1, 0]);
+    assert_eq!(<[i32; 8]>::from(a.simd_eq(b)), [-1, 0, -1, 0, -1, 0, -1, 0]);
 }
 
 #[simd_test]
 fn simd_lt_u32x8<S: Simd>(simd: S) {
     let a = u32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
     let b = u32x8::from_slice(simd, &[2, 2, 2, 5, 4, 7, 6, 9]);
-    assert_eq!(*a.simd_lt(b), [-1, 0, 0, -1, 0, -1, 0, -1]);
+    assert_eq!(<[i32; 8]>::from(a.simd_lt(b)), [-1, 0, 0, -1, 0, -1, 0, -1]);
 }
 
 #[simd_test]
 fn simd_gt_u32x8<S: Simd>(simd: S) {
     let a = u32x8::from_slice(simd, &[2, 2, 2, 5, 4, 7, 6, 9]);
     let b = u32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
-    assert_eq!(*a.simd_gt(b), [-1, 0, 0, -1, 0, -1, 0, -1]);
+    assert_eq!(<[i32; 8]>::from(a.simd_gt(b)), [-1, 0, 0, -1, 0, -1, 0, -1]);
 }
 
 #[simd_test]

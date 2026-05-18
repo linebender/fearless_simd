@@ -152,7 +152,7 @@ impl Level for Fallback {
                 let items = make_list(
                     (0..vec_ty.len)
                         .map(|idx| {
-                            let args = [quote! { a[#idx] }];
+                            let args = [lane(quote! { a }, vec_ty, idx)];
                             let expr = fallback::expr(method, vec_ty, &args);
                             quote! { #expr }
                         })
@@ -170,7 +170,8 @@ impl Level for Fallback {
                     (0..vec_ty.len)
                         .map(|idx| {
                             let scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
-                            quote! { a[#idx] as #scalar_ty }
+                            let a = lane(quote! { a }, vec_ty, idx);
+                            quote! { #a as #scalar_ty }
                         })
                         .collect::<Vec<_>>(),
                 );
@@ -185,6 +186,7 @@ impl Level for Fallback {
                 let items = make_list(
                     (0..vec_ty.len)
                         .map(|idx| {
+                            let b_lane = lane(quote! { b }, vec_ty, idx);
                             let b = if fallback::translate_op(
                                 method,
                                 vec_ty.scalar == ScalarType::Float,
@@ -192,12 +194,12 @@ impl Level for Fallback {
                             .map(rhs_reference)
                             .unwrap_or(true)
                             {
-                                quote! { &b[#idx] }
+                                quote! { &#b_lane }
                             } else {
-                                quote! { b[#idx] }
+                                b_lane
                             };
 
-                            let args = [quote! { a[#idx] }, quote! { #b }];
+                            let args = [lane(quote! { a }, vec_ty, idx), quote! { #b }];
                             let expr = fallback::expr(method, vec_ty, &args);
                             quote! { #expr }
                         })
@@ -214,7 +216,7 @@ impl Level for Fallback {
                 let items = make_list(
                     (0..vec_ty.len)
                         .map(|idx| {
-                            let args = [quote! { a[#idx] }, quote! { shift }];
+                            let args = [lane(quote! { a }, vec_ty, idx), quote! { shift }];
                             let expr = fallback::expr(method, vec_ty, &args);
                             quote! { #expr }
                         })
@@ -260,7 +262,9 @@ impl Level for Fallback {
                 let items = make_list(
                     (0..vec_ty.len)
                         .map(|idx: usize| {
-                            let args = [quote! { &a[#idx] }, quote! { &b[#idx] }];
+                            let a = lane(quote! { a }, vec_ty, idx);
+                            let b = lane(quote! { b }, vec_ty, idx);
+                            let args = [quote! { &#a }, quote! { &#b }];
                             let expr = fallback::expr(method, vec_ty, &args);
                             let mask_ty = mask_type.scalar.rust(vec_ty.scalar_bits);
                             quote! { -(#expr as #mask_ty) }
@@ -275,10 +279,14 @@ impl Level for Fallback {
                 }
             }
             OpSig::Select => {
+                let mask_type = vec_ty.mask_ty();
                 let items = make_list(
                     (0..vec_ty.len)
                         .map(|idx| {
-                            quote! { if a[#idx] != 0 { b[#idx] } else { c[#idx] } }
+                            let a = lane(quote! { a }, &mask_type, idx);
+                            let b = lane(quote! { b }, vec_ty, idx);
+                            let c = lane(quote! { c }, vec_ty, idx);
+                            quote! { if #a != 0 { #b } else { #c } }
                         })
                         .collect::<Vec<_>>(),
                 );
@@ -332,7 +340,9 @@ impl Level for Fallback {
                 let zip = make_list(
                     indices
                         .map(|idx| {
-                            quote! {a[#idx], b[#idx] }
+                            let a = lane(quote! { a }, vec_ty, idx);
+                            let b = lane(quote! { b }, vec_ty, idx);
+                            quote! { #a, #b }
                         })
                         .collect::<Vec<_>>(),
                 );
@@ -353,12 +363,8 @@ impl Level for Fallback {
                 let unzip = make_list(
                     indices
                         .clone()
-                        .map(|idx| {
-                            quote! {a[#idx]}
-                        })
-                        .chain(indices.map(|idx| {
-                            quote! {b[#idx]}
-                        }))
+                        .map(|idx| lane(quote! { a }, vec_ty, idx))
+                        .chain(indices.map(|idx| lane(quote! { b }, vec_ty, idx)))
                         .collect::<Vec<_>>(),
                 );
 
@@ -398,7 +404,8 @@ impl Level for Fallback {
                     let items = make_list(
                         (0..vec_ty.len)
                             .map(|idx| {
-                                quote! { a[#idx] as #scalar }
+                                let a = lane(quote! { a }, vec_ty, idx);
+                                quote! { #a as #scalar }
                             })
                             .collect::<Vec<_>>(),
                     );
@@ -427,7 +434,6 @@ impl Level for Fallback {
                 quantifier,
                 condition,
             } => {
-                let indices = (0..vec_ty.len).map(|idx| quote! { #idx });
                 let check = if condition {
                     quote! { != }
                 } else {
@@ -436,10 +442,12 @@ impl Level for Fallback {
 
                 let expr = match quantifier {
                     crate::ops::Quantifier::Any => {
-                        quote! { #(a[#indices] #check 0)||* }
+                        let lanes = (0..vec_ty.len).map(|idx| lane(quote! { a }, vec_ty, idx));
+                        quote! { #(#lanes #check 0)||* }
                     }
                     crate::ops::Quantifier::All => {
-                        quote! { #(a[#indices] #check 0)&&* }
+                        let lanes = (0..vec_ty.len).map(|idx| lane(quote! { a }, vec_ty, idx));
+                        quote! { #(#lanes #check 0)&&* }
                     }
                 };
 
@@ -544,6 +552,14 @@ fn interleave_indices(
     };
 
     make_list(indices.into_iter().map(func).collect::<Vec<_>>())
+}
+
+fn lane(value: TokenStream, vec_ty: &VecType, idx: usize) -> TokenStream {
+    if vec_ty.scalar == ScalarType::Mask {
+        quote! { #value.val.0[#idx] }
+    } else {
+        quote! { #value[#idx] }
+    }
 }
 
 /// Whether the second argument of the function needs to be passed by reference.

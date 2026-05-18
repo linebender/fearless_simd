@@ -475,10 +475,26 @@ impl Simd for Fallback {
     #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
+            if a.val.0[0usize] != 0 {
+                b[0usize]
+            } else {
+                c[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b[1usize]
+            } else {
+                c[1usize]
+            },
+            if a.val.0[2usize] != 0 {
+                b[2usize]
+            } else {
+                c[2usize]
+            },
+            if a.val.0[3usize] != 0 {
+                b[3usize]
+            } else {
+                c[3usize]
+            },
         ]
         .simd_into(self)
     }
@@ -998,42 +1014,82 @@ impl Simd for Fallback {
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
-            if a[4usize] != 0 { b[4usize] } else { c[4usize] },
-            if a[5usize] != 0 { b[5usize] } else { c[5usize] },
-            if a[6usize] != 0 { b[6usize] } else { c[6usize] },
-            if a[7usize] != 0 { b[7usize] } else { c[7usize] },
-            if a[8usize] != 0 { b[8usize] } else { c[8usize] },
-            if a[9usize] != 0 { b[9usize] } else { c[9usize] },
-            if a[10usize] != 0 {
+            if a.val.0[0usize] != 0 {
+                b[0usize]
+            } else {
+                c[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b[1usize]
+            } else {
+                c[1usize]
+            },
+            if a.val.0[2usize] != 0 {
+                b[2usize]
+            } else {
+                c[2usize]
+            },
+            if a.val.0[3usize] != 0 {
+                b[3usize]
+            } else {
+                c[3usize]
+            },
+            if a.val.0[4usize] != 0 {
+                b[4usize]
+            } else {
+                c[4usize]
+            },
+            if a.val.0[5usize] != 0 {
+                b[5usize]
+            } else {
+                c[5usize]
+            },
+            if a.val.0[6usize] != 0 {
+                b[6usize]
+            } else {
+                c[6usize]
+            },
+            if a.val.0[7usize] != 0 {
+                b[7usize]
+            } else {
+                c[7usize]
+            },
+            if a.val.0[8usize] != 0 {
+                b[8usize]
+            } else {
+                c[8usize]
+            },
+            if a.val.0[9usize] != 0 {
+                b[9usize]
+            } else {
+                c[9usize]
+            },
+            if a.val.0[10usize] != 0 {
                 b[10usize]
             } else {
                 c[10usize]
             },
-            if a[11usize] != 0 {
+            if a.val.0[11usize] != 0 {
                 b[11usize]
             } else {
                 c[11usize]
             },
-            if a[12usize] != 0 {
+            if a.val.0[12usize] != 0 {
                 b[12usize]
             } else {
                 c[12usize]
             },
-            if a[13usize] != 0 {
+            if a.val.0[13usize] != 0 {
                 b[13usize]
             } else {
                 c[13usize]
             },
-            if a[14usize] != 0 {
+            if a.val.0[14usize] != 0 {
                 b[14usize]
             } else {
                 c[14usize]
             },
-            if a[15usize] != 0 {
+            if a.val.0[15usize] != 0 {
                 b[15usize]
             } else {
                 c[15usize]
@@ -1587,42 +1643,82 @@ impl Simd for Fallback {
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
-            if a[4usize] != 0 { b[4usize] } else { c[4usize] },
-            if a[5usize] != 0 { b[5usize] } else { c[5usize] },
-            if a[6usize] != 0 { b[6usize] } else { c[6usize] },
-            if a[7usize] != 0 { b[7usize] } else { c[7usize] },
-            if a[8usize] != 0 { b[8usize] } else { c[8usize] },
-            if a[9usize] != 0 { b[9usize] } else { c[9usize] },
-            if a[10usize] != 0 {
+            if a.val.0[0usize] != 0 {
+                b[0usize]
+            } else {
+                c[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b[1usize]
+            } else {
+                c[1usize]
+            },
+            if a.val.0[2usize] != 0 {
+                b[2usize]
+            } else {
+                c[2usize]
+            },
+            if a.val.0[3usize] != 0 {
+                b[3usize]
+            } else {
+                c[3usize]
+            },
+            if a.val.0[4usize] != 0 {
+                b[4usize]
+            } else {
+                c[4usize]
+            },
+            if a.val.0[5usize] != 0 {
+                b[5usize]
+            } else {
+                c[5usize]
+            },
+            if a.val.0[6usize] != 0 {
+                b[6usize]
+            } else {
+                c[6usize]
+            },
+            if a.val.0[7usize] != 0 {
+                b[7usize]
+            } else {
+                c[7usize]
+            },
+            if a.val.0[8usize] != 0 {
+                b[8usize]
+            } else {
+                c[8usize]
+            },
+            if a.val.0[9usize] != 0 {
+                b[9usize]
+            } else {
+                c[9usize]
+            },
+            if a.val.0[10usize] != 0 {
                 b[10usize]
             } else {
                 c[10usize]
             },
-            if a[11usize] != 0 {
+            if a.val.0[11usize] != 0 {
                 b[11usize]
             } else {
                 c[11usize]
             },
-            if a[12usize] != 0 {
+            if a.val.0[12usize] != 0 {
                 b[12usize]
             } else {
                 c[12usize]
             },
-            if a[13usize] != 0 {
+            if a.val.0[13usize] != 0 {
                 b[13usize]
             } else {
                 c[13usize]
             },
-            if a[14usize] != 0 {
+            if a.val.0[14usize] != 0 {
                 b[14usize]
             } else {
                 c[14usize]
             },
-            if a[15usize] != 0 {
+            if a.val.0[15usize] != 0 {
                 b[15usize]
             } else {
                 c[15usize]
@@ -1719,150 +1815,94 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask8x16(self, val: &[i8; 16usize]) -> mask8x16<Self> {
-        mask8x16 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize] {
         a.val.0
     }
     #[inline(always)]
-    fn as_array_ref_mask8x16(self, a: &mask8x16<Self>) -> &[i8; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask8x16(self, a: &mut mask8x16<Self>) -> &mut [i8; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask8x16(self, a: mask8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask8x16(self, a: u8x16<Self>) -> mask8x16<Self> {
-        unsafe {
-            mask8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask8x16(self, a: mask8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask8x16<const SHIFT: usize>(
-        self,
-        a: mask8x16<Self>,
-        b: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        let mut dest = [Default::default(); 16usize];
-        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask8x16<const SHIFT: usize>(
-        self,
-        a: mask8x16<Self>,
-        b: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        self.slide_mask8x16::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         [
-            i8::bitand(a[0usize], &b[0usize]),
-            i8::bitand(a[1usize], &b[1usize]),
-            i8::bitand(a[2usize], &b[2usize]),
-            i8::bitand(a[3usize], &b[3usize]),
-            i8::bitand(a[4usize], &b[4usize]),
-            i8::bitand(a[5usize], &b[5usize]),
-            i8::bitand(a[6usize], &b[6usize]),
-            i8::bitand(a[7usize], &b[7usize]),
-            i8::bitand(a[8usize], &b[8usize]),
-            i8::bitand(a[9usize], &b[9usize]),
-            i8::bitand(a[10usize], &b[10usize]),
-            i8::bitand(a[11usize], &b[11usize]),
-            i8::bitand(a[12usize], &b[12usize]),
-            i8::bitand(a[13usize], &b[13usize]),
-            i8::bitand(a[14usize], &b[14usize]),
-            i8::bitand(a[15usize], &b[15usize]),
+            i8::bitand(a.val.0[0usize], &b.val.0[0usize]),
+            i8::bitand(a.val.0[1usize], &b.val.0[1usize]),
+            i8::bitand(a.val.0[2usize], &b.val.0[2usize]),
+            i8::bitand(a.val.0[3usize], &b.val.0[3usize]),
+            i8::bitand(a.val.0[4usize], &b.val.0[4usize]),
+            i8::bitand(a.val.0[5usize], &b.val.0[5usize]),
+            i8::bitand(a.val.0[6usize], &b.val.0[6usize]),
+            i8::bitand(a.val.0[7usize], &b.val.0[7usize]),
+            i8::bitand(a.val.0[8usize], &b.val.0[8usize]),
+            i8::bitand(a.val.0[9usize], &b.val.0[9usize]),
+            i8::bitand(a.val.0[10usize], &b.val.0[10usize]),
+            i8::bitand(a.val.0[11usize], &b.val.0[11usize]),
+            i8::bitand(a.val.0[12usize], &b.val.0[12usize]),
+            i8::bitand(a.val.0[13usize], &b.val.0[13usize]),
+            i8::bitand(a.val.0[14usize], &b.val.0[14usize]),
+            i8::bitand(a.val.0[15usize], &b.val.0[15usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn or_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         [
-            i8::bitor(a[0usize], &b[0usize]),
-            i8::bitor(a[1usize], &b[1usize]),
-            i8::bitor(a[2usize], &b[2usize]),
-            i8::bitor(a[3usize], &b[3usize]),
-            i8::bitor(a[4usize], &b[4usize]),
-            i8::bitor(a[5usize], &b[5usize]),
-            i8::bitor(a[6usize], &b[6usize]),
-            i8::bitor(a[7usize], &b[7usize]),
-            i8::bitor(a[8usize], &b[8usize]),
-            i8::bitor(a[9usize], &b[9usize]),
-            i8::bitor(a[10usize], &b[10usize]),
-            i8::bitor(a[11usize], &b[11usize]),
-            i8::bitor(a[12usize], &b[12usize]),
-            i8::bitor(a[13usize], &b[13usize]),
-            i8::bitor(a[14usize], &b[14usize]),
-            i8::bitor(a[15usize], &b[15usize]),
+            i8::bitor(a.val.0[0usize], &b.val.0[0usize]),
+            i8::bitor(a.val.0[1usize], &b.val.0[1usize]),
+            i8::bitor(a.val.0[2usize], &b.val.0[2usize]),
+            i8::bitor(a.val.0[3usize], &b.val.0[3usize]),
+            i8::bitor(a.val.0[4usize], &b.val.0[4usize]),
+            i8::bitor(a.val.0[5usize], &b.val.0[5usize]),
+            i8::bitor(a.val.0[6usize], &b.val.0[6usize]),
+            i8::bitor(a.val.0[7usize], &b.val.0[7usize]),
+            i8::bitor(a.val.0[8usize], &b.val.0[8usize]),
+            i8::bitor(a.val.0[9usize], &b.val.0[9usize]),
+            i8::bitor(a.val.0[10usize], &b.val.0[10usize]),
+            i8::bitor(a.val.0[11usize], &b.val.0[11usize]),
+            i8::bitor(a.val.0[12usize], &b.val.0[12usize]),
+            i8::bitor(a.val.0[13usize], &b.val.0[13usize]),
+            i8::bitor(a.val.0[14usize], &b.val.0[14usize]),
+            i8::bitor(a.val.0[15usize], &b.val.0[15usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         [
-            i8::bitxor(a[0usize], &b[0usize]),
-            i8::bitxor(a[1usize], &b[1usize]),
-            i8::bitxor(a[2usize], &b[2usize]),
-            i8::bitxor(a[3usize], &b[3usize]),
-            i8::bitxor(a[4usize], &b[4usize]),
-            i8::bitxor(a[5usize], &b[5usize]),
-            i8::bitxor(a[6usize], &b[6usize]),
-            i8::bitxor(a[7usize], &b[7usize]),
-            i8::bitxor(a[8usize], &b[8usize]),
-            i8::bitxor(a[9usize], &b[9usize]),
-            i8::bitxor(a[10usize], &b[10usize]),
-            i8::bitxor(a[11usize], &b[11usize]),
-            i8::bitxor(a[12usize], &b[12usize]),
-            i8::bitxor(a[13usize], &b[13usize]),
-            i8::bitxor(a[14usize], &b[14usize]),
-            i8::bitxor(a[15usize], &b[15usize]),
+            i8::bitxor(a.val.0[0usize], &b.val.0[0usize]),
+            i8::bitxor(a.val.0[1usize], &b.val.0[1usize]),
+            i8::bitxor(a.val.0[2usize], &b.val.0[2usize]),
+            i8::bitxor(a.val.0[3usize], &b.val.0[3usize]),
+            i8::bitxor(a.val.0[4usize], &b.val.0[4usize]),
+            i8::bitxor(a.val.0[5usize], &b.val.0[5usize]),
+            i8::bitxor(a.val.0[6usize], &b.val.0[6usize]),
+            i8::bitxor(a.val.0[7usize], &b.val.0[7usize]),
+            i8::bitxor(a.val.0[8usize], &b.val.0[8usize]),
+            i8::bitxor(a.val.0[9usize], &b.val.0[9usize]),
+            i8::bitxor(a.val.0[10usize], &b.val.0[10usize]),
+            i8::bitxor(a.val.0[11usize], &b.val.0[11usize]),
+            i8::bitxor(a.val.0[12usize], &b.val.0[12usize]),
+            i8::bitxor(a.val.0[13usize], &b.val.0[13usize]),
+            i8::bitxor(a.val.0[14usize], &b.val.0[14usize]),
+            i8::bitxor(a.val.0[15usize], &b.val.0[15usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
         [
-            i8::not(a[0usize]),
-            i8::not(a[1usize]),
-            i8::not(a[2usize]),
-            i8::not(a[3usize]),
-            i8::not(a[4usize]),
-            i8::not(a[5usize]),
-            i8::not(a[6usize]),
-            i8::not(a[7usize]),
-            i8::not(a[8usize]),
-            i8::not(a[9usize]),
-            i8::not(a[10usize]),
-            i8::not(a[11usize]),
-            i8::not(a[12usize]),
-            i8::not(a[13usize]),
-            i8::not(a[14usize]),
-            i8::not(a[15usize]),
+            i8::not(a.val.0[0usize]),
+            i8::not(a.val.0[1usize]),
+            i8::not(a.val.0[2usize]),
+            i8::not(a.val.0[3usize]),
+            i8::not(a.val.0[4usize]),
+            i8::not(a.val.0[5usize]),
+            i8::not(a.val.0[6usize]),
+            i8::not(a.val.0[7usize]),
+            i8::not(a.val.0[8usize]),
+            i8::not(a.val.0[9usize]),
+            i8::not(a.val.0[10usize]),
+            i8::not(a.val.0[11usize]),
+            i8::not(a.val.0[12usize]),
+            i8::not(a.val.0[13usize]),
+            i8::not(a.val.0[14usize]),
+            i8::not(a.val.0[15usize]),
         ]
         .simd_into(self)
     }
@@ -1874,45 +1914,85 @@ impl Simd for Fallback {
         c: mask8x16<Self>,
     ) -> mask8x16<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
-            if a[4usize] != 0 { b[4usize] } else { c[4usize] },
-            if a[5usize] != 0 { b[5usize] } else { c[5usize] },
-            if a[6usize] != 0 { b[6usize] } else { c[6usize] },
-            if a[7usize] != 0 { b[7usize] } else { c[7usize] },
-            if a[8usize] != 0 { b[8usize] } else { c[8usize] },
-            if a[9usize] != 0 { b[9usize] } else { c[9usize] },
-            if a[10usize] != 0 {
-                b[10usize]
+            if a.val.0[0usize] != 0 {
+                b.val.0[0usize]
             } else {
-                c[10usize]
+                c.val.0[0usize]
             },
-            if a[11usize] != 0 {
-                b[11usize]
+            if a.val.0[1usize] != 0 {
+                b.val.0[1usize]
             } else {
-                c[11usize]
+                c.val.0[1usize]
             },
-            if a[12usize] != 0 {
-                b[12usize]
+            if a.val.0[2usize] != 0 {
+                b.val.0[2usize]
             } else {
-                c[12usize]
+                c.val.0[2usize]
             },
-            if a[13usize] != 0 {
-                b[13usize]
+            if a.val.0[3usize] != 0 {
+                b.val.0[3usize]
             } else {
-                c[13usize]
+                c.val.0[3usize]
             },
-            if a[14usize] != 0 {
-                b[14usize]
+            if a.val.0[4usize] != 0 {
+                b.val.0[4usize]
             } else {
-                c[14usize]
+                c.val.0[4usize]
             },
-            if a[15usize] != 0 {
-                b[15usize]
+            if a.val.0[5usize] != 0 {
+                b.val.0[5usize]
             } else {
-                c[15usize]
+                c.val.0[5usize]
+            },
+            if a.val.0[6usize] != 0 {
+                b.val.0[6usize]
+            } else {
+                c.val.0[6usize]
+            },
+            if a.val.0[7usize] != 0 {
+                b.val.0[7usize]
+            } else {
+                c.val.0[7usize]
+            },
+            if a.val.0[8usize] != 0 {
+                b.val.0[8usize]
+            } else {
+                c.val.0[8usize]
+            },
+            if a.val.0[9usize] != 0 {
+                b.val.0[9usize]
+            } else {
+                c.val.0[9usize]
+            },
+            if a.val.0[10usize] != 0 {
+                b.val.0[10usize]
+            } else {
+                c.val.0[10usize]
+            },
+            if a.val.0[11usize] != 0 {
+                b.val.0[11usize]
+            } else {
+                c.val.0[11usize]
+            },
+            if a.val.0[12usize] != 0 {
+                b.val.0[12usize]
+            } else {
+                c.val.0[12usize]
+            },
+            if a.val.0[13usize] != 0 {
+                b.val.0[13usize]
+            } else {
+                c.val.0[13usize]
+            },
+            if a.val.0[14usize] != 0 {
+                b.val.0[14usize]
+            } else {
+                c.val.0[14usize]
+            },
+            if a.val.0[15usize] != 0 {
+                b.val.0[15usize]
+            } else {
+                c.val.0[15usize]
             },
         ]
         .simd_into(self)
@@ -1920,100 +2000,100 @@ impl Simd for Fallback {
     #[inline(always)]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         [
-            -(i8::eq(&a[0usize], &b[0usize]) as i8),
-            -(i8::eq(&a[1usize], &b[1usize]) as i8),
-            -(i8::eq(&a[2usize], &b[2usize]) as i8),
-            -(i8::eq(&a[3usize], &b[3usize]) as i8),
-            -(i8::eq(&a[4usize], &b[4usize]) as i8),
-            -(i8::eq(&a[5usize], &b[5usize]) as i8),
-            -(i8::eq(&a[6usize], &b[6usize]) as i8),
-            -(i8::eq(&a[7usize], &b[7usize]) as i8),
-            -(i8::eq(&a[8usize], &b[8usize]) as i8),
-            -(i8::eq(&a[9usize], &b[9usize]) as i8),
-            -(i8::eq(&a[10usize], &b[10usize]) as i8),
-            -(i8::eq(&a[11usize], &b[11usize]) as i8),
-            -(i8::eq(&a[12usize], &b[12usize]) as i8),
-            -(i8::eq(&a[13usize], &b[13usize]) as i8),
-            -(i8::eq(&a[14usize], &b[14usize]) as i8),
-            -(i8::eq(&a[15usize], &b[15usize]) as i8),
+            -(i8::eq(&a.val.0[0usize], &b.val.0[0usize]) as i8),
+            -(i8::eq(&a.val.0[1usize], &b.val.0[1usize]) as i8),
+            -(i8::eq(&a.val.0[2usize], &b.val.0[2usize]) as i8),
+            -(i8::eq(&a.val.0[3usize], &b.val.0[3usize]) as i8),
+            -(i8::eq(&a.val.0[4usize], &b.val.0[4usize]) as i8),
+            -(i8::eq(&a.val.0[5usize], &b.val.0[5usize]) as i8),
+            -(i8::eq(&a.val.0[6usize], &b.val.0[6usize]) as i8),
+            -(i8::eq(&a.val.0[7usize], &b.val.0[7usize]) as i8),
+            -(i8::eq(&a.val.0[8usize], &b.val.0[8usize]) as i8),
+            -(i8::eq(&a.val.0[9usize], &b.val.0[9usize]) as i8),
+            -(i8::eq(&a.val.0[10usize], &b.val.0[10usize]) as i8),
+            -(i8::eq(&a.val.0[11usize], &b.val.0[11usize]) as i8),
+            -(i8::eq(&a.val.0[12usize], &b.val.0[12usize]) as i8),
+            -(i8::eq(&a.val.0[13usize], &b.val.0[13usize]) as i8),
+            -(i8::eq(&a.val.0[14usize], &b.val.0[14usize]) as i8),
+            -(i8::eq(&a.val.0[15usize], &b.val.0[15usize]) as i8),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn any_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        a[0usize] != 0
-            || a[1usize] != 0
-            || a[2usize] != 0
-            || a[3usize] != 0
-            || a[4usize] != 0
-            || a[5usize] != 0
-            || a[6usize] != 0
-            || a[7usize] != 0
-            || a[8usize] != 0
-            || a[9usize] != 0
-            || a[10usize] != 0
-            || a[11usize] != 0
-            || a[12usize] != 0
-            || a[13usize] != 0
-            || a[14usize] != 0
-            || a[15usize] != 0
+        a.val.0[0usize] != 0
+            || a.val.0[1usize] != 0
+            || a.val.0[2usize] != 0
+            || a.val.0[3usize] != 0
+            || a.val.0[4usize] != 0
+            || a.val.0[5usize] != 0
+            || a.val.0[6usize] != 0
+            || a.val.0[7usize] != 0
+            || a.val.0[8usize] != 0
+            || a.val.0[9usize] != 0
+            || a.val.0[10usize] != 0
+            || a.val.0[11usize] != 0
+            || a.val.0[12usize] != 0
+            || a.val.0[13usize] != 0
+            || a.val.0[14usize] != 0
+            || a.val.0[15usize] != 0
     }
     #[inline(always)]
     fn all_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        a[0usize] != 0
-            && a[1usize] != 0
-            && a[2usize] != 0
-            && a[3usize] != 0
-            && a[4usize] != 0
-            && a[5usize] != 0
-            && a[6usize] != 0
-            && a[7usize] != 0
-            && a[8usize] != 0
-            && a[9usize] != 0
-            && a[10usize] != 0
-            && a[11usize] != 0
-            && a[12usize] != 0
-            && a[13usize] != 0
-            && a[14usize] != 0
-            && a[15usize] != 0
+        a.val.0[0usize] != 0
+            && a.val.0[1usize] != 0
+            && a.val.0[2usize] != 0
+            && a.val.0[3usize] != 0
+            && a.val.0[4usize] != 0
+            && a.val.0[5usize] != 0
+            && a.val.0[6usize] != 0
+            && a.val.0[7usize] != 0
+            && a.val.0[8usize] != 0
+            && a.val.0[9usize] != 0
+            && a.val.0[10usize] != 0
+            && a.val.0[11usize] != 0
+            && a.val.0[12usize] != 0
+            && a.val.0[13usize] != 0
+            && a.val.0[14usize] != 0
+            && a.val.0[15usize] != 0
     }
     #[inline(always)]
     fn any_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        a[0usize] == 0
-            || a[1usize] == 0
-            || a[2usize] == 0
-            || a[3usize] == 0
-            || a[4usize] == 0
-            || a[5usize] == 0
-            || a[6usize] == 0
-            || a[7usize] == 0
-            || a[8usize] == 0
-            || a[9usize] == 0
-            || a[10usize] == 0
-            || a[11usize] == 0
-            || a[12usize] == 0
-            || a[13usize] == 0
-            || a[14usize] == 0
-            || a[15usize] == 0
+        a.val.0[0usize] == 0
+            || a.val.0[1usize] == 0
+            || a.val.0[2usize] == 0
+            || a.val.0[3usize] == 0
+            || a.val.0[4usize] == 0
+            || a.val.0[5usize] == 0
+            || a.val.0[6usize] == 0
+            || a.val.0[7usize] == 0
+            || a.val.0[8usize] == 0
+            || a.val.0[9usize] == 0
+            || a.val.0[10usize] == 0
+            || a.val.0[11usize] == 0
+            || a.val.0[12usize] == 0
+            || a.val.0[13usize] == 0
+            || a.val.0[14usize] == 0
+            || a.val.0[15usize] == 0
     }
     #[inline(always)]
     fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        a[0usize] == 0
-            && a[1usize] == 0
-            && a[2usize] == 0
-            && a[3usize] == 0
-            && a[4usize] == 0
-            && a[5usize] == 0
-            && a[6usize] == 0
-            && a[7usize] == 0
-            && a[8usize] == 0
-            && a[9usize] == 0
-            && a[10usize] == 0
-            && a[11usize] == 0
-            && a[12usize] == 0
-            && a[13usize] == 0
-            && a[14usize] == 0
-            && a[15usize] == 0
+        a.val.0[0usize] == 0
+            && a.val.0[1usize] == 0
+            && a.val.0[2usize] == 0
+            && a.val.0[3usize] == 0
+            && a.val.0[4usize] == 0
+            && a.val.0[5usize] == 0
+            && a.val.0[6usize] == 0
+            && a.val.0[7usize] == 0
+            && a.val.0[8usize] == 0
+            && a.val.0[9usize] == 0
+            && a.val.0[10usize] == 0
+            && a.val.0[11usize] == 0
+            && a.val.0[12usize] == 0
+            && a.val.0[13usize] == 0
+            && a.val.0[14usize] == 0
+            && a.val.0[15usize] == 0
     }
     #[inline(always)]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self> {
@@ -2352,14 +2432,46 @@ impl Simd for Fallback {
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
-            if a[4usize] != 0 { b[4usize] } else { c[4usize] },
-            if a[5usize] != 0 { b[5usize] } else { c[5usize] },
-            if a[6usize] != 0 { b[6usize] } else { c[6usize] },
-            if a[7usize] != 0 { b[7usize] } else { c[7usize] },
+            if a.val.0[0usize] != 0 {
+                b[0usize]
+            } else {
+                c[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b[1usize]
+            } else {
+                c[1usize]
+            },
+            if a.val.0[2usize] != 0 {
+                b[2usize]
+            } else {
+                c[2usize]
+            },
+            if a.val.0[3usize] != 0 {
+                b[3usize]
+            } else {
+                c[3usize]
+            },
+            if a.val.0[4usize] != 0 {
+                b[4usize]
+            } else {
+                c[4usize]
+            },
+            if a.val.0[5usize] != 0 {
+                b[5usize]
+            } else {
+                c[5usize]
+            },
+            if a.val.0[6usize] != 0 {
+                b[6usize]
+            } else {
+                c[6usize]
+            },
+            if a.val.0[7usize] != 0 {
+                b[7usize]
+            } else {
+                c[7usize]
+            },
         ]
         .simd_into(self)
     }
@@ -2750,14 +2862,46 @@ impl Simd for Fallback {
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
-            if a[4usize] != 0 { b[4usize] } else { c[4usize] },
-            if a[5usize] != 0 { b[5usize] } else { c[5usize] },
-            if a[6usize] != 0 { b[6usize] } else { c[6usize] },
-            if a[7usize] != 0 { b[7usize] } else { c[7usize] },
+            if a.val.0[0usize] != 0 {
+                b[0usize]
+            } else {
+                c[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b[1usize]
+            } else {
+                c[1usize]
+            },
+            if a.val.0[2usize] != 0 {
+                b[2usize]
+            } else {
+                c[2usize]
+            },
+            if a.val.0[3usize] != 0 {
+                b[3usize]
+            } else {
+                c[3usize]
+            },
+            if a.val.0[4usize] != 0 {
+                b[4usize]
+            } else {
+                c[4usize]
+            },
+            if a.val.0[5usize] != 0 {
+                b[5usize]
+            } else {
+                c[5usize]
+            },
+            if a.val.0[6usize] != 0 {
+                b[6usize]
+            } else {
+                c[6usize]
+            },
+            if a.val.0[7usize] != 0 {
+                b[7usize]
+            } else {
+                c[7usize]
+            },
         ]
         .simd_into(self)
     }
@@ -2816,118 +2960,62 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask16x8(self, val: &[i16; 8usize]) -> mask16x8<Self> {
-        mask16x8 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize] {
         a.val.0
     }
     #[inline(always)]
-    fn as_array_ref_mask16x8(self, a: &mask16x8<Self>) -> &[i16; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask16x8(self, a: &mut mask16x8<Self>) -> &mut [i16; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask16x8(self, a: mask16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask16x8(self, a: u8x16<Self>) -> mask16x8<Self> {
-        unsafe {
-            mask16x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask16x8(self, a: mask16x8<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask16x8<const SHIFT: usize>(
-        self,
-        a: mask16x8<Self>,
-        b: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        let mut dest = [Default::default(); 8usize];
-        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask16x8<const SHIFT: usize>(
-        self,
-        a: mask16x8<Self>,
-        b: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        self.slide_mask16x8::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         [
-            i16::bitand(a[0usize], &b[0usize]),
-            i16::bitand(a[1usize], &b[1usize]),
-            i16::bitand(a[2usize], &b[2usize]),
-            i16::bitand(a[3usize], &b[3usize]),
-            i16::bitand(a[4usize], &b[4usize]),
-            i16::bitand(a[5usize], &b[5usize]),
-            i16::bitand(a[6usize], &b[6usize]),
-            i16::bitand(a[7usize], &b[7usize]),
+            i16::bitand(a.val.0[0usize], &b.val.0[0usize]),
+            i16::bitand(a.val.0[1usize], &b.val.0[1usize]),
+            i16::bitand(a.val.0[2usize], &b.val.0[2usize]),
+            i16::bitand(a.val.0[3usize], &b.val.0[3usize]),
+            i16::bitand(a.val.0[4usize], &b.val.0[4usize]),
+            i16::bitand(a.val.0[5usize], &b.val.0[5usize]),
+            i16::bitand(a.val.0[6usize], &b.val.0[6usize]),
+            i16::bitand(a.val.0[7usize], &b.val.0[7usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn or_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         [
-            i16::bitor(a[0usize], &b[0usize]),
-            i16::bitor(a[1usize], &b[1usize]),
-            i16::bitor(a[2usize], &b[2usize]),
-            i16::bitor(a[3usize], &b[3usize]),
-            i16::bitor(a[4usize], &b[4usize]),
-            i16::bitor(a[5usize], &b[5usize]),
-            i16::bitor(a[6usize], &b[6usize]),
-            i16::bitor(a[7usize], &b[7usize]),
+            i16::bitor(a.val.0[0usize], &b.val.0[0usize]),
+            i16::bitor(a.val.0[1usize], &b.val.0[1usize]),
+            i16::bitor(a.val.0[2usize], &b.val.0[2usize]),
+            i16::bitor(a.val.0[3usize], &b.val.0[3usize]),
+            i16::bitor(a.val.0[4usize], &b.val.0[4usize]),
+            i16::bitor(a.val.0[5usize], &b.val.0[5usize]),
+            i16::bitor(a.val.0[6usize], &b.val.0[6usize]),
+            i16::bitor(a.val.0[7usize], &b.val.0[7usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         [
-            i16::bitxor(a[0usize], &b[0usize]),
-            i16::bitxor(a[1usize], &b[1usize]),
-            i16::bitxor(a[2usize], &b[2usize]),
-            i16::bitxor(a[3usize], &b[3usize]),
-            i16::bitxor(a[4usize], &b[4usize]),
-            i16::bitxor(a[5usize], &b[5usize]),
-            i16::bitxor(a[6usize], &b[6usize]),
-            i16::bitxor(a[7usize], &b[7usize]),
+            i16::bitxor(a.val.0[0usize], &b.val.0[0usize]),
+            i16::bitxor(a.val.0[1usize], &b.val.0[1usize]),
+            i16::bitxor(a.val.0[2usize], &b.val.0[2usize]),
+            i16::bitxor(a.val.0[3usize], &b.val.0[3usize]),
+            i16::bitxor(a.val.0[4usize], &b.val.0[4usize]),
+            i16::bitxor(a.val.0[5usize], &b.val.0[5usize]),
+            i16::bitxor(a.val.0[6usize], &b.val.0[6usize]),
+            i16::bitxor(a.val.0[7usize], &b.val.0[7usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
         [
-            i16::not(a[0usize]),
-            i16::not(a[1usize]),
-            i16::not(a[2usize]),
-            i16::not(a[3usize]),
-            i16::not(a[4usize]),
-            i16::not(a[5usize]),
-            i16::not(a[6usize]),
-            i16::not(a[7usize]),
+            i16::not(a.val.0[0usize]),
+            i16::not(a.val.0[1usize]),
+            i16::not(a.val.0[2usize]),
+            i16::not(a.val.0[3usize]),
+            i16::not(a.val.0[4usize]),
+            i16::not(a.val.0[5usize]),
+            i16::not(a.val.0[6usize]),
+            i16::not(a.val.0[7usize]),
         ]
         .simd_into(self)
     }
@@ -2939,74 +3027,106 @@ impl Simd for Fallback {
         c: mask16x8<Self>,
     ) -> mask16x8<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
-            if a[4usize] != 0 { b[4usize] } else { c[4usize] },
-            if a[5usize] != 0 { b[5usize] } else { c[5usize] },
-            if a[6usize] != 0 { b[6usize] } else { c[6usize] },
-            if a[7usize] != 0 { b[7usize] } else { c[7usize] },
+            if a.val.0[0usize] != 0 {
+                b.val.0[0usize]
+            } else {
+                c.val.0[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b.val.0[1usize]
+            } else {
+                c.val.0[1usize]
+            },
+            if a.val.0[2usize] != 0 {
+                b.val.0[2usize]
+            } else {
+                c.val.0[2usize]
+            },
+            if a.val.0[3usize] != 0 {
+                b.val.0[3usize]
+            } else {
+                c.val.0[3usize]
+            },
+            if a.val.0[4usize] != 0 {
+                b.val.0[4usize]
+            } else {
+                c.val.0[4usize]
+            },
+            if a.val.0[5usize] != 0 {
+                b.val.0[5usize]
+            } else {
+                c.val.0[5usize]
+            },
+            if a.val.0[6usize] != 0 {
+                b.val.0[6usize]
+            } else {
+                c.val.0[6usize]
+            },
+            if a.val.0[7usize] != 0 {
+                b.val.0[7usize]
+            } else {
+                c.val.0[7usize]
+            },
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         [
-            -(i16::eq(&a[0usize], &b[0usize]) as i16),
-            -(i16::eq(&a[1usize], &b[1usize]) as i16),
-            -(i16::eq(&a[2usize], &b[2usize]) as i16),
-            -(i16::eq(&a[3usize], &b[3usize]) as i16),
-            -(i16::eq(&a[4usize], &b[4usize]) as i16),
-            -(i16::eq(&a[5usize], &b[5usize]) as i16),
-            -(i16::eq(&a[6usize], &b[6usize]) as i16),
-            -(i16::eq(&a[7usize], &b[7usize]) as i16),
+            -(i16::eq(&a.val.0[0usize], &b.val.0[0usize]) as i16),
+            -(i16::eq(&a.val.0[1usize], &b.val.0[1usize]) as i16),
+            -(i16::eq(&a.val.0[2usize], &b.val.0[2usize]) as i16),
+            -(i16::eq(&a.val.0[3usize], &b.val.0[3usize]) as i16),
+            -(i16::eq(&a.val.0[4usize], &b.val.0[4usize]) as i16),
+            -(i16::eq(&a.val.0[5usize], &b.val.0[5usize]) as i16),
+            -(i16::eq(&a.val.0[6usize], &b.val.0[6usize]) as i16),
+            -(i16::eq(&a.val.0[7usize], &b.val.0[7usize]) as i16),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        a[0usize] != 0
-            || a[1usize] != 0
-            || a[2usize] != 0
-            || a[3usize] != 0
-            || a[4usize] != 0
-            || a[5usize] != 0
-            || a[6usize] != 0
-            || a[7usize] != 0
+        a.val.0[0usize] != 0
+            || a.val.0[1usize] != 0
+            || a.val.0[2usize] != 0
+            || a.val.0[3usize] != 0
+            || a.val.0[4usize] != 0
+            || a.val.0[5usize] != 0
+            || a.val.0[6usize] != 0
+            || a.val.0[7usize] != 0
     }
     #[inline(always)]
     fn all_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        a[0usize] != 0
-            && a[1usize] != 0
-            && a[2usize] != 0
-            && a[3usize] != 0
-            && a[4usize] != 0
-            && a[5usize] != 0
-            && a[6usize] != 0
-            && a[7usize] != 0
+        a.val.0[0usize] != 0
+            && a.val.0[1usize] != 0
+            && a.val.0[2usize] != 0
+            && a.val.0[3usize] != 0
+            && a.val.0[4usize] != 0
+            && a.val.0[5usize] != 0
+            && a.val.0[6usize] != 0
+            && a.val.0[7usize] != 0
     }
     #[inline(always)]
     fn any_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        a[0usize] == 0
-            || a[1usize] == 0
-            || a[2usize] == 0
-            || a[3usize] == 0
-            || a[4usize] == 0
-            || a[5usize] == 0
-            || a[6usize] == 0
-            || a[7usize] == 0
+        a.val.0[0usize] == 0
+            || a.val.0[1usize] == 0
+            || a.val.0[2usize] == 0
+            || a.val.0[3usize] == 0
+            || a.val.0[4usize] == 0
+            || a.val.0[5usize] == 0
+            || a.val.0[6usize] == 0
+            || a.val.0[7usize] == 0
     }
     #[inline(always)]
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        a[0usize] == 0
-            && a[1usize] == 0
-            && a[2usize] == 0
-            && a[3usize] == 0
-            && a[4usize] == 0
-            && a[5usize] == 0
-            && a[6usize] == 0
-            && a[7usize] == 0
+        a.val.0[0usize] == 0
+            && a.val.0[1usize] == 0
+            && a.val.0[2usize] == 0
+            && a.val.0[3usize] == 0
+            && a.val.0[4usize] == 0
+            && a.val.0[5usize] == 0
+            && a.val.0[6usize] == 0
+            && a.val.0[7usize] == 0
     }
     #[inline(always)]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self> {
@@ -3269,10 +3389,26 @@ impl Simd for Fallback {
     #[inline(always)]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
+            if a.val.0[0usize] != 0 {
+                b[0usize]
+            } else {
+                c[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b[1usize]
+            } else {
+                c[1usize]
+            },
+            if a.val.0[2usize] != 0 {
+                b[2usize]
+            } else {
+                c[2usize]
+            },
+            if a.val.0[3usize] != 0 {
+                b[3usize]
+            } else {
+                c[3usize]
+            },
         ]
         .simd_into(self)
     }
@@ -3585,10 +3721,26 @@ impl Simd for Fallback {
     #[inline(always)]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
+            if a.val.0[0usize] != 0 {
+                b[0usize]
+            } else {
+                c[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b[1usize]
+            } else {
+                c[1usize]
+            },
+            if a.val.0[2usize] != 0 {
+                b[2usize]
+            } else {
+                c[2usize]
+            },
+            if a.val.0[3usize] != 0 {
+                b[3usize]
+            } else {
+                c[3usize]
+            },
         ]
         .simd_into(self)
     }
@@ -3645,102 +3797,46 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask32x4(self, val: &[i32; 4usize]) -> mask32x4<Self> {
-        mask32x4 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize] {
         a.val.0
     }
     #[inline(always)]
-    fn as_array_ref_mask32x4(self, a: &mask32x4<Self>) -> &[i32; 4usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask32x4(self, a: &mut mask32x4<Self>) -> &mut [i32; 4usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask32x4(self, a: mask32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask32x4(self, a: u8x16<Self>) -> mask32x4<Self> {
-        unsafe {
-            mask32x4 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask32x4(self, a: mask32x4<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask32x4<const SHIFT: usize>(
-        self,
-        a: mask32x4<Self>,
-        b: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        let mut dest = [Default::default(); 4usize];
-        dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask32x4<const SHIFT: usize>(
-        self,
-        a: mask32x4<Self>,
-        b: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        self.slide_mask32x4::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         [
-            i32::bitand(a[0usize], &b[0usize]),
-            i32::bitand(a[1usize], &b[1usize]),
-            i32::bitand(a[2usize], &b[2usize]),
-            i32::bitand(a[3usize], &b[3usize]),
+            i32::bitand(a.val.0[0usize], &b.val.0[0usize]),
+            i32::bitand(a.val.0[1usize], &b.val.0[1usize]),
+            i32::bitand(a.val.0[2usize], &b.val.0[2usize]),
+            i32::bitand(a.val.0[3usize], &b.val.0[3usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn or_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         [
-            i32::bitor(a[0usize], &b[0usize]),
-            i32::bitor(a[1usize], &b[1usize]),
-            i32::bitor(a[2usize], &b[2usize]),
-            i32::bitor(a[3usize], &b[3usize]),
+            i32::bitor(a.val.0[0usize], &b.val.0[0usize]),
+            i32::bitor(a.val.0[1usize], &b.val.0[1usize]),
+            i32::bitor(a.val.0[2usize], &b.val.0[2usize]),
+            i32::bitor(a.val.0[3usize], &b.val.0[3usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         [
-            i32::bitxor(a[0usize], &b[0usize]),
-            i32::bitxor(a[1usize], &b[1usize]),
-            i32::bitxor(a[2usize], &b[2usize]),
-            i32::bitxor(a[3usize], &b[3usize]),
+            i32::bitxor(a.val.0[0usize], &b.val.0[0usize]),
+            i32::bitxor(a.val.0[1usize], &b.val.0[1usize]),
+            i32::bitxor(a.val.0[2usize], &b.val.0[2usize]),
+            i32::bitxor(a.val.0[3usize], &b.val.0[3usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
         [
-            i32::not(a[0usize]),
-            i32::not(a[1usize]),
-            i32::not(a[2usize]),
-            i32::not(a[3usize]),
+            i32::not(a.val.0[0usize]),
+            i32::not(a.val.0[1usize]),
+            i32::not(a.val.0[2usize]),
+            i32::not(a.val.0[3usize]),
         ]
         .simd_into(self)
     }
@@ -3752,38 +3848,54 @@ impl Simd for Fallback {
         c: mask32x4<Self>,
     ) -> mask32x4<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
-            if a[2usize] != 0 { b[2usize] } else { c[2usize] },
-            if a[3usize] != 0 { b[3usize] } else { c[3usize] },
+            if a.val.0[0usize] != 0 {
+                b.val.0[0usize]
+            } else {
+                c.val.0[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b.val.0[1usize]
+            } else {
+                c.val.0[1usize]
+            },
+            if a.val.0[2usize] != 0 {
+                b.val.0[2usize]
+            } else {
+                c.val.0[2usize]
+            },
+            if a.val.0[3usize] != 0 {
+                b.val.0[3usize]
+            } else {
+                c.val.0[3usize]
+            },
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         [
-            -(i32::eq(&a[0usize], &b[0usize]) as i32),
-            -(i32::eq(&a[1usize], &b[1usize]) as i32),
-            -(i32::eq(&a[2usize], &b[2usize]) as i32),
-            -(i32::eq(&a[3usize], &b[3usize]) as i32),
+            -(i32::eq(&a.val.0[0usize], &b.val.0[0usize]) as i32),
+            -(i32::eq(&a.val.0[1usize], &b.val.0[1usize]) as i32),
+            -(i32::eq(&a.val.0[2usize], &b.val.0[2usize]) as i32),
+            -(i32::eq(&a.val.0[3usize], &b.val.0[3usize]) as i32),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        a[0usize] != 0 || a[1usize] != 0 || a[2usize] != 0 || a[3usize] != 0
+        a.val.0[0usize] != 0 || a.val.0[1usize] != 0 || a.val.0[2usize] != 0 || a.val.0[3usize] != 0
     }
     #[inline(always)]
     fn all_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        a[0usize] != 0 && a[1usize] != 0 && a[2usize] != 0 && a[3usize] != 0
+        a.val.0[0usize] != 0 && a.val.0[1usize] != 0 && a.val.0[2usize] != 0 && a.val.0[3usize] != 0
     }
     #[inline(always)]
     fn any_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        a[0usize] == 0 || a[1usize] == 0 || a[2usize] == 0 || a[3usize] == 0
+        a.val.0[0usize] == 0 || a.val.0[1usize] == 0 || a.val.0[2usize] == 0 || a.val.0[3usize] == 0
     }
     #[inline(always)]
     fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        a[0usize] == 0 && a[1usize] == 0 && a[2usize] == 0 && a[3usize] == 0
+        a.val.0[0usize] == 0 && a.val.0[1usize] == 0 && a.val.0[2usize] == 0 && a.val.0[3usize] == 0
     }
     #[inline(always)]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self> {
@@ -4042,8 +4154,16 @@ impl Simd for Fallback {
     #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
+            if a.val.0[0usize] != 0 {
+                b[0usize]
+            } else {
+                c[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b[1usize]
+            } else {
+                c[1usize]
+            },
         ]
         .simd_into(self)
     }
@@ -4070,92 +4190,36 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask64x2(self, val: &[i64; 2usize]) -> mask64x2<Self> {
-        mask64x2 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize] {
         a.val.0
     }
     #[inline(always)]
-    fn as_array_ref_mask64x2(self, a: &mask64x2<Self>) -> &[i64; 2usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask64x2(self, a: &mut mask64x2<Self>) -> &mut [i64; 2usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask64x2(self, a: mask64x2<Self>, dest: &mut [i64; 2usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask64x2(self, a: u8x16<Self>) -> mask64x2<Self> {
-        unsafe {
-            mask64x2 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask64x2(self, a: mask64x2<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask64x2<const SHIFT: usize>(
-        self,
-        a: mask64x2<Self>,
-        b: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        let mut dest = [Default::default(); 2usize];
-        dest[..2usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[2usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask64x2<const SHIFT: usize>(
-        self,
-        a: mask64x2<Self>,
-        b: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        self.slide_mask64x2::<SHIFT>(a, b)
-    }
-    #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         [
-            i64::bitand(a[0usize], &b[0usize]),
-            i64::bitand(a[1usize], &b[1usize]),
+            i64::bitand(a.val.0[0usize], &b.val.0[0usize]),
+            i64::bitand(a.val.0[1usize], &b.val.0[1usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn or_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         [
-            i64::bitor(a[0usize], &b[0usize]),
-            i64::bitor(a[1usize], &b[1usize]),
+            i64::bitor(a.val.0[0usize], &b.val.0[0usize]),
+            i64::bitor(a.val.0[1usize], &b.val.0[1usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         [
-            i64::bitxor(a[0usize], &b[0usize]),
-            i64::bitxor(a[1usize], &b[1usize]),
+            i64::bitxor(a.val.0[0usize], &b.val.0[0usize]),
+            i64::bitxor(a.val.0[1usize], &b.val.0[1usize]),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
-        [i64::not(a[0usize]), i64::not(a[1usize])].simd_into(self)
+        [i64::not(a.val.0[0usize]), i64::not(a.val.0[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn select_mask64x2(
@@ -4165,34 +4229,42 @@ impl Simd for Fallback {
         c: mask64x2<Self>,
     ) -> mask64x2<Self> {
         [
-            if a[0usize] != 0 { b[0usize] } else { c[0usize] },
-            if a[1usize] != 0 { b[1usize] } else { c[1usize] },
+            if a.val.0[0usize] != 0 {
+                b.val.0[0usize]
+            } else {
+                c.val.0[0usize]
+            },
+            if a.val.0[1usize] != 0 {
+                b.val.0[1usize]
+            } else {
+                c.val.0[1usize]
+            },
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         [
-            -(i64::eq(&a[0usize], &b[0usize]) as i64),
-            -(i64::eq(&a[1usize], &b[1usize]) as i64),
+            -(i64::eq(&a.val.0[0usize], &b.val.0[0usize]) as i64),
+            -(i64::eq(&a.val.0[1usize], &b.val.0[1usize]) as i64),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        a[0usize] != 0 || a[1usize] != 0
+        a.val.0[0usize] != 0 || a.val.0[1usize] != 0
     }
     #[inline(always)]
     fn all_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        a[0usize] != 0 && a[1usize] != 0
+        a.val.0[0usize] != 0 && a.val.0[1usize] != 0
     }
     #[inline(always)]
     fn any_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        a[0usize] == 0 || a[1usize] == 0
+        a.val.0[0usize] == 0 || a.val.0[1usize] == 0
     }
     #[inline(always)]
     fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        a[0usize] == 0 && a[1usize] == 0
+        a.val.0[0usize] == 0 && a.val.0[1usize] == 0
     }
     #[inline(always)]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self> {
@@ -5098,69 +5170,8 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask8x32(self, val: &[i8; 32usize]) -> mask8x32<Self> {
-        mask8x32 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize] {
         a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_mask8x32(self, a: &mask8x32<Self>) -> &[i8; 32usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask8x32(self, a: &mut mask8x32<Self>) -> &mut [i8; 32usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask8x32(self, a: mask8x32<Self>, dest: &mut [i8; 32usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask8x32(self, a: u8x32<Self>) -> mask8x32<Self> {
-        unsafe {
-            mask8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask8x32(self, a: mask8x32<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask8x32<const SHIFT: usize>(
-        self,
-        a: mask8x32<Self>,
-        b: mask8x32<Self>,
-    ) -> mask8x32<Self> {
-        let mut dest = [Default::default(); 32usize];
-        dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask8x32<const SHIFT: usize>(
-        self,
-        a: mask8x32<Self>,
-        b: mask8x32<Self>,
-    ) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        self.combine_mask8x16(
-            self.slide_within_blocks_mask8x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask8x16::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
@@ -5807,69 +5818,8 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask16x16(self, val: &[i16; 16usize]) -> mask16x16<Self> {
-        mask16x16 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize] {
         a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_mask16x16(self, a: &mask16x16<Self>) -> &[i16; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask16x16(self, a: &mut mask16x16<Self>) -> &mut [i16; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask16x16(self, a: mask16x16<Self>, dest: &mut [i16; 16usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask16x16(self, a: u8x32<Self>) -> mask16x16<Self> {
-        unsafe {
-            mask16x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask16x16(self, a: mask16x16<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask16x16<const SHIFT: usize>(
-        self,
-        a: mask16x16<Self>,
-        b: mask16x16<Self>,
-    ) -> mask16x16<Self> {
-        let mut dest = [Default::default(); 16usize];
-        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask16x16<const SHIFT: usize>(
-        self,
-        a: mask16x16<Self>,
-        b: mask16x16<Self>,
-    ) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        self.combine_mask16x8(
-            self.slide_within_blocks_mask16x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask16x8::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
@@ -6496,69 +6446,8 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask32x8(self, val: &[i32; 8usize]) -> mask32x8<Self> {
-        mask32x8 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize] {
         a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_mask32x8(self, a: &mask32x8<Self>) -> &[i32; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask32x8(self, a: &mut mask32x8<Self>) -> &mut [i32; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask32x8(self, a: mask32x8<Self>, dest: &mut [i32; 8usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask32x8(self, a: u8x32<Self>) -> mask32x8<Self> {
-        unsafe {
-            mask32x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask32x8(self, a: mask32x8<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask32x8<const SHIFT: usize>(
-        self,
-        a: mask32x8<Self>,
-        b: mask32x8<Self>,
-    ) -> mask32x8<Self> {
-        let mut dest = [Default::default(); 8usize];
-        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask32x8<const SHIFT: usize>(
-        self,
-        a: mask32x8<Self>,
-        b: mask32x8<Self>,
-    ) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        self.combine_mask32x4(
-            self.slide_within_blocks_mask32x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask32x4::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -6958,69 +6847,8 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask64x4(self, val: &[i64; 4usize]) -> mask64x4<Self> {
-        mask64x4 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize] {
         a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_mask64x4(self, a: &mask64x4<Self>) -> &[i64; 4usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask64x4(self, a: &mut mask64x4<Self>) -> &mut [i64; 4usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask64x4(self, a: mask64x4<Self>, dest: &mut [i64; 4usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask64x4(self, a: u8x32<Self>) -> mask64x4<Self> {
-        unsafe {
-            mask64x4 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask64x4(self, a: mask64x4<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask64x4<const SHIFT: usize>(
-        self,
-        a: mask64x4<Self>,
-        b: mask64x4<Self>,
-    ) -> mask64x4<Self> {
-        let mut dest = [Default::default(); 4usize];
-        dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[4usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask64x4<const SHIFT: usize>(
-        self,
-        a: mask64x4<Self>,
-        b: mask64x4<Self>,
-    ) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        self.combine_mask64x2(
-            self.slide_within_blocks_mask64x2::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask64x2::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -8087,69 +7915,8 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask8x64(self, val: &[i8; 64usize]) -> mask8x64<Self> {
-        mask8x64 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize] {
         a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_mask8x64(self, a: &mask8x64<Self>) -> &[i8; 64usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask8x64(self, a: &mut mask8x64<Self>) -> &mut [i8; 64usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask8x64(self, a: mask8x64<Self>, dest: &mut [i8; 64usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask8x64(self, a: u8x64<Self>) -> mask8x64<Self> {
-        unsafe {
-            mask8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask8x64(self, a: mask8x64<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask8x64<const SHIFT: usize>(
-        self,
-        a: mask8x64<Self>,
-        b: mask8x64<Self>,
-    ) -> mask8x64<Self> {
-        let mut dest = [Default::default(); 64usize];
-        dest[..64usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[64usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask8x64<const SHIFT: usize>(
-        self,
-        a: mask8x64<Self>,
-        b: mask8x64<Self>,
-    ) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(
-            self.slide_within_blocks_mask8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask8x32::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -8824,69 +8591,8 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask16x32(self, val: &[i16; 32usize]) -> mask16x32<Self> {
-        mask16x32 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize] {
         a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_mask16x32(self, a: &mask16x32<Self>) -> &[i16; 32usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask16x32(self, a: &mut mask16x32<Self>) -> &mut [i16; 32usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask16x32(self, a: mask16x32<Self>, dest: &mut [i16; 32usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask16x32(self, a: u8x64<Self>) -> mask16x32<Self> {
-        unsafe {
-            mask16x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask16x32(self, a: mask16x32<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask16x32<const SHIFT: usize>(
-        self,
-        a: mask16x32<Self>,
-        b: mask16x32<Self>,
-    ) -> mask16x32<Self> {
-        let mut dest = [Default::default(); 32usize];
-        dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[32usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask16x32<const SHIFT: usize>(
-        self,
-        a: mask16x32<Self>,
-        b: mask16x32<Self>,
-    ) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(
-            self.slide_within_blocks_mask16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask16x16::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -9525,69 +9231,8 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask32x16(self, val: &[i32; 16usize]) -> mask32x16<Self> {
-        mask32x16 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize] {
         a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_mask32x16(self, a: &mask32x16<Self>) -> &[i32; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask32x16(self, a: &mut mask32x16<Self>) -> &mut [i32; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask32x16(self, a: mask32x16<Self>, dest: &mut [i32; 16usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask32x16(self, a: u8x64<Self>) -> mask32x16<Self> {
-        unsafe {
-            mask32x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask32x16(self, a: mask32x16<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask32x16<const SHIFT: usize>(
-        self,
-        a: mask32x16<Self>,
-        b: mask32x16<Self>,
-    ) -> mask32x16<Self> {
-        let mut dest = [Default::default(); 16usize];
-        dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[16usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask32x16<const SHIFT: usize>(
-        self,
-        a: mask32x16<Self>,
-        b: mask32x16<Self>,
-    ) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(
-            self.slide_within_blocks_mask32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask32x8::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -9973,69 +9618,8 @@ impl Simd for Fallback {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask64x8(self, val: &[i64; 8usize]) -> mask64x8<Self> {
-        mask64x8 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
         a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_mask64x8(self, a: &mask64x8<Self>) -> &[i64; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_mask64x8(self, a: &mut mask64x8<Self>) -> &mut [i64; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_mask64x8(self, a: mask64x8<Self>, dest: &mut [i64; 8usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask64x8(self, a: u8x64<Self>) -> mask64x8<Self> {
-        unsafe {
-            mask64x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask64x8(self, a: mask64x8<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask64x8<const SHIFT: usize>(
-        self,
-        a: mask64x8<Self>,
-        b: mask64x8<Self>,
-    ) -> mask64x8<Self> {
-        let mut dest = [Default::default(); 8usize];
-        dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
-        dest[8usize - SHIFT..].copy_from_slice(&b.val.0[..SHIFT]);
-        dest.simd_into(self)
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask64x8<const SHIFT: usize>(
-        self,
-        a: mask64x8<Self>,
-        b: mask64x8<Self>,
-    ) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(
-            self.slide_within_blocks_mask64x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask64x4::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
