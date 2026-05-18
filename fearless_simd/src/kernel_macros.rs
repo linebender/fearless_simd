@@ -23,9 +23,9 @@
 /// ```rust
 /// # #[allow(unused_imports)]
 /// use fearless_simd::{i32x8, prelude::*};
-/// #[cfg(target_arch = \"x86\")]
+/// #[cfg(target_arch = "x86")]
 /// use std::arch::x86::{__m256i, _mm256_add_epi32};
-/// #[cfg(target_arch = \"x86_64\")]
+/// #[cfg(target_arch = "x86_64")]
 /// use std::arch::x86_64::{__m256i, _mm256_add_epi32};
 ///
 /// fearless_simd::kernel! {
@@ -35,7 +35,7 @@
 /// }
 ///
 /// # fn main() {
-/// #[cfg(any(target_arch = \"x86\", target_arch = \"x86_64\"))]
+/// #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 /// if let Some(avx2) = fearless_simd::Level::new().as_avx2() {
 ///     let a: i32x8<_> = [1, 2, 3, 4, 5, 6, 7, 8].simd_into(avx2);
 ///     let b: i32x8<_> = [10, 20, 30, 40, 50, 60, 70, 80].simd_into(avx2);
@@ -201,4 +201,66 @@ macro_rules! __fearless_simd_kernel_impl {
             unsafe { __fearless_simd_kernel($token $(, $arg)*) }
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(any(
+        target_arch = "aarch64",
+        all(target_arch = "wasm32", target_feature = "simd128")
+    ))]
+    use crate::prelude::*;
+
+    #[cfg(target_arch = "aarch64")]
+    use core::arch::aarch64::{float32x4_t, vaddq_f32};
+    #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+    use core::arch::wasm32::{f32x4_add, v128};
+
+    crate::kernel! {
+        fn add_f32x4_neon(neon: Neon, a: float32x4_t, b: float32x4_t) -> float32x4_t {
+            vaddq_f32(a, b)
+        }
+    }
+
+    crate::kernel! {
+        fn add_f32x4_wasm(wasm: WasmSimd128, a: v128, b: v128) -> v128 {
+            f32x4_add(a, b)
+        }
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    #[test]
+    fn kernel_instantiates_for_neon() {
+        let Some(neon) = crate::Level::new().as_neon() else {
+            return;
+        };
+
+        let a: crate::f32x4<_> = [1.0, 2.0, 3.0, 4.0].simd_into(neon);
+        let b: crate::f32x4<_> = [10.0, 20.0, 30.0, 40.0].simd_into(neon);
+        let sum: crate::f32x4<_> = add_f32x4_neon(neon, a.into(), b.into()).simd_into(neon);
+
+        assert_eq!(
+            <[f32; 4]>::from(sum),
+            [11.0, 22.0, 33.0, 44.0],
+            "`kernel!` should instantiate a working NEON kernel"
+        );
+    }
+
+    #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+    #[test]
+    fn kernel_instantiates_for_wasm_simd128() {
+        let wasm = crate::Level::new()
+            .as_wasm_simd128()
+            .expect("WASM SIMD128 should be available when +simd128 is enabled");
+
+        let a: crate::f32x4<_> = [1.0, 2.0, 3.0, 4.0].simd_into(wasm);
+        let b: crate::f32x4<_> = [10.0, 20.0, 30.0, 40.0].simd_into(wasm);
+        let sum: crate::f32x4<_> = add_f32x4_wasm(wasm, a.into(), b.into()).simd_into(wasm);
+
+        assert_eq!(
+            <[f32; 4]>::from(sum),
+            [11.0, 22.0, 33.0, 44.0],
+            "`kernel!` should instantiate a working WASM SIMD128 kernel"
+        );
+    }
 }
