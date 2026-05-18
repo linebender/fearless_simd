@@ -207,6 +207,8 @@ macro_rules! __fearless_simd_kernel_impl {
 mod tests {
     #[cfg(any(
         target_arch = "aarch64",
+        target_arch = "x86",
+        target_arch = "x86_64",
         all(target_arch = "wasm32", target_feature = "simd128")
     ))]
     use crate::prelude::*;
@@ -215,6 +217,10 @@ mod tests {
     use core::arch::aarch64::{float32x4_t, vaddq_f32};
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     use core::arch::wasm32::{f32x4_add, v128};
+    #[cfg(target_arch = "x86")]
+    use core::arch::x86::{__m256i, _mm256_add_epi32};
+    #[cfg(target_arch = "x86_64")]
+    use core::arch::x86_64::{__m256i, _mm256_add_epi32};
 
     crate::kernel! {
         fn add_f32x4_neon(neon: Neon, a: float32x4_t, b: float32x4_t) -> float32x4_t {
@@ -225,6 +231,12 @@ mod tests {
     crate::kernel! {
         fn add_f32x4_wasm(wasm: WasmSimd128, a: v128, b: v128) -> v128 {
             f32x4_add(a, b)
+        }
+    }
+
+    crate::kernel! {
+        fn add_i32x8_avx2(avx2: Avx2, a: __m256i, b: __m256i) -> __m256i {
+            _mm256_add_epi32(a, b)
         }
     }
 
@@ -261,6 +273,24 @@ mod tests {
             <[f32; 4]>::from(sum),
             [11.0, 22.0, 33.0, 44.0],
             "`kernel!` should instantiate a working WASM SIMD128 kernel"
+        );
+    }
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[test]
+    fn kernel_instantiates_for_avx2() {
+        let Some(avx2) = crate::Level::new().as_avx2() else {
+            return;
+        };
+
+        let a: crate::i32x8<_> = [1, 2, 3, 4, 5, 6, 7, 8].simd_into(avx2);
+        let b: crate::i32x8<_> = [10, 20, 30, 40, 50, 60, 70, 80].simd_into(avx2);
+        let sum: crate::i32x8<_> = add_i32x8_avx2(avx2, a.into(), b.into()).simd_into(avx2);
+
+        assert_eq!(
+            <[i32; 8]>::from(sum),
+            [11, 22, 33, 44, 55, 66, 77, 88],
+            "`kernel!` should instantiate a working AVX2 kernel"
         );
     }
 }
