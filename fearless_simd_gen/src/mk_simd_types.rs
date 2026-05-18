@@ -34,6 +34,25 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         let to_bytes_op = generic_op_name("cvt_to_bytes", ty);
         let bytes = VecType::new(ScalarType::Unsigned, 8, align).rust();
         let mask = ty.mask_ty().rust();
+        let array_methods = if ty.scalar == ScalarType::Mask {
+            quote! {}
+        } else {
+            quote! {
+                impl<S: Simd> #name<S> {
+                    /// Create a SIMD vector from an array.
+                    #[inline(always)]
+                    pub fn from_array(simd: S, array: [#rust_scalar; #len]) -> Self {
+                        simd.#from_array_op(array)
+                    }
+
+                    /// Convert this SIMD vector to an array.
+                    #[inline(always)]
+                    pub fn to_array(self) -> [#rust_scalar; #len] {
+                        self.simd.#as_array_op(self)
+                    }
+                }
+            }
+        };
 
         let scalar_impl = {
             let splat = Ident::new(&format!("splat_{}", ty.rust_name()), Span::call_site());
@@ -185,6 +204,8 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     value.simd.#as_array_op(value)
                 }
             }
+
+            #array_methods
 
             impl<S: Simd> core::ops::Deref for #name<S> {
                 type Target = [#rust_scalar; #len];

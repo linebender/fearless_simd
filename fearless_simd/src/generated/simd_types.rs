@@ -6,7 +6,7 @@
 use crate::{
     Bytes, Select, Simd, SimdBase, SimdCvtFloat, SimdCvtTruncate, SimdFrom, SimdInto, seal::Seal,
 };
-#[doc = "A SIMD vector of 4 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x4::splat(simd, 1.0);\n    let b = f32x4::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);\n\n    // From an array:\n    let d = f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]);\n\n    // From an element-wise function:\n    let e = f32x4::from_fn(simd, |i| i as f32);\n}\n```"]
+#[doc = "A SIMD vector of 4 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x4::splat(simd, 1.0);\n    let b = f32x4::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);\n\n    // From an array:\n    let d = f32x4::from_array(simd, [1.0, 2.0, 3.0, 4.0]);\n    let e = f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = f32x4::from_fn(simd, |i| i as f32);\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(16))]
 pub struct f32x4<S: Simd> {
@@ -24,6 +24,18 @@ impl<S: Simd> From<f32x4<S>> for [f32; 4] {
     #[inline(always)]
     fn from(value: f32x4<S>) -> Self {
         value.simd.as_array_f32x4(value)
+    }
+}
+impl<S: Simd> f32x4<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [f32; 4]) -> Self {
+        simd.load_array_f32x4(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [f32; 4] {
+        self.simd.as_array_f32x4(self)
     }
 }
 impl<S: Simd> core::ops::Deref for f32x4<S> {
@@ -255,7 +267,7 @@ impl<S: Simd> crate::SimdCombine<S> for f32x4<S> {
         self.simd.combine_f32x4(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 16 [`i8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i8x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i8x16::splat(simd, 1);\n    let b = i8x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i8x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = i8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an element-wise function:\n    let e = i8x16::from_fn(simd, |i| i as i8);\n}\n```"]
+#[doc = "A SIMD vector of 16 [`i8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i8x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i8x16::splat(simd, 1);\n    let b = i8x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i8x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = i8x16::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n    let e = i8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = i8x16::from_fn(simd, |i| i as i8);\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(16))]
 pub struct i8x16<S: Simd> {
@@ -273,6 +285,18 @@ impl<S: Simd> From<i8x16<S>> for [i8; 16] {
     #[inline(always)]
     fn from(value: i8x16<S>) -> Self {
         value.simd.as_array_i8x16(value)
+    }
+}
+impl<S: Simd> i8x16<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [i8; 16]) -> Self {
+        simd.load_array_i8x16(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [i8; 16] {
+        self.simd.as_array_i8x16(self)
     }
 }
 impl<S: Simd> core::ops::Deref for i8x16<S> {
@@ -440,7 +464,7 @@ impl<S: Simd> crate::SimdCombine<S> for i8x16<S> {
         self.simd.combine_i8x16(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 16 [`u8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u8x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u8x16::splat(simd, 1);\n    let b = u8x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u8x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = u8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an element-wise function:\n    let e = u8x16::from_fn(simd, |i| i as u8);\n}\n```"]
+#[doc = "A SIMD vector of 16 [`u8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u8x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u8x16::splat(simd, 1);\n    let b = u8x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u8x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = u8x16::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n    let e = u8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = u8x16::from_fn(simd, |i| i as u8);\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(16))]
 pub struct u8x16<S: Simd> {
@@ -458,6 +482,18 @@ impl<S: Simd> From<u8x16<S>> for [u8; 16] {
     #[inline(always)]
     fn from(value: u8x16<S>) -> Self {
         value.simd.as_array_u8x16(value)
+    }
+}
+impl<S: Simd> u8x16<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [u8; 16]) -> Self {
+        simd.load_array_u8x16(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [u8; 16] {
+        self.simd.as_array_u8x16(self)
     }
 }
 impl<S: Simd> core::ops::Deref for u8x16<S> {
@@ -783,7 +819,7 @@ impl<S: Simd> crate::SimdCombine<S> for mask8x16<S> {
         self.simd.combine_mask8x16(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 8 [`i16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i16x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i16x8::splat(simd, 1);\n    let b = i16x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = i16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an element-wise function:\n    let e = i16x8::from_fn(simd, |i| i as i16);\n}\n```"]
+#[doc = "A SIMD vector of 8 [`i16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i16x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i16x8::splat(simd, 1);\n    let b = i16x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = i16x8::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n    let e = i16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = i16x8::from_fn(simd, |i| i as i16);\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(16))]
 pub struct i16x8<S: Simd> {
@@ -801,6 +837,18 @@ impl<S: Simd> From<i16x8<S>> for [i16; 8] {
     #[inline(always)]
     fn from(value: i16x8<S>) -> Self {
         value.simd.as_array_i16x8(value)
+    }
+}
+impl<S: Simd> i16x8<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [i16; 8]) -> Self {
+        simd.load_array_i16x8(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [i16; 8] {
+        self.simd.as_array_i16x8(self)
     }
 }
 impl<S: Simd> core::ops::Deref for i16x8<S> {
@@ -968,7 +1016,7 @@ impl<S: Simd> crate::SimdCombine<S> for i16x8<S> {
         self.simd.combine_i16x8(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 8 [`u16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u16x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u16x8::splat(simd, 1);\n    let b = u16x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = u16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an element-wise function:\n    let e = u16x8::from_fn(simd, |i| i as u16);\n}\n```"]
+#[doc = "A SIMD vector of 8 [`u16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u16x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u16x8::splat(simd, 1);\n    let b = u16x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = u16x8::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n    let e = u16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = u16x8::from_fn(simd, |i| i as u16);\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(16))]
 pub struct u16x8<S: Simd> {
@@ -986,6 +1034,18 @@ impl<S: Simd> From<u16x8<S>> for [u16; 8] {
     #[inline(always)]
     fn from(value: u16x8<S>) -> Self {
         value.simd.as_array_u16x8(value)
+    }
+}
+impl<S: Simd> u16x8<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [u16; 8]) -> Self {
+        simd.load_array_u16x8(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [u16; 8] {
+        self.simd.as_array_u16x8(self)
     }
 }
 impl<S: Simd> core::ops::Deref for u16x8<S> {
@@ -1311,7 +1371,7 @@ impl<S: Simd> crate::SimdCombine<S> for mask16x8<S> {
         self.simd.combine_mask16x8(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 4 [`i32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i32x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i32x4::splat(simd, 1);\n    let b = i32x4::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i32x4::from_slice(simd, &[1, 2, 3, 4]);\n\n    // From an array:\n    let d = i32x4::simd_from(simd, [1, 2, 3, 4]);\n\n    // From an element-wise function:\n    let e = i32x4::from_fn(simd, |i| i as i32);\n}\n```"]
+#[doc = "A SIMD vector of 4 [`i32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i32x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i32x4::splat(simd, 1);\n    let b = i32x4::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i32x4::from_slice(simd, &[1, 2, 3, 4]);\n\n    // From an array:\n    let d = i32x4::from_array(simd, [1, 2, 3, 4]);\n    let e = i32x4::simd_from(simd, [1, 2, 3, 4]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = i32x4::from_fn(simd, |i| i as i32);\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(16))]
 pub struct i32x4<S: Simd> {
@@ -1329,6 +1389,18 @@ impl<S: Simd> From<i32x4<S>> for [i32; 4] {
     #[inline(always)]
     fn from(value: i32x4<S>) -> Self {
         value.simd.as_array_i32x4(value)
+    }
+}
+impl<S: Simd> i32x4<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [i32; 4]) -> Self {
+        simd.load_array_i32x4(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [i32; 4] {
+        self.simd.as_array_i32x4(self)
     }
 }
 impl<S: Simd> core::ops::Deref for i32x4<S> {
@@ -1508,7 +1580,7 @@ impl<S: Simd> crate::SimdCombine<S> for i32x4<S> {
         self.simd.combine_i32x4(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 4 [`u32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u32x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u32x4::splat(simd, 1);\n    let b = u32x4::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u32x4::from_slice(simd, &[1, 2, 3, 4]);\n\n    // From an array:\n    let d = u32x4::simd_from(simd, [1, 2, 3, 4]);\n\n    // From an element-wise function:\n    let e = u32x4::from_fn(simd, |i| i as u32);\n}\n```"]
+#[doc = "A SIMD vector of 4 [`u32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u32x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u32x4::splat(simd, 1);\n    let b = u32x4::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u32x4::from_slice(simd, &[1, 2, 3, 4]);\n\n    // From an array:\n    let d = u32x4::from_array(simd, [1, 2, 3, 4]);\n    let e = u32x4::simd_from(simd, [1, 2, 3, 4]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = u32x4::from_fn(simd, |i| i as u32);\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(16))]
 pub struct u32x4<S: Simd> {
@@ -1526,6 +1598,18 @@ impl<S: Simd> From<u32x4<S>> for [u32; 4] {
     #[inline(always)]
     fn from(value: u32x4<S>) -> Self {
         value.simd.as_array_u32x4(value)
+    }
+}
+impl<S: Simd> u32x4<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [u32; 4]) -> Self {
+        simd.load_array_u32x4(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [u32; 4] {
+        self.simd.as_array_u32x4(self)
     }
 }
 impl<S: Simd> core::ops::Deref for u32x4<S> {
@@ -1863,7 +1947,7 @@ impl<S: Simd> crate::SimdCombine<S> for mask32x4<S> {
         self.simd.combine_mask32x4(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 2 [`f64`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f64x2};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f64x2::splat(simd, 1.0);\n    let b = f64x2::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f64x2::from_slice(simd, &[1.0, 2.0]);\n\n    // From an array:\n    let d = f64x2::simd_from(simd, [1.0, 2.0]);\n\n    // From an element-wise function:\n    let e = f64x2::from_fn(simd, |i| i as f64);\n}\n```"]
+#[doc = "A SIMD vector of 2 [`f64`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f64x2};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f64x2::splat(simd, 1.0);\n    let b = f64x2::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f64x2::from_slice(simd, &[1.0, 2.0]);\n\n    // From an array:\n    let d = f64x2::from_array(simd, [1.0, 2.0]);\n    let e = f64x2::simd_from(simd, [1.0, 2.0]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = f64x2::from_fn(simd, |i| i as f64);\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(16))]
 pub struct f64x2<S: Simd> {
@@ -1881,6 +1965,18 @@ impl<S: Simd> From<f64x2<S>> for [f64; 2] {
     #[inline(always)]
     fn from(value: f64x2<S>) -> Self {
         value.simd.as_array_f64x2(value)
+    }
+}
+impl<S: Simd> f64x2<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [f64; 2]) -> Self {
+        simd.load_array_f64x2(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [f64; 2] {
+        self.simd.as_array_f64x2(self)
     }
 }
 impl<S: Simd> core::ops::Deref for f64x2<S> {
@@ -2256,7 +2352,7 @@ impl<S: Simd> crate::SimdCombine<S> for mask64x2<S> {
         self.simd.combine_mask64x2(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 8 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x8::splat(simd, 1.0);\n    let b = f32x8::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an array:\n    let d = f32x8::simd_from(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an element-wise function:\n    let e = f32x8::from_fn(simd, |i| i as f32);\n    # use fearless_simd::f32x4;\n    // From `Self::Block`:\n    let f = f32x8::block_splat(f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]));\n}\n```"]
+#[doc = "A SIMD vector of 8 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x8::splat(simd, 1.0);\n    let b = f32x8::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an array:\n    let d = f32x8::from_array(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n    let e = f32x8::simd_from(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = f32x8::from_fn(simd, |i| i as f32);\n    # use fearless_simd::f32x4;\n    // From `Self::Block`:\n    let g = f32x8::block_splat(f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(32))]
 pub struct f32x8<S: Simd> {
@@ -2274,6 +2370,18 @@ impl<S: Simd> From<f32x8<S>> for [f32; 8] {
     #[inline(always)]
     fn from(value: f32x8<S>) -> Self {
         value.simd.as_array_f32x8(value)
+    }
+}
+impl<S: Simd> f32x8<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [f32; 8]) -> Self {
+        simd.load_array_f32x8(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [f32; 8] {
+        self.simd.as_array_f32x8(self)
     }
 }
 impl<S: Simd> core::ops::Deref for f32x8<S> {
@@ -2512,7 +2620,7 @@ impl<S: Simd> crate::SimdCombine<S> for f32x8<S> {
         self.simd.combine_f32x8(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 32 [`i8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i8x32};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i8x32::splat(simd, 1);\n    let b = i8x32::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i8x32::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an array:\n    let d = i8x32::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an element-wise function:\n    let e = i8x32::from_fn(simd, |i| i as i8);\n    # use fearless_simd::i8x16;\n    // From `Self::Block`:\n    let f = i8x32::block_splat(i8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));\n}\n```"]
+#[doc = "A SIMD vector of 32 [`i8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i8x32};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i8x32::splat(simd, 1);\n    let b = i8x32::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i8x32::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an array:\n    let d = i8x32::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n    let e = i8x32::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = i8x32::from_fn(simd, |i| i as i8);\n    # use fearless_simd::i8x16;\n    // From `Self::Block`:\n    let g = i8x32::block_splat(i8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(32))]
 pub struct i8x32<S: Simd> {
@@ -2530,6 +2638,18 @@ impl<S: Simd> From<i8x32<S>> for [i8; 32] {
     #[inline(always)]
     fn from(value: i8x32<S>) -> Self {
         value.simd.as_array_i8x32(value)
+    }
+}
+impl<S: Simd> i8x32<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [i8; 32]) -> Self {
+        simd.load_array_i8x32(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [i8; 32] {
+        self.simd.as_array_i8x32(self)
     }
 }
 impl<S: Simd> core::ops::Deref for i8x32<S> {
@@ -2704,7 +2824,7 @@ impl<S: Simd> crate::SimdCombine<S> for i8x32<S> {
         self.simd.combine_i8x32(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 32 [`u8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u8x32};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u8x32::splat(simd, 1);\n    let b = u8x32::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u8x32::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an array:\n    let d = u8x32::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an element-wise function:\n    let e = u8x32::from_fn(simd, |i| i as u8);\n    # use fearless_simd::u8x16;\n    // From `Self::Block`:\n    let f = u8x32::block_splat(u8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));\n}\n```"]
+#[doc = "A SIMD vector of 32 [`u8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u8x32};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u8x32::splat(simd, 1);\n    let b = u8x32::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u8x32::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an array:\n    let d = u8x32::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n    let e = u8x32::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = u8x32::from_fn(simd, |i| i as u8);\n    # use fearless_simd::u8x16;\n    // From `Self::Block`:\n    let g = u8x32::block_splat(u8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(32))]
 pub struct u8x32<S: Simd> {
@@ -2722,6 +2842,18 @@ impl<S: Simd> From<u8x32<S>> for [u8; 32] {
     #[inline(always)]
     fn from(value: u8x32<S>) -> Self {
         value.simd.as_array_u8x32(value)
+    }
+}
+impl<S: Simd> u8x32<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [u8; 32]) -> Self {
+        simd.load_array_u8x32(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [u8; 32] {
+        self.simd.as_array_u8x32(self)
     }
 }
 impl<S: Simd> core::ops::Deref for u8x32<S> {
@@ -3061,7 +3193,7 @@ impl<S: Simd> crate::SimdCombine<S> for mask8x32<S> {
         self.simd.combine_mask8x32(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 16 [`i16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i16x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i16x16::splat(simd, 1);\n    let b = i16x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i16x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = i16x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an element-wise function:\n    let e = i16x16::from_fn(simd, |i| i as i16);\n    # use fearless_simd::i16x8;\n    // From `Self::Block`:\n    let f = i16x16::block_splat(i16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
+#[doc = "A SIMD vector of 16 [`i16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i16x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i16x16::splat(simd, 1);\n    let b = i16x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i16x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = i16x16::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n    let e = i16x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = i16x16::from_fn(simd, |i| i as i16);\n    # use fearless_simd::i16x8;\n    // From `Self::Block`:\n    let g = i16x16::block_splat(i16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(32))]
 pub struct i16x16<S: Simd> {
@@ -3079,6 +3211,18 @@ impl<S: Simd> From<i16x16<S>> for [i16; 16] {
     #[inline(always)]
     fn from(value: i16x16<S>) -> Self {
         value.simd.as_array_i16x16(value)
+    }
+}
+impl<S: Simd> i16x16<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [i16; 16]) -> Self {
+        simd.load_array_i16x16(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [i16; 16] {
+        self.simd.as_array_i16x16(self)
     }
 }
 impl<S: Simd> core::ops::Deref for i16x16<S> {
@@ -3259,7 +3403,7 @@ impl<S: Simd> crate::SimdCombine<S> for i16x16<S> {
         self.simd.combine_i16x16(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 16 [`u16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u16x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u16x16::splat(simd, 1);\n    let b = u16x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u16x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = u16x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an element-wise function:\n    let e = u16x16::from_fn(simd, |i| i as u16);\n    # use fearless_simd::u16x8;\n    // From `Self::Block`:\n    let f = u16x16::block_splat(u16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
+#[doc = "A SIMD vector of 16 [`u16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u16x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u16x16::splat(simd, 1);\n    let b = u16x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u16x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = u16x16::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n    let e = u16x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = u16x16::from_fn(simd, |i| i as u16);\n    # use fearless_simd::u16x8;\n    // From `Self::Block`:\n    let g = u16x16::block_splat(u16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(32))]
 pub struct u16x16<S: Simd> {
@@ -3277,6 +3421,18 @@ impl<S: Simd> From<u16x16<S>> for [u16; 16] {
     #[inline(always)]
     fn from(value: u16x16<S>) -> Self {
         value.simd.as_array_u16x16(value)
+    }
+}
+impl<S: Simd> u16x16<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [u16; 16]) -> Self {
+        simd.load_array_u16x16(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [u16; 16] {
+        self.simd.as_array_u16x16(self)
     }
 }
 impl<S: Simd> core::ops::Deref for u16x16<S> {
@@ -3622,7 +3778,7 @@ impl<S: Simd> crate::SimdCombine<S> for mask16x16<S> {
         self.simd.combine_mask16x16(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 8 [`i32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i32x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i32x8::splat(simd, 1);\n    let b = i32x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = i32x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an element-wise function:\n    let e = i32x8::from_fn(simd, |i| i as i32);\n    # use fearless_simd::i32x4;\n    // From `Self::Block`:\n    let f = i32x8::block_splat(i32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
+#[doc = "A SIMD vector of 8 [`i32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i32x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i32x8::splat(simd, 1);\n    let b = i32x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = i32x8::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n    let e = i32x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = i32x8::from_fn(simd, |i| i as i32);\n    # use fearless_simd::i32x4;\n    // From `Self::Block`:\n    let g = i32x8::block_splat(i32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(32))]
 pub struct i32x8<S: Simd> {
@@ -3640,6 +3796,18 @@ impl<S: Simd> From<i32x8<S>> for [i32; 8] {
     #[inline(always)]
     fn from(value: i32x8<S>) -> Self {
         value.simd.as_array_i32x8(value)
+    }
+}
+impl<S: Simd> i32x8<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [i32; 8]) -> Self {
+        simd.load_array_i32x8(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [i32; 8] {
+        self.simd.as_array_i32x8(self)
     }
 }
 impl<S: Simd> core::ops::Deref for i32x8<S> {
@@ -3826,7 +3994,7 @@ impl<S: Simd> crate::SimdCombine<S> for i32x8<S> {
         self.simd.combine_i32x8(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 8 [`u32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u32x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u32x8::splat(simd, 1);\n    let b = u32x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = u32x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an element-wise function:\n    let e = u32x8::from_fn(simd, |i| i as u32);\n    # use fearless_simd::u32x4;\n    // From `Self::Block`:\n    let f = u32x8::block_splat(u32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
+#[doc = "A SIMD vector of 8 [`u32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u32x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u32x8::splat(simd, 1);\n    let b = u32x8::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // From an array:\n    let d = u32x8::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n    let e = u32x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = u32x8::from_fn(simd, |i| i as u32);\n    # use fearless_simd::u32x4;\n    // From `Self::Block`:\n    let g = u32x8::block_splat(u32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(32))]
 pub struct u32x8<S: Simd> {
@@ -3844,6 +4012,18 @@ impl<S: Simd> From<u32x8<S>> for [u32; 8] {
     #[inline(always)]
     fn from(value: u32x8<S>) -> Self {
         value.simd.as_array_u32x8(value)
+    }
+}
+impl<S: Simd> u32x8<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [u32; 8]) -> Self {
+        simd.load_array_u32x8(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [u32; 8] {
+        self.simd.as_array_u32x8(self)
     }
 }
 impl<S: Simd> core::ops::Deref for u32x8<S> {
@@ -4195,7 +4375,7 @@ impl<S: Simd> crate::SimdCombine<S> for mask32x8<S> {
         self.simd.combine_mask32x8(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 4 [`f64`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f64x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f64x4::splat(simd, 1.0);\n    let b = f64x4::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f64x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);\n\n    // From an array:\n    let d = f64x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]);\n\n    // From an element-wise function:\n    let e = f64x4::from_fn(simd, |i| i as f64);\n    # use fearless_simd::f64x2;\n    // From `Self::Block`:\n    let f = f64x4::block_splat(f64x2::simd_from(simd, [1.0, 2.0]));\n}\n```"]
+#[doc = "A SIMD vector of 4 [`f64`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f64x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f64x4::splat(simd, 1.0);\n    let b = f64x4::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f64x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);\n\n    // From an array:\n    let d = f64x4::from_array(simd, [1.0, 2.0, 3.0, 4.0]);\n    let e = f64x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = f64x4::from_fn(simd, |i| i as f64);\n    # use fearless_simd::f64x2;\n    // From `Self::Block`:\n    let g = f64x4::block_splat(f64x2::simd_from(simd, [1.0, 2.0]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(32))]
 pub struct f64x4<S: Simd> {
@@ -4213,6 +4393,18 @@ impl<S: Simd> From<f64x4<S>> for [f64; 4] {
     #[inline(always)]
     fn from(value: f64x4<S>) -> Self {
         value.simd.as_array_f64x4(value)
+    }
+}
+impl<S: Simd> f64x4<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [f64; 4]) -> Self {
+        simd.load_array_f64x4(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [f64; 4] {
+        self.simd.as_array_f64x4(self)
     }
 }
 impl<S: Simd> core::ops::Deref for f64x4<S> {
@@ -4602,7 +4794,7 @@ impl<S: Simd> crate::SimdCombine<S> for mask64x4<S> {
         self.simd.combine_mask64x4(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD vector of 16 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x16::splat(simd, 1.0);\n    let b = f32x16::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x16::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);\n\n    // From an array:\n    let d = f32x16::simd_from(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);\n\n    // From an element-wise function:\n    let e = f32x16::from_fn(simd, |i| i as f32);\n    # use fearless_simd::f32x4;\n    // From `Self::Block`:\n    let f = f32x16::block_splat(f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]));\n}\n```"]
+#[doc = "A SIMD vector of 16 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x16::splat(simd, 1.0);\n    let b = f32x16::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x16::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);\n\n    // From an array:\n    let d = f32x16::from_array(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);\n    let e = f32x16::simd_from(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = f32x16::from_fn(simd, |i| i as f32);\n    # use fearless_simd::f32x4;\n    // From `Self::Block`:\n    let g = f32x16::block_splat(f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
 pub struct f32x16<S: Simd> {
@@ -4620,6 +4812,18 @@ impl<S: Simd> From<f32x16<S>> for [f32; 16] {
     #[inline(always)]
     fn from(value: f32x16<S>) -> Self {
         value.simd.as_array_f32x16(value)
+    }
+}
+impl<S: Simd> f32x16<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [f32; 16]) -> Self {
+        simd.load_array_f32x16(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [f32; 16] {
+        self.simd.as_array_f32x16(self)
     }
 }
 impl<S: Simd> core::ops::Deref for f32x16<S> {
@@ -4858,7 +5062,7 @@ impl<S: Simd> crate::SimdSplit<S> for f32x16<S> {
         self.simd.split_f32x16(self)
     }
 }
-#[doc = "A SIMD vector of 64 [`i8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i8x64};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i8x64::splat(simd, 1);\n    let b = i8x64::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i8x64::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n\n    // From an array:\n    let d = i8x64::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n\n    // From an element-wise function:\n    let e = i8x64::from_fn(simd, |i| i as i8);\n    # use fearless_simd::i8x16;\n    // From `Self::Block`:\n    let f = i8x64::block_splat(i8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));\n}\n```"]
+#[doc = "A SIMD vector of 64 [`i8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i8x64};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i8x64::splat(simd, 1);\n    let b = i8x64::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i8x64::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n\n    // From an array:\n    let d = i8x64::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n    let e = i8x64::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = i8x64::from_fn(simd, |i| i as i8);\n    # use fearless_simd::i8x16;\n    // From `Self::Block`:\n    let g = i8x64::block_splat(i8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
 pub struct i8x64<S: Simd> {
@@ -4876,6 +5080,18 @@ impl<S: Simd> From<i8x64<S>> for [i8; 64] {
     #[inline(always)]
     fn from(value: i8x64<S>) -> Self {
         value.simd.as_array_i8x64(value)
+    }
+}
+impl<S: Simd> i8x64<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [i8; 64]) -> Self {
+        simd.load_array_i8x64(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [i8; 64] {
+        self.simd.as_array_i8x64(self)
     }
 }
 impl<S: Simd> core::ops::Deref for i8x64<S> {
@@ -5044,7 +5260,7 @@ impl<S: Simd> crate::SimdSplit<S> for i8x64<S> {
         self.simd.split_i8x64(self)
     }
 }
-#[doc = "A SIMD vector of 64 [`u8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u8x64};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u8x64::splat(simd, 1);\n    let b = u8x64::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u8x64::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n\n    // From an array:\n    let d = u8x64::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n\n    // From an element-wise function:\n    let e = u8x64::from_fn(simd, |i| i as u8);\n    # use fearless_simd::u8x16;\n    // From `Self::Block`:\n    let f = u8x64::block_splat(u8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));\n}\n```"]
+#[doc = "A SIMD vector of 64 [`u8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u8x64};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u8x64::splat(simd, 1);\n    let b = u8x64::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u8x64::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n\n    // From an array:\n    let d = u8x64::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n    let e = u8x64::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = u8x64::from_fn(simd, |i| i as u8);\n    # use fearless_simd::u8x16;\n    // From `Self::Block`:\n    let g = u8x64::block_splat(u8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
 pub struct u8x64<S: Simd> {
@@ -5062,6 +5278,18 @@ impl<S: Simd> From<u8x64<S>> for [u8; 64] {
     #[inline(always)]
     fn from(value: u8x64<S>) -> Self {
         value.simd.as_array_u8x64(value)
+    }
+}
+impl<S: Simd> u8x64<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [u8; 64]) -> Self {
+        simd.load_array_u8x64(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [u8; 64] {
+        self.simd.as_array_u8x64(self)
     }
 }
 impl<S: Simd> core::ops::Deref for u8x64<S> {
@@ -5389,7 +5617,7 @@ impl<S: Simd> crate::SimdSplit<S> for mask8x64<S> {
         self.simd.split_mask8x64(self)
     }
 }
-#[doc = "A SIMD vector of 32 [`i16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i16x32};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i16x32::splat(simd, 1);\n    let b = i16x32::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i16x32::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an array:\n    let d = i16x32::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an element-wise function:\n    let e = i16x32::from_fn(simd, |i| i as i16);\n    # use fearless_simd::i16x8;\n    // From `Self::Block`:\n    let f = i16x32::block_splat(i16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
+#[doc = "A SIMD vector of 32 [`i16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i16x32};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i16x32::splat(simd, 1);\n    let b = i16x32::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i16x32::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an array:\n    let d = i16x32::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n    let e = i16x32::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = i16x32::from_fn(simd, |i| i as i16);\n    # use fearless_simd::i16x8;\n    // From `Self::Block`:\n    let g = i16x32::block_splat(i16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
 pub struct i16x32<S: Simd> {
@@ -5407,6 +5635,18 @@ impl<S: Simd> From<i16x32<S>> for [i16; 32] {
     #[inline(always)]
     fn from(value: i16x32<S>) -> Self {
         value.simd.as_array_i16x32(value)
+    }
+}
+impl<S: Simd> i16x32<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [i16; 32]) -> Self {
+        simd.load_array_i16x32(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [i16; 32] {
+        self.simd.as_array_i16x32(self)
     }
 }
 impl<S: Simd> core::ops::Deref for i16x32<S> {
@@ -5581,7 +5821,7 @@ impl<S: Simd> crate::SimdSplit<S> for i16x32<S> {
         self.simd.split_i16x32(self)
     }
 }
-#[doc = "A SIMD vector of 32 [`u16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u16x32};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u16x32::splat(simd, 1);\n    let b = u16x32::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u16x32::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an array:\n    let d = u16x32::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an element-wise function:\n    let e = u16x32::from_fn(simd, |i| i as u16);\n    # use fearless_simd::u16x8;\n    // From `Self::Block`:\n    let f = u16x32::block_splat(u16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
+#[doc = "A SIMD vector of 32 [`u16`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u16x32};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u16x32::splat(simd, 1);\n    let b = u16x32::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u16x32::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // From an array:\n    let d = u16x32::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n    let e = u16x32::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = u16x32::from_fn(simd, |i| i as u16);\n    # use fearless_simd::u16x8;\n    // From `Self::Block`:\n    let g = u16x32::block_splat(u16x8::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
 pub struct u16x32<S: Simd> {
@@ -5599,6 +5839,18 @@ impl<S: Simd> From<u16x32<S>> for [u16; 32] {
     #[inline(always)]
     fn from(value: u16x32<S>) -> Self {
         value.simd.as_array_u16x32(value)
+    }
+}
+impl<S: Simd> u16x32<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [u16; 32]) -> Self {
+        simd.load_array_u16x32(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [u16; 32] {
+        self.simd.as_array_u16x32(self)
     }
 }
 impl<S: Simd> core::ops::Deref for u16x32<S> {
@@ -5932,7 +6184,7 @@ impl<S: Simd> crate::SimdSplit<S> for mask16x32<S> {
         self.simd.split_mask16x32(self)
     }
 }
-#[doc = "A SIMD vector of 16 [`i32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i32x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i32x16::splat(simd, 1);\n    let b = i32x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i32x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = i32x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an element-wise function:\n    let e = i32x16::from_fn(simd, |i| i as i32);\n    # use fearless_simd::i32x4;\n    // From `Self::Block`:\n    let f = i32x16::block_splat(i32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
+#[doc = "A SIMD vector of 16 [`i32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, i32x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = i32x16::splat(simd, 1);\n    let b = i32x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = i32x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = i32x16::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n    let e = i32x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = i32x16::from_fn(simd, |i| i as i32);\n    # use fearless_simd::i32x4;\n    // From `Self::Block`:\n    let g = i32x16::block_splat(i32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
 pub struct i32x16<S: Simd> {
@@ -5950,6 +6202,18 @@ impl<S: Simd> From<i32x16<S>> for [i32; 16] {
     #[inline(always)]
     fn from(value: i32x16<S>) -> Self {
         value.simd.as_array_i32x16(value)
+    }
+}
+impl<S: Simd> i32x16<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [i32; 16]) -> Self {
+        simd.load_array_i32x16(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [i32; 16] {
+        self.simd.as_array_i32x16(self)
     }
 }
 impl<S: Simd> core::ops::Deref for i32x16<S> {
@@ -6136,7 +6400,7 @@ impl<S: Simd> crate::SimdSplit<S> for i32x16<S> {
         self.simd.split_i32x16(self)
     }
 }
-#[doc = "A SIMD vector of 16 [`u32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u32x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u32x16::splat(simd, 1);\n    let b = u32x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u32x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = u32x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an element-wise function:\n    let e = u32x16::from_fn(simd, |i| i as u32);\n    # use fearless_simd::u32x4;\n    // From `Self::Block`:\n    let f = u32x16::block_splat(u32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
+#[doc = "A SIMD vector of 16 [`u32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u32x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u32x16::splat(simd, 1);\n    let b = u32x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u32x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = u32x16::from_array(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n    let e = u32x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = u32x16::from_fn(simd, |i| i as u32);\n    # use fearless_simd::u32x4;\n    // From `Self::Block`:\n    let g = u32x16::block_splat(u32x4::simd_from(simd, [1, 2, 3, 4]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
 pub struct u32x16<S: Simd> {
@@ -6154,6 +6418,18 @@ impl<S: Simd> From<u32x16<S>> for [u32; 16] {
     #[inline(always)]
     fn from(value: u32x16<S>) -> Self {
         value.simd.as_array_u32x16(value)
+    }
+}
+impl<S: Simd> u32x16<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [u32; 16]) -> Self {
+        simd.load_array_u32x16(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [u32; 16] {
+        self.simd.as_array_u32x16(self)
     }
 }
 impl<S: Simd> core::ops::Deref for u32x16<S> {
@@ -6499,7 +6775,7 @@ impl<S: Simd> crate::SimdSplit<S> for mask32x16<S> {
         self.simd.split_mask32x16(self)
     }
 }
-#[doc = "A SIMD vector of 8 [`f64`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f64x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f64x8::splat(simd, 1.0);\n    let b = f64x8::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f64x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an array:\n    let d = f64x8::simd_from(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an element-wise function:\n    let e = f64x8::from_fn(simd, |i| i as f64);\n    # use fearless_simd::f64x2;\n    // From `Self::Block`:\n    let f = f64x8::block_splat(f64x2::simd_from(simd, [1.0, 2.0]));\n}\n```"]
+#[doc = "A SIMD vector of 8 [`f64`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f64x8};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f64x8::splat(simd, 1.0);\n    let b = f64x8::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f64x8::from_slice(simd, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // From an array:\n    let d = f64x8::from_array(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n    let e = f64x8::simd_from(simd, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);\n\n    // Back into an array:\n    let array = d.to_array();\n\n    // From an element-wise function:\n    let f = f64x8::from_fn(simd, |i| i as f64);\n    # use fearless_simd::f64x2;\n    // From `Self::Block`:\n    let g = f64x8::block_splat(f64x2::simd_from(simd, [1.0, 2.0]));\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
 pub struct f64x8<S: Simd> {
@@ -6517,6 +6793,18 @@ impl<S: Simd> From<f64x8<S>> for [f64; 8] {
     #[inline(always)]
     fn from(value: f64x8<S>) -> Self {
         value.simd.as_array_f64x8(value)
+    }
+}
+impl<S: Simd> f64x8<S> {
+    #[doc = r" Create a SIMD vector from an array."]
+    #[inline(always)]
+    pub fn from_array(simd: S, array: [f64; 8]) -> Self {
+        simd.load_array_f64x8(array)
+    }
+    #[doc = r" Convert this SIMD vector to an array."]
+    #[inline(always)]
+    pub fn to_array(self) -> [f64; 8] {
+        self.simd.as_array_f64x8(self)
     }
 }
 impl<S: Simd> core::ops::Deref for f64x8<S> {

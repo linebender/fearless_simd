@@ -212,7 +212,7 @@ impl VecType {
                     "
     # use fearless_simd::{block_name};
     // From `Self::Block`:
-    let f = {rust_name}::block_splat({block_name}::simd_from(simd, [{block_example}]));"
+    let g = {rust_name}::block_splat({block_name}::simd_from(simd, [{block_example}]));"
                 )
             } else {
                 String::new()
@@ -220,7 +220,7 @@ impl VecType {
 
             format!(
                 "A SIMD vector of {len} [`{scalar_name}`] elements.\n\n\
-                You may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n\
+                You may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::from_array`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n\
                 ```rust\n\
 # use fearless_simd::{{prelude::*, {rust_name}}};
 fn construct_simd<S: Simd>(simd: S) {{
@@ -232,10 +232,14 @@ fn construct_simd<S: Simd>(simd: S) {{
     let c = {rust_name}::from_slice(simd, &[{many_example}]);
 
     // From an array:
-    let d = {rust_name}::simd_from(simd, [{many_example}]);
+    let d = {rust_name}::from_array(simd, [{many_example}]);
+    let e = {rust_name}::simd_from(simd, [{many_example}]);
+
+    // Back into an array:
+    let array = d.to_array();
 
     // From an element-wise function:
-    let e = {rust_name}::from_fn(simd, |i| i as {scalar_name});\
+    let f = {rust_name}::from_fn(simd, |i| i as {scalar_name});\
     {block_example}
 }}
 ```")

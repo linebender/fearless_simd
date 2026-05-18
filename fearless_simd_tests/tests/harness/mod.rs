@@ -16,6 +16,49 @@ mod lm_generated;
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
+macro_rules! array_api {
+    ($test:ident, $vec:ident, $scalar:ty, $len:literal) => {
+        #[simd_test]
+        fn $test<S: Simd>(simd: S) {
+            let array: [$scalar; $len] = core::array::from_fn(|i| (i + 1) as $scalar);
+
+            let from_array = $vec::from_array(simd, array);
+            assert_eq!(from_array.to_array(), array);
+
+            let from_simd_from: $vec<S> = $vec::simd_from(simd, array);
+            assert_eq!(from_simd_from.to_array(), array);
+
+            let via_from: <$vec<S> as SimdBase<S>>::Array = from_array.into();
+            assert_eq!(via_from, array);
+        }
+    };
+}
+
+array_api!(array_api_f32x4, f32x4, f32, 4);
+array_api!(array_api_i8x16, i8x16, i8, 16);
+array_api!(array_api_u8x16, u8x16, u8, 16);
+array_api!(array_api_i16x8, i16x8, i16, 8);
+array_api!(array_api_u16x8, u16x8, u16, 8);
+array_api!(array_api_i32x4, i32x4, i32, 4);
+array_api!(array_api_u32x4, u32x4, u32, 4);
+array_api!(array_api_f64x2, f64x2, f64, 2);
+array_api!(array_api_f32x8, f32x8, f32, 8);
+array_api!(array_api_i8x32, i8x32, i8, 32);
+array_api!(array_api_u8x32, u8x32, u8, 32);
+array_api!(array_api_i16x16, i16x16, i16, 16);
+array_api!(array_api_u16x16, u16x16, u16, 16);
+array_api!(array_api_i32x8, i32x8, i32, 8);
+array_api!(array_api_u32x8, u32x8, u32, 8);
+array_api!(array_api_f64x4, f64x4, f64, 4);
+array_api!(array_api_f32x16, f32x16, f32, 16);
+array_api!(array_api_i8x64, i8x64, i8, 64);
+array_api!(array_api_u8x64, u8x64, u8, 64);
+array_api!(array_api_i16x32, i16x32, i16, 32);
+array_api!(array_api_u16x32, u16x32, u16, 32);
+array_api!(array_api_i32x16, i32x16, i32, 16);
+array_api!(array_api_u32x16, u32x16, u32, 16);
+array_api!(array_api_f64x8, f64x8, f64, 8);
+
 #[simd_test]
 fn splat_f32x4<S: Simd>(simd: S) {
     let a = f32x4::splat(simd, 4.2);
