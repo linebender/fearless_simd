@@ -197,7 +197,7 @@ macro_rules! __fearless_simd_kernel_impl {
             }
 
             // SAFETY: the SIMD token proves that the required target features are available.
-            #[allow(unused_unsafe)] // for WASM which has no target feature requirements and is safe to call
+            #[allow(unused_unsafe, reason = "for WASM which has no target feature requirements and is safe to call")]
             unsafe { __fearless_simd_kernel($token $(, $arg)*) }
         }
     };
