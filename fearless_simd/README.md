@@ -82,7 +82,7 @@ If you are writing an application, you should create this once (using [`Level::n
 This type stores which instruction sets are available for the current process, which is used
 in the macro to dispatch to the most optimal variant of the supplied function for this process.
 
-## Inlining
+# Inlining
 
 Fearless SIMD relies heavily on Rust's inlining support to create functions which have the
 given target features enabled.
@@ -109,11 +109,11 @@ E.g. We might want names for these, e.g.:
 TODO: Talk about writing versions of functions which can be called in other `S: Simd` functions.
 -->
 
-## Platform-specific intrinsics
+# Platform-specific intrinsics
 
 If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`](kernel) macro.
 
-## WebAssembly
+# WebAssembly
 
 WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle for WASM, one with SIMD and one without,
 then select the appropriate one for your user's browser. This can be done via [the `wasm-feature-detect`
@@ -133,7 +133,7 @@ If you want to compile both SIMD and non-SIMD versions of your WebAssembly libra
 that builds it once with the `RUSTFLAGS` specified, and once without. [Cargo currently does not allow specifying compiler flags
 per-profile.](https://github.com/rust-lang/cargo/issues/10271)
 
-### Relaxed SIMD
+## Relaxed SIMD
 
 Fearless SIMD can make use of the [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 WebAssembly instructions, if the requisite target feature is enabled. These instructions can return implementation-dependent results
@@ -143,12 +143,12 @@ At the time of writing, relaxed SIMD is only supported in Chrome. To make use of
 with relaxed SIMD enabled (`RUSTFLAGS="-Ctarget-feature=+simd128,+relaxed-simd"`) and one with it disabled, and then feature-detect at
 runtime.
 
-## Credits
+# Credits
 
 This crate was inspired by [`pulp`], [`std::simd`], among others in the Rust ecosystem, though makes many decisions differently.
 It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
 
-## Feature Flags
+# Feature Flags
 
 The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
 
