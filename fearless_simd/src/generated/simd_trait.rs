@@ -2955,6 +2955,8 @@ pub trait SimdMask<S: Simd>:
     const N: usize;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
+    #[doc = r" Create a SIMD mask with all lanes set to the given boolean value."]
+    fn splat(simd: S, val: bool) -> Self;
     #[doc = r" Create a SIMD mask from signed integer mask lanes."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]

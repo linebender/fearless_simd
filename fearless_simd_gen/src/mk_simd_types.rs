@@ -295,6 +295,7 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
     let scalar = ty.scalar.rust(ty.scalar_bits);
     let len = Literal::usize_unsuffixed(ty.len);
+    let splat = generic_op_name("splat", ty);
     let from_array_op = generic_op_name("load_array", ty);
     let as_array_op = generic_op_name("as_array", ty);
     let mut methods = vec![];
@@ -327,6 +328,12 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn witness(&self) -> S {
                 self.simd
+            }
+
+            #[inline(always)]
+            fn splat(simd: S, val: bool) -> Self {
+                let val: #scalar = if val { !0 } else { 0 };
+                simd.#splat(val)
             }
 
             #[inline(always)]
