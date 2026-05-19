@@ -332,7 +332,6 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
 
             #[inline(always)]
             fn splat(simd: S, val: bool) -> Self {
-                let val: #scalar = if val { !0 } else { 0 };
                 simd.#splat(val)
             }
 

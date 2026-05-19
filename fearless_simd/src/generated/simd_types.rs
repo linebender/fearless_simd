@@ -671,7 +671,6 @@ impl<S: Simd> crate::SimdMask<S> for mask8x16<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i8 = if val { !0 } else { 0 };
         simd.splat_mask8x16(val)
     }
     #[inline(always)]
@@ -1121,7 +1120,6 @@ impl<S: Simd> crate::SimdMask<S> for mask16x8<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i16 = if val { !0 } else { 0 };
         simd.splat_mask16x8(val)
     }
     #[inline(always)]
@@ -1595,7 +1593,6 @@ impl<S: Simd> crate::SimdMask<S> for mask32x4<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i32 = if val { !0 } else { 0 };
         simd.splat_mask32x4(val)
     }
     #[inline(always)]
@@ -1910,7 +1907,6 @@ impl<S: Simd> crate::SimdMask<S> for mask64x2<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i64 = if val { !0 } else { 0 };
         simd.splat_mask64x2(val)
     }
     #[inline(always)]
@@ -2630,7 +2626,6 @@ impl<S: Simd> crate::SimdMask<S> for mask8x32<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i8 = if val { !0 } else { 0 };
         simd.splat_mask8x32(val)
     }
     #[inline(always)]
@@ -3106,7 +3101,6 @@ impl<S: Simd> crate::SimdMask<S> for mask16x16<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i16 = if val { !0 } else { 0 };
         simd.splat_mask16x16(val)
     }
     #[inline(always)]
@@ -3594,7 +3588,6 @@ impl<S: Simd> crate::SimdMask<S> for mask32x8<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i32 = if val { !0 } else { 0 };
         simd.splat_mask32x8(val)
     }
     #[inline(always)]
@@ -3916,7 +3909,6 @@ impl<S: Simd> crate::SimdMask<S> for mask64x4<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i64 = if val { !0 } else { 0 };
         simd.splat_mask64x4(val)
     }
     #[inline(always)]
@@ -4624,7 +4616,6 @@ impl<S: Simd> crate::SimdMask<S> for mask8x64<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i8 = if val { !0 } else { 0 };
         simd.splat_mask8x64(val)
     }
     #[inline(always)]
@@ -5088,7 +5079,6 @@ impl<S: Simd> crate::SimdMask<S> for mask16x32<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i16 = if val { !0 } else { 0 };
         simd.splat_mask16x32(val)
     }
     #[inline(always)]
@@ -5576,7 +5566,6 @@ impl<S: Simd> crate::SimdMask<S> for mask32x16<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i32 = if val { !0 } else { 0 };
         simd.splat_mask32x16(val)
     }
     #[inline(always)]
@@ -5892,7 +5881,6 @@ impl<S: Simd> crate::SimdMask<S> for mask64x8<S> {
     }
     #[inline(always)]
     fn splat(simd: S, val: bool) -> Self {
-        let val: i64 = if val { !0 } else { 0 };
         simd.splat_mask64x8(val)
     }
     #[inline(always)]
