@@ -109,6 +109,10 @@ E.g. We might want names for these, e.g.:
 TODO: Talk about writing versions of functions which can be called in other `S: Simd` functions.
 -->
 
+# Platform-specific intrinsics
+
+If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`](kernel) macro.
+
 # WebAssembly
 
 WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle for WASM, one with SIMD and one without,
