@@ -877,8 +877,11 @@ impl Simd for Avx2 {
         __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
-    fn splat_mask8x16(self, val: i8) -> mask8x16<Self> {
-        unsafe { _mm_set1_epi8(val).simd_into(self) }
+    fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
+        unsafe {
+            let val: i8 = if val { !0 } else { 0 };
+            _mm_set1_epi8(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
@@ -905,7 +908,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
-        self.xor_mask8x16(a, self.splat_mask8x16(!0))
+        self.xor_mask8x16(a, self.splat_mask8x16(true))
     }
     #[inline(always)]
     fn select_mask8x16(
@@ -1365,8 +1368,11 @@ impl Simd for Avx2 {
         __m128i::from(a).simd_into(self)
     }
     #[inline(always)]
-    fn splat_mask16x8(self, val: i16) -> mask16x8<Self> {
-        unsafe { _mm_set1_epi16(val).simd_into(self) }
+    fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
+        unsafe {
+            let val: i16 = if val { !0 } else { 0 };
+            _mm_set1_epi16(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
@@ -1393,7 +1399,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
-        self.xor_mask16x8(a, self.splat_mask16x8(!0))
+        self.xor_mask16x8(a, self.splat_mask16x8(true))
     }
     #[inline(always)]
     fn select_mask16x8(
@@ -1863,8 +1869,11 @@ impl Simd for Avx2 {
         }
     }
     #[inline(always)]
-    fn splat_mask32x4(self, val: i32) -> mask32x4<Self> {
-        unsafe { _mm_set1_epi32(val).simd_into(self) }
+    fn splat_mask32x4(self, val: bool) -> mask32x4<Self> {
+        unsafe {
+            let val: i32 = if val { !0 } else { 0 };
+            _mm_set1_epi32(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
@@ -1891,7 +1900,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
-        self.xor_mask32x4(a, self.splat_mask32x4(!0))
+        self.xor_mask32x4(a, self.splat_mask32x4(true))
     }
     #[inline(always)]
     fn select_mask32x4(
@@ -2162,8 +2171,11 @@ impl Simd for Avx2 {
         unsafe { _mm_castpd_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn splat_mask64x2(self, val: i64) -> mask64x2<Self> {
-        unsafe { _mm_set1_epi64x(val).simd_into(self) }
+    fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
+        unsafe {
+            let val: i64 = if val { !0 } else { 0 };
+            _mm_set1_epi64x(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
@@ -2190,7 +2202,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
-        self.xor_mask64x2(a, self.splat_mask64x2(!0))
+        self.xor_mask64x2(a, self.splat_mask64x2(true))
     }
     #[inline(always)]
     fn select_mask64x2(
@@ -3240,8 +3252,11 @@ impl Simd for Avx2 {
         __m256i::from(a).simd_into(self)
     }
     #[inline(always)]
-    fn splat_mask8x32(self, val: i8) -> mask8x32<Self> {
-        unsafe { _mm256_set1_epi8(val).simd_into(self) }
+    fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
+        unsafe {
+            let val: i8 = if val { !0 } else { 0 };
+            _mm256_set1_epi8(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self> {
@@ -3268,7 +3283,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self> {
-        self.xor_mask8x32(a, self.splat_mask8x32(!0))
+        self.xor_mask8x32(a, self.splat_mask8x32(true))
     }
     #[inline(always)]
     fn select_mask8x32(
@@ -3930,8 +3945,11 @@ impl Simd for Avx2 {
         __m256i::from(a).simd_into(self)
     }
     #[inline(always)]
-    fn splat_mask16x16(self, val: i16) -> mask16x16<Self> {
-        unsafe { _mm256_set1_epi16(val).simd_into(self) }
+    fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
+        unsafe {
+            let val: i16 = if val { !0 } else { 0 };
+            _mm256_set1_epi16(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self> {
@@ -3958,7 +3976,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self> {
-        self.xor_mask16x16(a, self.splat_mask16x16(!0))
+        self.xor_mask16x16(a, self.splat_mask16x16(true))
     }
     #[inline(always)]
     fn select_mask16x16(
@@ -4565,8 +4583,11 @@ impl Simd for Avx2 {
         }
     }
     #[inline(always)]
-    fn splat_mask32x8(self, val: i32) -> mask32x8<Self> {
-        unsafe { _mm256_set1_epi32(val).simd_into(self) }
+    fn splat_mask32x8(self, val: bool) -> mask32x8<Self> {
+        unsafe {
+            let val: i32 = if val { !0 } else { 0 };
+            _mm256_set1_epi32(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self> {
@@ -4593,7 +4614,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self> {
-        self.xor_mask32x8(a, self.splat_mask32x8(!0))
+        self.xor_mask32x8(a, self.splat_mask32x8(true))
     }
     #[inline(always)]
     fn select_mask32x8(
@@ -4939,8 +4960,11 @@ impl Simd for Avx2 {
         unsafe { _mm256_castpd_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn splat_mask64x4(self, val: i64) -> mask64x4<Self> {
-        unsafe { _mm256_set1_epi64x(val).simd_into(self) }
+    fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
+        unsafe {
+            let val: i64 = if val { !0 } else { 0 };
+            _mm256_set1_epi64x(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self> {
@@ -4967,7 +4991,7 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self> {
-        self.xor_mask64x4(a, self.splat_mask64x4(!0))
+        self.xor_mask64x4(a, self.splat_mask64x4(true))
     }
     #[inline(always)]
     fn select_mask64x4(
@@ -6036,7 +6060,7 @@ impl Simd for Avx2 {
         )
     }
     #[inline(always)]
-    fn splat_mask8x64(self, val: i8) -> mask8x64<Self> {
+    fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
     }
@@ -6774,7 +6798,7 @@ impl Simd for Avx2 {
         )
     }
     #[inline(always)]
-    fn splat_mask16x32(self, val: i16) -> mask16x32<Self> {
+    fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
         let half = self.splat_mask16x16(val);
         self.combine_mask16x16(half, half)
     }
@@ -7476,7 +7500,7 @@ impl Simd for Avx2 {
         self.combine_f32x8(self.cvt_f32_u32x8(a0), self.cvt_f32_u32x8(a1))
     }
     #[inline(always)]
-    fn splat_mask32x16(self, val: i32) -> mask32x16<Self> {
+    fn splat_mask32x16(self, val: bool) -> mask32x16<Self> {
         let half = self.splat_mask32x8(val);
         self.combine_mask32x8(half, half)
     }
@@ -7889,7 +7913,7 @@ impl Simd for Avx2 {
         )
     }
     #[inline(always)]
-    fn splat_mask64x8(self, val: i64) -> mask64x8<Self> {
+    fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
         let half = self.splat_mask64x4(val);
         self.combine_mask64x4(half, half)
     }

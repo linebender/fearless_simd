@@ -82,9 +82,18 @@ impl Level for Neon {
         match sig {
             OpSig::Splat => {
                 let expr = neon::expr(method, vec_ty, &[quote! { val }]);
+                let normalize_mask = if vec_ty.scalar == ScalarType::Mask {
+                    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                    quote! {
+                        let val: #scalar = if val { !0 } else { 0 };
+                    }
+                } else {
+                    quote! {}
+                };
                 quote! {
                     #method_sig {
                         unsafe {
+                            #normalize_mask
                             #expr.simd_into(self)
                         }
                     }

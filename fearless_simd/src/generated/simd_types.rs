@@ -650,9 +650,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask8x16<S> {
         crate::support::simd_debug_impl(f, "mask8x16", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i8, S> for mask8x16<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask8x16<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i8) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask8x16(value)
     }
 }
@@ -1095,9 +1095,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask16x8<S> {
         crate::support::simd_debug_impl(f, "mask16x8", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i16, S> for mask16x8<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask16x8<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i16) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask16x8(value)
     }
 }
@@ -1564,9 +1564,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask32x4<S> {
         crate::support::simd_debug_impl(f, "mask32x4", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i32, S> for mask32x4<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask32x4<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i32) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask32x4(value)
     }
 }
@@ -1874,9 +1874,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask64x2<S> {
         crate::support::simd_debug_impl(f, "mask64x2", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i64, S> for mask64x2<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask64x2<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i64) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask64x2(value)
     }
 }
@@ -2589,9 +2589,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask8x32<S> {
         crate::support::simd_debug_impl(f, "mask8x32", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i8, S> for mask8x32<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask8x32<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i8) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask8x32(value)
     }
 }
@@ -3060,9 +3060,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask16x16<S> {
         crate::support::simd_debug_impl(f, "mask16x16", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i16, S> for mask16x16<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask16x16<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i16) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask16x16(value)
     }
 }
@@ -3543,9 +3543,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask32x8<S> {
         crate::support::simd_debug_impl(f, "mask32x8", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i32, S> for mask32x8<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask32x8<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i32) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask32x8(value)
     }
 }
@@ -3860,9 +3860,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask64x4<S> {
         crate::support::simd_debug_impl(f, "mask64x4", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i64, S> for mask64x4<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask64x4<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i64) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask64x4(value)
     }
 }
@@ -4563,9 +4563,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask8x64<S> {
         crate::support::simd_debug_impl(f, "mask8x64", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i8, S> for mask8x64<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask8x64<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i8) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask8x64(value)
     }
 }
@@ -5022,9 +5022,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask16x32<S> {
         crate::support::simd_debug_impl(f, "mask16x32", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i16, S> for mask16x32<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask16x32<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i16) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask16x32(value)
     }
 }
@@ -5505,9 +5505,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask32x16<S> {
         crate::support::simd_debug_impl(f, "mask32x16", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i32, S> for mask32x16<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask32x16<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i32) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask32x16(value)
     }
 }
@@ -5816,9 +5816,9 @@ impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask64x8<S> {
         crate::support::simd_debug_impl(f, "mask64x8", &self.simd, &lanes)
     }
 }
-impl<S: Simd> SimdFrom<i64, S> for mask64x8<S> {
+impl<S: Simd> SimdFrom<bool, S> for mask64x8<S> {
     #[inline(always)]
-    fn simd_from(simd: S, value: i64) -> Self {
+    fn simd_from(simd: S, value: bool) -> Self {
         simd.splat_mask64x8(value)
     }
 }

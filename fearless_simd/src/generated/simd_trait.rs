@@ -96,26 +96,26 @@ pub trait Simd:
         + core::ops::Neg<Output = Self::i32s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
     type mask8s: SimdMask<Self, Element = i8>
-        + SimdFrom<i8, Self>
+        + SimdFrom<bool, Self>
         + Select<Self::u8s>
         + Select<Self::i8s>
         + Select<Self::mask8s>;
     #[doc = r" A native-width SIMD mask with 16-bit lanes."]
     type mask16s: SimdMask<Self, Element = i16>
-        + SimdFrom<i16, Self>
+        + SimdFrom<bool, Self>
         + Select<Self::u16s>
         + Select<Self::i16s>
         + Select<Self::mask16s>;
     #[doc = r" A native-width SIMD mask with 32-bit lanes."]
     type mask32s: SimdMask<Self, Element = i32>
-        + SimdFrom<i32, Self>
+        + SimdFrom<bool, Self>
         + Select<Self::f32s>
         + Select<Self::u32s>
         + Select<Self::i32s>
         + Select<Self::mask32s>;
     #[doc = r" A native-width SIMD mask with 64-bit lanes."]
     type mask64s: SimdMask<Self, Element = i64>
-        + SimdFrom<i64, Self>
+        + SimdFrom<bool, Self>
         + Select<Self::f64s>
         + Select<Self::mask64s>;
     #[doc = r" This SIMD token's feature level."]
@@ -396,8 +396,8 @@ pub trait Simd:
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask8x16(self, val: i8) -> mask8x16<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask8x16(self, val: bool) -> mask8x16<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -595,8 +595,8 @@ pub trait Simd:
     fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask16x8(self, val: i16) -> mask16x8<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask16x8(self, val: bool) -> mask16x8<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -796,8 +796,8 @@ pub trait Simd:
     fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask32x4(self, val: i32) -> mask32x4<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask32x4(self, val: bool) -> mask32x4<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -921,8 +921,8 @@ pub trait Simd:
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask64x2(self, val: i64) -> mask64x2<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask64x2(self, val: bool) -> mask64x2<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -1232,8 +1232,8 @@ pub trait Simd:
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask8x32(self, val: i8) -> mask8x32<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask8x32(self, val: bool) -> mask8x32<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -1439,8 +1439,8 @@ pub trait Simd:
     fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask16x16(self, val: i16) -> mask16x16<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask16x16(self, val: bool) -> mask16x16<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -1646,8 +1646,8 @@ pub trait Simd:
     fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask32x8(self, val: i32) -> mask32x8<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask32x8(self, val: bool) -> mask32x8<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -1775,8 +1775,8 @@ pub trait Simd:
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>);
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask64x4(self, val: i64) -> mask64x4<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask64x4(self, val: bool) -> mask64x4<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -2088,8 +2088,8 @@ pub trait Simd:
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask8x64(self, val: i8) -> mask8x64<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask8x64(self, val: bool) -> mask8x64<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -2293,8 +2293,8 @@ pub trait Simd:
     fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask16x32(self, val: i16) -> mask16x32<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask16x32(self, val: bool) -> mask16x32<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -2498,8 +2498,8 @@ pub trait Simd:
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask32x16(self, val: i32) -> mask32x16<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask32x16(self, val: bool) -> mask32x16<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
@@ -2623,8 +2623,8 @@ pub trait Simd:
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self>;
-    #[doc = "Create a SIMD mask with all lanes set from the given signed integer mask value."]
-    fn splat_mask64x8(self, val: i64) -> mask64x8<Self>;
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask64x8(self, val: bool) -> mask64x8<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]

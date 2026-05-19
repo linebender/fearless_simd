@@ -136,8 +136,17 @@ impl Level for Fallback {
         match sig {
             OpSig::Splat => {
                 let num_elements = vec_ty.len;
+                let normalize_mask = if vec_ty.scalar == ScalarType::Mask {
+                    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                    quote! {
+                        let val: #scalar = if val { !0 } else { 0 };
+                    }
+                } else {
+                    quote! {}
+                };
                 quote! {
                     #method_sig {
+                        #normalize_mask
                         [val; #num_elements].simd_into(self)
                     }
                 }

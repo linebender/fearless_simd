@@ -230,9 +230,18 @@ impl X86 {
             ScalarType::Unsigned => quote!(.cast_signed()),
             _ => quote!(),
         };
+        let normalize_mask = if vec_ty.scalar == ScalarType::Mask {
+            let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+            quote! {
+                let val: #scalar = if val { !0 } else { 0 };
+            }
+        } else {
+            quote! {}
+        };
         quote! {
             #method_sig {
                 unsafe {
+                    #normalize_mask
                     #intrinsic(val #cast).simd_into(self)
                 }
             }
@@ -340,7 +349,7 @@ impl X86 {
                 let splat_op = generic_op_name("splat", vec_ty);
                 quote! {
                     #method_sig {
-                        self.#xor_op(a, self.#splat_op(!0))
+                        self.#xor_op(a, self.#splat_op(true))
                     }
                 }
             }

@@ -69,9 +69,9 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     }
                 }
 
-                impl<S: Simd> SimdFrom<#rust_scalar, S> for #name<S> {
+                impl<S: Simd> SimdFrom<bool, S> for #name<S> {
                     #[inline(always)]
-                    fn simd_from(simd: S, value: #rust_scalar) -> Self {
+                    fn simd_from(simd: S, value: bool) -> Self {
                         simd.#splat(value)
                     }
                 }

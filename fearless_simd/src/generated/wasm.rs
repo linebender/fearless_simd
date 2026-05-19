@@ -836,7 +836,8 @@ impl Simd for WasmSimd128 {
         <v128>::from(a).simd_into(self)
     }
     #[inline(always)]
-    fn splat_mask8x16(self, val: i8) -> mask8x16<Self> {
+    fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
+        let val: i8 = if val { !0 } else { 0 };
         i8x16_splat(val).simd_into(self)
     }
     #[inline(always)]
@@ -1324,7 +1325,8 @@ impl Simd for WasmSimd128 {
         <v128>::from(a).simd_into(self)
     }
     #[inline(always)]
-    fn splat_mask16x8(self, val: i16) -> mask16x8<Self> {
+    fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
+        let val: i16 = if val { !0 } else { 0 };
         i16x8_splat(val).simd_into(self)
     }
     #[inline(always)]
@@ -1816,7 +1818,8 @@ impl Simd for WasmSimd128 {
         f32x4_convert_u32x4(a.into()).simd_into(self)
     }
     #[inline(always)]
-    fn splat_mask32x4(self, val: i32) -> mask32x4<Self> {
+    fn splat_mask32x4(self, val: bool) -> mask32x4<Self> {
+        let val: i32 = if val { !0 } else { 0 };
         i32x4_splat(val).simd_into(self)
     }
     #[inline(always)]
@@ -2150,7 +2153,8 @@ impl Simd for WasmSimd128 {
         <v128>::from(a).simd_into(self)
     }
     #[inline(always)]
-    fn splat_mask64x2(self, val: i64) -> mask64x2<Self> {
+    fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
+        let val: i64 = if val { !0 } else { 0 };
         i64x2_splat(val).simd_into(self)
     }
     #[inline(always)]
@@ -3171,7 +3175,7 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn splat_mask8x32(self, val: i8) -> mask8x32<Self> {
+    fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
         let half = self.splat_mask8x16(val);
         self.combine_mask8x16(half, half)
     }
@@ -3853,7 +3857,7 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn splat_mask16x16(self, val: i16) -> mask16x16<Self> {
+    fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
         let half = self.splat_mask16x8(val);
         self.combine_mask16x8(half, half)
     }
@@ -4528,7 +4532,7 @@ impl Simd for WasmSimd128 {
         self.combine_f32x4(self.cvt_f32_u32x4(a0), self.cvt_f32_u32x4(a1))
     }
     #[inline(always)]
-    fn splat_mask32x8(self, val: i32) -> mask32x8<Self> {
+    fn splat_mask32x8(self, val: bool) -> mask32x8<Self> {
         let half = self.splat_mask32x4(val);
         self.combine_mask32x4(half, half)
     }
@@ -4955,7 +4959,7 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn splat_mask64x4(self, val: i64) -> mask64x4<Self> {
+    fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
         let half = self.splat_mask64x2(val);
         self.combine_mask64x2(half, half)
     }
@@ -6084,7 +6088,7 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn splat_mask8x64(self, val: i8) -> mask8x64<Self> {
+    fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
     }
@@ -6801,7 +6805,7 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn splat_mask16x32(self, val: i16) -> mask16x32<Self> {
+    fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
         let half = self.splat_mask16x16(val);
         self.combine_mask16x16(half, half)
     }
@@ -7500,7 +7504,7 @@ impl Simd for WasmSimd128 {
         self.combine_f32x8(self.cvt_f32_u32x8(a0), self.cvt_f32_u32x8(a1))
     }
     #[inline(always)]
-    fn splat_mask32x16(self, val: i32) -> mask32x16<Self> {
+    fn splat_mask32x16(self, val: bool) -> mask32x16<Self> {
         let half = self.splat_mask32x8(val);
         self.combine_mask32x8(half, half)
     }
@@ -7913,7 +7917,7 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn splat_mask64x8(self, val: i64) -> mask64x8<Self> {
+    fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
         let half = self.splat_mask64x4(val);
         self.combine_mask64x4(half, half)
     }

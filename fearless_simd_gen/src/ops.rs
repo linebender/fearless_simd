@@ -51,7 +51,8 @@ pub(crate) enum SlideGranularity {
 
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
-    /// Takes a single argument of the underlying SIMD element type, and returns the corresponding vector type.
+    /// Takes a single scalar argument, and returns the corresponding vector type.
+    /// Mask splats take a boolean and convert it to the backend's mask representation.
     Splat,
     /// Takes a single argument of the vector type, and returns that same vector type.
     Unary,
@@ -182,8 +183,8 @@ impl Op {
         let sig_inner = match &self.sig {
             OpSig::Splat => {
                 let arg0 = &arg_names[0];
-                let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                quote! { (self, #arg0: #scalar) -> #ty<Self> }
+                let arg_ty = splat_arg_ty(vec_ty);
+                quote! { (self, #arg0: #arg_ty) -> #ty<Self> }
             }
             OpSig::LoadInterleaved {
                 block_size,
@@ -443,6 +444,14 @@ impl Op {
     }
 }
 
+fn splat_arg_ty(vec_ty: &VecType) -> TokenStream {
+    if vec_ty.scalar == ScalarType::Mask {
+        quote! { bool }
+    } else {
+        vec_ty.scalar.rust(vec_ty.scalar_bits)
+    }
+}
+
 const BASE_OPS: &[Op] = &[
     Op::new(
         "splat",
@@ -531,7 +540,7 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
         "splat",
         OpKind::BaseTraitMethod,
         OpSig::Splat,
-        "Create a SIMD mask with all lanes set from the given signed integer mask value.",
+        "Create a SIMD mask with all lanes set from the given boolean value.",
     ),
     Op::new(
         "load_array",

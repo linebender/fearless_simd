@@ -23,6 +23,24 @@ fn splat_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn splat_mask32x4<S: Simd>(simd: S) {
+    let all_true = simd.splat_mask32x4(true);
+    assert!(all_true.all_true());
+
+    let all_false = simd.splat_mask32x4(false);
+    assert!(all_false.all_false());
+}
+
+#[simd_test]
+fn simd_from_bool_native_mask<S: Simd>(simd: S) {
+    let all_true: S::mask32s = true.simd_into(simd);
+    assert!(all_true.all_true());
+
+    let all_false: S::mask32s = false.simd_into(simd);
+    assert!(all_false.all_false());
+}
+
+#[simd_test]
 fn abs_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[-1.0, 2.0, -3.0, 4.0]);
     assert_eq!(*a.abs(), [1.0, 2.0, 3.0, 4.0]);

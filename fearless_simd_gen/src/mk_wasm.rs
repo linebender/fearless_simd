@@ -71,8 +71,17 @@ impl Level for WasmSimd128 {
         match sig {
             OpSig::Splat => {
                 let expr = wasm::expr(method, vec_ty, &[quote! { val }]);
+                let normalize_mask = if vec_ty.scalar == ScalarType::Mask {
+                    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                    quote! {
+                        let val: #scalar = if val { !0 } else { 0 };
+                    }
+                } else {
+                    quote! {}
+                };
                 quote! {
                     #method_sig {
+                        #normalize_mask
                         #expr.simd_into(self)
                     }
                 }
