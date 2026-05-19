@@ -30,26 +30,10 @@ fn foo<S: Simd>(simd: S, x: f32) -> f32 {
     simd.splat_f32x4(x).sqrt()[0]
 }
 
-// currently requires `safe_wrappers` feature
-fn do_something_on_neon(_level: Level) -> f32 {
-    #[cfg(all(feature = "safe_wrappers", target_arch = "aarch64"))]
-    if let Some(neon) = _level.as_neon() {
-        return neon.vectorize(
-            #[inline(always)]
-            || {
-                let v = neon.neon.vdupq_n_f32(42.0);
-                neon.neon.vgetq_lane_f32::<0>(v)
-            },
-        );
-    }
-    0.0
-}
-
 fn main() {
     let level = Level::new();
     let x = level.dispatch(Foo);
     let y = dispatch!(level, simd => foo(simd, 42.0));
-    let z = do_something_on_neon(level);
 
-    println!("level = {level:?}, x = {x}, y = {y}, z = {z}");
+    println!("level = {level:?}, x = {x}, y = {y}");
 }
