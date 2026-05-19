@@ -145,6 +145,7 @@ fn mk_simd_base() -> TokenStream {
         /// Base functionality implemented by all SIMD vectors.
         pub trait SimdBase<S: Simd>:
             Copy + Sync + Send + 'static
+            + Seal
             + Bytes + SimdFrom<Self::Element, S>
             + core::ops::Index<usize, Output = Self::Element> + core::ops::IndexMut<usize, Output = Self::Element>
             + core::ops::Deref<Target = Self::Array>+ core::ops::DerefMut<Target = Self::Array>
@@ -207,7 +208,7 @@ fn mk_simd_float() -> TokenStream {
         .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by floating-point SIMD vectors.
-        pub trait SimdFloat<S: Simd>: SimdBase<S>
+        pub trait SimdFloat<S: Simd>: SimdBase<S> + Seal
             #(+ #op_traits)*
         {
             /// Convert this floating-point type to an integer. This is a convenience method that
@@ -247,7 +248,7 @@ fn mk_simd_int() -> TokenStream {
         .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by (signed and unsigned) integer SIMD vectors.
-        pub trait SimdInt<S: Simd>: SimdBase<S>
+        pub trait SimdInt<S: Simd>: SimdBase<S> + Seal
             #(+ #op_traits)*
         {
             /// Convert this integer type to a floating-point type. This is a convenience method
@@ -273,7 +274,7 @@ fn mk_simd_mask() -> TokenStream {
         .flat_map(|core_op| core_op.trait_bounds());
     quote! {
         /// Functionality implemented by SIMD masks.
-        pub trait SimdMask<S: Simd>: SimdBase<S>
+        pub trait SimdMask<S: Simd>: SimdBase<S> + Seal
             #(+ #op_traits)*
         {
             #( #methods )*

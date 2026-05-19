@@ -2991,6 +2991,7 @@ pub trait SimdBase<S: Simd>:
     + Sync
     + Send
     + 'static
+    + Seal
     + Bytes
     + SimdFrom<Self::Element, S>
     + core::ops::Index<usize, Output = Self::Element>
@@ -3048,6 +3049,7 @@ pub trait SimdBase<S: Simd>:
 #[doc = r" Functionality implemented by floating-point SIMD vectors."]
 pub trait SimdFloat<S: Simd>:
     SimdBase<S>
+    + Seal
     + core::ops::Neg<Output = Self>
     + core::ops::Add<Output = Self>
     + core::ops::AddAssign
@@ -3142,6 +3144,7 @@ pub trait SimdFloat<S: Simd>:
 #[doc = r" Functionality implemented by (signed and unsigned) integer SIMD vectors."]
 pub trait SimdInt<S: Simd>:
     SimdBase<S>
+    + Seal
     + core::ops::Add<Output = Self>
     + core::ops::AddAssign
     + core::ops::Add<Self::Element, Output = Self>
@@ -3213,6 +3216,7 @@ pub trait SimdInt<S: Simd>:
 #[doc = r" Functionality implemented by SIMD masks."]
 pub trait SimdMask<S: Simd>:
     SimdBase<S>
+    + Seal
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
     + core::ops::BitAnd<Self::Element, Output = Self>

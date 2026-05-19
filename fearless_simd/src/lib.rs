@@ -145,6 +145,7 @@ use libm as _;
 pub mod core_arch;
 
 mod generated;
+mod kernel_macros;
 mod macros;
 mod support;
 mod traits;

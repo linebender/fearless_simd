@@ -1,6 +1,6 @@
 [package]
 name = "fearless_simd"
-version = "0.4.0"
+version = "0.4.1"
 license.workspace = true
 edition.workspace = true
 repository.workspace = true
@@ -13,9 +13,16 @@ readme = "README.md"
 
 [package.metadata.docs.rs]
 all-features = true
-# TODO: Get the right set of targets here. x86 linux, x86-64 linux, arm-macos, wasm
-# default-target = "x86_64-unknown-linux-gnu"
-# targets = []
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "i686-unknown-linux-gnu",
+  "aarch64-apple-darwin",
+  "wasm32-unknown-unknown",
+]
+rustdoc-args = [
+  "--cfg",
+  'target_feature="simd128"',
+] # otherwise WASM docs only show the fallback level
 
 
 [features]
