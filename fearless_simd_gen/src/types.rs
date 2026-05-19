@@ -179,7 +179,7 @@ impl VecType {
             let scalar_bits = self.scalar_bits;
             format!(
                 "A SIMD mask of {len} logical lanes corresponding to {scalar_bits}-bit vector elements.\n\n\
-                The storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones.",
+                The storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).",
             )
         } else {
             let scalar_name = self.scalar.rust_name(self.scalar_bits);

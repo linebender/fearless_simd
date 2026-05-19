@@ -792,7 +792,7 @@ const FLOAT_OPS: &[Op] = &[
         OpKind::OwnTrait,
         OpSig::Select,
         "Select elements from {arg1} and {arg2} based on the mask operand {arg0}.\n\n\
-    This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes nor all-ones. See the [`Select`] trait's documentation for more information.",
+    This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information.",
     ),
 ];
 
@@ -969,7 +969,7 @@ const INT_OPS: &[Op] = &[
         OpKind::OwnTrait,
         OpSig::Select,
         "Select elements from {arg1} and {arg2} based on the mask operand {arg0}.\n\n\
-    This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes nor all-ones. See the [`Select`] trait's documentation for more information.",
+    This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information.",
     ),
     Op::new(
         "min",
@@ -989,7 +989,7 @@ const INT_OPS: &[Op] = &[
 // `concat!` macro.
 macro_rules! mask_reduce_blurb {
     () => {
-        "Masks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes and true is encoded as all ones.\n\n\
+        "Masks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\n\
         Behavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\n\
         The behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\n\
         The [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."
@@ -1026,7 +1026,7 @@ const MASK_OPS: &[Op] = &[
         OpKind::OwnTrait,
         OpSig::Select,
         "Select elements from `{arg1}` and `{arg2}` based on the mask operand `{arg0}`.\n\n\
-    This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes nor all-ones. See the [`Select`] trait's documentation for more information.",
+    This operation's behavior is unspecified if {arg0} was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information.",
     ),
     Op::new(
         "simd_eq",

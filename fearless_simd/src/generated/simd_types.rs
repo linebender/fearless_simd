@@ -625,7 +625,7 @@ impl<S: Simd> crate::SimdCombine<S> for u8x16<S> {
         self.simd.combine_u8x16(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 16 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 16 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask8x16<S: Simd> {
     pub(crate) val: S::mask8x16,
@@ -1070,7 +1070,7 @@ impl<S: Simd> crate::SimdCombine<S> for u16x8<S> {
         self.simd.combine_u16x8(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 8 logical lanes corresponding to 16-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 8 logical lanes corresponding to 16-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask16x8<S: Simd> {
     pub(crate) val: S::mask16x8,
@@ -1539,7 +1539,7 @@ impl<S: Simd> crate::SimdCombine<S> for u32x4<S> {
         self.simd.combine_u32x4(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 4 logical lanes corresponding to 32-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 4 logical lanes corresponding to 32-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask32x4<S: Simd> {
     pub(crate) val: S::mask32x4,
@@ -1849,7 +1849,7 @@ impl<S: Simd> crate::SimdCombine<S> for f64x2<S> {
         self.simd.combine_f64x2(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 2 logical lanes corresponding to 64-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 2 logical lanes corresponding to 64-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask64x2<S: Simd> {
     pub(crate) val: S::mask64x2,
@@ -2564,7 +2564,7 @@ impl<S: Simd> crate::SimdCombine<S> for u8x32<S> {
         self.simd.combine_u8x32(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 32 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 32 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask8x32<S: Simd> {
     pub(crate) val: S::mask8x32,
@@ -3035,7 +3035,7 @@ impl<S: Simd> crate::SimdCombine<S> for u16x16<S> {
         self.simd.combine_u16x16(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 16 logical lanes corresponding to 16-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 16 logical lanes corresponding to 16-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask16x16<S: Simd> {
     pub(crate) val: S::mask16x16,
@@ -3518,7 +3518,7 @@ impl<S: Simd> crate::SimdCombine<S> for u32x8<S> {
         self.simd.combine_u32x8(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 8 logical lanes corresponding to 32-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 8 logical lanes corresponding to 32-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask32x8<S: Simd> {
     pub(crate) val: S::mask32x8,
@@ -3835,7 +3835,7 @@ impl<S: Simd> crate::SimdCombine<S> for f64x4<S> {
         self.simd.combine_f64x4(self, rhs.simd_into(self.simd))
     }
 }
-#[doc = "A SIMD mask of 4 logical lanes corresponding to 64-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 4 logical lanes corresponding to 64-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask64x4<S: Simd> {
     pub(crate) val: S::mask64x4,
@@ -4538,7 +4538,7 @@ impl<S: Simd> crate::SimdSplit<S> for u8x64<S> {
         self.simd.split_u8x64(self)
     }
 }
-#[doc = "A SIMD mask of 64 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 64 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask8x64<S: Simd> {
     pub(crate) val: S::mask8x64,
@@ -4997,7 +4997,7 @@ impl<S: Simd> crate::SimdSplit<S> for u16x32<S> {
         self.simd.split_u16x32(self)
     }
 }
-#[doc = "A SIMD mask of 32 logical lanes corresponding to 16-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 32 logical lanes corresponding to 16-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask16x32<S: Simd> {
     pub(crate) val: S::mask16x32,
@@ -5480,7 +5480,7 @@ impl<S: Simd> crate::SimdSplit<S> for u32x16<S> {
         self.simd.split_u32x16(self)
     }
 }
-#[doc = "A SIMD mask of 16 logical lanes corresponding to 32-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 16 logical lanes corresponding to 32-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask32x16<S: Simd> {
     pub(crate) val: S::mask32x16,
@@ -5791,7 +5791,7 @@ impl<S: Simd> crate::SimdSplit<S> for f64x8<S> {
         self.simd.split_f64x8(self)
     }
 }
-#[doc = "A SIMD mask of 8 logical lanes corresponding to 64-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes and true is encoded as all ones."]
+#[doc = "A SIMD mask of 8 logical lanes corresponding to 64-bit vector elements.\n\nThe storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1)."]
 #[derive(Clone, Copy)]
 pub struct mask64x8<S: Simd> {
     pub(crate) val: S::mask64x8,

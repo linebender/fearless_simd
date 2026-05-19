@@ -13,8 +13,8 @@ pub trait Select<T: Seal>: Seal {
     /// operand if the lane is false.
     ///
     /// Masks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those
-    /// conversions, false is encoded as all zeroes and true is encoded as all ones. If a mask is constructed from any
-    /// other integer bit pattern, the result of this operation is unspecified.
+    /// conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).
+    /// If a mask is constructed from any other integer bit pattern, the result of this operation is unspecified.
     fn select(self, if_true: T, if_false: T) -> T;
 }
 

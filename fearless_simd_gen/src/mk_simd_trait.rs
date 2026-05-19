@@ -295,7 +295,8 @@ fn mk_simd_mask() -> TokenStream {
         {
             /// The signed integer type used when converting this mask to and from lane values.
             ///
-            /// False lanes are encoded as all zeroes, and true lanes are encoded as all ones.
+            /// False lanes are encoded as all zeroes (integer value 0), and true lanes are encoded as all ones
+            /// (integer value -1).
             type Element: SimdElement;
 
             /// This mask type's lane count.
