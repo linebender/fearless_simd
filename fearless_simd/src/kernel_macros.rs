@@ -9,8 +9,6 @@
 ///
 /// The first argument must be a SIMD token written as `token: Neon`,
 /// `token: WasmSimd128`, `token: Sse4_2`, or `token: Avx2`.
-/// The generated wrapper uses the corresponding `$crate::` token type in its
-/// actual signature.
 ///
 /// For levels with runtime-detected target features, the macro runs your body
 /// inside an inner function annotated with the appropriate `#[target_feature]`
