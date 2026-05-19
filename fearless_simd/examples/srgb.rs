@@ -1,10 +1,20 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![expect(
-    missing_docs,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
-)]
+//! Converts a single RGBA pixel from linear RGB to sRGB.
+//!
+//! This example demonstrates the usual Fearless SIMD structure:
+//!
+//! - write the main computation as an `#[inline(always)]` function generic over
+//!   [`Simd`];
+//! - use [`dispatch!`] at the non-SIMD boundary to run it with the best
+//!   available target features;
+//! - drop down to [`kernel!`](fearless_simd::kernel) when a small part of the
+//!   computation needs a target-specific intrinsic.
+//!
+//! The RGB channels are converted with portable SIMD operations. The alpha
+//! channel is copied unchanged, using an architecture-specific lane-copy
+//! intrinsic if one is available and a scalar fallback otherwise.
 
 use fearless_simd::{Level, dispatch, f32x4, prelude::*};
 
@@ -16,6 +26,7 @@ use core::arch::x86::{__m128, _mm_blend_ps};
 use core::arch::x86_64::{__m128, _mm_blend_ps};
 
 fearless_simd::kernel! {
+    /// Copy the alpha lane on AArch64 using a NEON lane-copy intrinsic.
     #[inline]
     fn copy_alpha_neon(neon: Neon, a: float32x4_t, b: float32x4_t) -> float32x4_t {
         vcopyq_laneq_f32::<3, 3>(a, b)
@@ -23,12 +34,17 @@ fearless_simd::kernel! {
 }
 
 fearless_simd::kernel! {
+    /// Copy the alpha lane on x86 using the SSE4.2 token to enable SSE4.1 blend instructions.
     #[inline]
     fn copy_alpha_sse4_2(sse4_2: Sse4_2, a: __m128, b: __m128) -> __m128 {
         _mm_blend_ps::<8>(a, b)
     }
 }
 
+/// Return `a` with its alpha channel replaced by `b`'s alpha channel.
+///
+/// This helper shows how portable SIMD code can opportunistically call
+/// target-specific kernels while still providing a fallback for every backend.
 #[inline(always)]
 fn copy_alpha<S: Simd>(a: f32x4<S>, b: f32x4<S>) -> f32x4<S> {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -46,6 +62,7 @@ fn copy_alpha<S: Simd>(a: f32x4<S>, b: f32x4<S>) -> f32x4<S> {
     result
 }
 
+/// Approximate the linear-RGB to sRGB transfer curve for RGB, preserving alpha.
 #[inline(always)]
 fn to_srgb<S: Simd>(simd: S, rgba: [f32; 4]) -> [f32; 4] {
     let v: f32x4<S> = rgba.simd_into(simd);
