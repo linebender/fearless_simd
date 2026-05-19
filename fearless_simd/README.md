@@ -110,6 +110,7 @@ TODO: Talk about writing versions of functions which can be called in other `S: 
 -->
 
 ## Platform-specific intrinsics
+
 If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`](kernel) macro.
 
 ## WebAssembly
