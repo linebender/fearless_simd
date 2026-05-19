@@ -14,10 +14,10 @@ use crate::{
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
-#[doc = "The SIMD token for the x86-64-v2 level."]
+#[doc = "A token for SSE4.2 intrinsics on `x86` and `x86_64`, representing the x86-64-v2 level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Sse4_2 {
-    pub sse4_2: crate::core_arch::x86::Sse4_2,
+    _private: (),
 }
 impl Sse4_2 {
     #[doc = r" Create a SIMD token."]
@@ -28,9 +28,7 @@ impl Sse4_2 {
     #[doc = r" be available."]
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
-        Sse4_2 {
-            sse4_2: unsafe { crate::core_arch::x86::Sse4_2::new_unchecked() },
-        }
+        Sse4_2 { _private: () }
     }
 }
 impl Seal for Sse4_2 {}

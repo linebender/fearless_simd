@@ -11,17 +11,15 @@ use crate::{
     u32x4, u32x8, u32x16,
 };
 use core::arch::aarch64::*;
-#[doc = "The SIMD token for the \"neon\" level."]
+#[doc = "A token for Neon intrinsics on aarch64, representing the \"neon\" level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Neon {
-    pub neon: crate::core_arch::aarch64::Neon,
+    _private: (),
 }
 impl Neon {
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
-        Neon {
-            neon: unsafe { crate::core_arch::aarch64::Neon::new_unchecked() },
-        }
+        Neon { _private: () }
     }
 }
 impl Seal for Neon {}

@@ -67,15 +67,12 @@ impl Level for X86 {
 
     fn token_doc(&self) -> &'static str {
         match self {
-            Self::Sse4_2 => "The SIMD token for the x86-64-v2 level.",
-            Self::Avx2 => "The SIMD token for the x86-64-v3 level.",
-        }
-    }
-
-    fn token_inner(&self) -> TokenStream {
-        match self {
-            Self::Sse4_2 => quote!(crate::core_arch::x86::Sse4_2),
-            Self::Avx2 => quote!(crate::core_arch::x86::Avx2),
+            Self::Sse4_2 => {
+                "A token for SSE4.2 intrinsics on `x86` and `x86_64`, representing the x86-64-v2 level."
+            }
+            Self::Avx2 => {
+                "A token for AVX2 intrinsics on `x86` and `x86_64`, representing the x86-64-v3 level."
+            }
         }
     }
 
@@ -151,9 +148,7 @@ impl Level for X86 {
                 /// be available.
                 #[inline]
                 pub const unsafe fn new_unchecked() -> Self {
-                    Sse4_2 {
-                        sse4_2: unsafe { crate::core_arch::x86::Sse4_2::new_unchecked() },
-                    }
+                    Sse4_2 { _private: () }
                 }
             },
             Self::Avx2 => quote! {
@@ -166,9 +161,7 @@ impl Level for X86 {
                 /// be available.
                 #[inline]
                 pub const unsafe fn new_unchecked() -> Self {
-                    Self {
-                        avx2: unsafe { crate::core_arch::x86::Avx2::new_unchecked() },
-                    }
+                    Self { _private: () }
                 }
             },
         }

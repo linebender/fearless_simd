@@ -109,6 +109,10 @@ E.g. We might want names for these, e.g.:
 TODO: Talk about writing versions of functions which can be called in other `S: Simd` functions.
 -->
 
+# Platform-specific intrinsics
+
+If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`](kernel) macro.
+
 # WebAssembly
 
 WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle for WASM, one with SIMD and one without,
@@ -151,8 +155,6 @@ The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/fe
 - `std` (enabled by default): Get floating point functions from the standard library (likely using your target's libc).
   Also allows using [`Level::new`] on all platforms, to detect which target features are enabled.
 - `libm`: Use floating point implementations from [libm].
-- `safe_wrappers`: Include safe wrappers for (some) target feature specific intrinsics,
-  beyond the basic SIMD operations abstracted on all platforms.
 - `force_support_fallback`: Force scalar fallback, to be supported, even if your compilation target has a better baseline.
 
 At least one of `std` and `libm` is required; `std` overrides `libm`.

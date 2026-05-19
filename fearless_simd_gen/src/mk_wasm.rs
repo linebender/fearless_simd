@@ -42,11 +42,7 @@ impl Level for WasmSimd128 {
     }
 
     fn token_doc(&self) -> &'static str {
-        r#"The SIMD token for the "wasm128" level."#
-    }
-
-    fn token_inner(&self) -> TokenStream {
-        quote!(crate::core_arch::wasm32::WasmSimd128)
+        r#"A token for WASM SIMD128, representing the "wasm128" level."#
     }
 
     fn make_module_prelude(&self) -> TokenStream {
@@ -63,7 +59,7 @@ impl Level for WasmSimd128 {
         quote! {
             #[inline]
             pub const fn new_unchecked() -> Self {
-                Self { wasmsimd128: crate::core_arch::wasm32::WasmSimd128::new() }
+                Self { _private: () }
             }
         }
     }

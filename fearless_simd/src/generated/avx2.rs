@@ -14,10 +14,10 @@ use crate::{
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
-#[doc = "The SIMD token for the x86-64-v3 level."]
+#[doc = "A token for AVX2 intrinsics on `x86` and `x86_64`, representing the x86-64-v3 level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Avx2 {
-    pub avx2: crate::core_arch::x86::Avx2,
+    _private: (),
 }
 impl Avx2 {
     #[doc = r" Create a SIMD token."]
@@ -29,9 +29,7 @@ impl Avx2 {
     #[doc = r" be available."]
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
-        Self {
-            avx2: unsafe { crate::core_arch::x86::Avx2::new_unchecked() },
-        }
+        Self { _private: () }
     }
 }
 impl Seal for Avx2 {}

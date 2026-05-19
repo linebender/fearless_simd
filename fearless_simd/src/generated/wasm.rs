@@ -11,17 +11,15 @@ use crate::{
     u32x4, u32x8, u32x16,
 };
 use core::arch::wasm32::*;
-#[doc = "The SIMD token for the \"wasm128\" level."]
+#[doc = "A token for WASM SIMD128, representing the \"wasm128\" level."]
 #[derive(Clone, Copy, Debug)]
 pub struct WasmSimd128 {
-    pub wasmsimd128: crate::core_arch::wasm32::WasmSimd128,
+    _private: (),
 }
 impl WasmSimd128 {
     #[inline]
     pub const fn new_unchecked() -> Self {
-        Self {
-            wasmsimd128: crate::core_arch::wasm32::WasmSimd128::new(),
-        }
+        Self { _private: () }
     }
 }
 impl Seal for WasmSimd128 {}
