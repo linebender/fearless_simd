@@ -1,17 +1,25 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+#[cfg(panic = "unwind")]
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
 #[track_caller]
+#[cfg(panic = "unwind")]
 fn assert_panics(label: &str, f: impl FnOnce()) {
     assert!(
         catch_unwind(AssertUnwindSafe(f)).is_err(),
         "{label} should panic"
     );
+}
+
+#[cfg(not(panic = "unwind"))]
+fn assert_panics(_label: &str, _f: impl FnOnce()) {
+    // These tests need panic unwinding to observe rejected operations. Some targets, such as
+    // wasm32-wasip1, abort on panic instead.
 }
 
 macro_rules! for_each_simd_type {
