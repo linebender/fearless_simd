@@ -74,17 +74,15 @@ impl FloatExt for f64 {
         libm::trunc(self)
     }
 }
-#[doc = "The SIMD token for the \"fallback\" level."]
+#[doc = "A token for scalar fallback SIMD, representing the \"fallback\" level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Fallback {
-    pub fallback: crate::core_arch::fallback::Fallback,
+    _private: (),
 }
 impl Fallback {
     #[inline]
     pub const fn new() -> Self {
-        Self {
-            fallback: crate::core_arch::fallback::Fallback::new(),
-        }
+        Self { _private: () }
     }
 }
 impl Seal for Fallback {}

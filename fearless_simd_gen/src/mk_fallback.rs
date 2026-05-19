@@ -36,11 +36,7 @@ impl Level for Fallback {
     }
 
     fn token_doc(&self) -> &'static str {
-        r#"The SIMD token for the "fallback" level."#
-    }
-
-    fn token_inner(&self) -> TokenStream {
-        quote!(crate::core_arch::fallback::Fallback)
+        r#"A token for scalar fallback SIMD, representing the "fallback" level."#
     }
 
     fn make_module_prelude(&self) -> TokenStream {
@@ -128,9 +124,7 @@ impl Level for Fallback {
         quote! {
             #[inline]
             pub const fn new() -> Self {
-                Self {
-                    fallback: crate::core_arch::fallback::Fallback::new(),
-                }
+                Self { _private: () }
             }
         }
     }

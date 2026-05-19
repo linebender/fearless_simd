@@ -53,11 +53,7 @@ impl Level for Neon {
     }
 
     fn token_doc(&self) -> &'static str {
-        r#"The SIMD token for the "neon" level."#
-    }
-
-    fn token_inner(&self) -> TokenStream {
-        quote!(crate::core_arch::aarch64::Neon)
+        r#"A token for Neon intrinsics on aarch64, representing the "neon" level."#
     }
 
     fn make_module_prelude(&self) -> TokenStream {
@@ -74,9 +70,7 @@ impl Level for Neon {
         quote! {
             #[inline]
             pub const unsafe fn new_unchecked() -> Self {
-                Neon {
-                    neon: unsafe { crate::core_arch::aarch64::Neon::new_unchecked() },
-                }
+                Neon { _private: () }
             }
         }
     }

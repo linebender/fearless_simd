@@ -36,9 +36,6 @@ pub(crate) trait Level {
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream;
     /// The docstring for this SIMD level token.
     fn token_doc(&self) -> &'static str;
-    /// The full path to the `core_arch` token wrapped by this SIMD level token.
-    fn token_inner(&self) -> TokenStream;
-
     /// Any additional imports or supporting code necessary for the module (for instance, importing
     /// implementation-specific functions from `core::arch`).
     fn make_module_prelude(&self) -> TokenStream;
@@ -216,8 +213,6 @@ pub(crate) trait Level {
     fn make_module(&self) -> TokenStream {
         let level_tok = self.token();
         let token_doc = self.token_doc();
-        let field_name = Ident::new(&self.name().to_ascii_lowercase(), Span::call_site());
-        let token_inner = self.token_inner();
         let imports = type_imports();
         let module_prelude = self.make_module_prelude();
         let impl_body = self.make_impl_body();
@@ -236,7 +231,7 @@ pub(crate) trait Level {
             #[doc = #token_doc]
             #[derive(Clone, Copy, Debug)]
             pub struct #level_tok {
-                pub #field_name: #token_inner,
+                _private: (),
             }
 
             impl #level_tok {
