@@ -32,11 +32,11 @@ fn mask_trait_splat_mask32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
-fn simd_from_bool_native_mask<S: Simd>(simd: S) {
-    let all_true: S::mask32s = true.simd_into(simd);
+fn splat_native_mask<S: Simd>(simd: S) {
+    let all_true = S::mask32s::splat(simd, true);
     assert!(all_true.all_true());
 
-    let all_false: S::mask32s = false.simd_into(simd);
+    let all_false = S::mask32s::splat(simd, false);
     assert!(all_false.all_false());
 }
 

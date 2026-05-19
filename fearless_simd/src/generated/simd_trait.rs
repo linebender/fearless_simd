@@ -96,28 +96,22 @@ pub trait Simd:
         + core::ops::Neg<Output = Self::i32s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
     type mask8s: SimdMask<Self, Element = i8>
-        + SimdFrom<bool, Self>
         + Select<Self::u8s>
         + Select<Self::i8s>
         + Select<Self::mask8s>;
     #[doc = r" A native-width SIMD mask with 16-bit lanes."]
     type mask16s: SimdMask<Self, Element = i16>
-        + SimdFrom<bool, Self>
         + Select<Self::u16s>
         + Select<Self::i16s>
         + Select<Self::mask16s>;
     #[doc = r" A native-width SIMD mask with 32-bit lanes."]
     type mask32s: SimdMask<Self, Element = i32>
-        + SimdFrom<bool, Self>
         + Select<Self::f32s>
         + Select<Self::u32s>
         + Select<Self::i32s>
         + Select<Self::mask32s>;
     #[doc = r" A native-width SIMD mask with 64-bit lanes."]
-    type mask64s: SimdMask<Self, Element = i64>
-        + SimdFrom<bool, Self>
-        + Select<Self::f64s>
-        + Select<Self::mask64s>;
+    type mask64s: SimdMask<Self, Element = i64> + Select<Self::f64s> + Select<Self::mask64s>;
     #[doc = r" This SIMD token's feature level."]
     fn level(self) -> Level;
     #[doc = r" Call function with CPU features enabled."]
