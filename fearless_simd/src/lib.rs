@@ -142,8 +142,6 @@ compile_error!("fearless_simd requires either the `std` or `libm` feature");
 #[cfg(all(feature = "std", feature = "libm"))]
 use libm as _;
 
-pub mod core_arch;
-
 mod generated;
 mod kernel_macros;
 mod macros;
