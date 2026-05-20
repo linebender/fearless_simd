@@ -17,8 +17,14 @@ pub struct Neon {
     _private: (),
 }
 impl Neon {
+    #[doc = r" Create a SIMD token, which can be used as future proof that the"]
+    #[doc = r" neon target feature is available for this run."]
+    #[doc = r""]
+    #[doc = r" As indicated by the required target features to call this function,"]
+    #[doc = r" the `neon` CPU feature must be available."]
     #[inline]
-    pub const unsafe fn new_unchecked() -> Self {
+    #[target_feature(enable = "neon")]
+    pub const fn new_unchecked() -> Self {
         Neon { _private: () }
     }
 }
