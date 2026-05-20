@@ -1,6 +1,9 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+// After you edit the crate's doc comment, run this command, then check README.md for any missing links
+// cargo rdme --workspace-project=fearless_simd
+
 //! A helper library to make SIMD more friendly.
 //!
 //! Fearless SIMD exposes safe SIMD with ergonomic multi-versioning in Rust.
