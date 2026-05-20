@@ -37,6 +37,8 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 [`Level`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/enum.Level.html
 [`Level::new`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/enum.Level.html#method.new
 [`std::simd`]: https://doc.rust-lang.org/std/simd/index.html
+[kernel]: https://docs.rs/fearless_simd/0.4.1/fearless_simd/macro.kernel.html
+
 <!-- cargo-rdme start -->
 
 A helper library to make SIMD more friendly.
@@ -111,7 +113,7 @@ TODO: Talk about writing versions of functions which can be called in other `S: 
 
 # Platform-specific intrinsics
 
-If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`](kernel) macro.
+If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`][kernel] macro.
 
 # WebAssembly
 

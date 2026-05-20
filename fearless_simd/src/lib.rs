@@ -73,7 +73,7 @@
 //!
 //! # Platform-specific intrinsics
 //!
-//! If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`](kernel) macro.
+//! If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`][kernel] macro.
 //!
 //! # WebAssembly
 //!
