@@ -455,7 +455,7 @@ impl Level {
     /// If this is a proof that x86-64-v2 feature set (or better) is available, access that
     /// instruction set.
     ///
-    /// See [Sse4_2::new_unchecked] for the exact list of CPU features this token enables.
+    /// See [`Sse4_2::new_unchecked`] for the exact list of CPU features this token enables.
     ///
     /// This method should be preferred over matching against the `Sse4_2` variant of self,
     /// because if the CPU supports a superset of SSE4.2 (e.g. AVX2 or AVX-512),
@@ -494,7 +494,7 @@ impl Level {
     /// If this is a proof that the x86-64-v3 feature set (or better) is available, access that
     /// instruction set.
     ///
-    /// See [Avx2::new_unchecked] for the exact list of CPU features this token enables.
+    /// See [`Avx2::new_unchecked`] for the exact list of CPU features this token enables.
     ///
     /// This method should be preferred over matching against the `Avx2` variant of self,
     /// because if the CPU supports a superset of AVX2 (e.g. AVX-512),
