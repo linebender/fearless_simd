@@ -9,6 +9,8 @@ description = "Safer and easier SIMD"
 readme = "README.md"
 rust-version.workspace = true
 publish = false
+# Tests are collected through tests/mod.rs; files beside it are modules, not separate integration crates.
+autotests = false
 
 [[test]]
 name = "tests"
