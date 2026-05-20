@@ -414,8 +414,10 @@ impl Level {
     ///
     /// This method should be preferred over matching against the `Neon` variant of self,
     /// because if Fearless SIMD gets support for an instruction set which is a superset of Neon,
-    /// this method will return a value even if that "better" instruction set is available.
+    /// this method will return the Neon token even if that "better" instruction set is available.
     ///
+    /// This can be used in combination with the [kernel] macro to safely access level-specific
+    /// SIMD intrinsics.
     #[cfg(target_arch = "aarch64")]
     #[inline]
     pub fn as_neon(self) -> Option<Neon> {
@@ -433,8 +435,10 @@ impl Level {
     ///
     /// This method should be preferred over matching against the `WasmSimd128` variant of self,
     /// because if Fearless SIMD gets support for an instruction set which is a superset of SIMD 128,
-    /// this method will return a value even if that "better" instruction set is available.
+    /// this method will return the SIMD 128 token even if that "better" instruction set is available.
     ///
+    /// This can be used in combination with the [kernel] macro to safely access level-specific
+    /// SIMD intrinsics.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[inline]
     pub fn as_wasm_simd128(self) -> Option<WasmSimd128> {
@@ -448,12 +452,17 @@ impl Level {
         }
     }
 
-    /// If this is a proof that SSE4.2 (or better) is available, access that instruction set.
+    /// If this is a proof that x86-64-v2 feature set (or better) is available, access that
+    /// instruction set.
+    ///
+    /// See [`Sse4_2::new_unchecked`] for the exact list of CPU features this token enables.
     ///
     /// This method should be preferred over matching against the `Sse4_2` variant of self,
-    /// because if Fearless SIMD gets support for an instruction set which is a superset of SSE4.2,
-    /// this method will return a value even if that "better" instruction set is available.
+    /// because if the CPU supports a superset of SSE4.2 (e.g. AVX2 or AVX-512),
+    /// this method will return the SSE4.2 token even if that "better" instruction set is available.
     ///
+    /// This can be used in combination with the [kernel] macro to safely access level-specific
+    /// SIMD intrinsics.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[inline]
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
@@ -485,10 +494,14 @@ impl Level {
     /// If this is a proof that the x86-64-v3 feature set (or better) is available, access that
     /// instruction set.
     ///
-    /// This method should be preferred over matching against the `AVX2` variant of self,
-    /// because if Fearless SIMD gets support for an instruction set which is a superset of AVX2,
-    /// this method will return a value even if that "better" instruction set is available.
+    /// See [`Avx2::new_unchecked`] for the exact list of CPU features this token enables.
     ///
+    /// This method should be preferred over matching against the `Avx2` variant of self,
+    /// because if the CPU supports a superset of AVX2 (e.g. AVX-512),
+    /// this method will return the AVX2 token even if that "better" instruction set is available.
+    ///
+    /// This can be used in combination with the [kernel] macro to safely access level-specific
+    /// SIMD intrinsics.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[inline]
     pub fn as_avx2(self) -> Option<Avx2> {
