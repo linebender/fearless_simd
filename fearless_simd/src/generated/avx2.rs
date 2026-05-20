@@ -20,15 +20,16 @@ pub struct Avx2 {
     _private: (),
 }
 impl Avx2 {
-    #[doc = r" Create a SIMD token."]
+    #[doc = r" Create a SIMD token, which can be used as future proof that the"]
+    #[doc = r" x86-64-v2 level is available for this run."]
     #[doc = r""]
-    #[doc = r" # Safety"]
-    #[doc = r""]
-    #[doc = r" The `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`,"]
+    #[doc = r" As indicated by the required target features to call this function,"]
+    #[doc = r" `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`,"]
     #[doc = r" `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features must"]
     #[doc = r" be available."]
     #[inline]
-    pub const unsafe fn new_unchecked() -> Self {
+    #[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave")]
+    pub const fn new_unchecked() -> Self {
         Self { _private: () }
     }
 }
