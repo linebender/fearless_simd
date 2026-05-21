@@ -21,7 +21,7 @@
 //! [`from_slice`][SimdBase::from_slice] associated function.
 //!
 //! To call a function with the best available target features and get the associated `Simd`
-//! implementation, use the [`dispatch!()`] macro:
+//! implementation, use the [`dispatch`] macro:
 //!
 //! ```rust
 //! use fearless_simd::{Level, Simd, dispatch};
@@ -38,11 +38,11 @@
 //! A few things to note:
 //!
 //! 1) `sigmoid` is generic over any `Simd` type.
-//! 2) The [`dispatch`] macro is used to invoke the given function with the target features associated with the supplied [`Level`].
-//! 3) The function or closure passed to [`dispatch!()`] should be `#[inline(always)]`.
+//! 2) [`dispatch`] is used to invoke the given function with the target features associated with the supplied [`Level`].
+//! 3) The function or closure passed to [`dispatch`] should be `#[inline(always)]`.
 //!    The performance of the SIMD implementation may be poor if that isn't the case. See [the section on inlining for details](#inlining)
 //!
-//! The first parameter to [`dispatch!()`] is the [`Level`].
+//! The first parameter to [`dispatch`] is the [`Level`].
 //! If you are writing an application, you should create this once (using [`Level::new`]), and pass it to any function which wants to use SIMD.
 //! This type stores which instruction sets are available for the current process, which is used
 //! in the macro to dispatch to the most optimal variant of the supplied function for this process.
@@ -56,8 +56,8 @@
 //! There is a rule of thumb for how to achieve things in Fearless SIMD:
 //!
 //! - All SIMD functions need `#[inline(always)]`.
-//! - Use [`dispatch!`] when calling SIMD code from non-SIMD code.
-//! - Use [`vectorize()`](Simd::vectorize) when calling SIMD from SIMD if you don't want to force inlining.
+//! - Use [`dispatch`] when calling SIMD code from non-SIMD code.
+//! - Use [`vectorize()`][Simd::vectorize] when calling SIMD from SIMD if you don't want to force inlining.
 //!
 //! We currently don't have docs explaining why this is the case.
 //! You can read [this Zulip conversation](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433)
@@ -76,7 +76,7 @@
 //!
 //! # Platform-specific intrinsics
 //!
-//! If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`](kernel) macro.
+//! If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`][kernel] macro.
 //!
 //! # WebAssembly
 //!
@@ -277,7 +277,7 @@ impl Level {
     /// you should construct the relevant variants yourself, using whatever
     /// way your specific chip supports accessing the current level.
     ///
-    /// This value should be passed to [`dispatch!()`].
+    /// This value should be passed to [`dispatch`].
     #[cfg(any(feature = "std", target_arch = "wasm32"))]
     #[must_use]
     #[expect(
@@ -624,7 +624,7 @@ impl Level {
 
     /// Dispatch `f` to a context where the target features which this `Level` proves are available are [enabled].
     ///
-    /// Most users of Fearless SIMD should prefer to use [`dispatch!()`] to
+    /// Most users of Fearless SIMD should prefer to use [`dispatch`] to
     /// explicitly vectorize a function. That has a better developer experience
     /// than an implementation of `WithSimd`, and is less likely to miss a vectorization
     /// opportunity.

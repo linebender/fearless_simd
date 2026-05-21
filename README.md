@@ -48,7 +48,7 @@ The other packages are as follows:
 
 ## History
 
-A [much earlier version][fearless_simd 0.1.1] of this crate experimented with an approach that tried to accomplish safety in safe Rust as of 2018, using types that witnessed the SIMD capability of the CPU. There is a blog post, [Towards fearless SIMD], that wrote up the experiment. That approach couldn't quite be made to work, but was an interesting exploration at the time. A practical development along roughly similar lines is the [pulp] crate.
+A [much earlier version][fearless_simd 0.1.1] of this crate experimented with an approach that tried to accomplish safety in safe Rust as of 2018, using types that witnessed the SIMD capability of the CPU. There is a blog post, [Towards fearless SIMD], that wrote up the experiment. That approach couldn't quite be made to work, but was an interesting exploration at the time. A practical development along roughly similar lines is the [`pulp`] crate.
 
 For more discussion about this crate, see [Towards fearless SIMD, 7 years later].
 
@@ -91,7 +91,7 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 [AUTHORS]: ./AUTHORS
 
 [A plan for SIMD]: https://linebender.org/blog/a-plan-for-simd/
-[pulp]: https://crates.io/crates/pulp
+[`pulp`]: https://crates.io/crates/pulp
 [Towards fearless SIMD]: https://raphlinus.github.io/rust/simd/2018/10/19/fearless-simd.html
 [fearless_simd 0.1.1]: https://crates.io/crates/fearless_simd/0.1.1
 [std::simd]: https://doc.rust-lang.org/std/simd/index.html
