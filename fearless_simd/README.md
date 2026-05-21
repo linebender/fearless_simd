@@ -30,14 +30,14 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 
 [libm]: https://crates.io/crates/libm
 [`f32x4`]: https://docs.rs/fearless_simd/latest/fearless_simd/generated/simd_types/struct.f32x4.html
-[`Simd`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/generated/simd_trait/trait.Simd.html
-[`SimdFrom`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/traits/trait.SimdFrom.html
-[SimdBase::from_slice]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/generated/simd_trait/trait.SimdBase.html#tymethod.from_slice
-[`dispatch`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/macros/macro.dispatch.html
-[`Level`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/enum.Level.html
-[`Level::new`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/enum.Level.html#method.new
+[`Simd`]: https://docs.rs/fearless_simd/latest/fearless_simd/generated/simd_trait/trait.Simd.html
+[`SimdFrom`]: https://docs.rs/fearless_simd/latest/fearless_simd/traits/trait.SimdFrom.html
+[SimdBase::from_slice]: https://docs.rs/fearless_simd/latest/fearless_simd/generated/simd_trait/trait.SimdBase.html#tymethod.from_slice
+[`dispatch`]: https://docs.rs/fearless_simd/latest/fearless_simd/macros/macro.dispatch.html
+[`Level`]: https://docs.rs/fearless_simd/latest/fearless_simd/enum.Level.html
+[`Level::new`]: https://docs.rs/fearless_simd/latest/fearless_simd/enum.Level.html#method.new
 [`std::simd`]: https://doc.rust-lang.org/std/simd/index.html
-[kernel]: https://docs.rs/fearless_simd/0.4.1/fearless_simd/macro.kernel.html
+[kernel]: https://docs.rs/fearless_simd/latest/fearless_simd/macro.kernel.html
 
 <!-- cargo-rdme start -->
 
@@ -58,7 +58,7 @@ These can be created in a SIMD context using the [`SimdFrom`] trait, or the
 [`from_slice`][SimdBase::from_slice] associated function.
 
 To call a function with the best available target features and get the associated `Simd`
-implementation, use the [`dispatch!()`] macro:
+implementation, use the [`dispatch`] macro:
 
 ```rust
 use fearless_simd::{Level, Simd, dispatch};
@@ -75,11 +75,11 @@ dispatch!(level, simd => sigmoid(simd, &[/*...*/], &mut [/*...*/]));
 A few things to note:
 
 1) `sigmoid` is generic over any `Simd` type.
-2) The [`dispatch`] macro is used to invoke the given function with the target features associated with the supplied [`Level`].
-3) The function or closure passed to [`dispatch!()`] should be `#[inline(always)]`.
+2) [`dispatch`] is used to invoke the given function with the target features associated with the supplied [`Level`].
+3) The function or closure passed to [`dispatch`] should be `#[inline(always)]`.
    The performance of the SIMD implementation may be poor if that isn't the case. See [the section on inlining for details](#inlining)
 
-The first parameter to [`dispatch!()`] is the [`Level`].
+The first parameter to [`dispatch`] is the [`Level`].
 If you are writing an application, you should create this once (using [`Level::new`]), and pass it to any function which wants to use SIMD.
 This type stores which instruction sets are available for the current process, which is used
 in the macro to dispatch to the most optimal variant of the supplied function for this process.
@@ -93,7 +93,7 @@ As such, most functions which you write when using Fearless SIMD should have the
 There is a rule of thumb for how to achieve things in Fearless SIMD:
 
 - All SIMD functions need `#[inline(always)]`.
-- Use [`dispatch!`] when calling SIMD code from non-SIMD code.
+- Use [`dispatch`] when calling SIMD code from non-SIMD code.
 - Use [`vectorize()`](Simd::vectorize) when calling SIMD from SIMD if you don't want to force inlining.
 
 We currently don't have docs explaining why this is the case.
