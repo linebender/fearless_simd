@@ -54,7 +54,7 @@
 //!
 //! - All SIMD functions need `#[inline(always)]`.
 //! - Use [`dispatch`] when calling SIMD code from non-SIMD code.
-//! - Use [`vectorize()`](Simd::vectorize) when calling SIMD from SIMD if you don't want to force inlining.
+//! - Use [`vectorize()`][Simd::vectorize] when calling SIMD from SIMD if you don't want to force inlining.
 //!
 //! We currently don't have docs explaining why this is the case.
 //! You can read [this Zulip conversation](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433)

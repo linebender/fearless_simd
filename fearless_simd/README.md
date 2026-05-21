@@ -33,11 +33,12 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 [`Simd`]: https://docs.rs/fearless_simd/latest/fearless_simd/generated/simd_trait/trait.Simd.html
 [`SimdFrom`]: https://docs.rs/fearless_simd/latest/fearless_simd/traits/trait.SimdFrom.html
 [SimdBase::from_slice]: https://docs.rs/fearless_simd/latest/fearless_simd/generated/simd_trait/trait.SimdBase.html#tymethod.from_slice
-[`dispatch`]: https://docs.rs/fearless_simd/latest/fearless_simd/macros/macro.dispatch.html
+[`dispatch`]: https://docs.rs/fearless_simd/latest/fearless_simd/macro.dispatch.html
 [`Level`]: https://docs.rs/fearless_simd/latest/fearless_simd/enum.Level.html
 [`Level::new`]: https://docs.rs/fearless_simd/latest/fearless_simd/enum.Level.html#method.new
 [`std::simd`]: https://doc.rust-lang.org/std/simd/index.html
 [kernel]: https://docs.rs/fearless_simd/latest/fearless_simd/macro.kernel.html
+[Simd::vectorize]: https://docs.rs/fearless_simd/latest/fearless_simd/trait.Simd.html#tymethod.vectorize
 
 <!-- cargo-rdme start -->
 
@@ -94,7 +95,7 @@ There is a rule of thumb for how to achieve things in Fearless SIMD:
 
 - All SIMD functions need `#[inline(always)]`.
 - Use [`dispatch`] when calling SIMD code from non-SIMD code.
-- Use [`vectorize()`](Simd::vectorize) when calling SIMD from SIMD if you don't want to force inlining.
+- Use [`vectorize()`][Simd::vectorize] when calling SIMD from SIMD if you don't want to force inlining.
 
 We currently don't have docs explaining why this is the case.
 You can read [this Zulip conversation](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433)
