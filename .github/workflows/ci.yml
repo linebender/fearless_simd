@@ -374,14 +374,16 @@ jobs:
 
       - name: cargo test
         run: |
-          cargo test --lib --bins --tests --workspace --locked --all-features --target wasm32-wasip1 \
+          cargo test --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
             --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
+            --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128"' \
             --config 'target.wasm32-wasip1.runner = "wasmtime"'
 
       - name: cargo test (w/ relaxed-simd)
         run: |
-          cargo test --lib --bins --tests --workspace --locked --all-features --target wasm32-wasip1 \
+          cargo test --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
             --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
+            --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
             --config 'target.wasm32-wasip1.runner = "wasmtime"'
 
 
