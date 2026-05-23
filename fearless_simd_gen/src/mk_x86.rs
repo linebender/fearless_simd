@@ -174,25 +174,11 @@ impl Level for X86 {
             return false;
         }
 
-        // Some 512-bit masks can be constructed directly from one broadcast, avoiding the
-        // shift-and-rebroadcast shape from generic split/combine.
-        if matches!(op.sig, OpSig::MaskFromBitmask)
-            && vec_ty.scalar == ScalarType::Mask
-            && vec_ty.n_bits() == 512
-            && (vec_ty.scalar_bits == 8
-                || (*self == Self::Avx2 && matches!(vec_ty.scalar_bits, 32 | 64)))
-        {
-            return false;
+        match op.sig {
+            OpSig::MaskFromBitmask => !self.has_specialized_mask_from_bitmask(vec_ty),
+            OpSig::MaskToBitmask => !self.has_specialized_mask_to_bitmask(vec_ty),
+            _ => true,
         }
-
-        if matches!(op.sig, OpSig::MaskToBitmask)
-            && vec_ty.scalar == ScalarType::Mask
-            && vec_ty.scalar_bits == 16
-        {
-            return false;
-        }
-
-        true
     }
 
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
@@ -599,6 +585,29 @@ impl X86 {
         }
     }
 
+    fn has_specialized_mask_from_bitmask(&self, vec_ty: &VecType) -> bool {
+        self.has_wide_byte_mask_from_bitmask(vec_ty) || self.has_wide_avx2_mask_from_bitmask(vec_ty)
+    }
+
+    fn has_wide_byte_mask_from_bitmask(&self, vec_ty: &VecType) -> bool {
+        // 512-bit byte masks can be constructed directly from one broadcast, avoiding the
+        // shift-and-rebroadcast shape from generic split/combine.
+        vec_ty.scalar == ScalarType::Mask && vec_ty.n_bits() == 512 && vec_ty.scalar_bits == 8
+    }
+
+    fn has_wide_avx2_mask_from_bitmask(&self, vec_ty: &VecType) -> bool {
+        // AVX2 can construct these 512-bit masks directly from one broadcast, avoiding the
+        // split/combine shape that shifts and broadcasts each half separately.
+        *self == Self::Avx2
+            && vec_ty.scalar == ScalarType::Mask
+            && vec_ty.n_bits() == 512
+            && matches!(vec_ty.scalar_bits, 32 | 64)
+    }
+
+    fn has_specialized_mask_to_bitmask(&self, vec_ty: &VecType) -> bool {
+        vec_ty.scalar == ScalarType::Mask && vec_ty.scalar_bits == 16
+    }
+
     pub(crate) fn handle_mask_from_bitmask(
         &self,
         method_sig: TokenStream,
@@ -610,7 +619,7 @@ impl X86 {
             "mask bitmask conversion only operates on masks"
         );
 
-        if vec_ty.n_bits() == 512 && vec_ty.scalar_bits == 8 {
+        if self.has_wide_byte_mask_from_bitmask(vec_ty) {
             let expr = mask_from_bitmask_wide_bytes(self.native_width(), vec_ty);
             return quote! {
                 #method_sig {
@@ -621,7 +630,7 @@ impl X86 {
             };
         }
 
-        if *self == Self::Avx2 && vec_ty.n_bits() == 512 && matches!(vec_ty.scalar_bits, 32 | 64) {
+        if self.has_wide_avx2_mask_from_bitmask(vec_ty) {
             let expr = mask_from_bitmask_wide_avx2(vec_ty);
             return quote! {
                 #method_sig {
