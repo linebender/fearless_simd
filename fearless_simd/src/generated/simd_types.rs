@@ -682,6 +682,13 @@ impl<S: Simd> crate::SimdMask<S> for mask8x16<S> {
         self.simd.to_bitmask_mask8x16(self)
     }
     #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 16);
+        let mut lanes = self.simd.as_array_mask8x16(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask8x16(lanes);
+    }
+    #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
         let slice: &[i8; 16] = slice.try_into().unwrap();
         simd.load_array_mask8x16(*slice)
@@ -1137,6 +1144,13 @@ impl<S: Simd> crate::SimdMask<S> for mask16x8<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask16x8(self)
+    }
+    #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 8);
+        let mut lanes = self.simd.as_array_mask16x8(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask16x8(lanes);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
@@ -1620,6 +1634,13 @@ impl<S: Simd> crate::SimdMask<S> for mask32x4<S> {
         self.simd.to_bitmask_mask32x4(self)
     }
     #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 4);
+        let mut lanes = self.simd.as_array_mask32x4(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask32x4(lanes);
+    }
+    #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
         let slice: &[i32; 4] = slice.try_into().unwrap();
         simd.load_array_mask32x4(*slice)
@@ -1940,6 +1961,13 @@ impl<S: Simd> crate::SimdMask<S> for mask64x2<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask64x2(self)
+    }
+    #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 2);
+        let mut lanes = self.simd.as_array_mask64x2(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask64x2(lanes);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
@@ -2669,6 +2697,13 @@ impl<S: Simd> crate::SimdMask<S> for mask8x32<S> {
         self.simd.to_bitmask_mask8x32(self)
     }
     #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 32);
+        let mut lanes = self.simd.as_array_mask8x32(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask8x32(lanes);
+    }
+    #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
         let slice: &[i8; 32] = slice.try_into().unwrap();
         simd.load_array_mask8x32(*slice)
@@ -3150,6 +3185,13 @@ impl<S: Simd> crate::SimdMask<S> for mask16x16<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask16x16(self)
+    }
+    #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 16);
+        let mut lanes = self.simd.as_array_mask16x16(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask16x16(lanes);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
@@ -3647,6 +3689,13 @@ impl<S: Simd> crate::SimdMask<S> for mask32x8<S> {
         self.simd.to_bitmask_mask32x8(self)
     }
     #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 8);
+        let mut lanes = self.simd.as_array_mask32x8(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask32x8(lanes);
+    }
+    #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
         let slice: &[i32; 8] = slice.try_into().unwrap();
         simd.load_array_mask32x8(*slice)
@@ -3974,6 +4023,13 @@ impl<S: Simd> crate::SimdMask<S> for mask64x4<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask64x4(self)
+    }
+    #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 4);
+        let mut lanes = self.simd.as_array_mask64x4(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask64x4(lanes);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
@@ -4691,6 +4747,13 @@ impl<S: Simd> crate::SimdMask<S> for mask8x64<S> {
         self.simd.to_bitmask_mask8x64(self)
     }
     #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 64);
+        let mut lanes = self.simd.as_array_mask8x64(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask8x64(lanes);
+    }
+    #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
         let slice: &[i8; 64] = slice.try_into().unwrap();
         simd.load_array_mask8x64(*slice)
@@ -5160,6 +5223,13 @@ impl<S: Simd> crate::SimdMask<S> for mask16x32<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask16x32(self)
+    }
+    #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 32);
+        let mut lanes = self.simd.as_array_mask16x32(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask16x32(lanes);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
@@ -5657,6 +5727,13 @@ impl<S: Simd> crate::SimdMask<S> for mask32x16<S> {
         self.simd.to_bitmask_mask32x16(self)
     }
     #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 16);
+        let mut lanes = self.simd.as_array_mask32x16(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask32x16(lanes);
+    }
+    #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
         let slice: &[i32; 16] = slice.try_into().unwrap();
         simd.load_array_mask32x16(*slice)
@@ -5978,6 +6055,13 @@ impl<S: Simd> crate::SimdMask<S> for mask64x8<S> {
     #[inline(always)]
     fn to_bitmask(self) -> u64 {
         self.simd.to_bitmask_mask64x8(self)
+    }
+    #[inline(always)]
+    fn set(&mut self, index: usize, value: bool) {
+        assert!(index < 8);
+        let mut lanes = self.simd.as_array_mask64x8(*self);
+        lanes[index] = if value { !0 } else { 0 };
+        *self = self.simd.load_array_mask64x8(lanes);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {

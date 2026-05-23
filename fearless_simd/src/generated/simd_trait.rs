@@ -3020,16 +3020,7 @@ pub trait SimdMask<S: Simd>:
     #[doc = r" Sets the value of one logical lane."]
     #[doc = r""]
     #[doc = r" Panics if `index` is greater than or equal to the number of lanes in the mask."]
-    #[inline(always)]
-    fn set(&mut self, index: usize, value: bool) {
-        assert!(index < Self::N);
-        let lane_mask = Self::from_bitmask(self.witness(), 1u64 << index);
-        if value {
-            *self = *self | lane_mask;
-        } else {
-            *self = *self & !lane_mask;
-        }
-    }
+    fn set(&mut self, index: usize, value: bool);
     #[doc = r" Create a SIMD mask from signed integer mask lanes."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]

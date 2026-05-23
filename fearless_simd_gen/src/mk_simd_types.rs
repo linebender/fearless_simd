@@ -322,6 +322,9 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
         }
     }
 
+    // Current backends store masks as signed integer lanes, so `set` uses a generic
+    // spill/update/reload path. Future compact predicate backends such as AVX-512 can
+    // switch this implementation to `to_bitmask`/`from_bitmask`.
     quote! {
         impl<S: Simd> crate::SimdMask<S> for #name<S> {
             type Element = #scalar;
@@ -345,6 +348,14 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn to_bitmask(self) -> u64 {
                 self.simd.#to_bitmask_op(self)
+            }
+
+            #[inline(always)]
+            fn set(&mut self, index: usize, value: bool) {
+                assert!(index < #len);
+                let mut lanes = self.simd.#as_array_op(*self);
+                lanes[index] = if value { !0 } else { 0 };
+                *self = self.simd.#from_array_op(lanes);
             }
 
             #[inline(always)]
