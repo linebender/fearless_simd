@@ -100,9 +100,10 @@ impl Level for WasmSimd128 {
                         ScalarType::Float,
                         "only float supports approximate_recip"
                     );
+                    let splat_op = generic_op_name("splat", vec_ty);
                     let div_op = generic_op_name("div", vec_ty);
                     quote! {
-                        self.#div_op(1.0, a)
+                        self.#div_op(self.#splat_op(1.0), a)
                     }
                 } else {
                     let expr = wasm::expr(method, vec_ty, &args);
