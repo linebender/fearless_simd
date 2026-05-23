@@ -3014,7 +3014,11 @@ pub trait SimdMask<S: Simd>:
     #[doc = r" Panics if `index` is greater than or equal to the number of lanes in the mask."]
     #[inline(always)]
     fn test(&self, index: usize) -> bool {
-        assert!(index < Self::N);
+        assert!(
+            index < Self::N,
+            "mask lane index {index} is out of bounds for {} lanes",
+            Self::N
+        );
         (((*self).to_bitmask() >> index) & 1) != 0
     }
     #[doc = r" Sets the value of one logical lane."]

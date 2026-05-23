@@ -942,28 +942,41 @@ impl Simd for Sse4_2 {
                 let bit_bytes = _mm_shuffle_epi8(
                     bit_bytes,
                     _mm_setr_epi8(
-                        0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8,
-                        0u8 as i8, 0u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8,
-                        1u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8,
+                        0u8.cast_signed(),
+                        0u8.cast_signed(),
+                        0u8.cast_signed(),
+                        0u8.cast_signed(),
+                        0u8.cast_signed(),
+                        0u8.cast_signed(),
+                        0u8.cast_signed(),
+                        0u8.cast_signed(),
+                        1u8.cast_signed(),
+                        1u8.cast_signed(),
+                        1u8.cast_signed(),
+                        1u8.cast_signed(),
+                        1u8.cast_signed(),
+                        1u8.cast_signed(),
+                        1u8.cast_signed(),
+                        1u8.cast_signed(),
                     ),
                 );
                 let bit_mask = _mm_setr_epi8(
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
+                    1u8.cast_signed(),
+                    2u8.cast_signed(),
+                    4u8.cast_signed(),
+                    8u8.cast_signed(),
+                    16u8.cast_signed(),
+                    32u8.cast_signed(),
+                    64u8.cast_signed(),
+                    128u8.cast_signed(),
+                    1u8.cast_signed(),
+                    2u8.cast_signed(),
+                    4u8.cast_signed(),
+                    8u8.cast_signed(),
+                    16u8.cast_signed(),
+                    32u8.cast_signed(),
+                    64u8.cast_signed(),
+                    128u8.cast_signed(),
                 );
                 _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
             }
@@ -1480,14 +1493,14 @@ impl Simd for Sse4_2 {
             {
                 let bit_lanes = _mm_set1_epi16(bits as i16);
                 let bit_mask = _mm_setr_epi16(
-                    1u64 as i16,
-                    2u64 as i16,
-                    4u64 as i16,
-                    8u64 as i16,
-                    16u64 as i16,
-                    32u64 as i16,
-                    64u64 as i16,
-                    128u64 as i16,
+                    1u16.cast_signed(),
+                    2u16.cast_signed(),
+                    4u16.cast_signed(),
+                    8u16.cast_signed(),
+                    16u16.cast_signed(),
+                    32u16.cast_signed(),
+                    64u16.cast_signed(),
+                    128u16.cast_signed(),
                 );
                 _mm_cmpeq_epi16(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
             }
@@ -2018,7 +2031,12 @@ impl Simd for Sse4_2 {
         unsafe {
             {
                 let bit_lanes = _mm_set1_epi32(bits as i32);
-                let bit_mask = _mm_setr_epi32(1u64 as i32, 2u64 as i32, 4u64 as i32, 8u64 as i32);
+                let bit_mask = _mm_setr_epi32(
+                    1u32.cast_signed(),
+                    2u32.cast_signed(),
+                    4u32.cast_signed(),
+                    8u32.cast_signed(),
+                );
                 _mm_cmpeq_epi32(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
             }
             .simd_into(self)
@@ -2340,7 +2358,7 @@ impl Simd for Sse4_2 {
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
         unsafe {
             {
-                let bit_lanes = _mm_set1_epi64x(bits as i64);
+                let bit_lanes = _mm_set1_epi64x(bits.cast_signed());
                 let bit_mask = _mm_set_epi64x(2, 1);
                 _mm_cmpeq_epi64(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
             }
@@ -6331,24 +6349,24 @@ impl Simd for Sse4_2 {
     fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
         unsafe {
             {
-                let bit_bytes = _mm_set1_epi64x(bits as i64);
+                let bit_bytes = _mm_set1_epi64x(bits.cast_signed());
                 let bit_mask = _mm_setr_epi8(
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
+                    1u8.cast_signed(),
+                    2u8.cast_signed(),
+                    4u8.cast_signed(),
+                    8u8.cast_signed(),
+                    16u8.cast_signed(),
+                    32u8.cast_signed(),
+                    64u8.cast_signed(),
+                    128u8.cast_signed(),
+                    1u8.cast_signed(),
+                    2u8.cast_signed(),
+                    4u8.cast_signed(),
+                    8u8.cast_signed(),
+                    16u8.cast_signed(),
+                    32u8.cast_signed(),
+                    64u8.cast_signed(),
+                    128u8.cast_signed(),
                 );
                 mask8x64 {
                     val: crate::support::Aligned512([
@@ -6356,10 +6374,22 @@ impl Simd for Sse4_2 {
                             let bit_bytes = _mm_shuffle_epi8(
                                 bit_bytes,
                                 _mm_setr_epi8(
-                                    0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8,
-                                    0u8 as i8, 0u8 as i8, 0u8 as i8, 1u8 as i8, 1u8 as i8,
-                                    1u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8,
-                                    1u8 as i8,
+                                    0u8.cast_signed(),
+                                    0u8.cast_signed(),
+                                    0u8.cast_signed(),
+                                    0u8.cast_signed(),
+                                    0u8.cast_signed(),
+                                    0u8.cast_signed(),
+                                    0u8.cast_signed(),
+                                    0u8.cast_signed(),
+                                    1u8.cast_signed(),
+                                    1u8.cast_signed(),
+                                    1u8.cast_signed(),
+                                    1u8.cast_signed(),
+                                    1u8.cast_signed(),
+                                    1u8.cast_signed(),
+                                    1u8.cast_signed(),
+                                    1u8.cast_signed(),
                                 ),
                             );
                             _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
@@ -6368,10 +6398,22 @@ impl Simd for Sse4_2 {
                             let bit_bytes = _mm_shuffle_epi8(
                                 bit_bytes,
                                 _mm_setr_epi8(
-                                    2u8 as i8, 2u8 as i8, 2u8 as i8, 2u8 as i8, 2u8 as i8,
-                                    2u8 as i8, 2u8 as i8, 2u8 as i8, 3u8 as i8, 3u8 as i8,
-                                    3u8 as i8, 3u8 as i8, 3u8 as i8, 3u8 as i8, 3u8 as i8,
-                                    3u8 as i8,
+                                    2u8.cast_signed(),
+                                    2u8.cast_signed(),
+                                    2u8.cast_signed(),
+                                    2u8.cast_signed(),
+                                    2u8.cast_signed(),
+                                    2u8.cast_signed(),
+                                    2u8.cast_signed(),
+                                    2u8.cast_signed(),
+                                    3u8.cast_signed(),
+                                    3u8.cast_signed(),
+                                    3u8.cast_signed(),
+                                    3u8.cast_signed(),
+                                    3u8.cast_signed(),
+                                    3u8.cast_signed(),
+                                    3u8.cast_signed(),
+                                    3u8.cast_signed(),
                                 ),
                             );
                             _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
@@ -6380,10 +6422,22 @@ impl Simd for Sse4_2 {
                             let bit_bytes = _mm_shuffle_epi8(
                                 bit_bytes,
                                 _mm_setr_epi8(
-                                    4u8 as i8, 4u8 as i8, 4u8 as i8, 4u8 as i8, 4u8 as i8,
-                                    4u8 as i8, 4u8 as i8, 4u8 as i8, 5u8 as i8, 5u8 as i8,
-                                    5u8 as i8, 5u8 as i8, 5u8 as i8, 5u8 as i8, 5u8 as i8,
-                                    5u8 as i8,
+                                    4u8.cast_signed(),
+                                    4u8.cast_signed(),
+                                    4u8.cast_signed(),
+                                    4u8.cast_signed(),
+                                    4u8.cast_signed(),
+                                    4u8.cast_signed(),
+                                    4u8.cast_signed(),
+                                    4u8.cast_signed(),
+                                    5u8.cast_signed(),
+                                    5u8.cast_signed(),
+                                    5u8.cast_signed(),
+                                    5u8.cast_signed(),
+                                    5u8.cast_signed(),
+                                    5u8.cast_signed(),
+                                    5u8.cast_signed(),
+                                    5u8.cast_signed(),
                                 ),
                             );
                             _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
@@ -6392,10 +6446,22 @@ impl Simd for Sse4_2 {
                             let bit_bytes = _mm_shuffle_epi8(
                                 bit_bytes,
                                 _mm_setr_epi8(
-                                    6u8 as i8, 6u8 as i8, 6u8 as i8, 6u8 as i8, 6u8 as i8,
-                                    6u8 as i8, 6u8 as i8, 6u8 as i8, 7u8 as i8, 7u8 as i8,
-                                    7u8 as i8, 7u8 as i8, 7u8 as i8, 7u8 as i8, 7u8 as i8,
-                                    7u8 as i8,
+                                    6u8.cast_signed(),
+                                    6u8.cast_signed(),
+                                    6u8.cast_signed(),
+                                    6u8.cast_signed(),
+                                    6u8.cast_signed(),
+                                    6u8.cast_signed(),
+                                    6u8.cast_signed(),
+                                    6u8.cast_signed(),
+                                    7u8.cast_signed(),
+                                    7u8.cast_signed(),
+                                    7u8.cast_signed(),
+                                    7u8.cast_signed(),
+                                    7u8.cast_signed(),
+                                    7u8.cast_signed(),
+                                    7u8.cast_signed(),
+                                    7u8.cast_signed(),
                                 ),
                             );
                             _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)

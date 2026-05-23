@@ -352,7 +352,11 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
 
             #[inline(always)]
             fn set(&mut self, index: usize, value: bool) {
-                assert!(index < #len);
+                assert!(
+                    index < #len,
+                    "mask lane index {index} is out of bounds for {} lanes",
+                    #len
+                );
                 let mut lanes = self.simd.#as_array_op(*self);
                 lanes[index] = if value { !0 } else { 0 };
                 *self = self.simd.#from_array_op(lanes);

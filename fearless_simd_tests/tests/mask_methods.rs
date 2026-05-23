@@ -8,7 +8,7 @@ fn mask_bits(len: usize) -> u64 {
     if len == 64 {
         u64::MAX
     } else {
-        (1u64 << len) - 1
+        (1_u64 << len) - 1
     }
 }
 
@@ -23,7 +23,7 @@ fn for_each_exhaustive_bitmask<F: FnMut(u64)>(len: usize, mut f: F) {
     );
 
     let all_bits = mask_bits(len);
-    for bits in 0..(1u64 << len) {
+    for bits in 0..(1_u64 << len) {
         f(bits);
         f(bits | !all_bits);
     }
@@ -31,7 +31,7 @@ fn for_each_exhaustive_bitmask<F: FnMut(u64)>(len: usize, mut f: F) {
 
 fn for_each_chunked_bitmask<F: FnMut(u64)>(len: usize, mut f: F) {
     assert!(
-        len % 16 == 0,
+        len.is_multiple_of(16),
         "chunked bitmask roundtrip tests expect 16-lane chunks"
     );
     assert!(
@@ -40,13 +40,13 @@ fn for_each_chunked_bitmask<F: FnMut(u64)>(len: usize, mut f: F) {
     );
 
     let chunks = len / 16;
-    let mut pattern_count = 1usize;
+    let mut pattern_count = 1_usize;
     for _ in 0..chunks {
         pattern_count *= CHUNK_PATTERNS_16.len();
     }
 
     for mut pattern_index in 0..pattern_count {
-        let mut bits = 0u64;
+        let mut bits = 0_u64;
         for chunk in 0..chunks {
             let chunk_pattern = CHUNK_PATTERNS_16[pattern_index % CHUNK_PATTERNS_16.len()];
             pattern_index /= CHUNK_PATTERNS_16.len();
@@ -69,7 +69,7 @@ fn for_each_wide_bitmask<F: FnMut(u64)>(len: usize, mut f: F) {
     check(all_bits & 0xaaaa_aaaa_aaaa_aaaa);
 
     for bit in 0..len {
-        let bits = 1u64 << bit;
+        let bits = 1_u64 << bit;
         check(bits);
         check(all_bits ^ bits);
     }
@@ -114,16 +114,16 @@ macro_rules! check_mask_methods {
         assert_eq!(mask.to_bitmask(), expected);
 
         mask.set($len - 1, true);
-        expected |= 1u64 << ($len - 1);
+        expected |= 1_u64 << ($len - 1);
         assert_eq!(mask.to_bitmask(), expected);
 
         mask.set(1, true);
-        expected |= 1u64 << 1;
+        expected |= 1_u64 << 1;
         assert!(mask.test(1));
         assert_eq!(mask.to_bitmask(), expected);
 
         mask.set(1, false);
-        expected &= !(1u64 << 1);
+        expected &= !(1_u64 << 1);
         assert!(!mask.test(1));
         assert_eq!(mask.to_bitmask(), expected);
     }};
