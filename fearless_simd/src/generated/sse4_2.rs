@@ -2097,7 +2097,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn approximate_recip_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        self.splat_f64x2(1.0) / a
+        1.0 / a
     }
     #[inline(always)]
     fn add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {

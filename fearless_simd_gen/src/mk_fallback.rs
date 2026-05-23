@@ -148,10 +148,9 @@ impl Level for Fallback {
             }
             OpSig::Unary => {
                 if method == "approximate_recip" {
-                    let splat_op = generic_op_name("splat", vec_ty);
                     return quote! {
                         #method_sig {
-                            self.#splat_op(1.0) / a
+                            1.0 / a
                         }
                     };
                 }
