@@ -1428,28 +1428,20 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
         unsafe {
-            _mm_cvtepi8_epi16({
-                let bit_bytes = _mm_set1_epi8(bits as i8);
-                let bit_mask = _mm_setr_epi8(
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
+            {
+                let bit_lanes = _mm_set1_epi16(bits as i16);
+                let bit_mask = _mm_setr_epi16(
+                    1u64 as i16,
+                    2u64 as i16,
+                    4u64 as i16,
+                    8u64 as i16,
+                    16u64 as i16,
+                    32u64 as i16,
+                    64u64 as i16,
+                    128u64 as i16,
                 );
-                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
-            })
+                _mm_cmpeq_epi16(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
+            }
             .simd_into(self)
         }
     }
@@ -1968,28 +1960,11 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
         unsafe {
-            _mm_cvtepi8_epi32({
-                let bit_bytes = _mm_set1_epi8(bits as i8);
-                let bit_mask = _mm_setr_epi8(
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                );
-                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
-            })
+            {
+                let bit_lanes = _mm_set1_epi32(bits as i32);
+                let bit_mask = _mm_setr_epi32(1u64 as i32, 2u64 as i32, 4u64 as i32, 8u64 as i32);
+                _mm_cmpeq_epi32(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
+            }
             .simd_into(self)
         }
     }
@@ -2302,28 +2277,11 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
         unsafe {
-            _mm_cvtepi8_epi64({
-                let bit_bytes = _mm_set1_epi8(bits as i8);
-                let bit_mask = _mm_setr_epi8(
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                );
-                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
-            })
+            {
+                let bit_lanes = _mm_set1_epi64x(bits as i64);
+                let bit_mask = _mm_set_epi64x(2, 1);
+                _mm_cmpeq_epi64(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
+            }
             .simd_into(self)
         }
     }
@@ -4167,36 +4125,28 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self> {
         unsafe {
-            _mm256_cvtepi8_epi16({
-                let bit_bytes = _mm_cvtsi32_si128(bits as i32);
-                let bit_bytes = _mm_shuffle_epi8(
-                    bit_bytes,
-                    _mm_setr_epi8(
-                        0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8,
-                        0u8 as i8, 0u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8,
-                        1u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8,
-                    ),
+            {
+                let bit_lanes = _mm256_set1_epi16(bits as i16);
+                let bit_mask = _mm256_setr_epi16(
+                    1u64 as i16,
+                    2u64 as i16,
+                    4u64 as i16,
+                    8u64 as i16,
+                    16u64 as i16,
+                    32u64 as i16,
+                    64u64 as i16,
+                    128u64 as i16,
+                    256u64 as i16,
+                    512u64 as i16,
+                    1024u64 as i16,
+                    2048u64 as i16,
+                    4096u64 as i16,
+                    8192u64 as i16,
+                    16384u64 as i16,
+                    32768u64 as i16,
                 );
-                let bit_mask = _mm_setr_epi8(
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                );
-                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
-            })
+                _mm256_cmpeq_epi16(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+            }
             .simd_into(self)
         }
     }
@@ -4853,28 +4803,20 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self> {
         unsafe {
-            _mm256_cvtepi8_epi32({
-                let bit_bytes = _mm_set1_epi8(bits as i8);
-                let bit_mask = _mm_setr_epi8(
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
+            {
+                let bit_lanes = _mm256_set1_epi32(bits as i32);
+                let bit_mask = _mm256_setr_epi32(
+                    1u64 as i32,
+                    2u64 as i32,
+                    4u64 as i32,
+                    8u64 as i32,
+                    16u64 as i32,
+                    32u64 as i32,
+                    64u64 as i32,
+                    128u64 as i32,
                 );
-                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
-            })
+                _mm256_cmpeq_epi32(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+            }
             .simd_into(self)
         }
     }
@@ -5262,28 +5204,11 @@ impl Simd for Avx2 {
     #[inline(always)]
     fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self> {
         unsafe {
-            _mm256_cvtepi8_epi64({
-                let bit_bytes = _mm_set1_epi8(bits as i8);
-                let bit_mask = _mm_setr_epi8(
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                    1u16 as i8,
-                    2u16 as i8,
-                    4u16 as i8,
-                    8u16 as i8,
-                    16u16 as i8,
-                    32u16 as i8,
-                    64u16 as i8,
-                    128u16 as i8,
-                );
-                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
-            })
+            {
+                let bit_lanes = _mm256_set1_epi64x(bits as i64);
+                let bit_mask = _mm256_set_epi64x(8, 4, 2, 1);
+                _mm256_cmpeq_epi64(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+            }
             .simd_into(self)
         }
     }
@@ -6391,9 +6316,80 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
-        let lo = self.from_bitmask_mask8x32(bits);
-        let hi = self.from_bitmask_mask8x32(bits >> 32usize);
-        self.combine_mask8x32(lo, hi)
+        unsafe {
+            {
+                let bit_bytes = _mm256_set1_epi64x(bits as i64);
+                let bit_mask = _mm256_setr_epi8(
+                    1u16 as i8,
+                    2u16 as i8,
+                    4u16 as i8,
+                    8u16 as i8,
+                    16u16 as i8,
+                    32u16 as i8,
+                    64u16 as i8,
+                    128u16 as i8,
+                    1u16 as i8,
+                    2u16 as i8,
+                    4u16 as i8,
+                    8u16 as i8,
+                    16u16 as i8,
+                    32u16 as i8,
+                    64u16 as i8,
+                    128u16 as i8,
+                    1u16 as i8,
+                    2u16 as i8,
+                    4u16 as i8,
+                    8u16 as i8,
+                    16u16 as i8,
+                    32u16 as i8,
+                    64u16 as i8,
+                    128u16 as i8,
+                    1u16 as i8,
+                    2u16 as i8,
+                    4u16 as i8,
+                    8u16 as i8,
+                    16u16 as i8,
+                    32u16 as i8,
+                    64u16 as i8,
+                    128u16 as i8,
+                );
+                mask8x64 {
+                    val: crate::support::Aligned512([
+                        {
+                            let bit_bytes = _mm256_shuffle_epi8(
+                                bit_bytes,
+                                _mm256_setr_epi8(
+                                    0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8, 0u8 as i8,
+                                    0u8 as i8, 0u8 as i8, 0u8 as i8, 1u8 as i8, 1u8 as i8,
+                                    1u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8, 1u8 as i8,
+                                    1u8 as i8, 2u8 as i8, 2u8 as i8, 2u8 as i8, 2u8 as i8,
+                                    2u8 as i8, 2u8 as i8, 2u8 as i8, 2u8 as i8, 3u8 as i8,
+                                    3u8 as i8, 3u8 as i8, 3u8 as i8, 3u8 as i8, 3u8 as i8,
+                                    3u8 as i8, 3u8 as i8,
+                                ),
+                            );
+                            _mm256_cmpeq_epi8(_mm256_and_si256(bit_bytes, bit_mask), bit_mask)
+                        },
+                        {
+                            let bit_bytes = _mm256_shuffle_epi8(
+                                bit_bytes,
+                                _mm256_setr_epi8(
+                                    4u8 as i8, 4u8 as i8, 4u8 as i8, 4u8 as i8, 4u8 as i8,
+                                    4u8 as i8, 4u8 as i8, 4u8 as i8, 5u8 as i8, 5u8 as i8,
+                                    5u8 as i8, 5u8 as i8, 5u8 as i8, 5u8 as i8, 5u8 as i8,
+                                    5u8 as i8, 6u8 as i8, 6u8 as i8, 6u8 as i8, 6u8 as i8,
+                                    6u8 as i8, 6u8 as i8, 6u8 as i8, 6u8 as i8, 7u8 as i8,
+                                    7u8 as i8, 7u8 as i8, 7u8 as i8, 7u8 as i8, 7u8 as i8,
+                                    7u8 as i8, 7u8 as i8,
+                                ),
+                            );
+                            _mm256_cmpeq_epi8(_mm256_and_si256(bit_bytes, bit_mask), bit_mask)
+                        },
+                    ]),
+                    simd: self,
+                }
+            }
+        }
     }
     #[inline(always)]
     fn to_bitmask_mask8x64(self, a: mask8x64<Self>) -> u64 {
@@ -7857,9 +7853,42 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
-        let lo = self.from_bitmask_mask32x8(bits);
-        let hi = self.from_bitmask_mask32x8(bits >> 8usize);
-        self.combine_mask32x8(lo, hi)
+        unsafe {
+            {
+                let bit_lanes = _mm256_set1_epi32(bits as i32);
+                mask32x16 {
+                    val: crate::support::Aligned512([
+                        {
+                            let bit_mask = _mm256_setr_epi32(
+                                1u64 as i32,
+                                2u64 as i32,
+                                4u64 as i32,
+                                8u64 as i32,
+                                16u64 as i32,
+                                32u64 as i32,
+                                64u64 as i32,
+                                128u64 as i32,
+                            );
+                            _mm256_cmpeq_epi32(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+                        },
+                        {
+                            let bit_mask = _mm256_setr_epi32(
+                                256u64 as i32,
+                                512u64 as i32,
+                                1024u64 as i32,
+                                2048u64 as i32,
+                                4096u64 as i32,
+                                8192u64 as i32,
+                                16384u64 as i32,
+                                32768u64 as i32,
+                            );
+                            _mm256_cmpeq_epi32(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+                        },
+                    ]),
+                    simd: self,
+                }
+            }
+        }
     }
     #[inline(always)]
     fn to_bitmask_mask32x16(self, a: mask32x16<Self>) -> u64 {
@@ -8283,9 +8312,34 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {
-        let lo = self.from_bitmask_mask64x4(bits);
-        let hi = self.from_bitmask_mask64x4(bits >> 4usize);
-        self.combine_mask64x4(lo, hi)
+        unsafe {
+            {
+                let bit_lanes = _mm256_set1_epi64x(bits as i64);
+                mask64x8 {
+                    val: crate::support::Aligned512([
+                        {
+                            let bit_mask = _mm256_set_epi64x(
+                                8u64 as i64,
+                                4u64 as i64,
+                                2u64 as i64,
+                                1u64 as i64,
+                            );
+                            _mm256_cmpeq_epi64(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+                        },
+                        {
+                            let bit_mask = _mm256_set_epi64x(
+                                128u64 as i64,
+                                64u64 as i64,
+                                32u64 as i64,
+                                16u64 as i64,
+                            );
+                            _mm256_cmpeq_epi64(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+                        },
+                    ]),
+                    simd: self,
+                }
+            }
+        }
     }
     #[inline(always)]
     fn to_bitmask_mask64x8(self, a: mask64x8<Self>) -> u64 {
