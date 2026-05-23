@@ -853,9 +853,12 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
-        let lanes: [i8; 16usize] =
-            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
-        lanes.simd_into(self)
+        let lo = i8x16_splat(bits as i8);
+        let hi = i8x16_splat((bits >> 8) as i8);
+        let bytes = u8x16_shuffle::<0, 0, 0, 0, 0, 0, 0, 0, 16, 16, 16, 16, 16, 16, 16, 16>(lo, hi);
+        let powers = u8x16(1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128);
+        let selected = v128_and(bytes, powers);
+        i8x16_ne(selected, i8x16_splat(0)).simd_into(self)
     }
     #[inline(always)]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
@@ -1361,9 +1364,10 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
-        let lanes: [i16; 8usize] =
-            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
-        lanes.simd_into(self)
+        let bitset = i16x8_splat(bits as i16);
+        let powers = u16x8(1, 2, 4, 8, 16, 32, 64, 128);
+        let selected = v128_and(bitset, powers);
+        i16x8_ne(selected, i16x8_splat(0)).simd_into(self)
     }
     #[inline(always)]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64 {
@@ -1873,9 +1877,10 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
-        let lanes: [i32; 4usize] =
-            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
-        lanes.simd_into(self)
+        let bitset = i32x4_splat(bits as i32);
+        let powers = u32x4(1, 2, 4, 8);
+        let selected = v128_and(bitset, powers);
+        i32x4_ne(selected, i32x4_splat(0)).simd_into(self)
     }
     #[inline(always)]
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64 {
@@ -2227,9 +2232,10 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
-        let lanes: [i64; 2usize] =
-            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
-        lanes.simd_into(self)
+        let bitset = i64x2_splat(bits as i64);
+        let powers = u64x2(1, 2);
+        let selected = v128_and(bitset, powers);
+        i64x2_ne(selected, i64x2_splat(0)).simd_into(self)
     }
     #[inline(always)]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64 {

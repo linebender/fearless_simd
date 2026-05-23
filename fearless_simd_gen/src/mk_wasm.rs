@@ -7,8 +7,8 @@ use quote::{format_ident, quote};
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_mask_from_bitmask, generic_mask_to_bitmask, generic_op_name,
-    generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg, scalar_binary,
+    generic_from_bytes, generic_mask_to_bitmask, generic_op_name, generic_store_array,
+    generic_to_bytes, integer_lane_mask_splat_arg, scalar_binary,
 };
 use crate::level::Level;
 use crate::ops::{Op, Quantifier, SlideGranularity, valid_reinterpret};
@@ -20,6 +20,56 @@ use crate::{
 
 #[derive(Clone, Copy)]
 pub(crate) struct WasmSimd128;
+
+fn mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "mask bitmask conversion only operates on masks"
+    );
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "WASM SIMD mask bitmask lowering only handles one native vector"
+    );
+
+    let expr = match vec_ty.scalar_bits {
+        8 => quote! {
+            let lo = i8x16_splat(bits as i8);
+            let hi = i8x16_splat((bits >> 8) as i8);
+            let bytes =
+                u8x16_shuffle::<0, 0, 0, 0, 0, 0, 0, 0, 16, 16, 16, 16, 16, 16, 16, 16>(lo, hi);
+            let powers = u8x16(1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128);
+            let selected = v128_and(bytes, powers);
+            i8x16_ne(selected, i8x16_splat(0)).simd_into(self)
+        },
+        16 => quote! {
+            let bitset = i16x8_splat(bits as i16);
+            let powers = u16x8(1, 2, 4, 8, 16, 32, 64, 128);
+            let selected = v128_and(bitset, powers);
+            i16x8_ne(selected, i16x8_splat(0)).simd_into(self)
+        },
+        32 => quote! {
+            let bitset = i32x4_splat(bits as i32);
+            let powers = u32x4(1, 2, 4, 8);
+            let selected = v128_and(bitset, powers);
+            i32x4_ne(selected, i32x4_splat(0)).simd_into(self)
+        },
+        64 => quote! {
+            let bitset = i64x2_splat(bits as i64);
+            let powers = u64x2(1, 2);
+            let selected = v128_and(bitset, powers);
+            i64x2_ne(selected, i64x2_splat(0)).simd_into(self)
+        },
+        _ => unreachable!("WASM only supports mask lane widths of 8, 16, 32, and 64 bits"),
+    };
+
+    quote! {
+        #method_sig {
+            #expr
+        }
+    }
+}
 
 impl Level for WasmSimd128 {
     fn name(&self) -> &'static str {
@@ -512,7 +562,7 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
-            OpSig::MaskFromBitmask => generic_mask_from_bitmask(method_sig, vec_ty),
+            OpSig::MaskFromBitmask => mask_from_bitmask(method_sig, vec_ty),
             OpSig::MaskToBitmask => generic_mask_to_bitmask(method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
