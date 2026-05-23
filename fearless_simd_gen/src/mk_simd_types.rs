@@ -296,6 +296,8 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
     let scalar = ty.scalar.rust(ty.scalar_bits);
     let len = Literal::usize_unsuffixed(ty.len);
     let splat = generic_op_name("splat", ty);
+    let from_bitmask_op = generic_op_name("from_bitmask", ty);
+    let to_bitmask_op = generic_op_name("to_bitmask", ty);
     let from_array_op = generic_op_name("load_array", ty);
     let as_array_op = generic_op_name("as_array", ty);
     let mut methods = vec![];
@@ -333,6 +335,16 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn splat(simd: S, val: bool) -> Self {
                 simd.#splat(val)
+            }
+
+            #[inline(always)]
+            fn from_bitmask(simd: S, bits: u64) -> Self {
+                simd.#from_bitmask_op(bits)
+            }
+
+            #[inline(always)]
+            fn to_bitmask(self) -> u64 {
+                self.simd.#to_bitmask_op(self)
             }
 
             #[inline(always)]

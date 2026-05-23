@@ -3,7 +3,8 @@
 
 use crate::arch::fallback;
 use crate::generic::{
-    generic_from_bytes, generic_op_name, generic_to_bytes, integer_lane_mask_splat_arg,
+    generic_from_bytes, generic_mask_from_bitmask, generic_mask_to_bitmask, generic_op_name,
+    generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, RefKind, valid_reinterpret};
@@ -455,6 +456,8 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::MaskFromBitmask => generic_mask_from_bitmask(method_sig, vec_ty),
+            OpSig::MaskToBitmask => generic_mask_to_bitmask(method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,

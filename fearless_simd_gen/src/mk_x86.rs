@@ -201,6 +201,8 @@ impl Level for X86 {
                 quantifier,
                 condition,
             } => self.handle_mask_reduce(method_sig, vec_ty, quantifier, condition),
+            OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(method_sig, vec_ty),
+            OpSig::MaskToBitmask => self.handle_mask_to_bitmask(method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,
@@ -224,6 +226,82 @@ impl Level for X86 {
     }
 }
 
+fn mask_from_bitmask_bytes(vec_ty: &VecType) -> TokenStream {
+    let lane_count = vec_ty.len;
+    let bit_mask_128 = mask_bit_pattern_128();
+
+    if lane_count <= 8 {
+        return quote! {
+            {
+                let bit_bytes = _mm_set1_epi8(bits as i8);
+                let bit_mask = #bit_mask_128;
+                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+            }
+        };
+    }
+
+    if lane_count <= 16 {
+        let shuffle = mask_byte_shuffle_128(lane_count);
+        return quote! {
+            {
+                let bit_bytes = _mm_cvtsi32_si128(bits as i32);
+                let bit_bytes = _mm_shuffle_epi8(bit_bytes, #shuffle);
+                let bit_mask = #bit_mask_128;
+                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+            }
+        };
+    }
+
+    assert_eq!(
+        (vec_ty.n_bits(), vec_ty.scalar_bits, lane_count),
+        (256, 8, 32),
+        "only 32-lane masks need a 256-bit inverse movemask"
+    );
+
+    let shuffle = mask_byte_shuffle_256();
+    let bit_mask = mask_bit_pattern_256();
+    quote! {
+        {
+            let bit_bytes = _mm256_broadcastsi128_si256(_mm_cvtsi32_si128(bits as i32));
+            let bit_bytes = _mm256_shuffle_epi8(bit_bytes, #shuffle);
+            let bit_mask = #bit_mask;
+            _mm256_cmpeq_epi8(_mm256_and_si256(bit_bytes, bit_mask), bit_mask)
+        }
+    }
+}
+
+fn mask_bit_pattern_128() -> TokenStream {
+    let lanes = (0..16).map(|i| {
+        let bit = 1u16 << (i % 8);
+        quote! { #bit as i8 }
+    });
+    quote! { _mm_setr_epi8(#(#lanes),*) }
+}
+
+fn mask_bit_pattern_256() -> TokenStream {
+    let lanes = (0..32).map(|i| {
+        let bit = 1u16 << (i % 8);
+        quote! { #bit as i8 }
+    });
+    quote! { _mm256_setr_epi8(#(#lanes),*) }
+}
+
+fn mask_byte_shuffle_128(lane_count: usize) -> TokenStream {
+    let lanes = (0..16).map(|i| {
+        let byte = (i.min(lane_count - 1) / 8) as u8;
+        quote! { #byte as i8 }
+    });
+    quote! { _mm_setr_epi8(#(#lanes),*) }
+}
+
+fn mask_byte_shuffle_256() -> TokenStream {
+    let lanes = (0..32).map(|i| {
+        let byte = (i / 8) as u8;
+        quote! { #byte as i8 }
+    });
+    quote! { _mm256_setr_epi8(#(#lanes),*) }
+}
+
 impl X86 {
     pub(crate) fn handle_splat(&self, method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
         let intrinsic = set1_intrinsic(vec_ty);
@@ -239,6 +317,115 @@ impl X86 {
                     #intrinsic(val #cast).simd_into(self)
                 }
             }
+        }
+    }
+
+    pub(crate) fn handle_mask_from_bitmask(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "mask bitmask conversion only operates on masks"
+        );
+
+        let bytes = mask_from_bitmask_bytes(vec_ty);
+        let expr = if vec_ty.scalar_bits == 8 {
+            quote! {
+                #bytes.simd_into(self)
+            }
+        } else {
+            let extend = extend_intrinsic(ScalarType::Int, 8, vec_ty.scalar_bits, vec_ty.n_bits());
+            quote! {
+                #extend(#bytes).simd_into(self)
+            }
+        };
+
+        quote! {
+            #method_sig {
+                unsafe {
+                    #expr
+                }
+            }
+        }
+    }
+
+    pub(crate) fn handle_mask_to_bitmask(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "mask bitmask conversion only operates on masks"
+        );
+
+        match vec_ty.scalar_bits {
+            8 => {
+                let bits_ty = vec_ty.reinterpret(ScalarType::Int, 8);
+                let movemask = simple_intrinsic("movemask", &bits_ty);
+                quote! {
+                    #method_sig {
+                        unsafe { #movemask(a.into()) as u32 as u64 }
+                    }
+                }
+            }
+            16 => {
+                let bits_ty = vec_ty.reinterpret(ScalarType::Int, 8);
+                let movemask = simple_intrinsic("movemask", &bits_ty);
+                let (even_bits, pair_bits, nibble_bits, byte_bits, word_bits) = match vec_ty.len {
+                    8 => (0x5555u64, 0x3333u64, 0x0f0fu64, 0x00ffu64, 0),
+                    16 => (
+                        0x5555_5555u64,
+                        0x3333_3333u64,
+                        0x0f0f_0f0fu64,
+                        0x00ff_00ffu64,
+                        0x0000_ffffu64,
+                    ),
+                    _ => unimplemented!(),
+                };
+                let merge_words = (vec_ty.len > 8).then(|| {
+                    quote! {
+                        bits = (bits | (bits >> 8)) & #word_bits;
+                    }
+                });
+
+                quote! {
+                    #method_sig {
+                        unsafe {
+                            // `_mm*_movemask_epi8` returns one bit per byte. For 16-bit masks both bytes have the
+                            // same sign bit, so keep one byte bit per lane and compact those bits.
+                            let mut bits = #movemask(a.into()) as u32 as u64;
+                            bits &= #even_bits;
+                            bits = (bits | (bits >> 1)) & #pair_bits;
+                            bits = (bits | (bits >> 2)) & #nibble_bits;
+                            bits = (bits | (bits >> 4)) & #byte_bits;
+                            #merge_words
+                            bits
+                        }
+                    }
+                }
+            }
+            32 | 64 => {
+                let float_ty = vec_ty.cast(ScalarType::Float);
+                let movemask = simple_intrinsic("movemask", &float_ty);
+                let cast = cast_ident(
+                    ScalarType::Mask,
+                    ScalarType::Float,
+                    vec_ty.scalar_bits,
+                    vec_ty.scalar_bits,
+                    vec_ty.n_bits(),
+                );
+                quote! {
+                    #method_sig {
+                        unsafe { #movemask(#cast(a.into())) as u32 as u64 }
+                    }
+                }
+            }
+            _ => unreachable!(),
         }
     }
 

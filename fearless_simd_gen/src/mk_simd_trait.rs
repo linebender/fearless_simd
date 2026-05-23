@@ -308,6 +308,41 @@ fn mk_simd_mask() -> TokenStream {
             /// Create a SIMD mask with all lanes set to the given boolean value.
             fn splat(simd: S, val: bool) -> Self;
 
+            /// Create a mask from a compact bitmask.
+            ///
+            /// Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above
+            /// [`Self::N`] are ignored.
+            fn from_bitmask(simd: S, bits: u64) -> Self;
+
+            /// Convert this mask to a compact bitmask.
+            ///
+            /// Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above
+            /// [`Self::N`] are cleared.
+            fn to_bitmask(self) -> u64;
+
+            /// Test whether one logical lane is set.
+            ///
+            /// Panics if `index` is greater than or equal to the number of lanes in the mask.
+            #[inline(always)]
+            fn test(&self, index: usize) -> bool {
+                assert!(index < Self::N);
+                (((*self).to_bitmask() >> index) & 1) != 0
+            }
+
+            /// Sets the value of one logical lane.
+            ///
+            /// Panics if `index` is greater than or equal to the number of lanes in the mask.
+            #[inline(always)]
+            fn set(&mut self, index: usize, value: bool) {
+                assert!(index < Self::N);
+                let lane_mask = Self::from_bitmask(self.witness(), 1u64 << index);
+                if value {
+                    *self = *self | lane_mask;
+                } else {
+                    *self = *self & !lane_mask;
+                }
+            }
+
             /// Create a SIMD mask from signed integer mask lanes.
             ///
             /// The slice must be exactly the size of the SIMD mask.
