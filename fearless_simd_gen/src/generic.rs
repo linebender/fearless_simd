@@ -13,6 +13,19 @@ pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
     Ident::new(&format!("{op}_{}", ty.rust_name()), Span::call_site())
 }
 
+/// For backends that store masks as all-zero/all-one integer lanes, convert the public
+/// `bool` mask splat argument into the backend's lane representation.
+pub(crate) fn integer_lane_mask_splat_arg(vec_ty: &VecType) -> TokenStream {
+    if vec_ty.scalar != ScalarType::Mask {
+        return TokenStream::new();
+    }
+
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+    quote! {
+        let val: #scalar = if val { !0 } else { 0 };
+    }
+}
+
 /// Implementation based on split/combine
 ///
 /// Only suitable for lane-wise and block-wise operations

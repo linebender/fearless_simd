@@ -8,7 +8,8 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op_name, generic_store_array, generic_to_bytes, scalar_binary,
+    generic_from_bytes, generic_op_name, generic_store_array, generic_to_bytes,
+    integer_lane_mask_splat_arg, scalar_binary,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
@@ -49,6 +50,12 @@ impl Level for X86 {
     }
 
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream {
+        // Future AVX-512 backends should be able to keep mask types opaque by storing them as
+        // `__mmask*` predicate registers instead of `__m*i` vectors: for example, `mask8x64`
+        // maps naturally to `__mmask64`, `mask16x32` to `__mmask32`, and `mask32x16`/`mask64x8`
+        // to `__mmask16`/`__mmask8`. Comparisons would return `_mm512_cmp*_mask`, selects would
+        // use `_mm512_mask_blend_*`, and legacy integer-lane interop could materialize vectors
+        // with `_mm512_movm_epi*` only at the API boundary.
         let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
             (ScalarType::Float, 32) => "",
             (ScalarType::Float, 64) => "d",
@@ -224,9 +231,11 @@ impl X86 {
             ScalarType::Unsigned => quote!(.cast_signed()),
             _ => quote!(),
         };
+        let normalize_mask = integer_lane_mask_splat_arg(vec_ty);
         quote! {
             #method_sig {
                 unsafe {
+                    #normalize_mask
                     #intrinsic(val #cast).simd_into(self)
                 }
             }
@@ -326,6 +335,15 @@ impl X86 {
                 quote! {
                     #method_sig {
                         a - self.#trunc_op(a)
+                    }
+                }
+            }
+            "not" if vec_ty.scalar == ScalarType::Mask => {
+                let xor_op = generic_op_name("xor", vec_ty);
+                let splat_op = generic_op_name("splat", vec_ty);
+                quote! {
+                    #method_sig {
+                        self.#xor_op(a, self.#splat_op(true))
                     }
                 }
             }

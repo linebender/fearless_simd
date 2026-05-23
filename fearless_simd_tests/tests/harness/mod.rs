@@ -23,6 +23,24 @@ fn splat_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn mask_trait_splat_mask32x4<S: Simd>(simd: S) {
+    let t = mask32x4::splat(simd, true);
+    assert_eq!(<[i32; 4]>::from(t), [-1; 4]);
+
+    let f = mask32x4::splat(simd, false);
+    assert_eq!(<[i32; 4]>::from(f), [0; 4]);
+}
+
+#[simd_test]
+fn splat_native_mask<S: Simd>(simd: S) {
+    let all_true = S::mask32s::splat(simd, true);
+    assert!(all_true.all_true());
+
+    let all_false = S::mask32s::splat(simd, false);
+    assert!(all_false.all_false());
+}
+
+#[simd_test]
 fn abs_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[-1.0, 2.0, -3.0, 4.0]);
     assert_eq!(*a.abs(), [1.0, 2.0, 3.0, 4.0]);
@@ -72,35 +90,35 @@ fn copysign_f32x4<S: Simd>(simd: S) {
 fn simd_eq_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[4.0, 2.0, 1.0, 0.0]);
     let b = f32x4::from_slice(simd, &[4.0, 3.1, 1.0, 0.0]);
-    assert_eq!(*a.simd_eq(b), [-1, 0, -1, -1]);
+    assert_eq!(<[i32; 4]>::from(a.simd_eq(b)), [-1, 0, -1, -1]);
 }
 
 #[simd_test]
 fn simd_lt_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[4.0, 3.0, 2.0, 1.0]);
     let b = f32x4::from_slice(simd, &[1.0, 2.0, 2.0, 4.0]);
-    assert_eq!(*a.simd_lt(b), [0, 0, 0, -1]);
+    assert_eq!(<[i32; 4]>::from(a.simd_lt(b)), [0, 0, 0, -1]);
 }
 
 #[simd_test]
 fn simd_le_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[4.0, 3.0, 2.0, 1.0]);
     let b = f32x4::from_slice(simd, &[1.0, 2.0, 2.0, 4.0]);
-    assert_eq!(*a.simd_le(b), [0, 0, -1, -1]);
+    assert_eq!(<[i32; 4]>::from(a.simd_le(b)), [0, 0, -1, -1]);
 }
 
 #[simd_test]
 fn simd_ge_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[4.0, 3.0, 2.0, 1.0]);
     let b = f32x4::from_slice(simd, &[1.0, 2.0, 2.0, 4.0]);
-    assert_eq!(*a.simd_ge(b), [-1, -1, -1, 0]);
+    assert_eq!(<[i32; 4]>::from(a.simd_ge(b)), [-1, -1, -1, 0]);
 }
 
 #[simd_test]
 fn simd_gt_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[4.0, 3.0, 2.0, 1.0]);
     let b = f32x4::from_slice(simd, &[1.0, 2.0, 2.0, 4.0]);
-    assert_eq!(*a.simd_gt(b), [-1, -1, 0, 0]);
+    assert_eq!(<[i32; 4]>::from(a.simd_gt(b)), [-1, -1, 0, 0]);
 }
 
 #[simd_test]
@@ -422,7 +440,7 @@ fn simd_eq_i8x16<S: Simd>(simd: S) {
     let a = i8x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8]);
     let b = i8x16::from_slice(simd, &[1, 0, 3, 0, 5, 0, 7, 0, 1, 0, 3, 0, 5, 0, 7, 0]);
     assert_eq!(
-        *a.simd_eq(b),
+        <[i8; 16]>::from(a.simd_eq(b)),
         [-1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0]
     );
 }
@@ -438,7 +456,7 @@ fn simd_lt_i8x16<S: Simd>(simd: S) {
         &[2, 2, 2, 5, 0, 0, 0, 0, 5, 25, 25, 45, 45, 65, 65, 85],
     );
     assert_eq!(
-        *a.simd_lt(b),
+        <[i8; 16]>::from(a.simd_lt(b)),
         [-1, 0, 0, -1, -1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0, -1]
     );
 }
@@ -454,7 +472,7 @@ fn simd_gt_i8x16<S: Simd>(simd: S) {
         &[1, 2, 3, 4, -1, -2, -3, -4, 10, 20, 30, 40, 50, 60, 70, 80],
     );
     assert_eq!(
-        *a.simd_gt(b),
+        <[i8; 16]>::from(a.simd_gt(b)),
         [-1, 0, 0, -1, -1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0, -1]
     );
 }
@@ -675,28 +693,37 @@ fn and_mask8x16<S: Simd>(simd: S) {
             85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85,
         ],
     );
-    assert_eq!(*(a & b), [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]);
+    assert_eq!(
+        <[i8; 16]>::from(a & b),
+        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
+    );
 }
 
 #[simd_test]
 fn or_mask8x16<S: Simd>(simd: S) {
     let a = mask8x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8]);
     let b = mask8x16::from_slice(simd, &[1, 1, 1, 1, 2, 3, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0]);
-    assert_eq!(*(a | b), [1, 1, 3, 3, 6, 7, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8]);
+    assert_eq!(
+        <[i8; 16]>::from(a | b),
+        [1, 1, 3, 3, 6, 7, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8]
+    );
 }
 
 #[simd_test]
 fn xor_mask8x16<S: Simd>(simd: S) {
     let a = mask8x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 1, 1, 1, 1, 0, 0, 0, 0]);
     let b = mask8x16::from_slice(simd, &[1, 1, 0, 0, 5, 4, 7, 6, 1, 0, 1, 0, 1, 0, 1, 0]);
-    assert_eq!(*(a ^ b), [1, 0, 2, 3, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]);
+    assert_eq!(
+        <[i8; 16]>::from(a ^ b),
+        [1, 0, 2, 3, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]
+    );
 }
 
 #[simd_test]
 fn not_mask8x16<S: Simd>(simd: S) {
     let a = mask8x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8]);
     assert_eq!(
-        *(!a),
+        <[i8; 16]>::from(!a),
         [
             -1, -2, -3, -4, -5, -6, -7, -8, -2, -3, -4, -5, -6, -7, -8, -9
         ]
@@ -2413,21 +2440,27 @@ fn neg_i16x8<S: Simd>(simd: S) {
 fn simd_eq_i16x8<S: Simd>(simd: S) {
     let a = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
     let b = i16x8::from_slice(simd, &[1, 0, 3, 0, 5, 0, 7, 0]);
-    assert_eq!(*a.simd_eq(b), [-1, 0, -1, 0, -1, 0, -1, 0]);
+    assert_eq!(<[i16; 8]>::from(a.simd_eq(b)), [-1, 0, -1, 0, -1, 0, -1, 0]);
 }
 
 #[simd_test]
 fn simd_lt_i16x8<S: Simd>(simd: S) {
     let a = i16x8::from_slice(simd, &[1, 2, 3, 4, -1, -2, -3, -4]);
     let b = i16x8::from_slice(simd, &[2, 2, 2, 5, 0, 0, 0, 0]);
-    assert_eq!(*a.simd_lt(b), [-1, 0, 0, -1, -1, -1, -1, -1]);
+    assert_eq!(
+        <[i16; 8]>::from(a.simd_lt(b)),
+        [-1, 0, 0, -1, -1, -1, -1, -1]
+    );
 }
 
 #[simd_test]
 fn simd_gt_i16x8<S: Simd>(simd: S) {
     let a = i16x8::from_slice(simd, &[2, 2, 2, 5, 0, 0, 0, 0]);
     let b = i16x8::from_slice(simd, &[1, 2, 3, 4, -1, -2, -3, -4]);
-    assert_eq!(*a.simd_gt(b), [-1, 0, 0, -1, -1, -1, -1, -1]);
+    assert_eq!(
+        <[i16; 8]>::from(a.simd_gt(b)),
+        [-1, 0, 0, -1, -1, -1, -1, -1]
+    );
 }
 
 #[simd_test]
@@ -2472,21 +2505,21 @@ fn sub_u16x8<S: Simd>(simd: S) {
 fn simd_eq_u16x8<S: Simd>(simd: S) {
     let a = u16x8::from_slice(simd, &[1, 2, 32768, 40000, 65535, 6, 7, 8]);
     let b = u16x8::from_slice(simd, &[1, 0, 32768, 0, 65535, 0, 7, 0]);
-    assert_eq!(*a.simd_eq(b), [-1, 0, -1, 0, -1, 0, -1, 0]);
+    assert_eq!(<[i16; 8]>::from(a.simd_eq(b)), [-1, 0, -1, 0, -1, 0, -1, 0]);
 }
 
 #[simd_test]
 fn simd_lt_u16x8<S: Simd>(simd: S) {
     let a = u16x8::from_slice(simd, &[1, 2, 3, 4, 100, 200, 300, 400]);
     let b = u16x8::from_slice(simd, &[2, 2, 2, 5, 40000, 150, 50000, 350]);
-    assert_eq!(*a.simd_lt(b), [-1, 0, 0, -1, -1, 0, -1, 0]);
+    assert_eq!(<[i16; 8]>::from(a.simd_lt(b)), [-1, 0, 0, -1, -1, 0, -1, 0]);
 }
 
 #[simd_test]
 fn simd_gt_u16x8<S: Simd>(simd: S) {
     let a = u16x8::from_slice(simd, &[2, 2, 2, 5, 40000, 150, 50000, 350]);
     let b = u16x8::from_slice(simd, &[1, 2, 3, 4, 100, 200, 300, 400]);
-    assert_eq!(*a.simd_gt(b), [-1, 0, 0, -1, -1, 0, -1, 0]);
+    assert_eq!(<[i16; 8]>::from(a.simd_gt(b)), [-1, 0, 0, -1, -1, 0, -1, 0]);
 }
 
 #[simd_test]
@@ -2531,21 +2564,21 @@ fn sub_i32x4<S: Simd>(simd: S) {
 fn simd_eq_i32x4<S: Simd>(simd: S) {
     let a = i32x4::from_slice(simd, &[1, 2, 3, 4]);
     let b = i32x4::from_slice(simd, &[1, 0, 3, 0]);
-    assert_eq!(*a.simd_eq(b), [-1, 0, -1, 0]);
+    assert_eq!(<[i32; 4]>::from(a.simd_eq(b)), [-1, 0, -1, 0]);
 }
 
 #[simd_test]
 fn simd_lt_i32x4<S: Simd>(simd: S) {
     let a = i32x4::from_slice(simd, &[1, 2, -3, -4]);
     let b = i32x4::from_slice(simd, &[2, 2, 0, 0]);
-    assert_eq!(*a.simd_lt(b), [-1, 0, -1, -1]);
+    assert_eq!(<[i32; 4]>::from(a.simd_lt(b)), [-1, 0, -1, -1]);
 }
 
 #[simd_test]
 fn simd_gt_i32x4<S: Simd>(simd: S) {
     let a = i32x4::from_slice(simd, &[2, 2, 0, 0]);
     let b = i32x4::from_slice(simd, &[1, 2, -3, -4]);
-    assert_eq!(*a.simd_gt(b), [-1, 0, -1, -1]);
+    assert_eq!(<[i32; 4]>::from(a.simd_gt(b)), [-1, 0, -1, -1]);
 }
 
 #[simd_test]
@@ -2587,21 +2620,21 @@ fn sub_u32x4<S: Simd>(simd: S) {
 fn simd_eq_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[1, 2, 2147483648, 4294967295]);
     let b = u32x4::from_slice(simd, &[1, 0, 2147483648, 0]);
-    assert_eq!(*a.simd_eq(b), [-1, 0, -1, 0]);
+    assert_eq!(<[i32; 4]>::from(a.simd_eq(b)), [-1, 0, -1, 0]);
 }
 
 #[simd_test]
 fn simd_lt_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[1, 2, 100, 200]);
     let b = u32x4::from_slice(simd, &[2, 2, 3000000000, 150]);
-    assert_eq!(*a.simd_lt(b), [-1, 0, -1, 0]);
+    assert_eq!(<[i32; 4]>::from(a.simd_lt(b)), [-1, 0, -1, 0]);
 }
 
 #[simd_test]
 fn simd_gt_u32x4<S: Simd>(simd: S) {
     let a = u32x4::from_slice(simd, &[2, 2, 3000000000, 150]);
     let b = u32x4::from_slice(simd, &[1, 2, 100, 200]);
-    assert_eq!(*a.simd_gt(b), [-1, 0, -1, 0]);
+    assert_eq!(<[i32; 4]>::from(a.simd_gt(b)), [-1, 0, -1, 0]);
 }
 
 #[simd_test]
@@ -2922,7 +2955,7 @@ fn select_mask8x16<S: Simd>(simd: S) {
     );
     let result: mask8x16<_> = mask.select(b, c);
     assert_eq!(
-        *result,
+        <[i8; 16]>::from(result),
         [-1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0, -1]
     );
 }
@@ -2952,7 +2985,7 @@ fn select_mask16x8<S: Simd>(simd: S) {
     let b = mask16x8::from_slice(simd, &[-1, 0, -1, 0, -1, 0, -1, 0]);
     let c = mask16x8::from_slice(simd, &[0, -1, 0, -1, 0, -1, 0, -1]);
     let result: mask16x8<_> = mask.select(b, c);
-    assert_eq!(*result, [-1, 0, 0, -1, -1, 0, 0, -1]);
+    assert_eq!(<[i16; 8]>::from(result), [-1, 0, 0, -1, -1, 0, 0, -1]);
 }
 
 #[simd_test]
@@ -3025,7 +3058,7 @@ fn select_mask32x4<S: Simd>(simd: S) {
     let b = mask32x4::from_slice(simd, &[-1, -1, 0, 0]);
     let c = mask32x4::from_slice(simd, &[0, 0, -1, -1]);
     let result: mask32x4<_> = mask.select(b, c);
-    assert_eq!(*result, [-1, 0, 0, -1]);
+    assert_eq!(<[i32; 4]>::from(result), [-1, 0, 0, -1]);
 }
 
 #[simd_test]
@@ -3347,7 +3380,7 @@ fn simd_eq_u8x16<S: Simd>(simd: S) {
         &[1, 0, 128, 0, 255, 0, 7, 0, 1, 0, 128, 0, 255, 0, 7, 0],
     );
     assert_eq!(
-        *a.simd_eq(b),
+        <[i8; 16]>::from(a.simd_eq(b)),
         [-1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0]
     );
 }
@@ -3362,7 +3395,10 @@ fn simd_ge_u8x16<S: Simd>(simd: S) {
     );
     let mask = vals.simd_ge(u8x16::splat(simd, 128));
 
-    assert_eq!(*mask, [0, 0, 0, 0, -1, -1, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        <[i8; 16]>::from(mask),
+        [0, 0, 0, 0, -1, -1, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0]
+    );
 }
 
 #[simd_test]
@@ -3375,7 +3411,10 @@ fn simd_gt_u8x16<S: Simd>(simd: S) {
     );
     let mask = vals.simd_gt(u8x16::splat(simd, 128));
 
-    assert_eq!(*mask, [0, 0, 0, 0, -1, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        <[i8; 16]>::from(mask),
+        [0, 0, 0, 0, -1, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0]
+    );
 }
 
 #[simd_test]
@@ -3389,7 +3428,7 @@ fn simd_le_u8x16<S: Simd>(simd: S) {
     let mask = vals.simd_le(u8x16::splat(simd, 128));
 
     assert_eq!(
-        *mask,
+        <[i8; 16]>::from(mask),
         [-1, -1, -1, -1, 0, 0, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1]
     );
 }
@@ -3405,7 +3444,7 @@ fn simd_lt_u8x16<S: Simd>(simd: S) {
     let mask = vals.simd_lt(u8x16::splat(simd, 128));
 
     assert_eq!(
-        *mask,
+        <[i8; 16]>::from(mask),
         [-1, -1, -1, -1, 0, 0, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1]
     );
 }
@@ -3419,7 +3458,7 @@ fn simd_ge_i8x16<S: Simd>(simd: S) {
     let mask = vals.simd_ge(i8x16::splat(simd, -1));
 
     assert_eq!(
-        *mask,
+        <[i8; 16]>::from(mask),
         [-1, 0, 0, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1]
     );
 }
@@ -3722,6 +3761,14 @@ fn store_slice_f32x4<S: Simd>(simd: S) {
     let mut dest = [0.0_f32; 4];
     a.store_slice(&mut dest);
     assert_eq!(dest, [1.0, 2.0, 3.0, 4.0]);
+}
+
+#[simd_test]
+fn store_slice_mask32x4<S: Simd>(simd: S) {
+    let mask = mask32x4::from_slice(simd, &[-1, 0, -1, 0]);
+    let mut dest = [0_i32; 4];
+    mask.store_slice(&mut dest);
+    assert_eq!(dest, [-1, 0, -1, 0]);
 }
 
 #[simd_test]
@@ -4382,322 +4429,6 @@ fn slide_within_blocks_u32x16<S: Simd>(simd: S) {
     let expected_1: [u32; 16] = [2, 3, 4, 17, 6, 7, 8, 21, 10, 11, 12, 25, 14, 15, 16, 29];
     assert_eq!(a.slide_within_blocks::<1>(b).as_slice(), &expected_1);
     assert_eq!(a.slide_within_blocks::<4>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask8x16<S: Simd>(simd: S) {
-    let a: Vec<i8> = (1_i8..=16).collect();
-    let b: Vec<i8> = (17_i8..=32).collect();
-    let a = mask8x16::from_slice(simd, &a);
-    let b = mask8x16::from_slice(simd, &b);
-    let expected_0: Vec<i8> = (1_i8..=16).collect();
-    let expected_8: Vec<i8> = (9_i8..=24).collect();
-    let expected_16: Vec<i8> = (17_i8..=32).collect();
-    assert_eq!(a.slide::<0>(b).as_slice(), &expected_0);
-    assert_eq!(a.slide::<8>(b).as_slice(), &expected_8);
-    assert_eq!(a.slide::<16>(b).as_slice(), &expected_16);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask8x16<S: Simd>(simd: S) {
-    let a: Vec<i8> = (1_i8..=16).collect();
-    let b: Vec<i8> = (17_i8..=32).collect();
-    let a = mask8x16::from_slice(simd, &a);
-    let b = mask8x16::from_slice(simd, &b);
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-    assert_eq!(
-        a.slide_within_blocks::<1>(b).as_slice(),
-        &[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,]
-    );
-    assert_eq!(a.slide_within_blocks::<16>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask8x32<S: Simd>(simd: S) {
-    let a: Vec<i8> = (1_i8..=32).collect();
-    let b: Vec<i8> = (33_i8..=64).collect();
-    let a = mask8x32::from_slice(simd, &a);
-    let b = mask8x32::from_slice(simd, &b);
-    let expected_0: Vec<i8> = (1_i8..=32).collect();
-    let expected_16: Vec<i8> = (17_i8..=48).collect();
-    let expected_32: Vec<i8> = (33_i8..=64).collect();
-    assert_eq!(a.slide::<0>(b).as_slice(), &expected_0);
-    assert_eq!(a.slide::<16>(b).as_slice(), &expected_16);
-    assert_eq!(a.slide::<32>(b).as_slice(), &expected_32);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask8x32<S: Simd>(simd: S) {
-    let a: Vec<i8> = (1_i8..=32).collect();
-    let b: Vec<i8> = (33_i8..=64).collect();
-    let a = mask8x32::from_slice(simd, &a);
-    let b = mask8x32::from_slice(simd, &b);
-
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-
-    let expected_1: [i8; 32] = [
-        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 33, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-        27, 28, 29, 30, 31, 32, 49,
-    ];
-    assert_eq!(a.slide_within_blocks::<1>(b).as_slice(), &expected_1);
-
-    assert_eq!(a.slide_within_blocks::<16>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask8x64<S: Simd>(simd: S) {
-    let a: Vec<i8> = (0_i8..=63).collect();
-    let b: Vec<i8> = (64_i8..=127).collect();
-    let a = mask8x64::from_slice(simd, &a);
-    let b = mask8x64::from_slice(simd, &b);
-    let expected_0: Vec<i8> = (0_i8..=63).collect();
-    let expected_32: Vec<i8> = (32_i8..=95).collect();
-    let expected_64: Vec<i8> = (64_i8..=127).collect();
-    assert_eq!(a.slide::<0>(b).as_slice(), &expected_0);
-    assert_eq!(a.slide::<32>(b).as_slice(), &expected_32);
-    assert_eq!(a.slide::<64>(b).as_slice(), &expected_64);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask8x64<S: Simd>(simd: S) {
-    let a: Vec<i8> = (0_i8..=63).collect();
-    let b: Vec<i8> = (64_i8..=127).collect();
-    let a = mask8x64::from_slice(simd, &a);
-    let b = mask8x64::from_slice(simd, &b);
-
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-
-    let expected_1: [i8; 64] = [
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 64, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-        26, 27, 28, 29, 30, 31, 80, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 96,
-        49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 112,
-    ];
-    assert_eq!(a.slide_within_blocks::<1>(b).as_slice(), &expected_1);
-
-    assert_eq!(a.slide_within_blocks::<16>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask16x8<S: Simd>(simd: S) {
-    let a: Vec<i16> = (1_i16..=8).collect();
-    let b: Vec<i16> = (9_i16..=16).collect();
-    let a = mask16x8::from_slice(simd, &a);
-    let b = mask16x8::from_slice(simd, &b);
-    let expected_0: Vec<i16> = (1_i16..=8).collect();
-    let expected_4: Vec<i16> = (5_i16..=12).collect();
-    let expected_8: Vec<i16> = (9_i16..=16).collect();
-    assert_eq!(a.slide::<0>(b).as_slice(), &expected_0);
-    assert_eq!(a.slide::<4>(b).as_slice(), &expected_4);
-    assert_eq!(a.slide::<8>(b).as_slice(), &expected_8);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask16x8<S: Simd>(simd: S) {
-    let a: Vec<i16> = (1_i16..=8).collect();
-    let b: Vec<i16> = (9_i16..=16).collect();
-    let a = mask16x8::from_slice(simd, &a);
-    let b = mask16x8::from_slice(simd, &b);
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-    assert_eq!(
-        a.slide_within_blocks::<1>(b).as_slice(),
-        &[2, 3, 4, 5, 6, 7, 8, 9]
-    );
-    assert_eq!(a.slide_within_blocks::<8>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask16x16<S: Simd>(simd: S) {
-    let a: Vec<i16> = (1_i16..=16).collect();
-    let b: Vec<i16> = (17_i16..=32).collect();
-    let a = mask16x16::from_slice(simd, &a);
-    let b = mask16x16::from_slice(simd, &b);
-    let expected_0: Vec<i16> = (1_i16..=16).collect();
-    let expected_8: Vec<i16> = (9_i16..=24).collect();
-    let expected_16: Vec<i16> = (17_i16..=32).collect();
-    assert_eq!(a.slide::<0>(b).as_slice(), &expected_0);
-    assert_eq!(a.slide::<8>(b).as_slice(), &expected_8);
-    assert_eq!(a.slide::<16>(b).as_slice(), &expected_16);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask16x16<S: Simd>(simd: S) {
-    let a: Vec<i16> = (1_i16..=16).collect();
-    let b: Vec<i16> = (17_i16..=32).collect();
-    let a = mask16x16::from_slice(simd, &a);
-    let b = mask16x16::from_slice(simd, &b);
-
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-
-    let expected_1: [i16; 16] = [2, 3, 4, 5, 6, 7, 8, 17, 10, 11, 12, 13, 14, 15, 16, 25];
-    assert_eq!(a.slide_within_blocks::<1>(b).as_slice(), &expected_1);
-
-    assert_eq!(a.slide_within_blocks::<8>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask16x32<S: Simd>(simd: S) {
-    let a: Vec<i16> = (1_i16..=32).collect();
-    let b: Vec<i16> = (33_i16..=64).collect();
-    let a = mask16x32::from_slice(simd, &a);
-    let b = mask16x32::from_slice(simd, &b);
-    let expected_0: Vec<i16> = (1_i16..=32).collect();
-    let expected_16: Vec<i16> = (17_i16..=48).collect();
-    let expected_32: Vec<i16> = (33_i16..=64).collect();
-    assert_eq!(a.slide::<0>(b).as_slice(), &expected_0);
-    assert_eq!(a.slide::<16>(b).as_slice(), &expected_16);
-    assert_eq!(a.slide::<32>(b).as_slice(), &expected_32);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask16x32<S: Simd>(simd: S) {
-    let a: Vec<i16> = (1_i16..=32).collect();
-    let b: Vec<i16> = (33_i16..=64).collect();
-    let a = mask16x32::from_slice(simd, &a);
-    let b = mask16x32::from_slice(simd, &b);
-
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-
-    let expected_1: [i16; 32] = [
-        2, 3, 4, 5, 6, 7, 8, 33, 10, 11, 12, 13, 14, 15, 16, 41, 18, 19, 20, 21, 22, 23, 24, 49,
-        26, 27, 28, 29, 30, 31, 32, 57,
-    ];
-    assert_eq!(a.slide_within_blocks::<1>(b).as_slice(), &expected_1);
-
-    assert_eq!(a.slide_within_blocks::<8>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask32x4<S: Simd>(simd: S) {
-    let a = mask32x4::from_slice(simd, &[1, 2, 3, 4]);
-    let b = mask32x4::from_slice(simd, &[5, 6, 7, 8]);
-    assert_eq!(*a.slide::<0>(b), [1, 2, 3, 4]);
-    assert_eq!(*a.slide::<2>(b), [3, 4, 5, 6]);
-    assert_eq!(*a.slide::<4>(b), [5, 6, 7, 8]);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask32x4<S: Simd>(simd: S) {
-    let a = mask32x4::from_slice(simd, &[1, 2, 3, 4]);
-    let b = mask32x4::from_slice(simd, &[5, 6, 7, 8]);
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-    assert_eq!(a.slide_within_blocks::<1>(b).as_slice(), &[2, 3, 4, 5]);
-    assert_eq!(a.slide_within_blocks::<4>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask32x8<S: Simd>(simd: S) {
-    let a = mask32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
-    let b = mask32x8::from_slice(simd, &[9, 10, 11, 12, 13, 14, 15, 16]);
-    assert_eq!(*a.slide::<0>(b), [1, 2, 3, 4, 5, 6, 7, 8]);
-    assert_eq!(*a.slide::<4>(b), [5, 6, 7, 8, 9, 10, 11, 12]);
-    assert_eq!(*a.slide::<8>(b), [9, 10, 11, 12, 13, 14, 15, 16]);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask32x8<S: Simd>(simd: S) {
-    let a = mask32x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
-    let b = mask32x8::from_slice(simd, &[9, 10, 11, 12, 13, 14, 15, 16]);
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-    assert_eq!(
-        a.slide_within_blocks::<1>(b).as_slice(),
-        &[2, 3, 4, 9, 6, 7, 8, 13]
-    );
-    assert_eq!(a.slide_within_blocks::<4>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask32x16<S: Simd>(simd: S) {
-    let a: Vec<i32> = (1..=16).collect();
-    let b: Vec<i32> = (17..=32).collect();
-    let a = mask32x16::from_slice(simd, &a);
-    let b = mask32x16::from_slice(simd, &b);
-    let expected_0: Vec<i32> = (1..=16).collect();
-    let expected_8: Vec<i32> = (9..=24).collect();
-    let expected_16: Vec<i32> = (17..=32).collect();
-    assert_eq!(a.slide::<0>(b).as_slice(), &expected_0);
-    assert_eq!(a.slide::<8>(b).as_slice(), &expected_8);
-    assert_eq!(a.slide::<16>(b).as_slice(), &expected_16);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask32x16<S: Simd>(simd: S) {
-    let a: Vec<i32> = (1..=16).collect();
-    let b: Vec<i32> = (17..=32).collect();
-    let a = mask32x16::from_slice(simd, &a);
-    let b = mask32x16::from_slice(simd, &b);
-
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-
-    let expected_1: [i32; 16] = [2, 3, 4, 17, 6, 7, 8, 21, 10, 11, 12, 25, 14, 15, 16, 29];
-    assert_eq!(a.slide_within_blocks::<1>(b).as_slice(), &expected_1);
-
-    assert_eq!(a.slide_within_blocks::<4>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask64x2<S: Simd>(simd: S) {
-    let a = mask64x2::from_slice(simd, &[1, 2]);
-    let b = mask64x2::from_slice(simd, &[3, 4]);
-    assert_eq!(*a.slide::<0>(b), [1, 2]);
-    assert_eq!(*a.slide::<1>(b), [2, 3]);
-    assert_eq!(*a.slide::<2>(b), [3, 4]);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask64x2<S: Simd>(simd: S) {
-    let a = mask64x2::from_slice(simd, &[1, 2]);
-    let b = mask64x2::from_slice(simd, &[3, 4]);
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-    assert_eq!(a.slide_within_blocks::<1>(b).as_slice(), &[2, 3]);
-    assert_eq!(a.slide_within_blocks::<2>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask64x4<S: Simd>(simd: S) {
-    let a = mask64x4::from_slice(simd, &[1, 2, 3, 4]);
-    let b = mask64x4::from_slice(simd, &[5, 6, 7, 8]);
-    assert_eq!(*a.slide::<0>(b), [1, 2, 3, 4]);
-    assert_eq!(*a.slide::<2>(b), [3, 4, 5, 6]);
-    assert_eq!(*a.slide::<4>(b), [5, 6, 7, 8]);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask64x4<S: Simd>(simd: S) {
-    // 256-bit vector partitioned into two 128-bit blocks (2 i64 per block)
-    let a = mask64x4::from_slice(simd, &[1, 2, 3, 4]);
-    let b = mask64x4::from_slice(simd, &[5, 6, 7, 8]);
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-    assert_eq!(a.slide_within_blocks::<1>(b).as_slice(), &[2, 5, 4, 7]);
-    assert_eq!(a.slide_within_blocks::<2>(b).as_slice(), b.as_slice());
-}
-
-#[simd_test]
-fn slide_mask64x8<S: Simd>(simd: S) {
-    let a: Vec<i64> = (1..=8).collect();
-    let b: Vec<i64> = (9..=16).collect();
-    let a = mask64x8::from_slice(simd, &a);
-    let b = mask64x8::from_slice(simd, &b);
-    let expected_0: Vec<i64> = (1..=8).collect();
-    let expected_4: Vec<i64> = (5..=12).collect();
-    let expected_8: Vec<i64> = (9..=16).collect();
-    assert_eq!(a.slide::<0>(b).as_slice(), &expected_0);
-    assert_eq!(a.slide::<4>(b).as_slice(), &expected_4);
-    assert_eq!(a.slide::<8>(b).as_slice(), &expected_8);
-}
-
-#[simd_test]
-fn slide_within_blocks_mask64x8<S: Simd>(simd: S) {
-    let a: Vec<i64> = (1..=8).collect();
-    let b: Vec<i64> = (9..=16).collect();
-    let a = mask64x8::from_slice(simd, &a);
-    let b = mask64x8::from_slice(simd, &b);
-
-    assert_eq!(a.slide_within_blocks::<0>(b).as_slice(), a.as_slice());
-    assert_eq!(
-        a.slide_within_blocks::<1>(b).as_slice(),
-        &[2, 9, 4, 11, 6, 13, 8, 15]
-    );
-    assert_eq!(a.slide_within_blocks::<2>(b).as_slice(), b.as_slice());
 }
 
 // Because the slide amount is a const generic, the exhaustive tests have to *compile* one slide per amount per vector

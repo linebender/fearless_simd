@@ -95,25 +95,23 @@ pub trait Simd:
         > + SimdCvtTruncate<Self::f32s>
         + core::ops::Neg<Output = Self::i32s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
-    type mask8s: SimdMask<Self, Element = i8, Block = mask8x16<Self>, Bytes = <Self::u8s as Bytes>::Bytes>
+    type mask8s: SimdMask<Self, Element = i8>
         + Select<Self::u8s>
         + Select<Self::i8s>
         + Select<Self::mask8s>;
     #[doc = r" A native-width SIMD mask with 16-bit lanes."]
-    type mask16s: SimdMask<Self, Element = i16, Block = mask16x8<Self>, Bytes = <Self::u16s as Bytes>::Bytes>
+    type mask16s: SimdMask<Self, Element = i16>
         + Select<Self::u16s>
         + Select<Self::i16s>
         + Select<Self::mask16s>;
     #[doc = r" A native-width SIMD mask with 32-bit lanes."]
-    type mask32s: SimdMask<Self, Element = i32, Block = mask32x4<Self>, Bytes = <Self::u32s as Bytes>::Bytes>
+    type mask32s: SimdMask<Self, Element = i32>
         + Select<Self::f32s>
         + Select<Self::u32s>
         + Select<Self::i32s>
         + Select<Self::mask32s>;
     #[doc = r" A native-width SIMD mask with 64-bit lanes."]
-    type mask64s: SimdMask<Self, Element = i64, Block = mask64x2<Self>>
-        + Select<Self::f64s>
-        + Select<Self::mask64s>;
+    type mask64s: SimdMask<Self, Element = i64> + Select<Self::f64s> + Select<Self::mask64s>;
     #[doc = r" This SIMD token's feature level."]
     fn level(self) -> Level;
     #[doc = r" Call function with CPU features enabled."]
@@ -162,15 +160,15 @@ pub trait Simd:
     fn div_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
@@ -206,7 +204,7 @@ pub trait Simd:
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self>;
@@ -274,15 +272,15 @@ pub trait Simd:
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
@@ -296,7 +294,7 @@ pub trait Simd:
     fn interleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
@@ -358,15 +356,15 @@ pub trait Simd:
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
@@ -380,7 +378,7 @@ pub trait Simd:
     fn interleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
@@ -392,36 +390,12 @@ pub trait Simd:
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask8x16(self, val: i8) -> mask8x16<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask8x16(self, val: bool) -> mask8x16<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask8x16(self, val: &[i8; 16usize]) -> mask8x16<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask8x16(self, a: &mask8x16<Self>) -> &[i8; 16usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask8x16(self, a: &mut mask8x16<Self>) -> &mut [i8; 16usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask8x16(self, a: mask8x16<Self>, dest: &mut [i8; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask8x16(self, a: u8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask8x16(self, a: mask8x16<Self>) -> u8x16<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask8x16<const SHIFT: usize>(
-        self,
-        a: mask8x16<Self>,
-        b: mask8x16<Self>,
-    ) -> mask8x16<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask8x16<const SHIFT: usize>(
-        self,
-        a: mask8x16<Self>,
-        b: mask8x16<Self>,
-    ) -> mask8x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -430,22 +404,22 @@ pub trait Simd:
     fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask8x16(
         self,
         a: mask8x16<Self>,
         b: mask8x16<Self>,
         c: mask8x16<Self>,
     ) -> mask8x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask8x16(self, a: mask8x16<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask8x16(self, a: mask8x16<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask8x16(self, a: mask8x16<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x32<Self>;
@@ -497,15 +471,15 @@ pub trait Simd:
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
@@ -519,7 +493,7 @@ pub trait Simd:
     fn interleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
@@ -581,15 +555,15 @@ pub trait Simd:
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
@@ -603,7 +577,7 @@ pub trait Simd:
     fn interleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
@@ -615,36 +589,12 @@ pub trait Simd:
     fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask16x8(self, val: i16) -> mask16x8<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask16x8(self, val: bool) -> mask16x8<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask16x8(self, val: &[i16; 8usize]) -> mask16x8<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask16x8(self, a: &mask16x8<Self>) -> &[i16; 8usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask16x8(self, a: &mut mask16x8<Self>) -> &mut [i16; 8usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask16x8(self, a: mask16x8<Self>, dest: &mut [i16; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask16x8(self, a: u8x16<Self>) -> mask16x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask16x8(self, a: mask16x8<Self>) -> u8x16<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask16x8<const SHIFT: usize>(
-        self,
-        a: mask16x8<Self>,
-        b: mask16x8<Self>,
-    ) -> mask16x8<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask16x8<const SHIFT: usize>(
-        self,
-        a: mask16x8<Self>,
-        b: mask16x8<Self>,
-    ) -> mask16x8<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -653,22 +603,22 @@ pub trait Simd:
     fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask16x8(
         self,
         a: mask16x8<Self>,
         b: mask16x8<Self>,
         c: mask16x8<Self>,
     ) -> mask16x8<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask16x8(self, a: mask16x8<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask16x8(self, a: mask16x8<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x16<Self>;
@@ -720,15 +670,15 @@ pub trait Simd:
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
@@ -742,7 +692,7 @@ pub trait Simd:
     fn interleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
@@ -806,15 +756,15 @@ pub trait Simd:
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
@@ -828,7 +778,7 @@ pub trait Simd:
     fn interleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
@@ -840,36 +790,12 @@ pub trait Simd:
     fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask32x4(self, val: i32) -> mask32x4<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask32x4(self, val: bool) -> mask32x4<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask32x4(self, val: &[i32; 4usize]) -> mask32x4<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask32x4(self, a: &mask32x4<Self>) -> &[i32; 4usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask32x4(self, a: &mut mask32x4<Self>) -> &mut [i32; 4usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask32x4(self, a: mask32x4<Self>, dest: &mut [i32; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask32x4(self, a: u8x16<Self>) -> mask32x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask32x4(self, a: mask32x4<Self>) -> u8x16<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask32x4<const SHIFT: usize>(
-        self,
-        a: mask32x4<Self>,
-        b: mask32x4<Self>,
-    ) -> mask32x4<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask32x4<const SHIFT: usize>(
-        self,
-        a: mask32x4<Self>,
-        b: mask32x4<Self>,
-    ) -> mask32x4<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -878,22 +804,22 @@ pub trait Simd:
     fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask32x4(
         self,
         a: mask32x4<Self>,
         b: mask32x4<Self>,
         c: mask32x4<Self>,
     ) -> mask32x4<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask32x4(self, a: mask32x4<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask32x4(self, a: mask32x4<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x8<Self>;
@@ -939,15 +865,15 @@ pub trait Simd:
     fn div_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
@@ -983,42 +909,18 @@ pub trait Simd:
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask64x2(self, val: i64) -> mask64x2<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask64x2(self, val: bool) -> mask64x2<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask64x2(self, val: &[i64; 2usize]) -> mask64x2<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask64x2(self, a: &mask64x2<Self>) -> &[i64; 2usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask64x2(self, a: &mut mask64x2<Self>) -> &mut [i64; 2usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask64x2(self, a: mask64x2<Self>, dest: &mut [i64; 2usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask64x2(self, a: u8x16<Self>) -> mask64x2<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask64x2(self, a: mask64x2<Self>) -> u8x16<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask64x2<const SHIFT: usize>(
-        self,
-        a: mask64x2<Self>,
-        b: mask64x2<Self>,
-    ) -> mask64x2<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask64x2<const SHIFT: usize>(
-        self,
-        a: mask64x2<Self>,
-        b: mask64x2<Self>,
-    ) -> mask64x2<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1027,22 +929,22 @@ pub trait Simd:
     fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask64x2(
         self,
         a: mask64x2<Self>,
         b: mask64x2<Self>,
         c: mask64x2<Self>,
     ) -> mask64x2<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask64x2(self, a: mask64x2<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask64x2(self, a: mask64x2<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x4<Self>;
@@ -1088,15 +990,15 @@ pub trait Simd:
     fn div_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
@@ -1132,7 +1034,7 @@ pub trait Simd:
     fn fract_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self>;
@@ -1202,15 +1104,15 @@ pub trait Simd:
     fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
@@ -1224,7 +1126,7 @@ pub trait Simd:
     fn interleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> (i8x32<Self>, i8x32<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i8x32(self, a: mask8x32<Self>, b: i8x32<Self>, c: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
@@ -1288,15 +1190,15 @@ pub trait Simd:
     fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
@@ -1310,7 +1212,7 @@ pub trait Simd:
     fn interleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> (u8x32<Self>, u8x32<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u8x32(self, a: mask8x32<Self>, b: u8x32<Self>, c: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
@@ -1324,36 +1226,12 @@ pub trait Simd:
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask8x32(self, val: i8) -> mask8x32<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask8x32(self, val: bool) -> mask8x32<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask8x32(self, val: &[i8; 32usize]) -> mask8x32<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask8x32(self, a: &mask8x32<Self>) -> &[i8; 32usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask8x32(self, a: &mut mask8x32<Self>) -> &mut [i8; 32usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask8x32(self, a: mask8x32<Self>, dest: &mut [i8; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask8x32(self, a: u8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask8x32(self, a: mask8x32<Self>) -> u8x32<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask8x32<const SHIFT: usize>(
-        self,
-        a: mask8x32<Self>,
-        b: mask8x32<Self>,
-    ) -> mask8x32<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask8x32<const SHIFT: usize>(
-        self,
-        a: mask8x32<Self>,
-        b: mask8x32<Self>,
-    ) -> mask8x32<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1362,22 +1240,22 @@ pub trait Simd:
     fn xor_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask8x32(self, a: mask8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask8x32(
         self,
         a: mask8x32<Self>,
         b: mask8x32<Self>,
         c: mask8x32<Self>,
     ) -> mask8x32<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask8x32(self, a: mask8x32<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask8x32(self, a: mask8x32<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask8x32(self, a: mask8x32<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask8x32(self, a: mask8x32<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x64<Self>;
@@ -1431,15 +1309,15 @@ pub trait Simd:
     fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
@@ -1453,7 +1331,7 @@ pub trait Simd:
     fn interleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> (i16x16<Self>, i16x16<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i16x16(self, a: mask16x16<Self>, b: i16x16<Self>, c: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
@@ -1517,15 +1395,15 @@ pub trait Simd:
     fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
@@ -1539,7 +1417,7 @@ pub trait Simd:
     fn interleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> (u16x16<Self>, u16x16<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u16x16(self, a: mask16x16<Self>, b: u16x16<Self>, c: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
@@ -1555,36 +1433,12 @@ pub trait Simd:
     fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask16x16(self, val: i16) -> mask16x16<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask16x16(self, val: bool) -> mask16x16<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask16x16(self, val: &[i16; 16usize]) -> mask16x16<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask16x16(self, a: &mask16x16<Self>) -> &[i16; 16usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask16x16(self, a: &mut mask16x16<Self>) -> &mut [i16; 16usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask16x16(self, a: mask16x16<Self>, dest: &mut [i16; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask16x16(self, a: u8x32<Self>) -> mask16x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask16x16(self, a: mask16x16<Self>) -> u8x32<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask16x16<const SHIFT: usize>(
-        self,
-        a: mask16x16<Self>,
-        b: mask16x16<Self>,
-    ) -> mask16x16<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask16x16<const SHIFT: usize>(
-        self,
-        a: mask16x16<Self>,
-        b: mask16x16<Self>,
-    ) -> mask16x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1593,22 +1447,22 @@ pub trait Simd:
     fn xor_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask16x16(self, a: mask16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask16x16(
         self,
         a: mask16x16<Self>,
         b: mask16x16<Self>,
         c: mask16x16<Self>,
     ) -> mask16x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask16x16(self, a: mask16x16<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask16x16(self, a: mask16x16<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask16x16(self, a: mask16x16<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask16x16(self, a: mask16x16<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x32<Self>;
@@ -1662,15 +1516,15 @@ pub trait Simd:
     fn shr_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
@@ -1684,7 +1538,7 @@ pub trait Simd:
     fn interleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> (i32x8<Self>, i32x8<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i32x8(self, a: mask32x8<Self>, b: i32x8<Self>, c: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
@@ -1750,15 +1604,15 @@ pub trait Simd:
     fn shr_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
@@ -1772,7 +1626,7 @@ pub trait Simd:
     fn interleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> (u32x8<Self>, u32x8<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u32x8(self, a: mask32x8<Self>, b: u32x8<Self>, c: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
@@ -1786,36 +1640,12 @@ pub trait Simd:
     fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask32x8(self, val: i32) -> mask32x8<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask32x8(self, val: bool) -> mask32x8<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask32x8(self, val: &[i32; 8usize]) -> mask32x8<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask32x8(self, a: &mask32x8<Self>) -> &[i32; 8usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask32x8(self, a: &mut mask32x8<Self>) -> &mut [i32; 8usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask32x8(self, a: mask32x8<Self>, dest: &mut [i32; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask32x8(self, a: u8x32<Self>) -> mask32x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask32x8(self, a: mask32x8<Self>) -> u8x32<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask32x8<const SHIFT: usize>(
-        self,
-        a: mask32x8<Self>,
-        b: mask32x8<Self>,
-    ) -> mask32x8<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask32x8<const SHIFT: usize>(
-        self,
-        a: mask32x8<Self>,
-        b: mask32x8<Self>,
-    ) -> mask32x8<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1824,22 +1654,22 @@ pub trait Simd:
     fn xor_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask32x8(self, a: mask32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask32x8(
         self,
         a: mask32x8<Self>,
         b: mask32x8<Self>,
         c: mask32x8<Self>,
     ) -> mask32x8<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask32x8(self, a: mask32x8<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask32x8(self, a: mask32x8<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask32x8(self, a: mask32x8<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask32x8(self, a: mask32x8<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x16<Self>;
@@ -1887,15 +1717,15 @@ pub trait Simd:
     fn div_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
@@ -1931,7 +1761,7 @@ pub trait Simd:
     fn fract_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self>;
@@ -1939,36 +1769,12 @@ pub trait Simd:
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>);
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask64x4(self, val: i64) -> mask64x4<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask64x4(self, val: bool) -> mask64x4<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask64x4(self, val: &[i64; 4usize]) -> mask64x4<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask64x4(self, a: &mask64x4<Self>) -> &[i64; 4usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask64x4(self, a: &mut mask64x4<Self>) -> &mut [i64; 4usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask64x4(self, a: mask64x4<Self>, dest: &mut [i64; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask64x4(self, a: u8x32<Self>) -> mask64x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask64x4(self, a: mask64x4<Self>) -> u8x32<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask64x4<const SHIFT: usize>(
-        self,
-        a: mask64x4<Self>,
-        b: mask64x4<Self>,
-    ) -> mask64x4<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask64x4<const SHIFT: usize>(
-        self,
-        a: mask64x4<Self>,
-        b: mask64x4<Self>,
-    ) -> mask64x4<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1977,22 +1783,22 @@ pub trait Simd:
     fn xor_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask64x4(self, a: mask64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask64x4(
         self,
         a: mask64x4<Self>,
         b: mask64x4<Self>,
         c: mask64x4<Self>,
     ) -> mask64x4<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask64x4(self, a: mask64x4<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask64x4(self, a: mask64x4<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask64x4(self, a: mask64x4<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask64x4(self, a: mask64x4<Self>) -> bool;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x8<Self>;
@@ -2040,15 +1846,15 @@ pub trait Simd:
     fn div_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
@@ -2084,7 +1890,7 @@ pub trait Simd:
     fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>);
@@ -2156,15 +1962,15 @@ pub trait Simd:
     fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
@@ -2178,7 +1984,7 @@ pub trait Simd:
     fn interleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> (i8x64<Self>, i8x64<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i8x64(self, a: mask8x64<Self>, b: i8x64<Self>, c: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
@@ -2240,15 +2046,15 @@ pub trait Simd:
     fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
@@ -2262,7 +2068,7 @@ pub trait Simd:
     fn interleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> (u8x64<Self>, u8x64<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u8x64(self, a: mask8x64<Self>, b: u8x64<Self>, c: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
@@ -2276,36 +2082,12 @@ pub trait Simd:
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask8x64(self, val: i8) -> mask8x64<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask8x64(self, val: bool) -> mask8x64<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask8x64(self, val: &[i8; 64usize]) -> mask8x64<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask8x64(self, a: &mask8x64<Self>) -> &[i8; 64usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask8x64(self, a: &mut mask8x64<Self>) -> &mut [i8; 64usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask8x64(self, a: mask8x64<Self>, dest: &mut [i8; 64usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask8x64(self, a: u8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask8x64(self, a: mask8x64<Self>) -> u8x64<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask8x64<const SHIFT: usize>(
-        self,
-        a: mask8x64<Self>,
-        b: mask8x64<Self>,
-    ) -> mask8x64<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask8x64<const SHIFT: usize>(
-        self,
-        a: mask8x64<Self>,
-        b: mask8x64<Self>,
-    ) -> mask8x64<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2314,22 +2096,22 @@ pub trait Simd:
     fn xor_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask8x64(self, a: mask8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask8x64(
         self,
         a: mask8x64<Self>,
         b: mask8x64<Self>,
         c: mask8x64<Self>,
     ) -> mask8x64<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask8x64(self, a: mask8x64<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask8x64(self, a: mask8x64<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask8x64(self, a: mask8x64<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask8x64(self, a: mask8x64<Self>) -> bool;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask8x64(self, a: mask8x64<Self>) -> (mask8x32<Self>, mask8x32<Self>);
@@ -2381,15 +2163,15 @@ pub trait Simd:
     fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
@@ -2403,7 +2185,7 @@ pub trait Simd:
     fn interleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> (i16x32<Self>, i16x32<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i16x32(self, a: mask16x32<Self>, b: i16x32<Self>, c: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
@@ -2465,15 +2247,15 @@ pub trait Simd:
     fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
@@ -2487,7 +2269,7 @@ pub trait Simd:
     fn interleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> (u16x32<Self>, u16x32<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u16x32(self, a: mask16x32<Self>, b: u16x32<Self>, c: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
@@ -2505,36 +2287,12 @@ pub trait Simd:
     fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask16x32(self, val: i16) -> mask16x32<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask16x32(self, val: bool) -> mask16x32<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask16x32(self, val: &[i16; 32usize]) -> mask16x32<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask16x32(self, a: &mask16x32<Self>) -> &[i16; 32usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask16x32(self, a: &mut mask16x32<Self>) -> &mut [i16; 32usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask16x32(self, a: mask16x32<Self>, dest: &mut [i16; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask16x32(self, a: u8x64<Self>) -> mask16x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask16x32(self, a: mask16x32<Self>) -> u8x64<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask16x32<const SHIFT: usize>(
-        self,
-        a: mask16x32<Self>,
-        b: mask16x32<Self>,
-    ) -> mask16x32<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask16x32<const SHIFT: usize>(
-        self,
-        a: mask16x32<Self>,
-        b: mask16x32<Self>,
-    ) -> mask16x32<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2543,22 +2301,22 @@ pub trait Simd:
     fn xor_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask16x32(self, a: mask16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask16x32(
         self,
         a: mask16x32<Self>,
         b: mask16x32<Self>,
         c: mask16x32<Self>,
     ) -> mask16x32<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask16x32(self, a: mask16x32<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask16x32(self, a: mask16x32<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask16x32(self, a: mask16x32<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask16x32(self, a: mask16x32<Self>) -> bool;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask16x32(self, a: mask16x32<Self>) -> (mask16x16<Self>, mask16x16<Self>);
@@ -2610,15 +2368,15 @@ pub trait Simd:
     fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
@@ -2632,7 +2390,7 @@ pub trait Simd:
     fn interleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> (i32x16<Self>, i32x16<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_i32x16(self, a: mask32x16<Self>, b: i32x16<Self>, c: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
@@ -2696,15 +2454,15 @@ pub trait Simd:
     fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self>;
     #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
@@ -2718,7 +2476,7 @@ pub trait Simd:
     fn interleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>);
     #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
     fn deinterleave_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> (u32x16<Self>, u32x16<Self>);
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_u32x16(self, a: mask32x16<Self>, b: u32x16<Self>, c: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Return the element-wise minimum of two vectors."]
     fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
@@ -2734,36 +2492,12 @@ pub trait Simd:
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask32x16(self, val: i32) -> mask32x16<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask32x16(self, val: bool) -> mask32x16<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask32x16(self, val: &[i32; 16usize]) -> mask32x16<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask32x16(self, a: &mask32x16<Self>) -> &[i32; 16usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask32x16(self, a: &mut mask32x16<Self>) -> &mut [i32; 16usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask32x16(self, a: mask32x16<Self>, dest: &mut [i32; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask32x16(self, a: u8x64<Self>) -> mask32x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask32x16(self, a: mask32x16<Self>) -> u8x64<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask32x16<const SHIFT: usize>(
-        self,
-        a: mask32x16<Self>,
-        b: mask32x16<Self>,
-    ) -> mask32x16<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask32x16<const SHIFT: usize>(
-        self,
-        a: mask32x16<Self>,
-        b: mask32x16<Self>,
-    ) -> mask32x16<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2772,22 +2506,22 @@ pub trait Simd:
     fn xor_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask32x16(self, a: mask32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask32x16(
         self,
         a: mask32x16<Self>,
         b: mask32x16<Self>,
         c: mask32x16<Self>,
     ) -> mask32x16<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask32x16(self, a: mask32x16<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask32x16(self, a: mask32x16<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask32x16(self, a: mask32x16<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask32x16(self, a: mask32x16<Self>) -> bool;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask32x16(self, a: mask32x16<Self>) -> (mask32x8<Self>, mask32x8<Self>);
@@ -2833,15 +2567,15 @@ pub trait Simd:
     fn div_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Return a vector with the magnitude of `a` and the sign of `b` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `a` is less than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
     fn simd_lt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `a` is less than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
     fn simd_le_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `a` is greater than or equal to `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
     fn simd_ge_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `a` is greater than `b`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
     fn simd_gt_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self>;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
@@ -2877,42 +2611,18 @@ pub trait Simd:
     fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Return the integer part of each element, rounding towards zero."]
     fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self>;
-    #[doc = "Create a SIMD vector with all elements set to the given value."]
-    fn splat_mask64x8(self, val: i64) -> mask64x8<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
+    #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
+    fn splat_mask64x8(self, val: bool) -> mask64x8<Self>;
+    #[doc = "Create a SIMD mask from signed integer mask lanes."]
     fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self>;
-    #[doc = "Create a SIMD vector from an array of the same length."]
-    fn load_array_ref_mask64x8(self, val: &[i64; 8usize]) -> mask64x8<Self>;
-    #[doc = "Convert a SIMD vector to an array."]
+    #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize];
-    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
-    fn as_array_ref_mask64x8(self, a: &mask64x8<Self>) -> &[i64; 8usize];
-    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
-    fn as_array_mut_mask64x8(self, a: &mut mask64x8<Self>) -> &mut [i64; 8usize];
-    #[doc = "Store a SIMD vector into an array of the same length."]
-    fn store_array_mask64x8(self, a: mask64x8<Self>, dest: &mut [i64; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_mask64x8(self, a: u8x64<Self>) -> mask64x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_mask64x8(self, a: mask64x8<Self>) -> u8x64<Self>;
-    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
-    fn slide_mask64x8<const SHIFT: usize>(
-        self,
-        a: mask64x8<Self>,
-        b: mask64x8<Self>,
-    ) -> mask64x8<Self>;
-    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
-    fn slide_within_blocks_mask64x8<const SHIFT: usize>(
-        self,
-        a: mask64x8<Self>,
-        b: mask64x8<Self>,
-    ) -> mask64x8<Self>;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2921,22 +2631,22 @@ pub trait Simd:
     fn xor_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
     #[doc = "Compute the logical NOT of the mask."]
     fn not_mask64x8(self, a: mask64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if each lane of a is not the all-zeroes or all-ones bit pattern. See the [`Select`] trait's documentation for more information."]
+    #[doc = "Select elements from `b` and `c` based on the mask operand `a`.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
     fn select_mask64x8(
         self,
         a: mask64x8<Self>,
         b: mask64x8<Self>,
         c: mask64x8<Self>,
     ) -> mask64x8<Self>;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true_mask64x8(self, a: mask64x8<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true_mask64x8(self, a: mask64x8<Self>) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false_mask64x8(self, a: mask64x8<Self>) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false_mask64x8(self, a: mask64x8<Self>) -> bool;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
@@ -3005,14 +2715,11 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" working with a native-width vector (e.g. [`Simd::f32s`]) and"]
     #[doc = r" want to process data in native-width chunks."]
     const N: usize;
-    #[doc = r" A SIMD vector mask with the same number of elements."]
+    #[doc = r" A SIMD vector mask with the same number of logical lanes."]
     #[doc = r""]
-    #[doc = r" The mask element is represented as an integer which is"]
-    #[doc = r" all-0 for `false` and all-1 for `true`. When we get deep"]
-    #[doc = r" into AVX-512, we need to think about predication masks."]
-    #[doc = r""]
-    #[doc = r" One possibility to consider is that the SIMD trait grows"]
-    #[doc = r" `maskAxB` associated types."]
+    #[doc = r" Masks intentionally do not implement [`SimdBase`]. SSE, NEON, WASM, and the"]
+    #[doc = r" fallback backend currently store masks as all-zero/all-one integer vectors, but"]
+    #[doc = r" AVX-512/RVV/SVE-style targets use compact predicate registers instead."]
     type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
     #[doc = r" A 128-bit SIMD vector of the same scalar type."]
     type Block: SimdBase<S, Element = Self::Element>;
@@ -3096,15 +2803,15 @@ pub trait SimdFloat<S: Simd>:
     fn sqrt(self) -> Self;
     #[doc = "Return a vector with the magnitude of `self` and the sign of `rhs` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self;
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `self` is less than `rhs`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `self` is less than `rhs`, and false if not."]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `self` is less than or equal to `rhs`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `self` is less than or equal to `rhs`, and false if not."]
     fn simd_le(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `self` is greater than or equal to `rhs`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `self` is greater than or equal to `rhs`, and false if not."]
     fn simd_ge(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `self` is greater than `rhs`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `self` is greater than `rhs`, and false if not."]
     fn simd_gt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
@@ -3186,15 +2893,15 @@ pub trait SimdInt<S: Simd>:
     fn to_float<T: SimdCvtFloat<Self>>(self) -> T {
         T::float_from(self)
     }
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each element is all ones if `self` is less than `rhs`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `self` is less than `rhs`, and false if not."]
     fn simd_lt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each element is all ones if `self` is less than or equal to `rhs`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `self` is less than or equal to `rhs`, and false if not."]
     fn simd_le(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each element is all ones if `self` is greater than or equal to `rhs`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `self` is greater than or equal to `rhs`, and false if not."]
     fn simd_ge(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each element is all ones if `self` is greater than `rhs`, and all zeroes if not."]
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `self` is greater than `rhs`, and false if not."]
     fn simd_gt(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
     #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
     fn zip_low(self, rhs: impl SimdInto<Self, S>) -> Self;
@@ -3214,31 +2921,52 @@ pub trait SimdInt<S: Simd>:
     fn max(self, rhs: impl SimdInto<Self, S>) -> Self;
 }
 #[doc = r" Functionality implemented by SIMD masks."]
+#[doc = r""]
+#[doc = r" A mask has one logical boolean lane per SIMD lane. Its storage is intentionally opaque:"]
+#[doc = r" current backends may use all-zero/all-one integer vectors internally, while future"]
+#[doc = r" predicate-register backends may use a compact representation."]
 pub trait SimdMask<S: Simd>:
-    SimdBase<S>
+    Copy
+    + Sync
+    + Send
+    + 'static
     + Seal
+    + Select<Self>
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
-    + core::ops::BitAnd<Self::Element, Output = Self>
-    + core::ops::BitAndAssign<Self::Element>
     + core::ops::BitOr<Output = Self>
     + core::ops::BitOrAssign
-    + core::ops::BitOr<Self::Element, Output = Self>
-    + core::ops::BitOrAssign<Self::Element>
     + core::ops::BitXor<Output = Self>
     + core::ops::BitXorAssign
-    + core::ops::BitXor<Self::Element, Output = Self>
-    + core::ops::BitXorAssign<Self::Element>
     + core::ops::Not<Output = Self>
 {
-    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each element is all ones if the corresponding elements are equal, and all zeroes if not."]
-    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self::Mask;
-    #[doc = "Returns true if any elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = r" The signed integer type used when converting this mask to and from lane values."]
+    #[doc = r""]
+    #[doc = r" False lanes are encoded as all zeroes (integer value 0), and true lanes are encoded as all ones"]
+    #[doc = r" (integer value -1)."]
+    type Element: SimdElement;
+    #[doc = r" This mask type's lane count."]
+    const N: usize;
+    #[doc = r" Get the [`Simd`] implementation associated with this type."]
+    fn witness(&self) -> S;
+    #[doc = r" Create a SIMD mask with all lanes set to the given boolean value."]
+    fn splat(simd: S, val: bool) -> Self;
+    #[doc = r" Create a SIMD mask from signed integer mask lanes."]
+    #[doc = r""]
+    #[doc = r" The slice must be exactly the size of the SIMD mask."]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+    #[doc = r" Store this SIMD mask as signed integer mask lanes."]
+    #[doc = r""]
+    #[doc = r" The slice must be exactly the size of the SIMD mask."]
+    fn store_slice(&self, slice: &mut [Self::Element]);
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
+    fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self;
+    #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_true(self) -> bool;
-    #[doc = "Returns true if all elements in this mask are true (all ones).\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_true(self) -> bool;
-    #[doc = "Returns true if any elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if any logical lanes in this mask are false.\n\nThis is logically equivalent to `!all_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn any_false(self) -> bool;
-    #[doc = "Returns true if all elements in this mask are false (all zeroes).\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nBehavior on mask elements that are not all zeroes or all ones is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent if mask elements are not all zeroes or all ones. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for mask elements that are not all zeroes or all ones. That behavior may not match the behavior of this operation."]
+    #[doc = "Returns true if all logical lanes in this mask are false.\n\nThis is logically equivalent to `!any_true`, but may be faster.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]
     fn all_false(self) -> bool;
 }

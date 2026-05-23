@@ -768,8 +768,11 @@ impl Simd for Neon {
         unsafe { vreinterpretq_u32_u8(a.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn splat_mask8x16(self, val: i8) -> mask8x16<Self> {
-        unsafe { vdupq_n_s8(val).simd_into(self) }
+    fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
+        unsafe {
+            let val: i8 = if val { !0 } else { 0 };
+            vdupq_n_s8(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
@@ -779,80 +782,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask8x16(self, val: &[i8; 16usize]) -> mask8x16<Self> {
-        mask8x16 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize] {
         unsafe { core::mem::transmute::<int8x16_t, [i8; 16usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask8x16(self, a: &mask8x16<Self>) -> &[i8; 16usize] {
-        unsafe { core::mem::transmute::<&int8x16_t, &[i8; 16usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask8x16(self, a: &mut mask8x16<Self>) -> &mut [i8; 16usize] {
-        unsafe { core::mem::transmute::<&mut int8x16_t, &mut [i8; 16usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask8x16(self, a: mask8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i8,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask8x16(self, a: u8x16<Self>) -> mask8x16<Self> {
-        unsafe {
-            mask8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask8x16(self, a: mask8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask8x16<const SHIFT: usize>(
-        self,
-        a: mask8x16<Self>,
-        b: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        if SHIFT >= 16usize {
-            return b;
-        }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_mask8x16(a).val.0,
-                self.cvt_to_bytes_mask8x16(b).val.0,
-                SHIFT,
-            )
-        };
-        self.cvt_from_bytes_mask8x16(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask8x16<const SHIFT: usize>(
-        self,
-        a: mask8x16<Self>,
-        b: mask8x16<Self>,
-    ) -> mask8x16<Self> {
-        self.slide_mask8x16::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -1323,8 +1254,11 @@ impl Simd for Neon {
         unsafe { vreinterpretq_u32_u16(a.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn splat_mask16x8(self, val: i16) -> mask16x8<Self> {
-        unsafe { vdupq_n_s16(val).simd_into(self) }
+    fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
+        unsafe {
+            let val: i16 = if val { !0 } else { 0 };
+            vdupq_n_s16(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
@@ -1334,80 +1268,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask16x8(self, val: &[i16; 8usize]) -> mask16x8<Self> {
-        mask16x8 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize] {
         unsafe { core::mem::transmute::<int16x8_t, [i16; 8usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask16x8(self, a: &mask16x8<Self>) -> &[i16; 8usize] {
-        unsafe { core::mem::transmute::<&int16x8_t, &[i16; 8usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask16x8(self, a: &mut mask16x8<Self>) -> &mut [i16; 8usize] {
-        unsafe { core::mem::transmute::<&mut int16x8_t, &mut [i16; 8usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask16x8(self, a: mask16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i16,
-                dest.as_mut_ptr(),
-                8usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask16x8(self, a: u8x16<Self>) -> mask16x8<Self> {
-        unsafe {
-            mask16x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask16x8(self, a: mask16x8<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask16x8<const SHIFT: usize>(
-        self,
-        a: mask16x8<Self>,
-        b: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        if SHIFT >= 8usize {
-            return b;
-        }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_mask16x8(a).val.0,
-                self.cvt_to_bytes_mask16x8(b).val.0,
-                SHIFT * 2usize,
-            )
-        };
-        self.cvt_from_bytes_mask16x8(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask16x8<const SHIFT: usize>(
-        self,
-        a: mask16x8<Self>,
-        b: mask16x8<Self>,
-    ) -> mask16x8<Self> {
-        self.slide_mask16x8::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -1882,8 +1744,11 @@ impl Simd for Neon {
         unsafe { vcvtq_f32_u32(a.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn splat_mask32x4(self, val: i32) -> mask32x4<Self> {
-        unsafe { vdupq_n_s32(val).simd_into(self) }
+    fn splat_mask32x4(self, val: bool) -> mask32x4<Self> {
+        unsafe {
+            let val: i32 = if val { !0 } else { 0 };
+            vdupq_n_s32(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
@@ -1893,80 +1758,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask32x4(self, val: &[i32; 4usize]) -> mask32x4<Self> {
-        mask32x4 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize] {
         unsafe { core::mem::transmute::<int32x4_t, [i32; 4usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask32x4(self, a: &mask32x4<Self>) -> &[i32; 4usize] {
-        unsafe { core::mem::transmute::<&int32x4_t, &[i32; 4usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask32x4(self, a: &mut mask32x4<Self>) -> &mut [i32; 4usize] {
-        unsafe { core::mem::transmute::<&mut int32x4_t, &mut [i32; 4usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask32x4(self, a: mask32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i32,
-                dest.as_mut_ptr(),
-                4usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask32x4(self, a: u8x16<Self>) -> mask32x4<Self> {
-        unsafe {
-            mask32x4 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask32x4(self, a: mask32x4<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask32x4<const SHIFT: usize>(
-        self,
-        a: mask32x4<Self>,
-        b: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        if SHIFT >= 4usize {
-            return b;
-        }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_mask32x4(a).val.0,
-                self.cvt_to_bytes_mask32x4(b).val.0,
-                SHIFT * 4usize,
-            )
-        };
-        self.cvt_from_bytes_mask32x4(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask32x4<const SHIFT: usize>(
-        self,
-        a: mask32x4<Self>,
-        b: mask32x4<Self>,
-    ) -> mask32x4<Self> {
-        self.slide_mask32x4::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -2254,8 +2047,11 @@ impl Simd for Neon {
         unsafe { vreinterpretq_f32_f64(a.into()).simd_into(self) }
     }
     #[inline(always)]
-    fn splat_mask64x2(self, val: i64) -> mask64x2<Self> {
-        unsafe { vdupq_n_s64(val).simd_into(self) }
+    fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
+        unsafe {
+            let val: i64 = if val { !0 } else { 0 };
+            vdupq_n_s64(val).simd_into(self)
+        }
     }
     #[inline(always)]
     fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
@@ -2265,80 +2061,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask64x2(self, val: &[i64; 2usize]) -> mask64x2<Self> {
-        mask64x2 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize] {
         unsafe { core::mem::transmute::<int64x2_t, [i64; 2usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask64x2(self, a: &mask64x2<Self>) -> &[i64; 2usize] {
-        unsafe { core::mem::transmute::<&int64x2_t, &[i64; 2usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask64x2(self, a: &mut mask64x2<Self>) -> &mut [i64; 2usize] {
-        unsafe { core::mem::transmute::<&mut int64x2_t, &mut [i64; 2usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask64x2(self, a: mask64x2<Self>, dest: &mut [i64; 2usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i64,
-                dest.as_mut_ptr(),
-                2usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask64x2(self, a: u8x16<Self>) -> mask64x2<Self> {
-        unsafe {
-            mask64x2 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask64x2(self, a: mask64x2<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask64x2<const SHIFT: usize>(
-        self,
-        a: mask64x2<Self>,
-        b: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        if SHIFT >= 2usize {
-            return b;
-        }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_mask64x2(a).val.0,
-                self.cvt_to_bytes_mask64x2(b).val.0,
-                SHIFT * 8usize,
-            )
-        };
-        self.cvt_from_bytes_mask64x2(u8x16 {
-            val: crate::support::Aligned128(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask64x2<const SHIFT: usize>(
-        self,
-        a: mask64x2<Self>,
-        b: mask64x2<Self>,
-    ) -> mask64x2<Self> {
-        self.slide_mask64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -3406,7 +3130,7 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
-    fn splat_mask8x32(self, val: i8) -> mask8x32<Self> {
+    fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
         let half = self.splat_mask8x16(val);
         self.combine_mask8x16(half, half)
     }
@@ -3418,105 +3142,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask8x32(self, val: &[i8; 32usize]) -> mask8x32<Self> {
-        mask8x32 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize] {
         unsafe { core::mem::transmute::<int8x16x2_t, [i8; 32usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask8x32(self, a: &mask8x32<Self>) -> &[i8; 32usize] {
-        unsafe { core::mem::transmute::<&int8x16x2_t, &[i8; 32usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask8x32(self, a: &mut mask8x32<Self>) -> &mut [i8; 32usize] {
-        unsafe { core::mem::transmute::<&mut int8x16x2_t, &mut [i8; 32usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask8x32(self, a: mask8x32<Self>, dest: &mut [i8; 32usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i8,
-                dest.as_mut_ptr(),
-                32usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask8x32(self, a: u8x32<Self>) -> mask8x32<Self> {
-        unsafe {
-            mask8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask8x32(self, a: mask8x32<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask8x32<const SHIFT: usize>(
-        self,
-        a: mask8x32<Self>,
-        b: mask8x32<Self>,
-    ) -> mask8x32<Self> {
-        if SHIFT >= 32usize {
-            return b;
-        }
-        let result = unsafe {
-            let a_bytes = self.cvt_to_bytes_mask8x32(a).val.0;
-            let b_bytes = self.cvt_to_bytes_mask8x32(b).val.0;
-            let a_blocks = [a_bytes.0, a_bytes.1];
-            let b_blocks = [b_bytes.0, b_bytes.1];
-            let shift_bytes = SHIFT;
-            uint8x16x2_t(
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        0,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        1,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-            )
-        };
-        self.cvt_from_bytes_mask8x32(u8x32 {
-            val: crate::support::Aligned256(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask8x32<const SHIFT: usize>(
-        self,
-        a: mask8x32<Self>,
-        b: mask8x32<Self>,
-    ) -> mask8x32<Self> {
-        let (a0, a1) = self.split_mask8x32(a);
-        let (b0, b1) = self.split_mask8x32(b);
-        self.combine_mask8x16(
-            self.slide_within_blocks_mask8x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask8x16::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
@@ -4231,7 +3858,7 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
-    fn splat_mask16x16(self, val: i16) -> mask16x16<Self> {
+    fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
         let half = self.splat_mask16x8(val);
         self.combine_mask16x8(half, half)
     }
@@ -4243,105 +3870,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask16x16(self, val: &[i16; 16usize]) -> mask16x16<Self> {
-        mask16x16 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize] {
         unsafe { core::mem::transmute::<int16x8x2_t, [i16; 16usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask16x16(self, a: &mask16x16<Self>) -> &[i16; 16usize] {
-        unsafe { core::mem::transmute::<&int16x8x2_t, &[i16; 16usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask16x16(self, a: &mut mask16x16<Self>) -> &mut [i16; 16usize] {
-        unsafe { core::mem::transmute::<&mut int16x8x2_t, &mut [i16; 16usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask16x16(self, a: mask16x16<Self>, dest: &mut [i16; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i16,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask16x16(self, a: u8x32<Self>) -> mask16x16<Self> {
-        unsafe {
-            mask16x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask16x16(self, a: mask16x16<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask16x16<const SHIFT: usize>(
-        self,
-        a: mask16x16<Self>,
-        b: mask16x16<Self>,
-    ) -> mask16x16<Self> {
-        if SHIFT >= 16usize {
-            return b;
-        }
-        let result = unsafe {
-            let a_bytes = self.cvt_to_bytes_mask16x16(a).val.0;
-            let b_bytes = self.cvt_to_bytes_mask16x16(b).val.0;
-            let a_blocks = [a_bytes.0, a_bytes.1];
-            let b_blocks = [b_bytes.0, b_bytes.1];
-            let shift_bytes = SHIFT * 2usize;
-            uint8x16x2_t(
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        0,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        1,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-            )
-        };
-        self.cvt_from_bytes_mask16x16(u8x32 {
-            val: crate::support::Aligned256(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask16x16<const SHIFT: usize>(
-        self,
-        a: mask16x16<Self>,
-        b: mask16x16<Self>,
-    ) -> mask16x16<Self> {
-        let (a0, a1) = self.split_mask16x16(a);
-        let (b0, b1) = self.split_mask16x16(b);
-        self.combine_mask16x8(
-            self.slide_within_blocks_mask16x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask16x8::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
@@ -5049,7 +4579,7 @@ impl Simd for Neon {
         self.combine_f32x4(self.cvt_f32_u32x4(a0), self.cvt_f32_u32x4(a1))
     }
     #[inline(always)]
-    fn splat_mask32x8(self, val: i32) -> mask32x8<Self> {
+    fn splat_mask32x8(self, val: bool) -> mask32x8<Self> {
         let half = self.splat_mask32x4(val);
         self.combine_mask32x4(half, half)
     }
@@ -5061,105 +4591,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask32x8(self, val: &[i32; 8usize]) -> mask32x8<Self> {
-        mask32x8 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize] {
         unsafe { core::mem::transmute::<int32x4x2_t, [i32; 8usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask32x8(self, a: &mask32x8<Self>) -> &[i32; 8usize] {
-        unsafe { core::mem::transmute::<&int32x4x2_t, &[i32; 8usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask32x8(self, a: &mut mask32x8<Self>) -> &mut [i32; 8usize] {
-        unsafe { core::mem::transmute::<&mut int32x4x2_t, &mut [i32; 8usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask32x8(self, a: mask32x8<Self>, dest: &mut [i32; 8usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i32,
-                dest.as_mut_ptr(),
-                8usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask32x8(self, a: u8x32<Self>) -> mask32x8<Self> {
-        unsafe {
-            mask32x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask32x8(self, a: mask32x8<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask32x8<const SHIFT: usize>(
-        self,
-        a: mask32x8<Self>,
-        b: mask32x8<Self>,
-    ) -> mask32x8<Self> {
-        if SHIFT >= 8usize {
-            return b;
-        }
-        let result = unsafe {
-            let a_bytes = self.cvt_to_bytes_mask32x8(a).val.0;
-            let b_bytes = self.cvt_to_bytes_mask32x8(b).val.0;
-            let a_blocks = [a_bytes.0, a_bytes.1];
-            let b_blocks = [b_bytes.0, b_bytes.1];
-            let shift_bytes = SHIFT * 4usize;
-            uint8x16x2_t(
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        0,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        1,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-            )
-        };
-        self.cvt_from_bytes_mask32x8(u8x32 {
-            val: crate::support::Aligned256(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask32x8<const SHIFT: usize>(
-        self,
-        a: mask32x8<Self>,
-        b: mask32x8<Self>,
-    ) -> mask32x8<Self> {
-        let (a0, a1) = self.split_mask32x8(a);
-        let (b0, b1) = self.split_mask32x8(b);
-        self.combine_mask32x4(
-            self.slide_within_blocks_mask32x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask32x4::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -5597,7 +5030,7 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
-    fn splat_mask64x4(self, val: i64) -> mask64x4<Self> {
+    fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
         let half = self.splat_mask64x2(val);
         self.combine_mask64x2(half, half)
     }
@@ -5609,105 +5042,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask64x4(self, val: &[i64; 4usize]) -> mask64x4<Self> {
-        mask64x4 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize] {
         unsafe { core::mem::transmute::<int64x2x2_t, [i64; 4usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask64x4(self, a: &mask64x4<Self>) -> &[i64; 4usize] {
-        unsafe { core::mem::transmute::<&int64x2x2_t, &[i64; 4usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask64x4(self, a: &mut mask64x4<Self>) -> &mut [i64; 4usize] {
-        unsafe { core::mem::transmute::<&mut int64x2x2_t, &mut [i64; 4usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask64x4(self, a: mask64x4<Self>, dest: &mut [i64; 4usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i64,
-                dest.as_mut_ptr(),
-                4usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask64x4(self, a: u8x32<Self>) -> mask64x4<Self> {
-        unsafe {
-            mask64x4 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask64x4(self, a: mask64x4<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask64x4<const SHIFT: usize>(
-        self,
-        a: mask64x4<Self>,
-        b: mask64x4<Self>,
-    ) -> mask64x4<Self> {
-        if SHIFT >= 4usize {
-            return b;
-        }
-        let result = unsafe {
-            let a_bytes = self.cvt_to_bytes_mask64x4(a).val.0;
-            let b_bytes = self.cvt_to_bytes_mask64x4(b).val.0;
-            let a_blocks = [a_bytes.0, a_bytes.1];
-            let b_blocks = [b_bytes.0, b_bytes.1];
-            let shift_bytes = SHIFT * 8usize;
-            uint8x16x2_t(
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        0,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        1,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-            )
-        };
-        self.cvt_from_bytes_mask64x4(u8x32 {
-            val: crate::support::Aligned256(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask64x4<const SHIFT: usize>(
-        self,
-        a: mask64x4<Self>,
-        b: mask64x4<Self>,
-    ) -> mask64x4<Self> {
-        let (a0, a1) = self.split_mask64x4(a);
-        let (b0, b1) = self.split_mask64x4(b);
-        self.combine_mask64x2(
-            self.slide_within_blocks_mask64x2::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask64x2::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -6847,7 +6183,7 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
-    fn splat_mask8x64(self, val: i8) -> mask8x64<Self> {
+    fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
     }
@@ -6859,123 +6195,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask8x64(self, val: &[i8; 64usize]) -> mask8x64<Self> {
-        mask8x64 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize] {
         unsafe { core::mem::transmute::<int8x16x4_t, [i8; 64usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask8x64(self, a: &mask8x64<Self>) -> &[i8; 64usize] {
-        unsafe { core::mem::transmute::<&int8x16x4_t, &[i8; 64usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask8x64(self, a: &mut mask8x64<Self>) -> &mut [i8; 64usize] {
-        unsafe { core::mem::transmute::<&mut int8x16x4_t, &mut [i8; 64usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask8x64(self, a: mask8x64<Self>, dest: &mut [i8; 64usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i8,
-                dest.as_mut_ptr(),
-                64usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask8x64(self, a: u8x64<Self>) -> mask8x64<Self> {
-        unsafe {
-            mask8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask8x64(self, a: mask8x64<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask8x64<const SHIFT: usize>(
-        self,
-        a: mask8x64<Self>,
-        b: mask8x64<Self>,
-    ) -> mask8x64<Self> {
-        if SHIFT >= 64usize {
-            return b;
-        }
-        let result = unsafe {
-            let a_bytes = self.cvt_to_bytes_mask8x64(a).val.0;
-            let b_bytes = self.cvt_to_bytes_mask8x64(b).val.0;
-            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
-            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
-            let shift_bytes = SHIFT;
-            uint8x16x4_t(
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        0,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        1,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        2,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        3,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-            )
-        };
-        self.cvt_from_bytes_mask8x64(u8x64 {
-            val: crate::support::Aligned512(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask8x64<const SHIFT: usize>(
-        self,
-        a: mask8x64<Self>,
-        b: mask8x64<Self>,
-    ) -> mask8x64<Self> {
-        let (a0, a1) = self.split_mask8x64(a);
-        let (b0, b1) = self.split_mask8x64(b);
-        self.combine_mask8x32(
-            self.slide_within_blocks_mask8x32::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask8x32::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -7721,7 +6942,7 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
-    fn splat_mask16x32(self, val: i16) -> mask16x32<Self> {
+    fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
         let half = self.splat_mask16x16(val);
         self.combine_mask16x16(half, half)
     }
@@ -7733,123 +6954,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask16x32(self, val: &[i16; 32usize]) -> mask16x32<Self> {
-        mask16x32 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize] {
         unsafe { core::mem::transmute::<int16x8x4_t, [i16; 32usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask16x32(self, a: &mask16x32<Self>) -> &[i16; 32usize] {
-        unsafe { core::mem::transmute::<&int16x8x4_t, &[i16; 32usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask16x32(self, a: &mut mask16x32<Self>) -> &mut [i16; 32usize] {
-        unsafe { core::mem::transmute::<&mut int16x8x4_t, &mut [i16; 32usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask16x32(self, a: mask16x32<Self>, dest: &mut [i16; 32usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i16,
-                dest.as_mut_ptr(),
-                32usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask16x32(self, a: u8x64<Self>) -> mask16x32<Self> {
-        unsafe {
-            mask16x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask16x32(self, a: mask16x32<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask16x32<const SHIFT: usize>(
-        self,
-        a: mask16x32<Self>,
-        b: mask16x32<Self>,
-    ) -> mask16x32<Self> {
-        if SHIFT >= 32usize {
-            return b;
-        }
-        let result = unsafe {
-            let a_bytes = self.cvt_to_bytes_mask16x32(a).val.0;
-            let b_bytes = self.cvt_to_bytes_mask16x32(b).val.0;
-            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
-            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
-            let shift_bytes = SHIFT * 2usize;
-            uint8x16x4_t(
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        0,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        1,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        2,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        3,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-            )
-        };
-        self.cvt_from_bytes_mask16x32(u8x64 {
-            val: crate::support::Aligned512(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask16x32<const SHIFT: usize>(
-        self,
-        a: mask16x32<Self>,
-        b: mask16x32<Self>,
-    ) -> mask16x32<Self> {
-        let (a0, a1) = self.split_mask16x32(a);
-        let (b0, b1) = self.split_mask16x32(b);
-        self.combine_mask16x16(
-            self.slide_within_blocks_mask16x16::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask16x16::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -8577,7 +7683,7 @@ impl Simd for Neon {
         self.combine_f32x8(self.cvt_f32_u32x8(a0), self.cvt_f32_u32x8(a1))
     }
     #[inline(always)]
-    fn splat_mask32x16(self, val: i32) -> mask32x16<Self> {
+    fn splat_mask32x16(self, val: bool) -> mask32x16<Self> {
         let half = self.splat_mask32x8(val);
         self.combine_mask32x8(half, half)
     }
@@ -8589,123 +7695,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask32x16(self, val: &[i32; 16usize]) -> mask32x16<Self> {
-        mask32x16 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize] {
         unsafe { core::mem::transmute::<int32x4x4_t, [i32; 16usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask32x16(self, a: &mask32x16<Self>) -> &[i32; 16usize] {
-        unsafe { core::mem::transmute::<&int32x4x4_t, &[i32; 16usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask32x16(self, a: &mut mask32x16<Self>) -> &mut [i32; 16usize] {
-        unsafe { core::mem::transmute::<&mut int32x4x4_t, &mut [i32; 16usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask32x16(self, a: mask32x16<Self>, dest: &mut [i32; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i32,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask32x16(self, a: u8x64<Self>) -> mask32x16<Self> {
-        unsafe {
-            mask32x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask32x16(self, a: mask32x16<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask32x16<const SHIFT: usize>(
-        self,
-        a: mask32x16<Self>,
-        b: mask32x16<Self>,
-    ) -> mask32x16<Self> {
-        if SHIFT >= 16usize {
-            return b;
-        }
-        let result = unsafe {
-            let a_bytes = self.cvt_to_bytes_mask32x16(a).val.0;
-            let b_bytes = self.cvt_to_bytes_mask32x16(b).val.0;
-            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
-            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
-            let shift_bytes = SHIFT * 4usize;
-            uint8x16x4_t(
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        0,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        1,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        2,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        3,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-            )
-        };
-        self.cvt_from_bytes_mask32x16(u8x64 {
-            val: crate::support::Aligned512(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask32x16<const SHIFT: usize>(
-        self,
-        a: mask32x16<Self>,
-        b: mask32x16<Self>,
-    ) -> mask32x16<Self> {
-        let (a0, a1) = self.split_mask32x16(a);
-        let (b0, b1) = self.split_mask32x16(b);
-        self.combine_mask32x8(
-            self.slide_within_blocks_mask32x8::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask32x8::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -9143,7 +8134,7 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
-    fn splat_mask64x8(self, val: i64) -> mask64x8<Self> {
+    fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
         let half = self.splat_mask64x4(val);
         self.combine_mask64x4(half, half)
     }
@@ -9155,123 +8146,8 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn load_array_ref_mask64x8(self, val: &[i64; 8usize]) -> mask64x8<Self> {
-        mask64x8 {
-            val: unsafe { core::mem::transmute_copy(val) },
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
         unsafe { core::mem::transmute::<int64x2x4_t, [i64; 8usize]>(a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_ref_mask64x8(self, a: &mask64x8<Self>) -> &[i64; 8usize] {
-        unsafe { core::mem::transmute::<&int64x2x4_t, &[i64; 8usize]>(&a.val.0) }
-    }
-    #[inline(always)]
-    fn as_array_mut_mask64x8(self, a: &mut mask64x8<Self>) -> &mut [i64; 8usize] {
-        unsafe { core::mem::transmute::<&mut int64x2x4_t, &mut [i64; 8usize]>(&mut a.val.0) }
-    }
-    #[inline(always)]
-    fn store_array_mask64x8(self, a: mask64x8<Self>, dest: &mut [i64; 8usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i64,
-                dest.as_mut_ptr(),
-                8usize,
-            );
-        }
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_mask64x8(self, a: u8x64<Self>) -> mask64x8<Self> {
-        unsafe {
-            mask64x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_mask64x8(self, a: mask64x8<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
-        }
-    }
-    #[inline(always)]
-    fn slide_mask64x8<const SHIFT: usize>(
-        self,
-        a: mask64x8<Self>,
-        b: mask64x8<Self>,
-    ) -> mask64x8<Self> {
-        if SHIFT >= 8usize {
-            return b;
-        }
-        let result = unsafe {
-            let a_bytes = self.cvt_to_bytes_mask64x8(a).val.0;
-            let b_bytes = self.cvt_to_bytes_mask64x8(b).val.0;
-            let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
-            let b_blocks = [b_bytes.0, b_bytes.1, b_bytes.2, b_bytes.3];
-            let shift_bytes = SHIFT * 8usize;
-            uint8x16x4_t(
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        0,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        1,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        2,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-                {
-                    let [lo, hi] = crate::support::cross_block_slide_blocks_at(
-                        &a_blocks,
-                        &b_blocks,
-                        3,
-                        shift_bytes,
-                    );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
-                },
-            )
-        };
-        self.cvt_from_bytes_mask64x8(u8x64 {
-            val: crate::support::Aligned512(result),
-            simd: self,
-        })
-    }
-    #[inline(always)]
-    fn slide_within_blocks_mask64x8<const SHIFT: usize>(
-        self,
-        a: mask64x8<Self>,
-        b: mask64x8<Self>,
-    ) -> mask64x8<Self> {
-        let (a0, a1) = self.split_mask64x8(a);
-        let (b0, b1) = self.split_mask64x8(b);
-        self.combine_mask64x4(
-            self.slide_within_blocks_mask64x4::<SHIFT>(a0, b0),
-            self.slide_within_blocks_mask64x4::<SHIFT>(a1, b1),
-        )
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
