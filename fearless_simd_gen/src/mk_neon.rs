@@ -6,7 +6,7 @@ use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
     generic_as_array, generic_from_array, generic_from_bytes, generic_op_name, generic_store_array,
-    generic_to_bytes,
+    generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity, valid_reinterpret};
@@ -82,14 +82,7 @@ impl Level for Neon {
         match sig {
             OpSig::Splat => {
                 let expr = neon::expr(method, vec_ty, &[quote! { val }]);
-                let normalize_mask = if vec_ty.scalar == ScalarType::Mask {
-                    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                    quote! {
-                        let val: #scalar = if val { !0 } else { 0 };
-                    }
-                } else {
-                    quote! {}
-                };
+                let normalize_mask = integer_lane_mask_splat_arg(vec_ty);
                 quote! {
                     #method_sig {
                         unsafe {
