@@ -787,9 +787,18 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
-        let lanes: [i8; 16usize] =
-            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
-        lanes.simd_into(self)
+        unsafe {
+            let shifts = vld1q_s16([15, 14, 13, 12, 11, 10, 9, 8].as_ptr());
+            let lo = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
+            let hi = vshlq_u16(vdupq_n_u16((bits >> 8) as u16), shifts);
+            let lo = vcltq_s16(vreinterpretq_s16_u16(lo), vdupq_n_s16(0));
+            let hi = vcltq_s16(vreinterpretq_s16_u16(hi), vdupq_n_s16(0));
+            vcombine_s8(
+                vmovn_s16(vreinterpretq_s16_u16(lo)),
+                vmovn_s16(vreinterpretq_s16_u16(hi)),
+            )
+            .simd_into(self)
+        }
     }
     #[inline(always)]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
@@ -1290,9 +1299,12 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
-        let lanes: [i16; 8usize] =
-            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
-        lanes.simd_into(self)
+        unsafe {
+            let shifts = vld1q_s16([15, 14, 13, 12, 11, 10, 9, 8].as_ptr());
+            let shifted = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
+            let mask = vcltq_s16(vreinterpretq_s16_u16(shifted), vdupq_n_s16(0));
+            vreinterpretq_s16_u16(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64 {
@@ -1794,9 +1806,12 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
-        let lanes: [i32; 4usize] =
-            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
-        lanes.simd_into(self)
+        unsafe {
+            let shifts = vld1q_s32([31, 30, 29, 28].as_ptr());
+            let shifted = vshlq_u32(vdupq_n_u32(bits as u32), shifts);
+            let mask = vcltq_s32(vreinterpretq_s32_u32(shifted), vdupq_n_s32(0));
+            vreinterpretq_s32_u32(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64 {
@@ -2111,9 +2126,12 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
-        let lanes: [i64; 2usize] =
-            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
-        lanes.simd_into(self)
+        unsafe {
+            let shifts = vld1q_s64([63, 62].as_ptr());
+            let shifted = vshlq_u64(vdupq_n_u64(bits), shifts);
+            let mask = vcltq_s64(vreinterpretq_s64_u64(shifted), vdupq_n_s64(0));
+            vreinterpretq_s64_u64(mask).simd_into(self)
+        }
     }
     #[inline(always)]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64 {

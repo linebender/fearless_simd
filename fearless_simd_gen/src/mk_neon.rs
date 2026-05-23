@@ -5,8 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    generic_as_array, generic_from_array, generic_from_bytes, generic_mask_from_bitmask,
-    generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
+    generic_as_array, generic_from_array, generic_from_bytes, generic_op_name, generic_store_array,
+    generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity, valid_reinterpret};
@@ -530,7 +530,7 @@ impl Level for Neon {
                     }
                 }
             }
-            OpSig::MaskFromBitmask => generic_mask_from_bitmask(method_sig, vec_ty),
+            OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(method_sig, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(method_sig, vec_ty),
             OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
             OpSig::AsArray { kind } => {
@@ -564,6 +564,68 @@ impl Level for Neon {
 }
 
 impl Neon {
+    fn handle_mask_from_bitmask(&self, method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "mask bitmask conversion only operates on masks"
+        );
+        assert_eq!(
+            vec_ty.n_bits(),
+            self.native_width(),
+            "wide masks should use the generic split implementation"
+        );
+
+        match vec_ty.scalar_bits {
+            8 => quote! {
+                #method_sig {
+                    unsafe {
+                        let shifts = vld1q_s16([15, 14, 13, 12, 11, 10, 9, 8].as_ptr());
+                        let lo = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
+                        let hi = vshlq_u16(vdupq_n_u16((bits >> 8) as u16), shifts);
+                        let lo = vcltq_s16(vreinterpretq_s16_u16(lo), vdupq_n_s16(0));
+                        let hi = vcltq_s16(vreinterpretq_s16_u16(hi), vdupq_n_s16(0));
+                        vcombine_s8(
+                            vmovn_s16(vreinterpretq_s16_u16(lo)),
+                            vmovn_s16(vreinterpretq_s16_u16(hi)),
+                        ).simd_into(self)
+                    }
+                }
+            },
+            16 => quote! {
+                #method_sig {
+                    unsafe {
+                        let shifts = vld1q_s16([15, 14, 13, 12, 11, 10, 9, 8].as_ptr());
+                        let shifted = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
+                        let mask = vcltq_s16(vreinterpretq_s16_u16(shifted), vdupq_n_s16(0));
+                        vreinterpretq_s16_u16(mask).simd_into(self)
+                    }
+                }
+            },
+            32 => quote! {
+                #method_sig {
+                    unsafe {
+                        let shifts = vld1q_s32([31, 30, 29, 28].as_ptr());
+                        let shifted = vshlq_u32(vdupq_n_u32(bits as u32), shifts);
+                        let mask = vcltq_s32(vreinterpretq_s32_u32(shifted), vdupq_n_s32(0));
+                        vreinterpretq_s32_u32(mask).simd_into(self)
+                    }
+                }
+            },
+            64 => quote! {
+                #method_sig {
+                    unsafe {
+                        let shifts = vld1q_s64([63, 62].as_ptr());
+                        let shifted = vshlq_u64(vdupq_n_u64(bits), shifts);
+                        let mask = vcltq_s64(vreinterpretq_s64_u64(shifted), vdupq_n_s64(0));
+                        vreinterpretq_s64_u64(mask).simd_into(self)
+                    }
+                }
+            },
+            _ => unimplemented!(),
+        }
+    }
+
     fn handle_mask_to_bitmask(&self, method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
         assert_eq!(
             vec_ty.scalar,
