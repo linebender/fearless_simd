@@ -185,6 +185,13 @@ impl Level for X86 {
             return false;
         }
 
+        if matches!(op.sig, OpSig::MaskToBitmask)
+            && vec_ty.scalar == ScalarType::Mask
+            && vec_ty.scalar_bits == 16
+        {
+            return false;
+        }
+
         true
     }
 
@@ -486,6 +493,54 @@ fn mask_from_bitmask_wide_bytes(native_width: usize, vec_ty: &VecType) -> TokenS
     }
 }
 
+fn mask_to_bitmask_words(native_width: usize, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar_bits, 16,
+        "only 16-bit masks use word packing to produce bitmasks"
+    );
+
+    match (native_width, vec_ty.n_bits()) {
+        (128 | 256, 128) => quote! {
+            {
+                let packed = _mm_packs_epi16(a.into(), a.into());
+                _mm_movemask_epi8(packed) as u8 as u64
+            }
+        },
+        (128, 256) => quote! {
+            {
+                let packed = _mm_packs_epi16(a.val.0[0], a.val.0[1]);
+                _mm_movemask_epi8(packed) as u32 as u64
+            }
+        },
+        (128, 512) => quote! {
+            {
+                let lo = _mm_packs_epi16(a.val.0[0], a.val.0[1]);
+                let hi = _mm_packs_epi16(a.val.0[2], a.val.0[3]);
+                let lo = _mm_movemask_epi8(lo) as u32 as u64;
+                let hi = _mm_movemask_epi8(hi) as u32 as u64;
+                lo | (hi << 16usize)
+            }
+        },
+        (256, 256) => quote! {
+            {
+                let halves: [__m128i; 2usize] = core::mem::transmute(a.val.0);
+                let packed = _mm_packs_epi16(halves[0], halves[1]);
+                _mm_movemask_epi8(packed) as u32 as u64
+            }
+        },
+        (256, 512) => quote! {
+            {
+                let lo = _mm256_movemask_epi8(a.val.0[0]) as u32;
+                let hi = _mm256_movemask_epi8(a.val.0[1]) as u32;
+                let lo = _pext_u32(lo, 0x5555_5555u32) as u64;
+                let hi = _pext_u32(hi, 0x5555_5555u32) as u64;
+                lo | (hi << 16usize)
+            }
+        },
+        _ => unimplemented!(),
+    }
+}
+
 fn mask_bit_pattern_128() -> TokenStream {
     let lanes = (0..16).map(|i| {
         let bit = 1u16 << (i % 8);
@@ -624,37 +679,11 @@ impl X86 {
                 }
             }
             16 => {
-                let bits_ty = vec_ty.reinterpret(ScalarType::Int, 8);
-                let movemask = simple_intrinsic("movemask", &bits_ty);
-                let (even_bits, pair_bits, nibble_bits, byte_bits, word_bits) = match vec_ty.len {
-                    8 => (0x5555u64, 0x3333u64, 0x0f0fu64, 0x00ffu64, 0),
-                    16 => (
-                        0x5555_5555u64,
-                        0x3333_3333u64,
-                        0x0f0f_0f0fu64,
-                        0x00ff_00ffu64,
-                        0x0000_ffffu64,
-                    ),
-                    _ => unimplemented!(),
-                };
-                let merge_words = (vec_ty.len > 8).then(|| {
-                    quote! {
-                        bits = (bits | (bits >> 8)) & #word_bits;
-                    }
-                });
-
+                let bits = mask_to_bitmask_words(self.native_width(), vec_ty);
                 quote! {
                     #method_sig {
                         unsafe {
-                            // `_mm*_movemask_epi8` returns one bit per byte. For 16-bit masks both bytes have the
-                            // same sign bit, so keep one byte bit per lane and compact those bits.
-                            let mut bits = #movemask(a.into()) as u32 as u64;
-                            bits &= #even_bits;
-                            bits = (bits | (bits >> 1)) & #pair_bits;
-                            bits = (bits | (bits >> 2)) & #nibble_bits;
-                            bits = (bits | (bits >> 4)) & #byte_bits;
-                            #merge_words
-                            bits
+                            #bits
                         }
                     }
                 }
