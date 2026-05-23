@@ -10,7 +10,6 @@ use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
 mod harness;
-mod mask_methods;
 mod soundness;
 
 // Ensure that we can cast between generic native-width vectors
