@@ -862,16 +862,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
-        let lanes = self.as_array_mask8x16(a);
-        let mut bits = 0u64;
-        let mut i = 0;
-        while i < 16usize {
-            if lanes[i] != 0 {
-                bits |= 1u64 << i;
-            }
-            i += 1;
-        }
-        bits
+        i8x16_bitmask(a.into()) as u64
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -1371,16 +1362,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64 {
-        let lanes = self.as_array_mask16x8(a);
-        let mut bits = 0u64;
-        let mut i = 0;
-        while i < 8usize {
-            if lanes[i] != 0 {
-                bits |= 1u64 << i;
-            }
-            i += 1;
-        }
-        bits
+        i16x8_bitmask(a.into()) as u64
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -1884,16 +1866,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64 {
-        let lanes = self.as_array_mask32x4(a);
-        let mut bits = 0u64;
-        let mut i = 0;
-        while i < 4usize {
-            if lanes[i] != 0 {
-                bits |= 1u64 << i;
-            }
-            i += 1;
-        }
-        bits
+        i32x4_bitmask(a.into()) as u64
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -2239,16 +2212,7 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64 {
-        let lanes = self.as_array_mask64x2(a);
-        let mut bits = 0u64;
-        let mut i = 0;
-        while i < 2usize {
-            if lanes[i] != 0 {
-                bits |= 1u64 << i;
-            }
-            i += 1;
-        }
-        bits
+        i64x2_bitmask(a.into()) as u64
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {

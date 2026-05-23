@@ -7,8 +7,8 @@ use quote::{format_ident, quote};
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_mask_to_bitmask, generic_op_name, generic_store_array,
-    generic_to_bytes, integer_lane_mask_splat_arg, scalar_binary,
+    generic_from_bytes, generic_op_name, generic_store_array, generic_to_bytes,
+    integer_lane_mask_splat_arg, scalar_binary,
 };
 use crate::level::Level;
 use crate::ops::{Op, Quantifier, SlideGranularity, valid_reinterpret};
@@ -67,6 +67,27 @@ fn mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     quote! {
         #method_sig {
             #expr
+        }
+    }
+}
+
+fn mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "mask bitmask conversion only operates on masks"
+    );
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "WASM SIMD mask bitmask lowering only handles one native vector"
+    );
+
+    let intrinsic = format_ident!("i{}x{}_bitmask", vec_ty.scalar_bits, vec_ty.len);
+
+    quote! {
+        #method_sig {
+            #intrinsic(a.into()) as u64
         }
     }
 }
@@ -563,7 +584,7 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::MaskFromBitmask => mask_from_bitmask(method_sig, vec_ty),
-            OpSig::MaskToBitmask => generic_mask_to_bitmask(method_sig, vec_ty),
+            OpSig::MaskToBitmask => mask_to_bitmask(method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,
