@@ -6,8 +6,7 @@ use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
     generic_as_array, generic_from_array, generic_from_bytes, generic_mask_from_bitmask,
-    generic_mask_to_bitmask, generic_op_name, generic_store_array, generic_to_bytes,
-    integer_lane_mask_splat_arg,
+    generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity, valid_reinterpret};
@@ -532,7 +531,7 @@ impl Level for Neon {
                 }
             }
             OpSig::MaskFromBitmask => generic_mask_from_bitmask(method_sig, vec_ty),
-            OpSig::MaskToBitmask => generic_mask_to_bitmask(method_sig, vec_ty),
+            OpSig::MaskToBitmask => self.handle_mask_to_bitmask(method_sig, vec_ty),
             OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
             OpSig::AsArray { kind } => {
                 generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
@@ -560,6 +559,68 @@ impl Level for Neon {
                     }
                 }
             }
+        }
+    }
+}
+
+impl Neon {
+    fn handle_mask_to_bitmask(&self, method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "mask bitmask conversion only operates on masks"
+        );
+        assert_eq!(
+            vec_ty.n_bits(),
+            self.native_width(),
+            "wide masks should use the generic split implementation"
+        );
+
+        match vec_ty.scalar_bits {
+            8 => quote! {
+                #method_sig {
+                    unsafe {
+                        let weights = vld1q_u8([
+                            1, 2, 4, 8, 16, 32, 64, 128,
+                            1, 2, 4, 8, 16, 32, 64, 128,
+                        ].as_ptr());
+                        let bits = vandq_u8(vreinterpretq_u8_s8(a.into()), weights);
+                        let lo = vaddv_u8(vget_low_u8(bits)) as u64;
+                        let hi = vaddv_u8(vget_high_u8(bits)) as u64;
+                        lo | (hi << 8)
+                    }
+                }
+            },
+            16 => quote! {
+                #method_sig {
+                    unsafe {
+                        let weights = vld1q_u16([
+                            1, 2, 4, 8, 16, 32, 64, 128,
+                        ].as_ptr());
+                        let bits = vandq_u16(vreinterpretq_u16_s16(a.into()), weights);
+                        vaddvq_u16(bits) as u64
+                    }
+                }
+            },
+            32 => quote! {
+                #method_sig {
+                    unsafe {
+                        let weights = vld1q_u32([1, 2, 4, 8].as_ptr());
+                        let bits = vandq_u32(vreinterpretq_u32_s32(a.into()), weights);
+                        vaddvq_u32(bits) as u64
+                    }
+                }
+            },
+            64 => quote! {
+                #method_sig {
+                    unsafe {
+                        let weights = vld1q_u64([1, 2].as_ptr());
+                        let bits = vandq_u64(vreinterpretq_u64_s64(a.into()), weights);
+                        vaddvq_u64(bits)
+                    }
+                }
+            },
+            _ => unimplemented!(),
         }
     }
 }

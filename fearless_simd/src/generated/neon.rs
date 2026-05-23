@@ -793,16 +793,14 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
-        let lanes = self.as_array_mask8x16(a);
-        let mut bits = 0u64;
-        let mut i = 0;
-        while i < 16usize {
-            if lanes[i] != 0 {
-                bits |= 1u64 << i;
-            }
-            i += 1;
+        unsafe {
+            let weights =
+                vld1q_u8([1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128].as_ptr());
+            let bits = vandq_u8(vreinterpretq_u8_s8(a.into()), weights);
+            let lo = vaddv_u8(vget_low_u8(bits)) as u64;
+            let hi = vaddv_u8(vget_high_u8(bits)) as u64;
+            lo | (hi << 8)
         }
-        bits
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -1298,16 +1296,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64 {
-        let lanes = self.as_array_mask16x8(a);
-        let mut bits = 0u64;
-        let mut i = 0;
-        while i < 8usize {
-            if lanes[i] != 0 {
-                bits |= 1u64 << i;
-            }
-            i += 1;
+        unsafe {
+            let weights = vld1q_u16([1, 2, 4, 8, 16, 32, 64, 128].as_ptr());
+            let bits = vandq_u16(vreinterpretq_u16_s16(a.into()), weights);
+            vaddvq_u16(bits) as u64
         }
-        bits
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -1807,16 +1800,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64 {
-        let lanes = self.as_array_mask32x4(a);
-        let mut bits = 0u64;
-        let mut i = 0;
-        while i < 4usize {
-            if lanes[i] != 0 {
-                bits |= 1u64 << i;
-            }
-            i += 1;
+        unsafe {
+            let weights = vld1q_u32([1, 2, 4, 8].as_ptr());
+            let bits = vandq_u32(vreinterpretq_u32_s32(a.into()), weights);
+            vaddvq_u32(bits) as u64
         }
-        bits
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -2129,16 +2117,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64 {
-        let lanes = self.as_array_mask64x2(a);
-        let mut bits = 0u64;
-        let mut i = 0;
-        while i < 2usize {
-            if lanes[i] != 0 {
-                bits |= 1u64 << i;
-            }
-            i += 1;
+        unsafe {
+            let weights = vld1q_u64([1, 2].as_ptr());
+            let bits = vandq_u64(vreinterpretq_u64_s64(a.into()), weights);
+            vaddvq_u64(bits)
         }
-        bits
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
