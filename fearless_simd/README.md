@@ -22,7 +22,7 @@
 
 <!-- We use cargo-rdme to update the README with the contents of lib.rs.
 To edit the following section, update it in lib.rs, then run:
-cargo rdme --workspace-project=fearless_simd --heading-base-level=0
+cargo rdme --workspace-project=fearless_simd
 Full documentation at https://github.com/orium/cargo-rdme -->
 
 <!-- Intra-doc links used in lib.rs should be evaluated here. 
@@ -30,13 +30,16 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 
 [libm]: https://crates.io/crates/libm
 [`f32x4`]: https://docs.rs/fearless_simd/latest/fearless_simd/generated/simd_types/struct.f32x4.html
-[`Simd`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/generated/simd_trait/trait.Simd.html
-[`SimdFrom`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/traits/trait.SimdFrom.html
-[SimdBase::from_slice]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/generated/simd_trait/trait.SimdBase.html#tymethod.from_slice
-[`dispatch`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/macros/macro.dispatch.html
-[`Level`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/enum.Level.html
-[`Level::new`]: https://docs.rs/fearless_simd/0.2.0/fearless_simd/enum.Level.html#method.new
+[`Simd`]: https://docs.rs/fearless_simd/latest/fearless_simd/generated/simd_trait/trait.Simd.html
+[`SimdFrom`]: https://docs.rs/fearless_simd/latest/fearless_simd/traits/trait.SimdFrom.html
+[SimdBase::from_slice]: https://docs.rs/fearless_simd/latest/fearless_simd/generated/simd_trait/trait.SimdBase.html#tymethod.from_slice
+[`dispatch`]: https://docs.rs/fearless_simd/latest/fearless_simd/macro.dispatch.html
+[`Level`]: https://docs.rs/fearless_simd/latest/fearless_simd/enum.Level.html
+[`Level::new`]: https://docs.rs/fearless_simd/latest/fearless_simd/enum.Level.html#method.new
 [`std::simd`]: https://doc.rust-lang.org/std/simd/index.html
+[kernel]: https://docs.rs/fearless_simd/latest/fearless_simd/macro.kernel.html
+[Simd::vectorize]: https://docs.rs/fearless_simd/latest/fearless_simd/trait.Simd.html#tymethod.vectorize
+
 <!-- cargo-rdme start -->
 
 A helper library to make SIMD more friendly.
@@ -56,7 +59,7 @@ These can be created in a SIMD context using the [`SimdFrom`] trait, or the
 [`from_slice`][SimdBase::from_slice] associated function.
 
 To call a function with the best available target features and get the associated `Simd`
-implementation, use the [`dispatch!()`] macro:
+implementation, use the [`dispatch`] macro:
 
 ```rust
 use fearless_simd::{Level, Simd, dispatch};
@@ -73,16 +76,16 @@ dispatch!(level, simd => sigmoid(simd, &[/*...*/], &mut [/*...*/]));
 A few things to note:
 
 1) `sigmoid` is generic over any `Simd` type.
-2) The [`dispatch`] macro is used to invoke the given function with the target features associated with the supplied [`Level`].
-3) The function or closure passed to [`dispatch!()`] should be `#[inline(always)]`.
+2) [`dispatch`] is used to invoke the given function with the target features associated with the supplied [`Level`].
+3) The function or closure passed to [`dispatch`] should be `#[inline(always)]`.
    The performance of the SIMD implementation may be poor if that isn't the case. See [the section on inlining for details](#inlining)
 
-The first parameter to [`dispatch!()`] is the [`Level`].
+The first parameter to [`dispatch`] is the [`Level`].
 If you are writing an application, you should create this once (using [`Level::new`]), and pass it to any function which wants to use SIMD.
 This type stores which instruction sets are available for the current process, which is used
 in the macro to dispatch to the most optimal variant of the supplied function for this process.
 
-# Inlining
+## Inlining
 
 Fearless SIMD relies heavily on Rust's inlining support to create functions which have the
 given target features enabled.
@@ -91,8 +94,8 @@ As such, most functions which you write when using Fearless SIMD should have the
 There is a rule of thumb for how to achieve things in Fearless SIMD:
 
 - All SIMD functions need `#[inline(always)]`.
-- Use [`dispatch!`] when calling SIMD code from non-SIMD code.
-- Use [`vectorize()`](Simd::vectorize) when calling SIMD from SIMD if you don't want to force inlining.
+- Use [`dispatch`] when calling SIMD code from non-SIMD code.
+- Use [`vectorize()`][Simd::vectorize] when calling SIMD from SIMD if you don't want to force inlining.
 
 We currently don't have docs explaining why this is the case.
 You can read [this Zulip conversation](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433)
@@ -109,11 +112,11 @@ E.g. We might want names for these, e.g.:
 TODO: Talk about writing versions of functions which can be called in other `S: Simd` functions.
 -->
 
-# Platform-specific intrinsics
+## Platform-specific intrinsics
 
-If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`](kernel) macro.
+If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`][kernel] macro.
 
-# WebAssembly
+## WebAssembly
 
 WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle for WASM, one with SIMD and one without,
 then select the appropriate one for your user's browser. This can be done via [the `wasm-feature-detect`
@@ -133,7 +136,7 @@ If you want to compile both SIMD and non-SIMD versions of your WebAssembly libra
 that builds it once with the `RUSTFLAGS` specified, and once without. [Cargo currently does not allow specifying compiler flags
 per-profile.](https://github.com/rust-lang/cargo/issues/10271)
 
-## Relaxed SIMD
+### Relaxed SIMD
 
 Fearless SIMD can make use of the [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 WebAssembly instructions, if the requisite target feature is enabled. These instructions can return implementation-dependent results
@@ -143,12 +146,12 @@ At the time of writing, relaxed SIMD is only supported in Chrome. To make use of
 with relaxed SIMD enabled (`RUSTFLAGS="-Ctarget-feature=+simd128,+relaxed-simd"`) and one with it disabled, and then feature-detect at
 runtime.
 
-# Credits
+## Credits
 
 This crate was inspired by [`pulp`], [`std::simd`], among others in the Rust ecosystem, though makes many decisions differently.
 It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
 
-# Feature Flags
+## Feature Flags
 
 The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
 

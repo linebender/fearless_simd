@@ -1,6 +1,9 @@
 // Copyright 2024 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+// After you edit the crate's doc comment, run this command, then check README.md for any missing links
+// cargo rdme --workspace-project=fearless_simd
+
 //! A helper library to make SIMD more friendly.
 //!
 //! Fearless SIMD exposes safe SIMD with ergonomic multi-versioning in Rust.
@@ -18,7 +21,7 @@
 //! [`from_slice`][SimdBase::from_slice] associated function.
 //!
 //! To call a function with the best available target features and get the associated `Simd`
-//! implementation, use the [`dispatch!()`] macro:
+//! implementation, use the [`dispatch`] macro:
 //!
 //! ```rust
 //! use fearless_simd::{Level, Simd, dispatch};
@@ -35,11 +38,11 @@
 //! A few things to note:
 //!
 //! 1) `sigmoid` is generic over any `Simd` type.
-//! 2) The [`dispatch`] macro is used to invoke the given function with the target features associated with the supplied [`Level`].
-//! 3) The function or closure passed to [`dispatch!()`] should be `#[inline(always)]`.
+//! 2) [`dispatch`] is used to invoke the given function with the target features associated with the supplied [`Level`].
+//! 3) The function or closure passed to [`dispatch`] should be `#[inline(always)]`.
 //!    The performance of the SIMD implementation may be poor if that isn't the case. See [the section on inlining for details](#inlining)
 //!
-//! The first parameter to [`dispatch!()`] is the [`Level`].
+//! The first parameter to [`dispatch`] is the [`Level`].
 //! If you are writing an application, you should create this once (using [`Level::new`]), and pass it to any function which wants to use SIMD.
 //! This type stores which instruction sets are available for the current process, which is used
 //! in the macro to dispatch to the most optimal variant of the supplied function for this process.
@@ -53,8 +56,8 @@
 //! There is a rule of thumb for how to achieve things in Fearless SIMD:
 //!
 //! - All SIMD functions need `#[inline(always)]`.
-//! - Use [`dispatch!`] when calling SIMD code from non-SIMD code.
-//! - Use [`vectorize()`](Simd::vectorize) when calling SIMD from SIMD if you don't want to force inlining.
+//! - Use [`dispatch`] when calling SIMD code from non-SIMD code.
+//! - Use [`vectorize()`][Simd::vectorize] when calling SIMD from SIMD if you don't want to force inlining.
 //!
 //! We currently don't have docs explaining why this is the case.
 //! You can read [this Zulip conversation](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433)
@@ -73,7 +76,7 @@
 //!
 //! # Platform-specific intrinsics
 //!
-//! If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`](kernel) macro.
+//! If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`][kernel] macro.
 //!
 //! # WebAssembly
 //!
@@ -274,7 +277,7 @@ impl Level {
     /// you should construct the relevant variants yourself, using whatever
     /// way your specific chip supports accessing the current level.
     ///
-    /// This value should be passed to [`dispatch!()`].
+    /// This value should be passed to [`dispatch`].
     #[cfg(any(feature = "std", target_arch = "wasm32"))]
     #[must_use]
     #[expect(
@@ -414,8 +417,10 @@ impl Level {
     ///
     /// This method should be preferred over matching against the `Neon` variant of self,
     /// because if Fearless SIMD gets support for an instruction set which is a superset of Neon,
-    /// this method will return a value even if that "better" instruction set is available.
+    /// this method will return the Neon token even if that "better" instruction set is available.
     ///
+    /// This can be used in combination with the [kernel] macro to safely access level-specific
+    /// SIMD intrinsics.
     #[cfg(target_arch = "aarch64")]
     #[inline]
     pub fn as_neon(self) -> Option<Neon> {
@@ -433,8 +438,10 @@ impl Level {
     ///
     /// This method should be preferred over matching against the `WasmSimd128` variant of self,
     /// because if Fearless SIMD gets support for an instruction set which is a superset of SIMD 128,
-    /// this method will return a value even if that "better" instruction set is available.
+    /// this method will return the SIMD 128 token even if that "better" instruction set is available.
     ///
+    /// This can be used in combination with the [kernel] macro to safely access level-specific
+    /// SIMD intrinsics.
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[inline]
     pub fn as_wasm_simd128(self) -> Option<WasmSimd128> {
@@ -448,12 +455,17 @@ impl Level {
         }
     }
 
-    /// If this is a proof that SSE4.2 (or better) is available, access that instruction set.
+    /// If this is a proof that x86-64-v2 feature set (or better) is available, access that
+    /// instruction set.
+    ///
+    /// See [`Sse4_2::new_unchecked`] for the exact list of CPU features this token enables.
     ///
     /// This method should be preferred over matching against the `Sse4_2` variant of self,
-    /// because if Fearless SIMD gets support for an instruction set which is a superset of SSE4.2,
-    /// this method will return a value even if that "better" instruction set is available.
+    /// because if the CPU supports a superset of SSE4.2 (e.g. AVX2 or AVX-512),
+    /// this method will return the SSE4.2 token even if that "better" instruction set is available.
     ///
+    /// This can be used in combination with the [kernel] macro to safely access level-specific
+    /// SIMD intrinsics.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[inline]
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
@@ -485,10 +497,14 @@ impl Level {
     /// If this is a proof that the x86-64-v3 feature set (or better) is available, access that
     /// instruction set.
     ///
-    /// This method should be preferred over matching against the `AVX2` variant of self,
-    /// because if Fearless SIMD gets support for an instruction set which is a superset of AVX2,
-    /// this method will return a value even if that "better" instruction set is available.
+    /// See [`Avx2::new_unchecked`] for the exact list of CPU features this token enables.
     ///
+    /// This method should be preferred over matching against the `Avx2` variant of self,
+    /// because if the CPU supports a superset of AVX2 (e.g. AVX-512),
+    /// this method will return the AVX2 token even if that "better" instruction set is available.
+    ///
+    /// This can be used in combination with the [kernel] macro to safely access level-specific
+    /// SIMD intrinsics.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[inline]
     pub fn as_avx2(self) -> Option<Avx2> {
@@ -608,7 +624,7 @@ impl Level {
 
     /// Dispatch `f` to a context where the target features which this `Level` proves are available are [enabled].
     ///
-    /// Most users of Fearless SIMD should prefer to use [`dispatch!()`] to
+    /// Most users of Fearless SIMD should prefer to use [`dispatch`] to
     /// explicitly vectorize a function. That has a better developer experience
     /// than an implementation of `WithSimd`, and is less likely to miss a vectorization
     /// opportunity.
