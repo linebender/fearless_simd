@@ -147,6 +147,14 @@ impl Level for Fallback {
                 }
             }
             OpSig::Unary => {
+                if method == "approximate_recip" {
+                    return quote! {
+                        #method_sig {
+                            1.0 / a
+                        }
+                    };
+                }
+
                 let items = make_list(
                     (0..vec_ty.len)
                         .map(|idx| {

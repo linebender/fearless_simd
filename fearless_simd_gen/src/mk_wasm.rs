@@ -94,6 +94,15 @@ impl Level for WasmSimd128 {
                     quote! {
                         self.#sub(a, self.#trunc(a))
                     }
+                } else if matches!(method, "approximate_recip") {
+                    assert_eq!(
+                        vec_ty.scalar,
+                        ScalarType::Float,
+                        "only float supports approximate_recip"
+                    );
+                    quote! {
+                        1.0 / a
+                    }
                 } else {
                     let expr = wasm::expr(method, vec_ty, &args);
                     quote! { #expr.simd_into(self) }
