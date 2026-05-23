@@ -36,10 +36,6 @@ env:
 # Using cargo-hack also allows us to more easily test the feature matrix of our packages.
 # We use --each-feature & --optional-deps which will run a separate check for every feature.
 #
-# We use cargo-nextest, which has a faster concurrency model for running tests.
-# However cargo-nextest does not support running doc tests, so we also have a cargo test --doc step.
-# For more information see https://github.com/nextest-rs/nextest/issues/16
-#
 # The MSRV jobs run only cargo check because different clippy versions can disagree on goals and
 # running tests introduces dev dependencies which may require a higher MSRV than the bare package.
 #
@@ -215,21 +211,13 @@ jobs:
           toolchain: ${{ env.RUST_STABLE_VER }}
           targets: ${{ matrix.platform.target }}
 
-      - name: install cargo-nextest
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-nextest
-
       - name: restore cache
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.event_name != 'merge_group' }}
 
-      - name: cargo nextest
-        run: cargo nextest run --workspace --locked --all-features --no-fail-fast --target ${{ matrix.platform.target }}
-
-      - name: cargo test --doc
-        run: cargo test --doc --workspace --locked --all-features --no-fail-fast --target ${{ matrix.platform.target }}
+      - name: cargo test
+        run: cargo test --workspace --locked --all-features --no-fail-fast --target ${{ matrix.platform.target }}
 
   test-sde:
     name: cargo test in an emulator
@@ -368,10 +356,10 @@ jobs:
         with:
           save-if: ${{ github.event_name != 'merge_group' }}
 
-      - name: install cargo-nextest and wasmtime
+      - name: install wasmtime
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-nextest,wasmtime-cli
+          tool: wasmtime-cli
 
       # We test using wasm32-wasip1, but want to make sure that wasm32-unknown-unknown still builds
       - name: cargo build (wasm32-unknown-unknown)
@@ -384,28 +372,16 @@ jobs:
           cargo build --target wasm32-unknown-unknown \
             --config 'target.wasm32-unknown-unknown.rustflags = "-Ctarget-feature=+simd128,+relaxed-simd"'
 
-      - name: cargo nextest
+      - name: cargo test
         run: |
-          cargo nextest run --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
-            --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
-            --config 'target.wasm32-wasip1.runner = "wasmtime"'
-
-      - name: cargo nextest (w/ relaxed-simd)
-        run: |
-          cargo nextest run --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
-            --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
-            --config 'target.wasm32-wasip1.runner = "wasmtime"'
-
-      - name: cargo test --doc
-        run: |
-          cargo test --doc --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+          cargo test --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
             --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128"' \
             --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128"' \
             --config 'target.wasm32-wasip1.runner = "wasmtime"'
 
-      - name: cargo test --doc (w/ relaxed-simd)
+      - name: cargo test (w/ relaxed-simd)
         run: |
-          cargo test --doc --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
+          cargo test --workspace --locked --all-features --no-fail-fast --target wasm32-wasip1 \
             --config 'target.wasm32-wasip1.rustflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
             --config 'target.wasm32-wasip1.rustdocflags = "-Ctarget-feature=+simd128,+relaxed-simd"' \
             --config 'target.wasm32-wasip1.runner = "wasmtime"'
