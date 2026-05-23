@@ -14,7 +14,7 @@ use crate::generic::{
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
 use crate::types::{ScalarType, VecType};
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -291,7 +291,7 @@ fn mask_from_bitmask_lanes(vec_ty: &VecType) -> TokenStream {
         (128, 16) => {
             let lanes = (0..lane_count).map(|i| {
                 let bit = 1_u16 << i;
-                quote! { #bit.cast_signed() }
+                signed_literal(bit.into(), 16)
             });
             quote! {
                 {
@@ -304,7 +304,7 @@ fn mask_from_bitmask_lanes(vec_ty: &VecType) -> TokenStream {
         (256, 16) => {
             let lanes = (0..lane_count).map(|i| {
                 let bit = 1_u16 << i;
-                quote! { #bit.cast_signed() }
+                signed_literal(bit.into(), 16)
             });
             quote! {
                 {
@@ -317,7 +317,7 @@ fn mask_from_bitmask_lanes(vec_ty: &VecType) -> TokenStream {
         (128, 32) => {
             let lanes = (0..lane_count).map(|i| {
                 let bit = 1_u32 << i;
-                quote! { #bit.cast_signed() }
+                signed_literal(bit.into(), 32)
             });
             quote! {
                 {
@@ -330,7 +330,7 @@ fn mask_from_bitmask_lanes(vec_ty: &VecType) -> TokenStream {
         (256, 32) => {
             let lanes = (0..lane_count).map(|i| {
                 let bit = 1_u32 << i;
-                quote! { #bit.cast_signed() }
+                signed_literal(bit.into(), 32)
             });
             quote! {
                 {
@@ -383,7 +383,7 @@ fn mask_from_bitmask_wide_avx2(vec_ty: &VecType) -> TokenStream {
             32 => {
                 let lanes = (0..lanes_per_chunk).map(|i| {
                     let bit = 1_u32 << (chunk_start + i);
-                    quote! { #bit.cast_signed() }
+                    signed_literal(bit.into(), 32)
                 });
                 quote! {
                     {
@@ -395,7 +395,7 @@ fn mask_from_bitmask_wide_avx2(vec_ty: &VecType) -> TokenStream {
             64 => {
                 let lanes = (0..lanes_per_chunk).rev().map(|i| {
                     let bit = 1_u64 << (chunk_start + i);
-                    quote! { #bit.cast_signed() }
+                    signed_literal(bit, 64)
                 });
                 quote! {
                     {
@@ -538,7 +538,7 @@ fn mask_to_bitmask_words(native_width: usize, vec_ty: &VecType) -> TokenStream {
 fn mask_bit_pattern_128() -> TokenStream {
     let lanes = (0..16).map(|i| {
         let bit = 1_u8 << (i % 8);
-        quote! { #bit.cast_signed() }
+        signed_literal(bit.into(), 8)
     });
     quote! { _mm_setr_epi8(#(#lanes),*) }
 }
@@ -546,7 +546,7 @@ fn mask_bit_pattern_128() -> TokenStream {
 fn mask_bit_pattern_256() -> TokenStream {
     let lanes = (0..32).map(|i| {
         let bit = 1_u8 << (i % 8);
-        quote! { #bit.cast_signed() }
+        signed_literal(bit.into(), 8)
     });
     quote! { _mm256_setr_epi8(#(#lanes),*) }
 }
@@ -555,7 +555,7 @@ fn mask_byte_shuffle_128_offset(lane_count: usize, byte_offset: usize) -> TokenS
     let lanes = (0..16).map(|i| {
         let byte = u8::try_from(byte_offset + i.min(lane_count - 1) / 8)
             .expect("SSE byte shuffle index must fit in u8");
-        quote! { #byte.cast_signed() }
+        signed_literal(byte.into(), 8)
     });
     quote! { _mm_setr_epi8(#(#lanes),*) }
 }
@@ -568,13 +568,29 @@ fn mask_byte_shuffle_256_offset(byte_offset: usize) -> TokenStream {
     let lanes = (0..32).map(|i| {
         let byte =
             u8::try_from(byte_offset + i / 8).expect("AVX2 byte shuffle index must fit in u8");
-        quote! { #byte.cast_signed() }
+        signed_literal(byte.into(), 8)
     });
     quote! { _mm256_setr_epi8(#(#lanes),*) }
 }
 
 fn mask_byte_shuffle_256() -> TokenStream {
     mask_byte_shuffle_256_offset(0)
+}
+
+fn signed_literal(value: u64, bits: u32) -> TokenStream {
+    assert!(
+        bits <= 64,
+        "signed literal width must fit in a primitive integer"
+    );
+    let shift = 64 - bits;
+    let value = (value << shift).cast_signed() >> shift;
+    if value < 0 {
+        let magnitude = Literal::u64_unsuffixed(value.unsigned_abs());
+        quote! { -#magnitude }
+    } else {
+        let value = Literal::u64_unsuffixed(value as u64);
+        quote! { #value }
+    }
 }
 
 impl X86 {

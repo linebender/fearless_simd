@@ -901,43 +901,10 @@ impl Simd for Avx2 {
                 let bit_bytes = _mm_cvtsi32_si128(bits as i32);
                 let bit_bytes = _mm_shuffle_epi8(
                     bit_bytes,
-                    _mm_setr_epi8(
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                    ),
+                    _mm_setr_epi8(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1),
                 );
-                let bit_mask = _mm_setr_epi8(
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
-                );
+                let bit_mask =
+                    _mm_setr_epi8(1, 2, 4, 8, 16, 32, 64, -128, 1, 2, 4, 8, 16, 32, 64, -128);
                 _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
             }
             .simd_into(self)
@@ -1443,16 +1410,7 @@ impl Simd for Avx2 {
         unsafe {
             {
                 let bit_lanes = _mm_set1_epi16(bits as i16);
-                let bit_mask = _mm_setr_epi16(
-                    1u16.cast_signed(),
-                    2u16.cast_signed(),
-                    4u16.cast_signed(),
-                    8u16.cast_signed(),
-                    16u16.cast_signed(),
-                    32u16.cast_signed(),
-                    64u16.cast_signed(),
-                    128u16.cast_signed(),
-                );
+                let bit_mask = _mm_setr_epi16(1, 2, 4, 8, 16, 32, 64, 128);
                 _mm_cmpeq_epi16(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
             }
             .simd_into(self)
@@ -1973,12 +1931,7 @@ impl Simd for Avx2 {
         unsafe {
             {
                 let bit_lanes = _mm_set1_epi32(bits as i32);
-                let bit_mask = _mm_setr_epi32(
-                    1u32.cast_signed(),
-                    2u32.cast_signed(),
-                    4u32.cast_signed(),
-                    8u32.cast_signed(),
-                );
+                let bit_mask = _mm_setr_epi32(1, 2, 4, 8);
                 _mm_cmpeq_epi32(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
             }
             .simd_into(self)
@@ -3394,73 +3347,13 @@ impl Simd for Avx2 {
                 let bit_bytes = _mm256_shuffle_epi8(
                     bit_bytes,
                     _mm256_setr_epi8(
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        0u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        1u8.cast_signed(),
-                        2u8.cast_signed(),
-                        2u8.cast_signed(),
-                        2u8.cast_signed(),
-                        2u8.cast_signed(),
-                        2u8.cast_signed(),
-                        2u8.cast_signed(),
-                        2u8.cast_signed(),
-                        2u8.cast_signed(),
-                        3u8.cast_signed(),
-                        3u8.cast_signed(),
-                        3u8.cast_signed(),
-                        3u8.cast_signed(),
-                        3u8.cast_signed(),
-                        3u8.cast_signed(),
-                        3u8.cast_signed(),
-                        3u8.cast_signed(),
+                        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3,
+                        3, 3, 3, 3, 3, 3, 3,
                     ),
                 );
                 let bit_mask = _mm256_setr_epi8(
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
+                    1, 2, 4, 8, 16, 32, 64, -128, 1, 2, 4, 8, 16, 32, 64, -128, 1, 2, 4, 8, 16, 32,
+                    64, -128, 1, 2, 4, 8, 16, 32, 64, -128,
                 );
                 _mm256_cmpeq_epi8(_mm256_and_si256(bit_bytes, bit_mask), bit_mask)
             }
@@ -4170,22 +4063,7 @@ impl Simd for Avx2 {
             {
                 let bit_lanes = _mm256_set1_epi16(bits as i16);
                 let bit_mask = _mm256_setr_epi16(
-                    1u16.cast_signed(),
-                    2u16.cast_signed(),
-                    4u16.cast_signed(),
-                    8u16.cast_signed(),
-                    16u16.cast_signed(),
-                    32u16.cast_signed(),
-                    64u16.cast_signed(),
-                    128u16.cast_signed(),
-                    256u16.cast_signed(),
-                    512u16.cast_signed(),
-                    1024u16.cast_signed(),
-                    2048u16.cast_signed(),
-                    4096u16.cast_signed(),
-                    8192u16.cast_signed(),
-                    16384u16.cast_signed(),
-                    32768u16.cast_signed(),
+                    1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, -32768,
                 );
                 _mm256_cmpeq_epi16(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
             }
@@ -4845,16 +4723,7 @@ impl Simd for Avx2 {
         unsafe {
             {
                 let bit_lanes = _mm256_set1_epi32(bits as i32);
-                let bit_mask = _mm256_setr_epi32(
-                    1u32.cast_signed(),
-                    2u32.cast_signed(),
-                    4u32.cast_signed(),
-                    8u32.cast_signed(),
-                    16u32.cast_signed(),
-                    32u32.cast_signed(),
-                    64u32.cast_signed(),
-                    128u32.cast_signed(),
-                );
+                let bit_mask = _mm256_setr_epi32(1, 2, 4, 8, 16, 32, 64, 128);
                 _mm256_cmpeq_epi32(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
             }
             .simd_into(self)
@@ -6360,38 +6229,8 @@ impl Simd for Avx2 {
             {
                 let bit_bytes = _mm256_set1_epi64x(bits.cast_signed());
                 let bit_mask = _mm256_setr_epi8(
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
-                    1u8.cast_signed(),
-                    2u8.cast_signed(),
-                    4u8.cast_signed(),
-                    8u8.cast_signed(),
-                    16u8.cast_signed(),
-                    32u8.cast_signed(),
-                    64u8.cast_signed(),
-                    128u8.cast_signed(),
+                    1, 2, 4, 8, 16, 32, 64, -128, 1, 2, 4, 8, 16, 32, 64, -128, 1, 2, 4, 8, 16, 32,
+                    64, -128, 1, 2, 4, 8, 16, 32, 64, -128,
                 );
                 mask8x64 {
                     val: crate::support::Aligned512([
@@ -6399,38 +6238,8 @@ impl Simd for Avx2 {
                             let bit_bytes = _mm256_shuffle_epi8(
                                 bit_bytes,
                                 _mm256_setr_epi8(
-                                    0u8.cast_signed(),
-                                    0u8.cast_signed(),
-                                    0u8.cast_signed(),
-                                    0u8.cast_signed(),
-                                    0u8.cast_signed(),
-                                    0u8.cast_signed(),
-                                    0u8.cast_signed(),
-                                    0u8.cast_signed(),
-                                    1u8.cast_signed(),
-                                    1u8.cast_signed(),
-                                    1u8.cast_signed(),
-                                    1u8.cast_signed(),
-                                    1u8.cast_signed(),
-                                    1u8.cast_signed(),
-                                    1u8.cast_signed(),
-                                    1u8.cast_signed(),
-                                    2u8.cast_signed(),
-                                    2u8.cast_signed(),
-                                    2u8.cast_signed(),
-                                    2u8.cast_signed(),
-                                    2u8.cast_signed(),
-                                    2u8.cast_signed(),
-                                    2u8.cast_signed(),
-                                    2u8.cast_signed(),
-                                    3u8.cast_signed(),
-                                    3u8.cast_signed(),
-                                    3u8.cast_signed(),
-                                    3u8.cast_signed(),
-                                    3u8.cast_signed(),
-                                    3u8.cast_signed(),
-                                    3u8.cast_signed(),
-                                    3u8.cast_signed(),
+                                    0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2,
+                                    2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
                                 ),
                             );
                             _mm256_cmpeq_epi8(_mm256_and_si256(bit_bytes, bit_mask), bit_mask)
@@ -6439,38 +6248,8 @@ impl Simd for Avx2 {
                             let bit_bytes = _mm256_shuffle_epi8(
                                 bit_bytes,
                                 _mm256_setr_epi8(
-                                    4u8.cast_signed(),
-                                    4u8.cast_signed(),
-                                    4u8.cast_signed(),
-                                    4u8.cast_signed(),
-                                    4u8.cast_signed(),
-                                    4u8.cast_signed(),
-                                    4u8.cast_signed(),
-                                    4u8.cast_signed(),
-                                    5u8.cast_signed(),
-                                    5u8.cast_signed(),
-                                    5u8.cast_signed(),
-                                    5u8.cast_signed(),
-                                    5u8.cast_signed(),
-                                    5u8.cast_signed(),
-                                    5u8.cast_signed(),
-                                    5u8.cast_signed(),
-                                    6u8.cast_signed(),
-                                    6u8.cast_signed(),
-                                    6u8.cast_signed(),
-                                    6u8.cast_signed(),
-                                    6u8.cast_signed(),
-                                    6u8.cast_signed(),
-                                    6u8.cast_signed(),
-                                    6u8.cast_signed(),
-                                    7u8.cast_signed(),
-                                    7u8.cast_signed(),
-                                    7u8.cast_signed(),
-                                    7u8.cast_signed(),
-                                    7u8.cast_signed(),
-                                    7u8.cast_signed(),
-                                    7u8.cast_signed(),
-                                    7u8.cast_signed(),
+                                    4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6,
+                                    6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7,
                                 ),
                             );
                             _mm256_cmpeq_epi8(_mm256_and_si256(bit_bytes, bit_mask), bit_mask)
@@ -7954,29 +7733,12 @@ impl Simd for Avx2 {
                 mask32x16 {
                     val: crate::support::Aligned512([
                         {
-                            let bit_mask = _mm256_setr_epi32(
-                                1u32.cast_signed(),
-                                2u32.cast_signed(),
-                                4u32.cast_signed(),
-                                8u32.cast_signed(),
-                                16u32.cast_signed(),
-                                32u32.cast_signed(),
-                                64u32.cast_signed(),
-                                128u32.cast_signed(),
-                            );
+                            let bit_mask = _mm256_setr_epi32(1, 2, 4, 8, 16, 32, 64, 128);
                             _mm256_cmpeq_epi32(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
                         },
                         {
-                            let bit_mask = _mm256_setr_epi32(
-                                256u32.cast_signed(),
-                                512u32.cast_signed(),
-                                1024u32.cast_signed(),
-                                2048u32.cast_signed(),
-                                4096u32.cast_signed(),
-                                8192u32.cast_signed(),
-                                16384u32.cast_signed(),
-                                32768u32.cast_signed(),
-                            );
+                            let bit_mask =
+                                _mm256_setr_epi32(256, 512, 1024, 2048, 4096, 8192, 16384, 32768);
                             _mm256_cmpeq_epi32(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
                         },
                     ]),
@@ -8413,21 +8175,11 @@ impl Simd for Avx2 {
                 mask64x8 {
                     val: crate::support::Aligned512([
                         {
-                            let bit_mask = _mm256_set_epi64x(
-                                8u64.cast_signed(),
-                                4u64.cast_signed(),
-                                2u64.cast_signed(),
-                                1u64.cast_signed(),
-                            );
+                            let bit_mask = _mm256_set_epi64x(8, 4, 2, 1);
                             _mm256_cmpeq_epi64(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
                         },
                         {
-                            let bit_mask = _mm256_set_epi64x(
-                                128u64.cast_signed(),
-                                64u64.cast_signed(),
-                                32u64.cast_signed(),
-                                16u64.cast_signed(),
-                            );
+                            let bit_mask = _mm256_set_epi64x(128, 64, 32, 16);
                             _mm256_cmpeq_epi64(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
                         },
                     ]),
