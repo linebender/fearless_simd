@@ -251,6 +251,7 @@ impl Level for X86 {
                     ..
                 }
             )
+            && vec_ty.scalar == ScalarType::Mask
             && vec_ty.n_bits() > 128
         {
             return true;
@@ -2434,6 +2435,37 @@ impl X86 {
         let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
         let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
+        if *self == Self::Avx512
+            && granularity == WithinBlocks
+            && vec_ty.scalar != ScalarType::Mask
+            && vec_ty.n_bits() >= 256
+        {
+            let alignr = format_ident!("dyn_alignr_{}", vec_ty.n_bits());
+            let byte_shift = if scalar_bytes == 1 {
+                quote! { SHIFT }
+            } else {
+                quote! { SHIFT * #scalar_bytes }
+            };
+
+            return quote! {
+                #method_sig {
+                    unsafe {
+                        if SHIFT == 0 {
+                            return a;
+                        }
+                        if SHIFT >= #max_shift {
+                            return b;
+                        }
+
+                        let a = self.#to_bytes(a).val.0;
+                        let b = self.#to_bytes(b).val.0;
+                        let result = #alignr(b, a, #byte_shift);
+                        self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                    }
+                }
+            };
+        }
+
         if *self == Self::Avx512 && granularity == AcrossBlocks && vec_ty.n_bits() >= 256 {
             let byte_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8);
             let base_idx = avx512_index_vector(&byte_ty, 0..byte_ty.len);
@@ -3259,10 +3291,7 @@ impl X86 {
         let vec_widths: &[usize] = match self {
             Self::Sse4_2 => &[128],
             Self::Avx2 => &[128, 256],
-            // AVX-512 uses byte-wise permutex2var for 256/512-bit slide operations.
-            // It only needs the legacy alignr helper for 128-bit slides and for
-            // wider within-block slides that decompose through 128-bit lanes.
-            Self::Avx512 => &[128],
+            Self::Avx512 => &[128, 256, 512],
         };
 
         for vec_ty in vec_widths
