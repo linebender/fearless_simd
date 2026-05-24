@@ -110,6 +110,8 @@ pub(crate) enum OpSig {
     MaskFromBitmask,
     /// Takes a mask vector type and returns its compact bitmask representation.
     MaskToBitmask,
+    /// Takes a mutable mask vector, a lane index, and a boolean, and updates the lane in place.
+    MaskSet,
     /// Takes an argument of an array of a certain scalar type, with the length (`block_size` * `block_count`) / [scalar
     /// type's byte size]. Returns a vector type of that scalar type and length.
     ///
@@ -277,6 +279,12 @@ impl Op {
                 let arg0 = &arg_names[0];
                 quote! { (self, #arg0: #ty<Self>) -> u64 }
             }
+            OpSig::MaskSet => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let arg2 = &arg_names[2];
+                quote! { (self, #arg0: &mut #ty<Self>, #arg1: usize, #arg2: bool) -> () }
+            }
             OpSig::Shift => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
@@ -353,7 +361,7 @@ impl Op {
             OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } | OpSig::StoreArray => {
                 return None;
             }
-            OpSig::MaskFromBitmask | OpSig::MaskToBitmask => return None,
+            OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
             OpSig::Unary
             | OpSig::Cvt { .. }
             | OpSig::Reinterpret { .. }
@@ -582,6 +590,12 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
         OpKind::AssociatedOnly,
         OpSig::MaskToBitmask,
         "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared.",
+    ),
+    Op::new(
+        "set",
+        OpKind::AssociatedOnly,
+        OpSig::MaskSet,
+        "Set one logical lane of a SIMD mask.",
     ),
 ];
 
@@ -1511,6 +1525,7 @@ impl OpSig {
                 | Self::FromArray { .. }
                 | Self::AsArray { .. }
                 | Self::StoreArray
+                | Self::MaskSet
                 | Self::Slide {
                     granularity: SlideGranularity::AcrossBlocks,
                     ..
@@ -1540,6 +1555,7 @@ impl OpSig {
         match self {
             Self::Splat | Self::FromArray { .. } => &["val"],
             Self::MaskFromBitmask => &["bits"],
+            Self::MaskSet => &["a", "index", "value"],
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
@@ -1572,6 +1588,7 @@ impl OpSig {
             | Self::FromArray { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
+            | Self::MaskSet
             | Self::FromBytes { .. }
             | Self::StoreArray => &[],
             Self::Unary
@@ -1634,6 +1651,7 @@ impl OpSig {
             | Self::Shift
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
+            | Self::MaskSet
             | Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }

@@ -4,6 +4,86 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
+/// Verifies that `SimdMask::set` can set and clear every lane while keeping
+/// `to_bitmask` and `test` in sync with the expected compact bitmask.
+fn assert_mask_set_roundtrip<S: Simd, M: SimdMask<S>>(simd: S) {
+    let mut mask = M::from_bitmask(simd, 0);
+    let mut expected = 0u64;
+    for i in 0..M::N {
+        mask.set(i, true);
+        expected |= 1u64 << i;
+        assert_eq!(mask.to_bitmask(), expected);
+        assert!(mask.test(i));
+    }
+
+    for i in 0..M::N {
+        mask.set(i, false);
+        expected &= !(1u64 << i);
+        assert_eq!(mask.to_bitmask(), expected);
+        assert!(!mask.test(i));
+    }
+}
+
+#[simd_test]
+fn mask8x16_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask8x16<S>>(simd);
+}
+
+#[simd_test]
+fn mask16x8_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask16x8<S>>(simd);
+}
+
+#[simd_test]
+fn mask32x4_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask32x4<S>>(simd);
+}
+
+#[simd_test]
+fn mask64x2_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask64x2<S>>(simd);
+}
+
+#[simd_test]
+fn mask8x32_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask8x32<S>>(simd);
+}
+
+#[simd_test]
+fn mask16x16_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask16x16<S>>(simd);
+}
+
+#[simd_test]
+fn mask32x8_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask32x8<S>>(simd);
+}
+
+#[simd_test]
+fn mask64x4_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask64x4<S>>(simd);
+}
+
+#[simd_test]
+fn mask8x64_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask8x64<S>>(simd);
+}
+
+#[simd_test]
+fn mask16x32_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask16x32<S>>(simd);
+}
+
+#[simd_test]
+fn mask32x16_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask32x16<S>>(simd);
+}
+
+#[simd_test]
+fn mask64x8_set_roundtrip<S: Simd>(simd: S) {
+    assert_mask_set_roundtrip::<S, mask64x8<S>>(simd);
+}
+
 #[simd_test]
 fn mask8x16_bitmask_roundtrip<S: Simd>(simd: S) {
     for bits in 0..=0xffff_u64 {

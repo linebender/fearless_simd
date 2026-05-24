@@ -402,6 +402,8 @@ pub trait Simd:
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask8x16(self, a: &mut mask8x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -605,6 +607,8 @@ pub trait Simd:
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask16x8(self, a: &mut mask16x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -810,6 +814,8 @@ pub trait Simd:
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask32x4(self, a: &mut mask32x4<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -941,6 +947,8 @@ pub trait Simd:
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask64x2(self, a: &mut mask64x2<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1258,6 +1266,8 @@ pub trait Simd:
     fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask8x32(self, a: mask8x32<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1469,6 +1479,8 @@ pub trait Simd:
     fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask16x16(self, a: mask16x16<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1680,6 +1692,8 @@ pub trait Simd:
     fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask32x8(self, a: mask32x8<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1815,6 +1829,8 @@ pub trait Simd:
     fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask64x4(self, a: mask64x4<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2134,6 +2150,8 @@ pub trait Simd:
     fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask8x64(self, a: mask8x64<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2343,6 +2361,8 @@ pub trait Simd:
     fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask16x32(self, a: mask16x32<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2552,6 +2572,8 @@ pub trait Simd:
     fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask32x16(self, a: mask32x16<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2683,6 +2705,8 @@ pub trait Simd:
     fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self>;
     #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
     fn to_bitmask_mask64x8(self, a: mask64x8<Self>) -> u64;
+    #[doc = "Set one logical lane of a SIMD mask."]
+    fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> ();
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
