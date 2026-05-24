@@ -43,10 +43,7 @@ where
     let expected_bits = bits & lane_mask(LANES);
     let expected_lanes = lanes_from_bits::<L, LANES>(bits);
 
-    assert_eq!(
-        size_of::<A>(),
-        size_of::<[L; LANES]>()
-    );
+    assert_eq!(size_of::<A>(), size_of::<[L; LANES]>());
 
     let mask = M::from_bitmask(simd, bits);
     let arch: A = mask.into();
