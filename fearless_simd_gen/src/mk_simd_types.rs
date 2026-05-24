@@ -15,7 +15,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdCvtFloat, SimdCvtTruncate, seal::Seal};
+        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -326,7 +326,7 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
     // spill/update/reload path. Future compact predicate backends such as AVX-512 can
     // switch this implementation to `to_bitmask`/`from_bitmask`.
     quote! {
-        impl<S: Simd> crate::SimdMask<S> for #name<S> {
+        impl<S: Simd> SimdMask<S> for #name<S> {
             type Element = #scalar;
             const N: usize = #len;
 
