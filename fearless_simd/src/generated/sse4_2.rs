@@ -129,14 +129,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f32x4(self, val: [f32; 4usize]) -> f32x4<Self> {
         f32x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f32x4(self, val: &[f32; 4usize]) -> f32x4<Self> {
         f32x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -442,14 +442,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i8x16(self, val: [i8; 16usize]) -> i8x16<Self> {
         i8x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i8x16(self, val: &[i8; 16usize]) -> i8x16<Self> {
         i8x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -679,14 +679,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self> {
         u8x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u8x16(self, val: &[u8; 16usize]) -> u8x16<Self> {
         u8x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -930,7 +930,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
         mask8x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -1028,14 +1028,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i16x8(self, val: [i16; 8usize]) -> i16x8<Self> {
         i16x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i16x8(self, val: &[i16; 8usize]) -> i16x8<Self> {
         i16x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -1240,14 +1240,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self> {
         u16x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u16x8(self, val: &[u16; 8usize]) -> u16x8<Self> {
         u16x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -1461,7 +1461,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
         mask16x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -1559,14 +1559,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i32x4(self, val: [i32; 4usize]) -> i32x4<Self> {
         i32x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i32x4(self, val: &[i32; 4usize]) -> i32x4<Self> {
         i32x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -1773,14 +1773,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self> {
         u32x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u32x4(self, val: &[u32; 4usize]) -> u32x4<Self> {
         u32x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -2002,7 +2002,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
         mask32x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -2095,14 +2095,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f64x2(self, val: [f64; 2usize]) -> f64x2<Self> {
         f64x2 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f64x2(self, val: &[f64; 2usize]) -> f64x2<Self> {
         f64x2 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -2340,7 +2340,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
         mask64x2 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -2434,14 +2434,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f32x8(self, val: [f32; 8usize]) -> f32x8<Self> {
         f32x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f32x8(self, val: &[f32; 8usize]) -> f32x8<Self> {
         f32x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -2816,14 +2816,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i8x32(self, val: [i8; 32usize]) -> i8x32<Self> {
         i8x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i8x32(self, val: &[i8; 32usize]) -> i8x32<Self> {
         i8x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -3105,14 +3105,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u8x32(self, val: [u8; 32usize]) -> u8x32<Self> {
         u8x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u8x32(self, val: &[u8; 32usize]) -> u8x32<Self> {
         u8x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -3389,7 +3389,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self> {
         mask8x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -3513,14 +3513,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i16x16(self, val: [i16; 16usize]) -> i16x16<Self> {
         i16x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i16x16(self, val: &[i16; 16usize]) -> i16x16<Self> {
         i16x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -3802,14 +3802,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u16x16(self, val: [u16; 16usize]) -> u16x16<Self> {
         u16x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u16x16(self, val: &[u16; 16usize]) -> u16x16<Self> {
         u16x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -4097,7 +4097,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self> {
         mask16x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -4223,14 +4223,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i32x8(self, val: [i32; 8usize]) -> i32x8<Self> {
         i32x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i32x8(self, val: &[i32; 8usize]) -> i32x8<Self> {
         i32x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -4517,14 +4517,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u32x8(self, val: [u32; 8usize]) -> u32x8<Self> {
         u32x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u32x8(self, val: &[u32; 8usize]) -> u32x8<Self> {
         u32x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -4798,7 +4798,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self> {
         mask32x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -4922,14 +4922,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f64x4(self, val: [f64; 4usize]) -> f64x4<Self> {
         f64x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f64x4(self, val: &[f64; 4usize]) -> f64x4<Self> {
         f64x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -5257,7 +5257,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self> {
         mask64x4 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -5381,14 +5381,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self> {
         f32x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f32x16(self, val: &[f32; 16usize]) -> f32x16<Self> {
         f32x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -5801,14 +5801,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self> {
         i8x64 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i8x64(self, val: &[i8; 64usize]) -> i8x64<Self> {
         i8x64 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -6083,14 +6083,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self> {
         u8x64 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u8x64(self, val: &[u8; 64usize]) -> u8x64<Self> {
         u8x64 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -6410,7 +6410,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self> {
         mask8x64 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -6564,14 +6564,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self> {
         i16x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i16x32(self, val: &[i16; 32usize]) -> i16x32<Self> {
         i16x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -6855,14 +6855,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self> {
         u16x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u16x32(self, val: &[u16; 32usize]) -> u16x32<Self> {
         u16x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -7201,7 +7201,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self> {
         mask16x32 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -7326,14 +7326,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self> {
         i32x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_i32x16(self, val: &[i32; 16usize]) -> i32x16<Self> {
         i32x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -7613,14 +7613,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self> {
         u32x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_u32x16(self, val: &[u32; 16usize]) -> u32x16<Self> {
         u32x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -7932,7 +7932,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self> {
         mask32x16 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
@@ -8049,14 +8049,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self> {
         f64x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
     #[inline(always)]
     fn load_array_ref_f64x8(self, val: &[f64; 8usize]) -> f64x8<Self> {
         f64x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(val) } },
+            val: unsafe { crate::support::checked_transmute_copy(val) },
             simd: self,
         }
     }
@@ -8377,7 +8377,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self> {
         mask64x8 {
-            val: { unsafe { crate::support::checked_transmute_copy(&val) } },
+            val: unsafe { crate::support::checked_transmute_copy(&val) },
             simd: self,
         }
     }
