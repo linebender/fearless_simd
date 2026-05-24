@@ -1581,6 +1581,13 @@ impl X86 {
                 }
             }
             "shlv" | "shrv"
+                if *self == Self::Avx512
+                    && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+                    && matches!(vec_ty.scalar_bits, 8 | 16) =>
+            {
+                self.handle_avx512_narrow_variable_shift(method, vec_ty)
+            }
+            "shlv" | "shrv"
                 if matches!(self, Self::Avx2 | Self::Avx512) && vec_ty.scalar_bits >= 32 =>
             {
                 let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
@@ -1610,6 +1617,60 @@ impl X86 {
         quote! {
             #method_sig {
                 #body
+            }
+        }
+    }
+
+    fn handle_avx512_narrow_variable_shift(&self, method: &str, vec_ty: &VecType) -> TokenStream {
+        assert!(*self == Self::Avx512);
+        assert!(matches!(vec_ty.scalar_bits, 8 | 16));
+        let name = match (method, vec_ty.scalar) {
+            ("shrv", ScalarType::Int) => "srav",
+            ("shrv", _) => "srlv",
+            ("shlv", _) => "sllv",
+            _ => unreachable!(),
+        };
+        let shift_intrinsic = intrinsic_ident(name, "epi16", vec_ty.n_bits());
+
+        if vec_ty.scalar_bits == 16 {
+            return quote! {
+                unsafe { #shift_intrinsic(a.into(), b.into()).simd_into(self) }
+            };
+        }
+
+        let ty_bits = vec_ty.n_bits();
+        let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
+        let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
+        let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
+        let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
+        let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
+        let pack = pack_intrinsic(16, false, ty_bits);
+        let value_extend = match (method, vec_ty.scalar) {
+            ("shlv", _) | (_, ScalarType::Unsigned) => quote! { zero },
+            ("shrv", ScalarType::Int) if ty_bits == 512 => {
+                quote! { _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(zero, val)) }
+            }
+            ("shrv", ScalarType::Int) => {
+                let cmpgt = intrinsic_ident("cmpgt", "epi8", ty_bits);
+                quote! { #cmpgt(zero, val) }
+            }
+            _ => unreachable!(),
+        };
+
+        quote! {
+            unsafe {
+                let val = a.into();
+                let counts = b.into();
+                let zero = #set0();
+                let value_extend = #value_extend;
+                let lo_values = #unpack_lo(val, value_extend);
+                let hi_values = #unpack_hi(val, value_extend);
+                let lo_counts = #unpack_lo(counts, zero);
+                let hi_counts = #unpack_hi(counts, zero);
+                let byte_mask = #set1_epi16(0x00ff);
+                let lo_shifted = #and(#shift_intrinsic(lo_values, lo_counts), byte_mask);
+                let hi_shifted = #and(#shift_intrinsic(hi_values, hi_counts), byte_mask);
+                #pack(lo_shifted, hi_shifted).simd_into(self)
             }
         }
     }

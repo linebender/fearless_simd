@@ -547,7 +547,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm_setzero_si128();
+            let value_extend = zero;
+            let lo_values = _mm_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm_set1_epi16(0x00ff);
+            let lo_shifted = _mm_and_si128(_mm_sllv_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm_and_si128(_mm_sllv_epi16(hi_values, hi_counts), byte_mask);
+            _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
@@ -563,7 +576,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm_setzero_si128();
+            let value_extend = _mm_cmpgt_epi8(zero, val);
+            let lo_values = _mm_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm_set1_epi16(0x00ff);
+            let lo_shifted = _mm_and_si128(_mm_srav_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm_and_si128(_mm_srav_epi16(hi_values, hi_counts), byte_mask);
+            _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -806,7 +832,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm_setzero_si128();
+            let value_extend = zero;
+            let lo_values = _mm_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm_set1_epi16(0x00ff);
+            let lo_shifted = _mm_and_si128(_mm_sllv_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm_and_si128(_mm_sllv_epi16(hi_values, hi_counts), byte_mask);
+            _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
@@ -822,7 +861,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm_setzero_si128();
+            let value_extend = zero;
+            let lo_values = _mm_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm_set1_epi16(0x00ff);
+            let lo_shifted = _mm_and_si128(_mm_srlv_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm_and_si128(_mm_srlv_epi16(hi_values, hi_counts), byte_mask);
+            _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -1171,7 +1223,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe { _mm_sllv_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
@@ -1179,7 +1231,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe { _mm_srav_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -1405,7 +1457,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe { _mm_sllv_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
@@ -1413,7 +1465,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe { _mm_srlv_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -3178,7 +3230,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm256_setzero_si256();
+            let value_extend = zero;
+            let lo_values = _mm256_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm256_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm256_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm256_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm256_set1_epi16(0x00ff);
+            let lo_shifted = _mm256_and_si256(_mm256_sllv_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm256_and_si256(_mm256_sllv_epi16(hi_values, hi_counts), byte_mask);
+            _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self> {
@@ -3194,7 +3259,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm256_setzero_si256();
+            let value_extend = _mm256_cmpgt_epi8(zero, val);
+            let lo_values = _mm256_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm256_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm256_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm256_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm256_set1_epi16(0x00ff);
+            let lo_shifted = _mm256_and_si256(_mm256_srav_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm256_and_si256(_mm256_srav_epi16(hi_values, hi_counts), byte_mask);
+            _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
@@ -3538,7 +3616,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm256_setzero_si256();
+            let value_extend = zero;
+            let lo_values = _mm256_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm256_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm256_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm256_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm256_set1_epi16(0x00ff);
+            let lo_shifted = _mm256_and_si256(_mm256_sllv_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm256_and_si256(_mm256_sllv_epi16(hi_values, hi_counts), byte_mask);
+            _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self> {
@@ -3554,7 +3645,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm256_setzero_si256();
+            let value_extend = zero;
+            let lo_values = _mm256_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm256_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm256_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm256_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm256_set1_epi16(0x00ff);
+            let lo_shifted = _mm256_and_si256(_mm256_srlv_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm256_and_si256(_mm256_srlv_epi16(hi_values, hi_counts), byte_mask);
+            _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
@@ -4018,7 +4122,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe { _mm256_sllv_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self> {
@@ -4028,7 +4132,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe { _mm256_srav_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
@@ -4331,7 +4435,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe { _mm256_sllv_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self> {
@@ -4341,7 +4445,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe { _mm256_srlv_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
@@ -6437,7 +6541,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm512_setzero_si512();
+            let value_extend = zero;
+            let lo_values = _mm512_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm512_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm512_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm512_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm512_set1_epi16(0x00ff);
+            let lo_shifted = _mm512_and_si512(_mm512_sllv_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm512_and_si512(_mm512_sllv_epi16(hi_values, hi_counts), byte_mask);
+            _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
@@ -6459,7 +6576,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm512_setzero_si512();
+            let value_extend = _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(zero, val));
+            let lo_values = _mm512_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm512_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm512_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm512_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm512_set1_epi16(0x00ff);
+            let lo_shifted = _mm512_and_si512(_mm512_srav_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm512_and_si512(_mm512_srav_epi16(hi_values, hi_counts), byte_mask);
+            _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self> {
@@ -6815,7 +6945,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm512_setzero_si512();
+            let value_extend = zero;
+            let lo_values = _mm512_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm512_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm512_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm512_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm512_set1_epi16(0x00ff);
+            let lo_shifted = _mm512_and_si512(_mm512_sllv_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm512_and_si512(_mm512_sllv_epi16(hi_values, hi_counts), byte_mask);
+            _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
@@ -6831,7 +6974,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe {
+            let val = a.into();
+            let counts = b.into();
+            let zero = _mm512_setzero_si512();
+            let value_extend = zero;
+            let lo_values = _mm512_unpacklo_epi8(val, value_extend);
+            let hi_values = _mm512_unpackhi_epi8(val, value_extend);
+            let lo_counts = _mm512_unpacklo_epi8(counts, zero);
+            let hi_counts = _mm512_unpackhi_epi8(counts, zero);
+            let byte_mask = _mm512_set1_epi16(0x00ff);
+            let lo_shifted = _mm512_and_si512(_mm512_srlv_epi16(lo_values, lo_counts), byte_mask);
+            let hi_shifted = _mm512_and_si512(_mm512_srlv_epi16(hi_values, hi_counts), byte_mask);
+            _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
+        }
     }
     #[inline(always)]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self> {
@@ -7326,7 +7482,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe { _mm512_sllv_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
@@ -7336,7 +7492,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe { _mm512_srav_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self> {
@@ -7659,7 +7815,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        unsafe { _mm512_sllv_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
@@ -7669,7 +7825,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        unsafe { _mm512_srlv_epi16(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self> {

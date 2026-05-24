@@ -942,6 +942,114 @@ fn shl_u32x16<S: Simd>(simd: S) {
 
 // Vector shift tests (shlv/shrv)
 #[simd_test]
+fn shlv_i8x64<S: Simd>(simd: S) {
+    const A: [i8; 16] = [64, 65, -64, -65, 1, 2, 3, 4, -1, -2, -3, -4, 15, 16, 31, 32];
+    const SHIFTS: [i8; 16] = [1, 2, 1, 2, 0, 1, 2, 3, 1, 2, 3, 4, 3, 2, 1, 0];
+    const EXPECTED: [i8; 16] = [
+        -128, 4, -128, -4, 1, 4, 12, 32, -2, -8, -24, -64, 120, 64, 62, 32,
+    ];
+    let a_vals: [i8; 64] = core::array::from_fn(|i| A[i % 16]);
+    let shift_vals: [i8; 64] = core::array::from_fn(|i| SHIFTS[i % 16]);
+    let expected: [i8; 64] = core::array::from_fn(|i| EXPECTED[i % 16]);
+    let a = i8x64::from_slice(simd, &a_vals);
+    let shifts = i8x64::from_slice(simd, &shift_vals);
+    assert_eq!(*(a << shifts), expected);
+}
+
+#[simd_test]
+fn shrv_i8x64<S: Simd>(simd: S) {
+    const A: [i8; 16] = [
+        -128, -64, -33, -1, 127, 64, 33, 1, -2, -4, -8, -16, 0, 2, 4, 8,
+    ];
+    const SHIFTS: [i8; 16] = [1, 2, 3, 7, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3];
+    const EXPECTED: [i8; 16] = [-64, -16, -5, -1, 63, 16, 4, 1, -1, -1, -1, -1, 0, 1, 1, 1];
+    let a_vals: [i8; 64] = core::array::from_fn(|i| A[i % 16]);
+    let shift_vals: [i8; 64] = core::array::from_fn(|i| SHIFTS[i % 16]);
+    let expected: [i8; 64] = core::array::from_fn(|i| EXPECTED[i % 16]);
+    let a = i8x64::from_slice(simd, &a_vals);
+    let shifts = i8x64::from_slice(simd, &shift_vals);
+    assert_eq!(*(a >> shifts), expected);
+}
+
+#[simd_test]
+fn shlv_u8x64<S: Simd>(simd: S) {
+    const A: [u8; 16] = [255, 128, 64, 32, 16, 8, 4, 2, 1, 3, 5, 7, 15, 31, 63, 127];
+    const SHIFTS: [u8; 16] = [4, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 3, 2, 1];
+    const EXPECTED: [u8; 16] = [240, 0, 0, 0, 0, 0, 0, 0, 1, 6, 20, 56, 240, 248, 252, 254];
+    let a_vals: [u8; 64] = core::array::from_fn(|i| A[i % 16]);
+    let shift_vals: [u8; 64] = core::array::from_fn(|i| SHIFTS[i % 16]);
+    let expected: [u8; 64] = core::array::from_fn(|i| EXPECTED[i % 16]);
+    let a = u8x64::from_slice(simd, &a_vals);
+    let shifts = u8x64::from_slice(simd, &shift_vals);
+    assert_eq!(*(a << shifts), expected);
+}
+
+#[simd_test]
+fn shrv_u8x64<S: Simd>(simd: S) {
+    const A: [u8; 16] = [255, 128, 64, 32, 16, 8, 4, 2, 1, 3, 5, 7, 15, 31, 63, 127];
+    const SHIFTS: [u8; 16] = [1, 2, 3, 4, 5, 6, 7, 1, 0, 1, 2, 3, 4, 3, 2, 1];
+    const EXPECTED: [u8; 16] = [127, 32, 8, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 3, 15, 63];
+    let a_vals: [u8; 64] = core::array::from_fn(|i| A[i % 16]);
+    let shift_vals: [u8; 64] = core::array::from_fn(|i| SHIFTS[i % 16]);
+    let expected: [u8; 64] = core::array::from_fn(|i| EXPECTED[i % 16]);
+    let a = u8x64::from_slice(simd, &a_vals);
+    let shifts = u8x64::from_slice(simd, &shift_vals);
+    assert_eq!(*(a >> shifts), expected);
+}
+
+#[simd_test]
+fn shlv_i16x32<S: Simd>(simd: S) {
+    const A: [i16; 8] = [16384, 8192, -16384, -8192, 1, -1, 255, -256];
+    const SHIFTS: [i16; 8] = [1, 2, 1, 2, 15, 1, 4, 3];
+    const EXPECTED: [i16; 8] = [-32768, -32768, -32768, -32768, -32768, -2, 4080, -2048];
+    let a_vals: [i16; 32] = core::array::from_fn(|i| A[i % 8]);
+    let shift_vals: [i16; 32] = core::array::from_fn(|i| SHIFTS[i % 8]);
+    let expected: [i16; 32] = core::array::from_fn(|i| EXPECTED[i % 8]);
+    let a = i16x32::from_slice(simd, &a_vals);
+    let shifts = i16x32::from_slice(simd, &shift_vals);
+    assert_eq!(*(a << shifts), expected);
+}
+
+#[simd_test]
+fn shrv_i16x32<S: Simd>(simd: S) {
+    const A: [i16; 8] = [-32768, -16384, -1025, -1, 32767, 16384, 1025, 1];
+    const SHIFTS: [i16; 8] = [1, 2, 3, 15, 1, 2, 3, 0];
+    const EXPECTED: [i16; 8] = [-16384, -4096, -129, -1, 16383, 4096, 128, 1];
+    let a_vals: [i16; 32] = core::array::from_fn(|i| A[i % 8]);
+    let shift_vals: [i16; 32] = core::array::from_fn(|i| SHIFTS[i % 8]);
+    let expected: [i16; 32] = core::array::from_fn(|i| EXPECTED[i % 8]);
+    let a = i16x32::from_slice(simd, &a_vals);
+    let shifts = i16x32::from_slice(simd, &shift_vals);
+    assert_eq!(*(a >> shifts), expected);
+}
+
+#[simd_test]
+fn shlv_u16x32<S: Simd>(simd: S) {
+    const A: [u16; 8] = [65535, 32768, 16384, 8192, 1, 255, 1024, 4096];
+    const SHIFTS: [u16; 8] = [4, 1, 2, 3, 15, 4, 5, 0];
+    const EXPECTED: [u16; 8] = [65520, 0, 0, 0, 32768, 4080, 32768, 4096];
+    let a_vals: [u16; 32] = core::array::from_fn(|i| A[i % 8]);
+    let shift_vals: [u16; 32] = core::array::from_fn(|i| SHIFTS[i % 8]);
+    let expected: [u16; 32] = core::array::from_fn(|i| EXPECTED[i % 8]);
+    let a = u16x32::from_slice(simd, &a_vals);
+    let shifts = u16x32::from_slice(simd, &shift_vals);
+    assert_eq!(*(a << shifts), expected);
+}
+
+#[simd_test]
+fn shrv_u16x32<S: Simd>(simd: S) {
+    const A: [u16; 8] = [65535, 32768, 16384, 8192, 1, 255, 1024, 4096];
+    const SHIFTS: [u16; 8] = [1, 2, 3, 4, 0, 4, 5, 12];
+    const EXPECTED: [u16; 8] = [32767, 8192, 2048, 512, 1, 15, 32, 1];
+    let a_vals: [u16; 32] = core::array::from_fn(|i| A[i % 8]);
+    let shift_vals: [u16; 32] = core::array::from_fn(|i| SHIFTS[i % 8]);
+    let expected: [u16; 32] = core::array::from_fn(|i| EXPECTED[i % 8]);
+    let a = u16x32::from_slice(simd, &a_vals);
+    let shifts = u16x32::from_slice(simd, &shift_vals);
+    assert_eq!(*(a >> shifts), expected);
+}
+
+#[simd_test]
 fn shrv_i32x16<S: Simd>(simd: S) {
     let a = i32x16::from_slice(
         simd,
