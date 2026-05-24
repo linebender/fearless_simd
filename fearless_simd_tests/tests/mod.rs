@@ -10,6 +10,7 @@ use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
 mod harness;
+#[cfg(not(miri))] // too slow
 mod soundness;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
