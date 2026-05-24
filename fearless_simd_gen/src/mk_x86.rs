@@ -186,7 +186,8 @@ impl Level for X86 {
             impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                 #[inline(always)]
                 fn simd_from(simd: S, arch: #arch) -> Self {
-                    let lanes: [#lane_ty; #len] = unsafe { core::mem::transmute_copy(&arch) };
+                    let lanes: [#lane_ty; #len] =
+                        unsafe { crate::support::checked_transmute_copy(&arch) };
                     lanes.simd_into(simd)
                 }
             }
@@ -194,7 +195,7 @@ impl Level for X86 {
                 #[inline(always)]
                 fn from(value: #simd<S>) -> Self {
                     let lanes: [#lane_ty; #len] = value.into();
-                    unsafe { core::mem::transmute_copy(&lanes) }
+                    unsafe { crate::support::checked_transmute_copy(&lanes) }
                 }
             }
         })

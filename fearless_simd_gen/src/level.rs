@@ -237,7 +237,7 @@ pub(crate) trait Level {
                     #[inline(always)]
                     fn simd_from(simd: S, arch: #arch) -> Self {
                         Self {
-                            val: unsafe { core::mem::transmute_copy(&arch) },
+                            val: unsafe { crate::support::checked_transmute_copy(&arch) },
                             simd
                         }
                     }
@@ -245,7 +245,7 @@ pub(crate) trait Level {
                 impl<S: Simd> From<#simd<S>> for #arch {
                     #[inline(always)]
                     fn from(value: #simd<S>) -> Self {
-                        unsafe { core::mem::transmute_copy(&value.val) }
+                        unsafe { crate::support::checked_transmute_copy(&value.val) }
                     }
                 }
                 }

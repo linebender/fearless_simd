@@ -161,10 +161,10 @@ fn x86_mask_arch_conversions_roundtrip<S: Simd>(simd: S) {
 
                 let mask = $mask::from_bitmask(simd, bits);
                 let arch: $arch = mask.into();
-                let lanes: [$lane; $lanes] = unsafe { core::mem::transmute_copy(&arch) };
+                let lanes: [$lane; $lanes] = unsafe { core::mem::transmute(arch) };
                 assert_eq!(lanes, expected);
 
-                let arch: $arch = unsafe { core::mem::transmute_copy(&expected) };
+                let arch: $arch = unsafe { core::mem::transmute(expected) };
                 let mask = $mask::simd_from(simd, arch);
                 assert_eq!(mask.to_bitmask(), bits);
             }};

@@ -371,25 +371,25 @@ pub(crate) fn generic_from_array(
     } else {
         quote! { val }
     };
-
     // There are architecture-specific "load" intrinsics, but they can actually be *worse* for performance. If they
     // lower to LLVM intrinsics, they will likely not be optimized until much later in the pipeline (if at all),
     // resulting in substantially worse codegen. See https://github.com/linebender/fearless_simd/pull/185.
-    let expr = quote! {
+    let expr = quote! {{
         // Safety: The native vector type backing any implementation will be:
         // - A `#[repr(simd)]` type, which has the same layout as an array of scalars
         // - An array of `#[repr(simd)]` types
         // - For AArch64 specifically, a `#[repr(C)]` tuple of `#[repr(simd)]` types
         //
-        // These all have the same layout as a flat array of the corresponding scalars. The native vector types probably
-        // have greater alignment requirements than the source array type we're copying from, but that's explicitly
-        // allowed by transmute_copy:
+        // These all have the same layout as a flat array of the corresponding scalars. `checked_transmute_copy`
+        // statically verifies that the source and destination sizes match. The native vector types probably have
+        // greater alignment requirements than the source array type we're copying from, but that's explicitly allowed by
+        // transmute_copy:
         //
         // > This function will unsafely assume the pointer src is valid for size_of::<Dst> bytes by transmuting &Src to
         // > &Dst and then reading the &Dst **(except that this is done in a way that is correct even when &Dst has
         // > stricter alignment requirements than &Src).**
-        unsafe { core::mem::transmute_copy(#inner_ref) }
-    };
+        unsafe { crate::support::checked_transmute_copy(#inner_ref) }
+    }};
     let vec_rust = vec_ty.rust();
 
     quote! {

@@ -1,6 +1,8 @@
 // Copyright 2025 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+use core::mem::size_of;
+
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(16))]
 #[expect(
@@ -27,6 +29,29 @@ pub struct Aligned256<T>(pub T);
 )]
 /// Wrapper for internal native vector types that gives them 512-bit alignment.
 pub struct Aligned512<T>(pub T);
+
+/// Like [`core::mem::transmute_copy`], but statically rejects differently-sized types.
+///
+/// # Safety
+///
+/// `src` must be valid to copy as `Dst`. This helper only checks the size invariant; the caller
+/// is still responsible for the rest of `transmute_copy`'s safety contract.
+#[inline(always)]
+#[allow(
+    clippy::disallowed_methods,
+    reason = "This is the central checked wrapper around transmute_copy"
+)]
+pub(crate) unsafe fn checked_transmute_copy<Src, Dst>(src: &Src) -> Dst {
+    const {
+        assert!(
+            size_of::<Src>() == size_of::<Dst>(),
+            "checked_transmute_copy requires source and destination to have the same size"
+        );
+    }
+    // Safety: The caller upholds `transmute_copy`'s validity requirements, and the
+    // const assertion above prevents the "destination larger than source" footgun.
+    unsafe { core::mem::transmute_copy(src) }
+}
 
 /// The actual `Debug` implementation for all `SimdBase` types. This only needs to be monomorphized once per element
 /// type, rather than once per vector type.

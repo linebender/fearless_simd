@@ -7,4 +7,9 @@
 # 16 bytes is the number of bytes that fits into two 64-bit CPU registers.
 trivial-copy-size-limit = 16
 
+disallowed-methods = [
+    { path = "core::mem::transmute_copy", reason = "Use crate::support::checked_transmute_copy so equal sizes are asserted at compile time." },
+    { path = "std::mem::transmute_copy", reason = "Use a checked wrapper so equal sizes are asserted at compile time." },
+]
+
 # END LINEBENDER LINT SET
