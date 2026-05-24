@@ -63,6 +63,23 @@ macro_rules! for_each_simd_type {
     };
 }
 
+macro_rules! for_each_mask_type {
+    ($test:ident, $simd:expr) => {
+        $test!($simd, mask8x16, 16);
+        $test!($simd, mask16x8, 8);
+        $test!($simd, mask32x4, 4);
+        $test!($simd, mask64x2, 2);
+        $test!($simd, mask8x32, 32);
+        $test!($simd, mask16x16, 16);
+        $test!($simd, mask32x8, 8);
+        $test!($simd, mask64x4, 4);
+        $test!($simd, mask8x64, 64);
+        $test!($simd, mask16x32, 32);
+        $test!($simd, mask32x16, 16);
+        $test!($simd, mask64x8, 8);
+    };
+}
+
 macro_rules! check_from_slice_short {
     ($simd:expr, $vec:ident, $len:expr) => {
         assert_panics(stringify!($vec::from_slice), || {
@@ -82,6 +99,26 @@ macro_rules! check_store_slice_short {
     }};
 }
 
+macro_rules! check_mask_test_oob {
+    ($simd:expr, $mask:ident, $len:expr) => {{
+        let mask = $mask::splat($simd, false);
+
+        assert_panics(stringify!($mask::test), || {
+            let _ = mask.test($len);
+        });
+    }};
+}
+
+macro_rules! check_mask_set_oob {
+    ($simd:expr, $mask:ident, $len:expr) => {{
+        let mut mask = $mask::splat($simd, false);
+
+        assert_panics(stringify!($mask::set), || {
+            mask.set($len, true);
+        });
+    }};
+}
+
 #[simd_test]
 fn from_slice_rejects_short_slice<S: Simd>(simd: S) {
     for_each_simd_type!(check_from_slice_short, simd);
@@ -90,4 +127,14 @@ fn from_slice_rejects_short_slice<S: Simd>(simd: S) {
 #[simd_test]
 fn store_slice_rejects_short_slice<S: Simd>(simd: S) {
     for_each_simd_type!(check_store_slice_short, simd);
+}
+
+#[simd_test]
+fn mask_test_rejects_out_of_bounds<S: Simd>(simd: S) {
+    for_each_mask_type!(check_mask_test_oob, simd);
+}
+
+#[simd_test]
+fn mask_set_rejects_out_of_bounds<S: Simd>(simd: S) {
+    for_each_mask_type!(check_mask_set_oob, simd);
 }

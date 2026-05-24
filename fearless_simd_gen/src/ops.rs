@@ -106,6 +106,10 @@ pub(crate) enum OpSig {
         quantifier: Quantifier,
         condition: bool,
     },
+    /// Takes a compact bitmask and returns the corresponding mask vector type.
+    MaskFromBitmask,
+    /// Takes a mask vector type and returns its compact bitmask representation.
+    MaskToBitmask,
     /// Takes an argument of an array of a certain scalar type, with the length (`block_size` * `block_count`) / [scalar
     /// type's byte size]. Returns a vector type of that scalar type and length.
     ///
@@ -265,6 +269,14 @@ impl Op {
                 let arg0 = &arg_names[0];
                 quote! { (self, #arg0: #ty<Self>) -> bool }
             }
+            OpSig::MaskFromBitmask => {
+                let arg0 = &arg_names[0];
+                quote! { (self, #arg0: u64) -> #ty<Self> }
+            }
+            OpSig::MaskToBitmask => {
+                let arg0 = &arg_names[0];
+                quote! { (self, #arg0: #ty<Self>) -> u64 }
+            }
             OpSig::Shift => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
@@ -341,6 +353,7 @@ impl Op {
             OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } | OpSig::StoreArray => {
                 return None;
             }
+            OpSig::MaskFromBitmask | OpSig::MaskToBitmask => return None,
             OpSig::Unary
             | OpSig::Cvt { .. }
             | OpSig::Reinterpret { .. }
@@ -557,6 +570,18 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
             kind: RefKind::Value,
         },
         "Convert a SIMD mask to signed integer mask lanes.",
+    ),
+    Op::new(
+        "from_bitmask",
+        OpKind::AssociatedOnly,
+        OpSig::MaskFromBitmask,
+        "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored.",
+    ),
+    Op::new(
+        "to_bitmask",
+        OpKind::AssociatedOnly,
+        OpSig::MaskToBitmask,
+        "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared.",
     ),
 ];
 
@@ -1514,12 +1539,14 @@ impl OpSig {
     fn simd_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
             Self::Splat | Self::FromArray { .. } => &["val"],
+            Self::MaskFromBitmask => &["bits"],
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
+            | Self::MaskToBitmask
             | Self::AsArray { .. }
             | Self::FromBytes
             | Self::ToBytes => &["a"],
@@ -1543,6 +1570,8 @@ impl OpSig {
             Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }
+            | Self::MaskFromBitmask
+            | Self::MaskToBitmask
             | Self::FromBytes { .. }
             | Self::StoreArray => &[],
             Self::Unary
@@ -1603,6 +1632,8 @@ impl OpSig {
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
             | Self::Shift
+            | Self::MaskFromBitmask
+            | Self::MaskToBitmask
             | Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }

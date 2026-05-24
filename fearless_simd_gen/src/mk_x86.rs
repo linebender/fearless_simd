@@ -14,7 +14,7 @@ use crate::generic::{
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
 use crate::types::{ScalarType, VecType};
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -168,6 +168,19 @@ impl Level for X86 {
         }
     }
 
+    fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
+        let should_use_generic = op.sig.should_use_generic_op(vec_ty, self.native_width());
+        if !should_use_generic {
+            return false;
+        }
+
+        match op.sig {
+            OpSig::MaskFromBitmask => !self.has_specialized_mask_from_bitmask(vec_ty),
+            OpSig::MaskToBitmask => !self.has_specialized_mask_to_bitmask(vec_ty),
+            _ => true,
+        }
+    }
+
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
         let method_sig = op.simd_trait_method_sig(vec_ty);
@@ -201,6 +214,8 @@ impl Level for X86 {
                 quantifier,
                 condition,
             } => self.handle_mask_reduce(method_sig, vec_ty, quantifier, condition),
+            OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(method_sig, vec_ty),
+            OpSig::MaskToBitmask => self.handle_mask_to_bitmask(method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,
@@ -224,6 +239,360 @@ impl Level for X86 {
     }
 }
 
+fn mask_from_bitmask_bytes(vec_ty: &VecType) -> TokenStream {
+    let lane_count = vec_ty.len;
+    let bit_mask_128 = mask_bit_pattern_128();
+
+    if lane_count <= 8 {
+        return quote! {
+            {
+                let bit_bytes = _mm_set1_epi8(bits as i8);
+                let bit_mask = #bit_mask_128;
+                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+            }
+        };
+    }
+
+    if lane_count <= 16 {
+        let shuffle = mask_byte_shuffle_128(lane_count);
+        return quote! {
+            {
+                let bit_bytes = _mm_cvtsi32_si128(bits as i32);
+                let bit_bytes = _mm_shuffle_epi8(bit_bytes, #shuffle);
+                let bit_mask = #bit_mask_128;
+                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+            }
+        };
+    }
+
+    assert_eq!(
+        (vec_ty.n_bits(), vec_ty.scalar_bits, lane_count),
+        (256, 8, 32),
+        "only 32-lane masks need a 256-bit inverse movemask"
+    );
+
+    let shuffle = mask_byte_shuffle_256();
+    let bit_mask = mask_bit_pattern_256();
+    quote! {
+        {
+            let bit_bytes = _mm256_broadcastsi128_si256(_mm_cvtsi32_si128(bits as i32));
+            let bit_bytes = _mm256_shuffle_epi8(bit_bytes, #shuffle);
+            let bit_mask = #bit_mask;
+            _mm256_cmpeq_epi8(_mm256_and_si256(bit_bytes, bit_mask), bit_mask)
+        }
+    }
+}
+
+fn mask_from_bitmask_lanes(vec_ty: &VecType) -> TokenStream {
+    let lane_count = vec_ty.len;
+    let scalar_bits = vec_ty.scalar_bits;
+
+    match (vec_ty.n_bits(), scalar_bits) {
+        (128, 16) => {
+            let lanes = (0..lane_count).map(|i| {
+                let bit = 1_u16 << i;
+                signed_literal(bit.into(), 16)
+            });
+            quote! {
+                {
+                    let bit_lanes = _mm_set1_epi16(bits as i16);
+                    let bit_mask = _mm_setr_epi16(#(#lanes),*);
+                    _mm_cmpeq_epi16(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
+                }
+            }
+        }
+        (256, 16) => {
+            let lanes = (0..lane_count).map(|i| {
+                let bit = 1_u16 << i;
+                signed_literal(bit.into(), 16)
+            });
+            quote! {
+                {
+                    let bit_lanes = _mm256_set1_epi16(bits as i16);
+                    let bit_mask = _mm256_setr_epi16(#(#lanes),*);
+                    _mm256_cmpeq_epi16(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+                }
+            }
+        }
+        (128, 32) => {
+            let lanes = (0..lane_count).map(|i| {
+                let bit = 1_u32 << i;
+                signed_literal(bit.into(), 32)
+            });
+            quote! {
+                {
+                    let bit_lanes = _mm_set1_epi32(bits as i32);
+                    let bit_mask = _mm_setr_epi32(#(#lanes),*);
+                    _mm_cmpeq_epi32(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
+                }
+            }
+        }
+        (256, 32) => {
+            let lanes = (0..lane_count).map(|i| {
+                let bit = 1_u32 << i;
+                signed_literal(bit.into(), 32)
+            });
+            quote! {
+                {
+                    let bit_lanes = _mm256_set1_epi32(bits as i32);
+                    let bit_mask = _mm256_setr_epi32(#(#lanes),*);
+                    _mm256_cmpeq_epi32(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+                }
+            }
+        }
+        (128, 64) => {
+            assert_eq!(lane_count, 2, "128-bit 64-bit masks must have two lanes");
+            quote! {
+                {
+                    let bit_lanes = _mm_set1_epi64x(bits.cast_signed());
+                    let bit_mask = _mm_set_epi64x(2, 1);
+                    _mm_cmpeq_epi64(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
+                }
+            }
+        }
+        (256, 64) => {
+            assert_eq!(lane_count, 4, "256-bit 64-bit masks must have four lanes");
+            quote! {
+                {
+                    let bit_lanes = _mm256_set1_epi64x(bits.cast_signed());
+                    let bit_mask = _mm256_set_epi64x(8, 4, 2, 1);
+                    _mm256_cmpeq_epi64(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+                }
+            }
+        }
+        _ => unimplemented!(),
+    }
+}
+
+fn mask_from_bitmask_wide_avx2(vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.n_bits(),
+        512,
+        "only 512-bit masks use direct wide AVX2 bitmask lowering"
+    );
+    assert!(
+        matches!(vec_ty.scalar_bits, 32 | 64),
+        "only 32-bit and 64-bit AVX2 masks use direct wide lowering"
+    );
+
+    let ty = vec_ty.rust();
+    let lanes_per_chunk = 256 / vec_ty.scalar_bits;
+    let chunks = (0..2).map(|chunk| {
+        let chunk_start = chunk * lanes_per_chunk;
+        match vec_ty.scalar_bits {
+            32 => {
+                let lanes = (0..lanes_per_chunk).map(|i| {
+                    let bit = 1_u32 << (chunk_start + i);
+                    signed_literal(bit.into(), 32)
+                });
+                quote! {
+                    {
+                        let bit_mask = _mm256_setr_epi32(#(#lanes),*);
+                        _mm256_cmpeq_epi32(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+                    }
+                }
+            }
+            64 => {
+                let lanes = (0..lanes_per_chunk).rev().map(|i| {
+                    let bit = 1_u64 << (chunk_start + i);
+                    signed_literal(bit, 64)
+                });
+                quote! {
+                    {
+                        let bit_mask = _mm256_set_epi64x(#(#lanes),*);
+                        _mm256_cmpeq_epi64(_mm256_and_si256(bit_lanes, bit_mask), bit_mask)
+                    }
+                }
+            }
+            _ => unreachable!(),
+        }
+    });
+    let set1 = match vec_ty.scalar_bits {
+        32 => quote! { _mm256_set1_epi32(bits as i32) },
+        64 => quote! { _mm256_set1_epi64x(bits.cast_signed()) },
+        _ => unreachable!(),
+    };
+
+    quote! {
+        {
+            let bit_lanes = #set1;
+            #ty {
+                val: crate::support::Aligned512([#(#chunks),*]),
+                simd: self,
+            }
+        }
+    }
+}
+
+fn mask_from_bitmask_wide_bytes(native_width: usize, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.n_bits(),
+        512,
+        "only 512-bit masks use direct wide byte-mask lowering"
+    );
+    assert_eq!(
+        vec_ty.scalar_bits, 8,
+        "only mask8x64 uses direct wide byte-mask lowering"
+    );
+
+    let ty = vec_ty.rust();
+    match native_width {
+        128 => {
+            let bit_mask = mask_bit_pattern_128();
+            let chunks = (0..4).map(|chunk| {
+                let shuffle = mask_byte_shuffle_128_offset(16, chunk * 2);
+                quote! {
+                    {
+                        let bit_bytes = _mm_shuffle_epi8(bit_bytes, #shuffle);
+                        _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+                    }
+                }
+            });
+
+            quote! {
+                {
+                    let bit_bytes = _mm_set1_epi64x(bits.cast_signed());
+                    let bit_mask = #bit_mask;
+                    #ty {
+                        val: crate::support::Aligned512([#(#chunks),*]),
+                        simd: self,
+                    }
+                }
+            }
+        }
+        256 => {
+            let bit_mask = mask_bit_pattern_256();
+            let chunks = (0..2).map(|chunk| {
+                let shuffle = mask_byte_shuffle_256_offset(chunk * 4);
+                quote! {
+                    {
+                        let bit_bytes = _mm256_shuffle_epi8(bit_bytes, #shuffle);
+                        _mm256_cmpeq_epi8(_mm256_and_si256(bit_bytes, bit_mask), bit_mask)
+                    }
+                }
+            });
+
+            quote! {
+                {
+                    let bit_bytes = _mm256_set1_epi64x(bits.cast_signed());
+                    let bit_mask = #bit_mask;
+                    #ty {
+                        val: crate::support::Aligned512([#(#chunks),*]),
+                        simd: self,
+                    }
+                }
+            }
+        }
+        _ => unreachable!(),
+    }
+}
+
+fn mask_to_bitmask_words(native_width: usize, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar_bits, 16,
+        "only 16-bit masks use word packing to produce bitmasks"
+    );
+
+    match (native_width, vec_ty.n_bits()) {
+        (128 | 256, 128) => quote! {
+            {
+                let packed = _mm_packs_epi16(a.into(), a.into());
+                _mm_movemask_epi8(packed) as u8 as u64
+            }
+        },
+        (128, 256) => quote! {
+            {
+                let packed = _mm_packs_epi16(a.val.0[0], a.val.0[1]);
+                _mm_movemask_epi8(packed) as u32 as u64
+            }
+        },
+        (128, 512) => quote! {
+            {
+                let lo = _mm_packs_epi16(a.val.0[0], a.val.0[1]);
+                let hi = _mm_packs_epi16(a.val.0[2], a.val.0[3]);
+                let lo = _mm_movemask_epi8(lo) as u32 as u64;
+                let hi = _mm_movemask_epi8(hi) as u32 as u64;
+                lo | (hi << 16usize)
+            }
+        },
+        (256, 256) => quote! {
+            {
+                let halves: [__m128i; 2usize] = core::mem::transmute(a.val.0);
+                let packed = _mm_packs_epi16(halves[0], halves[1]);
+                _mm_movemask_epi8(packed) as u32 as u64
+            }
+        },
+        (256, 512) => quote! {
+            {
+                let lo = _mm256_movemask_epi8(a.val.0[0]) as u32;
+                let hi = _mm256_movemask_epi8(a.val.0[1]) as u32;
+                let lo = _pext_u32(lo, 0x5555_5555u32) as u64;
+                let hi = _pext_u32(hi, 0x5555_5555u32) as u64;
+                lo | (hi << 16usize)
+            }
+        },
+        _ => unimplemented!(),
+    }
+}
+
+fn mask_bit_pattern_128() -> TokenStream {
+    let lanes = (0..16).map(|i| {
+        let bit = 1_u8 << (i % 8);
+        signed_literal(bit.into(), 8)
+    });
+    quote! { _mm_setr_epi8(#(#lanes),*) }
+}
+
+fn mask_bit_pattern_256() -> TokenStream {
+    let lanes = (0..32).map(|i| {
+        let bit = 1_u8 << (i % 8);
+        signed_literal(bit.into(), 8)
+    });
+    quote! { _mm256_setr_epi8(#(#lanes),*) }
+}
+
+fn mask_byte_shuffle_128_offset(lane_count: usize, byte_offset: usize) -> TokenStream {
+    let lanes = (0..16).map(|i| {
+        let byte = u8::try_from(byte_offset + i.min(lane_count - 1) / 8)
+            .expect("SSE byte shuffle index must fit in u8");
+        signed_literal(byte.into(), 8)
+    });
+    quote! { _mm_setr_epi8(#(#lanes),*) }
+}
+
+fn mask_byte_shuffle_128(lane_count: usize) -> TokenStream {
+    mask_byte_shuffle_128_offset(lane_count, 0)
+}
+
+fn mask_byte_shuffle_256_offset(byte_offset: usize) -> TokenStream {
+    let lanes = (0..32).map(|i| {
+        let byte =
+            u8::try_from(byte_offset + i / 8).expect("AVX2 byte shuffle index must fit in u8");
+        signed_literal(byte.into(), 8)
+    });
+    quote! { _mm256_setr_epi8(#(#lanes),*) }
+}
+
+fn mask_byte_shuffle_256() -> TokenStream {
+    mask_byte_shuffle_256_offset(0)
+}
+
+fn signed_literal(value: u64, bits: u32) -> TokenStream {
+    assert!(
+        bits <= 64,
+        "signed literal width must fit in a primitive integer"
+    );
+    let shift = 64 - bits;
+    let value = (value << shift).cast_signed() >> shift;
+    if value < 0 {
+        let magnitude = Literal::u64_unsuffixed(value.unsigned_abs());
+        quote! { -#magnitude }
+    } else {
+        let value = Literal::u64_unsuffixed(value as u64);
+        quote! { #value }
+    }
+}
+
 impl X86 {
     pub(crate) fn handle_splat(&self, method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
         let intrinsic = set1_intrinsic(vec_ty);
@@ -239,6 +608,138 @@ impl X86 {
                     #intrinsic(val #cast).simd_into(self)
                 }
             }
+        }
+    }
+
+    fn has_specialized_mask_from_bitmask(&self, vec_ty: &VecType) -> bool {
+        self.has_wide_byte_mask_from_bitmask(vec_ty) || self.has_wide_avx2_mask_from_bitmask(vec_ty)
+    }
+
+    fn has_wide_byte_mask_from_bitmask(&self, vec_ty: &VecType) -> bool {
+        // 512-bit byte masks can be constructed directly from one broadcast, avoiding the
+        // shift-and-rebroadcast shape from generic split/combine.
+        vec_ty.scalar == ScalarType::Mask && vec_ty.n_bits() == 512 && vec_ty.scalar_bits == 8
+    }
+
+    fn has_wide_avx2_mask_from_bitmask(&self, vec_ty: &VecType) -> bool {
+        // AVX2 can construct these 512-bit masks directly from one broadcast, avoiding the
+        // split/combine shape that shifts and broadcasts each half separately.
+        *self == Self::Avx2
+            && vec_ty.scalar == ScalarType::Mask
+            && vec_ty.n_bits() == 512
+            && matches!(vec_ty.scalar_bits, 32 | 64)
+    }
+
+    fn has_specialized_mask_to_bitmask(&self, vec_ty: &VecType) -> bool {
+        vec_ty.scalar == ScalarType::Mask && vec_ty.scalar_bits == 16
+    }
+
+    pub(crate) fn handle_mask_from_bitmask(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "mask bitmask conversion only operates on masks"
+        );
+
+        if self.has_wide_byte_mask_from_bitmask(vec_ty) {
+            let expr = mask_from_bitmask_wide_bytes(self.native_width(), vec_ty);
+            return quote! {
+                #method_sig {
+                    unsafe {
+                        #expr
+                    }
+                }
+            };
+        }
+
+        if self.has_wide_avx2_mask_from_bitmask(vec_ty) {
+            let expr = mask_from_bitmask_wide_avx2(vec_ty);
+            return quote! {
+                #method_sig {
+                    unsafe {
+                        #expr
+                    }
+                }
+            };
+        }
+
+        let expr = match vec_ty.scalar_bits {
+            8 => {
+                let bytes = mask_from_bitmask_bytes(vec_ty);
+                quote! {
+                    #bytes.simd_into(self)
+                }
+            }
+            16 | 32 | 64 => {
+                let lanes = mask_from_bitmask_lanes(vec_ty);
+                quote! {
+                    #lanes.simd_into(self)
+                }
+            }
+            _ => unreachable!(),
+        };
+
+        quote! {
+            #method_sig {
+                unsafe {
+                    #expr
+                }
+            }
+        }
+    }
+
+    pub(crate) fn handle_mask_to_bitmask(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+    ) -> TokenStream {
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "mask bitmask conversion only operates on masks"
+        );
+
+        match vec_ty.scalar_bits {
+            8 => {
+                let bits_ty = vec_ty.reinterpret(ScalarType::Int, 8);
+                let movemask = simple_intrinsic("movemask", &bits_ty);
+                quote! {
+                    #method_sig {
+                        unsafe { #movemask(a.into()) as u32 as u64 }
+                    }
+                }
+            }
+            16 => {
+                let bits = mask_to_bitmask_words(self.native_width(), vec_ty);
+                quote! {
+                    #method_sig {
+                        unsafe {
+                            #bits
+                        }
+                    }
+                }
+            }
+            32 | 64 => {
+                let float_ty = vec_ty.cast(ScalarType::Float);
+                let movemask = simple_intrinsic("movemask", &float_ty);
+                let cast = cast_ident(
+                    ScalarType::Mask,
+                    ScalarType::Float,
+                    vec_ty.scalar_bits,
+                    vec_ty.scalar_bits,
+                    vec_ty.n_bits(),
+                );
+                quote! {
+                    #method_sig {
+                        unsafe { #movemask(#cast(a.into())) as u32 as u64 }
+                    }
+                }
+            }
+            _ => unreachable!(),
         }
     }
 

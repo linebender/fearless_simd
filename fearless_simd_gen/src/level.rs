@@ -46,6 +46,11 @@ pub(crate) trait Level {
     /// Generate a single operation's method on the `Simd` implementation.
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream;
 
+    /// Determine whether an operation should defer to the generic split/combine implementation.
+    fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
+        op.sig.should_use_generic_op(vec_ty, self.native_width())
+    }
+
     fn token(&self) -> Ident {
         Ident::new(self.name(), Span::call_site())
     }
@@ -91,7 +96,7 @@ pub(crate) trait Level {
         let mut methods = vec![];
         for vec_ty in SIMD_TYPES {
             for op in ops_for_type(vec_ty) {
-                if op.sig.should_use_generic_op(vec_ty, native_width) {
+                if self.should_use_generic_op(&op, vec_ty) {
                     methods.push(generic_op(&op, vec_ty));
                     continue;
                 }

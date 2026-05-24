@@ -939,6 +939,26 @@ impl Simd for Sse4_2 {
         unsafe { core::mem::transmute::<__m128i, [i8; 16usize]>(a.val.0) }
     }
     #[inline(always)]
+    fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
+        unsafe {
+            {
+                let bit_bytes = _mm_cvtsi32_si128(bits as i32);
+                let bit_bytes = _mm_shuffle_epi8(
+                    bit_bytes,
+                    _mm_setr_epi8(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1),
+                );
+                let bit_mask =
+                    _mm_setr_epi8(1, 2, 4, 8, 16, 32, 64, -128, 1, 2, 4, 8, 16, 32, 64, -128);
+                _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+            }
+            .simd_into(self)
+        }
+    }
+    #[inline(always)]
+    fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
+        unsafe { _mm_movemask_epi8(a.into()) as u32 as u64 }
+    }
+    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         unsafe { _mm_and_si128(a.into(), b.into()).simd_into(self) }
     }
@@ -1437,6 +1457,26 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize] {
         unsafe { core::mem::transmute::<__m128i, [i16; 8usize]>(a.val.0) }
+    }
+    #[inline(always)]
+    fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
+        unsafe {
+            {
+                let bit_lanes = _mm_set1_epi16(bits as i16);
+                let bit_mask = _mm_setr_epi16(1, 2, 4, 8, 16, 32, 64, 128);
+                _mm_cmpeq_epi16(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
+            }
+            .simd_into(self)
+        }
+    }
+    #[inline(always)]
+    fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64 {
+        unsafe {
+            {
+                let packed = _mm_packs_epi16(a.into(), a.into());
+                _mm_movemask_epi8(packed) as u8 as u64
+            }
+        }
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -1949,6 +1989,21 @@ impl Simd for Sse4_2 {
         unsafe { core::mem::transmute::<__m128i, [i32; 4usize]>(a.val.0) }
     }
     #[inline(always)]
+    fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
+        unsafe {
+            {
+                let bit_lanes = _mm_set1_epi32(bits as i32);
+                let bit_mask = _mm_setr_epi32(1, 2, 4, 8);
+                _mm_cmpeq_epi32(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
+            }
+            .simd_into(self)
+        }
+    }
+    #[inline(always)]
+    fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64 {
+        unsafe { _mm_movemask_ps(_mm_castsi128_ps(a.into())) as u32 as u64 }
+    }
+    #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         unsafe { _mm_and_si128(a.into(), b.into()).simd_into(self) }
     }
@@ -2259,6 +2314,21 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize] {
         unsafe { core::mem::transmute::<__m128i, [i64; 2usize]>(a.val.0) }
+    }
+    #[inline(always)]
+    fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
+        unsafe {
+            {
+                let bit_lanes = _mm_set1_epi64x(bits.cast_signed());
+                let bit_mask = _mm_set_epi64x(2, 1);
+                _mm_cmpeq_epi64(_mm_and_si128(bit_lanes, bit_mask), bit_mask)
+            }
+            .simd_into(self)
+        }
+    }
+    #[inline(always)]
+    fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64 {
+        unsafe { _mm_movemask_pd(_mm_castsi128_pd(a.into())) as u32 as u64 }
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -3284,6 +3354,19 @@ impl Simd for Sse4_2 {
         unsafe { core::mem::transmute::<[__m128i; 2usize], [i8; 32usize]>(a.val.0) }
     }
     #[inline(always)]
+    fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self> {
+        let lo = self.from_bitmask_mask8x16(bits);
+        let hi = self.from_bitmask_mask8x16(bits >> 16usize);
+        self.combine_mask8x16(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask8x32(self, a: mask8x32<Self>) -> u64 {
+        let (lo, hi) = self.split_mask8x32(a);
+        let lo = self.to_bitmask_mask8x16(lo);
+        let hi = self.to_bitmask_mask8x16(hi);
+        lo | (hi << 16usize)
+    }
+    #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_mask8x32(b);
@@ -3968,6 +4051,21 @@ impl Simd for Sse4_2 {
         unsafe { core::mem::transmute::<[__m128i; 2usize], [i16; 16usize]>(a.val.0) }
     }
     #[inline(always)]
+    fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self> {
+        let lo = self.from_bitmask_mask16x8(bits);
+        let hi = self.from_bitmask_mask16x8(bits >> 8usize);
+        self.combine_mask16x8(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask16x16(self, a: mask16x16<Self>) -> u64 {
+        unsafe {
+            {
+                let packed = _mm_packs_epi16(a.val.0[0], a.val.0[1]);
+                _mm_movemask_epi8(packed) as u32 as u64
+            }
+        }
+    }
+    #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_mask16x16(b);
@@ -4643,6 +4741,19 @@ impl Simd for Sse4_2 {
         unsafe { core::mem::transmute::<[__m128i; 2usize], [i32; 8usize]>(a.val.0) }
     }
     #[inline(always)]
+    fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self> {
+        let lo = self.from_bitmask_mask32x4(bits);
+        let hi = self.from_bitmask_mask32x4(bits >> 4usize);
+        self.combine_mask32x4(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask32x8(self, a: mask32x8<Self>) -> u64 {
+        let (lo, hi) = self.split_mask32x8(a);
+        let lo = self.to_bitmask_mask32x4(lo);
+        let hi = self.to_bitmask_mask32x4(hi);
+        lo | (hi << 4usize)
+    }
+    #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_mask32x8(b);
@@ -5076,6 +5187,19 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize] {
         unsafe { core::mem::transmute::<[__m128i; 2usize], [i64; 4usize]>(a.val.0) }
+    }
+    #[inline(always)]
+    fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self> {
+        let lo = self.from_bitmask_mask64x2(bits);
+        let hi = self.from_bitmask_mask64x2(bits >> 2usize);
+        self.combine_mask64x2(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask64x4(self, a: mask64x4<Self>) -> u64 {
+        let (lo, hi) = self.split_mask64x4(a);
+        let lo = self.to_bitmask_mask64x2(lo);
+        let hi = self.to_bitmask_mask64x2(hi);
+        lo | (hi << 2usize)
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -6207,6 +6331,56 @@ impl Simd for Sse4_2 {
         unsafe { core::mem::transmute::<[__m128i; 4usize], [i8; 64usize]>(a.val.0) }
     }
     #[inline(always)]
+    fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
+        unsafe {
+            {
+                let bit_bytes = _mm_set1_epi64x(bits.cast_signed());
+                let bit_mask =
+                    _mm_setr_epi8(1, 2, 4, 8, 16, 32, 64, -128, 1, 2, 4, 8, 16, 32, 64, -128);
+                mask8x64 {
+                    val: crate::support::Aligned512([
+                        {
+                            let bit_bytes = _mm_shuffle_epi8(
+                                bit_bytes,
+                                _mm_setr_epi8(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1),
+                            );
+                            _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+                        },
+                        {
+                            let bit_bytes = _mm_shuffle_epi8(
+                                bit_bytes,
+                                _mm_setr_epi8(2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3),
+                            );
+                            _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+                        },
+                        {
+                            let bit_bytes = _mm_shuffle_epi8(
+                                bit_bytes,
+                                _mm_setr_epi8(4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5),
+                            );
+                            _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+                        },
+                        {
+                            let bit_bytes = _mm_shuffle_epi8(
+                                bit_bytes,
+                                _mm_setr_epi8(6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7),
+                            );
+                            _mm_cmpeq_epi8(_mm_and_si128(bit_bytes, bit_mask), bit_mask)
+                        },
+                    ]),
+                    simd: self,
+                }
+            }
+        }
+    }
+    #[inline(always)]
+    fn to_bitmask_mask8x64(self, a: mask8x64<Self>) -> u64 {
+        let (lo, hi) = self.split_mask8x64(a);
+        let lo = self.to_bitmask_mask8x32(lo);
+        let hi = self.to_bitmask_mask8x32(hi);
+        lo | (hi << 32usize)
+    }
+    #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_mask8x64(b);
@@ -6937,6 +7111,24 @@ impl Simd for Sse4_2 {
         unsafe { core::mem::transmute::<[__m128i; 4usize], [i16; 32usize]>(a.val.0) }
     }
     #[inline(always)]
+    fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self> {
+        let lo = self.from_bitmask_mask16x16(bits);
+        let hi = self.from_bitmask_mask16x16(bits >> 16usize);
+        self.combine_mask16x16(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask16x32(self, a: mask16x32<Self>) -> u64 {
+        unsafe {
+            {
+                let lo = _mm_packs_epi16(a.val.0[0], a.val.0[1]);
+                let hi = _mm_packs_epi16(a.val.0[2], a.val.0[3]);
+                let lo = _mm_movemask_epi8(lo) as u32 as u64;
+                let hi = _mm_movemask_epi8(hi) as u32 as u64;
+                lo | (hi << 16usize)
+            }
+        }
+    }
+    #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_mask16x32(b);
@@ -7639,6 +7831,19 @@ impl Simd for Sse4_2 {
         unsafe { core::mem::transmute::<[__m128i; 4usize], [i32; 16usize]>(a.val.0) }
     }
     #[inline(always)]
+    fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
+        let lo = self.from_bitmask_mask32x8(bits);
+        let hi = self.from_bitmask_mask32x8(bits >> 8usize);
+        self.combine_mask32x8(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask32x16(self, a: mask32x16<Self>) -> u64 {
+        let (lo, hi) = self.split_mask32x16(a);
+        let lo = self.to_bitmask_mask32x8(lo);
+        let hi = self.to_bitmask_mask32x8(hi);
+        lo | (hi << 8usize)
+    }
+    #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_mask32x16(b);
@@ -8058,6 +8263,19 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
         unsafe { core::mem::transmute::<[__m128i; 4usize], [i64; 8usize]>(a.val.0) }
+    }
+    #[inline(always)]
+    fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {
+        let lo = self.from_bitmask_mask64x4(bits);
+        let hi = self.from_bitmask_mask64x4(bits >> 4usize);
+        self.combine_mask64x4(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask64x8(self, a: mask64x8<Self>) -> u64 {
+        let (lo, hi) = self.split_mask64x8(a);
+        let lo = self.to_bitmask_mask64x4(lo);
+        let hi = self.to_bitmask_mask64x4(hi);
+        lo | (hi << 4usize)
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {

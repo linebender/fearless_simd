@@ -6,6 +6,7 @@
     clippy::cast_possible_truncation,
     clippy::unseparated_literal_suffix,
     clippy::use_self,
+    clippy::wrong_self_convention,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
 #![cfg_attr(

@@ -21,6 +21,77 @@ use crate::{
 #[derive(Clone, Copy)]
 pub(crate) struct WasmSimd128;
 
+fn mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "mask bitmask conversion only operates on masks"
+    );
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "WASM SIMD mask bitmask lowering only handles one native vector"
+    );
+
+    let expr = match vec_ty.scalar_bits {
+        8 => quote! {
+            let lo = i8x16_splat(bits as i8);
+            let hi = i8x16_splat((bits >> 8) as i8);
+            let bytes =
+                u8x16_shuffle::<0, 0, 0, 0, 0, 0, 0, 0, 16, 16, 16, 16, 16, 16, 16, 16>(lo, hi);
+            let powers = u8x16(1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128);
+            let selected = v128_and(bytes, powers);
+            i8x16_ne(selected, i8x16_splat(0)).simd_into(self)
+        },
+        16 => quote! {
+            let bitset = i16x8_splat(bits as i16);
+            let powers = u16x8(1, 2, 4, 8, 16, 32, 64, 128);
+            let selected = v128_and(bitset, powers);
+            i16x8_ne(selected, i16x8_splat(0)).simd_into(self)
+        },
+        32 => quote! {
+            let bitset = i32x4_splat(bits as i32);
+            let powers = u32x4(1, 2, 4, 8);
+            let selected = v128_and(bitset, powers);
+            i32x4_ne(selected, i32x4_splat(0)).simd_into(self)
+        },
+        64 => quote! {
+            let bitset = i64x2_splat(bits as i64);
+            let powers = u64x2(1, 2);
+            let selected = v128_and(bitset, powers);
+            i64x2_ne(selected, i64x2_splat(0)).simd_into(self)
+        },
+        _ => unreachable!("WASM only supports mask lane widths of 8, 16, 32, and 64 bits"),
+    };
+
+    quote! {
+        #method_sig {
+            #expr
+        }
+    }
+}
+
+fn mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "mask bitmask conversion only operates on masks"
+    );
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "WASM SIMD mask bitmask lowering only handles one native vector"
+    );
+
+    let intrinsic = format_ident!("i{}x{}_bitmask", vec_ty.scalar_bits, vec_ty.len);
+
+    quote! {
+        #method_sig {
+            #intrinsic(a.into()) as u64
+        }
+    }
+}
+
 impl Level for WasmSimd128 {
     fn name(&self) -> &'static str {
         "WasmSimd128"
@@ -521,6 +592,8 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
+            OpSig::MaskFromBitmask => mask_from_bitmask(method_sig, vec_ty),
+            OpSig::MaskToBitmask => mask_to_bitmask(method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,

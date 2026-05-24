@@ -187,6 +187,27 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
+        OpSig::MaskFromBitmask => {
+            let half_len = half.len;
+            quote! {
+                #method_sig {
+                    let lo = self.#do_half(bits);
+                    let hi = self.#do_half(bits >> #half_len);
+                    self.#combine(lo, hi)
+                }
+            }
+        }
+        OpSig::MaskToBitmask => {
+            let half_len = half.len;
+            quote! {
+                #method_sig {
+                    let (lo, hi) = self.#split(a);
+                    let lo = self.#do_half(lo);
+                    let hi = self.#do_half(hi);
+                    lo | (hi << #half_len)
+                }
+            }
+        }
         OpSig::LoadInterleaved {
             block_size,
             block_count,
@@ -452,6 +473,39 @@ pub(crate) fn generic_from_bytes(method_sig: TokenStream, vec_ty: &VecType) -> T
                 // we're transmuting between types with all valid bit patterns and the same size and alignment.
                 #ty { val: core::mem::transmute(a.val), simd: self }
             }
+        }
+    }
+}
+
+pub(crate) fn generic_mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+    let len = vec_ty.len;
+
+    quote! {
+        #method_sig {
+            let lanes: [#scalar; #len] =
+                core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
+            lanes.simd_into(self)
+        }
+    }
+}
+
+pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let as_array = generic_op_name("as_array", vec_ty);
+    let len = vec_ty.len;
+
+    quote! {
+        #method_sig {
+            let lanes = self.#as_array(a);
+            let mut bits = 0u64;
+            let mut i = 0;
+            while i < #len {
+                if lanes[i] != 0 {
+                    bits |= 1u64 << i;
+                }
+                i += 1;
+            }
+            bits
         }
     }
 }
