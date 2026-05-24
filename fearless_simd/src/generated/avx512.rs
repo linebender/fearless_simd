@@ -6077,11 +6077,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn approximate_recip_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(
-            self.approximate_recip_f32x8(a0),
-            self.approximate_recip_f32x8(a1),
-        )
+        unsafe { _mm512_rcp14_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -6275,21 +6271,24 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.floor_f32x8(a0), self.floor_f32x8(a1))
+        unsafe {
+            _mm512_roundscale_ps::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
+        }
     }
     #[inline(always)]
     fn ceil_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.ceil_f32x8(a0), self.ceil_f32x8(a1))
+        unsafe {
+            _mm512_roundscale_ps::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
+        }
     }
     #[inline(always)]
     fn round_ties_even_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(
-            self.round_ties_even_f32x8(a0),
-            self.round_ties_even_f32x8(a1),
-        )
+        unsafe {
+            _mm512_roundscale_ps::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
+        }
     }
     #[inline(always)]
     fn fract_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -6297,8 +6296,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn trunc_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f32x8(self.trunc_f32x8(a0), self.trunc_f32x8(a1))
+        unsafe {
+            _mm512_roundscale_ps::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
@@ -9058,11 +9059,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn approximate_recip_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(
-            self.approximate_recip_f64x4(a0),
-            self.approximate_recip_f64x4(a1),
-        )
+        unsafe { _mm512_rcp14_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -9240,21 +9237,24 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.floor_f64x4(a0), self.floor_f64x4(a1))
+        unsafe {
+            _mm512_roundscale_pd::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
+        }
     }
     #[inline(always)]
     fn ceil_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.ceil_f64x4(a0), self.ceil_f64x4(a1))
+        unsafe {
+            _mm512_roundscale_pd::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
+        }
     }
     #[inline(always)]
     fn round_ties_even_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(
-            self.round_ties_even_f64x4(a0),
-            self.round_ties_even_f64x4(a1),
-        )
+        unsafe {
+            _mm512_roundscale_pd::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
+        }
     }
     #[inline(always)]
     fn fract_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -9262,8 +9262,10 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn trunc_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f64x4(self.trunc_f64x4(a0), self.trunc_f64x4(a1))
+        unsafe {
+            _mm512_roundscale_pd::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into())
+                .simd_into(self)
+        }
     }
     #[inline(always)]
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {

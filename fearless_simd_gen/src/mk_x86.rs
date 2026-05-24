@@ -244,17 +244,6 @@ impl Level for X86 {
 
     fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
         if *self == Self::Avx512
-            && vec_ty.scalar == ScalarType::Float
-            && vec_ty.n_bits() == 512
-            && matches!(
-                op.method,
-                "floor" | "ceil" | "round_ties_even" | "trunc" | "approximate_recip"
-            )
-        {
-            return true;
-        }
-
-        if *self == Self::Avx512
             && matches!(
                 op.sig,
                 OpSig::Slide {
@@ -1289,6 +1278,51 @@ impl X86 {
                     #body
                 }
             };
+        }
+
+        if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Float && vec_ty.n_bits() == 512 {
+            let body = match method {
+                "floor" | "ceil" | "round_ties_even" | "trunc" => {
+                    let intrinsic = intrinsic_ident(
+                        "roundscale",
+                        op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true),
+                        512,
+                    );
+                    let rounding_mode = match method {
+                        "floor" => quote! { _MM_FROUND_TO_NEG_INF },
+                        "ceil" => quote! { _MM_FROUND_TO_POS_INF },
+                        "round_ties_even" => quote! { _MM_FROUND_TO_NEAREST_INT },
+                        "trunc" => quote! { _MM_FROUND_TO_ZERO },
+                        _ => unreachable!(),
+                    };
+                    quote! {
+                        unsafe {
+                            #intrinsic::<{ #rounding_mode | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                "approximate_recip" => {
+                    let intrinsic = intrinsic_ident(
+                        "rcp14",
+                        op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true),
+                        512,
+                    );
+                    quote! {
+                        unsafe {
+                            #intrinsic(a.into()).simd_into(self)
+                        }
+                    }
+                }
+                _ => TokenStream::new(),
+            };
+
+            if !body.is_empty() {
+                return quote! {
+                    #method_sig {
+                        #body
+                    }
+                };
+            }
         }
 
         match method {

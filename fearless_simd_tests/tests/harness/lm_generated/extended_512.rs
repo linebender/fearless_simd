@@ -512,6 +512,61 @@ fn fract_f32x16<S: Simd>(simd: S) {
     );
 }
 
+#[simd_test]
+fn fract_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[1.7, -2.3, 3.9, -4.1, 5.5, -6.6, 7.2, -8.8]);
+    let result = simd.fract_f64x8(a);
+    assert_eq!(
+        *result,
+        [
+            0.7,
+            -0.2999999999999998,
+            0.8999999999999999,
+            -0.09999999999999964,
+            0.5,
+            -0.5999999999999996,
+            0.20000000000000018,
+            -0.8000000000000007
+        ]
+    );
+}
+
+#[simd_test]
+fn approximate_recip_f32x16<S: Simd>(simd: S) {
+    let a = f32x16::from_slice(
+        simd,
+        &[
+            1.0, -2.0, 23.0, 9.0, 0.5, -0.25, 128.0, -1024.0, 3.0, -7.0, 11.0, -13.0, 19.0, -29.0,
+            37.0, -41.0,
+        ],
+    );
+    let result = a.approximate_recip();
+    for i in 0..16 {
+        let expected = 1.0 / a[i];
+        let rel_error = ((result[i] - expected) / expected).abs();
+        assert!(
+            rel_error < 0.005,
+            "approximate_recip({}) rel_error = {rel_error}",
+            a[i]
+        );
+    }
+}
+
+#[simd_test]
+fn approximate_recip_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[1.0, -2.0, 23.0, 9.0, 0.5, -0.25, 128.0, -1024.0]);
+    let result = a.approximate_recip();
+    for i in 0..8 {
+        let expected = 1.0 / a[i];
+        let rel_error = ((result[i] - expected) / expected).abs();
+        assert!(
+            rel_error < 0.005,
+            "approximate_recip({}) rel_error = {rel_error}",
+            a[i]
+        );
+    }
+}
+
 // =============================================================================
 // max_precise and min_precise tests (512-bit floats)
 // =============================================================================
