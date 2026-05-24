@@ -840,6 +840,56 @@ fn all_false_mask8x16<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn load_interleaved_128_f32x16<S: Simd>(simd: S) {
+    let data: [f32; 16] = [
+        0.0,
+        f32::NAN,
+        f32::INFINITY,
+        -3.0,
+        4.0,
+        -0.0,
+        6.0,
+        f32::NEG_INFINITY,
+        8.0,
+        9.0,
+        -10.0,
+        11.0,
+        f32::MIN,
+        13.0,
+        f32::MAX,
+        15.0,
+    ];
+    let result = simd.load_interleaved_128_f32x16(&data);
+
+    let expected = [
+        0.0,
+        4.0,
+        8.0,
+        f32::MIN,
+        f32::NAN,
+        -0.0,
+        9.0,
+        13.0,
+        f32::INFINITY,
+        6.0,
+        -10.0,
+        f32::MAX,
+        -3.0,
+        f32::NEG_INFINITY,
+        11.0,
+        15.0,
+    ];
+
+    // Note: f32::NAN != f32::NAN hence we transmute to compare the bit pattern
+    unsafe {
+        assert_eq!(
+            std::mem::transmute::<[f32; 16], [u32; 16]>(*result),
+            std::mem::transmute::<[f32; 16], [u32; 16]>(expected)
+        );
+    }
+}
+
+#[simd_test]
 fn load_interleaved_128_u32x16<S: Simd>(simd: S) {
     #[rustfmt::skip]
     let data: [u32; 16] = [

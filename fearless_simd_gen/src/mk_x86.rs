@@ -791,6 +791,11 @@ fn avx512_permutex2var_intrinsic(vec_ty: &VecType) -> Ident {
     intrinsic_ident("permutex2var", suffix, vec_ty.n_bits())
 }
 
+fn avx512_permutexvar_intrinsic(vec_ty: &VecType) -> Ident {
+    let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+    intrinsic_ident("permutexvar", suffix, vec_ty.n_bits())
+}
+
 fn avx512_mask_blend_intrinsic(vec_ty: &VecType) -> Ident {
     let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
     intrinsic_ident("mask_blend", suffix, vec_ty.n_bits())
@@ -861,6 +866,20 @@ fn avx512_index_vector(vec_ty: &VecType, indices: impl IntoIterator<Item = usize
         }
         _ => unreachable!(),
     }
+}
+
+fn interleaved_load_indices(len: usize, block_count: usize) -> Vec<usize> {
+    let stream_len = len / block_count;
+    (0..block_count)
+        .flat_map(|stream| (0..stream_len).map(move |i| i * block_count + stream))
+        .collect()
+}
+
+fn interleaved_store_indices(len: usize, block_count: usize) -> Vec<usize> {
+    let stream_len = len / block_count;
+    (0..stream_len)
+        .flat_map(|i| (0..block_count).map(move |stream| stream * stream_len + i))
+        .collect()
 }
 
 impl X86 {
@@ -2810,6 +2829,14 @@ impl X86 {
             "only 128-bit blocks are currently supported"
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
+        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
+            return self.handle_avx512_load_interleaved(
+                method_sig,
+                vec_ty,
+                block_size,
+                block_count,
+            );
+        }
         let expr = match vec_ty.scalar_bits {
             32 | 16 | 8 => {
                 let block_ty =
@@ -2928,6 +2955,36 @@ impl X86 {
         }
     }
 
+    pub(crate) fn handle_avx512_load_interleaved(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+        block_size: u16,
+        block_count: u16,
+    ) -> TokenStream {
+        assert_eq!(
+            block_size, 128,
+            "only 128-bit blocks are currently supported"
+        );
+        assert_eq!(block_count, 4, "only count of 4 is currently supported");
+        assert_eq!(vec_ty.n_bits(), 512);
+        let load_unaligned = intrinsic_ident("loadu", coarse_type(vec_ty), vec_ty.n_bits());
+        let permute = avx512_permutexvar_intrinsic(vec_ty);
+        let indices = avx512_index_vector(
+            vec_ty,
+            interleaved_load_indices(vec_ty.len, block_count as usize),
+        );
+
+        quote! {
+            #method_sig {
+                unsafe {
+                    let lanes = #load_unaligned(src.as_ptr() as *const _);
+                    #permute(#indices, lanes).simd_into(self)
+                }
+            }
+        }
+    }
+
     pub(crate) fn handle_store_interleaved(
         &self,
         method_sig: TokenStream,
@@ -2940,6 +2997,14 @@ impl X86 {
             "only 128-bit blocks are currently supported"
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
+        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
+            return self.handle_avx512_store_interleaved(
+                method_sig,
+                vec_ty,
+                block_size,
+                block_count,
+            );
+        }
         let expr = match vec_ty.scalar_bits {
             32 | 16 | 8 => {
                 let block_ty =
@@ -3055,6 +3120,36 @@ impl X86 {
         quote! {
             #method_sig {
                 #expr
+            }
+        }
+    }
+
+    pub(crate) fn handle_avx512_store_interleaved(
+        &self,
+        method_sig: TokenStream,
+        vec_ty: &VecType,
+        block_size: u16,
+        block_count: u16,
+    ) -> TokenStream {
+        assert_eq!(
+            block_size, 128,
+            "only 128-bit blocks are currently supported"
+        );
+        assert_eq!(block_count, 4, "only count of 4 is currently supported");
+        assert_eq!(vec_ty.n_bits(), 512);
+        let store_unaligned = intrinsic_ident("storeu", coarse_type(vec_ty), vec_ty.n_bits());
+        let permute = avx512_permutexvar_intrinsic(vec_ty);
+        let indices = avx512_index_vector(
+            vec_ty,
+            interleaved_store_indices(vec_ty.len, block_count as usize),
+        );
+
+        quote! {
+            #method_sig {
+                unsafe {
+                    let lanes = #permute(#indices, a.into());
+                    #store_unaligned(dest.as_mut_ptr() as *mut _, lanes);
+                }
             }
         }
     }
