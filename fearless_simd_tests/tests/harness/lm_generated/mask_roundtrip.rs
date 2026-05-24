@@ -8,17 +8,17 @@ use fearless_simd_dev_macros::simd_test;
 /// `to_bitmask` and `test` in sync with the expected compact bitmask.
 fn assert_mask_set_roundtrip<S: Simd, M: SimdMask<S>>(simd: S) {
     let mut mask = M::from_bitmask(simd, 0);
-    let mut expected = 0u64;
+    let mut expected = 0_u64;
     for i in 0..M::N {
         mask.set(i, true);
-        expected |= 1u64 << i;
+        expected |= 1_u64 << i;
         assert_eq!(mask.to_bitmask(), expected);
         assert!(mask.test(i));
     }
 
     for i in 0..M::N {
         mask.set(i, false);
-        expected &= !(1u64 << i);
+        expected &= !(1_u64 << i);
         assert_eq!(mask.to_bitmask(), expected);
         assert!(!mask.test(i));
     }
