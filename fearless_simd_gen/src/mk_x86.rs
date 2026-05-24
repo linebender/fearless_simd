@@ -928,25 +928,25 @@ impl X86 {
         kind: crate::ops::RefKind,
     ) -> TokenStream {
         assert_eq!(vec_ty.scalar, ScalarType::Mask);
-        let len = vec_ty.len;
-        let val_ref = if kind == crate::ops::RefKind::Value {
+        let movepi_mask = intrinsic_ident(
+            &format!("movepi{}", vec_ty.scalar_bits),
+            "mask",
+            vec_ty.n_bits(),
+        );
+        let transmute_src = if kind == crate::ops::RefKind::Value {
             quote! { &val }
         } else {
             quote! { val }
         };
-        let result = avx512_mask_value(vec_ty, quote! { bits });
+        // Mask arrays are specified as either 0 or -1 per lane, so the sign bit is the
+        // truth value. Other lane values have unspecified results.
+        let result = avx512_mask_register_value(vec_ty, quote! { #movepi_mask(lanes) });
         quote! {
             #method_sig {
-                let val = #val_ref;
-                let mut bits = 0u64;
-                let mut i = 0usize;
-                while i < #len {
-                    if val[i] != 0 {
-                        bits |= 1u64 << i;
-                    }
-                    i += 1;
+                unsafe {
+                    let lanes = crate::support::checked_transmute_copy(#transmute_src);
+                    #result
                 }
-                #result
             }
         }
     }
@@ -962,11 +962,17 @@ impl X86 {
             kind == crate::ops::RefKind::Value,
             "mask array references are not exposed"
         );
-        let bits = avx512_mask_bits_expr(quote! { a });
+        let movm = intrinsic_ident(
+            "movm",
+            op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true),
+            vec_ty.n_bits(),
+        );
         quote! {
             #method_sig {
-                let bits = #bits;
-                core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+                unsafe {
+                    let lanes = #movm(a.val);
+                    crate::support::checked_transmute_copy(&lanes)
+                }
             }
         }
     }

@@ -936,24 +936,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 16usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask8x16 {
+                val: _mm_movepi8_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask8x16 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm_movm_epi8(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
@@ -1516,24 +1512,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 8usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask16x8 {
+                val: _mm_movepi16_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask16x8 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm_movm_epi16(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
@@ -2106,24 +2098,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 4usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask32x4 {
+                val: _mm_movepi32_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask32x4 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm_movm_epi32(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
@@ -2486,24 +2474,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 2usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask64x2 {
+                val: _mm_movepi64_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask64x2 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm_movm_epi64(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
@@ -3711,24 +3695,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 32usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask8x32 {
+                val: _mm256_movepi8_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask8x32 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm256_movm_epi8(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self> {
@@ -4467,24 +4447,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 16usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask16x16 {
+                val: _mm256_movepi16_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask16x16 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm256_movm_epi16(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self> {
@@ -5204,24 +5180,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 8usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask32x8 {
+                val: _mm256_movepi32_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask32x8 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm256_movm_epi32(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self> {
@@ -5653,24 +5625,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 4usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask64x4 {
+                val: _mm256_movepi64_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask64x4 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm256_movm_epi64(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self> {
@@ -7029,24 +6997,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 64usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask8x64 {
+                val: _mm512_movepi8_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask8x64 {
-            val: bits,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm512_movm_epi8(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
@@ -7872,24 +7836,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 32usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask16x32 {
+                val: _mm512_movepi16_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask16x32 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm512_movm_epi16(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self> {
@@ -8657,24 +8617,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 16usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask32x16 {
+                val: _mm512_movepi32_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask32x16 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm512_movm_epi32(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
@@ -9114,24 +9070,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self> {
-        let val = &val;
-        let mut bits = 0u64;
-        let mut i = 0usize;
-        while i < 8usize {
-            if val[i] != 0 {
-                bits |= 1u64 << i;
+        unsafe {
+            let lanes = crate::support::checked_transmute_copy(&val);
+            mask64x8 {
+                val: _mm512_movepi64_mask(lanes),
+                simd: self,
             }
-            i += 1;
-        }
-        mask64x8 {
-            val: (bits) as _,
-            simd: self,
         }
     }
     #[inline(always)]
     fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
-        let bits = u64::from((a).val);
-        core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 })
+        unsafe {
+            let lanes = _mm512_movm_epi64(a.val);
+            crate::support::checked_transmute_copy(&lanes)
+        }
     }
     #[inline(always)]
     fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {
