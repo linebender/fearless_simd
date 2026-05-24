@@ -374,37 +374,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        unsafe {
-            let mut converted = _mm_cvttps_epi32(a.into());
-            let in_range = _mm_cmplt_ps(a.into(), _mm_set1_ps(2147483648.0));
-            let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
-            if !all_in_range {
-                let excess = _mm_sub_ps(a.into(), _mm_set1_ps(2147483648.0));
-                let excess_converted = _mm_cvttps_epi32(_mm_andnot_ps(in_range, excess));
-                converted = _mm_add_epi32(converted, excess_converted);
-            }
-            converted.simd_into(self)
-        }
+        unsafe { _mm_cvttps_epu32(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn cvt_u32_precise_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         unsafe {
             let a = _mm_max_ps(a.into(), _mm_setzero_ps());
-            let mut converted = _mm_cvttps_epi32(a);
-            let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
-            let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
-            if !all_in_range {
-                let exceeds_unsigned_range =
-                    _mm_castps_si128(_mm_cmplt_ps(_mm_set1_ps(4294967040.0), a));
-                let excess = _mm_sub_ps(a, _mm_set1_ps(2147483648.0));
-                let excess_converted = _mm_cvttps_epi32(_mm_andnot_ps(in_range, excess));
-                converted = _mm_add_epi32(converted, excess_converted);
-                converted = _mm_blendv_epi8(
-                    converted,
-                    _mm_set1_epi32(u32::MAX.cast_signed()),
-                    exceeds_unsigned_range,
-                );
-            }
+            let mut converted = _mm_cvttps_epu32(a);
+            let exceeds_unsigned_range = _mm_cmp_ps_mask::<17i32>(_mm_set1_ps(4294967040.0), a);
+            converted = _mm_mask_blend_epi32(
+                exceeds_unsigned_range,
+                converted,
+                _mm_set1_epi32(u32::MAX.cast_signed()),
+            );
             converted.simd_into(self)
         }
     }
@@ -2964,37 +2946,20 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
-        unsafe {
-            let mut converted = _mm256_cvttps_epi32(a.into());
-            let in_range = _mm256_cmp_ps::<17i32>(a.into(), _mm256_set1_ps(2147483648.0));
-            let all_in_range = _mm256_movemask_ps(in_range) == 0b11111111;
-            if !all_in_range {
-                let excess = _mm256_sub_ps(a.into(), _mm256_set1_ps(2147483648.0));
-                let excess_converted = _mm256_cvttps_epi32(_mm256_andnot_ps(in_range, excess));
-                converted = _mm256_add_epi32(converted, excess_converted);
-            }
-            converted.simd_into(self)
-        }
+        unsafe { _mm256_cvttps_epu32(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn cvt_u32_precise_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
         unsafe {
             let a = _mm256_max_ps(a.into(), _mm256_setzero_ps());
-            let mut converted = _mm256_cvttps_epi32(a);
-            let in_range = _mm256_cmp_ps::<17i32>(a, _mm256_set1_ps(2147483648.0));
-            let all_in_range = _mm256_movemask_ps(in_range) == 0b11111111;
-            if !all_in_range {
-                let exceeds_unsigned_range =
-                    _mm256_castps_si256(_mm256_cmp_ps::<17i32>(_mm256_set1_ps(4294967040.0), a));
-                let excess = _mm256_sub_ps(a, _mm256_set1_ps(2147483648.0));
-                let excess_converted = _mm256_cvttps_epi32(_mm256_andnot_ps(in_range, excess));
-                converted = _mm256_add_epi32(converted, excess_converted);
-                converted = _mm256_blendv_epi8(
-                    converted,
-                    _mm256_set1_epi32(u32::MAX.cast_signed()),
-                    exceeds_unsigned_range,
-                );
-            }
+            let mut converted = _mm256_cvttps_epu32(a);
+            let exceeds_unsigned_range =
+                _mm256_cmp_ps_mask::<17i32>(_mm256_set1_ps(4294967040.0), a);
+            converted = _mm256_mask_blend_epi32(
+                exceeds_unsigned_range,
+                converted,
+                _mm256_set1_epi32(u32::MAX.cast_signed()),
+            );
             converted.simd_into(self)
         }
     }

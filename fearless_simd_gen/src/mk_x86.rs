@@ -2369,6 +2369,48 @@ impl X86 {
             vec_ty.scalar_bits, target_scalar_bits,
             "we currently only support converting between types of the same width"
         );
+        if *self == Self::Avx512
+            && vec_ty.scalar == ScalarType::Float
+            && target_scalar == ScalarType::Unsigned
+        {
+            let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
+            let convert = intrinsic_ident("cvttps", "epu32", vec_ty.n_bits());
+            let expr = if precise {
+                let max = simple_intrinsic("max", vec_ty);
+                let cmp = intrinsic_ident("cmp", "ps_mask", vec_ty.n_bits());
+                let blend = avx512_mask_blend_intrinsic(&target_ty);
+                let set1_float = set1_intrinsic(vec_ty);
+                let set1_int = set1_intrinsic(&target_ty);
+                let set0_float = intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
+                let lt = avx512_float_compare_predicate("simd_lt");
+                quote! {
+                    unsafe {
+                        let a = #max(a.into(), #set0_float());
+                        let mut converted = #convert(a);
+                        let exceeds_unsigned_range = #cmp::<#lt>(#set1_float(4294967040.0), a);
+                        converted = #blend(
+                            exceeds_unsigned_range,
+                            converted,
+                            #set1_int(u32::MAX.cast_signed()),
+                        );
+                        converted.simd_into(self)
+                    }
+                }
+            } else {
+                quote! {
+                    unsafe {
+                        #convert(a.into()).simd_into(self)
+                    }
+                }
+            };
+
+            return quote! {
+                #method_sig {
+                    #expr
+                }
+            };
+        }
+
         if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
             let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
             let expr = match (vec_ty.scalar, target_scalar) {
@@ -2391,38 +2433,6 @@ impl X86 {
                                 converted = #blend(in_range, #set1_int(i32::MAX), converted);
                                 let is_not_nan = #cmp::<#ord>(a, a);
                                 converted = #blend(is_not_nan, #set0_int(), converted);
-                                converted.simd_into(self)
-                            }
-                        }
-                    } else {
-                        quote! {
-                            unsafe {
-                                #convert(a.into()).simd_into(self)
-                            }
-                        }
-                    }
-                }
-                (ScalarType::Float, ScalarType::Unsigned) => {
-                    let convert = intrinsic_ident("cvttps", "epu32", vec_ty.n_bits());
-                    if precise {
-                        let max = simple_intrinsic("max", vec_ty);
-                        let cmp = intrinsic_ident("cmp", "ps_mask", vec_ty.n_bits());
-                        let blend = avx512_mask_blend_intrinsic(&target_ty);
-                        let set1_float = set1_intrinsic(vec_ty);
-                        let set1_int = set1_intrinsic(&target_ty);
-                        let set0_float =
-                            intrinsic_ident("setzero", coarse_type(vec_ty), vec_ty.n_bits());
-                        let lt = avx512_float_compare_predicate("simd_lt");
-                        quote! {
-                            unsafe {
-                                let a = #max(a.into(), #set0_float());
-                                let mut converted = #convert(a);
-                                let exceeds_unsigned_range = #cmp::<#lt>(#set1_float(4294967040.0), a);
-                                converted = #blend(
-                                    exceeds_unsigned_range,
-                                    converted,
-                                    #set1_int(u32::MAX.cast_signed()),
-                                );
                                 converted.simd_into(self)
                             }
                         }
