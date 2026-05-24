@@ -104,6 +104,23 @@ impl Level for X86 {
         }
     }
 
+    fn make_module_attrs(&self) -> TokenStream {
+        if *self != Self::Avx512 {
+            return TokenStream::new();
+        }
+
+        quote! {
+            #![allow(
+                clippy::identity_op,
+                reason = "AVX-512 mask code is generated uniformly for all __mmask widths"
+            )]
+            #![allow(
+                clippy::useless_conversion,
+                reason = "AVX-512 mask code is generated uniformly for all __mmask widths"
+            )]
+        }
+    }
+
     fn make_module_footer(&self) -> TokenStream {
         let alignr_helpers = self.dyn_alignr_helpers();
         let slide_helpers = match self {
@@ -706,13 +723,12 @@ fn avx512_mask_register_bits(vec_ty: &VecType) -> usize {
 }
 
 fn avx512_mask_lane_bits(vec_ty: &VecType) -> TokenStream {
-    let bits = if vec_ty.len == 64 {
+    if vec_ty.len == 64 {
         quote! { u64::MAX }
     } else {
         let bits = (1_u64 << vec_ty.len) - 1;
         quote! { #bits }
-    };
-    bits
+    }
 }
 
 fn avx512_mask_value(vec_ty: &VecType, bits: TokenStream) -> TokenStream {
@@ -940,7 +956,11 @@ impl X86 {
         vec_ty: &VecType,
         kind: crate::ops::RefKind,
     ) -> TokenStream {
-        assert_eq!(vec_ty.scalar, ScalarType::Mask);
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "AVX-512 mask array loads only operate on mask types"
+        );
         let movepi_mask = intrinsic_ident(
             &format!("movepi{}", vec_ty.scalar_bits),
             "mask",
@@ -970,7 +990,11 @@ impl X86 {
         vec_ty: &VecType,
         kind: crate::ops::RefKind,
     ) -> TokenStream {
-        assert_eq!(vec_ty.scalar, ScalarType::Mask);
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "AVX-512 mask array stores only operate on mask types"
+        );
         assert!(
             kind == crate::ops::RefKind::Value,
             "mask array references are not exposed"
@@ -995,9 +1019,13 @@ impl X86 {
         method_sig: TokenStream,
         vec_ty: &VecType,
     ) -> TokenStream {
-        assert_eq!(vec_ty.scalar, ScalarType::Mask);
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "AVX-512 mask set only operates on mask types"
+        );
         let len = vec_ty.len;
-        let bits = avx512_mask_bits_expr(quote! { *a });
+        let bits = avx512_mask_bits_expr(quote! { a });
         let result = avx512_mask_value(vec_ty, quote! { bits });
 
         quote! {
@@ -1657,8 +1685,14 @@ impl X86 {
     }
 
     fn handle_avx512_narrow_variable_shift(&self, method: &str, vec_ty: &VecType) -> TokenStream {
-        assert!(*self == Self::Avx512);
-        assert!(matches!(vec_ty.scalar_bits, 8 | 16));
+        assert!(
+            *self == Self::Avx512,
+            "narrow variable shifts are specialized for AVX-512"
+        );
+        assert!(
+            matches!(vec_ty.scalar_bits, 8 | 16),
+            "narrow variable shifts only handle 8-bit and 16-bit lanes"
+        );
         let name = match (method, vec_ty.scalar) {
             ("shrv", ScalarType::Int) => "srav",
             ("shrv", _) => "srlv",
@@ -3094,7 +3128,11 @@ impl X86 {
             "only 128-bit blocks are currently supported"
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
-        assert_eq!(vec_ty.n_bits(), 512);
+        assert_eq!(
+            vec_ty.n_bits(),
+            512,
+            "AVX-512 interleaved loads only specialize 512-bit vectors"
+        );
         let load_unaligned = intrinsic_ident("loadu", coarse_type(vec_ty), vec_ty.n_bits());
         let permute = avx512_permutexvar_intrinsic(vec_ty);
         let indices = avx512_index_vector(
@@ -3263,7 +3301,11 @@ impl X86 {
             "only 128-bit blocks are currently supported"
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
-        assert_eq!(vec_ty.n_bits(), 512);
+        assert_eq!(
+            vec_ty.n_bits(),
+            512,
+            "AVX-512 interleaved stores only specialize 512-bit vectors"
+        );
         let store_unaligned = intrinsic_ident("storeu", coarse_type(vec_ty), vec_ty.n_bits());
         let permute = avx512_permutexvar_intrinsic(vec_ty);
         let indices = avx512_index_vector(

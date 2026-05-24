@@ -46,6 +46,10 @@ pub(crate) trait Level {
     /// Any additional imports or supporting code necessary for the module (for instance, importing
     /// implementation-specific functions from `core::arch`).
     fn make_module_prelude(&self) -> TokenStream;
+    /// Inner attributes to place at the top of the generated module.
+    fn make_module_attrs(&self) -> TokenStream {
+        TokenStream::new()
+    }
     /// The body of the SIMD token's inherent `impl` block. By convention, this contains an unsafe `new_unchecked`
     /// method for constructing a SIMD token that may not be supported on current hardware, or a safe `new` method for
     /// constructing a SIMD token that is statically known to be supported.
@@ -261,6 +265,7 @@ pub(crate) trait Level {
         let level_tok = self.token();
         let token_doc = self.token_doc();
         let imports = type_imports();
+        let module_attrs = self.make_module_attrs();
         let module_prelude = self.make_module_prelude();
         let impl_body = self.make_impl_body();
         let arch_types_impl = self.impl_arch_types();
@@ -269,6 +274,8 @@ pub(crate) trait Level {
         let footer = self.make_module_footer();
 
         quote! {
+            #module_attrs
+
             use crate::{prelude::*, seal::Seal, arch_types::ArchTypes, Level};
 
             #imports
