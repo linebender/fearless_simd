@@ -158,6 +158,8 @@ The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/fe
 - `std` (enabled by default): Get floating point functions from the standard library (likely using your target's libc).
   Also allows using [`Level::new`] on all platforms, to detect which target features are enabled.
 - `libm`: Use floating point implementations from [libm].
+- `sse4_2` (enabled by default): Enable the SSE4.2/x86-64-v2 runtime SIMD level on `x86` and `x86_64`.
+- `avx2` (enabled by default): Enable the AVX2/x86-64-v3 runtime SIMD level on `x86` and `x86_64`.
 - `force_support_fallback`: Force scalar fallback, to be supported, even if your compilation target has a better baseline.
 
 At least one of `std` and `libm` is required; `std` overrides `libm`.

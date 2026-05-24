@@ -26,12 +26,17 @@ rustdoc-args = [
 
 
 [features]
-default = ["std"]
+default = ["std", "sse4_2", "avx2"]
 # Get floating point functions from the standard library (likely using your targets libc).
 # Also allows using `Level::new` on all platforms, to detect which target features are enabled
 std = []
 # Use floating point implementations from libm
 libm = ["dep:libm"]
+
+# Enable the SSE4.2/x86-64-v2 runtime SIMD level on x86 and x86_64.
+sse4_2 = []
+# Enable the AVX2/x86-64-v3 runtime SIMD level on x86 and x86_64.
+avx2 = []
 
 # Force the "fallback" SIMD level to be supported
 # This is primarily used for tests
