@@ -27,6 +27,7 @@ fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
     dead_code,
     reason = "The `UNSUPPORTED_LEVEL_MESSAGE` is only used in some cfgs."
 )]
+#[cfg(any(feature = "std", target_arch = "wasm32"))]
 #[test]
 fn supports_highest_level() {
     const UNSUPPORTED_LEVEL_MESSAGE: &str = "This means that some of the other tests in this run may be false positives, that is, they have been marked as succeeding even though they would actually fail if they could run.\n\
