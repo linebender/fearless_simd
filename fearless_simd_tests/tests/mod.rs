@@ -12,6 +12,41 @@ use fearless_simd_dev_macros::simd_test;
 mod harness;
 mod soundness;
 
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+fn x86_detects_icelake_avx512() -> bool {
+    std::arch::is_x86_feature_detected!("adx")
+        && std::arch::is_x86_feature_detected!("aes")
+        && std::arch::is_x86_feature_detected!("avx512bitalg")
+        && std::arch::is_x86_feature_detected!("avx512bw")
+        && std::arch::is_x86_feature_detected!("avx512cd")
+        && std::arch::is_x86_feature_detected!("avx512dq")
+        && std::arch::is_x86_feature_detected!("avx512f")
+        && std::arch::is_x86_feature_detected!("avx512ifma")
+        && std::arch::is_x86_feature_detected!("avx512vbmi")
+        && std::arch::is_x86_feature_detected!("avx512vbmi2")
+        && std::arch::is_x86_feature_detected!("avx512vl")
+        && std::arch::is_x86_feature_detected!("avx512vnni")
+        && std::arch::is_x86_feature_detected!("avx512vpopcntdq")
+        && std::arch::is_x86_feature_detected!("bmi1")
+        && std::arch::is_x86_feature_detected!("bmi2")
+        && std::arch::is_x86_feature_detected!("cmpxchg16b")
+        && std::arch::is_x86_feature_detected!("fma")
+        && std::arch::is_x86_feature_detected!("gfni")
+        && std::arch::is_x86_feature_detected!("lzcnt")
+        && std::arch::is_x86_feature_detected!("movbe")
+        && std::arch::is_x86_feature_detected!("pclmulqdq")
+        && std::arch::is_x86_feature_detected!("popcnt")
+        && std::arch::is_x86_feature_detected!("rdrand")
+        && std::arch::is_x86_feature_detected!("rdseed")
+        && std::arch::is_x86_feature_detected!("sha")
+        && std::arch::is_x86_feature_detected!("vaes")
+        && std::arch::is_x86_feature_detected!("vpclmulqdq")
+        && std::arch::is_x86_feature_detected!("xsave")
+        && std::arch::is_x86_feature_detected!("xsavec")
+        && std::arch::is_x86_feature_detected!("xsaveopt")
+        && std::arch::is_x86_feature_detected!("xsaves")
+}
+
 // Ensure that we can cast between generic native-width vectors
 #[expect(dead_code, reason = "Compile only test")]
 fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
@@ -45,7 +80,7 @@ fn supports_highest_level() {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         assert!(
             level.as_avx2().is_some(),
-            "This machine does not support every `Level` supported by Fearless SIMD (currently AVX2 and below).\n{UNSUPPORTED_LEVEL_MESSAGE}",
+            "This machine does not support every routinely local-tested x86 `Level` supported by Fearless SIMD (currently AVX2 and below; AVX-512 is covered by the SDE CI job).\n{UNSUPPORTED_LEVEL_MESSAGE}",
         );
 
         #[cfg(target_arch = "aarch64")]
@@ -60,6 +95,91 @@ fn supports_highest_level() {
         level.as_wasm_simd128().is_some(),
         "This environment does not support WASM SIMD128. This should never happen, since it should always be supported if the `simd128` feature is enabled."
     );
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[test]
+fn detects_avx512_when_available() {
+    if !x86_detects_icelake_avx512() {
+        return;
+    }
+
+    let level = Level::new();
+    assert!(
+        level.as_avx512().is_some(),
+        "Ice Lake AVX-512 should be selected when all required features are available"
+    );
+    assert!(
+        level.as_avx2().is_some(),
+        "AVX-512 should downgrade to an AVX2 proof"
+    );
+    assert!(
+        level.as_sse4_2().is_some(),
+        "AVX-512 should downgrade to an SSE4.2 proof"
+    );
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[test]
+fn avx512_masks_are_compact() {
+    #[cfg(target_arch = "x86")]
+    use core::arch::x86::*;
+    #[cfg(target_arch = "x86_64")]
+    use core::arch::x86_64::*;
+    use std::mem::size_of;
+
+    type A = Avx512;
+
+    assert_eq!(size_of::<mask8x16<A>>(), size_of::<__mmask16>());
+    assert_eq!(size_of::<mask16x8<A>>(), size_of::<__mmask8>());
+    assert_eq!(size_of::<mask32x4<A>>(), size_of::<__mmask8>());
+    assert_eq!(size_of::<mask64x2<A>>(), size_of::<__mmask8>());
+    assert_eq!(size_of::<mask8x32<A>>(), size_of::<__mmask32>());
+    assert_eq!(size_of::<mask16x16<A>>(), size_of::<__mmask16>());
+    assert_eq!(size_of::<mask32x8<A>>(), size_of::<__mmask8>());
+    assert_eq!(size_of::<mask64x4<A>>(), size_of::<__mmask8>());
+    assert_eq!(size_of::<mask8x64<A>>(), size_of::<__mmask64>());
+    assert_eq!(size_of::<mask16x32<A>>(), size_of::<__mmask32>());
+    assert_eq!(size_of::<mask32x16<A>>(), size_of::<__mmask16>());
+    assert_eq!(size_of::<mask64x8<A>>(), size_of::<__mmask8>());
+}
+
+#[simd_test]
+fn x86_mask_arch_conversions_roundtrip<S: Simd>(simd: S) {
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    {
+        #[cfg(target_arch = "x86")]
+        use core::arch::x86::*;
+        #[cfg(target_arch = "x86_64")]
+        use core::arch::x86_64::*;
+
+        macro_rules! assert_roundtrip {
+            ($mask:ident, $arch:ty, $lane:ty, $lanes:literal, $bits:expr) => {{
+                let bits: u64 = $bits;
+                let expected: [$lane; $lanes] =
+                    core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { -1 } else { 0 });
+
+                let mask = $mask::from_bitmask(simd, bits);
+                let arch: $arch = mask.into();
+                let lanes: [$lane; $lanes] = unsafe { core::mem::transmute_copy(&arch) };
+                assert_eq!(lanes, expected);
+
+                let arch: $arch = unsafe { core::mem::transmute_copy(&expected) };
+                let mask = $mask::simd_from(simd, arch);
+                assert_eq!(mask.to_bitmask(), bits);
+            }};
+        }
+
+        assert_roundtrip!(mask8x16, __m128i, i8, 16, 0xa55a);
+        assert_roundtrip!(mask16x8, __m128i, i16, 8, 0xa5);
+        assert_roundtrip!(mask32x4, __m128i, i32, 4, 0xb);
+        assert_roundtrip!(mask64x2, __m128i, i64, 2, 0x2);
+
+        assert_roundtrip!(mask8x32, __m256i, i8, 32, 0xa55a_5aa5);
+        assert_roundtrip!(mask16x16, __m256i, i16, 16, 0x5aa5);
+        assert_roundtrip!(mask32x8, __m256i, i32, 8, 0xa5);
+        assert_roundtrip!(mask64x4, __m256i, i64, 4, 0xb);
+    }
 }
 
 #[simd_test]

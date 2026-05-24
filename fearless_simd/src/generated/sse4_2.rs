@@ -8403,16 +8403,15 @@ impl<S: Simd> From<u8x16<S>> for __m128i {
 impl<S: Simd> SimdFrom<__m128i, S> for mask8x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute_copy(&arch) },
-            simd,
-        }
+        let lanes: [i8; 16usize] = unsafe { core::mem::transmute_copy(&arch) };
+        lanes.simd_into(simd)
     }
 }
 impl<S: Simd> From<mask8x16<S>> for __m128i {
     #[inline(always)]
     fn from(value: mask8x16<S>) -> Self {
-        unsafe { core::mem::transmute_copy(&value.val) }
+        let lanes: [i8; 16usize] = value.into();
+        unsafe { core::mem::transmute_copy(&lanes) }
     }
 }
 impl<S: Simd> SimdFrom<__m128i, S> for i16x8<S> {
@@ -8448,16 +8447,15 @@ impl<S: Simd> From<u16x8<S>> for __m128i {
 impl<S: Simd> SimdFrom<__m128i, S> for mask16x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute_copy(&arch) },
-            simd,
-        }
+        let lanes: [i16; 8usize] = unsafe { core::mem::transmute_copy(&arch) };
+        lanes.simd_into(simd)
     }
 }
 impl<S: Simd> From<mask16x8<S>> for __m128i {
     #[inline(always)]
     fn from(value: mask16x8<S>) -> Self {
-        unsafe { core::mem::transmute_copy(&value.val) }
+        let lanes: [i16; 8usize] = value.into();
+        unsafe { core::mem::transmute_copy(&lanes) }
     }
 }
 impl<S: Simd> SimdFrom<__m128i, S> for i32x4<S> {
@@ -8493,16 +8491,15 @@ impl<S: Simd> From<u32x4<S>> for __m128i {
 impl<S: Simd> SimdFrom<__m128i, S> for mask32x4<S> {
     #[inline(always)]
     fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute_copy(&arch) },
-            simd,
-        }
+        let lanes: [i32; 4usize] = unsafe { core::mem::transmute_copy(&arch) };
+        lanes.simd_into(simd)
     }
 }
 impl<S: Simd> From<mask32x4<S>> for __m128i {
     #[inline(always)]
     fn from(value: mask32x4<S>) -> Self {
-        unsafe { core::mem::transmute_copy(&value.val) }
+        let lanes: [i32; 4usize] = value.into();
+        unsafe { core::mem::transmute_copy(&lanes) }
     }
 }
 impl<S: Simd> SimdFrom<__m128d, S> for f64x2<S> {
@@ -8523,16 +8520,15 @@ impl<S: Simd> From<f64x2<S>> for __m128d {
 impl<S: Simd> SimdFrom<__m128i, S> for mask64x2<S> {
     #[inline(always)]
     fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: unsafe { core::mem::transmute_copy(&arch) },
-            simd,
-        }
+        let lanes: [i64; 2usize] = unsafe { core::mem::transmute_copy(&arch) };
+        lanes.simd_into(simd)
     }
 }
 impl<S: Simd> From<mask64x2<S>> for __m128i {
     #[inline(always)]
     fn from(value: mask64x2<S>) -> Self {
-        unsafe { core::mem::transmute_copy(&value.val) }
+        let lanes: [i64; 2usize] = value.into();
+        unsafe { core::mem::transmute_copy(&lanes) }
     }
 }
 #[doc = r" This is a version of the `alignr` intrinsic that takes a non-const shift argument. The shift is still"]

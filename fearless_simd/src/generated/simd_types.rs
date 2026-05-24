@@ -1572,7 +1572,7 @@ impl<S: Simd> crate::SimdInt<S> for u32x4<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
     fn truncate_from(x: f32x4<S>) -> Self {
         x.simd.cvt_u32_f32x4(x)
@@ -3644,7 +3644,7 @@ impl<S: Simd> crate::SimdInt<S> for u32x8<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for u32x8<S> {
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
     fn truncate_from(x: f32x8<S>) -> Self {
         x.simd.cvt_u32_f32x8(x)
@@ -5713,7 +5713,7 @@ impl<S: Simd> crate::SimdInt<S> for u32x16<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for u32x16<S> {
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
     fn truncate_from(x: f32x16<S>) -> Self {
         x.simd.cvt_u32_f32x16(x)

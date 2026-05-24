@@ -1176,7 +1176,7 @@ pub(crate) const F32_TO_U32: Op = Op::new(
     },
     "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
     Out-of-range values or NaN will produce implementation-defined results.\n\n\
-    On x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\n\
+    On x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\n\
     If you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards.",
 );
 pub(crate) const F32_TO_U32_PRECISE: Op = Op::new(
