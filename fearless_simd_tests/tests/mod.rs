@@ -145,44 +145,6 @@ fn avx512_masks_are_compact() {
 }
 
 #[simd_test]
-fn x86_mask_arch_conversions_roundtrip<S: Simd>(simd: S) {
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    {
-        #[cfg(target_arch = "x86")]
-        use core::arch::x86::*;
-        #[cfg(target_arch = "x86_64")]
-        use core::arch::x86_64::*;
-
-        macro_rules! assert_roundtrip {
-            ($mask:ident, $arch:ty, $lane:ty, $lanes:literal, $bits:expr) => {{
-                let bits: u64 = $bits;
-                let expected: [$lane; $lanes] =
-                    core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { -1 } else { 0 });
-
-                let mask = $mask::from_bitmask(simd, bits);
-                let arch: $arch = mask.into();
-                let lanes: [$lane; $lanes] = unsafe { core::mem::transmute(arch) };
-                assert_eq!(lanes, expected);
-
-                let arch: $arch = unsafe { core::mem::transmute(expected) };
-                let mask = $mask::simd_from(simd, arch);
-                assert_eq!(mask.to_bitmask(), bits);
-            }};
-        }
-
-        assert_roundtrip!(mask8x16, __m128i, i8, 16, 0xa55a);
-        assert_roundtrip!(mask16x8, __m128i, i16, 8, 0xa5);
-        assert_roundtrip!(mask32x4, __m128i, i32, 4, 0xb);
-        assert_roundtrip!(mask64x2, __m128i, i64, 2, 0x2);
-
-        assert_roundtrip!(mask8x32, __m256i, i8, 32, 0xa55a_5aa5);
-        assert_roundtrip!(mask16x16, __m256i, i16, 16, 0x5aa5);
-        assert_roundtrip!(mask32x8, __m256i, i32, 8, 0xa5);
-        assert_roundtrip!(mask64x4, __m256i, i64, 4, 0xb);
-    }
-}
-
-#[simd_test]
 #[ignore]
 fn test_f32_to_i32_precise_exhaustive<S: Simd>(simd: S) {
     // The vectorize call doesn't affect the outcome of the test, but does make it complete far more quickly

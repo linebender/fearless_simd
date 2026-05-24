@@ -3,5 +3,7 @@
 
 mod extended_512;
 mod mask_methods;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod mask_roundtrip_x86;
 mod mod_256;
 mod mod_512;
