@@ -37,6 +37,13 @@ pub struct Aligned512<T>(pub T);
 /// `src` must be valid to copy as `Dst`. This helper only checks the size invariant; the caller
 /// is still responsible for the rest of `transmute_copy`'s safety contract.
 #[inline(always)]
+#[cfg_attr(
+    target_arch = "wasm32",
+    expect(
+        dead_code,
+        reason = "native vector conversions are not used by the wasm32 libm Clippy build"
+    )
+)]
 #[allow(
     clippy::disallowed_methods,
     reason = "This is the central checked wrapper around transmute_copy"
