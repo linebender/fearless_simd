@@ -193,7 +193,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn approximate_recip_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_rcp_ps(a.into()).simd_into(self) }
+        unsafe { _mm_rcp14_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -2395,7 +2395,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn approximate_recip_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        1.0 / a
+        unsafe { _mm_rcp14_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -2798,7 +2798,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn approximate_recip_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_rcp_ps(a.into()).simd_into(self) }
+        unsafe { _mm256_rcp14_ps(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -5615,7 +5615,7 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn approximate_recip_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        1.0 / a
+        unsafe { _mm256_rcp14_pd(a.into()).simd_into(self) }
     }
     #[inline(always)]
     fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {

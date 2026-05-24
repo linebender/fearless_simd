@@ -3412,10 +3412,25 @@ fn sqrt_f64x2<S: Simd>(simd: S) {
 
 #[simd_test]
 fn approximate_recip_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[1.0, -2.0]);
+    let result = a.approximate_recip();
+    let expected = [1.0, -0.5];
+    for i in 0..2 {
+        let rel_error = ((result[i] - expected[i]) / expected[i]).abs();
+        assert!(
+            rel_error < 0.005,
+            "approximate_recip({}) rel_error = {rel_error}",
+            a[i]
+        );
+    }
+}
+
+#[simd_test]
+fn approximate_recip_f64x4<S: Simd>(simd: S) {
     let a = f64x4::from_slice(simd, &[1.0, -2.0, 23.0, 9.0]);
     let result = a.approximate_recip();
     let expected = [1.0, -0.5, 1. / 23., 1. / 9.];
-    for i in 0..2 {
+    for i in 0..4 {
         let rel_error = ((result[i] - expected[i]) / expected[i]).abs();
         assert!(
             rel_error < 0.005,

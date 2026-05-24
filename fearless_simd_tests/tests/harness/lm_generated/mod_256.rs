@@ -66,6 +66,30 @@ fn sqrt_f32x8<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn approximate_recip_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[1.0, -2.0, 23.0, 9.0, 3.5, -7.25, 13.0, 0.25]);
+    let result = a.approximate_recip();
+    let expected = [
+        1.0,
+        -0.5,
+        1. / 23.,
+        1. / 9.,
+        1. / 3.5,
+        1. / -7.25,
+        1. / 13.,
+        4.0,
+    ];
+    for i in 0..8 {
+        let rel_error = ((result[i] - expected[i]) / expected[i]).abs();
+        assert!(
+            rel_error < 0.005,
+            "approximate_recip({}) rel_error = {rel_error}",
+            a[i]
+        );
+    }
+}
+
+#[simd_test]
 fn div_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[4.0, 2.0, 1.0, 0.0, 10.0, 12.0, 15.0, 20.0]);
     let b = f32x8::from_slice(simd, &[4.0, 1.0, 3.0, 0.1, 2.0, 3.0, 5.0, 4.0]);

@@ -1280,13 +1280,13 @@ impl X86 {
             };
         }
 
-        if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Float && vec_ty.n_bits() == 512 {
+        if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Float {
             let body = match method {
-                "floor" | "ceil" | "round_ties_even" | "trunc" => {
+                "floor" | "ceil" | "round_ties_even" | "trunc" if vec_ty.n_bits() == 512 => {
                     let intrinsic = intrinsic_ident(
                         "roundscale",
                         op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true),
-                        512,
+                        vec_ty.n_bits(),
                     );
                     let rounding_mode = match method {
                         "floor" => quote! { _MM_FROUND_TO_NEG_INF },
@@ -1305,7 +1305,7 @@ impl X86 {
                     let intrinsic = intrinsic_ident(
                         "rcp14",
                         op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true),
-                        512,
+                        vec_ty.n_bits(),
                     );
                     quote! {
                         unsafe {
