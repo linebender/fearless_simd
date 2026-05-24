@@ -77,6 +77,25 @@ fn mask64x8_bitmask_roundtrip<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+#[ignore] // takes too long to run on CI
+fn mask8x32_bitmask_roundtrip_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xffff_ffff_u64 {
+        let mask = mask8x32::from_bitmask(simd, bits);
+        assert_eq!(mask.to_bitmask(), bits);
+    }
+}
+
+#[simd_test]
+#[ignore] // takes too long to run on CI
+fn mask16x32_bitmask_roundtrip_exhaustive<S: Simd>(simd: S) {
+    for bits in 0..=0xffff_ffff_u64 {
+        let mask = mask16x32::from_bitmask(simd, bits);
+        assert_eq!(mask.to_bitmask(), bits);
+    }
+}
+
+// selected interesting bit patterns to test always
+#[simd_test]
 fn mask8x32_bitmask_roundtrip<S: Simd>(simd: S) {
     let mask = mask8x32::from_bitmask(simd, 0x0000_0000);
     assert_eq!(mask.to_bitmask(), 0x0000_0000);
@@ -115,6 +134,7 @@ fn mask8x32_bitmask_roundtrip<S: Simd>(simd: S) {
     assert_eq!(mask.to_bitmask(), 0xffff_ffff);
 }
 
+// selected interesting bit patterns to test always
 #[simd_test]
 fn mask16x32_bitmask_roundtrip<S: Simd>(simd: S) {
     let mask = mask16x32::from_bitmask(simd, 0x0000_0000);
