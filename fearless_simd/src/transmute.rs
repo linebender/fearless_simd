@@ -106,8 +106,16 @@ impl_aligned_simd_pod!(
     Aligned512<[u32; 16]>,
 );
 
+// the `const` is just to only use a single cfg annotation, nothing to do with const evalulation
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 const _: () = {
+    // SAFETY: std docs clearly state:
+    // > The in-memory representation of this type is the same as the one of an equivalent array
+    // > (i.e. the in-memory order of elements is the same,
+    // and there is no padding between two consecutive elements);
+    // > however, the alignment is different and equal to the size of the type.
+    // at https://doc.rust-lang.org/stable/core/arch/x86_64/struct.__m256.html and the other structs
+    // Fortunately for us, transmute_copy() does not care about alignment
     unsafe impl SimdPod for __m128 {}
     unsafe impl SimdPod for __m128d {}
     unsafe impl SimdPod for __m128i {}
@@ -121,6 +129,9 @@ unsafe impl SimdPod for v128 {}
 
 #[cfg(target_arch = "aarch64")]
 const _: () = {
+    // SAFETY:
+    // Compound types like float32x4x4_t are defined as #[repr(C)] tuples of basic types,
+    // see e.g. https://doc.rust-lang.org/stable/core/arch/aarch64/struct.float32x4x4_t.html
     unsafe impl SimdPod for float32x4_t {}
     unsafe impl SimdPod for float32x4x2_t {}
     unsafe impl SimdPod for float32x4x4_t {}
