@@ -5,6 +5,10 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
+#![allow(
+    clippy::disallowed_methods,
+    reason = "fearless_simd_tests has test-only transmute helpers that should not be forced through the library's private checked transmute machinery"
+)]
 
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
