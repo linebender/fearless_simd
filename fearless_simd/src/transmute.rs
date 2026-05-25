@@ -36,9 +36,13 @@ use core::arch::x86_64::{__m128, __m128d, __m128i, __m256, __m256d, __m256i};
 ///
 /// See [bytemuck::Pod](https://docs.rs/bytemuck/latest/bytemuck/trait.Pod.html)
 /// for the exact requirements and examples.
-#[expect(
+#[allow(
     unnameable_types,
-    reason = "This is an internal trait in a private module"
+    reason = "This must be `pub` to avoid `private_bounds` warnings on the generated `ArchTypes` trait, but the containing module remains private"
+)]
+#[allow(
+    unreachable_pub,
+    reason = "This must be `pub` to avoid `private_bounds` warnings on the generated `ArchTypes` trait, but the containing module remains private"
 )]
 pub unsafe trait SimdPod: Copy {}
 
