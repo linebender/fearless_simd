@@ -46,14 +46,18 @@ use core::arch::x86_64::{__m128, __m128d, __m128i, __m256, __m256d, __m256i};
 )]
 pub unsafe trait SimdPod: Copy {}
 
+fn assert_simd_pod<T: SimdPod>() {}
+
 // Do not blanket-impl `Aligned*<T: SimdPod>`: alignment wrappers can add
 // trailing padding for undersized `T`, e.g. `Aligned128<u8>`.
 macro_rules! impl_aligned_simd_pod {
     ($($wrapper:ident<$inner:ty>),+ $(,)?) => {
         $(
             // SAFETY: this enforces that the alignment wrapper adds no trailing padding to the
-            // wrapped SIMD storage, preserving the `SimdPod` no-padding invariant.
+            // wrapped SIMD storage, preserving the `SimdPod` no-padding invariant,
+            // and that the inner type is also SimdPod
             const _: () = assert!(size_of::<$wrapper<$inner>>() == size_of::<$inner>());
+            const _: fn() = assert_simd_pod::<$inner>;
             unsafe impl SimdPod for $wrapper<$inner> {}
         )+
     };
