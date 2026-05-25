@@ -46,6 +46,7 @@ use core::arch::x86_64::{__m128, __m128d, __m128i, __m256, __m256d, __m256i};
 )]
 pub unsafe trait SimdPod: Copy {}
 
+#[allow(dead_code, reason = "Not all platforms use safe transmute machinery")]
 fn assert_simd_pod<T: SimdPod>() {}
 
 // Do not blanket-impl `Aligned*<T: SimdPod>`: alignment wrappers can add
