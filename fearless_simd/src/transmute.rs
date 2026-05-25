@@ -107,7 +107,7 @@ impl_aligned_simd_pod!(
     Aligned512<[u32; 16]>,
 );
 
-// the `const` is just to only use a single cfg annotation, nothing to do with const evalulation
+// the `const` is just to only use a single cfg annotation, nothing to do with const evaluation
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 const _: () = {
     // SAFETY: std docs clearly state:
