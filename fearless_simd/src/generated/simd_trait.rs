@@ -2712,47 +2712,48 @@ pub trait Simd:
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
 }
 pub(crate) mod arch_types {
+    use crate::transmute::SimdPod;
     #[expect(
         unnameable_types,
         reason = "The native vector types that back a `Simd` implementation are an internal implementation detail, and intentionally kept private"
     )]
     pub trait ArchTypes {
-        type f32x4: Copy + Send + Sync;
-        type i8x16: Copy + Send + Sync;
-        type u8x16: Copy + Send + Sync;
-        type mask8x16: Copy + Send + Sync;
-        type i16x8: Copy + Send + Sync;
-        type u16x8: Copy + Send + Sync;
-        type mask16x8: Copy + Send + Sync;
-        type i32x4: Copy + Send + Sync;
-        type u32x4: Copy + Send + Sync;
-        type mask32x4: Copy + Send + Sync;
-        type f64x2: Copy + Send + Sync;
-        type mask64x2: Copy + Send + Sync;
-        type f32x8: Copy + Send + Sync;
-        type i8x32: Copy + Send + Sync;
-        type u8x32: Copy + Send + Sync;
-        type mask8x32: Copy + Send + Sync;
-        type i16x16: Copy + Send + Sync;
-        type u16x16: Copy + Send + Sync;
-        type mask16x16: Copy + Send + Sync;
-        type i32x8: Copy + Send + Sync;
-        type u32x8: Copy + Send + Sync;
-        type mask32x8: Copy + Send + Sync;
-        type f64x4: Copy + Send + Sync;
-        type mask64x4: Copy + Send + Sync;
-        type f32x16: Copy + Send + Sync;
-        type i8x64: Copy + Send + Sync;
-        type u8x64: Copy + Send + Sync;
-        type mask8x64: Copy + Send + Sync;
-        type i16x32: Copy + Send + Sync;
-        type u16x32: Copy + Send + Sync;
-        type mask16x32: Copy + Send + Sync;
-        type i32x16: Copy + Send + Sync;
-        type u32x16: Copy + Send + Sync;
-        type mask32x16: Copy + Send + Sync;
-        type f64x8: Copy + Send + Sync;
-        type mask64x8: Copy + Send + Sync;
+        type f32x4: Copy + Send + Sync + SimdPod;
+        type i8x16: Copy + Send + Sync + SimdPod;
+        type u8x16: Copy + Send + Sync + SimdPod;
+        type mask8x16: Copy + Send + Sync + SimdPod;
+        type i16x8: Copy + Send + Sync + SimdPod;
+        type u16x8: Copy + Send + Sync + SimdPod;
+        type mask16x8: Copy + Send + Sync + SimdPod;
+        type i32x4: Copy + Send + Sync + SimdPod;
+        type u32x4: Copy + Send + Sync + SimdPod;
+        type mask32x4: Copy + Send + Sync + SimdPod;
+        type f64x2: Copy + Send + Sync + SimdPod;
+        type mask64x2: Copy + Send + Sync + SimdPod;
+        type f32x8: Copy + Send + Sync + SimdPod;
+        type i8x32: Copy + Send + Sync + SimdPod;
+        type u8x32: Copy + Send + Sync + SimdPod;
+        type mask8x32: Copy + Send + Sync + SimdPod;
+        type i16x16: Copy + Send + Sync + SimdPod;
+        type u16x16: Copy + Send + Sync + SimdPod;
+        type mask16x16: Copy + Send + Sync + SimdPod;
+        type i32x8: Copy + Send + Sync + SimdPod;
+        type u32x8: Copy + Send + Sync + SimdPod;
+        type mask32x8: Copy + Send + Sync + SimdPod;
+        type f64x4: Copy + Send + Sync + SimdPod;
+        type mask64x4: Copy + Send + Sync + SimdPod;
+        type f32x16: Copy + Send + Sync + SimdPod;
+        type i8x64: Copy + Send + Sync + SimdPod;
+        type u8x64: Copy + Send + Sync + SimdPod;
+        type mask8x64: Copy + Send + Sync + SimdPod;
+        type i16x32: Copy + Send + Sync + SimdPod;
+        type u16x32: Copy + Send + Sync + SimdPod;
+        type mask16x32: Copy + Send + Sync + SimdPod;
+        type i32x16: Copy + Send + Sync + SimdPod;
+        type u32x16: Copy + Send + Sync + SimdPod;
+        type mask32x16: Copy + Send + Sync + SimdPod;
+        type f64x8: Copy + Send + Sync + SimdPod;
+        type mask64x8: Copy + Send + Sync + SimdPod;
     }
 }
 #[doc = r" Base functionality implemented by all SIMD vectors."]
