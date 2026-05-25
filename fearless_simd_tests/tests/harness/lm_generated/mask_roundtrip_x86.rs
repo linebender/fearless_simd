@@ -33,22 +33,6 @@ where
     })
 }
 
-#[allow(
-    clippy::disallowed_methods,
-    reason = "test-only checked wrapper around transmute_copy"
-)]
-unsafe fn checked_transmute_copy<Src: Copy, Dst: Copy>(src: &Src) -> Dst {
-    const {
-        assert!(
-            size_of::<Src>() == size_of::<Dst>(),
-            "checked_transmute_copy requires source and destination to have the same size"
-        );
-    }
-    // Safety: the caller upholds `transmute_copy`'s validity requirements, and
-    // the const assertion above verifies that the source and destination sizes match.
-    unsafe { core::mem::transmute_copy(src) }
-}
-
 fn assert_native_vector_roundtrip<S, M, A, L, const LANES: usize>(simd: S, bits: u64)
 where
     S: Simd,
@@ -65,12 +49,12 @@ where
     let arch: A = mask.into();
     // Safety: the size assertion above verifies that the x86 vector type has
     // the same size as the signed integer lane representation used for masks.
-    let lanes = unsafe { checked_transmute_copy::<A, [L; LANES]>(&arch) };
+    let lanes = unsafe { core::mem::transmute_copy::<A, [L; LANES]>(&arch) };
     assert_eq!(lanes, expected_lanes);
 
     // Safety: this builds the native x86 vector value from the lane
     // representation expected by the public mask conversion.
-    let arch = unsafe { checked_transmute_copy::<[L; LANES], A>(&expected_lanes) };
+    let arch = unsafe { core::mem::transmute_copy::<[L; LANES], A>(&expected_lanes) };
     let mask = M::simd_from(simd, arch);
     assert_eq!(mask.to_bitmask(), expected_bits);
 }
