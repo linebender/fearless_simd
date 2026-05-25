@@ -48,7 +48,7 @@ pub struct Aligned512<T>(pub T);
     clippy::disallowed_methods,
     reason = "This is the central checked wrapper around transmute_copy"
 )]
-pub(crate) unsafe fn checked_transmute_copy<Src, Dst>(src: &Src) -> Dst {
+pub(crate) unsafe fn checked_transmute_copy<Src: Copy, Dst: Copy>(src: &Src) -> Dst {
     const {
         assert!(
             size_of::<Src>() == size_of::<Dst>(),

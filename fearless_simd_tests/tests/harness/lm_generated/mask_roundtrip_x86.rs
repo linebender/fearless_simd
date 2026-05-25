@@ -37,7 +37,7 @@ where
     clippy::disallowed_methods,
     reason = "test-only checked wrapper around transmute_copy"
 )]
-unsafe fn checked_transmute_copy<Src, Dst>(src: &Src) -> Dst {
+unsafe fn checked_transmute_copy<Src: Copy, Dst: Copy>(src: &Src) -> Dst {
     const {
         assert!(
             size_of::<Src>() == size_of::<Dst>(),
