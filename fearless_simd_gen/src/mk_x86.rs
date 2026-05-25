@@ -204,7 +204,7 @@ impl Level for X86 {
                 #[inline(always)]
                 fn simd_from(simd: S, arch: #arch) -> Self {
                     let lanes: [#lane_ty; #len] =
-                        unsafe { crate::support::checked_transmute_copy(&arch) };
+                        crate::transmute::checked_transmute_copy(&arch);
                     lanes.simd_into(simd)
                 }
             }
@@ -212,7 +212,7 @@ impl Level for X86 {
                 #[inline(always)]
                 fn from(value: #simd<S>) -> Self {
                     let lanes: [#lane_ty; #len] = value.into();
-                    unsafe { crate::support::checked_transmute_copy(&lanes) }
+                    crate::transmute::checked_transmute_copy(&lanes)
                 }
             }
         })
@@ -977,7 +977,7 @@ impl X86 {
         quote! {
             #method_sig {
                 unsafe {
-                    let lanes = crate::support::checked_transmute_copy(#transmute_src);
+                    let lanes = crate::transmute::checked_transmute_copy(#transmute_src);
                     #result
                 }
             }
@@ -1008,7 +1008,7 @@ impl X86 {
             #method_sig {
                 unsafe {
                     let lanes = #movm(a.val);
-                    crate::support::checked_transmute_copy(&lanes)
+                    crate::transmute::checked_transmute_copy(&lanes)
                 }
             }
         }

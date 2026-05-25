@@ -13,3 +13,8 @@ disallowed-methods = [
 ]
 
 # END LINEBENDER LINT SET
+
+disallowed-methods = [
+  { path = "core::mem::transmute_copy", reason = "Use crate::transmute::checked_transmute_copy so that safety preconditions are verified at compile time." },
+  { path = "std::mem::transmute_copy", reason = "Use crate::transmute::checked_transmute_copy so that safety preconditions are verified at compile time." },
+]

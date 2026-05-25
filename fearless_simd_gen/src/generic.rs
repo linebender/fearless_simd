@@ -392,7 +392,7 @@ pub(crate) fn generic_from_array(
     // > &Dst and then reading the &Dst **(except that this is done in a way that is correct even when &Dst has
     // > stricter alignment requirements than &Src).**
     let expr = quote! {
-        unsafe { crate::support::checked_transmute_copy(#inner_ref) }
+        crate::transmute::checked_transmute_copy(#inner_ref)
     };
     let vec_rust = vec_ty.rust();
 
