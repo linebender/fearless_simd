@@ -154,6 +154,7 @@ mod kernel_macros;
 mod macros;
 mod support;
 mod traits;
+mod transmute;
 
 pub use generated::*;
 pub use traits::*;

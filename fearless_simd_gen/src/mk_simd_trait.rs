@@ -114,12 +114,14 @@ pub(crate) fn mk_arch_types() -> TokenStream {
     for vec_ty in SIMD_TYPES {
         let ty_name = vec_ty.rust();
         types.push(quote! {
-            type #ty_name: Copy + Send + Sync;
+            type #ty_name: Copy + Send + Sync + SimdPod;
         });
     }
 
     quote! {
         pub(crate) mod arch_types {
+            use crate::transmute::SimdPod;
+
             #[expect(
                 unnameable_types,
                 reason = "The native vector types that back a `Simd` implementation are an internal implementation detail, and intentionally kept private"

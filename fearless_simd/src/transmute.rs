@@ -1,0 +1,231 @@
+// Copyright 2026 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
+//! We have bytemuck at home
+//!
+//! This all serves a single `checked_transmute_copy` function,
+//! if we find this growing in complexity we should probably just use the real bytemuck
+
+use core::mem::size_of;
+
+use crate::support::{Aligned128, Aligned256, Aligned512};
+
+#[cfg(target_arch = "aarch64")]
+use core::arch::aarch64::{
+    float32x4_t, float32x4x2_t, float32x4x4_t, float64x2_t, float64x2x2_t, float64x2x4_t,
+    int8x16_t, int8x16x2_t, int8x16x4_t, int16x8_t, int16x8x2_t, int16x8x4_t, int32x4_t,
+    int32x4x2_t, int32x4x4_t, int64x2_t, int64x2x2_t, int64x2x4_t, uint8x16_t, uint8x16x2_t,
+    uint8x16x4_t, uint16x8_t, uint16x8x2_t, uint16x8x4_t, uint32x4_t, uint32x4x2_t, uint32x4x4_t,
+};
+#[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+use core::arch::wasm32::v128;
+#[cfg(target_arch = "x86")]
+use core::arch::x86::{__m128, __m128d, __m128i, __m256, __m256d, __m256i};
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64::{__m128, __m128d, __m128i, __m256, __m256d, __m256i};
+
+/// Types that can be safely copied through an arbitrary same-sized bit representation.
+///
+/// This is intentionally narrower than all possible POD types: it only covers scalar and SIMD
+/// storage types used by this crate today.
+///
+/// # Safety
+///
+/// Implementors must be `Copy`, contain no pointers or padding, and every bit pattern must be a
+/// valid value of the type.
+///
+/// See [bytemuck::Pod](https://docs.rs/bytemuck/latest/bytemuck/trait.Pod.html)
+/// for the exact requirements and examples.
+#[expect(
+    unnameable_types,
+    reason = "This is an internal trait in a private module"
+)]
+pub unsafe trait SimdPod: Copy {}
+
+// Do not blanket-impl `Aligned*<T: SimdPod>`: alignment wrappers can add
+// trailing padding for undersized `T`, e.g. `Aligned128<u8>`.
+macro_rules! impl_aligned_simd_pod {
+    ($($wrapper:ident<$inner:ty>),+ $(,)?) => {
+        $(
+            // SAFETY: this enforces that the alignment wrapper adds no trailing padding to the
+            // wrapped SIMD storage, preserving the `SimdPod` no-padding invariant.
+            const _: () = assert!(size_of::<$wrapper<$inner>>() == size_of::<$inner>());
+            unsafe impl SimdPod for $wrapper<$inner> {}
+        )+
+    };
+}
+
+unsafe impl SimdPod for f32 {}
+unsafe impl SimdPod for f64 {}
+unsafe impl SimdPod for i8 {}
+unsafe impl SimdPod for u8 {}
+unsafe impl SimdPod for i16 {}
+unsafe impl SimdPod for u16 {}
+unsafe impl SimdPod for i32 {}
+unsafe impl SimdPod for u32 {}
+unsafe impl SimdPod for i64 {}
+unsafe impl SimdPod for u64 {}
+
+unsafe impl<T: SimdPod, const N: usize> SimdPod for [T; N] {}
+
+impl_aligned_simd_pod!(
+    Aligned128<[f32; 4]>,
+    Aligned128<[f64; 2]>,
+    Aligned128<[i8; 16]>,
+    Aligned128<[i16; 8]>,
+    Aligned128<[i32; 4]>,
+    Aligned128<[i64; 2]>,
+    Aligned128<[u8; 16]>,
+    Aligned128<[u16; 8]>,
+    Aligned128<[u32; 4]>,
+    Aligned256<[f32; 8]>,
+    Aligned256<[f64; 4]>,
+    Aligned256<[i8; 32]>,
+    Aligned256<[i16; 16]>,
+    Aligned256<[i32; 8]>,
+    Aligned256<[i64; 4]>,
+    Aligned256<[u8; 32]>,
+    Aligned256<[u16; 16]>,
+    Aligned256<[u32; 8]>,
+    Aligned512<[f32; 16]>,
+    Aligned512<[f64; 8]>,
+    Aligned512<[i8; 64]>,
+    Aligned512<[i16; 32]>,
+    Aligned512<[i32; 16]>,
+    Aligned512<[i64; 8]>,
+    Aligned512<[u8; 64]>,
+    Aligned512<[u16; 32]>,
+    Aligned512<[u32; 16]>,
+);
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+const _: () = {
+    unsafe impl SimdPod for __m128 {}
+    unsafe impl SimdPod for __m128d {}
+    unsafe impl SimdPod for __m128i {}
+    unsafe impl SimdPod for __m256 {}
+    unsafe impl SimdPod for __m256d {}
+    unsafe impl SimdPod for __m256i {}
+};
+
+#[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+unsafe impl SimdPod for v128 {}
+
+#[cfg(target_arch = "aarch64")]
+const _: () = {
+    unsafe impl SimdPod for float32x4_t {}
+    unsafe impl SimdPod for float32x4x2_t {}
+    unsafe impl SimdPod for float32x4x4_t {}
+    unsafe impl SimdPod for float64x2_t {}
+    unsafe impl SimdPod for float64x2x2_t {}
+    unsafe impl SimdPod for float64x2x4_t {}
+    unsafe impl SimdPod for int8x16_t {}
+    unsafe impl SimdPod for int8x16x2_t {}
+    unsafe impl SimdPod for int8x16x4_t {}
+    unsafe impl SimdPod for int16x8_t {}
+    unsafe impl SimdPod for int16x8x2_t {}
+    unsafe impl SimdPod for int16x8x4_t {}
+    unsafe impl SimdPod for int32x4_t {}
+    unsafe impl SimdPod for int32x4x2_t {}
+    unsafe impl SimdPod for int32x4x4_t {}
+    unsafe impl SimdPod for int64x2_t {}
+    unsafe impl SimdPod for int64x2x2_t {}
+    unsafe impl SimdPod for int64x2x4_t {}
+    unsafe impl SimdPod for uint8x16_t {}
+    unsafe impl SimdPod for uint8x16x2_t {}
+    unsafe impl SimdPod for uint8x16x4_t {}
+    unsafe impl SimdPod for uint16x8_t {}
+    unsafe impl SimdPod for uint16x8x2_t {}
+    unsafe impl SimdPod for uint16x8x4_t {}
+    unsafe impl SimdPod for uint32x4_t {}
+    unsafe impl SimdPod for uint32x4x2_t {}
+    unsafe impl SimdPod for uint32x4x4_t {}
+};
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+impl_aligned_simd_pod!(
+    Aligned128<__m128>,
+    Aligned128<__m128d>,
+    Aligned128<__m128i>,
+    Aligned256<__m256>,
+    Aligned256<__m256d>,
+    Aligned256<__m256i>,
+    Aligned256<[__m128; 2]>,
+    Aligned256<[__m128d; 2]>,
+    Aligned256<[__m128i; 2]>,
+    Aligned512<[__m128; 4]>,
+    Aligned512<[__m128d; 4]>,
+    Aligned512<[__m128i; 4]>,
+    Aligned512<[__m256; 2]>,
+    Aligned512<[__m256d; 2]>,
+    Aligned512<[__m256i; 2]>,
+);
+
+#[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+impl_aligned_simd_pod!(
+    Aligned128<v128>,
+    Aligned256<[v128; 2]>,
+    Aligned512<[v128; 4]>
+);
+
+#[cfg(target_arch = "aarch64")]
+impl_aligned_simd_pod!(
+    Aligned128<float32x4_t>,
+    Aligned128<float64x2_t>,
+    Aligned128<int8x16_t>,
+    Aligned128<int16x8_t>,
+    Aligned128<int32x4_t>,
+    Aligned128<int64x2_t>,
+    Aligned128<uint8x16_t>,
+    Aligned128<uint16x8_t>,
+    Aligned128<uint32x4_t>,
+    Aligned256<float32x4x2_t>,
+    Aligned256<float64x2x2_t>,
+    Aligned256<int8x16x2_t>,
+    Aligned256<int16x8x2_t>,
+    Aligned256<int32x4x2_t>,
+    Aligned256<int64x2x2_t>,
+    Aligned256<uint8x16x2_t>,
+    Aligned256<uint16x8x2_t>,
+    Aligned256<uint32x4x2_t>,
+    Aligned512<float32x4x4_t>,
+    Aligned512<float64x2x4_t>,
+    Aligned512<int8x16x4_t>,
+    Aligned512<int16x8x4_t>,
+    Aligned512<int32x4x4_t>,
+    Aligned512<int64x2x4_t>,
+    Aligned512<uint8x16x4_t>,
+    Aligned512<uint16x8x4_t>,
+    Aligned512<uint32x4x4_t>,
+);
+
+/// Like [`core::mem::transmute_copy`], but statically rejects differently-sized
+/// types and only accepts this crate's SIMD plain-old-data storage types.
+#[inline(always)]
+#[cfg_attr(
+    not(any(
+        target_arch = "x86",
+        target_arch = "x86_64",
+        target_arch = "aarch64",
+        all(target_arch = "wasm32", target_feature = "simd128")
+    )),
+    expect(
+        dead_code,
+        reason = "native vector conversions are not used by scalar-only builds"
+    )
+)]
+#[allow(
+    clippy::disallowed_methods,
+    reason = "This is the central checked wrapper around transmute_copy"
+)]
+pub(crate) fn checked_transmute_copy<Src: SimdPod, Dst: SimdPod>(src: &Src) -> Dst {
+    const {
+        assert!(
+            size_of::<Src>() == size_of::<Dst>(),
+            "checked_transmute_copy requires source and destination to have the same size"
+        );
+    }
+    // Safety: `SimdPod` guarantees source and destination validity for all bit patterns, and
+    // the const assertion above prevents the "destination larger than source" failure mode.
+    unsafe { core::mem::transmute_copy(src) }
+}
