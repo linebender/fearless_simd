@@ -5540,11 +5540,18 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: __m128 =
+            crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[0]);
+        let v1: __m128 =
+            crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[1]);
+        let v2: __m128 =
+            crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[2]);
+        let v3: __m128 =
+            crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[3]);
         unsafe {
-            let v0 = _mm_loadu_ps(src.as_ptr() as *const _);
-            let v1 = _mm_loadu_ps(src.as_ptr().add(4usize) as *const _);
-            let v2 = _mm_loadu_ps(src.as_ptr().add(2 * 4usize) as *const _);
-            let v3 = _mm_loadu_ps(src.as_ptr().add(3 * 4usize) as *const _);
             let tmp0 = _mm_unpacklo_ps(v0, v1);
             let tmp1 = _mm_unpackhi_ps(v0, v1);
             let tmp2 = _mm_unpacklo_ps(v2, v3);
@@ -6170,11 +6177,18 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
+        let (chunks, []) = src.as_chunks::<16usize>() else {
+            unreachable!()
+        };
+        let v0: __m128i =
+            crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[0]);
+        let v1: __m128i =
+            crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[1]);
+        let v2: __m128i =
+            crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[2]);
+        let v3: __m128i =
+            crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[3]);
         unsafe {
-            let v0 = _mm_loadu_si128(src.as_ptr() as *const _);
-            let v1 = _mm_loadu_si128(src.as_ptr().add(16usize) as *const _);
-            let v2 = _mm_loadu_si128(src.as_ptr().add(2 * 16usize) as *const _);
-            let v3 = _mm_loadu_si128(src.as_ptr().add(3 * 16usize) as *const _);
             let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
             let v0 = _mm_shuffle_epi8(v0, mask);
             let v1 = _mm_shuffle_epi8(v1, mask);
@@ -6931,11 +6945,18 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
+        let (chunks, []) = src.as_chunks::<8usize>() else {
+            unreachable!()
+        };
+        let v0: __m128i =
+            crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[0]);
+        let v1: __m128i =
+            crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[1]);
+        let v2: __m128i =
+            crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[2]);
+        let v3: __m128i =
+            crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[3]);
         unsafe {
-            let v0 = _mm_loadu_si128(src.as_ptr() as *const _);
-            let v1 = _mm_loadu_si128(src.as_ptr().add(8usize) as *const _);
-            let v2 = _mm_loadu_si128(src.as_ptr().add(2 * 8usize) as *const _);
-            let v3 = _mm_loadu_si128(src.as_ptr().add(3 * 8usize) as *const _);
             let mask = _mm_setr_epi8(0, 1, 8, 9, 2, 3, 10, 11, 4, 5, 12, 13, 6, 7, 14, 15);
             let v0 = _mm_shuffle_epi8(v0, mask);
             let v1 = _mm_shuffle_epi8(v1, mask);
@@ -7680,11 +7701,18 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: __m128i =
+            crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[0]);
+        let v1: __m128i =
+            crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[1]);
+        let v2: __m128i =
+            crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[2]);
+        let v3: __m128i =
+            crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[3]);
         unsafe {
-            let v0 = _mm_loadu_si128(src.as_ptr() as *const _);
-            let v1 = _mm_loadu_si128(src.as_ptr().add(4usize) as *const _);
-            let v2 = _mm_loadu_si128(src.as_ptr().add(2 * 4usize) as *const _);
-            let v3 = _mm_loadu_si128(src.as_ptr().add(3 * 4usize) as *const _);
             let tmp0 = _mm_unpacklo_epi32(v0, v1);
             let tmp1 = _mm_unpackhi_epi32(v0, v1);
             let tmp2 = _mm_unpacklo_epi32(v2, v3);
