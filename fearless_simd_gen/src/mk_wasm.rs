@@ -600,6 +600,7 @@ impl Level for WasmSimd128 {
             } => {
                 assert_eq!(block_count, 4, "only count of 4 is currently supported");
                 let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
+                let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
 
                 // For WASM we need to simulate interleaving with shuffle, and we only have
                 // access to 2, 4 and 16 lanes. So, for 64 u8's, we need to split and recombine
@@ -644,10 +645,21 @@ impl Level for WasmSimd128 {
 
                 quote! {
                     #method_sig {
-                            let v0: v128 = unsafe { v128_load(src[0 * #elems_per_vec..].as_ptr() as *const v128) };
-                            let v1: v128 = unsafe { v128_load(src[1 * #elems_per_vec..].as_ptr() as *const v128) };
-                            let v2: v128 = unsafe { v128_load(src[2 * #elems_per_vec..].as_ptr() as *const v128) };
-                            let v3: v128 = unsafe { v128_load(src[3 * #elems_per_vec..].as_ptr() as *const v128) };
+                            let (chunks, []) = src.as_chunks::<#elems_per_vec>() else {
+                                unreachable!()
+                            };
+                            let v0: v128 = crate::transmute::checked_transmute_copy::<[#scalar_ty; #elems_per_vec], v128>(
+                                &chunks[0],
+                            );
+                            let v1: v128 = crate::transmute::checked_transmute_copy::<[#scalar_ty; #elems_per_vec], v128>(
+                                &chunks[1],
+                            );
+                            let v2: v128 = crate::transmute::checked_transmute_copy::<[#scalar_ty; #elems_per_vec], v128>(
+                                &chunks[2],
+                            );
+                            let v3: v128 = crate::transmute::checked_transmute_copy::<[#scalar_ty; #elems_per_vec], v128>(
+                                &chunks[3],
+                            );
 
                             // InterleaveLowerLanes(v0, v2) and InterleaveLowerLanes(v1, v3)
                             let v01_lower = #shuffle_fn::<#i1>(v0, v1);

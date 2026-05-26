@@ -1933,8 +1933,8 @@ impl X86 {
             32 | 16 | 8 => {
                 let block_ty =
                     VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
-                let load_unaligned =
-                    intrinsic_ident("loadu", coarse_type(&block_ty), block_ty.n_bits());
+                let scalar_ty = block_ty.scalar.rust(block_ty.scalar_bits);
+                let native_ty = self.arch_ty(&block_ty);
                 let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
                 let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
                 let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
@@ -2015,12 +2015,23 @@ impl X86 {
                 };
 
                 quote! {
-                    unsafe {
-                        let v0 = #load_unaligned(src.as_ptr() as *const _);
-                        let v1 = #load_unaligned(src.as_ptr().add(#block_len) as *const _);
-                        let v2 = #load_unaligned(src.as_ptr().add(2 * #block_len) as *const _);
-                        let v3 = #load_unaligned(src.as_ptr().add(3 * #block_len) as *const _);
+                    let (chunks, []) = src.as_chunks::<#block_len>() else {
+                        unreachable!()
+                    };
+                    let v0: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
+                        &chunks[0],
+                    );
+                    let v1: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
+                        &chunks[1],
+                    );
+                    let v2: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
+                        &chunks[2],
+                    );
+                    let v3: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
+                        &chunks[3],
+                    );
 
+                    unsafe {
                         #init_shuffle
 
                         let tmp0 = #unpacklo_32(v0, v1); // [0,4,1,5]
