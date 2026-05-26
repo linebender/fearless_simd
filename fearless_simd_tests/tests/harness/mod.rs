@@ -247,18 +247,11 @@ fn trunc_f32x4_special_values<S: Simd>(simd: S) {
     );
     let result = a.trunc();
 
-    // Note: f32::NAN != f32::NAN hence we transmute to compare the bit pattern
-    unsafe {
-        assert_eq!(
-            std::mem::transmute::<[f32; 4], [u32; 4]>(*result),
-            std::mem::transmute::<[f32; 4], [u32; 4]>([
-                f32::NAN,
-                f32::NEG_INFINITY,
-                f32::INFINITY,
-                -f32::NAN
-            ])
-        );
-    }
+    // Note: f32::NAN != f32::NAN hence we compare the bit pattern.
+    assert_eq!(
+        (*result).map(f32::to_bits),
+        [f32::NAN, f32::NEG_INFINITY, f32::INFINITY, -f32::NAN].map(f32::to_bits)
+    );
 }
 
 #[simd_test]
@@ -942,13 +935,8 @@ fn store_interleaved_128_f32x16<S: Simd>(simd: S) {
         15.0,
     ];
 
-    // Note: f32::NAN != f32::NAN hence we transmute to compare the bit pattern
-    unsafe {
-        assert_eq!(
-            std::mem::transmute::<[f32; 16], [u32; 16]>(dest),
-            std::mem::transmute::<[f32; 16], [u32; 16]>(expected)
-        );
-    }
+    // Note: f32::NAN != f32::NAN hence we compare the bit pattern.
+    assert_eq!(dest.map(f32::to_bits), expected.map(f32::to_bits));
 }
 
 #[simd_test]
