@@ -305,19 +305,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            let intermediate = _mm_max_ps(a.into(), b.into());
-            let b_is_nan = _mm_cmp_ps_mask::<3i32>(b.into(), b.into());
-            _mm_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm_range_ps::<5i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            let intermediate = _mm_min_ps(a.into(), b.into());
-            let b_is_nan = _mm_cmp_ps_mask::<3i32>(b.into(), b.into());
-            _mm_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm_range_ps::<4i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -2507,19 +2499,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe {
-            let intermediate = _mm_max_pd(a.into(), b.into());
-            let b_is_nan = _mm_cmp_pd_mask::<3i32>(b.into(), b.into());
-            _mm_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm_range_pd::<5i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe {
-            let intermediate = _mm_min_pd(a.into(), b.into());
-            let b_is_nan = _mm_cmp_pd_mask::<3i32>(b.into(), b.into());
-            _mm_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm_range_pd::<4i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -2969,19 +2953,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe {
-            let intermediate = _mm256_max_ps(a.into(), b.into());
-            let b_is_nan = _mm256_cmp_ps_mask::<3i32>(b.into(), b.into());
-            _mm256_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm256_range_ps::<5i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe {
-            let intermediate = _mm256_min_ps(a.into(), b.into());
-            let b_is_nan = _mm256_cmp_ps_mask::<3i32>(b.into(), b.into());
-            _mm256_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm256_range_ps::<4i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
@@ -5829,19 +5805,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe {
-            let intermediate = _mm256_max_pd(a.into(), b.into());
-            let b_is_nan = _mm256_cmp_pd_mask::<3i32>(b.into(), b.into());
-            _mm256_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm256_range_pd::<5i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe {
-            let intermediate = _mm256_min_pd(a.into(), b.into());
-            let b_is_nan = _mm256_cmp_pd_mask::<3i32>(b.into(), b.into());
-            _mm256_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm256_range_pd::<4i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
@@ -6336,19 +6304,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        unsafe {
-            let intermediate = _mm512_max_ps(a.into(), b.into());
-            let b_is_nan = _mm512_cmp_ps_mask::<3i32>(b.into(), b.into());
-            _mm512_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm512_range_ps::<5i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        unsafe {
-            let intermediate = _mm512_min_ps(a.into(), b.into());
-            let b_is_nan = _mm512_cmp_ps_mask::<3i32>(b.into(), b.into());
-            _mm512_mask_blend_ps(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm512_range_ps::<4i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
@@ -9365,19 +9325,11 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        unsafe {
-            let intermediate = _mm512_max_pd(a.into(), b.into());
-            let b_is_nan = _mm512_cmp_pd_mask::<3i32>(b.into(), b.into());
-            _mm512_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm512_range_pd::<5i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn min_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        unsafe {
-            let intermediate = _mm512_min_pd(a.into(), b.into());
-            let b_is_nan = _mm512_cmp_pd_mask::<3i32>(b.into(), b.into());
-            _mm512_mask_blend_pd(b_is_nan, intermediate, a.into()).simd_into(self)
-        }
+        unsafe { _mm512_range_pd::<4i32>(a.into(), b.into()).simd_into(self) }
     }
     #[inline(always)]
     fn mul_add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {

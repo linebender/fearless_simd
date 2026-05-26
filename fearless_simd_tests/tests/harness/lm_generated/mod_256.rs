@@ -260,6 +260,44 @@ fn min_precise_f32x8_with_nan<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn max_precise_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[2.0, -3.0, 0.0, 0.5]);
+    let b = f64x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
+    assert_eq!(*a.max_precise(b), [2.0, -2.0, 7.0, 3.0]);
+}
+
+#[simd_test]
+fn min_precise_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[2.0, -3.0, 0.0, 0.5]);
+    let b = f64x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
+    assert_eq!(*a.min_precise(b), [1.0, -3.0, 0.0, 0.5]);
+}
+
+#[simd_test]
+fn max_precise_f64x4_with_nan<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[f64::NAN, -3.0, f64::INFINITY, 0.5]);
+    let b = f64x4::from_slice(simd, &[1.0, f64::NAN, 7.0, f64::NEG_INFINITY]);
+    let result = a.max_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], f64::INFINITY);
+    assert_eq!(result[3], 0.5);
+}
+
+#[simd_test]
+fn min_precise_f64x4_with_nan<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[f64::NAN, -3.0, f64::INFINITY, 0.5]);
+    let b = f64x4::from_slice(simd, &[1.0, f64::NAN, 7.0, f64::NEG_INFINITY]);
+    let result = a.min_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], 7.0);
+    assert_eq!(result[3], f64::NEG_INFINITY);
+}
+
+#[simd_test]
 fn floor_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[2.0, -3.2, 0.0, 0.5, 1.7, -2.8, 3.1, -4.9]);
     assert_eq!(*a.floor(), [2.0, -4.0, 0.0, 0.0, 1.0, -3.0, 3.0, -5.0]);

@@ -1602,24 +1602,16 @@ impl X86 {
             && matches!(method, "min_precise" | "max_precise")
         {
             let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true);
-            let minmax = intrinsic_ident(
-                if method == "max_precise" {
-                    "max"
-                } else {
-                    "min"
-                },
-                suffix,
-                vec_ty.n_bits(),
-            );
-            let cmp = intrinsic_ident("cmp", &format!("{suffix}_mask"), vec_ty.n_bits());
-            let blend = avx512_mask_blend_intrinsic(vec_ty);
-            let unord = avx512_float_compare_predicate("unord");
+            let range = intrinsic_ident("range", suffix, vec_ty.n_bits());
+            let imm = if method == "max_precise" {
+                0b0101
+            } else {
+                0b0100
+            };
             return quote! {
                 #method_sig {
                     unsafe {
-                        let intermediate = #minmax(a.into(), b.into());
-                        let b_is_nan = #cmp::<#unord>(b.into(), b.into());
-                        #blend(b_is_nan, intermediate, a.into()).simd_into(self)
+                        #range::<#imm>(a.into(), b.into()).simd_into(self)
                     }
                 }
             };

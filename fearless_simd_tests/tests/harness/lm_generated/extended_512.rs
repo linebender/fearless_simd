@@ -743,6 +743,82 @@ fn min_precise_f32x16_with_nan<S: Simd>(simd: S) {
     assert_eq!(result[15], 5.0);
 }
 
+#[simd_test]
+fn max_precise_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[2.0, -3.0, 0.0, 0.5, 1.0, 5.0, 3.0, 7.0]);
+    let b = f64x8::from_slice(simd, &[1.0, -2.0, 7.0, 3.0, 2.0, 4.0, 6.0, 5.0]);
+    assert_eq!(*a.max_precise(b), [2.0, -2.0, 7.0, 3.0, 2.0, 5.0, 6.0, 7.0]);
+}
+
+#[simd_test]
+fn min_precise_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[2.0, -3.0, 0.0, 0.5, 1.0, 5.0, 3.0, 7.0]);
+    let b = f64x8::from_slice(simd, &[1.0, -2.0, 7.0, 3.0, 2.0, 4.0, 6.0, 5.0]);
+    assert_eq!(*a.min_precise(b), [1.0, -3.0, 0.0, 0.5, 1.0, 4.0, 3.0, 5.0]);
+}
+
+#[simd_test]
+fn max_precise_f64x8_with_nan<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(
+        simd,
+        &[f64::NAN, -3.0, f64::INFINITY, 0.5, 1.0, f64::NAN, 3.0, 7.0],
+    );
+    let b = f64x8::from_slice(
+        simd,
+        &[
+            1.0,
+            f64::NAN,
+            7.0,
+            f64::NEG_INFINITY,
+            f64::NAN,
+            4.0,
+            6.0,
+            5.0,
+        ],
+    );
+    let result = a.max_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], f64::INFINITY);
+    assert_eq!(result[3], 0.5);
+    assert_eq!(result[4], 1.0);
+    assert_eq!(result[5], 4.0);
+    assert_eq!(result[6], 6.0);
+    assert_eq!(result[7], 7.0);
+}
+
+#[simd_test]
+fn min_precise_f64x8_with_nan<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(
+        simd,
+        &[f64::NAN, -3.0, f64::INFINITY, 0.5, 1.0, f64::NAN, 3.0, 7.0],
+    );
+    let b = f64x8::from_slice(
+        simd,
+        &[
+            1.0,
+            f64::NAN,
+            7.0,
+            f64::NEG_INFINITY,
+            f64::NAN,
+            4.0,
+            6.0,
+            5.0,
+        ],
+    );
+    let result = a.min_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], 7.0);
+    assert_eq!(result[3], f64::NEG_INFINITY);
+    assert_eq!(result[4], 1.0);
+    assert_eq!(result[5], 4.0);
+    assert_eq!(result[6], 3.0);
+    assert_eq!(result[7], 5.0);
+}
+
 // =============================================================================
 // Shift operations tests (512-bit)
 // =============================================================================
