@@ -245,6 +245,7 @@ pub(crate) fn checked_transmute_copy<Src: SimdPod, Dst: SimdPod>(src: &Src) -> D
     clippy::disallowed_methods,
     reason = "This is the central checked wrapper around transmute"
 )]
+#[allow(dead_code, reason = "Not all backends use this function")]
 pub(crate) fn checked_cast_ref<Src: SimdPod, Dst: SimdPod>(src: &Src) -> &Dst {
     const {
         assert!(
@@ -272,6 +273,7 @@ pub(crate) fn checked_cast_ref<Src: SimdPod, Dst: SimdPod>(src: &Src) -> &Dst {
     clippy::disallowed_methods,
     reason = "This is the central checked wrapper around transmute"
 )]
+#[allow(dead_code, reason = "Not all backends use this function")]
 pub(crate) fn checked_cast_mut<Src: SimdPod, Dst: SimdPod>(src: &mut Src) -> &mut Dst {
     const {
         assert!(
