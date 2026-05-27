@@ -16,6 +16,7 @@ use core::arch::aarch64::{
     int8x16_t, int8x16x2_t, int8x16x4_t, int16x8_t, int16x8x2_t, int16x8x4_t, int32x4_t,
     int32x4x2_t, int32x4x4_t, int64x2_t, int64x2x2_t, int64x2x4_t, uint8x16_t, uint8x16x2_t,
     uint8x16x4_t, uint16x8_t, uint16x8x2_t, uint16x8x4_t, uint32x4_t, uint32x4x2_t, uint32x4x4_t,
+    uint64x2_t,
 };
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 use core::arch::wasm32::v128;
@@ -167,6 +168,7 @@ const _: () = {
     unsafe impl SimdPod for uint32x4_t {}
     unsafe impl SimdPod for uint32x4x2_t {}
     unsafe impl SimdPod for uint32x4x4_t {}
+    unsafe impl SimdPod for uint64x2_t {}
 };
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]

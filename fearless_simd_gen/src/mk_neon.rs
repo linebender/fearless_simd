@@ -581,7 +581,10 @@ impl Neon {
             8 => quote! {
                 #method_sig {
                     unsafe {
-                        let shifts = vld1q_s16([15, 14, 13, 12, 11, 10, 9, 8].as_ptr());
+                        let shifts =
+                            crate::transmute::checked_transmute_copy::<[i16; 8], int16x8_t>(
+                                &[15, 14, 13, 12, 11, 10, 9, 8],
+                            );
                         let lo = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
                         let hi = vshlq_u16(vdupq_n_u16((bits >> 8) as u16), shifts);
                         let lo = vcltq_s16(vreinterpretq_s16_u16(lo), vdupq_n_s16(0));
@@ -596,7 +599,10 @@ impl Neon {
             16 => quote! {
                 #method_sig {
                     unsafe {
-                        let shifts = vld1q_s16([15, 14, 13, 12, 11, 10, 9, 8].as_ptr());
+                        let shifts =
+                            crate::transmute::checked_transmute_copy::<[i16; 8], int16x8_t>(
+                                &[15, 14, 13, 12, 11, 10, 9, 8],
+                            );
                         let shifted = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
                         let mask = vcltq_s16(vreinterpretq_s16_u16(shifted), vdupq_n_s16(0));
                         vreinterpretq_s16_u16(mask).simd_into(self)
@@ -606,7 +612,10 @@ impl Neon {
             32 => quote! {
                 #method_sig {
                     unsafe {
-                        let shifts = vld1q_s32([31, 30, 29, 28].as_ptr());
+                        let shifts =
+                            crate::transmute::checked_transmute_copy::<[i32; 4], int32x4_t>(
+                                &[31, 30, 29, 28],
+                            );
                         let shifted = vshlq_u32(vdupq_n_u32(bits as u32), shifts);
                         let mask = vcltq_s32(vreinterpretq_s32_u32(shifted), vdupq_n_s32(0));
                         vreinterpretq_s32_u32(mask).simd_into(self)
@@ -616,7 +625,10 @@ impl Neon {
             64 => quote! {
                 #method_sig {
                     unsafe {
-                        let shifts = vld1q_s64([63, 62].as_ptr());
+                        let shifts =
+                            crate::transmute::checked_transmute_copy::<[i64; 2], int64x2_t>(
+                                &[63, 62],
+                            );
                         let shifted = vshlq_u64(vdupq_n_u64(bits), shifts);
                         let mask = vcltq_s64(vreinterpretq_s64_u64(shifted), vdupq_n_s64(0));
                         vreinterpretq_s64_u64(mask).simd_into(self)
@@ -643,10 +655,13 @@ impl Neon {
             8 => quote! {
                 #method_sig {
                     unsafe {
-                        let weights = vld1q_u8([
-                            1, 2, 4, 8, 16, 32, 64, 128,
-                            1, 2, 4, 8, 16, 32, 64, 128,
-                        ].as_ptr());
+                        let weights =
+                            crate::transmute::checked_transmute_copy::<[u8; 16], uint8x16_t>(
+                                &[
+                                    1, 2, 4, 8, 16, 32, 64, 128,
+                                    1, 2, 4, 8, 16, 32, 64, 128,
+                                ],
+                            );
                         let bits = vandq_u8(vreinterpretq_u8_s8(a.into()), weights);
                         let lo = vaddv_u8(vget_low_u8(bits)) as u64;
                         let hi = vaddv_u8(vget_high_u8(bits)) as u64;
@@ -657,9 +672,10 @@ impl Neon {
             16 => quote! {
                 #method_sig {
                     unsafe {
-                        let weights = vld1q_u16([
-                            1, 2, 4, 8, 16, 32, 64, 128,
-                        ].as_ptr());
+                        let weights =
+                            crate::transmute::checked_transmute_copy::<[u16; 8], uint16x8_t>(
+                                &[1, 2, 4, 8, 16, 32, 64, 128],
+                            );
                         let bits = vandq_u16(vreinterpretq_u16_s16(a.into()), weights);
                         vaddvq_u16(bits) as u64
                     }
@@ -668,7 +684,10 @@ impl Neon {
             32 => quote! {
                 #method_sig {
                     unsafe {
-                        let weights = vld1q_u32([1, 2, 4, 8].as_ptr());
+                        let weights =
+                            crate::transmute::checked_transmute_copy::<[u32; 4], uint32x4_t>(
+                                &[1, 2, 4, 8],
+                            );
                         let bits = vandq_u32(vreinterpretq_u32_s32(a.into()), weights);
                         vaddvq_u32(bits) as u64
                     }
@@ -677,7 +696,10 @@ impl Neon {
             64 => quote! {
                 #method_sig {
                     unsafe {
-                        let weights = vld1q_u64([1, 2].as_ptr());
+                        let weights =
+                            crate::transmute::checked_transmute_copy::<[u64; 2], uint64x2_t>(
+                                &[1, 2],
+                            );
                         let bits = vandq_u64(vreinterpretq_u64_s64(a.into()), weights);
                         vaddvq_u64(bits)
                     }
