@@ -5606,10 +5606,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        let v0: v128 = unsafe { v128_load(src[0 * 4usize..].as_ptr() as *const v128) };
-        let v1: v128 = unsafe { v128_load(src[1 * 4usize..].as_ptr() as *const v128) };
-        let v2: v128 = unsafe { v128_load(src[2 * 4usize..].as_ptr() as *const v128) };
-        let v3: v128 = unsafe { v128_load(src[3 * 4usize..].as_ptr() as *const v128) };
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[3]);
         let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
         let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
         let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
@@ -6233,10 +6236,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        let v0: v128 = unsafe { v128_load(src[0 * 16usize..].as_ptr() as *const v128) };
-        let v1: v128 = unsafe { v128_load(src[1 * 16usize..].as_ptr() as *const v128) };
-        let v2: v128 = unsafe { v128_load(src[2 * 16usize..].as_ptr() as *const v128) };
-        let v3: v128 = unsafe { v128_load(src[3 * 16usize..].as_ptr() as *const v128) };
+        let (chunks, []) = src.as_chunks::<16usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[3]);
         let v01_lower =
             u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v0, v1);
         let v23_lower =
@@ -6985,10 +6991,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        let v0: v128 = unsafe { v128_load(src[0 * 8usize..].as_ptr() as *const v128) };
-        let v1: v128 = unsafe { v128_load(src[1 * 8usize..].as_ptr() as *const v128) };
-        let v2: v128 = unsafe { v128_load(src[2 * 8usize..].as_ptr() as *const v128) };
-        let v3: v128 = unsafe { v128_load(src[3 * 8usize..].as_ptr() as *const v128) };
+        let (chunks, []) = src.as_chunks::<8usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[3]);
         let v01_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v0, v1);
         let v23_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v2, v3);
         let v01_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v0, v1);
@@ -7719,10 +7728,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        let v0: v128 = unsafe { v128_load(src[0 * 4usize..].as_ptr() as *const v128) };
-        let v1: v128 = unsafe { v128_load(src[1 * 4usize..].as_ptr() as *const v128) };
-        let v2: v128 = unsafe { v128_load(src[2 * 4usize..].as_ptr() as *const v128) };
-        let v3: v128 = unsafe { v128_load(src[3 * 4usize..].as_ptr() as *const v128) };
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[3]);
         let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
         let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
         let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
