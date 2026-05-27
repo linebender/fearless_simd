@@ -232,18 +232,6 @@ impl_aligned_simd_pod!(
 /// Like [`core::mem::transmute_copy`], but statically rejects differently-sized
 /// types and only accepts this crate's SIMD plain-old-data storage types.
 #[inline(always)]
-#[cfg_attr(
-    not(any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "aarch64",
-        all(target_arch = "wasm32", target_feature = "simd128")
-    )),
-    expect(
-        dead_code,
-        reason = "native vector conversions are not used by scalar-only builds"
-    )
-)]
 #[allow(
     clippy::disallowed_methods,
     reason = "This is the central checked wrapper around transmute_copy"
