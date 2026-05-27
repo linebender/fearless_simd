@@ -6373,8 +6373,8 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
+        let lanes: __m512 = crate::transmute::checked_transmute_copy::<[f32; 16usize], __m512>(src);
         unsafe {
-            let lanes = _mm512_loadu_ps(src.as_ptr() as *const _);
             _mm512_permutexvar_ps(
                 _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
                 lanes,
@@ -7251,8 +7251,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
+        let lanes: __m512i =
+            crate::transmute::checked_transmute_copy::<[u8; 64usize], __m512i>(src);
         unsafe {
-            let lanes = _mm512_loadu_si512(src.as_ptr() as *const _);
             _mm512_permutexvar_epi8(
                 _mm512_set_epi8(
                     63, 59, 55, 51, 47, 43, 39, 35, 31, 27, 23, 19, 15, 11, 7, 3, 62, 58, 54, 50,
@@ -8091,8 +8092,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
+        let lanes: __m512i =
+            crate::transmute::checked_transmute_copy::<[u16; 32usize], __m512i>(src);
         unsafe {
-            let lanes = _mm512_loadu_si512(src.as_ptr() as *const _);
             _mm512_permutexvar_epi16(
                 _mm512_set_epi16(
                     31, 27, 23, 19, 15, 11, 7, 3, 30, 26, 22, 18, 14, 10, 6, 2, 29, 25, 21, 17, 13,
@@ -8891,8 +8893,9 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
+        let lanes: __m512i =
+            crate::transmute::checked_transmute_copy::<[u32; 16usize], __m512i>(src);
         unsafe {
-            let lanes = _mm512_loadu_si512(src.as_ptr() as *const _);
             _mm512_permutexvar_epi32(
                 _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
                 lanes,

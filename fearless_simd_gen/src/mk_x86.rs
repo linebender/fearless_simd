@@ -3136,7 +3136,9 @@ impl X86 {
             512,
             "AVX-512 interleaved loads only specialize 512-bit vectors"
         );
-        let load_unaligned = intrinsic_ident("loadu", coarse_type(vec_ty), vec_ty.n_bits());
+        let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
+        let native_ty = self.arch_ty(vec_ty);
+        let len = vec_ty.len;
         let permute = avx512_permutexvar_intrinsic(vec_ty);
         let indices = avx512_index_vector(
             vec_ty,
@@ -3145,8 +3147,11 @@ impl X86 {
 
         quote! {
             #method_sig {
+                let lanes: #native_ty =
+                    crate::transmute::checked_transmute_copy::<[#scalar_ty; #len], #native_ty>(
+                        src,
+                    );
                 unsafe {
-                    let lanes = #load_unaligned(src.as_ptr() as *const _);
                     #permute(#indices, lanes).simd_into(self)
                 }
             }
