@@ -907,13 +907,8 @@ fn load_interleaved_128_f32x16<S: Simd>(simd: S) {
         15.0,
     ];
 
-    // Note: f32::NAN != f32::NAN hence we transmute to compare the bit pattern
-    unsafe {
-        assert_eq!(
-            std::mem::transmute::<[f32; 16], [u32; 16]>(*result),
-            std::mem::transmute::<[f32; 16], [u32; 16]>(expected)
-        );
-    }
+    // Note: f32::NAN != f32::NAN hence we compare the bit pattern.
+    assert_eq!((*result).map(f32::to_bits), expected.map(f32::to_bits));
 }
 
 #[simd_test]
