@@ -252,6 +252,9 @@ pub(crate) fn checked_cast_ref<Src: SimdPod, Dst: SimdPod>(src: &Src) -> &Dst {
             size_of::<Src>() == size_of::<Dst>(),
             "checked_cast_ref requires source and destination to have the same size"
         );
+        // alignment is always a power of two as per Rust Reference:
+        // https://doc.rust-lang.org/stable/reference/type-layout.html#size-and-alignment
+        // so >= is sufficient and won't run into issues with coprime alignments
         assert!(
             align_of::<Src>() >= align_of::<Dst>(),
             "checked_cast_ref requires source to have alignment equal or greater to the destination"
@@ -280,6 +283,9 @@ pub(crate) fn checked_cast_mut<Src: SimdPod, Dst: SimdPod>(src: &mut Src) -> &mu
             size_of::<Src>() == size_of::<Dst>(),
             "checked_cast_mut requires source and destination to have the same size"
         );
+        // alignment is always a power of two as per Rust Reference:
+        // https://doc.rust-lang.org/stable/reference/type-layout.html#size-and-alignment
+        // so >= is sufficient and won't run into issues with coprime alignments
         assert!(
             align_of::<Src>() >= align_of::<Dst>(),
             "checked_cast_mut requires source to have alignment equal or greater to the destination"
