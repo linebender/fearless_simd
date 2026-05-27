@@ -360,22 +360,21 @@ fn trunc_f32x8_special_values<S: Simd>(simd: S) {
     );
     let result = a.trunc();
 
-    // Note: f32::NAN != f32::NAN hence we transmute to compare the bit pattern
-    unsafe {
-        assert_eq!(
-            std::mem::transmute::<[f32; 8], [u32; 8]>(*result),
-            std::mem::transmute::<[f32; 8], [u32; 8]>([
-                f32::NAN,
-                f32::NEG_INFINITY,
-                f32::INFINITY,
-                -f32::NAN,
-                f32::NAN,
-                f32::NEG_INFINITY,
-                f32::INFINITY,
-                -f32::NAN
-            ])
-        );
-    }
+    // Note: f32::NAN != f32::NAN hence we compare the bit pattern.
+    assert_eq!(
+        (*result).map(f32::to_bits),
+        [
+            f32::NAN,
+            f32::NEG_INFINITY,
+            f32::INFINITY,
+            -f32::NAN,
+            f32::NAN,
+            f32::NEG_INFINITY,
+            f32::INFINITY,
+            -f32::NAN
+        ]
+        .map(f32::to_bits)
+    );
 }
 
 #[simd_test]

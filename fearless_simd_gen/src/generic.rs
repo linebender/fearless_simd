@@ -426,23 +426,16 @@ pub(crate) fn generic_as_array<T: ToTokens>(
                 crate::transmute::checked_transmute_copy::<#native_ty, [#rust_scalar; #num_scalars]>(&a.val.0)
             }
         },
-        RefKind::Ref | RefKind::Mut => {
-            let ref_tok = kind.token();
-            quote! {
-                #method_sig {
-                    unsafe {
-                        // Safety: The native vector type backing any implementation will be:
-                        // - A `#[repr(simd)]` type, which has the same layout as an array of scalars
-                        // - An array of `#[repr(simd)]` types
-                        // - For AArch64 specifically, a `#[repr(C)]` tuple of `#[repr(simd)]` types
-                        //
-                        // Not only do these all have the same layout as a flat array of the corresponding scalars, but they
-                        // wrap primitives where all bit patterns are valid (ints and floats).
-                        core::mem::transmute::<#ref_tok #native_ty, #ref_tok [#rust_scalar; #num_scalars]>(#ref_tok a.val.0)
-                    }
-                }
+        RefKind::Ref => quote! {
+            #method_sig {
+                crate::transmute::checked_cast_ref::<#native_ty, [#rust_scalar; #num_scalars]>(&a.val.0)
             }
-        }
+        },
+        RefKind::Mut => quote! {
+            #method_sig {
+                crate::transmute::checked_cast_mut::<#native_ty, [#rust_scalar; #num_scalars]>(&mut a.val.0)
+            }
+        },
     }
 }
 

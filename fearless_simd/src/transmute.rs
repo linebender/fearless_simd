@@ -6,7 +6,7 @@
 //! This all serves a single `checked_transmute_copy` function,
 //! if we find this growing in complexity we should probably just use the real bytemuck
 
-use core::mem::size_of;
+use core::mem::{align_of, size_of};
 
 use crate::support::{Aligned128, Aligned256, Aligned512};
 
@@ -246,4 +246,66 @@ pub(crate) fn checked_transmute_copy<Src: SimdPod, Dst: SimdPod>(src: &Src) -> D
     // Safety: `SimdPod` guarantees source and destination validity for all bit patterns, and
     // the const assertion above prevents the "destination larger than source" failure mode.
     unsafe { core::mem::transmute_copy(src) }
+}
+
+/// Like `bytemuck::cast_ref`, but rejects incompatible types at compile time
+/// and only accepts this crate's SIMD plain-old-data storage types.
+#[inline(always)]
+#[allow(
+    clippy::disallowed_methods,
+    reason = "This is the central checked wrapper around transmute"
+)]
+#[allow(dead_code, reason = "Not all backends use this function")]
+pub(crate) fn checked_cast_ref<Src: SimdPod, Dst: SimdPod>(src: &Src) -> &Dst {
+    const {
+        assert!(
+            size_of::<Src>() == size_of::<Dst>(),
+            "checked_cast_ref requires source and destination to have the same size"
+        );
+        // alignment is always a power of two as per Rust Reference:
+        // https://doc.rust-lang.org/stable/reference/type-layout.html#size-and-alignment
+        // so >= is sufficient and won't run into issues with coprime alignments
+        assert!(
+            align_of::<Src>() >= align_of::<Dst>(),
+            "checked_cast_ref requires source to have alignment equal or greater to the destination"
+        );
+    }
+    // Safety: `SimdPod` guarantees source and destination validity for all bit patterns, and
+    // the const assertions above enforce compatible size and alignment.
+    //
+    // The pointer cast has less footguns than `transmute`:
+    // `src as *const Src` keeps the same address and provenance from the original reference,
+    // so we will never run into lifetime issues.
+    unsafe { &*(src as *const Src).cast::<Dst>() }
+}
+
+/// Like `bytemuck::cast_mut`, but rejects incompatible types at compile time
+/// and only accepts this crate's SIMD plain-old-data storage types.
+#[inline(always)]
+#[allow(
+    clippy::disallowed_methods,
+    reason = "This is the central checked wrapper around transmute"
+)]
+#[allow(dead_code, reason = "Not all backends use this function")]
+pub(crate) fn checked_cast_mut<Src: SimdPod, Dst: SimdPod>(src: &mut Src) -> &mut Dst {
+    const {
+        assert!(
+            size_of::<Src>() == size_of::<Dst>(),
+            "checked_cast_mut requires source and destination to have the same size"
+        );
+        // alignment is always a power of two as per Rust Reference:
+        // https://doc.rust-lang.org/stable/reference/type-layout.html#size-and-alignment
+        // so >= is sufficient and won't run into issues with coprime alignments
+        assert!(
+            align_of::<Src>() >= align_of::<Dst>(),
+            "checked_cast_mut requires source to have alignment equal or greater to the destination"
+        );
+    }
+    // Safety: `SimdPod` guarantees source and destination validity for all bit patterns, and
+    // the const assertions above enforce compatible size and alignment.
+    //
+    // The pointer cast has less footguns than `transmute`:
+    // `src as *mut Src` keeps the same address and provenance from the original reference,
+    // so we will never run into lifetime issues.
+    unsafe { &mut *(src as *mut Src).cast::<Dst>() }
 }
