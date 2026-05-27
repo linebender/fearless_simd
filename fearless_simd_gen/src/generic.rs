@@ -213,11 +213,15 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
             block_count,
         } => {
             let split_len = (block_size * block_count) as usize / (ty.scalar_bits * 2);
+            let ty_rust = ty.rust();
             quote! {
                 #method_sig {
                     let (chunks, _) = src.as_chunks::<#split_len>();
-                    unsafe {
-                        core::mem::transmute([self.#do_half(&chunks[0]), self.#do_half(&chunks[1])])
+                    let lo = self.#do_half(&chunks[0]);
+                    let hi = self.#do_half(&chunks[1]);
+                    #ty_rust {
+                        val: crate::transmute::checked_transmute_copy(&[lo.val, hi.val]),
+                        simd: self,
                     }
                 }
             }
@@ -397,21 +401,30 @@ pub(crate) fn generic_as_array<T: ToTokens>(
     let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let num_scalars = vec_ty.len;
 
-    let ref_tok = kind.token();
     let native_ty =
         vec_ty.wrapped_native_ty(|vec_ty| arch_ty(vec_ty).into_token_stream(), max_block_size);
 
-    quote! {
-        #method_sig {
-            unsafe {
-                // Safety: The native vector type backing any implementation will be:
-                // - A `#[repr(simd)]` type, which has the same layout as an array of scalars
-                // - An array of `#[repr(simd)]` types
-                // - For AArch64 specifically, a `#[repr(C)]` tuple of `#[repr(simd)]` types
-                //
-                // Not only do these all have the same layout as a flat array of the corresponding scalars, but they
-                // wrap primitives where all bit patterns are valid (ints and floats).
-                core::mem::transmute::<#ref_tok #native_ty, #ref_tok [#rust_scalar; #num_scalars]>(#ref_tok a.val.0)
+    match kind {
+        RefKind::Value => quote! {
+            #method_sig {
+                crate::transmute::checked_transmute_copy::<#native_ty, [#rust_scalar; #num_scalars]>(&a.val.0)
+            }
+        },
+        RefKind::Ref | RefKind::Mut => {
+            let ref_tok = kind.token();
+            quote! {
+                #method_sig {
+                    unsafe {
+                        // Safety: The native vector type backing any implementation will be:
+                        // - A `#[repr(simd)]` type, which has the same layout as an array of scalars
+                        // - An array of `#[repr(simd)]` types
+                        // - For AArch64 specifically, a `#[repr(C)]` tuple of `#[repr(simd)]` types
+                        //
+                        // Not only do these all have the same layout as a flat array of the corresponding scalars, but they
+                        // wrap primitives where all bit patterns are valid (ints and floats).
+                        core::mem::transmute::<#ref_tok #native_ty, #ref_tok [#rust_scalar; #num_scalars]>(#ref_tok a.val.0)
+                    }
+                }
             }
         }
     }
@@ -445,9 +458,7 @@ pub(crate) fn generic_to_bytes(method_sig: TokenStream, vec_ty: &VecType) -> Tok
     let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
     quote! {
         #method_sig {
-            unsafe {
-                #bytes_ty { val: core::mem::transmute(a.val), simd: self }
-            }
+            #bytes_ty { val: crate::transmute::checked_transmute_copy(&a.val), simd: self }
         }
     }
 }
@@ -456,11 +467,7 @@ pub(crate) fn generic_from_bytes(method_sig: TokenStream, vec_ty: &VecType) -> T
     let ty = vec_ty.rust();
     quote! {
         #method_sig {
-            unsafe {
-                // Safety: All values are wrapped in alignment wrappers (`Aligned128`, `Aligned256`, `Aligned512`), so
-                // we're transmuting between types with all valid bit patterns and the same size and alignment.
-                #ty { val: core::mem::transmute(a.val), simd: self }
-            }
+            #ty { val: crate::transmute::checked_transmute_copy(&a.val), simd: self }
         }
     }
 }

@@ -517,7 +517,7 @@ fn mask_to_bitmask_words(native_width: usize, vec_ty: &VecType) -> TokenStream {
         },
         (256, 256) => quote! {
             {
-                let halves: [__m128i; 2usize] = core::mem::transmute(a.val.0);
+                let halves: [__m128i; 2usize] = crate::transmute::checked_transmute_copy(&a.val.0);
                 let packed = _mm_packs_epi16(halves[0], halves[1]);
                 _mm_movemask_epi8(packed) as u32 as u64
             }
