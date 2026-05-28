@@ -423,26 +423,10 @@ pub(crate) fn generic_as_array<T: ToTokens>(
     }
 }
 
-pub(crate) fn generic_store_array(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let count = vec_ty.len;
-
-    let store_expr = quote! {
-        unsafe {
-            // Copies `count` scalars from the backing type, which has the same layout as the destination array (see
-            // `generic_as_array`). The backing type is aligned to its own size, and the destination array must *by
-            // definition* be aligned to at least the alignment of the scalar.
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const #scalar_ty,
-                dest.as_mut_ptr(),
-                #count,
-            );
-        }
-    };
-
+pub(crate) fn generic_store_array(method_sig: TokenStream, _vec_ty: &VecType) -> TokenStream {
     quote! {
         #method_sig {
-            #store_expr
+            crate::transmute::checked_transmute_store(a.val.0, dest);
         }
     }
 }
