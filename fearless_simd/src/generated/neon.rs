@@ -111,11 +111,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_f32x4(self, a: &f32x4<Self>) -> &[f32; 4usize] {
-        unsafe { core::mem::transmute::<&float32x4_t, &[f32; 4usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<float32x4_t, [f32; 4usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_f32x4(self, a: &mut f32x4<Self>) -> &mut [f32; 4usize] {
-        unsafe { core::mem::transmute::<&mut float32x4_t, &mut [f32; 4usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<float32x4_t, [f32; 4usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> () {
@@ -394,11 +394,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_i8x16(self, a: &i8x16<Self>) -> &[i8; 16usize] {
-        unsafe { core::mem::transmute::<&int8x16_t, &[i8; 16usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<int8x16_t, [i8; 16usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_i8x16(self, a: &mut i8x16<Self>) -> &mut [i8; 16usize] {
-        unsafe { core::mem::transmute::<&mut int8x16_t, &mut [i8; 16usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<int8x16_t, [i8; 16usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
@@ -619,11 +619,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_u8x16(self, a: &u8x16<Self>) -> &[u8; 16usize] {
-        unsafe { core::mem::transmute::<&uint8x16_t, &[u8; 16usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<uint8x16_t, [u8; 16usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_u8x16(self, a: &mut u8x16<Self>) -> &mut [u8; 16usize] {
-        unsafe { core::mem::transmute::<&mut uint8x16_t, &mut [u8; 16usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<uint8x16_t, [u8; 16usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
@@ -833,7 +833,9 @@ impl Simd for Neon {
     #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
         unsafe {
-            let shifts = vld1q_s16([15, 14, 13, 12, 11, 10, 9, 8].as_ptr());
+            let shifts = crate::transmute::checked_transmute_copy::<[i16; 8], int16x8_t>(&[
+                15, 14, 13, 12, 11, 10, 9, 8,
+            ]);
             let lo = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
             let hi = vshlq_u16(vdupq_n_u16((bits >> 8) as u16), shifts);
             let lo = vcltq_s16(vreinterpretq_s16_u16(lo), vdupq_n_s16(0));
@@ -848,8 +850,9 @@ impl Simd for Neon {
     #[inline(always)]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
         unsafe {
-            let weights =
-                vld1q_u8([1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128].as_ptr());
+            let weights = crate::transmute::checked_transmute_copy::<[u8; 16], uint8x16_t>(&[
+                1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128,
+            ]);
             let bits = vandq_u8(vreinterpretq_u8_s8(a.into()), weights);
             let lo = vaddv_u8(vget_low_u8(bits)) as u64;
             let hi = vaddv_u8(vget_high_u8(bits)) as u64;
@@ -943,11 +946,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_i16x8(self, a: &i16x8<Self>) -> &[i16; 8usize] {
-        unsafe { core::mem::transmute::<&int16x8_t, &[i16; 8usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<int16x8_t, [i16; 8usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_i16x8(self, a: &mut i16x8<Self>) -> &mut [i16; 8usize] {
-        unsafe { core::mem::transmute::<&mut int16x8_t, &mut [i16; 8usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<int16x8_t, [i16; 8usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> () {
@@ -1168,11 +1171,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_u16x8(self, a: &u16x8<Self>) -> &[u16; 8usize] {
-        unsafe { core::mem::transmute::<&uint16x8_t, &[u16; 8usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<uint16x8_t, [u16; 8usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_u16x8(self, a: &mut u16x8<Self>) -> &mut [u16; 8usize] {
-        unsafe { core::mem::transmute::<&mut uint16x8_t, &mut [u16; 8usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<uint16x8_t, [u16; 8usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
@@ -1382,7 +1385,9 @@ impl Simd for Neon {
     #[inline(always)]
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
         unsafe {
-            let shifts = vld1q_s16([15, 14, 13, 12, 11, 10, 9, 8].as_ptr());
+            let shifts = crate::transmute::checked_transmute_copy::<[i16; 8], int16x8_t>(&[
+                15, 14, 13, 12, 11, 10, 9, 8,
+            ]);
             let shifted = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
             let mask = vcltq_s16(vreinterpretq_s16_u16(shifted), vdupq_n_s16(0));
             vreinterpretq_s16_u16(mask).simd_into(self)
@@ -1391,7 +1396,9 @@ impl Simd for Neon {
     #[inline(always)]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64 {
         unsafe {
-            let weights = vld1q_u16([1, 2, 4, 8, 16, 32, 64, 128].as_ptr());
+            let weights = crate::transmute::checked_transmute_copy::<[u16; 8], uint16x8_t>(&[
+                1, 2, 4, 8, 16, 32, 64, 128,
+            ]);
             let bits = vandq_u16(vreinterpretq_u16_s16(a.into()), weights);
             vaddvq_u16(bits) as u64
         }
@@ -1483,11 +1490,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_i32x4(self, a: &i32x4<Self>) -> &[i32; 4usize] {
-        unsafe { core::mem::transmute::<&int32x4_t, &[i32; 4usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<int32x4_t, [i32; 4usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_i32x4(self, a: &mut i32x4<Self>) -> &mut [i32; 4usize] {
-        unsafe { core::mem::transmute::<&mut int32x4_t, &mut [i32; 4usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<int32x4_t, [i32; 4usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> () {
@@ -1713,11 +1720,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_u32x4(self, a: &u32x4<Self>) -> &[u32; 4usize] {
-        unsafe { core::mem::transmute::<&uint32x4_t, &[u32; 4usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<uint32x4_t, [u32; 4usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_u32x4(self, a: &mut u32x4<Self>) -> &mut [u32; 4usize] {
-        unsafe { core::mem::transmute::<&mut uint32x4_t, &mut [u32; 4usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<uint32x4_t, [u32; 4usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
@@ -1927,7 +1934,8 @@ impl Simd for Neon {
     #[inline(always)]
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
         unsafe {
-            let shifts = vld1q_s32([31, 30, 29, 28].as_ptr());
+            let shifts =
+                crate::transmute::checked_transmute_copy::<[i32; 4], int32x4_t>(&[31, 30, 29, 28]);
             let shifted = vshlq_u32(vdupq_n_u32(bits as u32), shifts);
             let mask = vcltq_s32(vreinterpretq_s32_u32(shifted), vdupq_n_s32(0));
             vreinterpretq_s32_u32(mask).simd_into(self)
@@ -1936,7 +1944,8 @@ impl Simd for Neon {
     #[inline(always)]
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64 {
         unsafe {
-            let weights = vld1q_u32([1, 2, 4, 8].as_ptr());
+            let weights =
+                crate::transmute::checked_transmute_copy::<[u32; 4], uint32x4_t>(&[1, 2, 4, 8]);
             let bits = vandq_u32(vreinterpretq_u32_s32(a.into()), weights);
             vaddvq_u32(bits) as u64
         }
@@ -2028,11 +2037,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_f64x2(self, a: &f64x2<Self>) -> &[f64; 2usize] {
-        unsafe { core::mem::transmute::<&float64x2_t, &[f64; 2usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<float64x2_t, [f64; 2usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_f64x2(self, a: &mut f64x2<Self>) -> &mut [f64; 2usize] {
-        unsafe { core::mem::transmute::<&mut float64x2_t, &mut [f64; 2usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<float64x2_t, [f64; 2usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> () {
@@ -2272,7 +2281,7 @@ impl Simd for Neon {
     #[inline(always)]
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
         unsafe {
-            let shifts = vld1q_s64([63, 62].as_ptr());
+            let shifts = crate::transmute::checked_transmute_copy::<[i64; 2], int64x2_t>(&[63, 62]);
             let shifted = vshlq_u64(vdupq_n_u64(bits), shifts);
             let mask = vcltq_s64(vreinterpretq_s64_u64(shifted), vdupq_n_s64(0));
             vreinterpretq_s64_u64(mask).simd_into(self)
@@ -2281,7 +2290,7 @@ impl Simd for Neon {
     #[inline(always)]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64 {
         unsafe {
-            let weights = vld1q_u64([1, 2].as_ptr());
+            let weights = crate::transmute::checked_transmute_copy::<[u64; 2], uint64x2_t>(&[1, 2]);
             let bits = vandq_u64(vreinterpretq_u64_s64(a.into()), weights);
             vaddvq_u64(bits)
         }
@@ -2373,11 +2382,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_f32x8(self, a: &f32x8<Self>) -> &[f32; 8usize] {
-        unsafe { core::mem::transmute::<&float32x4x2_t, &[f32; 8usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<float32x4x2_t, [f32; 8usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_f32x8(self, a: &mut f32x8<Self>) -> &mut [f32; 8usize] {
-        unsafe { core::mem::transmute::<&mut float32x4x2_t, &mut [f32; 8usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<float32x4x2_t, [f32; 8usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
@@ -2773,11 +2782,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_i8x32(self, a: &i8x32<Self>) -> &[i8; 32usize] {
-        unsafe { core::mem::transmute::<&int8x16x2_t, &[i8; 32usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<int8x16x2_t, [i8; 32usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_i8x32(self, a: &mut i8x32<Self>) -> &mut [i8; 32usize] {
-        unsafe { core::mem::transmute::<&mut int8x16x2_t, &mut [i8; 32usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<int8x16x2_t, [i8; 32usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
@@ -3080,11 +3089,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_u8x32(self, a: &u8x32<Self>) -> &[u8; 32usize] {
-        unsafe { core::mem::transmute::<&uint8x16x2_t, &[u8; 32usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<uint8x16x2_t, [u8; 32usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_u8x32(self, a: &mut u8x32<Self>) -> &mut [u8; 32usize] {
-        unsafe { core::mem::transmute::<&mut uint8x16x2_t, &mut [u8; 32usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<uint8x16x2_t, [u8; 32usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
@@ -3497,11 +3506,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_i16x16(self, a: &i16x16<Self>) -> &[i16; 16usize] {
-        unsafe { core::mem::transmute::<&int16x8x2_t, &[i16; 16usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<int16x8x2_t, [i16; 16usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_i16x16(self, a: &mut i16x16<Self>) -> &mut [i16; 16usize] {
-        unsafe { core::mem::transmute::<&mut int16x8x2_t, &mut [i16; 16usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<int16x8x2_t, [i16; 16usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
@@ -3804,11 +3813,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_u16x16(self, a: &u16x16<Self>) -> &[u16; 16usize] {
-        unsafe { core::mem::transmute::<&uint16x8x2_t, &[u16; 16usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<uint16x8x2_t, [u16; 16usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_u16x16(self, a: &mut u16x16<Self>) -> &mut [u16; 16usize] {
-        unsafe { core::mem::transmute::<&mut uint16x8x2_t, &mut [u16; 16usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<uint16x8x2_t, [u16; 16usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
@@ -4226,11 +4235,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_i32x8(self, a: &i32x8<Self>) -> &[i32; 8usize] {
-        unsafe { core::mem::transmute::<&int32x4x2_t, &[i32; 8usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<int32x4x2_t, [i32; 8usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_i32x8(self, a: &mut i32x8<Self>) -> &mut [i32; 8usize] {
-        unsafe { core::mem::transmute::<&mut int32x4x2_t, &mut [i32; 8usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<int32x4x2_t, [i32; 8usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
@@ -4538,11 +4547,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_u32x8(self, a: &u32x8<Self>) -> &[u32; 8usize] {
-        unsafe { core::mem::transmute::<&uint32x4x2_t, &[u32; 8usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<uint32x4x2_t, [u32; 8usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_u32x8(self, a: &mut u32x8<Self>) -> &mut [u32; 8usize] {
-        unsafe { core::mem::transmute::<&mut uint32x4x2_t, &mut [u32; 8usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<uint32x4x2_t, [u32; 8usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
@@ -4952,11 +4961,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_f64x4(self, a: &f64x4<Self>) -> &[f64; 4usize] {
-        unsafe { core::mem::transmute::<&float64x2x2_t, &[f64; 4usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<float64x2x2_t, [f64; 4usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_f64x4(self, a: &mut f64x4<Self>) -> &mut [f64; 4usize] {
-        unsafe { core::mem::transmute::<&mut float64x2x2_t, &mut [f64; 4usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<float64x2x2_t, [f64; 4usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
@@ -5420,11 +5429,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_f32x16(self, a: &f32x16<Self>) -> &[f32; 16usize] {
-        unsafe { core::mem::transmute::<&float32x4x4_t, &[f32; 16usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<float32x4x4_t, [f32; 16usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize] {
-        unsafe { core::mem::transmute::<&mut float32x4x4_t, &mut [f32; 16usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<float32x4x4_t, [f32; 16usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
@@ -5837,11 +5846,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_i8x64(self, a: &i8x64<Self>) -> &[i8; 64usize] {
-        unsafe { core::mem::transmute::<&int8x16x4_t, &[i8; 64usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<int8x16x4_t, [i8; 64usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_i8x64(self, a: &mut i8x64<Self>) -> &mut [i8; 64usize] {
-        unsafe { core::mem::transmute::<&mut int8x16x4_t, &mut [i8; 64usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<int8x16x4_t, [i8; 64usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
@@ -6153,11 +6162,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_u8x64(self, a: &u8x64<Self>) -> &[u8; 64usize] {
-        unsafe { core::mem::transmute::<&uint8x16x4_t, &[u8; 64usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<uint8x16x4_t, [u8; 64usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize] {
-        unsafe { core::mem::transmute::<&mut uint8x16x4_t, &mut [u8; 64usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<uint8x16x4_t, [u8; 64usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
@@ -6573,11 +6582,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_i16x32(self, a: &i16x32<Self>) -> &[i16; 32usize] {
-        unsafe { core::mem::transmute::<&int16x8x4_t, &[i16; 32usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<int16x8x4_t, [i16; 32usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize] {
-        unsafe { core::mem::transmute::<&mut int16x8x4_t, &mut [i16; 32usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<int16x8x4_t, [i16; 32usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
@@ -6898,11 +6907,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_u16x32(self, a: &u16x32<Self>) -> &[u16; 32usize] {
-        unsafe { core::mem::transmute::<&uint16x8x4_t, &[u16; 32usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<uint16x8x4_t, [u16; 32usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize] {
-        unsafe { core::mem::transmute::<&mut uint16x8x4_t, &mut [u16; 32usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<uint16x8x4_t, [u16; 32usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
@@ -7340,11 +7349,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_i32x16(self, a: &i32x16<Self>) -> &[i32; 16usize] {
-        unsafe { core::mem::transmute::<&int32x4x4_t, &[i32; 16usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<int32x4x4_t, [i32; 16usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize] {
-        unsafe { core::mem::transmute::<&mut int32x4x4_t, &mut [i32; 16usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<int32x4x4_t, [i32; 16usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
@@ -7661,11 +7670,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_u32x16(self, a: &u32x16<Self>) -> &[u32; 16usize] {
-        unsafe { core::mem::transmute::<&uint32x4x4_t, &[u32; 16usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<uint32x4x4_t, [u32; 16usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize] {
-        unsafe { core::mem::transmute::<&mut uint32x4x4_t, &mut [u32; 16usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<uint32x4x4_t, [u32; 16usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
@@ -8083,11 +8092,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn as_array_ref_f64x8(self, a: &f64x8<Self>) -> &[f64; 8usize] {
-        unsafe { core::mem::transmute::<&float64x2x4_t, &[f64; 8usize]>(&a.val.0) }
+        crate::transmute::checked_cast_ref::<float64x2x4_t, [f64; 8usize]>(&a.val.0)
     }
     #[inline(always)]
     fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize] {
-        unsafe { core::mem::transmute::<&mut float64x2x4_t, &mut [f64; 8usize]>(&mut a.val.0) }
+        crate::transmute::checked_cast_mut::<float64x2x4_t, [f64; 8usize]>(&mut a.val.0)
     }
     #[inline(always)]
     fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {

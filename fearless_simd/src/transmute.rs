@@ -6,7 +6,7 @@
 //! This all serves a single `checked_transmute_copy` function,
 //! if we find this growing in complexity we should probably just use the real bytemuck
 
-use core::mem::size_of;
+use core::mem::{align_of, size_of};
 
 use crate::support::{Aligned128, Aligned256, Aligned512};
 
@@ -16,6 +16,7 @@ use core::arch::aarch64::{
     int8x16_t, int8x16x2_t, int8x16x4_t, int16x8_t, int16x8x2_t, int16x8x4_t, int32x4_t,
     int32x4x2_t, int32x4x4_t, int64x2_t, int64x2x2_t, int64x2x4_t, uint8x16_t, uint8x16x2_t,
     uint8x16x4_t, uint16x8_t, uint16x8x2_t, uint16x8x4_t, uint32x4_t, uint32x4x2_t, uint32x4x4_t,
+    uint64x2_t,
 };
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 use core::arch::wasm32::v128;
@@ -160,6 +161,7 @@ const _: () = {
     unsafe impl SimdPod for uint32x4_t {}
     unsafe impl SimdPod for uint32x4x2_t {}
     unsafe impl SimdPod for uint32x4x4_t {}
+    unsafe impl SimdPod for uint64x2_t {}
 };
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -236,4 +238,66 @@ pub(crate) fn checked_transmute_copy<Src: SimdPod, Dst: SimdPod>(src: &Src) -> D
     // Safety: `SimdPod` guarantees source and destination validity for all bit patterns, and
     // the const assertion above prevents the "destination larger than source" failure mode.
     unsafe { core::mem::transmute_copy(src) }
+}
+
+/// Like `bytemuck::cast_ref`, but rejects incompatible types at compile time
+/// and only accepts this crate's SIMD plain-old-data storage types.
+#[inline(always)]
+#[allow(
+    clippy::disallowed_methods,
+    reason = "This is the central checked wrapper around transmute"
+)]
+#[allow(dead_code, reason = "Not all backends use this function")]
+pub(crate) fn checked_cast_ref<Src: SimdPod, Dst: SimdPod>(src: &Src) -> &Dst {
+    const {
+        assert!(
+            size_of::<Src>() == size_of::<Dst>(),
+            "checked_cast_ref requires source and destination to have the same size"
+        );
+        // alignment is always a power of two as per Rust Reference:
+        // https://doc.rust-lang.org/stable/reference/type-layout.html#size-and-alignment
+        // so >= is sufficient and won't run into issues with coprime alignments
+        assert!(
+            align_of::<Src>() >= align_of::<Dst>(),
+            "checked_cast_ref requires source to have alignment equal or greater to the destination"
+        );
+    }
+    // Safety: `SimdPod` guarantees source and destination validity for all bit patterns, and
+    // the const assertions above enforce compatible size and alignment.
+    //
+    // The pointer cast has less footguns than `transmute`:
+    // `src as *const Src` keeps the same address and provenance from the original reference,
+    // so we will never run into lifetime issues.
+    unsafe { &*(src as *const Src).cast::<Dst>() }
+}
+
+/// Like `bytemuck::cast_mut`, but rejects incompatible types at compile time
+/// and only accepts this crate's SIMD plain-old-data storage types.
+#[inline(always)]
+#[allow(
+    clippy::disallowed_methods,
+    reason = "This is the central checked wrapper around transmute"
+)]
+#[allow(dead_code, reason = "Not all backends use this function")]
+pub(crate) fn checked_cast_mut<Src: SimdPod, Dst: SimdPod>(src: &mut Src) -> &mut Dst {
+    const {
+        assert!(
+            size_of::<Src>() == size_of::<Dst>(),
+            "checked_cast_mut requires source and destination to have the same size"
+        );
+        // alignment is always a power of two as per Rust Reference:
+        // https://doc.rust-lang.org/stable/reference/type-layout.html#size-and-alignment
+        // so >= is sufficient and won't run into issues with coprime alignments
+        assert!(
+            align_of::<Src>() >= align_of::<Dst>(),
+            "checked_cast_mut requires source to have alignment equal or greater to the destination"
+        );
+    }
+    // Safety: `SimdPod` guarantees source and destination validity for all bit patterns, and
+    // the const assertions above enforce compatible size and alignment.
+    //
+    // The pointer cast has less footguns than `transmute`:
+    // `src as *mut Src` keeps the same address and provenance from the original reference,
+    // so we will never run into lifetime issues.
+    unsafe { &mut *(src as *mut Src).cast::<Dst>() }
 }
