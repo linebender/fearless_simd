@@ -117,7 +117,7 @@ impl Simd for Sse4_2 {
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(enable = "sse4.2,cmpxchg16b,popcnt")]
-        unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
+        fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }
         unsafe { vectorize_sse4_2(f) }

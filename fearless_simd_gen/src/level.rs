@@ -113,7 +113,7 @@ pub(crate) trait Level {
                 // The closure passed to it is already required to be #[inline(always)],
                 // so this wrapper is the only opportunity for the compiler to make inlining decisions.
                 #[target_feature(enable = #target_features)]
-                unsafe fn #vectorize<F: FnOnce() -> R, R>(f: F) -> R {
+                fn #vectorize<F: FnOnce() -> R, R>(f: F) -> R {
                     f()
                 }
                 unsafe { #vectorize(f) }
