@@ -19,6 +19,11 @@ path = "tests/mod.rs"
 [lints]
 workspace = true
 
+[features]
+default = ["std"]
+std = ["fearless_simd/std"]
+libm = ["fearless_simd/libm"]
+
 [dependencies]
-fearless_simd = { workspace = true, features = ["std"] }
+fearless_simd = { workspace = true }
 fearless_simd_dev_macros = { workspace = true }

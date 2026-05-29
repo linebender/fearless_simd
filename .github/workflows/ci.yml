@@ -219,6 +219,25 @@ jobs:
       - name: cargo test
         run: cargo test --workspace --locked --all-features --no-fail-fast --target ${{ matrix.platform.target }}
 
+  test-stable-libm:
+    name: cargo test (libm, no_std)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install stable toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_STABLE_VER }}
+
+      - name: restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.event_name != 'merge_group' }}
+
+      - name: cargo test
+        run: cargo test -p fearless_simd_tests --locked --no-default-features --features libm --no-fail-fast
+
   test-sde:
     name: cargo test in an emulator
     runs-on: ${{ matrix.platform.os }}
