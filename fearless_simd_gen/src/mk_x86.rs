@@ -99,11 +99,29 @@ impl Level for X86 {
         }
     }
 
+    fn arch_type_impl_cfg(&self, vec_ty: &VecType) -> Option<TokenStream> {
+        let n_bits = vec_ty.n_bits();
+        if n_bits > self.max_block_size() {
+            return None;
+        }
+
+        match (self, n_bits) {
+            (Self::Sse4_2, 128) | (Self::Avx2, 256) => Some(TokenStream::new()),
+            // The AVX2 backend uses 128-bit intrinsics internally. Normally the SSE4.2 backend
+            // provides those conversion impls, but AVX2 still needs them when SSE4.2 is disabled.
+            (Self::Avx2, 128) => Some(quote! {
+                #[cfg(not(feature = "sse4_2"))]
+            }),
+            _ => None,
+        }
+    }
+
     fn make_level_body(&self) -> TokenStream {
         let level_tok = self.token();
         match self {
             Self::Sse4_2 => quote! {
                 #[cfg(not(all(
+                    feature = "avx2",
                     target_feature = "avx2",
                     target_feature = "bmi1",
                     target_feature = "bmi2",
@@ -117,6 +135,7 @@ impl Level for X86 {
                 )))]
                 return Level::#level_tok(self);
                 #[cfg(all(
+                    feature = "avx2",
                     target_feature = "avx2",
                     target_feature = "bmi1",
                     target_feature = "bmi2",

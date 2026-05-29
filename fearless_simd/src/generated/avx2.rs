@@ -8237,6 +8237,210 @@ impl Simd for Avx2 {
         )
     }
 }
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128, S> for f32x4<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<f32x4<S>> for __m128 {
+    #[inline(always)]
+    fn from(value: f32x4<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for i8x16<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<i8x16<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: i8x16<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for u8x16<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<u8x16<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: u8x16<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for mask8x16<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<mask8x16<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: mask8x16<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for i16x8<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<i16x8<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: i16x8<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for u16x8<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<u16x8<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: u16x8<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for mask16x8<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<mask16x8<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: mask16x8<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for i32x4<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<i32x4<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: i32x4<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for u32x4<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<u32x4<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: u32x4<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for mask32x4<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<mask32x4<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: mask32x4<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128d, S> for f64x2<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128d) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<f64x2<S>> for __m128d {
+    #[inline(always)]
+    fn from(value: f64x2<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> SimdFrom<__m128i, S> for mask64x2<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m128i) -> Self {
+        Self {
+            val: unsafe { core::mem::transmute_copy(&arch) },
+            simd,
+        }
+    }
+}
+#[cfg(not(feature = "sse4_2"))]
+impl<S: Simd> From<mask64x2<S>> for __m128i {
+    #[inline(always)]
+    fn from(value: mask64x2<S>) -> Self {
+        unsafe { core::mem::transmute_copy(&value.val) }
+    }
+}
 impl<S: Simd> SimdFrom<__m256, S> for f32x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, arch: __m256) -> Self {

@@ -55,6 +55,7 @@
 ///
 /// The SIMD token type must be written as a bare supported name:
 /// literally `Neon`, `WasmSimd128`, `Sse4_2`, or `Avx2`. No paths or aliases.
+/// The x86 token names are accepted only when their matching crate features are enabled.
 ///
 /// For soundness, this macro only accepts safe functions.
 ///
@@ -131,26 +132,14 @@ macro_rules! __fearless_simd_kernel_dispatch {
         Sse4_2,
         $($body:tt)*
     ) => {
-        $crate::__fearless_simd_kernel_impl! {
-            @cfg any(target_arch = "x86", target_arch = "x86_64");
-            @token_ty $crate::Sse4_2;
-            @kernel_attrs #[target_feature(enable = "sse4.2,cmpxchg16b,popcnt")];
-            $($body)*
-        }
+        $crate::__fearless_simd_kernel_dispatch_sse4_2! { $($body)* }
     };
 
     (
         Avx2,
         $($body:tt)*
     ) => {
-        $crate::__fearless_simd_kernel_impl! {
-            @cfg any(target_arch = "x86", target_arch = "x86_64");
-            @token_ty $crate::Avx2;
-            @kernel_attrs #[target_feature(
-                enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave"
-            )];
-            $($body)*
-        }
+        $crate::__fearless_simd_kernel_dispatch_avx2! { $($body)* }
     };
 
     (
@@ -163,6 +152,56 @@ macro_rules! __fearless_simd_kernel_dispatch {
             stringify!($token_ty),
             "`",
         ));
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+#[cfg(feature = "sse4_2")]
+macro_rules! __fearless_simd_kernel_dispatch_sse4_2 {
+    ($($body:tt)*) => {
+        $crate::__fearless_simd_kernel_impl! {
+            @cfg any(target_arch = "x86", target_arch = "x86_64");
+            @token_ty $crate::Sse4_2;
+            @kernel_attrs #[target_feature(enable = "sse4.2,cmpxchg16b,popcnt")];
+            $($body)*
+        }
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+#[cfg(not(feature = "sse4_2"))]
+macro_rules! __fearless_simd_kernel_dispatch_sse4_2 {
+    ($($body:tt)*) => {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        compile_error!("fearless_simd::kernel! token `Sse4_2` requires the `sse4_2` crate feature");
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+#[cfg(feature = "avx2")]
+macro_rules! __fearless_simd_kernel_dispatch_avx2 {
+    ($($body:tt)*) => {
+        $crate::__fearless_simd_kernel_impl! {
+            @cfg any(target_arch = "x86", target_arch = "x86_64");
+            @token_ty $crate::Avx2;
+            @kernel_attrs #[target_feature(
+                enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave"
+            )];
+            $($body)*
+        }
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+#[cfg(not(feature = "avx2"))]
+macro_rules! __fearless_simd_kernel_dispatch_avx2 {
+    ($($body:tt)*) => {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        compile_error!("fearless_simd::kernel! token `Avx2` requires the `avx2` crate feature");
     };
 }
 
@@ -205,8 +244,8 @@ macro_rules! __fearless_simd_kernel_impl {
 mod tests {
     #[cfg(any(
         target_arch = "aarch64",
-        target_arch = "x86",
-        target_arch = "x86_64",
+        all(feature = "avx2", target_arch = "x86"),
+        all(feature = "avx2", target_arch = "x86_64"),
         all(target_arch = "wasm32", target_feature = "simd128")
     ))]
     use crate::prelude::*;
@@ -215,9 +254,9 @@ mod tests {
     use core::arch::aarch64::{float32x4_t, vaddq_f32};
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     use core::arch::wasm32::{f32x4_add, v128};
-    #[cfg(target_arch = "x86")]
+    #[cfg(all(feature = "avx2", target_arch = "x86"))]
     use core::arch::x86::{__m256i, _mm256_add_epi32};
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(all(feature = "avx2", target_arch = "x86_64"))]
     use core::arch::x86_64::{__m256i, _mm256_add_epi32};
 
     crate::kernel! {
@@ -232,6 +271,7 @@ mod tests {
         }
     }
 
+    #[cfg(all(feature = "avx2", any(target_arch = "x86", target_arch = "x86_64")))]
     crate::kernel! {
         fn add_i32x8_avx2(avx2: Avx2, a: __m256i, b: __m256i) -> __m256i {
             _mm256_add_epi32(a, b)
@@ -274,7 +314,7 @@ mod tests {
         );
     }
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[cfg(all(feature = "avx2", any(target_arch = "x86", target_arch = "x86_64")))]
     #[test]
     fn kernel_instantiates_for_avx2() {
         let Some(avx2) = crate::Level::new().as_avx2() else {

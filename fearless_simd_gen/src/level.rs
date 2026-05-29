@@ -80,6 +80,19 @@ pub(crate) trait Level {
         TokenStream::new()
     }
 
+    /// Optional cfg attributes for native architecture conversion impls for this vector type.
+    ///
+    /// Returning `None` skips the impl. Returning an empty token stream emits an unconditional impl.
+    fn arch_type_impl_cfg(&self, vec_ty: &VecType) -> Option<TokenStream> {
+        let n_bits = vec_ty.n_bits();
+        // If n_bits is below our native width (e.g. 128 bits for AVX2), another module will have already
+        // implemented the conversion.
+        if n_bits > self.max_block_size() || n_bits < self.native_width() {
+            return None;
+        }
+        Some(TokenStream::new())
+    }
+
     /// The body of the `Simd::level` function. This can be overridden, e.g. to return `Level::baseline()` if we know a
     /// higher SIMD level is statically enabled.
     fn make_level_body(&self) -> TokenStream {
@@ -180,19 +193,15 @@ pub(crate) trait Level {
     }
 
     fn make_type_impl(&self) -> TokenStream {
-        let native_width = self.native_width();
-        let max_block_size = self.max_block_size();
         let mut result = vec![];
         for ty in SIMD_TYPES {
-            let n_bits = ty.n_bits();
-            // If n_bits is below our native width (e.g. 128 bits for AVX2), another module will have already
-            // implemented the conversion.
-            if n_bits > max_block_size || n_bits < native_width {
+            let Some(cfg) = self.arch_type_impl_cfg(ty) else {
                 continue;
-            }
+            };
             let simd = ty.rust();
             let arch = self.arch_ty(ty);
             result.push(quote! {
+                #cfg
                 impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                     #[inline(always)]
                     fn simd_from(simd: S, arch: #arch) -> Self {
@@ -202,6 +211,7 @@ pub(crate) trait Level {
                         }
                     }
                 }
+                #cfg
                 impl<S: Simd> From<#simd<S>> for #arch {
                     #[inline(always)]
                     fn from(value: #simd<S>) -> Self {

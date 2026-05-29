@@ -86,6 +86,7 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn level(self) -> Level {
         #[cfg(not(all(
+            feature = "avx2",
             target_feature = "avx2",
             target_feature = "bmi1",
             target_feature = "bmi2",
@@ -99,6 +100,7 @@ impl Simd for Sse4_2 {
         )))]
         return Level::Sse4_2(self);
         #[cfg(all(
+            feature = "avx2",
             target_feature = "avx2",
             target_feature = "bmi1",
             target_feature = "bmi2",
