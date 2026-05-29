@@ -43,8 +43,8 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         /// # Associated Types
         ///
         /// The trait defines associated types for the highest "native" vector width of each scalar type (e.g. `f32s`,
-        /// `u32s`). These are always at least 128 bits, but may be larger. Currently, they are 128 bits everywhere but
-        /// AVX2, where they are 256 bits.
+        /// `u32s`). These are always at least 128 bits, but may be larger. Currently, they are 128 bits on the
+        /// fallback, NEON, WASM, and SSE4.2 backends, 256 bits on AVX2, and 512 bits on AVX-512.
         ///
         /// # Example
         ///

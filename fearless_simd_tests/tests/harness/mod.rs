@@ -205,6 +205,40 @@ fn min_precise_f32x4_with_nan<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn max_precise_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[2.0, -3.0]);
+    let b = f64x2::from_slice(simd, &[1.0, -2.0]);
+    assert_eq!(*a.max_precise(b), [2.0, -2.0]);
+}
+
+#[simd_test]
+fn min_precise_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[2.0, -3.0]);
+    let b = f64x2::from_slice(simd, &[1.0, -2.0]);
+    assert_eq!(*a.min_precise(b), [1.0, -3.0]);
+}
+
+#[simd_test]
+fn max_precise_f64x2_with_nan<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[f64::NAN, -3.0]);
+    let b = f64x2::from_slice(simd, &[1.0, f64::NAN]);
+    let result = a.max_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+}
+
+#[simd_test]
+fn min_precise_f64x2_with_nan<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[f64::NAN, -3.0]);
+    let b = f64x2::from_slice(simd, &[1.0, f64::NAN]);
+    let result = a.min_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+}
+
+#[simd_test]
 fn floor_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[2.0, -3.2, 0.0, 0.5]);
     assert_eq!(*a.floor(), [2.0, -4.0, 0.0, 0.0]);
@@ -694,47 +728,63 @@ fn combine_u8x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn and_mask8x16<S: Simd>(simd: S) {
-    let a = mask8x16::from_slice(simd, &[1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]);
+    let a = mask8x16::from_slice(
+        simd,
+        &[-1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0],
+    );
     let b = mask8x16::from_slice(
         simd,
         &[
-            85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         ],
     );
     assert_eq!(
         <[i8; 16]>::from(a & b),
-        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
+        [-1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0]
     );
 }
 
 #[simd_test]
 fn or_mask8x16<S: Simd>(simd: S) {
-    let a = mask8x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8]);
-    let b = mask8x16::from_slice(simd, &[1, 1, 1, 1, 2, 3, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0]);
+    let a = mask8x16::from_slice(
+        simd,
+        &[0, -1, 0, -1, 0, -1, 0, -1, -1, 0, -1, 0, -1, 0, -1, 0],
+    );
+    let b = mask8x16::from_slice(
+        simd,
+        &[0, 0, -1, -1, 0, 0, -1, -1, 0, -1, 0, -1, 0, -1, 0, -1],
+    );
     assert_eq!(
         <[i8; 16]>::from(a | b),
-        [1, 1, 3, 3, 6, 7, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8]
+        [0, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
     );
 }
 
 #[simd_test]
 fn xor_mask8x16<S: Simd>(simd: S) {
-    let a = mask8x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 1, 1, 1, 1, 0, 0, 0, 0]);
-    let b = mask8x16::from_slice(simd, &[1, 1, 0, 0, 5, 4, 7, 6, 1, 0, 1, 0, 1, 0, 1, 0]);
+    let a = mask8x16::from_slice(
+        simd,
+        &[0, -1, -1, 0, -1, 0, 0, -1, -1, -1, 0, 0, -1, -1, 0, 0],
+    );
+    let b = mask8x16::from_slice(
+        simd,
+        &[-1, -1, 0, 0, -1, -1, 0, 0, -1, 0, -1, 0, -1, 0, -1, 0],
+    );
     assert_eq!(
         <[i8; 16]>::from(a ^ b),
-        [1, 0, 2, 3, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]
+        [-1, 0, -1, 0, 0, -1, 0, -1, 0, -1, -1, 0, 0, -1, -1, 0]
     );
 }
 
 #[simd_test]
 fn not_mask8x16<S: Simd>(simd: S) {
-    let a = mask8x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8]);
+    let a = mask8x16::from_slice(
+        simd,
+        &[0, -1, -1, 0, -1, 0, 0, -1, -1, 0, -1, 0, 0, -1, 0, -1],
+    );
     assert_eq!(
         <[i8; 16]>::from(!a),
-        [
-            -1, -2, -3, -4, -5, -6, -7, -8, -2, -3, -4, -5, -6, -7, -8, -9
-        ]
+        [-1, 0, 0, -1, 0, -1, -1, 0, 0, -1, 0, -1, -1, 0, -1, 0]
     );
 }
 
@@ -814,6 +864,51 @@ fn all_false_mask8x16<S: Simd>(simd: S) {
 
     let one_neg = mask8x16::from_slice(simd, &[0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0]);
     assert!(!simd.all_false_mask8x16(one_neg));
+}
+
+#[simd_test]
+fn load_interleaved_128_f32x16<S: Simd>(simd: S) {
+    let data: [f32; 16] = [
+        0.0,
+        f32::NAN,
+        f32::INFINITY,
+        -3.0,
+        4.0,
+        -0.0,
+        6.0,
+        f32::NEG_INFINITY,
+        8.0,
+        9.0,
+        -10.0,
+        11.0,
+        f32::MIN,
+        13.0,
+        f32::MAX,
+        15.0,
+    ];
+    let result = simd.load_interleaved_128_f32x16(&data);
+
+    let expected = [
+        0.0,
+        4.0,
+        8.0,
+        f32::MIN,
+        f32::NAN,
+        -0.0,
+        9.0,
+        13.0,
+        f32::INFINITY,
+        6.0,
+        -10.0,
+        f32::MAX,
+        -3.0,
+        f32::NEG_INFINITY,
+        11.0,
+        15.0,
+    ];
+
+    // Note: f32::NAN != f32::NAN hence we compare the bit pattern.
+    assert_eq!((*result).map(f32::to_bits), expected.map(f32::to_bits));
 }
 
 #[simd_test]
@@ -2420,6 +2515,139 @@ fn shlv_u32x4_varied<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn shlv_i8x16<S: Simd>(simd: S) {
+    let a = i8x16::from_slice(
+        simd,
+        &[64, 65, -64, -65, 1, 2, 3, 4, -1, -2, -3, -4, 15, 16, 31, 32],
+    );
+    let shifts = i8x16::from_slice(simd, &[1, 2, 1, 2, 0, 1, 2, 3, 1, 2, 3, 4, 3, 2, 1, 0]);
+    assert_eq!(
+        *(a << shifts),
+        [
+            -128, 4, -128, -4, 1, 4, 12, 32, -2, -8, -24, -64, 120, 64, 62, 32
+        ]
+    );
+}
+
+#[simd_test]
+fn shrv_i8x16<S: Simd>(simd: S) {
+    let a = i8x16::from_slice(
+        simd,
+        &[
+            -128, -64, -33, -1, 127, 64, 33, 1, -2, -4, -8, -16, 0, 2, 4, 8,
+        ],
+    );
+    let shifts = i8x16::from_slice(simd, &[1, 2, 3, 7, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3]);
+    assert_eq!(
+        *(a >> shifts),
+        [-64, -16, -5, -1, 63, 16, 4, 1, -1, -1, -1, -1, 0, 1, 1, 1]
+    );
+}
+
+#[simd_test]
+fn shlv_u8x16<S: Simd>(simd: S) {
+    let a = u8x16::from_slice(
+        simd,
+        &[255, 128, 64, 32, 16, 8, 4, 2, 1, 3, 5, 7, 15, 31, 63, 127],
+    );
+    let shifts = u8x16::from_slice(simd, &[4, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 3, 2, 1]);
+    assert_eq!(
+        *(a << shifts),
+        [240, 0, 0, 0, 0, 0, 0, 0, 1, 6, 20, 56, 240, 248, 252, 254]
+    );
+}
+
+#[simd_test]
+fn shrv_u8x16<S: Simd>(simd: S) {
+    let a = u8x16::from_slice(
+        simd,
+        &[255, 128, 64, 32, 16, 8, 4, 2, 1, 3, 5, 7, 15, 31, 63, 127],
+    );
+    let shifts = u8x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 1, 0, 1, 2, 3, 4, 3, 2, 1]);
+    assert_eq!(
+        *(a >> shifts),
+        [127, 32, 8, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 3, 15, 63]
+    );
+}
+
+#[simd_test]
+fn shlv_i16x8<S: Simd>(simd: S) {
+    let a = i16x8::from_slice(simd, &[16384, 8192, -16384, -8192, 1, -1, 255, -256]);
+    let shifts = i16x8::from_slice(simd, &[1, 2, 1, 2, 15, 1, 4, 3]);
+    assert_eq!(
+        *(a << shifts),
+        [-32768, -32768, -32768, -32768, -32768, -2, 4080, -2048]
+    );
+}
+
+#[simd_test]
+fn shrv_i16x8<S: Simd>(simd: S) {
+    let a = i16x8::from_slice(simd, &[-32768, -16384, -1025, -1, 32767, 16384, 1025, 1]);
+    let shifts = i16x8::from_slice(simd, &[1, 2, 3, 15, 1, 2, 3, 0]);
+    assert_eq!(
+        *(a >> shifts),
+        [-16384, -4096, -129, -1, 16383, 4096, 128, 1]
+    );
+}
+
+#[simd_test]
+fn shlv_u16x8<S: Simd>(simd: S) {
+    let a = u16x8::from_slice(simd, &[65535, 32768, 16384, 8192, 1, 255, 1024, 4096]);
+    let shifts = u16x8::from_slice(simd, &[4, 1, 2, 3, 15, 4, 5, 0]);
+    assert_eq!(*(a << shifts), [65520, 0, 0, 0, 32768, 4080, 32768, 4096]);
+}
+
+#[simd_test]
+fn shrv_u16x8<S: Simd>(simd: S) {
+    let a = u16x8::from_slice(simd, &[65535, 32768, 16384, 8192, 1, 255, 1024, 4096]);
+    let shifts = u16x8::from_slice(simd, &[1, 2, 3, 4, 0, 4, 5, 12]);
+    assert_eq!(*(a >> shifts), [32767, 8192, 2048, 512, 1, 15, 32, 1]);
+}
+
+#[simd_test]
+fn shlv_u8x32<S: Simd>(simd: S) {
+    let a = u8x32::from_slice(
+        simd,
+        &[
+            255, 128, 64, 32, 16, 8, 4, 2, 1, 3, 5, 7, 15, 31, 63, 127, 255, 128, 64, 32, 16, 8, 4,
+            2, 1, 3, 5, 7, 15, 31, 63, 127,
+        ],
+    );
+    let shifts = u8x32::from_slice(
+        simd,
+        &[
+            4, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 3, 2, 1, 4, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4,
+            3, 2, 1,
+        ],
+    );
+    assert_eq!(
+        *(a << shifts),
+        [
+            240, 0, 0, 0, 0, 0, 0, 0, 1, 6, 20, 56, 240, 248, 252, 254, 240, 0, 0, 0, 0, 0, 0, 0,
+            1, 6, 20, 56, 240, 248, 252, 254
+        ]
+    );
+}
+
+#[simd_test]
+fn shlv_u16x16<S: Simd>(simd: S) {
+    let a = u16x16::from_slice(
+        simd,
+        &[
+            65535, 32768, 16384, 8192, 1, 255, 1024, 4096, 65535, 32768, 16384, 8192, 1, 255, 1024,
+            4096,
+        ],
+    );
+    let shifts = u16x16::from_slice(simd, &[4, 1, 2, 3, 15, 4, 5, 0, 4, 1, 2, 3, 15, 4, 5, 0]);
+    assert_eq!(
+        *(a << shifts),
+        [
+            65520, 0, 0, 0, 32768, 4080, 32768, 4096, 65520, 0, 0, 0, 32768, 4080, 32768, 4096
+        ]
+    );
+}
+
+#[simd_test]
 fn add_i16x8<S: Simd>(simd: S) {
     let a = i16x8::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8]);
     let b = i16x8::from_slice(simd, &[10, 20, 30, 40, 50, 60, 70, 80]);
@@ -3201,10 +3429,25 @@ fn sqrt_f64x2<S: Simd>(simd: S) {
 
 #[simd_test]
 fn approximate_recip_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[1.0, -2.0]);
+    let result = a.approximate_recip();
+    let expected = [1.0, -0.5];
+    for i in 0..2 {
+        let rel_error = ((result[i] - expected[i]) / expected[i]).abs();
+        assert!(
+            rel_error < 0.005,
+            "approximate_recip({}) rel_error = {rel_error}",
+            a[i]
+        );
+    }
+}
+
+#[simd_test]
+fn approximate_recip_f64x4<S: Simd>(simd: S) {
     let a = f64x4::from_slice(simd, &[1.0, -2.0, 23.0, 9.0]);
     let result = a.approximate_recip();
     let expected = [1.0, -0.5, 1. / 23., 1. / 9.];
-    for i in 0..2 {
+    for i in 0..4 {
         let rel_error = ((result[i] - expected[i]) / expected[i]).abs();
         assert!(
             rel_error < 0.005,

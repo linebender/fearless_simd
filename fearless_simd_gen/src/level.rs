@@ -34,11 +34,22 @@ pub(crate) trait Level {
     /// type *larger* than [`Level::max_block_size`], since [`VecType::aligned_wrapper_ty`] will split those up into
     /// smaller blocks.
     fn arch_ty(&self, vec_ty: &VecType) -> TokenStream;
+    /// The associated storage type used by a public SIMD vector for this level.
+    ///
+    /// Most levels wrap their native storage in an `Aligned*` newtype, but some compact scalar-like
+    /// representations, such as AVX-512 masks, can store the native type directly.
+    fn arch_storage_ty(&self, vec_ty: &VecType) -> TokenStream {
+        vec_ty.aligned_wrapper_ty(|vec_ty| self.arch_ty(vec_ty), self.max_block_size())
+    }
     /// The docstring for this SIMD level token.
     fn token_doc(&self) -> &'static str;
     /// Any additional imports or supporting code necessary for the module (for instance, importing
     /// implementation-specific functions from `core::arch`).
     fn make_module_prelude(&self) -> TokenStream;
+    /// Inner attributes to place at the top of the generated module.
+    fn make_module_attrs(&self) -> TokenStream {
+        TokenStream::new()
+    }
     /// The body of the SIMD token's inherent `impl` block. By convention, this contains an unsafe `new_unchecked`
     /// method for constructing a SIMD token that may not be supported on current hardware, or a safe `new` method for
     /// constructing a SIMD token that is statically known to be supported.
@@ -59,8 +70,7 @@ pub(crate) trait Level {
         let mut assoc_types = vec![];
         for vec_ty in SIMD_TYPES {
             let ty_ident = vec_ty.rust();
-            let wrapper_ty =
-                vec_ty.aligned_wrapper_ty(|vec_ty| self.arch_ty(vec_ty), self.max_block_size());
+            let wrapper_ty = self.arch_storage_ty(vec_ty);
             assoc_types.push(quote! {
                 type #ty_ident = #wrapper_ty;
             });
@@ -88,6 +98,19 @@ pub(crate) trait Level {
         quote! {
             Level::#level_tok(self)
         }
+    }
+
+    fn should_impl_arch_type_conversion(&self, ty: &VecType) -> bool {
+        let n_bits = ty.n_bits();
+        n_bits <= self.max_block_size() && n_bits >= self.native_width()
+    }
+
+    fn should_use_bitmask_arch_type_conversion(&self, _ty: &VecType) -> bool {
+        false
+    }
+
+    fn custom_arch_type_conversion(&self, _ty: &VecType) -> Option<TokenStream> {
+        None
     }
 
     fn make_simd_impl(&self) -> TokenStream {
@@ -180,19 +203,40 @@ pub(crate) trait Level {
     }
 
     fn make_type_impl(&self) -> TokenStream {
-        let native_width = self.native_width();
-        let max_block_size = self.max_block_size();
         let mut result = vec![];
         for ty in SIMD_TYPES {
-            let n_bits = ty.n_bits();
             // If n_bits is below our native width (e.g. 128 bits for AVX2), another module will have already
             // implemented the conversion.
-            if n_bits > max_block_size || n_bits < native_width {
+            if !self.should_impl_arch_type_conversion(ty) {
                 continue;
             }
             let simd = ty.rust();
             let arch = self.arch_ty(ty);
-            result.push(quote! {
+            let type_impl = if let Some(type_impl) = self.custom_arch_type_conversion(ty) {
+                type_impl
+            } else if self.should_use_bitmask_arch_type_conversion(ty) {
+                assert_eq!(
+                    ty.scalar,
+                    ScalarType::Mask,
+                    "bitmask arch type conversions are only valid for mask types"
+                );
+                quote! {
+                    impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
+                        #[inline(always)]
+                        fn simd_from(simd: S, arch: #arch) -> Self {
+                            Self::from_bitmask(simd, u64::from(arch))
+                        }
+                    }
+                    impl<S: Simd> From<#simd<S>> for #arch {
+                        #[inline(always)]
+                        #[allow(trivial_numeric_casts, reason = "generated uniformly for all __mmask widths")]
+                        fn from(value: #simd<S>) -> Self {
+                            value.to_bitmask() as #arch
+                        }
+                    }
+                }
+            } else {
+                quote! {
                 impl<S: Simd> SimdFrom<#arch, S> for #simd<S> {
                     #[inline(always)]
                     fn simd_from(simd: S, arch: #arch) -> Self {
@@ -208,7 +252,9 @@ pub(crate) trait Level {
                         crate::transmute::checked_transmute_copy(&value.val)
                     }
                 }
-            });
+                }
+            };
+            result.push(type_impl);
         }
         quote! {
             #( #result )*
@@ -219,6 +265,7 @@ pub(crate) trait Level {
         let level_tok = self.token();
         let token_doc = self.token_doc();
         let imports = type_imports();
+        let module_attrs = self.make_module_attrs();
         let module_prelude = self.make_module_prelude();
         let impl_body = self.make_impl_body();
         let arch_types_impl = self.impl_arch_types();
@@ -227,6 +274,8 @@ pub(crate) trait Level {
         let footer = self.make_module_footer();
 
         quote! {
+            #module_attrs
+
             use crate::{prelude::*, seal::Seal, arch_types::ArchTypes, Level};
 
             #imports

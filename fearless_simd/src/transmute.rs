@@ -21,9 +21,13 @@ use core::arch::aarch64::{
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 use core::arch::wasm32::v128;
 #[cfg(target_arch = "x86")]
-use core::arch::x86::{__m128, __m128d, __m128i, __m256, __m256d, __m256i};
+use core::arch::x86::{
+    __m128, __m128d, __m128i, __m256, __m256d, __m256i, __m512, __m512d, __m512i,
+};
 #[cfg(target_arch = "x86_64")]
-use core::arch::x86_64::{__m128, __m128d, __m128i, __m256, __m256d, __m256i};
+use core::arch::x86_64::{
+    __m128, __m128d, __m128i, __m256, __m256d, __m256i, __m512, __m512d, __m512i,
+};
 
 /// Types that can be safely copied through an arbitrary same-sized bit representation.
 ///
@@ -124,6 +128,9 @@ const _: () = {
     unsafe impl SimdPod for __m256 {}
     unsafe impl SimdPod for __m256d {}
     unsafe impl SimdPod for __m256i {}
+    unsafe impl SimdPod for __m512 {}
+    unsafe impl SimdPod for __m512d {}
+    unsafe impl SimdPod for __m512i {}
 };
 
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
@@ -181,6 +188,9 @@ impl_aligned_simd_pod!(
     Aligned512<[__m256; 2]>,
     Aligned512<[__m256d; 2]>,
     Aligned512<[__m256i; 2]>,
+    Aligned512<__m512>,
+    Aligned512<__m512d>,
+    Aligned512<__m512i>,
 );
 
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]

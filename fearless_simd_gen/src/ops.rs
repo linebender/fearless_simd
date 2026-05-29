@@ -110,6 +110,8 @@ pub(crate) enum OpSig {
     MaskFromBitmask,
     /// Takes a mask vector type and returns its compact bitmask representation.
     MaskToBitmask,
+    /// Takes a mutable mask vector, a lane index, and a boolean, and updates the lane in place.
+    MaskSet,
     /// Takes an argument of an array of a certain scalar type, with the length (`block_size` * `block_count`) / [scalar
     /// type's byte size]. Returns a vector type of that scalar type and length.
     ///
@@ -277,6 +279,12 @@ impl Op {
                 let arg0 = &arg_names[0];
                 quote! { (self, #arg0: #ty<Self>) -> u64 }
             }
+            OpSig::MaskSet => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                let arg2 = &arg_names[2];
+                quote! { (self, #arg0: &mut #ty<Self>, #arg1: usize, #arg2: bool) -> () }
+            }
             OpSig::Shift => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
@@ -353,7 +361,7 @@ impl Op {
             OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } | OpSig::StoreArray => {
                 return None;
             }
-            OpSig::MaskFromBitmask | OpSig::MaskToBitmask => return None,
+            OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
             OpSig::Unary
             | OpSig::Cvt { .. }
             | OpSig::Reinterpret { .. }
@@ -583,6 +591,12 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
         OpSig::MaskToBitmask,
         "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared.",
     ),
+    Op::new(
+        "set",
+        OpKind::AssociatedOnly,
+        OpSig::MaskSet,
+        "Set one logical lane of a SIMD mask.",
+    ),
 ];
 
 const FLOAT_OPS: &[Op] = &[
@@ -612,7 +626,7 @@ const FLOAT_OPS: &[Op] = &[
         "Compute an approximate reciprocal (`1. / x`) for each element.\n\n\
          This uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\n\
          On x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. \
-         On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. \
+         On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. \
          The precision of this operation may change as new platform support is added.",
     ),
     Op::new(
@@ -1176,7 +1190,7 @@ pub(crate) const F32_TO_U32: Op = Op::new(
     },
     "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\n\
     Out-of-range values or NaN will produce implementation-defined results.\n\n\
-    On x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\n\
+    On x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\n\
     If you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards.",
 );
 pub(crate) const F32_TO_U32_PRECISE: Op = Op::new(
@@ -1511,6 +1525,7 @@ impl OpSig {
                 | Self::FromArray { .. }
                 | Self::AsArray { .. }
                 | Self::StoreArray
+                | Self::MaskSet
                 | Self::Slide {
                     granularity: SlideGranularity::AcrossBlocks,
                     ..
@@ -1540,6 +1555,7 @@ impl OpSig {
         match self {
             Self::Splat | Self::FromArray { .. } => &["val"],
             Self::MaskFromBitmask => &["bits"],
+            Self::MaskSet => &["a", "index", "value"],
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
@@ -1572,6 +1588,7 @@ impl OpSig {
             | Self::FromArray { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
+            | Self::MaskSet
             | Self::FromBytes { .. }
             | Self::StoreArray => &[],
             Self::Unary
@@ -1634,6 +1651,7 @@ impl OpSig {
             | Self::Shift
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
+            | Self::MaskSet
             | Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }

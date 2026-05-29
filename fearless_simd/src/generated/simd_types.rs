@@ -688,14 +688,7 @@ impl<S: Simd> SimdMask<S> for mask8x16<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 16,
-            "mask lane index {index} is out of bounds for {} lanes",
-            16
-        );
-        let mut lanes = self.simd.as_array_mask8x16(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask8x16(lanes);
+        self.simd.set_mask8x16(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
@@ -1156,14 +1149,7 @@ impl<S: Simd> SimdMask<S> for mask16x8<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 8,
-            "mask lane index {index} is out of bounds for {} lanes",
-            8
-        );
-        let mut lanes = self.simd.as_array_mask16x8(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask16x8(lanes);
+        self.simd.set_mask16x8(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
@@ -1572,7 +1558,7 @@ impl<S: Simd> crate::SimdInt<S> for u32x4<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x4<S>> for u32x4<S> {
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
     fn truncate_from(x: f32x4<S>) -> Self {
         x.simd.cvt_u32_f32x4(x)
@@ -1648,14 +1634,7 @@ impl<S: Simd> SimdMask<S> for mask32x4<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 4,
-            "mask lane index {index} is out of bounds for {} lanes",
-            4
-        );
-        let mut lanes = self.simd.as_array_mask32x4(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask32x4(lanes);
+        self.simd.set_mask32x4(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
@@ -1985,14 +1964,7 @@ impl<S: Simd> SimdMask<S> for mask64x2<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 2,
-            "mask lane index {index} is out of bounds for {} lanes",
-            2
-        );
-        let mut lanes = self.simd.as_array_mask64x2(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask64x2(lanes);
+        self.simd.set_mask64x2(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
@@ -2727,14 +2699,7 @@ impl<S: Simd> SimdMask<S> for mask8x32<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 32,
-            "mask lane index {index} is out of bounds for {} lanes",
-            32
-        );
-        let mut lanes = self.simd.as_array_mask8x32(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask8x32(lanes);
+        self.simd.set_mask8x32(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
@@ -3221,14 +3186,7 @@ impl<S: Simd> SimdMask<S> for mask16x16<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 16,
-            "mask lane index {index} is out of bounds for {} lanes",
-            16
-        );
-        let mut lanes = self.simd.as_array_mask16x16(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask16x16(lanes);
+        self.simd.set_mask16x16(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
@@ -3644,7 +3602,7 @@ impl<S: Simd> crate::SimdInt<S> for u32x8<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x8<S>> for u32x8<S> {
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
     fn truncate_from(x: f32x8<S>) -> Self {
         x.simd.cvt_u32_f32x8(x)
@@ -3727,14 +3685,7 @@ impl<S: Simd> SimdMask<S> for mask32x8<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 8,
-            "mask lane index {index} is out of bounds for {} lanes",
-            8
-        );
-        let mut lanes = self.simd.as_array_mask32x8(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask32x8(lanes);
+        self.simd.set_mask32x8(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
@@ -4071,14 +4022,7 @@ impl<S: Simd> SimdMask<S> for mask64x4<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 4,
-            "mask lane index {index} is out of bounds for {} lanes",
-            4
-        );
-        let mut lanes = self.simd.as_array_mask64x4(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask64x4(lanes);
+        self.simd.set_mask64x4(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
@@ -4801,14 +4745,7 @@ impl<S: Simd> SimdMask<S> for mask8x64<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 64,
-            "mask lane index {index} is out of bounds for {} lanes",
-            64
-        );
-        let mut lanes = self.simd.as_array_mask8x64(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask8x64(lanes);
+        self.simd.set_mask8x64(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
@@ -5283,14 +5220,7 @@ impl<S: Simd> SimdMask<S> for mask16x32<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 32,
-            "mask lane index {index} is out of bounds for {} lanes",
-            32
-        );
-        let mut lanes = self.simd.as_array_mask16x32(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask16x32(lanes);
+        self.simd.set_mask16x32(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
@@ -5713,7 +5643,7 @@ impl<S: Simd> crate::SimdInt<S> for u32x16<S> {
     }
 }
 impl<S: Simd> SimdCvtTruncate<f32x16<S>> for u32x16<S> {
-    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32` (at least until AVX-512, which is currently not supported).\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
+    #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     #[inline(always)]
     fn truncate_from(x: f32x16<S>) -> Self {
         x.simd.cvt_u32_f32x16(x)
@@ -5789,14 +5719,7 @@ impl<S: Simd> SimdMask<S> for mask32x16<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 16,
-            "mask lane index {index} is out of bounds for {} lanes",
-            16
-        );
-        let mut lanes = self.simd.as_array_mask32x16(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask32x16(lanes);
+        self.simd.set_mask32x16(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
@@ -6127,14 +6050,7 @@ impl<S: Simd> SimdMask<S> for mask64x8<S> {
     }
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
-        assert!(
-            index < 8,
-            "mask lane index {index} is out of bounds for {} lanes",
-            8
-        );
-        let mut lanes = self.simd.as_array_mask64x8(*self);
-        lanes[index] = if value { !0 } else { 0 };
-        *self = self.simd.load_array_mask64x8(lanes);
+        self.simd.set_mask64x8(self, index, value);
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {

@@ -298,6 +298,7 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
     let splat = generic_op_name("splat", ty);
     let from_bitmask_op = generic_op_name("from_bitmask", ty);
     let to_bitmask_op = generic_op_name("to_bitmask", ty);
+    let set_op = generic_op_name("set", ty);
     let from_array_op = generic_op_name("load_array", ty);
     let as_array_op = generic_op_name("as_array", ty);
     let mut methods = vec![];
@@ -322,9 +323,6 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
         }
     }
 
-    // Current backends store masks as signed integer lanes, so `set` uses a generic
-    // spill/update/reload path. Future compact predicate backends such as AVX-512 can
-    // switch this implementation to `to_bitmask`/`from_bitmask`.
     quote! {
         impl<S: Simd> SimdMask<S> for #name<S> {
             type Element = #scalar;
@@ -352,14 +350,7 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
 
             #[inline(always)]
             fn set(&mut self, index: usize, value: bool) {
-                assert!(
-                    index < #len,
-                    "mask lane index {index} is out of bounds for {} lanes",
-                    #len
-                );
-                let mut lanes = self.simd.#as_array_op(*self);
-                lanes[index] = if value { !0 } else { 0 };
-                *self = self.simd.#from_array_op(lanes);
+                self.simd.#set_op(self, index, value);
             }
 
             #[inline(always)]

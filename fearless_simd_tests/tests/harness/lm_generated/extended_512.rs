@@ -512,6 +512,61 @@ fn fract_f32x16<S: Simd>(simd: S) {
     );
 }
 
+#[simd_test]
+fn fract_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[1.7, -2.3, 3.9, -4.1, 5.5, -6.6, 7.2, -8.8]);
+    let result = simd.fract_f64x8(a);
+    assert_eq!(
+        *result,
+        [
+            0.7,
+            -0.2999999999999998,
+            0.8999999999999999,
+            -0.09999999999999964,
+            0.5,
+            -0.5999999999999996,
+            0.20000000000000018,
+            -0.8000000000000007
+        ]
+    );
+}
+
+#[simd_test]
+fn approximate_recip_f32x16<S: Simd>(simd: S) {
+    let a = f32x16::from_slice(
+        simd,
+        &[
+            1.0, -2.0, 23.0, 9.0, 0.5, -0.25, 128.0, -1024.0, 3.0, -7.0, 11.0, -13.0, 19.0, -29.0,
+            37.0, -41.0,
+        ],
+    );
+    let result = a.approximate_recip();
+    for i in 0..16 {
+        let expected = 1.0 / a[i];
+        let rel_error = ((result[i] - expected) / expected).abs();
+        assert!(
+            rel_error < 0.005,
+            "approximate_recip({}) rel_error = {rel_error}",
+            a[i]
+        );
+    }
+}
+
+#[simd_test]
+fn approximate_recip_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[1.0, -2.0, 23.0, 9.0, 0.5, -0.25, 128.0, -1024.0]);
+    let result = a.approximate_recip();
+    for i in 0..8 {
+        let expected = 1.0 / a[i];
+        let rel_error = ((result[i] - expected) / expected).abs();
+        assert!(
+            rel_error < 0.005,
+            "approximate_recip({}) rel_error = {rel_error}",
+            a[i]
+        );
+    }
+}
+
 // =============================================================================
 // max_precise and min_precise tests (512-bit floats)
 // =============================================================================
@@ -686,6 +741,82 @@ fn min_precise_f32x16_with_nan<S: Simd>(simd: S) {
     assert_eq!(result[13], 4.0);
     assert_eq!(result[14], 3.0);
     assert_eq!(result[15], 5.0);
+}
+
+#[simd_test]
+fn max_precise_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[2.0, -3.0, 0.0, 0.5, 1.0, 5.0, 3.0, 7.0]);
+    let b = f64x8::from_slice(simd, &[1.0, -2.0, 7.0, 3.0, 2.0, 4.0, 6.0, 5.0]);
+    assert_eq!(*a.max_precise(b), [2.0, -2.0, 7.0, 3.0, 2.0, 5.0, 6.0, 7.0]);
+}
+
+#[simd_test]
+fn min_precise_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[2.0, -3.0, 0.0, 0.5, 1.0, 5.0, 3.0, 7.0]);
+    let b = f64x8::from_slice(simd, &[1.0, -2.0, 7.0, 3.0, 2.0, 4.0, 6.0, 5.0]);
+    assert_eq!(*a.min_precise(b), [1.0, -3.0, 0.0, 0.5, 1.0, 4.0, 3.0, 5.0]);
+}
+
+#[simd_test]
+fn max_precise_f64x8_with_nan<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(
+        simd,
+        &[f64::NAN, -3.0, f64::INFINITY, 0.5, 1.0, f64::NAN, 3.0, 7.0],
+    );
+    let b = f64x8::from_slice(
+        simd,
+        &[
+            1.0,
+            f64::NAN,
+            7.0,
+            f64::NEG_INFINITY,
+            f64::NAN,
+            4.0,
+            6.0,
+            5.0,
+        ],
+    );
+    let result = a.max_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], f64::INFINITY);
+    assert_eq!(result[3], 0.5);
+    assert_eq!(result[4], 1.0);
+    assert_eq!(result[5], 4.0);
+    assert_eq!(result[6], 6.0);
+    assert_eq!(result[7], 7.0);
+}
+
+#[simd_test]
+fn min_precise_f64x8_with_nan<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(
+        simd,
+        &[f64::NAN, -3.0, f64::INFINITY, 0.5, 1.0, f64::NAN, 3.0, 7.0],
+    );
+    let b = f64x8::from_slice(
+        simd,
+        &[
+            1.0,
+            f64::NAN,
+            7.0,
+            f64::NEG_INFINITY,
+            f64::NAN,
+            4.0,
+            6.0,
+            5.0,
+        ],
+    );
+    let result = a.min_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], 7.0);
+    assert_eq!(result[3], f64::NEG_INFINITY);
+    assert_eq!(result[4], 1.0);
+    assert_eq!(result[5], 4.0);
+    assert_eq!(result[6], 3.0);
+    assert_eq!(result[7], 5.0);
 }
 
 // =============================================================================
@@ -941,6 +1072,114 @@ fn shl_u32x16<S: Simd>(simd: S) {
 }
 
 // Vector shift tests (shlv/shrv)
+#[simd_test]
+fn shlv_i8x64<S: Simd>(simd: S) {
+    const A: [i8; 16] = [64, 65, -64, -65, 1, 2, 3, 4, -1, -2, -3, -4, 15, 16, 31, 32];
+    const SHIFTS: [i8; 16] = [1, 2, 1, 2, 0, 1, 2, 3, 1, 2, 3, 4, 3, 2, 1, 0];
+    const EXPECTED: [i8; 16] = [
+        -128, 4, -128, -4, 1, 4, 12, 32, -2, -8, -24, -64, 120, 64, 62, 32,
+    ];
+    let a_vals: [i8; 64] = core::array::from_fn(|i| A[i % 16]);
+    let shift_vals: [i8; 64] = core::array::from_fn(|i| SHIFTS[i % 16]);
+    let expected: [i8; 64] = core::array::from_fn(|i| EXPECTED[i % 16]);
+    let a = i8x64::from_slice(simd, &a_vals);
+    let shifts = i8x64::from_slice(simd, &shift_vals);
+    assert_eq!(*(a << shifts), expected);
+}
+
+#[simd_test]
+fn shrv_i8x64<S: Simd>(simd: S) {
+    const A: [i8; 16] = [
+        -128, -64, -33, -1, 127, 64, 33, 1, -2, -4, -8, -16, 0, 2, 4, 8,
+    ];
+    const SHIFTS: [i8; 16] = [1, 2, 3, 7, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3];
+    const EXPECTED: [i8; 16] = [-64, -16, -5, -1, 63, 16, 4, 1, -1, -1, -1, -1, 0, 1, 1, 1];
+    let a_vals: [i8; 64] = core::array::from_fn(|i| A[i % 16]);
+    let shift_vals: [i8; 64] = core::array::from_fn(|i| SHIFTS[i % 16]);
+    let expected: [i8; 64] = core::array::from_fn(|i| EXPECTED[i % 16]);
+    let a = i8x64::from_slice(simd, &a_vals);
+    let shifts = i8x64::from_slice(simd, &shift_vals);
+    assert_eq!(*(a >> shifts), expected);
+}
+
+#[simd_test]
+fn shlv_u8x64<S: Simd>(simd: S) {
+    const A: [u8; 16] = [255, 128, 64, 32, 16, 8, 4, 2, 1, 3, 5, 7, 15, 31, 63, 127];
+    const SHIFTS: [u8; 16] = [4, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 3, 2, 1];
+    const EXPECTED: [u8; 16] = [240, 0, 0, 0, 0, 0, 0, 0, 1, 6, 20, 56, 240, 248, 252, 254];
+    let a_vals: [u8; 64] = core::array::from_fn(|i| A[i % 16]);
+    let shift_vals: [u8; 64] = core::array::from_fn(|i| SHIFTS[i % 16]);
+    let expected: [u8; 64] = core::array::from_fn(|i| EXPECTED[i % 16]);
+    let a = u8x64::from_slice(simd, &a_vals);
+    let shifts = u8x64::from_slice(simd, &shift_vals);
+    assert_eq!(*(a << shifts), expected);
+}
+
+#[simd_test]
+fn shrv_u8x64<S: Simd>(simd: S) {
+    const A: [u8; 16] = [255, 128, 64, 32, 16, 8, 4, 2, 1, 3, 5, 7, 15, 31, 63, 127];
+    const SHIFTS: [u8; 16] = [1, 2, 3, 4, 5, 6, 7, 1, 0, 1, 2, 3, 4, 3, 2, 1];
+    const EXPECTED: [u8; 16] = [127, 32, 8, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 3, 15, 63];
+    let a_vals: [u8; 64] = core::array::from_fn(|i| A[i % 16]);
+    let shift_vals: [u8; 64] = core::array::from_fn(|i| SHIFTS[i % 16]);
+    let expected: [u8; 64] = core::array::from_fn(|i| EXPECTED[i % 16]);
+    let a = u8x64::from_slice(simd, &a_vals);
+    let shifts = u8x64::from_slice(simd, &shift_vals);
+    assert_eq!(*(a >> shifts), expected);
+}
+
+#[simd_test]
+fn shlv_i16x32<S: Simd>(simd: S) {
+    const A: [i16; 8] = [16384, 8192, -16384, -8192, 1, -1, 255, -256];
+    const SHIFTS: [i16; 8] = [1, 2, 1, 2, 15, 1, 4, 3];
+    const EXPECTED: [i16; 8] = [-32768, -32768, -32768, -32768, -32768, -2, 4080, -2048];
+    let a_vals: [i16; 32] = core::array::from_fn(|i| A[i % 8]);
+    let shift_vals: [i16; 32] = core::array::from_fn(|i| SHIFTS[i % 8]);
+    let expected: [i16; 32] = core::array::from_fn(|i| EXPECTED[i % 8]);
+    let a = i16x32::from_slice(simd, &a_vals);
+    let shifts = i16x32::from_slice(simd, &shift_vals);
+    assert_eq!(*(a << shifts), expected);
+}
+
+#[simd_test]
+fn shrv_i16x32<S: Simd>(simd: S) {
+    const A: [i16; 8] = [-32768, -16384, -1025, -1, 32767, 16384, 1025, 1];
+    const SHIFTS: [i16; 8] = [1, 2, 3, 15, 1, 2, 3, 0];
+    const EXPECTED: [i16; 8] = [-16384, -4096, -129, -1, 16383, 4096, 128, 1];
+    let a_vals: [i16; 32] = core::array::from_fn(|i| A[i % 8]);
+    let shift_vals: [i16; 32] = core::array::from_fn(|i| SHIFTS[i % 8]);
+    let expected: [i16; 32] = core::array::from_fn(|i| EXPECTED[i % 8]);
+    let a = i16x32::from_slice(simd, &a_vals);
+    let shifts = i16x32::from_slice(simd, &shift_vals);
+    assert_eq!(*(a >> shifts), expected);
+}
+
+#[simd_test]
+fn shlv_u16x32<S: Simd>(simd: S) {
+    const A: [u16; 8] = [65535, 32768, 16384, 8192, 1, 255, 1024, 4096];
+    const SHIFTS: [u16; 8] = [4, 1, 2, 3, 15, 4, 5, 0];
+    const EXPECTED: [u16; 8] = [65520, 0, 0, 0, 32768, 4080, 32768, 4096];
+    let a_vals: [u16; 32] = core::array::from_fn(|i| A[i % 8]);
+    let shift_vals: [u16; 32] = core::array::from_fn(|i| SHIFTS[i % 8]);
+    let expected: [u16; 32] = core::array::from_fn(|i| EXPECTED[i % 8]);
+    let a = u16x32::from_slice(simd, &a_vals);
+    let shifts = u16x32::from_slice(simd, &shift_vals);
+    assert_eq!(*(a << shifts), expected);
+}
+
+#[simd_test]
+fn shrv_u16x32<S: Simd>(simd: S) {
+    const A: [u16; 8] = [65535, 32768, 16384, 8192, 1, 255, 1024, 4096];
+    const SHIFTS: [u16; 8] = [1, 2, 3, 4, 0, 4, 5, 12];
+    const EXPECTED: [u16; 8] = [32767, 8192, 2048, 512, 1, 15, 32, 1];
+    let a_vals: [u16; 32] = core::array::from_fn(|i| A[i % 8]);
+    let shift_vals: [u16; 32] = core::array::from_fn(|i| SHIFTS[i % 8]);
+    let expected: [u16; 32] = core::array::from_fn(|i| EXPECTED[i % 8]);
+    let a = u16x32::from_slice(simd, &a_vals);
+    let shifts = u16x32::from_slice(simd, &shift_vals);
+    assert_eq!(*(a >> shifts), expected);
+}
+
 #[simd_test]
 fn shrv_i32x16<S: Simd>(simd: S) {
     let a = i32x16::from_slice(
@@ -1356,6 +1595,166 @@ fn unzip_high_u32x16<S: Simd>(simd: S) {
     assert_eq!(
         *simd.unzip_high_u32x16(a, b),
         [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
+    );
+}
+
+#[simd_test]
+fn zip_unzip_i16x32<S: Simd>(simd: S) {
+    let a = i16x32::from_slice(
+        simd,
+        &[
+            -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4,
+            5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+        ],
+    );
+    let b = i16x32::from_slice(
+        simd,
+        &[
+            1000, 999, 998, 997, 996, 995, 994, 993, 992, 991, 990, 989, 988, 987, 986, 985, 984,
+            983, 982, 981, 980, 979, 978, 977, 976, 975, 974, 973, 972, 971, 970, 969,
+        ],
+    );
+
+    assert_eq!(
+        *simd.zip_low_i16x32(a, b),
+        [
+            -16, 1000, -15, 999, -14, 998, -13, 997, -12, 996, -11, 995, -10, 994, -9, 993, -8,
+            992, -7, 991, -6, 990, -5, 989, -4, 988, -3, 987, -2, 986, -1, 985
+        ]
+    );
+    assert_eq!(
+        *simd.zip_high_i16x32(a, b),
+        [
+            0, 984, 1, 983, 2, 982, 3, 981, 4, 980, 5, 979, 6, 978, 7, 977, 8, 976, 9, 975, 10,
+            974, 11, 973, 12, 972, 13, 971, 14, 970, 15, 969
+        ]
+    );
+    assert_eq!(
+        *simd.unzip_low_i16x32(a, b),
+        [
+            -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 1000, 998, 996, 994,
+            992, 990, 988, 986, 984, 982, 980, 978, 976, 974, 972, 970
+        ]
+    );
+    assert_eq!(
+        *simd.unzip_high_i16x32(a, b),
+        [
+            -15, -13, -11, -9, -7, -5, -3, -1, 1, 3, 5, 7, 9, 11, 13, 15, 999, 997, 995, 993, 991,
+            989, 987, 985, 983, 981, 979, 977, 975, 973, 971, 969
+        ]
+    );
+
+    let (interleaved_low, interleaved_high) = simd.interleave_i16x32(a, b);
+    assert_eq!(
+        *interleaved_low,
+        [
+            -16, 1000, -15, 999, -14, 998, -13, 997, -12, 996, -11, 995, -10, 994, -9, 993, -8,
+            992, -7, 991, -6, 990, -5, 989, -4, 988, -3, 987, -2, 986, -1, 985
+        ]
+    );
+    assert_eq!(
+        *interleaved_high,
+        [
+            0, 984, 1, 983, 2, 982, 3, 981, 4, 980, 5, 979, 6, 978, 7, 977, 8, 976, 9, 975, 10,
+            974, 11, 973, 12, 972, 13, 971, 14, 970, 15, 969
+        ]
+    );
+
+    let (roundtrip_a, roundtrip_b) = simd.deinterleave_i16x32(interleaved_low, interleaved_high);
+    assert_eq!(
+        *roundtrip_a,
+        [
+            -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4,
+            5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+        ]
+    );
+    assert_eq!(
+        *roundtrip_b,
+        [
+            1000, 999, 998, 997, 996, 995, 994, 993, 992, 991, 990, 989, 988, 987, 986, 985, 984,
+            983, 982, 981, 980, 979, 978, 977, 976, 975, 974, 973, 972, 971, 970, 969
+        ]
+    );
+}
+
+#[simd_test]
+fn zip_unzip_u16x32<S: Simd>(simd: S) {
+    let a = u16x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    let b = u16x32::from_slice(
+        simd,
+        &[
+            1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013,
+            1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026, 1027,
+            1028, 1029, 1030, 1031,
+        ],
+    );
+
+    assert_eq!(
+        *simd.zip_low_u16x32(a, b),
+        [
+            0, 1000, 1, 1001, 2, 1002, 3, 1003, 4, 1004, 5, 1005, 6, 1006, 7, 1007, 8, 1008, 9,
+            1009, 10, 1010, 11, 1011, 12, 1012, 13, 1013, 14, 1014, 15, 1015
+        ]
+    );
+    assert_eq!(
+        *simd.zip_high_u16x32(a, b),
+        [
+            16, 1016, 17, 1017, 18, 1018, 19, 1019, 20, 1020, 21, 1021, 22, 1022, 23, 1023, 24,
+            1024, 25, 1025, 26, 1026, 27, 1027, 28, 1028, 29, 1029, 30, 1030, 31, 1031
+        ]
+    );
+    assert_eq!(
+        *simd.unzip_low_u16x32(a, b),
+        [
+            0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 1000, 1002, 1004, 1006,
+            1008, 1010, 1012, 1014, 1016, 1018, 1020, 1022, 1024, 1026, 1028, 1030
+        ]
+    );
+    assert_eq!(
+        *simd.unzip_high_u16x32(a, b),
+        [
+            1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 1001, 1003, 1005, 1007,
+            1009, 1011, 1013, 1015, 1017, 1019, 1021, 1023, 1025, 1027, 1029, 1031
+        ]
+    );
+
+    let (interleaved_low, interleaved_high) = simd.interleave_u16x32(a, b);
+    assert_eq!(
+        *interleaved_low,
+        [
+            0, 1000, 1, 1001, 2, 1002, 3, 1003, 4, 1004, 5, 1005, 6, 1006, 7, 1007, 8, 1008, 9,
+            1009, 10, 1010, 11, 1011, 12, 1012, 13, 1013, 14, 1014, 15, 1015
+        ]
+    );
+    assert_eq!(
+        *interleaved_high,
+        [
+            16, 1016, 17, 1017, 18, 1018, 19, 1019, 20, 1020, 21, 1021, 22, 1022, 23, 1023, 24,
+            1024, 25, 1025, 26, 1026, 27, 1027, 28, 1028, 29, 1029, 30, 1030, 31, 1031
+        ]
+    );
+
+    let (roundtrip_a, roundtrip_b) = simd.deinterleave_u16x32(interleaved_low, interleaved_high);
+    assert_eq!(
+        *roundtrip_a,
+        [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31
+        ]
+    );
+    assert_eq!(
+        *roundtrip_b,
+        [
+            1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013,
+            1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026, 1027,
+            1028, 1029, 1030, 1031
+        ]
     );
 }
 

@@ -5,8 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    generic_as_array, generic_from_array, generic_from_bytes, generic_op_name, generic_store_array,
-    generic_to_bytes, integer_lane_mask_splat_arg,
+    generic_as_array, generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name,
+    generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity, valid_reinterpret};
@@ -532,6 +532,7 @@ impl Level for Neon {
             }
             OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(method_sig, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(method_sig, vec_ty),
+            OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
             OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
             OpSig::AsArray { kind } => {
                 generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {

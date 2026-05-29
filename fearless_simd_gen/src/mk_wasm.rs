@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_op_name, generic_store_array, generic_to_bytes,
+    generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array, generic_to_bytes,
     integer_lane_mask_splat_arg, scalar_binary,
 };
 use crate::level::Level;
@@ -594,6 +594,7 @@ impl Level for WasmSimd128 {
             }
             OpSig::MaskFromBitmask => mask_from_bitmask(method_sig, vec_ty),
             OpSig::MaskToBitmask => mask_to_bitmask(method_sig, vec_ty),
+            OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,
