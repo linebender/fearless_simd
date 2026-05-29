@@ -140,31 +140,45 @@ impl Level for X86 {
 
     fn make_impl_body(&self) -> TokenStream {
         match self {
-            Self::Sse4_2 => quote! {
-                /// Create a SIMD token.
-                ///
-                /// # Safety
-                ///
-                /// The `sse4.2`, `cmpxchg16b`, and `popcnt` CPU features must
-                /// be available.
-                #[inline]
-                pub const unsafe fn new_unchecked() -> Self {
-                    Sse4_2 { _private: () }
+            Self::Sse4_2 => {
+                let features = self
+                    .enabled_target_features()
+                    .expect("Actual impl can't fail.");
+                quote! {
+                    /// Create a SIMD token, which can be used as future proof that the
+                    /// x86-64-v2 level is available for this run.
+                    ///
+                    /// As indicated by the required target features to call this function,
+                    /// `sse4.2`, `cmpxchg16b`, and `popcnt` CPU features must
+                    /// be available.
+                    // TODO: Why is this const?
+                    // TODO: Do we need to explain why this is const.
+                    #[target_feature(enable = #features)]
+                    #[inline]
+                    pub const fn new_unchecked() -> Self {
+                        Sse4_2 { _private: () }
+                    }
                 }
-            },
-            Self::Avx2 => quote! {
-                /// Create a SIMD token.
-                ///
-                /// # Safety
-                ///
-                /// The `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`,
-                /// `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features must
-                /// be available.
-                #[inline]
-                pub const unsafe fn new_unchecked() -> Self {
-                    Self { _private: () }
+            }
+            Self::Avx2 => {
+                let features = self
+                    .enabled_target_features()
+                    .expect("Actual impl can't fail.");
+                quote! {
+                    /// Create a SIMD token, which can be used as future proof that the
+                    /// x86-64-v2 level is available for this run.
+                    ///
+                    /// As indicated by the required target features to call this function,
+                    /// `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`,
+                    /// `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features must
+                    /// be available.
+                    #[inline]
+                    #[target_feature(enable = #features)]
+                    pub const fn new_unchecked() -> Self {
+                        Self { _private: () }
+                    }
                 }
-            },
+            }
         }
     }
 

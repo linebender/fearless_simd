@@ -17,6 +17,12 @@ pub struct WasmSimd128 {
     _private: (),
 }
 impl WasmSimd128 {
+    #[doc = r" Create a SIMD token, which can be used as future proof that the"]
+    #[doc = r" simd128 wasm feature is enabled for this run."]
+    #[doc = r""]
+    #[doc = r" As WASM does not allow runtime feature detection, this function"]
+    #[doc = r" is always available if this library is compiled with the simd128"]
+    #[doc = r" feature enabled."]
     #[inline]
     pub const fn new_unchecked() -> Self {
         Self { _private: () }
