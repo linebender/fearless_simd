@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use anyhow::{Context, anyhow};
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Group, Ident, Span, TokenStream, TokenTree};
 use quote::{format_ident, quote};
 use std::fmt::Write;
 
@@ -336,6 +336,167 @@ impl Op {
         }
     }
 
+    /// Generate a `Simd` trait method that delegates its body to a local `kernel!` function.
+    ///
+    /// The generated method keeps the trait signature using `Self`, while the local kernel uses
+    /// the concrete SIMD token type required by `kernel!`. Const-generic operations are rejected
+    /// because `kernel!` currently only accepts plain non-generic functions.
+    pub(crate) fn simd_trait_kernel_method(
+        &self,
+        level: Ident,
+        vec_ty: &VecType,
+        body: TokenStream,
+    ) -> TokenStream {
+        assert!(
+            !matches!(self.sig, OpSig::Slide { .. }),
+            "kernel! does not support const-generic methods"
+        );
+
+        let method_sig = self.simd_trait_method_sig(vec_ty);
+        let token = Ident::new("token", Span::call_site());
+        let kernel_body = replace_ident(body, "self", &token);
+        let (arg_decls, call_args, ret) = self.simd_trait_kernel_sig_parts(&level, vec_ty);
+
+        quote! {
+            #method_sig {
+                crate::kernel! {
+                    #[inline(always)]
+                    fn kernel(#token: #level #(, #arg_decls)*) -> #ret {
+                        #kernel_body
+                    }
+                }
+
+                kernel(self #(, #call_args)*)
+            }
+        }
+    }
+
+    /// Build the concrete argument declarations, forwarding arguments, and return type for a generated kernel.
+    ///
+    /// This mirrors [`Op::simd_trait_method_sig`], but substitutes the concrete SIMD level token for `Self`.
+    fn simd_trait_kernel_sig_parts(
+        &self,
+        level: &Ident,
+        vec_ty: &VecType,
+    ) -> (Vec<TokenStream>, Vec<Ident>, TokenStream) {
+        let ty = vec_ty.rust();
+        let arg_names = self
+            .sig
+            .simd_trait_arg_names()
+            .iter()
+            .map(|n| Ident::new(n, Span::call_site()))
+            .collect::<Vec<_>>();
+        let vec = quote! { #ty<#level> };
+
+        let (arg_tys, ret) = match &self.sig {
+            OpSig::Splat => {
+                let arg_ty = splat_arg_ty(vec_ty);
+                (vec![arg_ty], vec)
+            }
+            OpSig::LoadInterleaved {
+                block_size,
+                block_count,
+            } => {
+                let arg_ty = load_interleaved_arg_ty(*block_size, *block_count, vec_ty);
+                (vec![arg_ty], vec)
+            }
+            OpSig::StoreInterleaved {
+                block_size,
+                block_count,
+            } => {
+                let arg_ty = store_interleaved_arg_ty(*block_size, *block_count, vec_ty);
+                (vec![vec.clone(), arg_ty], quote! { () })
+            }
+            OpSig::Compare => {
+                let result = vec_ty.mask_ty().rust();
+                (vec![vec.clone(), vec.clone()], quote! { #result<#level> })
+            }
+            OpSig::Split { half_ty } => {
+                let result = half_ty.rust();
+                (vec![vec], quote! { (#result<#level>, #result<#level>) })
+            }
+            OpSig::Combine { combined_ty } => {
+                let result = combined_ty.rust();
+                (vec![vec.clone(), vec], quote! { #result<#level> })
+            }
+            OpSig::Unary => (vec![vec.clone()], vec),
+            OpSig::Binary | OpSig::Zip { .. } | OpSig::Unzip { .. } => {
+                (vec![vec.clone(), vec.clone()], vec)
+            }
+            OpSig::Interleave | OpSig::Deinterleave => {
+                (vec![vec.clone(), vec.clone()], quote! { (#vec, #vec) })
+            }
+            OpSig::Slide { .. } => unreachable!("checked by caller"),
+            OpSig::Cvt {
+                target_ty,
+                scalar_bits,
+                ..
+            }
+            | OpSig::Reinterpret {
+                target_ty,
+                scalar_bits,
+            } => {
+                let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
+                (vec![vec], quote! { #result<#level> })
+            }
+            OpSig::WidenNarrow { target_ty } => {
+                let result = target_ty.rust();
+                (vec![vec], quote! { #result<#level> })
+            }
+            OpSig::MaskReduce { .. } => (vec![vec], quote! { bool }),
+            OpSig::MaskFromBitmask => (vec![quote! { u64 }], vec),
+            OpSig::MaskToBitmask => (vec![vec], quote! { u64 }),
+            OpSig::Shift => (vec![vec.clone(), quote! { u32 }], vec),
+            OpSig::Ternary => (vec![vec.clone(), vec.clone(), vec.clone()], vec),
+            OpSig::Select => {
+                let mask_ty = vec_ty.mask_ty().rust();
+                (
+                    vec![quote! { #mask_ty<#level> }, vec.clone(), vec.clone()],
+                    vec,
+                )
+            }
+            OpSig::FromArray { kind } => {
+                let ref_tok = kind.token();
+                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let array_ty = quote! { [#rust_scalar; #len] };
+                (vec![quote! { #ref_tok #array_ty }], vec)
+            }
+            OpSig::AsArray { kind } => {
+                let ref_tok = kind.token();
+                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let array_ty = quote! { [#rust_scalar; #len] };
+                (
+                    vec![quote! { #ref_tok #vec }],
+                    quote! { #ref_tok #array_ty },
+                )
+            }
+            OpSig::StoreArray => {
+                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let len = vec_ty.len;
+                let array_ty = quote! { [#rust_scalar; #len] };
+                (vec![vec, quote! { &mut #array_ty }], quote! { () })
+            }
+            OpSig::FromBytes => {
+                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+                (vec![quote! { #bytes_ty<#level> }], vec)
+            }
+            OpSig::ToBytes => {
+                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
+                (vec![vec], quote! { #bytes_ty<#level> })
+            }
+        };
+
+        let arg_decls = arg_names
+            .iter()
+            .zip(arg_tys)
+            .map(|(name, ty)| quote! { #name: #ty })
+            .collect();
+
+        (arg_decls, arg_names, ret)
+    }
+
     pub(crate) fn vec_trait_method_sig(&self) -> Option<TokenStream> {
         let arg_names = self
             .sig
@@ -455,6 +616,26 @@ impl Op {
 
         dest
     }
+}
+
+/// Replace all identifiers named `from` in a token stream with `to`, recursing into token groups.
+///
+/// This is used to turn generated method bodies that mention `self` into kernel bodies that mention
+/// the concrete token parameter instead.
+fn replace_ident(stream: TokenStream, from: &str, to: &Ident) -> TokenStream {
+    stream
+        .into_iter()
+        .map(|tree| match tree {
+            TokenTree::Group(group) => {
+                let mut new_group =
+                    Group::new(group.delimiter(), replace_ident(group.stream(), from, to));
+                new_group.set_span(group.span());
+                TokenTree::Group(new_group)
+            }
+            TokenTree::Ident(ident) if ident.to_string() == from => TokenTree::Ident(to.clone()),
+            tree => tree,
+        })
+        .collect()
 }
 
 fn splat_arg_ty(vec_ty: &VecType) -> TokenStream {

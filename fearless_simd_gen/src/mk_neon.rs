@@ -83,14 +83,14 @@ impl Level for Neon {
             OpSig::Splat => {
                 let expr = neon::expr(method, vec_ty, &[quote! { val }]);
                 let normalize_mask = integer_lane_mask_splat_arg(vec_ty);
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #normalize_mask
-                            #expr.simd_into(self)
-                        }
-                    }
-                }
+                op.simd_trait_kernel_method(
+                    self.token(),
+                    vec_ty,
+                    quote! {
+                        #normalize_mask
+                        #expr.simd_into(self)
+                    },
+                )
             }
             OpSig::Shift => {
                 let dup_type = vec_ty.cast(ScalarType::Int);
@@ -109,26 +109,14 @@ impl Level for Neon {
                     vec_ty,
                     &[quote! { a.into() }, quote! { #dup_intrinsic ( #shift ) }],
                 );
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #expr.simd_into(self)
-                        }
-                    }
-                }
+                op.simd_trait_kernel_method(self.token(), vec_ty, quote! { #expr.simd_into(self) })
             }
             OpSig::Unary => {
                 let args = [quote! { a.into() }];
 
                 let expr = neon::expr(method, vec_ty, &args);
 
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #expr.simd_into(self)
-                        }
-                    }
-                }
+                op.simd_trait_kernel_method(self.token(), vec_ty, quote! { #expr.simd_into(self) })
             }
             OpSig::LoadInterleaved {
                 block_size,
@@ -187,17 +175,17 @@ impl Level for Neon {
                     let id2 =
                         Ident::new(&format!("vcombine_{}", target_scalar_ty), Span::call_site());
 
-                    quote! {
-                        #method_sig {
-                            unsafe {
-                                let converted: #arch = a.into();
-                                let low = #id1(converted.0);
-                                let high = #id1(converted.1);
+                    op.simd_trait_kernel_method(
+                        self.token(),
+                        vec_ty,
+                        quote! {
+                            let converted: #arch = a.into();
+                            let low = #id1(converted.0);
+                            let high = #id1(converted.1);
 
-                                #id2(low, high).simd_into(self)
-                            }
-                        }
-                    }
+                            #id2(low, high).simd_into(self)
+                        },
+                    )
                 } else {
                     let arch = self.arch_ty(&target_ty);
                     let id1 = Ident::new(&format!("vmovl_{}", vec_scalar_ty), Span::call_site());
@@ -205,16 +193,16 @@ impl Level for Neon {
                     let id3 =
                         Ident::new(&format!("vget_high_{}", vec_scalar_ty), Span::call_site());
 
-                    quote! {
-                        #method_sig {
-                            unsafe {
-                                let low = #id1(#id2(a.into()));
-                                let high = #id1(#id3(a.into()));
+                    op.simd_trait_kernel_method(
+                        self.token(),
+                        vec_ty,
+                        quote! {
+                            let low = #id1(#id2(a.into()));
+                            let high = #id1(#id3(a.into()));
 
-                                #arch(low, high).simd_into(self)
-                            }
-                        }
-                    }
+                            #arch(low, high).simd_into(self)
+                        },
+                    )
                 }
             }
             OpSig::Binary => {
@@ -263,13 +251,7 @@ impl Level for Neon {
                     }
                 };
 
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #expr
-                        }
-                    }
-                }
+                op.simd_trait_kernel_method(self.token(), vec_ty, expr)
             }
             OpSig::Ternary => {
                 let args = match method {
@@ -291,13 +273,7 @@ impl Level for Neon {
                     let neg = simple_intrinsic("vneg", vec_ty);
                     expr = quote! { #neg(#expr) };
                 }
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #expr.simd_into(self)
-                        }
-                    }
-                }
+                op.simd_trait_kernel_method(self.token(), vec_ty, quote! { #expr.simd_into(self) })
             }
             OpSig::Compare => {
                 let args = [quote! { a.into() }, quote! { b.into() }];
@@ -306,13 +282,11 @@ impl Level for Neon {
                 let scalar_bits = vec_ty.scalar_bits;
                 let reinterpret_str = format!("vreinterpret{opt_q}_s{scalar_bits}_u{scalar_bits}");
                 let reinterpret = Ident::new(&reinterpret_str, Span::call_site());
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #reinterpret(#expr).simd_into(self)
-                        }
-                    }
-                }
+                op.simd_trait_kernel_method(
+                    self.token(),
+                    vec_ty,
+                    quote! { #reinterpret(#expr).simd_into(self) },
+                )
             }
             OpSig::Select => {
                 let opt_q = neon::opt_q(vec_ty);
@@ -320,13 +294,11 @@ impl Level for Neon {
                 let reinterpret_str = format!("vreinterpret{opt_q}_u{scalar_bits}_s{scalar_bits}");
                 let reinterpret = Ident::new(&reinterpret_str, Span::call_site());
                 let vbsl = simple_intrinsic("vbsl", vec_ty);
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #vbsl(#reinterpret(a.into()), b.into(), c.into()).simd_into(self)
-                        }
-                    }
-                }
+                op.simd_trait_kernel_method(
+                    self.token(),
+                    vec_ty,
+                    quote! { #vbsl(#reinterpret(a.into()), b.into(), c.into()).simd_into(self) },
+                )
             }
             OpSig::Combine { combined_ty } => {
                 let combined_wrapper = combined_ty.aligned_wrapper();
@@ -375,28 +347,28 @@ impl Level for Neon {
             OpSig::Zip { select_low } => {
                 let neon = if select_low { "vzip1" } else { "vzip2" };
                 let zip = simple_intrinsic(neon, vec_ty);
-                quote! {
-                    #method_sig {
+                op.simd_trait_kernel_method(
+                    self.token(),
+                    vec_ty,
+                    quote! {
                         let x = a.into();
                         let y = b.into();
-                        unsafe {
-                            #zip(x, y).simd_into(self)
-                        }
-                    }
-                }
+                        #zip(x, y).simd_into(self)
+                    },
+                )
             }
             OpSig::Unzip { select_even } => {
                 let neon = if select_even { "vuzp1" } else { "vuzp2" };
                 let zip = simple_intrinsic(neon, vec_ty);
-                quote! {
-                    #method_sig {
+                op.simd_trait_kernel_method(
+                    self.token(),
+                    vec_ty,
+                    quote! {
                         let x = a.into();
                         let y = b.into();
-                        unsafe {
-                            #zip(x, y).simd_into(self)
-                        }
-                    }
-                }
+                        #zip(x, y).simd_into(self)
+                    },
+                )
             }
             OpSig::Slide { granularity } => {
                 use SlideGranularity::*;
@@ -480,13 +452,11 @@ impl Level for Neon {
                 } else {
                     let to_ty = &vec_ty.reinterpret(target_ty, scalar_bits);
                     let neon = cvt_intrinsic("vcvt", to_ty, vec_ty);
-                    quote! {
-                        #method_sig {
-                            unsafe {
-                                #neon(a.into()).simd_into(self)
-                            }
-                        }
-                    }
+                    op.simd_trait_kernel_method(
+                        self.token(),
+                        vec_ty,
+                        quote! { #neon(a.into()).simd_into(self) },
+                    )
                 }
             }
             OpSig::Reinterpret {
@@ -497,13 +467,11 @@ impl Level for Neon {
                     let to_ty = vec_ty.reinterpret(target_ty, scalar_bits);
                     let neon = cvt_intrinsic("vreinterpret", &to_ty, vec_ty);
 
-                    quote! {
-                        #method_sig {
-                            unsafe {
-                                #neon(a.into()).simd_into(self)
-                            }
-                        }
-                    }
+                    op.simd_trait_kernel_method(
+                        self.token(),
+                        vec_ty,
+                        quote! { #neon(a.into()).simd_into(self) },
+                    )
                 } else {
                     quote! {}
                 }
@@ -522,13 +490,11 @@ impl Level for Neon {
                 let u32_ty = vec_ty.reinterpret(ScalarType::Unsigned, 32);
                 let min_max = simple_intrinsic(reduction, &u32_ty);
                 let reinterpret = format_ident!("vreinterpretq_u32_s{}", vec_ty.scalar_bits);
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #min_max(#reinterpret(a.into())) #target
-                        }
-                    }
-                }
+                op.simd_trait_kernel_method(
+                    self.token(),
+                    vec_ty,
+                    quote! { #min_max(#reinterpret(a.into())) #target },
+                )
             }
             OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(method_sig, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(method_sig, vec_ty),
