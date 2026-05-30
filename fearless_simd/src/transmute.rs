@@ -3,7 +3,7 @@
 
 //! We have bytemuck at home
 //!
-//! This all serves a single `checked_transmute_copy` function,
+//! This all serves a small set of checked transmute and cast functions;
 //! if we find this growing in complexity we should probably just use the real bytemuck
 
 use core::mem::{align_of, size_of};
@@ -238,6 +238,29 @@ pub(crate) fn checked_transmute_copy<Src: SimdPod, Dst: SimdPod>(src: &Src) -> D
     // Safety: `SimdPod` guarantees source and destination validity for all bit patterns, and
     // the const assertion above prevents the "destination larger than source" failure mode.
     unsafe { core::mem::transmute_copy(src) }
+}
+
+/// Store a plain-old-data value into a differently typed same-sized destination.
+///
+/// This is the store-side counterpart to [`checked_transmute_copy`].
+/// The destination only needs to satisfy its own alignment,
+/// not the source type's alignment.
+#[inline(always)]
+#[allow(dead_code, reason = "Not all backends use this function")]
+pub(crate) fn checked_transmute_store<Src: SimdPod, Dst: SimdPod>(src: Src, dest: &mut Dst) {
+    const {
+        assert!(
+            size_of::<Src>() == size_of::<Dst>(),
+            "checked_transmute_store requires source and destination to have the same size"
+        );
+    }
+    // Safety: `SimdPod` guarantees source and destination validity for all bit patterns, and
+    // the const assertion above ensures that the write fully covers exactly one destination.
+    // `write_unaligned` avoids making a reference to `Src`, so this is valid even when `dest`
+    // has weaker alignment than `Src`.
+    // Performance: this lowers into the same LLVM IR as platform-specific store intrinsics.
+    // The alternative of ptr::copy_nonoverlapping lowers into a memcpy, which is worse.
+    unsafe { core::ptr::write_unaligned((dest as *mut Dst).cast::<Src>(), src) }
 }
 
 /// Like `bytemuck::cast_ref`, but rejects incompatible types at compile time

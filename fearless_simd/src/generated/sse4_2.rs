@@ -117,7 +117,7 @@ impl Simd for Sse4_2 {
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(enable = "sse4.2,cmpxchg16b,popcnt")]
-        unsafe fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
+        fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }
         unsafe { vectorize_sse4_2(f) }
@@ -155,13 +155,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const f32,
-                dest.as_mut_ptr(),
-                4usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self> {
@@ -437,13 +431,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i8,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self> {
@@ -659,13 +647,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const u8,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -963,13 +945,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i16,
-                dest.as_mut_ptr(),
-                8usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self> {
@@ -1185,13 +1161,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const u16,
-                dest.as_mut_ptr(),
-                8usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self> {
@@ -1489,13 +1459,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i32,
-                dest.as_mut_ptr(),
-                4usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self> {
@@ -1716,13 +1680,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const u32,
-                dest.as_mut_ptr(),
-                4usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self> {
@@ -2020,13 +1978,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const f64,
-                dest.as_mut_ptr(),
-                2usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self> {
@@ -2353,13 +2305,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const f32,
-                dest.as_mut_ptr(),
-                8usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self> {
@@ -2731,13 +2677,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i8,
-                dest.as_mut_ptr(),
-                32usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self> {
@@ -3016,13 +2956,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const u8,
-                dest.as_mut_ptr(),
-                32usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
@@ -3409,13 +3343,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i16,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self> {
@@ -3694,13 +3622,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const u16,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self> {
@@ -4090,13 +4012,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i32,
-                dest.as_mut_ptr(),
-                8usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self> {
@@ -4380,13 +4296,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const u32,
-                dest.as_mut_ptr(),
-                8usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self> {
@@ -4770,13 +4680,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const f64,
-                dest.as_mut_ptr(),
-                4usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self> {
@@ -5214,13 +5118,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const f32,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self> {
@@ -5637,13 +5535,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i8,
-                dest.as_mut_ptr(),
-                64usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self> {
@@ -5915,13 +5807,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const u8,
-                dest.as_mut_ptr(),
-                64usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
@@ -6350,13 +6236,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i16,
-                dest.as_mut_ptr(),
-                32usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self> {
@@ -6637,13 +6517,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const u16,
-                dest.as_mut_ptr(),
-                32usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self> {
@@ -7093,13 +6967,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const i32,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self> {
@@ -7376,13 +7244,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const u32,
-                dest.as_mut_ptr(),
-                16usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self> {
@@ -7804,13 +7666,7 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const f64,
-                dest.as_mut_ptr(),
-                8usize,
-            );
-        }
+        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self> {
