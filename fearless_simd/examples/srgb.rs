@@ -25,21 +25,21 @@ use core::arch::x86::{__m128, _mm_blend_ps};
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::{__m128, _mm_blend_ps};
 
-fearless_simd::kernel! {
+fearless_simd::kernel!(
     /// Copy the alpha lane on AArch64 using a NEON lane-copy intrinsic.
     #[inline]
     fn copy_alpha_neon(neon: Neon, a: float32x4_t, b: float32x4_t) -> float32x4_t {
         vcopyq_laneq_f32::<3, 3>(a, b)
     }
-}
+);
 
-fearless_simd::kernel! {
+fearless_simd::kernel!(
     /// Copy the alpha lane on x86 using the SSE4.2 token to enable SSE4.1 blend instructions.
     #[inline]
     fn copy_alpha_sse4_2(sse4_2: Sse4_2, a: __m128, b: __m128) -> __m128 {
         _mm_blend_ps::<8>(a, b)
     }
-}
+);
 
 /// Return `a` with its alpha channel replaced by `b`'s alpha channel.
 ///
