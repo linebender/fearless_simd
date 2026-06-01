@@ -359,12 +359,12 @@ impl Op {
 
         quote! {
             #method_sig {
-                crate::kernel! {
+                crate::kernel!(
                     #[inline(always)]
                     fn kernel(#token: #level #(, #arg_decls)*) -> #ret {
                         #kernel_body
                     }
-                }
+                );
 
                 kernel(self #(, #call_args)*)
             }

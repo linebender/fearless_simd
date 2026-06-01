@@ -88,7 +88,12 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : f32) -> f32x4 < Neon > { vdupq_n_f32 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: f32) -> f32x4<Neon> {
+                vdupq_n_f32(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -162,92 +167,191 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f32x4 < Neon > { vabsq_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vabsq_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f32x4 < Neon > { vnegq_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vnegq_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn sqrt_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f32x4 < Neon > { vsqrtq_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vsqrtq_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn approximate_recip_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f32x4 < Neon > { vrecpeq_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vrecpeq_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { vaddq_f32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                vaddq_f32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { vsubq_f32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                vsubq_f32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { vmulq_f32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                vmulq_f32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn div_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { vdivq_f32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                vdivq_f32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn copysign_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { let sign_mask = vdupq_n_u32 (1 << 31) ; vbslq_f32 (sign_mask , b . into () , a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                let sign_mask = vdupq_n_u32(1 << 31);
+                vbslq_f32(sign_mask, b.into(), a.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vceqq_f32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vceqq_f32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_lt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcltq_f32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcltq_f32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcleq_f32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcleq_f32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_ge_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcgeq_f32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcgeq_f32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_gt_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcgtq_f32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcgtq_f32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { let x = a . into () ; let y = b . into () ; vzip1q_f32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip1q_f32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { let x = a . into () ; let y = b . into () ; vzip2q_f32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip2q_f32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { let x = a . into () ; let y = b . into () ; vuzp1q_f32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp1q_f32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { let x = a . into () ; let y = b . into () ; vuzp2q_f32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp2q_f32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -260,62 +364,129 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { vmaxq_f32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                vmaxq_f32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { vminq_f32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                vminq_f32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { vmaxnmq_f32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                vmaxnmq_f32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn min_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon >) -> f32x4 < Neon > { vminnmq_f32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>) -> f32x4<Neon> {
+                vminnmq_f32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon > , c : f32x4 < Neon >) -> f32x4 < Neon > { vfmaq_f32 (c . into () , b . into () , a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>, c: f32x4<Neon>) -> f32x4<Neon> {
+                vfmaq_f32(c.into(), b.into(), a.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon > , b : f32x4 < Neon > , c : f32x4 < Neon >) -> f32x4 < Neon > { vnegq_f32 (vfmsq_f32 (c . into () , b . into () , a . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>, b: f32x4<Neon>, c: f32x4<Neon>) -> f32x4<Neon> {
+                vnegq_f32(vfmsq_f32(c.into(), b.into(), a.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f32x4 < Neon > { vrndmq_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vrndmq_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn ceil_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f32x4 < Neon > { vrndpq_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vrndpq_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn round_ties_even_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f32x4 < Neon > { vrndnq_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vrndnq_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f32x4 < Neon > { let c1 = vcvtq_s32_f32 (a . into ()) ; let c2 = vcvtq_f32_s32 (c1) ; vsubq_f32 (a . into () , c2) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                let c1 = vcvtq_s32_f32(a.into());
+                let c2 = vcvtq_f32_s32(c1);
+                vsubq_f32(a.into(), c2).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f32x4 < Neon > { vrndq_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f32x4<Neon> {
+                vrndq_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon > , b : f32x4 < Neon > , c : f32x4 < Neon >) -> f32x4 < Neon > { vbslq_f32 (vreinterpretq_u32_s32 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask32x4<Neon>,
+                b: f32x4<Neon>,
+                c: f32x4<Neon>,
+            ) -> f32x4<Neon> {
+                vbslq_f32(vreinterpretq_u32_s32(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
@@ -327,27 +498,52 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> f64x2 < Neon > { vreinterpretq_f64_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> f64x2<Neon> {
+                vreinterpretq_f64_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> i32x4 < Neon > { vreinterpretq_s32_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> i32x4<Neon> {
+                vreinterpretq_s32_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> u8x16 < Neon > { vreinterpretq_u8_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> u8x16<Neon> {
+                vreinterpretq_u8_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> u32x4 < Neon > { vreinterpretq_u32_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> u32x4<Neon> {
+                vreinterpretq_u32_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> u32x4 < Neon > { vcvtq_u32_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> u32x4<Neon> {
+                vcvtq_u32_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -356,7 +552,12 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f32x4 < Neon >) -> i32x4 < Neon > { vcvtq_s32_f32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f32x4<Neon>) -> i32x4<Neon> {
+                vcvtq_s32_f32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -365,7 +566,12 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : i8) -> i8x16 < Neon > { vdupq_n_s8 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: i8) -> i8x16<Neon> {
+                vdupq_n_s8(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -439,102 +645,210 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { vaddq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vaddq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { vsubq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vsubq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { vmulq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vmulq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { vandq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vandq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { vorrq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vorrq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { veorq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                veorq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon >) -> i8x16 < Neon > { vmvnq_s8 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8x16<Neon> {
+                vmvnq_s8(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , shift : u32) -> i8x16 < Neon > { vshlq_s8 (a . into () , vdupq_n_s8 (shift as i8)) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, shift: u32) -> i8x16<Neon> {
+                vshlq_s8(a.into(), vdupq_n_s8(shift as i8)).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { vshlq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vshlq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , shift : u32) -> i8x16 < Neon > { vshlq_s8 (a . into () , vdupq_n_s8 (- (shift as i8))) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, shift: u32) -> i8x16<Neon> {
+                vshlq_s8(a.into(), vdupq_n_s8(-(shift as i8))).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { vshlq_s8 (a . into () , vnegq_s8 (b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vshlq_s8(a.into(), vnegq_s8(b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vceqq_s8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vceqq_s8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_lt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vcltq_s8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vcltq_s8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vcleq_s8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vcleq_s8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_ge_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vcgeq_s8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vcgeq_s8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_gt_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vcgtq_s8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vcgtq_s8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { let x = a . into () ; let y = b . into () ; vzip1q_s8 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip1q_s8(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { let x = a . into () ; let y = b . into () ; vzip2q_s8 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip2q_s8(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { let x = a . into () ; let y = b . into () ; vuzp1q_s8 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp1q_s8(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { let x = a . into () ; let y = b . into () ; vuzp2q_s8 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp2q_s8(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -547,17 +861,37 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn select_i8x16(self, a: mask8x16<Self>, b: i8x16<Self>, c: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon > , b : i8x16 < Neon > , c : i8x16 < Neon >) -> i8x16 < Neon > { vbslq_s8 (vreinterpretq_u8_s8 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask8x16<Neon>,
+                b: i8x16<Neon>,
+                c: i8x16<Neon>,
+            ) -> i8x16<Neon> {
+                vbslq_s8(vreinterpretq_u8_s8(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { vminq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vminq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon > , b : i8x16 < Neon >) -> i8x16 < Neon > { vmaxq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, b: i8x16<Neon>) -> i8x16<Neon> {
+                vmaxq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -569,22 +903,42 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon >) -> i8x16 < Neon > { vnegq_s8 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> i8x16<Neon> {
+                vnegq_s8(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon >) -> u8x16 < Neon > { vreinterpretq_u8_s8 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> u8x16<Neon> {
+                vreinterpretq_u8_s8(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i8x16 < Neon >) -> u32x4 < Neon > { vreinterpretq_u32_s8 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>) -> u32x4<Neon> {
+                vreinterpretq_u32_s8(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : u8) -> u8x16 < Neon > { vdupq_n_u8 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: u8) -> u8x16<Neon> {
+                vdupq_n_u8(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -658,102 +1012,210 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { vaddq_u8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vaddq_u8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { vsubq_u8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vsubq_u8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { vmulq_u8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vmulq_u8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { vandq_u8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vandq_u8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { vorrq_u8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vorrq_u8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { veorq_u8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                veorq_u8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon >) -> u8x16 < Neon > { vmvnq_u8 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u8x16<Neon> {
+                vmvnq_u8(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , shift : u32) -> u8x16 < Neon > { vshlq_u8 (a . into () , vdupq_n_s8 (shift as i8)) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, shift: u32) -> u8x16<Neon> {
+                vshlq_u8(a.into(), vdupq_n_s8(shift as i8)).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { vshlq_u8 (a . into () , vreinterpretq_s8_u8 (b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vshlq_u8(a.into(), vreinterpretq_s8_u8(b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , shift : u32) -> u8x16 < Neon > { vshlq_u8 (a . into () , vdupq_n_s8 (- (shift as i8))) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, shift: u32) -> u8x16<Neon> {
+                vshlq_u8(a.into(), vdupq_n_s8(-(shift as i8))).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { vshlq_u8 (a . into () , vnegq_s8 (vreinterpretq_s8_u8 (b . into ()))) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vshlq_u8(a.into(), vnegq_s8(vreinterpretq_s8_u8(b.into()))).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vceqq_u8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vceqq_u8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_lt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vcltq_u8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vcltq_u8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vcleq_u8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vcleq_u8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_ge_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vcgeq_u8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vcgeq_u8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_gt_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vcgtq_u8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vcgtq_u8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { let x = a . into () ; let y = b . into () ; vzip1q_u8 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip1q_u8(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { let x = a . into () ; let y = b . into () ; vzip2q_u8 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip2q_u8(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { let x = a . into () ; let y = b . into () ; vuzp1q_u8 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp1q_u8(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { let x = a . into () ; let y = b . into () ; vuzp2q_u8 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp2q_u8(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -766,17 +1228,37 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn select_u8x16(self, a: mask8x16<Self>, b: u8x16<Self>, c: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon > , b : u8x16 < Neon > , c : u8x16 < Neon >) -> u8x16 < Neon > { vbslq_u8 (vreinterpretq_u8_s8 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask8x16<Neon>,
+                b: u8x16<Neon>,
+                c: u8x16<Neon>,
+            ) -> u8x16<Neon> {
+                vbslq_u8(vreinterpretq_u8_s8(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { vminq_u8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vminq_u8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon > , b : u8x16 < Neon >) -> u8x16 < Neon > { vmaxq_u8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, b: u8x16<Neon>) -> u8x16<Neon> {
+                vmaxq_u8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -788,17 +1270,35 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon >) -> u16x16 < Neon > { let low = vmovl_u8 (vget_low_u8 (a . into ())) ; let high = vmovl_u8 (vget_high_u8 (a . into ())) ; uint16x8x2_t (low , high) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u16x16<Neon> {
+                let low = vmovl_u8(vget_low_u8(a.into()));
+                let high = vmovl_u8(vget_high_u8(a.into()));
+                uint16x8x2_t(low, high).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u8x16 < Neon >) -> u32x4 < Neon > { vreinterpretq_u32_u8 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>) -> u32x4<Neon> {
+                vreinterpretq_u32_u8(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : bool) -> mask8x16 < Neon > { let val : i8 = if val { ! 0 } else { 0 } ; vdupq_n_s8 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: bool) -> mask8x16<Neon> {
+                let val: i8 = if val { !0 } else { 0 };
+                vdupq_n_s8(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -843,22 +1343,42 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon > , b : mask8x16 < Neon >) -> mask8x16 < Neon > { vandq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>, b: mask8x16<Neon>) -> mask8x16<Neon> {
+                vandq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon > , b : mask8x16 < Neon >) -> mask8x16 < Neon > { vorrq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>, b: mask8x16<Neon>) -> mask8x16<Neon> {
+                vorrq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon > , b : mask8x16 < Neon >) -> mask8x16 < Neon > { veorq_s8 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>, b: mask8x16<Neon>) -> mask8x16<Neon> {
+                veorq_s8(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_mask8x16(self, a: mask8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon >) -> mask8x16 < Neon > { vmvnq_s8 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>) -> mask8x16<Neon> {
+                vmvnq_s8(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -868,32 +1388,67 @@ impl Simd for Neon {
         b: mask8x16<Self>,
         c: mask8x16<Self>,
     ) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon > , b : mask8x16 < Neon > , c : mask8x16 < Neon >) -> mask8x16 < Neon > { vbslq_s8 (vreinterpretq_u8_s8 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask8x16<Neon>,
+                b: mask8x16<Neon>,
+                c: mask8x16<Neon>,
+            ) -> mask8x16<Neon> {
+                vbslq_s8(vreinterpretq_u8_s8(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn simd_eq_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon > , b : mask8x16 < Neon >) -> mask8x16 < Neon > { vreinterpretq_s8_u8 (vceqq_s8 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>, b: mask8x16<Neon>) -> mask8x16<Neon> {
+                vreinterpretq_s8_u8(vceqq_s8(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn any_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon >) -> bool { vmaxvq_u32 (vreinterpretq_u32_s8 (a . into ())) != 0 } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>) -> bool {
+                vmaxvq_u32(vreinterpretq_u32_s8(a.into())) != 0
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn all_true_mask8x16(self, a: mask8x16<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon >) -> bool { vminvq_u32 (vreinterpretq_u32_s8 (a . into ())) == 0xffffffff } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>) -> bool {
+                vminvq_u32(vreinterpretq_u32_s8(a.into())) == 0xffffffff
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn any_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon >) -> bool { vminvq_u32 (vreinterpretq_u32_s8 (a . into ())) != 0xffffffff } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>) -> bool {
+                vminvq_u32(vreinterpretq_u32_s8(a.into())) != 0xffffffff
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn all_false_mask8x16(self, a: mask8x16<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask8x16 < Neon >) -> bool { vmaxvq_u32 (vreinterpretq_u32_s8 (a . into ())) == 0 } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask8x16<Neon>) -> bool {
+                vmaxvq_u32(vreinterpretq_u32_s8(a.into())) == 0
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -905,7 +1460,12 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : i16) -> i16x8 < Neon > { vdupq_n_s16 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: i16) -> i16x8<Neon> {
+                vdupq_n_s16(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -979,102 +1539,210 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { vaddq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vaddq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { vsubq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vsubq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { vmulq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vmulq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { vandq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vandq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { vorrq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vorrq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { veorq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                veorq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon >) -> i16x8 < Neon > { vmvnq_s16 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16x8<Neon> {
+                vmvnq_s16(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , shift : u32) -> i16x8 < Neon > { vshlq_s16 (a . into () , vdupq_n_s16 (shift as i16)) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, shift: u32) -> i16x8<Neon> {
+                vshlq_s16(a.into(), vdupq_n_s16(shift as i16)).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { vshlq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vshlq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , shift : u32) -> i16x8 < Neon > { vshlq_s16 (a . into () , vdupq_n_s16 (- (shift as i16))) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, shift: u32) -> i16x8<Neon> {
+                vshlq_s16(a.into(), vdupq_n_s16(-(shift as i16))).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { vshlq_s16 (a . into () , vnegq_s16 (b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vshlq_s16(a.into(), vnegq_s16(b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vceqq_s16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vceqq_s16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_lt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vcltq_s16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vcltq_s16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vcleq_s16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vcleq_s16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_ge_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vcgeq_s16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vcgeq_s16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_gt_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vcgtq_s16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vcgtq_s16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { let x = a . into () ; let y = b . into () ; vzip1q_s16 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip1q_s16(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { let x = a . into () ; let y = b . into () ; vzip2q_s16 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip2q_s16(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { let x = a . into () ; let y = b . into () ; vuzp1q_s16 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp1q_s16(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { let x = a . into () ; let y = b . into () ; vuzp2q_s16 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp2q_s16(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -1087,17 +1755,37 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn select_i16x8(self, a: mask16x8<Self>, b: i16x8<Self>, c: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon > , b : i16x8 < Neon > , c : i16x8 < Neon >) -> i16x8 < Neon > { vbslq_s16 (vreinterpretq_u16_s16 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask16x8<Neon>,
+                b: i16x8<Neon>,
+                c: i16x8<Neon>,
+            ) -> i16x8<Neon> {
+                vbslq_s16(vreinterpretq_u16_s16(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { vminq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vminq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon > , b : i16x8 < Neon >) -> i16x8 < Neon > { vmaxq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>, b: i16x8<Neon>) -> i16x8<Neon> {
+                vmaxq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -1109,22 +1797,42 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon >) -> i16x8 < Neon > { vnegq_s16 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> i16x8<Neon> {
+                vnegq_s16(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon >) -> u8x16 < Neon > { vreinterpretq_u8_s16 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> u8x16<Neon> {
+                vreinterpretq_u8_s16(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i16x8 < Neon >) -> u32x4 < Neon > { vreinterpretq_u32_s16 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i16x8<Neon>) -> u32x4<Neon> {
+                vreinterpretq_u32_s16(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : u16) -> u16x8 < Neon > { vdupq_n_u16 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: u16) -> u16x8<Neon> {
+                vdupq_n_u16(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -1198,102 +1906,210 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { vaddq_u16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vaddq_u16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { vsubq_u16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vsubq_u16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { vmulq_u16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vmulq_u16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { vandq_u16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vandq_u16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { vorrq_u16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vorrq_u16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { veorq_u16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                veorq_u16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon >) -> u16x8 < Neon > { vmvnq_u16 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u16x8<Neon> {
+                vmvnq_u16(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , shift : u32) -> u16x8 < Neon > { vshlq_u16 (a . into () , vdupq_n_s16 (shift as i16)) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, shift: u32) -> u16x8<Neon> {
+                vshlq_u16(a.into(), vdupq_n_s16(shift as i16)).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { vshlq_u16 (a . into () , vreinterpretq_s16_u16 (b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vshlq_u16(a.into(), vreinterpretq_s16_u16(b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , shift : u32) -> u16x8 < Neon > { vshlq_u16 (a . into () , vdupq_n_s16 (- (shift as i16))) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, shift: u32) -> u16x8<Neon> {
+                vshlq_u16(a.into(), vdupq_n_s16(-(shift as i16))).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { vshlq_u16 (a . into () , vnegq_s16 (vreinterpretq_s16_u16 (b . into ()))) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vshlq_u16(a.into(), vnegq_s16(vreinterpretq_s16_u16(b.into()))).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vceqq_u16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vceqq_u16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_lt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vcltq_u16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vcltq_u16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vcleq_u16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vcleq_u16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_ge_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vcgeq_u16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vcgeq_u16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_gt_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vcgtq_u16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vcgtq_u16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { let x = a . into () ; let y = b . into () ; vzip1q_u16 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip1q_u16(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { let x = a . into () ; let y = b . into () ; vzip2q_u16 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip2q_u16(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { let x = a . into () ; let y = b . into () ; vuzp1q_u16 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp1q_u16(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { let x = a . into () ; let y = b . into () ; vuzp2q_u16 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp2q_u16(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -1306,17 +2122,37 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn select_u16x8(self, a: mask16x8<Self>, b: u16x8<Self>, c: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon > , b : u16x8 < Neon > , c : u16x8 < Neon >) -> u16x8 < Neon > { vbslq_u16 (vreinterpretq_u16_s16 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask16x8<Neon>,
+                b: u16x8<Neon>,
+                c: u16x8<Neon>,
+            ) -> u16x8<Neon> {
+                vbslq_u16(vreinterpretq_u16_s16(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { vminq_u16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vminq_u16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon > , b : u16x8 < Neon >) -> u16x8 < Neon > { vmaxq_u16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>, b: u16x8<Neon>) -> u16x8<Neon> {
+                vmaxq_u16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -1328,17 +2164,33 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon >) -> u8x16 < Neon > { vreinterpretq_u8_u16 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u8x16<Neon> {
+                vreinterpretq_u8_u16(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x8 < Neon >) -> u32x4 < Neon > { vreinterpretq_u32_u16 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x8<Neon>) -> u32x4<Neon> {
+                vreinterpretq_u32_u16(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : bool) -> mask16x8 < Neon > { let val : i16 = if val { ! 0 } else { 0 } ; vdupq_n_s16 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: bool) -> mask16x8<Neon> {
+                let val: i16 = if val { !0 } else { 0 };
+                vdupq_n_s16(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -1375,22 +2227,42 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon > , b : mask16x8 < Neon >) -> mask16x8 < Neon > { vandq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>, b: mask16x8<Neon>) -> mask16x8<Neon> {
+                vandq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon > , b : mask16x8 < Neon >) -> mask16x8 < Neon > { vorrq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>, b: mask16x8<Neon>) -> mask16x8<Neon> {
+                vorrq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon > , b : mask16x8 < Neon >) -> mask16x8 < Neon > { veorq_s16 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>, b: mask16x8<Neon>) -> mask16x8<Neon> {
+                veorq_s16(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_mask16x8(self, a: mask16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon >) -> mask16x8 < Neon > { vmvnq_s16 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>) -> mask16x8<Neon> {
+                vmvnq_s16(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -1400,32 +2272,67 @@ impl Simd for Neon {
         b: mask16x8<Self>,
         c: mask16x8<Self>,
     ) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon > , b : mask16x8 < Neon > , c : mask16x8 < Neon >) -> mask16x8 < Neon > { vbslq_s16 (vreinterpretq_u16_s16 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask16x8<Neon>,
+                b: mask16x8<Neon>,
+                c: mask16x8<Neon>,
+            ) -> mask16x8<Neon> {
+                vbslq_s16(vreinterpretq_u16_s16(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn simd_eq_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon > , b : mask16x8 < Neon >) -> mask16x8 < Neon > { vreinterpretq_s16_u16 (vceqq_s16 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>, b: mask16x8<Neon>) -> mask16x8<Neon> {
+                vreinterpretq_s16_u16(vceqq_s16(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn any_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon >) -> bool { vmaxvq_u32 (vreinterpretq_u32_s16 (a . into ())) != 0 } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>) -> bool {
+                vmaxvq_u32(vreinterpretq_u32_s16(a.into())) != 0
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn all_true_mask16x8(self, a: mask16x8<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon >) -> bool { vminvq_u32 (vreinterpretq_u32_s16 (a . into ())) == 0xffffffff } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>) -> bool {
+                vminvq_u32(vreinterpretq_u32_s16(a.into())) == 0xffffffff
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn any_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon >) -> bool { vminvq_u32 (vreinterpretq_u32_s16 (a . into ())) != 0xffffffff } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>) -> bool {
+                vminvq_u32(vreinterpretq_u32_s16(a.into())) != 0xffffffff
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn all_false_mask16x8(self, a: mask16x8<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask16x8 < Neon >) -> bool { vmaxvq_u32 (vreinterpretq_u32_s16 (a . into ())) == 0 } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask16x8<Neon>) -> bool {
+                vmaxvq_u32(vreinterpretq_u32_s16(a.into())) == 0
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -1437,7 +2344,12 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : i32) -> i32x4 < Neon > { vdupq_n_s32 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: i32) -> i32x4<Neon> {
+                vdupq_n_s32(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -1511,102 +2423,210 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { vaddq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vaddq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { vsubq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vsubq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { vmulq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vmulq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { vandq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vandq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { vorrq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vorrq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { veorq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                veorq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon >) -> i32x4 < Neon > { vmvnq_s32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32x4<Neon> {
+                vmvnq_s32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , shift : u32) -> i32x4 < Neon > { vshlq_s32 (a . into () , vdupq_n_s32 (shift . cast_signed ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, shift: u32) -> i32x4<Neon> {
+                vshlq_s32(a.into(), vdupq_n_s32(shift.cast_signed())).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { vshlq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vshlq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , shift : u32) -> i32x4 < Neon > { vshlq_s32 (a . into () , vdupq_n_s32 (- shift . cast_signed ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, shift: u32) -> i32x4<Neon> {
+                vshlq_s32(a.into(), vdupq_n_s32(-shift.cast_signed())).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { vshlq_s32 (a . into () , vnegq_s32 (b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vshlq_s32(a.into(), vnegq_s32(b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vceqq_s32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vceqq_s32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_lt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcltq_s32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcltq_s32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcleq_s32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcleq_s32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_ge_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcgeq_s32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcgeq_s32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_gt_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcgtq_s32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcgtq_s32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { let x = a . into () ; let y = b . into () ; vzip1q_s32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip1q_s32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { let x = a . into () ; let y = b . into () ; vzip2q_s32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip2q_s32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { let x = a . into () ; let y = b . into () ; vuzp1q_s32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp1q_s32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { let x = a . into () ; let y = b . into () ; vuzp2q_s32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp2q_s32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -1619,17 +2639,37 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn select_i32x4(self, a: mask32x4<Self>, b: i32x4<Self>, c: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon > , b : i32x4 < Neon > , c : i32x4 < Neon >) -> i32x4 < Neon > { vbslq_s32 (vreinterpretq_u32_s32 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask32x4<Neon>,
+                b: i32x4<Neon>,
+                c: i32x4<Neon>,
+            ) -> i32x4<Neon> {
+                vbslq_s32(vreinterpretq_u32_s32(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { vminq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vminq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon > , b : i32x4 < Neon >) -> i32x4 < Neon > { vmaxq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>, b: i32x4<Neon>) -> i32x4<Neon> {
+                vmaxq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -1641,27 +2681,52 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon >) -> i32x4 < Neon > { vnegq_s32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> i32x4<Neon> {
+                vnegq_s32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon >) -> u8x16 < Neon > { vreinterpretq_u8_s32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> u8x16<Neon> {
+                vreinterpretq_u8_s32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon >) -> u32x4 < Neon > { vreinterpretq_u32_s32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> u32x4<Neon> {
+                vreinterpretq_u32_s32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : i32x4 < Neon >) -> f32x4 < Neon > { vcvtq_f32_s32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i32x4<Neon>) -> f32x4<Neon> {
+                vcvtq_f32_s32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn splat_u32x4(self, val: u32) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : u32) -> u32x4 < Neon > { vdupq_n_u32 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: u32) -> u32x4<Neon> {
+                vdupq_n_u32(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -1735,102 +2800,210 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { vaddq_u32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vaddq_u32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { vsubq_u32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vsubq_u32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { vmulq_u32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vmulq_u32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { vandq_u32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vandq_u32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { vorrq_u32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vorrq_u32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { veorq_u32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                veorq_u32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon >) -> u32x4 < Neon > { vmvnq_u32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u32x4<Neon> {
+                vmvnq_u32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , shift : u32) -> u32x4 < Neon > { vshlq_u32 (a . into () , vdupq_n_s32 (shift . cast_signed ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, shift: u32) -> u32x4<Neon> {
+                vshlq_u32(a.into(), vdupq_n_s32(shift.cast_signed())).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { vshlq_u32 (a . into () , vreinterpretq_s32_u32 (b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vshlq_u32(a.into(), vreinterpretq_s32_u32(b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , shift : u32) -> u32x4 < Neon > { vshlq_u32 (a . into () , vdupq_n_s32 (- shift . cast_signed ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, shift: u32) -> u32x4<Neon> {
+                vshlq_u32(a.into(), vdupq_n_s32(-shift.cast_signed())).simd_into(token)
+            }
+        );
         kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { vshlq_u32 (a . into () , vnegq_s32 (vreinterpretq_s32_u32 (b . into ()))) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vshlq_u32(a.into(), vnegq_s32(vreinterpretq_s32_u32(b.into()))).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vceqq_u32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vceqq_u32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_lt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcltq_u32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcltq_u32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcleq_u32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcleq_u32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_ge_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcgeq_u32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcgeq_u32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_gt_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vcgtq_u32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vcgtq_u32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { let x = a . into () ; let y = b . into () ; vzip1q_u32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip1q_u32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { let x = a . into () ; let y = b . into () ; vzip2q_u32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip2q_u32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { let x = a . into () ; let y = b . into () ; vuzp1q_u32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp1q_u32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { let x = a . into () ; let y = b . into () ; vuzp2q_u32 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp2q_u32(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -1843,17 +3016,37 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn select_u32x4(self, a: mask32x4<Self>, b: u32x4<Self>, c: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon > , b : u32x4 < Neon > , c : u32x4 < Neon >) -> u32x4 < Neon > { vbslq_u32 (vreinterpretq_u32_s32 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask32x4<Neon>,
+                b: u32x4<Neon>,
+                c: u32x4<Neon>,
+            ) -> u32x4<Neon> {
+                vbslq_u32(vreinterpretq_u32_s32(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { vminq_u32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vminq_u32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon > , b : u32x4 < Neon >) -> u32x4 < Neon > { vmaxq_u32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>, b: u32x4<Neon>) -> u32x4<Neon> {
+                vmaxq_u32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -1865,17 +3058,33 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon >) -> u8x16 < Neon > { vreinterpretq_u8_u32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> u8x16<Neon> {
+                vreinterpretq_u8_u32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u32x4 < Neon >) -> f32x4 < Neon > { vcvtq_f32_u32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u32x4<Neon>) -> f32x4<Neon> {
+                vcvtq_f32_u32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask32x4(self, val: bool) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : bool) -> mask32x4 < Neon > { let val : i32 = if val { ! 0 } else { 0 } ; vdupq_n_s32 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: bool) -> mask32x4<Neon> {
+                let val: i32 = if val { !0 } else { 0 };
+                vdupq_n_s32(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -1910,22 +3119,42 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon > , b : mask32x4 < Neon >) -> mask32x4 < Neon > { vandq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>, b: mask32x4<Neon>) -> mask32x4<Neon> {
+                vandq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon > , b : mask32x4 < Neon >) -> mask32x4 < Neon > { vorrq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>, b: mask32x4<Neon>) -> mask32x4<Neon> {
+                vorrq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon > , b : mask32x4 < Neon >) -> mask32x4 < Neon > { veorq_s32 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>, b: mask32x4<Neon>) -> mask32x4<Neon> {
+                veorq_s32(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_mask32x4(self, a: mask32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon >) -> mask32x4 < Neon > { vmvnq_s32 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>) -> mask32x4<Neon> {
+                vmvnq_s32(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -1935,32 +3164,67 @@ impl Simd for Neon {
         b: mask32x4<Self>,
         c: mask32x4<Self>,
     ) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon > , b : mask32x4 < Neon > , c : mask32x4 < Neon >) -> mask32x4 < Neon > { vbslq_s32 (vreinterpretq_u32_s32 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask32x4<Neon>,
+                b: mask32x4<Neon>,
+                c: mask32x4<Neon>,
+            ) -> mask32x4<Neon> {
+                vbslq_s32(vreinterpretq_u32_s32(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn simd_eq_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon > , b : mask32x4 < Neon >) -> mask32x4 < Neon > { vreinterpretq_s32_u32 (vceqq_s32 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>, b: mask32x4<Neon>) -> mask32x4<Neon> {
+                vreinterpretq_s32_u32(vceqq_s32(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn any_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon >) -> bool { vmaxvq_u32 (vreinterpretq_u32_s32 (a . into ())) != 0 } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>) -> bool {
+                vmaxvq_u32(vreinterpretq_u32_s32(a.into())) != 0
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn all_true_mask32x4(self, a: mask32x4<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon >) -> bool { vminvq_u32 (vreinterpretq_u32_s32 (a . into ())) == 0xffffffff } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>) -> bool {
+                vminvq_u32(vreinterpretq_u32_s32(a.into())) == 0xffffffff
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn any_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon >) -> bool { vminvq_u32 (vreinterpretq_u32_s32 (a . into ())) != 0xffffffff } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>) -> bool {
+                vminvq_u32(vreinterpretq_u32_s32(a.into())) != 0xffffffff
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn all_false_mask32x4(self, a: mask32x4<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask32x4 < Neon >) -> bool { vmaxvq_u32 (vreinterpretq_u32_s32 (a . into ())) == 0 } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask32x4<Neon>) -> bool {
+                vmaxvq_u32(vreinterpretq_u32_s32(a.into())) == 0
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -1972,7 +3236,12 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : f64) -> f64x2 < Neon > { vdupq_n_f64 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: f64) -> f64x2<Neon> {
+                vdupq_n_f64(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -2046,92 +3315,191 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f64x2 < Neon > { vabsq_f64 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vabsq_f64(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f64x2 < Neon > { vnegq_f64 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vnegq_f64(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn sqrt_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f64x2 < Neon > { vsqrtq_f64 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vsqrtq_f64(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn approximate_recip_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f64x2 < Neon > { vrecpeq_f64 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vrecpeq_f64(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { vaddq_f64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                vaddq_f64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { vsubq_f64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                vsubq_f64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { vmulq_f64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                vmulq_f64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn div_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { vdivq_f64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                vdivq_f64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn copysign_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { let sign_mask = vdupq_n_u64 (1 << 63) ; vbslq_f64 (sign_mask , b . into () , a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                let sign_mask = vdupq_n_u64(1 << 63);
+                vbslq_f64(sign_mask, b.into(), a.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> mask64x2 < Neon > { vreinterpretq_s64_u64 (vceqq_f64 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> mask64x2<Neon> {
+                vreinterpretq_s64_u64(vceqq_f64(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_lt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> mask64x2 < Neon > { vreinterpretq_s64_u64 (vcltq_f64 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> mask64x2<Neon> {
+                vreinterpretq_s64_u64(vcltq_f64(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_le_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> mask64x2 < Neon > { vreinterpretq_s64_u64 (vcleq_f64 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> mask64x2<Neon> {
+                vreinterpretq_s64_u64(vcleq_f64(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_ge_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> mask64x2 < Neon > { vreinterpretq_s64_u64 (vcgeq_f64 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> mask64x2<Neon> {
+                vreinterpretq_s64_u64(vcgeq_f64(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_gt_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> mask64x2 < Neon > { vreinterpretq_s64_u64 (vcgtq_f64 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> mask64x2<Neon> {
+                vreinterpretq_s64_u64(vcgtq_f64(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { let x = a . into () ; let y = b . into () ; vzip1q_f64 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip1q_f64(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { let x = a . into () ; let y = b . into () ; vzip2q_f64 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vzip2q_f64(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { let x = a . into () ; let y = b . into () ; vuzp1q_f64 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp1q_f64(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { let x = a . into () ; let y = b . into () ; vuzp2q_f64 (x , y) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                let x = a.into();
+                let y = b.into();
+                vuzp2q_f64(x, y).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
@@ -2144,62 +3512,129 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { vmaxq_f64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                vmaxq_f64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { vminq_f64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                vminq_f64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { vmaxnmq_f64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                vmaxnmq_f64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn min_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon >) -> f64x2 < Neon > { vminnmq_f64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>) -> f64x2<Neon> {
+                vminnmq_f64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon > , c : f64x2 < Neon >) -> f64x2 < Neon > { vfmaq_f64 (c . into () , b . into () , a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>, c: f64x2<Neon>) -> f64x2<Neon> {
+                vfmaq_f64(c.into(), b.into(), a.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon > , b : f64x2 < Neon > , c : f64x2 < Neon >) -> f64x2 < Neon > { vnegq_f64 (vfmsq_f64 (c . into () , b . into () , a . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>, b: f64x2<Neon>, c: f64x2<Neon>) -> f64x2<Neon> {
+                vnegq_f64(vfmsq_f64(c.into(), b.into(), a.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f64x2 < Neon > { vrndmq_f64 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vrndmq_f64(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn ceil_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f64x2 < Neon > { vrndpq_f64 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vrndpq_f64(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn round_ties_even_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f64x2 < Neon > { vrndnq_f64 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vrndnq_f64(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f64x2 < Neon > { let c1 = vcvtq_s64_f64 (a . into ()) ; let c2 = vcvtq_f64_s64 (c1) ; vsubq_f64 (a . into () , c2) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                let c1 = vcvtq_s64_f64(a.into());
+                let c2 = vcvtq_f64_s64(c1);
+                vsubq_f64(a.into(), c2).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f64x2 < Neon > { vrndq_f64 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f64x2<Neon> {
+                vrndq_f64(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon > , b : f64x2 < Neon > , c : f64x2 < Neon >) -> f64x2 < Neon > { vbslq_f64 (vreinterpretq_u64_s64 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask64x2<Neon>,
+                b: f64x2<Neon>,
+                c: f64x2<Neon>,
+            ) -> f64x2<Neon> {
+                vbslq_f64(vreinterpretq_u64_s64(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
@@ -2211,12 +3646,23 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : f64x2 < Neon >) -> f32x4 < Neon > { vreinterpretq_f32_f64 (a . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: f64x2<Neon>) -> f32x4<Neon> {
+                vreinterpretq_f32_f64(a.into()).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , val : bool) -> mask64x2 < Neon > { let val : i64 = if val { ! 0 } else { 0 } ; vdupq_n_s64 (val) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, val: bool) -> mask64x2<Neon> {
+                let val: i64 = if val { !0 } else { 0 };
+                vdupq_n_s64(val).simd_into(token)
+            }
+        );
         kernel(self, val)
     }
     #[inline(always)]
@@ -2249,22 +3695,42 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon > , b : mask64x2 < Neon >) -> mask64x2 < Neon > { vandq_s64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>, b: mask64x2<Neon>) -> mask64x2<Neon> {
+                vandq_s64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn or_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon > , b : mask64x2 < Neon >) -> mask64x2 < Neon > { vorrq_s64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>, b: mask64x2<Neon>) -> mask64x2<Neon> {
+                vorrq_s64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon > , b : mask64x2 < Neon >) -> mask64x2 < Neon > { veorq_s64 (a . into () , b . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>, b: mask64x2<Neon>) -> mask64x2<Neon> {
+                veorq_s64(a.into(), b.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn not_mask64x2(self, a: mask64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon >) -> mask64x2 < Neon > { vreinterpretq_s64_s32 (vmvnq_s32 (vreinterpretq_s32_s64 (a . into ()))) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>) -> mask64x2<Neon> {
+                vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -2274,32 +3740,67 @@ impl Simd for Neon {
         b: mask64x2<Self>,
         c: mask64x2<Self>,
     ) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon > , b : mask64x2 < Neon > , c : mask64x2 < Neon >) -> mask64x2 < Neon > { vbslq_s64 (vreinterpretq_u64_s64 (a . into ()) , b . into () , c . into ()) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Neon,
+                a: mask64x2<Neon>,
+                b: mask64x2<Neon>,
+                c: mask64x2<Neon>,
+            ) -> mask64x2<Neon> {
+                vbslq_s64(vreinterpretq_u64_s64(a.into()), b.into(), c.into()).simd_into(token)
+            }
+        );
         kernel(self, a, b, c)
     }
     #[inline(always)]
     fn simd_eq_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon > , b : mask64x2 < Neon >) -> mask64x2 < Neon > { vreinterpretq_s64_u64 (vceqq_s64 (a . into () , b . into ())) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>, b: mask64x2<Neon>) -> mask64x2<Neon> {
+                vreinterpretq_s64_u64(vceqq_s64(a.into(), b.into())).simd_into(token)
+            }
+        );
         kernel(self, a, b)
     }
     #[inline(always)]
     fn any_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon >) -> bool { vmaxvq_u32 (vreinterpretq_u32_s64 (a . into ())) != 0 } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>) -> bool {
+                vmaxvq_u32(vreinterpretq_u32_s64(a.into())) != 0
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn all_true_mask64x2(self, a: mask64x2<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon >) -> bool { vminvq_u32 (vreinterpretq_u32_s64 (a . into ())) == 0xffffffff } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>) -> bool {
+                vminvq_u32(vreinterpretq_u32_s64(a.into())) == 0xffffffff
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn any_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon >) -> bool { vminvq_u32 (vreinterpretq_u32_s64 (a . into ())) != 0xffffffff } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>) -> bool {
+                vminvq_u32(vreinterpretq_u32_s64(a.into())) != 0xffffffff
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
     fn all_false_mask64x2(self, a: mask64x2<Self>) -> bool {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : mask64x2 < Neon >) -> bool { vmaxvq_u32 (vreinterpretq_u32_s64 (a . into ())) == 0 } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: mask64x2<Neon>) -> bool {
+                vmaxvq_u32(vreinterpretq_u32_s64(a.into())) == 0
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
@@ -4001,7 +5502,15 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
-        crate::kernel! { # [inline (always)] fn kernel (token : Neon , a : u16x16 < Neon >) -> u8x16 < Neon > { let converted : uint16x8x2_t = a . into () ; let low = vmovn_u16 (converted . 0) ; let high = vmovn_u16 (converted . 1) ; vcombine_u8 (low , high) . simd_into (token) } }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u16x16<Neon>) -> u8x16<Neon> {
+                let converted: uint16x8x2_t = a.into();
+                let low = vmovn_u16(converted.0);
+                let high = vmovn_u16(converted.1);
+                vcombine_u8(low, high).simd_into(token)
+            }
+        );
         kernel(self, a)
     }
     #[inline(always)]
