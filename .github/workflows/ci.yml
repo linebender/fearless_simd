@@ -226,8 +226,9 @@ jobs:
       # doc tests take a long time to run in the emulator and are already tested elsewhere, so exclude them with --lib --bins --tests
       # the rest of the arguments match the native test jobs
       CARGO_TEST_ARGS: --lib --bins --tests --workspace --locked --all-features
-      # SDE package name (for both the tarball and the folder within)
-      SDE_PKG: sde-external-10.8.0-2026-03-15-lin
+      # SDE package name without the platform suffix.
+      SDE_PKG: sde-external-10.8.0-2026-03-15
+      SDE_SHA256: 50b320cd226acef7a491f5b321fc1be3c3c7984f9e27a456e64894b5b0979dd3
     strategy:
       matrix:
         platform:
@@ -247,7 +248,13 @@ jobs:
           save-if: ${{ github.event_name != 'merge_group' }}
 
       - name: install Intel Software Development Emulator
-        run: curl "https://downloadmirror.intel.com/915934/${SDE_PKG}.tar.xz" | tar -Jx
+        run: |
+          curl -fsSL -o "${SDE_PKG}-lin.tar.xz" "https://github.com/Shnatsel/intel-sde-mirror/releases/download/sde-${SDE_PKG#sde-external-}/${SDE_PKG}-lin.tar.xz"
+          if ! echo "${SDE_SHA256}  ${SDE_PKG}-lin.tar.xz" | sha256sum -c -; then
+            echo "SDE archive checksum verification failed" >&2
+            exit 1
+          fi
+          tar -Jxf "${SDE_PKG}-lin.tar.xz"
 
       # build the tests outside the emulator, otherwise this job would be very slow
       - name: build tests
@@ -255,22 +262,22 @@ jobs:
 
       - name: run tests on CPU with only SSE2
         # -p4p stands for Pentium 4 Prescott, the first Intel 64-bit CPU
-        run: ${SDE_PKG}/sde64 -p4p -- cargo test $CARGO_TEST_ARGS
+        run: ${SDE_PKG}-lin/sde64 -p4p -- cargo test $CARGO_TEST_ARGS
 
       - name: run tests on CPU with SSE4.2
         # -nhm stands for Nehalem
-        run: ${SDE_PKG}/sde64 -nhm -- cargo test $CARGO_TEST_ARGS
+        run: ${SDE_PKG}-lin/sde64 -nhm -- cargo test $CARGO_TEST_ARGS
 
       - name: run tests on CPU with AVX2
         # -hsw stands for Haswell
-        run: ${SDE_PKG}/sde64 -hsw -- cargo test $CARGO_TEST_ARGS
+        run: ${SDE_PKG}-lin/sde64 -hsw -- cargo test $CARGO_TEST_ARGS
 
       - name: run tests on CPU with AVX-512
         # Github Actions doesn't give us AVX-512 so this is the only way to exercise AVX-512 codepaths on CI.
         # -icl stands for Ice Lake. Technically Skylake added AVX-512 first, but it's mostly useless there due to
         # downclocking. When we do eventually add explicit AVX-512 support, we'll likely target the Ice Lake feature
         # level.
-        run: ${SDE_PKG}/sde64 -icl -- cargo test $CARGO_TEST_ARGS
+        run: ${SDE_PKG}-lin/sde64 -icl -- cargo test $CARGO_TEST_ARGS
 
   test-aarch64-qemu:
     # This job runs tests on an emulated CPU that only implements the baseline Aarch64
