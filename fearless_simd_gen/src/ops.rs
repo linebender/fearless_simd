@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use anyhow::{Context, anyhow};
-use proc_macro2::{Group, Ident, Span, TokenStream, TokenTree};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use std::fmt::Write;
 
@@ -213,7 +213,7 @@ impl Op {
         &self,
         level: Ident,
         vec_ty: &VecType,
-        body: TokenStream,
+        body: impl FnOnce(&Ident) -> TokenStream,
     ) -> TokenStream {
         assert!(
             !matches!(self.sig, OpSig::Slide { .. }),
@@ -222,7 +222,7 @@ impl Op {
 
         let method_sig = self.simd_trait_method_sig(vec_ty);
         let token = Ident::new("token", Span::call_site());
-        let kernel_body = replace_ident(body, "self", &token);
+        let kernel_body = body(&token);
         let sig = self.simd_trait_sig_parts(vec_ty, quote! { #level });
         let arg_decls = sig.arg_decls();
         let call_args = &sig.arg_names;
@@ -278,10 +278,7 @@ impl Op {
             }
             OpSig::Compare => {
                 let result = vec_ty.mask_ty().rust();
-                (
-                    vec![vec.clone(), vec.clone()],
-                    quote! { #result<#simd_ty> },
-                )
+                (vec![vec.clone(), vec.clone()], quote! { #result<#simd_ty> })
             }
             OpSig::Split { half_ty } => {
                 let result = half_ty.rust();
@@ -487,26 +484,6 @@ impl Op {
 
         dest
     }
-}
-
-/// Replace all identifiers named `from` in a token stream with `to`, recursing into token groups.
-///
-/// This is used to turn generated method bodies that mention `self` into kernel bodies that mention
-/// the concrete token parameter instead.
-fn replace_ident(stream: TokenStream, from: &str, to: &Ident) -> TokenStream {
-    stream
-        .into_iter()
-        .map(|tree| match tree {
-            TokenTree::Group(group) => {
-                let mut new_group =
-                    Group::new(group.delimiter(), replace_ident(group.stream(), from, to));
-                new_group.set_span(group.span());
-                TokenTree::Group(new_group)
-            }
-            TokenTree::Ident(ident) if ident.to_string() == from => TokenTree::Ident(to.clone()),
-            tree => tree,
-        })
-        .collect()
 }
 
 fn splat_arg_ty(vec_ty: &VecType) -> TokenStream {

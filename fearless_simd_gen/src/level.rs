@@ -55,6 +55,15 @@ pub(crate) trait Level {
         Ident::new(self.name(), Span::call_site())
     }
 
+    fn kernel_method(
+        &self,
+        op: Op,
+        vec_ty: &VecType,
+        body: impl FnOnce(&Ident) -> TokenStream,
+    ) -> TokenStream {
+        op.simd_trait_kernel_method(self.token(), vec_ty, body)
+    }
+
     fn impl_arch_types(&self) -> TokenStream {
         let mut assoc_types = vec![];
         for vec_ty in SIMD_TYPES {

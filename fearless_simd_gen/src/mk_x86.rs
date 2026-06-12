@@ -364,7 +364,7 @@ fn mask_from_bitmask_lanes(vec_ty: &VecType) -> TokenStream {
     }
 }
 
-fn mask_from_bitmask_wide_avx2(vec_ty: &VecType) -> TokenStream {
+fn mask_from_bitmask_wide_avx2(vec_ty: &VecType, simd: &Ident) -> TokenStream {
     assert_eq!(
         vec_ty.n_bits(),
         512,
@@ -418,13 +418,17 @@ fn mask_from_bitmask_wide_avx2(vec_ty: &VecType) -> TokenStream {
             let bit_lanes = #set1;
             #ty {
                 val: crate::support::Aligned512([#(#chunks),*]),
-                simd: self,
+                simd: #simd,
             }
         }
     }
 }
 
-fn mask_from_bitmask_wide_bytes(native_width: usize, vec_ty: &VecType) -> TokenStream {
+fn mask_from_bitmask_wide_bytes(
+    native_width: usize,
+    vec_ty: &VecType,
+    simd: &Ident,
+) -> TokenStream {
     assert_eq!(
         vec_ty.n_bits(),
         512,
@@ -455,7 +459,7 @@ fn mask_from_bitmask_wide_bytes(native_width: usize, vec_ty: &VecType) -> TokenS
                     let bit_mask = #bit_mask;
                     #ty {
                         val: crate::support::Aligned512([#(#chunks),*]),
-                        simd: self,
+                        simd: #simd,
                     }
                 }
             }
@@ -478,7 +482,7 @@ fn mask_from_bitmask_wide_bytes(native_width: usize, vec_ty: &VecType) -> TokenS
                     let bit_mask = #bit_mask;
                     #ty {
                         val: crate::support::Aligned512([#(#chunks),*]),
-                        simd: self,
+                        simd: #simd,
                     }
                 }
             }
@@ -601,14 +605,12 @@ impl X86 {
             _ => quote!(),
         };
         let normalize_mask = integer_lane_mask_splat_arg(vec_ty);
-        op.simd_trait_kernel_method(
-            self.token(),
-            vec_ty,
+        self.kernel_method(op, vec_ty, |token| {
             quote! {
                 #normalize_mask
-                #intrinsic(val #cast).simd_into(self)
-            },
-        )
+                #intrinsic(val #cast).simd_into(#token)
+            }
+        })
     }
 
     fn has_specialized_mask_from_bitmask(&self, vec_ty: &VecType) -> bool {
@@ -642,32 +644,32 @@ impl X86 {
         );
 
         if self.has_wide_byte_mask_from_bitmask(vec_ty) {
-            let expr = mask_from_bitmask_wide_bytes(self.native_width(), vec_ty);
-            return op.simd_trait_kernel_method(self.token(), vec_ty, expr);
+            return self.kernel_method(op, vec_ty, |token| {
+                mask_from_bitmask_wide_bytes(self.native_width(), vec_ty, token)
+            });
         }
 
         if self.has_wide_avx2_mask_from_bitmask(vec_ty) {
-            let expr = mask_from_bitmask_wide_avx2(vec_ty);
-            return op.simd_trait_kernel_method(self.token(), vec_ty, expr);
+            return self.kernel_method(op, vec_ty, |token| {
+                mask_from_bitmask_wide_avx2(vec_ty, token)
+            });
         }
 
-        let expr = match vec_ty.scalar_bits {
+        self.kernel_method(op, vec_ty, |token| match vec_ty.scalar_bits {
             8 => {
                 let bytes = mask_from_bitmask_bytes(vec_ty);
                 quote! {
-                    #bytes.simd_into(self)
+                    #bytes.simd_into(#token)
                 }
             }
             16 | 32 | 64 => {
                 let lanes = mask_from_bitmask_lanes(vec_ty);
                 quote! {
-                    #lanes.simd_into(self)
+                    #lanes.simd_into(#token)
                 }
             }
             _ => unreachable!(),
-        };
-
-        op.simd_trait_kernel_method(self.token(), vec_ty, expr)
+        })
     }
 
     pub(crate) fn handle_mask_to_bitmask(&self, op: Op, vec_ty: &VecType) -> TokenStream {
@@ -681,15 +683,13 @@ impl X86 {
             8 => {
                 let bits_ty = vec_ty.reinterpret(ScalarType::Int, 8);
                 let movemask = simple_intrinsic("movemask", &bits_ty);
-                op.simd_trait_kernel_method(
-                    self.token(),
-                    vec_ty,
-                    quote! { #movemask(a.into()) as u32 as u64 },
-                )
+                self.kernel_method(op, vec_ty, |_| {
+                    quote! { #movemask(a.into()) as u32 as u64 }
+                })
             }
             16 => {
                 let bits = mask_to_bitmask_words(self.native_width(), vec_ty);
-                op.simd_trait_kernel_method(self.token(), vec_ty, bits)
+                self.kernel_method(op, vec_ty, |_| bits)
             }
             32 | 64 => {
                 let float_ty = vec_ty.cast(ScalarType::Float);
@@ -701,11 +701,9 @@ impl X86 {
                     vec_ty.scalar_bits,
                     vec_ty.n_bits(),
                 );
-                op.simd_trait_kernel_method(
-                    self.token(),
-                    vec_ty,
-                    quote! { #movemask(#cast(a.into())) as u32 as u64 },
-                )
+                self.kernel_method(op, vec_ty, |_| {
+                    quote! { #movemask(#cast(a.into())) as u32 as u64 }
+                })
             }
             _ => unreachable!(),
         }
@@ -780,7 +778,9 @@ impl X86 {
             quote! { #ident(#compare_op(a.into(), b.into())) }
         };
 
-        op.simd_trait_kernel_method(self.token(), vec_ty, quote! { #expr.simd_into(self) })
+        self.kernel_method(op, vec_ty, |token| {
+            quote! { #expr.simd_into(#token) }
+        })
     }
 
     pub(crate) fn handle_unary(
@@ -825,7 +825,9 @@ impl X86 {
             _ => {
                 let args = [quote! { a.into() }];
                 let expr = x86::expr(method, vec_ty, &args);
-                op.simd_trait_kernel_method(self.token(), vec_ty, quote! { #expr.simd_into(self) })
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { #expr.simd_into(#token) }
+                })
             }
         }
     }
@@ -838,7 +840,7 @@ impl X86 {
         target_ty: VecType,
     ) -> TokenStream {
         let dst_width = target_ty.n_bits();
-        let expr = match method {
+        self.kernel_method(op, vec_ty, |token| match method {
             "widen" => {
                 match (self, dst_width, vec_ty.n_bits()) {
                     (Self::Avx2, 256, 128) => {
@@ -849,7 +851,7 @@ impl X86 {
                             dst_width,
                         );
                         quote! {
-                            #extend(a.into()).simd_into(self)
+                            #extend(a.into()).simd_into(#token)
                         }
                     }
                     (Self::Avx2, 512, 256) => {
@@ -865,10 +867,10 @@ impl X86 {
                         );
                         let split = generic_op_name("split", vec_ty);
                         quote! {
-                            let (a0, a1) = self.#split(a);
-                            let high = #extend(a0.into()).simd_into(self);
-                            let low = #extend(a1.into()).simd_into(self);
-                            self.#combine(high, low)
+                            let (a0, a1) = #token.#split(a);
+                            let high = #extend(a0.into()).simd_into(#token);
+                            let low = #extend(a1.into()).simd_into(#token);
+                            #token.#combine(high, low)
                         }
                     }
                     (Self::Sse4_2, 256, 128) => {
@@ -884,11 +886,11 @@ impl X86 {
                         );
                         quote! {
                             let raw = a.into();
-                            let high = #extend(raw).simd_into(self);
+                            let high = #extend(raw).simd_into(#token);
                             // Shift by 8 since we want to get the higher part into the
                             // lower position.
-                            let low = #extend(_mm_srli_si128::<8>(raw)).simd_into(self);
-                            self.#combine(high, low)
+                            let low = #extend(_mm_srli_si128::<8>(raw)).simd_into(#token);
+                            #token.#combine(high, low)
                         }
                     }
                     _ => unimplemented!(),
@@ -909,7 +911,7 @@ impl X86 {
                             let shuffled = _mm256_shuffle_epi8(a.into(), mask);
                             let packed = _mm256_permute4x64_epi64::<0b11_01_10_00>(shuffled);
 
-                            _mm256_castsi256_si128(packed).simd_into(self)
+                            _mm256_castsi256_si128(packed).simd_into(#token)
                         }
                     }
                     (Self::Avx2, 256, 512) => {
@@ -925,7 +927,7 @@ impl X86 {
                         );
                         let split = generic_op_name("split", vec_ty);
                         quote! {
-                            let (a, b) = self.#split(a);
+                            let (a, b) = #token.#split(a);
                             // Note that AVX2 only has an intrinsic for saturating cast,
                             // but not wrapping.
                             let mask = #mask(0xFF);
@@ -934,7 +936,7 @@ impl X86 {
                             // The 256-bit version of packus_epi16 operates lane-wise, so we need to arrange things
                             // properly afterwards.
                             let result = _mm256_permute4x64_epi64::<0b_11_01_10_00>(#pack(lo_masked, hi_masked));
-                            result.simd_into(self)
+                            result.simd_into(#token)
                         }
                     }
                     (Self::Sse4_2, 128, 256) => {
@@ -950,76 +952,76 @@ impl X86 {
                         );
                         let split = generic_op_name("split", vec_ty);
                         quote! {
-                            let (a, b) = self.#split(a);
+                            let (a, b) = #token.#split(a);
                             // Below AVX-512. we only have an intrinsic for saturating cast, but not wrapping.
                             let mask = #mask(0xFF);
                             let lo_masked = _mm_and_si128(a.into(), mask);
                             let hi_masked = _mm_and_si128(b.into(), mask);
                             let result = #pack(lo_masked, hi_masked);
-                            result.simd_into(self)
+                            result.simd_into(#token)
                         }
                     }
                     _ => unimplemented!(),
                 }
             }
             _ => unreachable!(),
-        };
-
-        op.simd_trait_kernel_method(self.token(), vec_ty, expr)
+        })
     }
 
     pub(crate) fn handle_binary(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {
         let method_sig = op.simd_trait_method_sig(vec_ty);
-        let body = match method {
-            "mul" if vec_ty.scalar_bits == 8 => {
-                // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
-                let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
-                let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
-                let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
-                let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
-                let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
-                let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
-                quote! {
-                    let dst_even = #mullo(a.into(), b.into());
-                    let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
-
-                    #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(self)
-                }
-            }
-            "shlv" | "shrv" if *self == Self::Avx2 && vec_ty.scalar_bits >= 32 => {
-                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
-                let name = match (method, vec_ty.scalar) {
-                    ("shrv", ScalarType::Int) => "srav",
-                    ("shrv", _) => "srlv",
-                    ("shlv", _) => "sllv",
-                    _ => unreachable!(),
-                };
-                let intrinsic = intrinsic_ident(name, suffix, vec_ty.n_bits());
-                quote! {
-                    #intrinsic(a.into(), b.into()).simd_into(self)
-                }
-            }
-            // SSE2 has shift operations, but they shift every lane by the same amount, so we can't use them here.
-            "shlv" => scalar_binary(quote!(core::ops::Shl::shl)),
-            "shrv" => scalar_binary(quote!(core::ops::Shr::shr)),
-            _ => {
-                let args = [quote! { a.into() }, quote! { b.into() }];
-                let expr = x86::expr(method, vec_ty, &args);
-                quote! {
-                    #expr.simd_into(self)
-                }
-            }
-        };
 
         match method {
             "shlv" | "shrv" if !(*self == Self::Avx2 && vec_ty.scalar_bits >= 32) => {
+                // SSE2 has shift operations, but they shift every lane by the same amount, so we can't use them here.
+                let body = match method {
+                    "shlv" => scalar_binary(quote!(core::ops::Shl::shl)),
+                    "shrv" => scalar_binary(quote!(core::ops::Shr::shr)),
+                    _ => unreachable!(),
+                };
                 quote! {
                     #method_sig {
                         #body
                     }
                 }
             }
-            _ => op.simd_trait_kernel_method(self.token(), vec_ty, body),
+            _ => self.kernel_method(op, vec_ty, |token| match method {
+                "mul" if vec_ty.scalar_bits == 8 => {
+                    // https://stackoverflow.com/questions/8193601/sse-multiplication-16-x-uint8-t
+                    let mullo = intrinsic_ident("mullo", "epi16", vec_ty.n_bits());
+                    let set1 = intrinsic_ident("set1", "epi16", vec_ty.n_bits());
+                    let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
+                    let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
+                    let slli = intrinsic_ident("slli", "epi16", vec_ty.n_bits());
+                    let srli = intrinsic_ident("srli", "epi16", vec_ty.n_bits());
+                    quote! {
+                        let dst_even = #mullo(a.into(), b.into());
+                        let dst_odd = #mullo(#srli::<8>(a.into()), #srli::<8>(b.into()));
+
+                        #or(#slli(dst_odd, 8), #and(dst_even, #set1(0xFF))).simd_into(#token)
+                    }
+                }
+                "shlv" | "shrv" => {
+                    let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+                    let name = match (method, vec_ty.scalar) {
+                        ("shrv", ScalarType::Int) => "srav",
+                        ("shrv", _) => "srlv",
+                        ("shlv", _) => "sllv",
+                        _ => unreachable!(),
+                    };
+                    let intrinsic = intrinsic_ident(name, suffix, vec_ty.n_bits());
+                    quote! {
+                        #intrinsic(a.into(), b.into()).simd_into(#token)
+                    }
+                }
+                _ => {
+                    let args = [quote! { a.into() }, quote! { b.into() }];
+                    let expr = x86::expr(method, vec_ty, &args);
+                    quote! {
+                        #expr.simd_into(#token)
+                    }
+                }
+            }),
         }
     }
 
@@ -1058,9 +1060,7 @@ impl X86 {
             let extend_intrinsic_hi = extend_expr(unpack_hi);
             let pack_intrinsic = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int, ty_bits);
 
-            op.simd_trait_kernel_method(
-                self.token(),
-                vec_ty,
+            self.kernel_method(op, vec_ty, |token| {
                 quote! {
                     let val = a.into();
                     let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
@@ -1071,14 +1071,16 @@ impl X86 {
                     let lo_shifted = #shift_intrinsic(lo_16, shift_count);
                     let hi_shifted = #shift_intrinsic(hi_16, shift_count);
 
-                    #pack_intrinsic(lo_shifted, hi_shifted).simd_into(self)
-                },
-            )
+                    #pack_intrinsic(lo_shifted, hi_shifted).simd_into(#token)
+                }
+            })
         } else {
-            op.simd_trait_kernel_method(
-                self.token(),
+            self.kernel_method(
+                op,
                 vec_ty,
-                quote! { #shift_intrinsic(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) },
+                |token| {
+                    quote! { #shift_intrinsic(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(#token) }
+                },
             )
         }
     }
@@ -1093,18 +1095,18 @@ impl X86 {
         match method {
             "mul_add" if *self == Self::Avx2 => {
                 let intrinsic = simple_intrinsic("fmadd", vec_ty);
-                op.simd_trait_kernel_method(
-                    self.token(),
+                self.kernel_method(
+                    op,
                     vec_ty,
-                    quote! { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) },
+                    |token| quote! { #intrinsic(a.into(), b.into(), c.into()).simd_into(#token) },
                 )
             }
             "mul_sub" if *self == Self::Avx2 => {
                 let intrinsic = simple_intrinsic("fmsub", vec_ty);
-                op.simd_trait_kernel_method(
-                    self.token(),
+                self.kernel_method(
+                    op,
                     vec_ty,
-                    quote! { #intrinsic(a.into(), b.into(), c.into()).simd_into(self) },
+                    |token| quote! { #intrinsic(a.into(), b.into(), c.into()).simd_into(#token) },
                 )
             }
             "mul_add" => {
@@ -1129,7 +1131,9 @@ impl X86 {
                 ];
 
                 let expr = x86::expr(method, vec_ty, &args);
-                op.simd_trait_kernel_method(self.token(), vec_ty, quote! { #expr.simd_into(self) })
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { #expr.simd_into(#token) }
+                })
             }
         }
     }
@@ -1155,7 +1159,9 @@ impl X86 {
         ];
         let expr = x86::expr("select", vec_ty, &args);
 
-        op.simd_trait_kernel_method(self.token(), vec_ty, quote! { #expr.simd_into(self) })
+        self.kernel_method(op, vec_ty, |token| {
+            quote! { #expr.simd_into(#token) }
+        })
     }
 
     pub(crate) fn handle_split(&self, op: Op, vec_ty: &VecType, half_ty: &VecType) -> TokenStream {
@@ -1165,16 +1171,14 @@ impl X86 {
                 _ => "extracti128",
             };
             let extract_intrinsic = intrinsic_ident(extract_op, coarse_type(vec_ty), 256);
-            op.simd_trait_kernel_method(
-                self.token(),
-                vec_ty,
+            self.kernel_method(op, vec_ty, |token| {
                 quote! {
                     (
-                        #extract_intrinsic::<0>(a.into()).simd_into(self),
-                        #extract_intrinsic::<1>(a.into()).simd_into(self),
+                        #extract_intrinsic::<0>(a.into()).simd_into(#token),
+                        #extract_intrinsic::<1>(a.into()).simd_into(#token),
                     )
-                },
-            )
+                }
+            })
         } else {
             let method_sig = op.simd_trait_method_sig(vec_ty);
             generic_block_split(method_sig, half_ty, self.max_block_size())
@@ -1194,10 +1198,10 @@ impl X86 {
                 _ => "m128i",
             };
             let set_intrinsic = intrinsic_ident("setr", suffix, 256);
-            op.simd_trait_kernel_method(
-                self.token(),
+            self.kernel_method(
+                op,
                 vec_ty,
-                quote! { #set_intrinsic(a.into(), b.into()).simd_into(self) },
+                |token| quote! { #set_intrinsic(a.into(), b.into()).simd_into(#token) },
             )
         } else {
             let method_sig = op.simd_trait_method_sig(vec_ty);
@@ -1206,14 +1210,14 @@ impl X86 {
     }
 
     pub(crate) fn handle_zip(&self, op: Op, vec_ty: &VecType, select_low: bool) -> TokenStream {
-        let expr = match vec_ty.n_bits() {
+        self.kernel_method(op, vec_ty, |token| match vec_ty.n_bits() {
             128 => {
                 let op = if select_low { "unpacklo" } else { "unpackhi" };
 
                 let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
                 let unpack_intrinsic = intrinsic_ident(op, suffix, vec_ty.n_bits());
                 quote! {
-                    #unpack_intrinsic(a.into(), b.into()).simd_into(self)
+                    #unpack_intrinsic(a.into(), b.into()).simd_into(#token)
                 }
             }
             256 => {
@@ -1239,13 +1243,11 @@ impl X86 {
                     let lo = #lo(a.into(), b.into());
                     let hi = #hi(a.into(), b.into());
 
-                    #shuffle::<#shuffle_immediate>(lo, hi).simd_into(self)
+                    #shuffle::<#shuffle_immediate>(lo, hi).simd_into(#token)
                 }
             }
             _ => unreachable!(),
-        };
-
-        op.simd_trait_kernel_method(self.token(), vec_ty, expr)
+        })
     }
 
     pub(crate) fn handle_interleave(&self, op: Op, vec_ty: &VecType) -> TokenStream {
@@ -1265,18 +1267,16 @@ impl X86 {
                     coarse_type(vec_ty),
                     256,
                 );
-                op.simd_trait_kernel_method(
-                    self.token(),
-                    vec_ty,
+                self.kernel_method(op, vec_ty, |token| {
                     quote! {
                         let lo = #lo(a.into(), b.into());
                         let hi = #hi(a.into(), b.into());
                         (
-                            #shuffle::<0b0010_0000>(lo, hi).simd_into(self),
-                            #shuffle::<0b0011_0001>(lo, hi).simd_into(self),
+                            #shuffle::<0b0010_0000>(lo, hi).simd_into(#token),
+                            #shuffle::<0b0011_0001>(lo, hi).simd_into(#token),
                         )
-                    },
-                )
+                    }
+                })
             }
             _ => {
                 // For 128-bit vectors, zip_low/zip_high are single instructions (unpacklo/unpackhi),
@@ -1301,18 +1301,16 @@ impl X86 {
                 // the redundant shuffle operations that occur when unzip_low and unzip_high are
                 // called separately.
                 let (t1, t2, shuffle) = self.unzip256_intermediates(vec_ty);
-                op.simd_trait_kernel_method(
-                    self.token(),
-                    vec_ty,
+                self.kernel_method(op, vec_ty, |token| {
                     quote! {
                         let t1 = #t1;
                         let t2 = #t2;
                         (
-                            #shuffle::<0b0010_0000>(t1, t2).simd_into(self),
-                            #shuffle::<0b0011_0001>(t1, t2).simd_into(self),
+                            #shuffle::<0b0010_0000>(t1, t2).simd_into(#token),
+                            #shuffle::<0b0011_0001>(t1, t2).simd_into(#token),
                         )
-                    },
-                )
+                    }
+                })
             }
             _ => {
                 // For 128-bit vectors, unzip_low/unzip_high are cheap, so there's no
@@ -1382,82 +1380,82 @@ impl X86 {
     }
 
     pub(crate) fn handle_unzip(&self, op: Op, vec_ty: &VecType, select_even: bool) -> TokenStream {
-        let expr = match (vec_ty.scalar, vec_ty.n_bits(), vec_ty.scalar_bits) {
-            (ScalarType::Float, 128, _) => {
-                // 128-bit shuffle of floats or doubles; there are built-in SSE intrinsics for this
-                let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
-                let intrinsic = intrinsic_ident("shuffle", suffix, vec_ty.n_bits());
+        self.kernel_method(op, vec_ty, |token| {
+            match (vec_ty.scalar, vec_ty.n_bits(), vec_ty.scalar_bits) {
+                (ScalarType::Float, 128, _) => {
+                    // 128-bit shuffle of floats or doubles; there are built-in SSE intrinsics for this
+                    let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
+                    let intrinsic = intrinsic_ident("shuffle", suffix, vec_ty.n_bits());
 
-                let mask = match (vec_ty.scalar_bits, select_even) {
-                    (32, true) => quote! { 0b10_00_10_00 },
-                    (32, false) => quote! { 0b11_01_11_01 },
-                    (64, true) => quote! { 0b00 },
-                    (64, false) => quote! { 0b11 },
-                    _ => unimplemented!(),
-                };
+                    let mask = match (vec_ty.scalar_bits, select_even) {
+                        (32, true) => quote! { 0b10_00_10_00 },
+                        (32, false) => quote! { 0b11_01_11_01 },
+                        (64, true) => quote! { 0b00 },
+                        (64, false) => quote! { 0b11 },
+                        _ => unimplemented!(),
+                    };
 
-                quote! { #intrinsic::<#mask>(a.into(), b.into()).simd_into(self) }
-            }
-            (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 32) => {
-                // 128-bit shuffle of 32-bit integers; unlike with floats, there is no single shuffle instruction that
-                // combines two vectors
-                let op = if select_even { "unpacklo" } else { "unpackhi" };
-                let intrinsic = intrinsic_ident(op, "epi64", vec_ty.n_bits());
-
-                quote! {
-                    let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
-                    let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
-                    #intrinsic(t1, t2).simd_into(self)
+                    quote! { #intrinsic::<#mask>(a.into(), b.into()).simd_into(#token) }
                 }
-            }
-            (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 16 | 8) => {
-                // Separate out the even-indexed and odd-indexed elements
-                let mask = match vec_ty.scalar_bits {
-                    8 => {
-                        quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 }
+                (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 32) => {
+                    // 128-bit shuffle of 32-bit integers; unlike with floats, there is no single shuffle instruction that
+                    // combines two vectors
+                    let op = if select_even { "unpacklo" } else { "unpackhi" };
+                    let intrinsic = intrinsic_ident(op, "epi64", vec_ty.n_bits());
+
+                    quote! {
+                        let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+                        let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
+                        #intrinsic(t1, t2).simd_into(#token)
                     }
-                    16 => {
-                        quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 }
+                }
+                (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 16 | 8) => {
+                    // Separate out the even-indexed and odd-indexed elements
+                    let mask = match vec_ty.scalar_bits {
+                        8 => {
+                            quote! { 0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15 }
+                        }
+                        16 => {
+                            quote! { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 }
+                        }
+                        _ => unreachable!(),
+                    };
+                    let mask_reg = match vec_ty.n_bits() {
+                        128 => quote! { _mm_setr_epi8(#mask) },
+                        256 => quote! { _mm256_setr_epi8(#mask, #mask) },
+                        _ => unreachable!(),
+                    };
+                    let shuffle_epi8 = intrinsic_ident("shuffle", "epi8", vec_ty.n_bits());
+
+                    // Select either the low or high half of each one
+                    let op = if select_even { "unpacklo" } else { "unpackhi" };
+                    let unpack_epi64 = intrinsic_ident(op, "epi64", vec_ty.n_bits());
+
+                    quote! {
+                        let mask = #mask_reg;
+
+                        let t1 = #shuffle_epi8(a.into(), mask);
+                        let t2 = #shuffle_epi8(b.into(), mask);
+                        #unpack_epi64(t1, t2).simd_into(#token)
                     }
-                    _ => unreachable!(),
-                };
-                let mask_reg = match vec_ty.n_bits() {
-                    128 => quote! { _mm_setr_epi8(#mask) },
-                    256 => quote! { _mm256_setr_epi8(#mask, #mask) },
-                    _ => unreachable!(),
-                };
-                let shuffle_epi8 = intrinsic_ident("shuffle", "epi8", vec_ty.n_bits());
-
-                // Select either the low or high half of each one
-                let op = if select_even { "unpacklo" } else { "unpackhi" };
-                let unpack_epi64 = intrinsic_ident(op, "epi64", vec_ty.n_bits());
-
-                quote! {
-                    let mask = #mask_reg;
-
-                    let t1 = #shuffle_epi8(a.into(), mask);
-                    let t2 = #shuffle_epi8(b.into(), mask);
-                    #unpack_epi64(t1, t2).simd_into(self)
                 }
-            }
-            (_, 256, _) => {
-                let (t1, t2, shuffle) = self.unzip256_intermediates(vec_ty);
-                let shuffle_immediate = if select_even {
-                    quote! { 0b0010_0000 }
-                } else {
-                    quote! { 0b0011_0001 }
-                };
+                (_, 256, _) => {
+                    let (t1, t2, shuffle) = self.unzip256_intermediates(vec_ty);
+                    let shuffle_immediate = if select_even {
+                        quote! { 0b0010_0000 }
+                    } else {
+                        quote! { 0b0011_0001 }
+                    };
 
-                quote! {
-                    let t1 = #t1;
-                    let t2 = #t2;
-                    #shuffle::<#shuffle_immediate>(t1, t2).simd_into(self)
+                    quote! {
+                        let t1 = #t1;
+                        let t2 = #t2;
+                        #shuffle::<#shuffle_immediate>(t1, t2).simd_into(#token)
+                    }
                 }
+                _ => unimplemented!(),
             }
-            _ => unimplemented!(),
-        };
-
-        op.simd_trait_kernel_method(self.token(), vec_ty, expr)
+        })
     }
 
     pub(crate) fn handle_slide(
@@ -1531,7 +1529,7 @@ impl X86 {
             vec_ty.scalar_bits, target_scalar_bits,
             "we currently only support converting between types of the same width"
         );
-        let expr = match (vec_ty.scalar, target_scalar) {
+        self.kernel_method(op, vec_ty, |token| match (vec_ty.scalar, target_scalar) {
             (ScalarType::Float, ScalarType::Int | ScalarType::Unsigned) => {
                 let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
                 let max = simple_intrinsic("max", vec_ty);
@@ -1563,7 +1561,7 @@ impl X86 {
                 match (target_scalar, precise) {
                     (ScalarType::Int, false) => {
                         quote! {
-                            #convert(a.into()).simd_into(self)
+                            #convert(a.into()).simd_into(#token)
                         }
                     }
                     (ScalarType::Unsigned, false) => {
@@ -1581,7 +1579,7 @@ impl X86 {
                                 converted = #add_int(converted, excess_converted);
                             }
 
-                            converted.simd_into(self)
+                            converted.simd_into(#token)
                         }
                     }
                     (ScalarType::Int, true) => {
@@ -1604,7 +1602,7 @@ impl X86 {
                                 // value is -2147483648, which is what we want anyway.
                             }
 
-                            converted.simd_into(self)
+                            converted.simd_into(#token)
                         }
                     }
                     (ScalarType::Unsigned, true) => {
@@ -1629,7 +1627,7 @@ impl X86 {
                                 converted = #blend(converted, #set1_int(u32::MAX.cast_signed()), exceeds_unsigned_range);
                             }
 
-                            converted.simd_into(self)
+                            converted.simd_into(#token)
                         }
                     }
                     _ => unreachable!(),
@@ -1643,7 +1641,7 @@ impl X86 {
                 let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
                 let intrinsic = simple_intrinsic("cvtepi32", &target_ty);
                 quote! {
-                    #intrinsic(a.into()).simd_into(self)
+                    #intrinsic(a.into()).simd_into(#token)
                 }
             }
             (ScalarType::Unsigned, ScalarType::Float) => {
@@ -1678,13 +1676,11 @@ impl X86 {
                     let fhi = #sub_float(#cast_to_float(hi), #set1_float(f32::from_bits(0x53000080)));
                     let result = #add_float(#cast_to_float(lo), fhi);
 
-                    result.simd_into(self)
+                    result.simd_into(#token)
                 }
             }
             _ => unimplemented!(),
-        };
-
-        op.simd_trait_kernel_method(self.token(), vec_ty, expr)
+        })
     }
 
     pub(crate) fn handle_reinterpret(
@@ -1703,10 +1699,10 @@ impl X86 {
 
         if coarse_type(vec_ty) == coarse_type(&dst_ty) {
             let arch_ty = level.arch_ty(vec_ty);
-            op.simd_trait_kernel_method(
-                self.token(),
+            self.kernel_method(
+                op,
                 vec_ty,
-                quote! { #arch_ty::from(a).simd_into(self) },
+                |token| quote! { #arch_ty::from(a).simd_into(#token) },
             )
         } else {
             let ident = cast_ident(
@@ -1716,10 +1712,10 @@ impl X86 {
                 scalar_bits,
                 vec_ty.n_bits(),
             );
-            op.simd_trait_kernel_method(
-                self.token(),
+            self.kernel_method(
+                op,
                 vec_ty,
-                quote! { #ident(a.into()).simd_into(self) },
+                |token| quote! { #ident(a.into()).simd_into(#token) },
             )
         }
     }
@@ -1780,7 +1776,7 @@ impl X86 {
             (Quantifier::All, false) => quote! { == 0 },
         };
 
-        method_op.simd_trait_kernel_method(self.token(), vec_ty, quote! { #movemask as u32 #op })
+        self.kernel_method(method_op, vec_ty, |_| quote! { #movemask as u32 #op })
     }
 
     pub(crate) fn handle_load_interleaved(
