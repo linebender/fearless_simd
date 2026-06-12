@@ -165,6 +165,23 @@ pub(crate) struct Op {
     pub(crate) doc: &'static str,
 }
 
+struct SimdTraitSigParts {
+    const_params: TokenStream,
+    arg_names: Vec<Ident>,
+    arg_tys: Vec<TokenStream>,
+    ret: TokenStream,
+}
+
+impl SimdTraitSigParts {
+    fn arg_decls(&self) -> Vec<TokenStream> {
+        self.arg_names
+            .iter()
+            .zip(&self.arg_tys)
+            .map(|(name, ty)| quote! { #name: #ty })
+            .collect()
+    }
+}
+
 impl Op {
     const fn new(method: &'static str, kind: OpKind, sig: OpSig, doc: &'static str) -> Self {
         Self {
@@ -176,163 +193,14 @@ impl Op {
     }
 
     pub(crate) fn simd_trait_method_sig(&self, vec_ty: &VecType) -> TokenStream {
-        let ty = vec_ty.rust();
-        let arg_names = self
-            .sig
-            .simd_trait_arg_names()
-            .iter()
-            .map(|n| Ident::new(n, Span::call_site()))
-            .collect::<Vec<_>>();
         let method_ident = generic_op_name(self.method, vec_ty);
-        let sig_inner = match &self.sig {
-            OpSig::Splat => {
-                let arg0 = &arg_names[0];
-                let arg_ty = splat_arg_ty(vec_ty);
-                quote! { (self, #arg0: #arg_ty) -> #ty<Self> }
-            }
-            OpSig::LoadInterleaved {
-                block_size,
-                block_count,
-            } => {
-                let arg0 = &arg_names[0];
-                let arg_ty = load_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                quote! { (self, #arg0: #arg_ty) -> #ty<Self> }
-            }
-            OpSig::StoreInterleaved {
-                block_size,
-                block_count,
-            } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let arg_ty = store_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                quote! { (self, #arg0: #ty<Self>, #arg1: #arg_ty) -> () }
-            }
-            OpSig::Compare => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let result = vec_ty.mask_ty().rust();
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
-            }
-            OpSig::Split { half_ty } => {
-                let arg0 = &arg_names[0];
-                let result = half_ty.rust();
-                quote! { (self, #arg0: #ty<Self>) -> (#result<Self>, #result<Self>) }
-            }
-            OpSig::Combine { combined_ty } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let result = combined_ty.rust();
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
-            }
-            OpSig::Unary => {
-                let arg0 = &arg_names[0];
-                quote! { (self, #arg0: #ty<Self>) -> #ty<Self> }
-            }
-            OpSig::Binary | OpSig::Zip { .. } | OpSig::Unzip { .. } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
-            }
-            OpSig::Interleave | OpSig::Deinterleave => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> (#ty<Self>, #ty<Self>) }
-            }
-            OpSig::Slide { .. } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { <const SHIFT: usize>(self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
-            }
-            OpSig::Cvt {
-                target_ty,
-                scalar_bits,
-                ..
-            } => {
-                let arg0 = &arg_names[0];
-                let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
-                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
-            }
-            OpSig::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => {
-                let arg0 = &arg_names[0];
-                let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
-                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
-            }
-            OpSig::WidenNarrow { target_ty } => {
-                let arg0 = &arg_names[0];
-                let result = target_ty.rust();
-                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
-            }
-            OpSig::MaskReduce { .. } => {
-                let arg0 = &arg_names[0];
-                quote! { (self, #arg0: #ty<Self>) -> bool }
-            }
-            OpSig::MaskFromBitmask => {
-                let arg0 = &arg_names[0];
-                quote! { (self, #arg0: u64) -> #ty<Self> }
-            }
-            OpSig::MaskToBitmask => {
-                let arg0 = &arg_names[0];
-                quote! { (self, #arg0: #ty<Self>) -> u64 }
-            }
-            OpSig::Shift => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (self, #arg0: #ty<Self>, #arg1: u32) -> #ty<Self> }
-            }
-            OpSig::Ternary => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let arg2 = &arg_names[2];
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
-            }
-            OpSig::Select => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let arg2 = &arg_names[2];
-                let mask_ty = vec_ty.mask_ty().rust();
-                quote! { (self, #arg0: #mask_ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
-            }
-            OpSig::FromArray { kind } => {
-                let arg0 = &arg_names[0];
-                let ref_tok = kind.token();
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                quote! { (self, #arg0: #ref_tok #array_ty) -> #ty<Self> }
-            }
-            OpSig::AsArray { kind } => {
-                let arg0 = &arg_names[0];
-                let ref_tok = kind.token();
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                quote! { (self, #arg0: #ref_tok #ty<Self>) -> #ref_tok #array_ty }
-            }
-            OpSig::StoreArray => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                quote! { (self, #arg0: #ty<Self>, #arg1: &mut #array_ty) -> () }
-            }
-            OpSig::FromBytes => {
-                let arg0 = &arg_names[0];
-                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-                quote! { (self, #arg0: #bytes_ty<Self>) -> #ty<Self> }
-            }
-            OpSig::ToBytes => {
-                let arg0 = &arg_names[0];
-                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-                quote! { (self, #arg0: #ty<Self>) -> #bytes_ty<Self> }
-            }
-        };
+        let sig = self.simd_trait_sig_parts(vec_ty, quote! { Self });
+        let const_params = &sig.const_params;
+        let arg_decls = sig.arg_decls();
+        let ret = &sig.ret;
 
         quote! {
-            fn #method_ident #sig_inner
+            fn #method_ident #const_params(self #(, #arg_decls)*) -> #ret
         }
     }
 
@@ -355,7 +223,10 @@ impl Op {
         let method_sig = self.simd_trait_method_sig(vec_ty);
         let token = Ident::new("token", Span::call_site());
         let kernel_body = replace_ident(body, "self", &token);
-        let (arg_decls, call_args, ret) = self.simd_trait_kernel_sig_parts(&level, vec_ty);
+        let sig = self.simd_trait_sig_parts(vec_ty, quote! { #level });
+        let arg_decls = sig.arg_decls();
+        let call_args = &sig.arg_names;
+        let ret = &sig.ret;
 
         quote! {
             #method_sig {
@@ -371,14 +242,7 @@ impl Op {
         }
     }
 
-    /// Build the concrete argument declarations, forwarding arguments, and return type for a generated kernel.
-    ///
-    /// This mirrors [`Op::simd_trait_method_sig`], but substitutes the concrete SIMD level token for `Self`.
-    fn simd_trait_kernel_sig_parts(
-        &self,
-        level: &Ident,
-        vec_ty: &VecType,
-    ) -> (Vec<TokenStream>, Vec<Ident>, TokenStream) {
+    fn simd_trait_sig_parts(&self, vec_ty: &VecType, simd_ty: TokenStream) -> SimdTraitSigParts {
         let ty = vec_ty.rust();
         let arg_names = self
             .sig
@@ -386,7 +250,12 @@ impl Op {
             .iter()
             .map(|n| Ident::new(n, Span::call_site()))
             .collect::<Vec<_>>();
-        let vec = quote! { #ty<#level> };
+        let vec = quote! { #ty<#simd_ty> };
+        let const_params = if matches!(self.sig, OpSig::Slide { .. }) {
+            quote! { <const SHIFT: usize> }
+        } else {
+            TokenStream::new()
+        };
 
         let (arg_tys, ret) = match &self.sig {
             OpSig::Splat => {
@@ -409,15 +278,18 @@ impl Op {
             }
             OpSig::Compare => {
                 let result = vec_ty.mask_ty().rust();
-                (vec![vec.clone(), vec.clone()], quote! { #result<#level> })
+                (
+                    vec![vec.clone(), vec.clone()],
+                    quote! { #result<#simd_ty> },
+                )
             }
             OpSig::Split { half_ty } => {
                 let result = half_ty.rust();
-                (vec![vec], quote! { (#result<#level>, #result<#level>) })
+                (vec![vec], quote! { (#result<#simd_ty>, #result<#simd_ty>) })
             }
             OpSig::Combine { combined_ty } => {
                 let result = combined_ty.rust();
-                (vec![vec.clone(), vec], quote! { #result<#level> })
+                (vec![vec.clone(), vec], quote! { #result<#simd_ty> })
             }
             OpSig::Unary => (vec![vec.clone()], vec),
             OpSig::Binary | OpSig::Zip { .. } | OpSig::Unzip { .. } => {
@@ -426,7 +298,7 @@ impl Op {
             OpSig::Interleave | OpSig::Deinterleave => {
                 (vec![vec.clone(), vec.clone()], quote! { (#vec, #vec) })
             }
-            OpSig::Slide { .. } => unreachable!("checked by caller"),
+            OpSig::Slide { .. } => (vec![vec.clone(), vec.clone()], vec),
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -437,11 +309,11 @@ impl Op {
                 scalar_bits,
             } => {
                 let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
-                (vec![vec], quote! { #result<#level> })
+                (vec![vec], quote! { #result<#simd_ty> })
             }
             OpSig::WidenNarrow { target_ty } => {
                 let result = target_ty.rust();
-                (vec![vec], quote! { #result<#level> })
+                (vec![vec], quote! { #result<#simd_ty> })
             }
             OpSig::MaskReduce { .. } => (vec![vec], quote! { bool }),
             OpSig::MaskFromBitmask => (vec![quote! { u64 }], vec),
@@ -451,7 +323,7 @@ impl Op {
             OpSig::Select => {
                 let mask_ty = vec_ty.mask_ty().rust();
                 (
-                    vec![quote! { #mask_ty<#level> }, vec.clone(), vec.clone()],
+                    vec![quote! { #mask_ty<#simd_ty> }, vec.clone(), vec.clone()],
                     vec,
                 )
             }
@@ -480,21 +352,20 @@ impl Op {
             }
             OpSig::FromBytes => {
                 let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-                (vec![quote! { #bytes_ty<#level> }], vec)
+                (vec![quote! { #bytes_ty<#simd_ty> }], vec)
             }
             OpSig::ToBytes => {
                 let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-                (vec![vec], quote! { #bytes_ty<#level> })
+                (vec![vec], quote! { #bytes_ty<#simd_ty> })
             }
         };
 
-        let arg_decls = arg_names
-            .iter()
-            .zip(arg_tys)
-            .map(|(name, ty)| quote! { #name: #ty })
-            .collect();
-
-        (arg_decls, arg_names, ret)
+        SimdTraitSigParts {
+            const_params,
+            arg_names,
+            arg_tys,
+            ret,
+        }
     }
 
     pub(crate) fn vec_trait_method_sig(&self) -> Option<TokenStream> {
