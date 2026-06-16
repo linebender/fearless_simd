@@ -50,8 +50,7 @@
 ///
 /// ## Limitations
 ///
-/// The macro only accepts a single plain, safe function item with simple named parameters.
-/// The function may optionally have one const generic parameter written as `<const NAME: usize>`.
+/// The macro only accepts a single plain, safe, non-generic function item with simple named parameters.
 /// However, the body of the function can be as complex as you like.
 ///
 /// The SIMD token type must be written as a bare supported name:
@@ -67,7 +66,7 @@
 macro_rules! kernel {
     (
         $(#[$meta:meta])*
-        $vis:vis fn $name:ident $(<const $const_param:ident : usize>)?(
+        $vis:vis fn $name:ident(
             $token:ident : $token_ty:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
         ) $(-> $ret:ty)? {
             $($kernel_body:tt)*
@@ -76,7 +75,7 @@ macro_rules! kernel {
         $crate::__fearless_simd_kernel_dispatch! {
             $token_ty,
             $(#[$meta])*
-            $vis fn $name $(<const $const_param: usize>)?(
+            $vis fn $name(
                 $token $(, $arg: $arg_ty)*
             ) $(-> $ret)? {
                 $($kernel_body)*
@@ -86,7 +85,7 @@ macro_rules! kernel {
 
     (
         $(#[$meta:meta])*
-        $vis:vis fn $name:ident $(<const $const_param:ident : usize>)?(
+        $vis:vis fn $name:ident(
             $token:ident : $token_ty:ty $(, $arg:ident : $arg_ty:ty)* $(,)?
         ) $(-> $ret:ty)? {
             $($kernel_body:tt)*
@@ -175,7 +174,7 @@ macro_rules! __fearless_simd_kernel_impl {
         @token_ty $token_ty:ty;
         @kernel_attrs $(#[$kernel_attr:meta])*;
         $(#[$meta:meta])*
-        $vis:vis fn $name:ident $(<const $const_param:ident : usize>)?(
+        $vis:vis fn $name:ident(
             $token:ident $(, $arg:ident : $arg_ty:ty)* $(,)?
         ) $(-> $ret:ty)? {
             $($kernel_body:tt)*
@@ -183,12 +182,12 @@ macro_rules! __fearless_simd_kernel_impl {
     ) => {
         #[cfg($cfg)]
         $(#[$meta])*
-        $vis fn $name $(<const $const_param: usize>)?(
+        $vis fn $name(
             $token: $token_ty $(, $arg: $arg_ty)*
         ) $(-> $ret)? {
             #[inline] // can't use `#[inline(always)]` with target features
             $(#[$kernel_attr])*
-            fn __fearless_simd_kernel $(<const $const_param: usize>)?(
+            fn __fearless_simd_kernel(
                 $token: $token_ty $(, $arg: $arg_ty)*
             ) $(-> $ret)? {
                 let _ = $token;
@@ -197,7 +196,7 @@ macro_rules! __fearless_simd_kernel_impl {
 
             // SAFETY: the SIMD token proves that the required target features are available.
             #[allow(unused_unsafe, reason = "for WASM which has no target feature requirements and is safe to call")]
-            unsafe { __fearless_simd_kernel $(::<$const_param>)?($token $(, $arg)*) }
+            unsafe { __fearless_simd_kernel($token $(, $arg)*) }
         }
     };
 }
@@ -228,38 +227,13 @@ mod tests {
     );
 
     crate::kernel!(
-        fn add_f32x4_neon_const<const LANES: usize>(
-            neon: Neon,
-            a: float32x4_t,
-            b: float32x4_t,
-        ) -> float32x4_t {
-            let _ = LANES;
-            vaddq_f32(a, b)
-        }
-    );
-
-    crate::kernel!(
         fn add_f32x4_wasm(wasm: WasmSimd128, a: v128, b: v128) -> v128 {
             f32x4_add(a, b)
         }
     );
 
     crate::kernel!(
-        fn add_f32x4_wasm_const<const LANES: usize>(wasm: WasmSimd128, a: v128, b: v128) -> v128 {
-            let _ = LANES;
-            f32x4_add(a, b)
-        }
-    );
-
-    crate::kernel!(
         fn add_i32x8_avx2(avx2: Avx2, a: __m256i, b: __m256i) -> __m256i {
-            _mm256_add_epi32(a, b)
-        }
-    );
-
-    crate::kernel!(
-        fn add_i32x8_avx2_const<const LANES: usize>(avx2: Avx2, a: __m256i, b: __m256i) -> __m256i {
-            let _ = LANES;
             _mm256_add_epi32(a, b)
         }
     );
@@ -282,25 +256,6 @@ mod tests {
         );
     }
 
-    #[cfg(target_arch = "aarch64")]
-    #[test]
-    fn kernel_instantiates_const_generic_for_neon() {
-        let Some(neon) = crate::Level::new().as_neon() else {
-            return;
-        };
-
-        let a: crate::f32x4<_> = [1.0, 2.0, 3.0, 4.0].simd_into(neon);
-        let b: crate::f32x4<_> = [10.0, 20.0, 30.0, 40.0].simd_into(neon);
-        let sum: crate::f32x4<_> =
-            add_f32x4_neon_const::<4>(neon, a.into(), b.into()).simd_into(neon);
-
-        assert_eq!(
-            <[f32; 4]>::from(sum),
-            [11.0, 22.0, 33.0, 44.0],
-            "`kernel!` should instantiate a const-generic NEON kernel"
-        );
-    }
-
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[test]
     fn kernel_instantiates_for_wasm_simd128() {
@@ -319,25 +274,6 @@ mod tests {
         );
     }
 
-    #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
-    #[test]
-    fn kernel_instantiates_const_generic_for_wasm_simd128() {
-        let wasm = crate::Level::new()
-            .as_wasm_simd128()
-            .expect("WASM SIMD128 should be available when +simd128 is enabled");
-
-        let a: crate::f32x4<_> = [1.0, 2.0, 3.0, 4.0].simd_into(wasm);
-        let b: crate::f32x4<_> = [10.0, 20.0, 30.0, 40.0].simd_into(wasm);
-        let sum: crate::f32x4<_> =
-            add_f32x4_wasm_const::<4>(wasm, a.into(), b.into()).simd_into(wasm);
-
-        assert_eq!(
-            <[f32; 4]>::from(sum),
-            [11.0, 22.0, 33.0, 44.0],
-            "`kernel!` should instantiate a const-generic WASM SIMD128 kernel"
-        );
-    }
-
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[test]
     fn kernel_instantiates_for_avx2() {
@@ -353,25 +289,6 @@ mod tests {
             <[i32; 8]>::from(sum),
             [11, 22, 33, 44, 55, 66, 77, 88],
             "`kernel!` should instantiate a working AVX2 kernel"
-        );
-    }
-
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[test]
-    fn kernel_instantiates_const_generic_for_avx2() {
-        let Some(avx2) = crate::Level::new().as_avx2() else {
-            return;
-        };
-
-        let a: crate::i32x8<_> = [1, 2, 3, 4, 5, 6, 7, 8].simd_into(avx2);
-        let b: crate::i32x8<_> = [10, 20, 30, 40, 50, 60, 70, 80].simd_into(avx2);
-        let sum: crate::i32x8<_> =
-            add_i32x8_avx2_const::<8>(avx2, a.into(), b.into()).simd_into(avx2);
-
-        assert_eq!(
-            <[i32; 8]>::from(sum),
-            [11, 22, 33, 44, 55, 66, 77, 88],
-            "`kernel!` should instantiate a const-generic AVX2 kernel"
         );
     }
 }
