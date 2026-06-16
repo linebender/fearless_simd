@@ -685,6 +685,7 @@ impl Level for WasmSimd128 {
             } => {
                 assert_eq!(block_count, 4, "only count of 4 is currently supported");
                 let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
+                let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
 
                 let (lower_indices, upper_indices, shuffle_fn) = match vec_ty.scalar_bits {
                     8 => (
@@ -743,12 +744,14 @@ impl Level for WasmSimd128 {
                         let out2 = #shuffle_fn::<#lower_indices>(v02_upper, v13_upper);
                         let out3 = #shuffle_fn::<#upper_indices>(v02_upper, v13_upper);
 
-                        unsafe {
-                            v128_store(dest[0 * #elems_per_vec..].as_mut_ptr() as *mut v128, out0);
-                            v128_store(dest[1 * #elems_per_vec..].as_mut_ptr() as *mut v128, out1);
-                            v128_store(dest[2 * #elems_per_vec..].as_mut_ptr() as *mut v128, out2);
-                            v128_store(dest[3 * #elems_per_vec..].as_mut_ptr() as *mut v128, out3);
-                        }
+                        let (chunks, []) = dest.as_chunks_mut::<#elems_per_vec>() else {
+                            unreachable!()
+                        };
+
+                        crate::transmute::checked_transmute_store::<v128, [#scalar_ty; #elems_per_vec]>(out0, &mut chunks[0]);
+                        crate::transmute::checked_transmute_store::<v128, [#scalar_ty; #elems_per_vec]>(out1, &mut chunks[1]);
+                        crate::transmute::checked_transmute_store::<v128, [#scalar_ty; #elems_per_vec]>(out2, &mut chunks[2]);
+                        crate::transmute::checked_transmute_store::<v128, [#scalar_ty; #elems_per_vec]>(out3, &mut chunks[3]);
                     }
                 }
             }

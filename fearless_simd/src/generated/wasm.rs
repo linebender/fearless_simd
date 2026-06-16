@@ -5384,12 +5384,13 @@ impl Simd for WasmSimd128 {
         let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
         let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
         let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
-        unsafe {
-            v128_store(dest[0 * 4usize..].as_mut_ptr() as *mut v128, out0);
-            v128_store(dest[1 * 4usize..].as_mut_ptr() as *mut v128, out1);
-            v128_store(dest[2 * 4usize..].as_mut_ptr() as *mut v128, out2);
-            v128_store(dest[3 * 4usize..].as_mut_ptr() as *mut v128, out3);
-        }
+        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -6018,12 +6019,13 @@ impl Simd for WasmSimd128 {
         let out3 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
             v02_upper, v13_upper,
         );
-        unsafe {
-            v128_store(dest[0 * 16usize..].as_mut_ptr() as *mut v128, out0);
-            v128_store(dest[1 * 16usize..].as_mut_ptr() as *mut v128, out1);
-            v128_store(dest[2 * 16usize..].as_mut_ptr() as *mut v128, out2);
-            v128_store(dest[3 * 16usize..].as_mut_ptr() as *mut v128, out3);
-        }
+        let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
@@ -6718,12 +6720,13 @@ impl Simd for WasmSimd128 {
         let out1 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_lower, v13_lower);
         let out2 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_upper, v13_upper);
         let out3 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_upper, v13_upper);
-        unsafe {
-            v128_store(dest[0 * 8usize..].as_mut_ptr() as *mut v128, out0);
-            v128_store(dest[1 * 8usize..].as_mut_ptr() as *mut v128, out1);
-            v128_store(dest[2 * 8usize..].as_mut_ptr() as *mut v128, out2);
-            v128_store(dest[3 * 8usize..].as_mut_ptr() as *mut v128, out3);
-        }
+        let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
@@ -7424,12 +7427,13 @@ impl Simd for WasmSimd128 {
         let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
         let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
         let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
-        unsafe {
-            v128_store(dest[0 * 4usize..].as_mut_ptr() as *mut v128, out0);
-            v128_store(dest[1 * 4usize..].as_mut_ptr() as *mut v128, out1);
-            v128_store(dest[2 * 4usize..].as_mut_ptr() as *mut v128, out2);
-            v128_store(dest[3 * 4usize..].as_mut_ptr() as *mut v128, out3);
-        }
+        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
