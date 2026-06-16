@@ -3,7 +3,7 @@
 
 //! This all serves a small set of checked transmute and cast functions.
 //!
-//! It fulfills the purpose of both safe_unaligned_simd and bytemuck crates.
+//! It fulfills the purpose of both `safe_unaligned_simd` and `bytemuck` crates.
 //! The implementation is bytemuck-like, but far smaller than either of those crates,
 //! mostly by virtue of supporting less features (e.g. no by-value transmute).
 //!
