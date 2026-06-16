@@ -227,6 +227,12 @@ impl Op {
         let arg_decls = sig.arg_decls();
         let call_args = &sig.arg_names;
         let ret = &sig.ret;
+        let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. } | OpSig::StoreArray)
+        {
+            quote! { kernel(self #(, #call_args)*); }
+        } else {
+            quote! { kernel(self #(, #call_args)*) }
+        };
 
         quote! {
             #method_sig {
@@ -237,7 +243,7 @@ impl Op {
                     }
                 );
 
-                kernel(self #(, #call_args)*)
+                #kernel_call
             }
         }
     }
@@ -641,7 +647,7 @@ const FLOAT_OPS: &[Op] = &[
         "Compute an approximate reciprocal (`1. / x`) for each element.\n\n\
          This uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\n\
          On x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. \
-         On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. \
+         On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. \
          The precision of this operation may change as new platform support is added.",
     ),
     Op::new(

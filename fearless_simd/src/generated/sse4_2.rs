@@ -7021,7 +7021,7 @@ impl Simd for Sse4_2 {
                 );
             }
         );
-        kernel(self, a, dest)
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -7671,7 +7671,7 @@ impl Simd for Sse4_2 {
                 );
             }
         );
-        kernel(self, a, dest)
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
@@ -8452,7 +8452,7 @@ impl Simd for Sse4_2 {
                 );
             }
         );
-        kernel(self, a, dest)
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
@@ -9197,7 +9197,7 @@ impl Simd for Sse4_2 {
                 );
             }
         );
-        kernel(self, a, dest)
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
