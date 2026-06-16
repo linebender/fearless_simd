@@ -219,11 +219,11 @@ impl Level for X86 {
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,
-            } => self.handle_load_interleaved(method_sig, vec_ty, block_size, block_count),
+            } => self.handle_load_interleaved(op, vec_ty, block_size, block_count),
             OpSig::StoreInterleaved {
                 block_size,
                 block_count,
-            } => self.handle_store_interleaved(method_sig, vec_ty, block_size, block_count),
+            } => self.handle_store_interleaved(op, vec_ty, block_size, block_count),
             OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
             OpSig::AsArray { kind } => {
                 generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
@@ -1781,7 +1781,7 @@ impl X86 {
 
     pub(crate) fn handle_load_interleaved(
         &self,
-        method_sig: TokenStream,
+        op: Op,
         vec_ty: &VecType,
         block_size: u16,
         block_count: u16,
@@ -1791,7 +1791,7 @@ impl X86 {
             "only 128-bit blocks are currently supported"
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
-        let expr = match vec_ty.scalar_bits {
+        match vec_ty.scalar_bits {
             32 | 16 | 8 => {
                 let block_ty =
                     VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
@@ -1876,24 +1876,24 @@ impl X86 {
                     }
                 };
 
-                quote! {
-                    let (chunks, []) = src.as_chunks::<#block_len>() else {
-                        unreachable!()
-                    };
-                    let v0: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
-                        &chunks[0],
-                    );
-                    let v1: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
-                        &chunks[1],
-                    );
-                    let v2: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
-                        &chunks[2],
-                    );
-                    let v3: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
-                        &chunks[3],
-                    );
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let (chunks, []) = src.as_chunks::<#block_len>() else {
+                            unreachable!()
+                        };
+                        let v0: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
+                            &chunks[0],
+                        );
+                        let v1: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
+                            &chunks[1],
+                        );
+                        let v2: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
+                            &chunks[2],
+                        );
+                        let v3: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; #block_len], #native_ty>(
+                            &chunks[3],
+                        );
 
-                    unsafe {
                         #init_shuffle
 
                         let tmp0 = #unpacklo_32(v0, v1); // [0,4,1,5]
@@ -1903,26 +1903,20 @@ impl X86 {
 
                         #final_unpack
 
-                        self.#combine_full(
-                            self.#combine_half(out0.simd_into(self), out1.simd_into(self)),
-                            self.#combine_half(out2.simd_into(self), out3.simd_into(self)),
+                        #token.#combine_full(
+                            #token.#combine_half(out0.simd_into(#token), out1.simd_into(#token)),
+                            #token.#combine_half(out2.simd_into(#token), out3.simd_into(#token)),
                         )
                     }
-                }
+                })
             }
             _ => unimplemented!(),
-        };
-
-        quote! {
-            #method_sig {
-                #expr
-            }
         }
     }
 
     pub(crate) fn handle_store_interleaved(
         &self,
-        method_sig: TokenStream,
+        op: Op,
         vec_ty: &VecType,
         block_size: u16,
         block_count: u16,
@@ -1932,12 +1926,12 @@ impl X86 {
             "only 128-bit blocks are currently supported"
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
-        let expr = match vec_ty.scalar_bits {
+        match vec_ty.scalar_bits {
             32 | 16 | 8 => {
                 let block_ty =
                     VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
-                let store_unaligned =
-                    intrinsic_ident("storeu", coarse_type(&block_ty), block_ty.n_bits());
+                let scalar_ty = block_ty.scalar.rust(block_ty.scalar_bits);
+                let native_ty = self.arch_ty(&block_ty);
                 let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
                 let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
                 let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
@@ -2015,16 +2009,16 @@ impl X86 {
                     }
                 };
 
-                quote! {
-                    let (v01, v23) = self.#split_full(a);
-                    let (v0, v1) = self.#split_half(v01);
-                    let (v2, v3) = self.#split_half(v23);
-                    let v0 = v0.into();
-                    let v1 = v1.into();
-                    let v2 = v2.into();
-                    let v3 = v3.into();
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let (v01, v23) = #token.#split_full(a);
+                        let (v0, v1) = #token.#split_half(v01);
+                        let (v2, v3) = #token.#split_half(v23);
+                        let v0 = v0.into();
+                        let v1 = v1.into();
+                        let v2 = v2.into();
+                        let v3 = v3.into();
 
-                    unsafe {
                         let tmp0 = #unpacklo_32(v0, v1); // [0,4,1,5]
                         let tmp1 = #unpackhi_32(v0, v1); // [2,6,3,7]
                         let tmp2 = #unpacklo_32(v2, v3); // [8,12,9,13]
@@ -2034,20 +2028,18 @@ impl X86 {
 
                         #post_shuffle
 
-                        #store_unaligned(dest.as_mut_ptr() as *mut _, out0);
-                        #store_unaligned(dest.as_mut_ptr().add(#block_len) as *mut _, out1);
-                        #store_unaligned(dest.as_mut_ptr().add(2 * #block_len) as *mut _, out2);
-                        #store_unaligned(dest.as_mut_ptr().add(3 * #block_len) as *mut _, out3);
+                        let (chunks, []) = dest.as_chunks_mut::<#block_len>() else {
+                            unreachable!()
+                        };
+
+                        crate::transmute::checked_transmute_store::<#native_ty, [#scalar_ty; #block_len]>(out0, &mut chunks[0]);
+                        crate::transmute::checked_transmute_store::<#native_ty, [#scalar_ty; #block_len]>(out1, &mut chunks[1]);
+                        crate::transmute::checked_transmute_store::<#native_ty, [#scalar_ty; #block_len]>(out2, &mut chunks[2]);
+                        crate::transmute::checked_transmute_store::<#native_ty, [#scalar_ty; #block_len]>(out3, &mut chunks[3]);
                     }
-                }
+                })
             }
             _ => unimplemented!(),
-        };
-
-        quote! {
-            #method_sig {
-                #expr
-            }
         }
     }
 
