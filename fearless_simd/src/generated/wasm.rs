@@ -8156,48 +8156,30 @@ impl<S: Simd> From<mask64x2<S>> for v128 {
 #[doc = r" The shift is still expected to be constant in practice, so the match statement will be optimized out."]
 #[doc = r" This exists because Rust doesn't currently let you do math on const generics."]
 #[inline(always)]
-unsafe fn dyn_slide_128(a: v128, b: v128, shift: usize) -> v128 {
-    unsafe {
-        match shift {
-            0 => i8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>(a, b),
-            1 => i8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16>(a, b),
-            2 => i8x16_shuffle::<2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17>(a, b),
-            3 => i8x16_shuffle::<3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18>(a, b),
-            4 => i8x16_shuffle::<4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19>(a, b),
-            5 => i8x16_shuffle::<5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20>(a, b),
-            6 => i8x16_shuffle::<6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21>(a, b),
-            7 => i8x16_shuffle::<7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22>(a, b),
-            8 => {
-                i8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23>(a, b)
-            }
-            9 => {
-                i8x16_shuffle::<9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24>(a, b)
-            }
-            10 => i8x16_shuffle::<10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25>(
-                a, b,
-            ),
-            11 => i8x16_shuffle::<11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26>(
-                a, b,
-            ),
-            12 => i8x16_shuffle::<12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27>(
-                a, b,
-            ),
-            13 => i8x16_shuffle::<13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28>(
-                a, b,
-            ),
-            14 => i8x16_shuffle::<14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29>(
-                a, b,
-            ),
-            15 => i8x16_shuffle::<15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30>(
-                a, b,
-            ),
-            _ => unreachable!(),
-        }
+fn dyn_slide_128(a: v128, b: v128, shift: usize) -> v128 {
+    match shift {
+        0 => i8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>(a, b),
+        1 => i8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16>(a, b),
+        2 => i8x16_shuffle::<2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17>(a, b),
+        3 => i8x16_shuffle::<3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18>(a, b),
+        4 => i8x16_shuffle::<4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19>(a, b),
+        5 => i8x16_shuffle::<5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20>(a, b),
+        6 => i8x16_shuffle::<6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21>(a, b),
+        7 => i8x16_shuffle::<7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22>(a, b),
+        8 => i8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23>(a, b),
+        9 => i8x16_shuffle::<9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24>(a, b),
+        10 => i8x16_shuffle::<10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25>(a, b),
+        11 => i8x16_shuffle::<11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26>(a, b),
+        12 => i8x16_shuffle::<12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27>(a, b),
+        13 => i8x16_shuffle::<13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28>(a, b),
+        14 => i8x16_shuffle::<14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29>(a, b),
+        15 => i8x16_shuffle::<15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30>(a, b),
+        _ => unreachable!(),
     }
 }
 #[doc = r" Concatenates `a` and `b` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`."]
 #[inline(always)]
-unsafe fn cross_block_slide_128x2(
+fn cross_block_slide_128x2(
     a: [v128; 2usize],
     b: [v128; 2usize],
     shift_bytes: usize,
@@ -8205,17 +8187,17 @@ unsafe fn cross_block_slide_128x2(
     [
         {
             let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 0usize, shift_bytes);
-            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+            dyn_slide_128(lo, hi, shift_bytes % 16)
         },
         {
             let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 1usize, shift_bytes);
-            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+            dyn_slide_128(lo, hi, shift_bytes % 16)
         },
     ]
 }
 #[doc = r" Concatenates `a` and `b` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`."]
 #[inline(always)]
-unsafe fn cross_block_slide_128x4(
+fn cross_block_slide_128x4(
     a: [v128; 4usize],
     b: [v128; 4usize],
     shift_bytes: usize,
@@ -8223,19 +8205,19 @@ unsafe fn cross_block_slide_128x4(
     [
         {
             let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 0usize, shift_bytes);
-            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+            dyn_slide_128(lo, hi, shift_bytes % 16)
         },
         {
             let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 1usize, shift_bytes);
-            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+            dyn_slide_128(lo, hi, shift_bytes % 16)
         },
         {
             let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 2usize, shift_bytes);
-            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+            dyn_slide_128(lo, hi, shift_bytes % 16)
         },
         {
             let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, 3usize, shift_bytes);
-            unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+            dyn_slide_128(lo, hi, shift_bytes % 16)
         },
     ]
 }
