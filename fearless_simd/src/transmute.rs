@@ -1,9 +1,9 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! This all serves a small set of checked transmute and cast functions.
+//! Safe wrappers for SIMD loads/stores and reference casts.
 //!
-//! It fulfills the purpose of both `safe_unaligned_simd` and `bytemuck` crates.
+//! This fulfills the purpose of both `safe_unaligned_simd` and `bytemuck` crates.
 //! The implementation is bytemuck-like, but far smaller than either of those crates,
 //! mostly by virtue of supporting less features (e.g. no by-value transmute).
 //!
