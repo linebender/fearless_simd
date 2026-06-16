@@ -10,7 +10,7 @@
 //! Unlike bytemuck, this verifies that sizes match at compile time,
 //! so we won't accidentally ship always-panicking code even if it's not covered by tests.
 //!
-//! It's not possible to get rid of `unsafe` here enitrely, even if we were to use external crates,
+//! It's not possible to get rid of `unsafe` here entirely, even if we were to use external crates,
 //! because we need to implement Pod for wrappers like Aligned512 which cannot be safely derived.
 
 use core::mem::{align_of, size_of};
