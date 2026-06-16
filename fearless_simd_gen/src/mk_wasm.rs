@@ -478,10 +478,8 @@ impl Level for WasmSimd128 {
                             return b;
                         }
 
-                        unsafe {
-                            let result = #slide_op(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift);
-                            self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
-                        }
+                        let result = #slide_op(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift);
+                        self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
                     }
                 }
             }

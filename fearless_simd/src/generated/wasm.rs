@@ -138,17 +138,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 4usize {
             return b;
         }
-        unsafe {
-            let result = dyn_slide_128(
-                self.cvt_to_bytes_f32x4(a).val.0,
-                self.cvt_to_bytes_f32x4(b).val.0,
-                SHIFT * 4usize,
-            );
-            self.cvt_from_bytes_f32x4(u8x16 {
-                val: crate::support::Aligned128(result),
-                simd: self,
-            })
-        }
+        let result = dyn_slide_128(
+            self.cvt_to_bytes_f32x4(a).val.0,
+            self.cvt_to_bytes_f32x4(b).val.0,
+            SHIFT * 4usize,
+        );
+        self.cvt_from_bytes_f32x4(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_f32x4<const SHIFT: usize>(
@@ -434,17 +432,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 16usize {
             return b;
         }
-        unsafe {
-            let result = dyn_slide_128(
-                self.cvt_to_bytes_i8x16(a).val.0,
-                self.cvt_to_bytes_i8x16(b).val.0,
-                SHIFT,
-            );
-            self.cvt_from_bytes_i8x16(u8x16 {
-                val: crate::support::Aligned128(result),
-                simd: self,
-            })
-        }
+        let result = dyn_slide_128(
+            self.cvt_to_bytes_i8x16(a).val.0,
+            self.cvt_to_bytes_i8x16(b).val.0,
+            SHIFT,
+        );
+        self.cvt_from_bytes_i8x16(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_i8x16<const SHIFT: usize>(
@@ -649,17 +645,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 16usize {
             return b;
         }
-        unsafe {
-            let result = dyn_slide_128(
-                self.cvt_to_bytes_u8x16(a).val.0,
-                self.cvt_to_bytes_u8x16(b).val.0,
-                SHIFT,
-            );
-            self.cvt_from_bytes_u8x16(u8x16 {
-                val: crate::support::Aligned128(result),
-                simd: self,
-            })
-        }
+        let result = dyn_slide_128(
+            self.cvt_to_bytes_u8x16(a).val.0,
+            self.cvt_to_bytes_u8x16(b).val.0,
+            SHIFT,
+        );
+        self.cvt_from_bytes_u8x16(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_u8x16<const SHIFT: usize>(
@@ -950,17 +944,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 8usize {
             return b;
         }
-        unsafe {
-            let result = dyn_slide_128(
-                self.cvt_to_bytes_i16x8(a).val.0,
-                self.cvt_to_bytes_i16x8(b).val.0,
-                SHIFT * 2usize,
-            );
-            self.cvt_from_bytes_i16x8(u8x16 {
-                val: crate::support::Aligned128(result),
-                simd: self,
-            })
-        }
+        let result = dyn_slide_128(
+            self.cvt_to_bytes_i16x8(a).val.0,
+            self.cvt_to_bytes_i16x8(b).val.0,
+            SHIFT * 2usize,
+        );
+        self.cvt_from_bytes_i16x8(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_i16x8<const SHIFT: usize>(
@@ -1149,17 +1141,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 8usize {
             return b;
         }
-        unsafe {
-            let result = dyn_slide_128(
-                self.cvt_to_bytes_u16x8(a).val.0,
-                self.cvt_to_bytes_u16x8(b).val.0,
-                SHIFT * 2usize,
-            );
-            self.cvt_from_bytes_u16x8(u8x16 {
-                val: crate::support::Aligned128(result),
-                simd: self,
-            })
-        }
+        let result = dyn_slide_128(
+            self.cvt_to_bytes_u16x8(a).val.0,
+            self.cvt_to_bytes_u16x8(b).val.0,
+            SHIFT * 2usize,
+        );
+        self.cvt_from_bytes_u16x8(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_u16x8<const SHIFT: usize>(
@@ -1430,17 +1420,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 4usize {
             return b;
         }
-        unsafe {
-            let result = dyn_slide_128(
-                self.cvt_to_bytes_i32x4(a).val.0,
-                self.cvt_to_bytes_i32x4(b).val.0,
-                SHIFT * 4usize,
-            );
-            self.cvt_from_bytes_i32x4(u8x16 {
-                val: crate::support::Aligned128(result),
-                simd: self,
-            })
-        }
+        let result = dyn_slide_128(
+            self.cvt_to_bytes_i32x4(a).val.0,
+            self.cvt_to_bytes_i32x4(b).val.0,
+            SHIFT * 4usize,
+        );
+        self.cvt_from_bytes_i32x4(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_i32x4<const SHIFT: usize>(
@@ -1633,17 +1621,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 4usize {
             return b;
         }
-        unsafe {
-            let result = dyn_slide_128(
-                self.cvt_to_bytes_u32x4(a).val.0,
-                self.cvt_to_bytes_u32x4(b).val.0,
-                SHIFT * 4usize,
-            );
-            self.cvt_from_bytes_u32x4(u8x16 {
-                val: crate::support::Aligned128(result),
-                simd: self,
-            })
-        }
+        let result = dyn_slide_128(
+            self.cvt_to_bytes_u32x4(a).val.0,
+            self.cvt_to_bytes_u32x4(b).val.0,
+            SHIFT * 4usize,
+        );
+        self.cvt_from_bytes_u32x4(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_u32x4<const SHIFT: usize>(
@@ -1914,17 +1900,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 2usize {
             return b;
         }
-        unsafe {
-            let result = dyn_slide_128(
-                self.cvt_to_bytes_f64x2(a).val.0,
-                self.cvt_to_bytes_f64x2(b).val.0,
-                SHIFT * 8usize,
-            );
-            self.cvt_from_bytes_f64x2(u8x16 {
-                val: crate::support::Aligned128(result),
-                simd: self,
-            })
-        }
+        let result = dyn_slide_128(
+            self.cvt_to_bytes_f64x2(a).val.0,
+            self.cvt_to_bytes_f64x2(b).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_f64x2(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_f64x2<const SHIFT: usize>(
@@ -2255,17 +2239,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 8usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x2(
-                self.cvt_to_bytes_f32x8(a).val.0,
-                self.cvt_to_bytes_f32x8(b).val.0,
-                SHIFT * 4usize,
-            );
-            self.cvt_from_bytes_f32x8(u8x32 {
-                val: crate::support::Aligned256(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x2(
+            self.cvt_to_bytes_f32x8(a).val.0,
+            self.cvt_to_bytes_f32x8(b).val.0,
+            SHIFT * 4usize,
+        );
+        self.cvt_from_bytes_f32x8(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_f32x8<const SHIFT: usize>(
@@ -2627,17 +2609,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 32usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x2(
-                self.cvt_to_bytes_i8x32(a).val.0,
-                self.cvt_to_bytes_i8x32(b).val.0,
-                SHIFT,
-            );
-            self.cvt_from_bytes_i8x32(u8x32 {
-                val: crate::support::Aligned256(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x2(
+            self.cvt_to_bytes_i8x32(a).val.0,
+            self.cvt_to_bytes_i8x32(b).val.0,
+            SHIFT,
+        );
+        self.cvt_from_bytes_i8x32(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_i8x32<const SHIFT: usize>(
@@ -2906,17 +2886,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 32usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x2(
-                self.cvt_to_bytes_u8x32(a).val.0,
-                self.cvt_to_bytes_u8x32(b).val.0,
-                SHIFT,
-            );
-            self.cvt_from_bytes_u8x32(u8x32 {
-                val: crate::support::Aligned256(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x2(
+            self.cvt_to_bytes_u8x32(a).val.0,
+            self.cvt_to_bytes_u8x32(b).val.0,
+            SHIFT,
+        );
+        self.cvt_from_bytes_u8x32(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_u8x32<const SHIFT: usize>(
@@ -3293,17 +3271,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 16usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x2(
-                self.cvt_to_bytes_i16x16(a).val.0,
-                self.cvt_to_bytes_i16x16(b).val.0,
-                SHIFT * 2usize,
-            );
-            self.cvt_from_bytes_i16x16(u8x32 {
-                val: crate::support::Aligned256(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x2(
+            self.cvt_to_bytes_i16x16(a).val.0,
+            self.cvt_to_bytes_i16x16(b).val.0,
+            SHIFT * 2usize,
+        );
+        self.cvt_from_bytes_i16x16(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_i16x16<const SHIFT: usize>(
@@ -3572,17 +3548,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 16usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x2(
-                self.cvt_to_bytes_u16x16(a).val.0,
-                self.cvt_to_bytes_u16x16(b).val.0,
-                SHIFT * 2usize,
-            );
-            self.cvt_from_bytes_u16x16(u8x32 {
-                val: crate::support::Aligned256(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x2(
+            self.cvt_to_bytes_u16x16(a).val.0,
+            self.cvt_to_bytes_u16x16(b).val.0,
+            SHIFT * 2usize,
+        );
+        self.cvt_from_bytes_u16x16(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_u16x16<const SHIFT: usize>(
@@ -3968,17 +3942,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 8usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x2(
-                self.cvt_to_bytes_i32x8(a).val.0,
-                self.cvt_to_bytes_i32x8(b).val.0,
-                SHIFT * 4usize,
-            );
-            self.cvt_from_bytes_i32x8(u8x32 {
-                val: crate::support::Aligned256(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x2(
+            self.cvt_to_bytes_i32x8(a).val.0,
+            self.cvt_to_bytes_i32x8(b).val.0,
+            SHIFT * 4usize,
+        );
+        self.cvt_from_bytes_i32x8(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_i32x8<const SHIFT: usize>(
@@ -4252,17 +4224,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 8usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x2(
-                self.cvt_to_bytes_u32x8(a).val.0,
-                self.cvt_to_bytes_u32x8(b).val.0,
-                SHIFT * 4usize,
-            );
-            self.cvt_from_bytes_u32x8(u8x32 {
-                val: crate::support::Aligned256(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x2(
+            self.cvt_to_bytes_u32x8(a).val.0,
+            self.cvt_to_bytes_u32x8(b).val.0,
+            SHIFT * 4usize,
+        );
+        self.cvt_from_bytes_u32x8(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_u32x8<const SHIFT: usize>(
@@ -4636,17 +4606,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 4usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x2(
-                self.cvt_to_bytes_f64x4(a).val.0,
-                self.cvt_to_bytes_f64x4(b).val.0,
-                SHIFT * 8usize,
-            );
-            self.cvt_from_bytes_f64x4(u8x32 {
-                val: crate::support::Aligned256(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x2(
+            self.cvt_to_bytes_f64x4(a).val.0,
+            self.cvt_to_bytes_f64x4(b).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_f64x4(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_f64x4<const SHIFT: usize>(
@@ -5074,17 +5042,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 16usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x4(
-                self.cvt_to_bytes_f32x16(a).val.0,
-                self.cvt_to_bytes_f32x16(b).val.0,
-                SHIFT * 4usize,
-            );
-            self.cvt_from_bytes_f32x16(u8x64 {
-                val: crate::support::Aligned512(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x4(
+            self.cvt_to_bytes_f32x16(a).val.0,
+            self.cvt_to_bytes_f32x16(b).val.0,
+            SHIFT * 4usize,
+        );
+        self.cvt_from_bytes_f32x16(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_f32x16<const SHIFT: usize>(
@@ -5484,17 +5450,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 64usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x4(
-                self.cvt_to_bytes_i8x64(a).val.0,
-                self.cvt_to_bytes_i8x64(b).val.0,
-                SHIFT,
-            );
-            self.cvt_from_bytes_i8x64(u8x64 {
-                val: crate::support::Aligned512(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x4(
+            self.cvt_to_bytes_i8x64(a).val.0,
+            self.cvt_to_bytes_i8x64(b).val.0,
+            SHIFT,
+        );
+        self.cvt_from_bytes_i8x64(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_i8x64<const SHIFT: usize>(
@@ -5756,17 +5720,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 64usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x4(
-                self.cvt_to_bytes_u8x64(a).val.0,
-                self.cvt_to_bytes_u8x64(b).val.0,
-                SHIFT,
-            );
-            self.cvt_from_bytes_u8x64(u8x64 {
-                val: crate::support::Aligned512(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x4(
+            self.cvt_to_bytes_u8x64(a).val.0,
+            self.cvt_to_bytes_u8x64(b).val.0,
+            SHIFT,
+        );
+        self.cvt_from_bytes_u8x64(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_u8x64<const SHIFT: usize>(
@@ -6193,17 +6155,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 32usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x4(
-                self.cvt_to_bytes_i16x32(a).val.0,
-                self.cvt_to_bytes_i16x32(b).val.0,
-                SHIFT * 2usize,
-            );
-            self.cvt_from_bytes_i16x32(u8x64 {
-                val: crate::support::Aligned512(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x4(
+            self.cvt_to_bytes_i16x32(a).val.0,
+            self.cvt_to_bytes_i16x32(b).val.0,
+            SHIFT * 2usize,
+        );
+        self.cvt_from_bytes_i16x32(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_i16x32<const SHIFT: usize>(
@@ -6474,17 +6434,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 32usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x4(
-                self.cvt_to_bytes_u16x32(a).val.0,
-                self.cvt_to_bytes_u16x32(b).val.0,
-                SHIFT * 2usize,
-            );
-            self.cvt_from_bytes_u16x32(u8x64 {
-                val: crate::support::Aligned512(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x4(
+            self.cvt_to_bytes_u16x32(a).val.0,
+            self.cvt_to_bytes_u16x32(b).val.0,
+            SHIFT * 2usize,
+        );
+        self.cvt_from_bytes_u16x32(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_u16x32<const SHIFT: usize>(
@@ -6909,17 +6867,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 16usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x4(
-                self.cvt_to_bytes_i32x16(a).val.0,
-                self.cvt_to_bytes_i32x16(b).val.0,
-                SHIFT * 4usize,
-            );
-            self.cvt_from_bytes_i32x16(u8x64 {
-                val: crate::support::Aligned512(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x4(
+            self.cvt_to_bytes_i32x16(a).val.0,
+            self.cvt_to_bytes_i32x16(b).val.0,
+            SHIFT * 4usize,
+        );
+        self.cvt_from_bytes_i32x16(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_i32x16<const SHIFT: usize>(
@@ -7186,17 +7142,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 16usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x4(
-                self.cvt_to_bytes_u32x16(a).val.0,
-                self.cvt_to_bytes_u32x16(b).val.0,
-                SHIFT * 4usize,
-            );
-            self.cvt_from_bytes_u32x16(u8x64 {
-                val: crate::support::Aligned512(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x4(
+            self.cvt_to_bytes_u32x16(a).val.0,
+            self.cvt_to_bytes_u32x16(b).val.0,
+            SHIFT * 4usize,
+        );
+        self.cvt_from_bytes_u32x16(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_u32x16<const SHIFT: usize>(
@@ -7601,17 +7555,15 @@ impl Simd for WasmSimd128 {
         if SHIFT >= 8usize {
             return b;
         }
-        unsafe {
-            let result = cross_block_slide_128x4(
-                self.cvt_to_bytes_f64x8(a).val.0,
-                self.cvt_to_bytes_f64x8(b).val.0,
-                SHIFT * 8usize,
-            );
-            self.cvt_from_bytes_f64x8(u8x64 {
-                val: crate::support::Aligned512(result),
-                simd: self,
-            })
-        }
+        let result = cross_block_slide_128x4(
+            self.cvt_to_bytes_f64x8(a).val.0,
+            self.cvt_to_bytes_f64x8(b).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_f64x8(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
     }
     #[inline(always)]
     fn slide_within_blocks_f64x8<const SHIFT: usize>(
