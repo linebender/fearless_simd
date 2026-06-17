@@ -99,7 +99,7 @@ impl Simd for Avx512 {
         #[target_feature(
             enable = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
         )]
-        unsafe fn vectorize_avx512<F: FnOnce() -> R, R>(f: F) -> R {
+        fn vectorize_avx512<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }
         unsafe { vectorize_avx512(f) }
