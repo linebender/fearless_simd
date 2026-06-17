@@ -7,8 +7,11 @@
 //! The implementation is bytemuck-like, but far smaller than either of those crates,
 //! mostly by virtue of supporting less features (e.g. no by-value transmute).
 //!
-//! Unlike bytemuck, this verifies that sizes match at compile time,
-//! so we won't accidentally ship always-panicking code even if it's not covered by tests.
+//! This approach also relies less on the optimizer than using `bytemuck` would.
+//! We've verified that it emits the same IR as using intrinsics directly,
+//! since they [lower into generic loads/stores anyway](https://github.com/rust-lang/stdarch/pull/2004).
+//! With bytemuck the optimizer would need to do more work to remove the abstractions,
+//! and for single load/store instructions an inlining failure would be devastating.
 //!
 //! It's not possible to get rid of `unsafe` here entirely, even if we were to use external crates,
 //! because we need to implement Pod for wrappers like Aligned512 which cannot be safely derived.
