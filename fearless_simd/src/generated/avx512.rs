@@ -106,7 +106,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_f32x4(self, val: f32) -> f32x4<Self> {
-        unsafe { _mm_set1_ps(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: f32) -> f32x4<Avx512> {
+                _mm_set1_ps(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_f32x4(self, val: [f32; 4usize]) -> f32x4<Self> {
@@ -179,15 +185,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_andnot_ps(_mm_set1_ps(-0.0), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_andnot_ps(_mm_set1_ps(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_xor_ps(a.into(), _mm_set1_ps(-0.0)).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_xor_ps(a.into(), _mm_set1_ps(-0.0)).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn sqrt_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_sqrt_ps(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_sqrt_ps(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn approximate_recip_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -195,26 +219,55 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_add_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_add_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_sub_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_sub_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_mul_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_mul_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn div_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_div_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_div_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn copysign_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            let mask = _mm_set1_ps(-0.0);
-            _mm_or_ps(_mm_and_ps(mask, b.into()), _mm_andnot_ps(mask, a.into())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                let mask = _mm_set1_ps(-0.0);
+                _mm_or_ps(_mm_and_ps(mask, b.into()), _mm_andnot_ps(mask, a.into()))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> mask32x4<Self> {
@@ -263,19 +316,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn zip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_unpacklo_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_unpacklo_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_unpackhi_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_unpackhi_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_shuffle_ps::<0b10_00_10_00>(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_shuffle_ps::<0b10_00_10_00>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_shuffle_ps::<0b11_01_11_01>(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_shuffle_ps::<0b11_01_11_01>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> (f32x4<Self>, f32x4<Self>) {
@@ -287,11 +364,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_max_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_max_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn min_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_min_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_min_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_precise_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -303,30 +392,66 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn mul_add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_fmadd_ps(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f32x4<Avx512>,
+                b: f32x4<Avx512>,
+                c: f32x4<Avx512>,
+            ) -> f32x4<Avx512> {
+                _mm_fmadd_ps(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f32x4(self, a: f32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_fmsub_ps(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f32x4<Avx512>,
+                b: f32x4<Avx512>,
+                c: f32x4<Avx512>,
+            ) -> f32x4<Avx512> {
+                _mm_fmsub_ps(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn floor_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            _mm_round_ps::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_round_ps::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn ceil_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            _mm_round_ps::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_round_ps::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn round_ties_even_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            _mm_round_ps::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
-                .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_round_ps::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn fract_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -334,9 +459,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn trunc_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            _mm_round_ps::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_round_ps::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self> {
@@ -344,23 +474,53 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self> {
-        unsafe { _mm256_setr_m128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x8<Avx512> {
+                _mm256_setr_m128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
-        unsafe { _mm_castps_pd(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f64x2<Avx512> {
+                _mm_castps_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_castps_si128(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_castps_si128(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        unsafe { _mm_castps_si128(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> u8x16<Avx512> {
+                _mm_castps_si128(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_castps_si128(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_castps_si128(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
@@ -382,30 +542,46 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_cvttps_epi32(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_cvttps_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        unsafe {
-            let a = a.into();
-            let mut converted = _mm_cvttps_epi32(a);
-            let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
-            let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
-            if !all_in_range {
-                converted = _mm_blendv_epi8(
-                    _mm_set1_epi32(i32::MAX),
-                    converted,
-                    _mm_castps_si128(in_range),
-                );
-                let is_not_nan = _mm_castps_si128(_mm_cmpord_ps(a, a));
-                converted = _mm_and_si128(converted, is_not_nan);
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> i32x4<Avx512> {
+                let a = a.into();
+                let mut converted = _mm_cvttps_epi32(a);
+                let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
+                let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
+                if !all_in_range {
+                    converted = _mm_blendv_epi8(
+                        _mm_set1_epi32(i32::MAX),
+                        converted,
+                        _mm_castps_si128(in_range),
+                    );
+                    let is_not_nan = _mm_castps_si128(_mm_cmpord_ps(a, a));
+                    converted = _mm_and_si128(converted, is_not_nan);
+                }
+                converted.simd_into(token)
             }
-            converted.simd_into(self)
-        }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
-        unsafe { _mm_set1_epi8(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: i8) -> i8x16<Avx512> {
+                _mm_set1_epi8(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_i8x16(self, val: [i8; 16usize]) -> i8x16<Self> {
@@ -478,36 +654,70 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_add_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_add_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_sub_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe {
-            let dst_even = _mm_mullo_epi16(a.into(), b.into());
-            let dst_odd =
-                _mm_mullo_epi16(_mm_srli_epi16::<8>(a.into()), _mm_srli_epi16::<8>(b.into()));
-            _mm_or_si128(
-                _mm_slli_epi16(dst_odd, 8),
-                _mm_and_si128(dst_even, _mm_set1_epi16(0xFF)),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                let dst_even = _mm_mullo_epi16(a.into(), b.into());
+                let dst_odd =
+                    _mm_mullo_epi16(_mm_srli_epi16::<8>(a.into()), _mm_srli_epi16::<8>(b.into()));
+                _mm_or_si128(
+                    _mm_slli_epi16(dst_odd, 8),
+                    _mm_and_si128(dst_even, _mm_set1_epi16(0xFF)),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_and_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_and_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_or_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_or_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_xor_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_xor_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
@@ -515,15 +725,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
-            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
-            let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
-            let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
-            _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, shift: u32) -> i8x16<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
+                let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
+                let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
+                let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
+                _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -544,15 +758,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
-            let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
-            let lo_shifted = _mm_sra_epi16(lo_16, shift_count);
-            let hi_shifted = _mm_sra_epi16(hi_16, shift_count);
-            _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, shift: u32) -> i8x16<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
+                let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
+                let lo_shifted = _mm_sra_epi16(lo_16, shift_count);
+                let hi_shifted = _mm_sra_epi16(hi_16, shift_count);
+                _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -618,29 +836,49 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn zip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_unpacklo_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_unpacklo_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_unpackhi_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_unpackhi_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe {
-            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
-            let t1 = _mm_shuffle_epi8(a.into(), mask);
-            let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
+                let t1 = _mm_shuffle_epi8(a.into(), mask);
+                let t2 = _mm_shuffle_epi8(b.into(), mask);
+                _mm_unpacklo_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe {
-            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
-            let t1 = _mm_shuffle_epi8(a.into(), mask);
-            let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpackhi_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
+                let t1 = _mm_shuffle_epi8(a.into(), mask);
+                let t2 = _mm_shuffle_epi8(b.into(), mask);
+                _mm_unpackhi_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> (i8x16<Self>, i8x16<Self>) {
@@ -656,31 +894,73 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_min_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_min_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_max_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_max_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self> {
-        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, b: i8x16<Avx512>) -> i8x32<Avx512> {
+                _mm256_setr_m128i(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
-        unsafe { _mm_sub_epi8(_mm_setzero_si128(), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_sub_epi8(_mm_setzero_si128(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>) -> u8x16<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>) -> u32x4<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
-        unsafe { _mm_set1_epi8(val.cast_signed()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: u8) -> u8x16<Avx512> {
+                _mm_set1_epi8(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self> {
@@ -753,36 +1033,70 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_add_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_add_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_sub_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            let dst_even = _mm_mullo_epi16(a.into(), b.into());
-            let dst_odd =
-                _mm_mullo_epi16(_mm_srli_epi16::<8>(a.into()), _mm_srli_epi16::<8>(b.into()));
-            _mm_or_si128(
-                _mm_slli_epi16(dst_odd, 8),
-                _mm_and_si128(dst_even, _mm_set1_epi16(0xFF)),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                let dst_even = _mm_mullo_epi16(a.into(), b.into());
+                let dst_odd =
+                    _mm_mullo_epi16(_mm_srli_epi16::<8>(a.into()), _mm_srli_epi16::<8>(b.into()));
+                _mm_or_si128(
+                    _mm_slli_epi16(dst_odd, 8),
+                    _mm_and_si128(dst_even, _mm_set1_epi16(0xFF)),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_and_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_and_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_or_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_or_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_xor_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_xor_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
@@ -790,15 +1104,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
-            let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
-            let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
-            let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
-            _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, shift: u32) -> u8x16<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
+                let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
+                let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
+                let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
+                _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -819,15 +1137,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
-            let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
-            let lo_shifted = _mm_srl_epi16(lo_16, shift_count);
-            let hi_shifted = _mm_srl_epi16(hi_16, shift_count);
-            _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, shift: u32) -> u8x16<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
+                let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
+                let lo_shifted = _mm_srl_epi16(lo_16, shift_count);
+                let hi_shifted = _mm_srl_epi16(hi_16, shift_count);
+                _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -893,29 +1215,49 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn zip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_unpacklo_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_unpacklo_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_unpackhi_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_unpackhi_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
-            let t1 = _mm_shuffle_epi8(a.into(), mask);
-            let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
+                let t1 = _mm_shuffle_epi8(a.into(), mask);
+                let t2 = _mm_shuffle_epi8(b.into(), mask);
+                _mm_unpacklo_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
-            let t1 = _mm_shuffle_epi8(a.into(), mask);
-            let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpackhi_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                let mask = _mm_setr_epi8(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15);
+                let t1 = _mm_shuffle_epi8(a.into(), mask);
+                let t2 = _mm_shuffle_epi8(b.into(), mask);
+                _mm_unpackhi_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> (u8x16<Self>, u8x16<Self>) {
@@ -931,23 +1273,53 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_min_epu8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_min_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        unsafe { _mm_max_epu8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_max_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self> {
-        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, b: u8x16<Avx512>) -> u8x32<Avx512> {
+                _mm256_setr_m128i(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
-        unsafe { _mm256_cvtepu8_epi16(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_cvtepu8_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>) -> u32x4<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
@@ -1078,7 +1450,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
-        unsafe { _mm_set1_epi16(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: i16) -> i16x8<Avx512> {
+                _mm_set1_epi16(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_i16x8(self, val: [i16; 8usize]) -> i16x8<Self> {
@@ -1151,27 +1529,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_add_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_add_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_sub_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_mullo_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_mullo_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_and_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_and_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_or_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_or_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_xor_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_xor_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
@@ -1179,7 +1593,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
-        unsafe { _mm_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, shift: u32) -> i16x8<Avx512> {
+                _mm_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -1187,7 +1607,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
-        unsafe { _mm_sra_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, shift: u32) -> i16x8<Avx512> {
+                _mm_sra_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -1240,29 +1666,49 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn zip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_unpacklo_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_unpacklo_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_unpackhi_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_unpackhi_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe {
-            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
-            let t1 = _mm_shuffle_epi8(a.into(), mask);
-            let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+                let t1 = _mm_shuffle_epi8(a.into(), mask);
+                let t2 = _mm_shuffle_epi8(b.into(), mask);
+                _mm_unpacklo_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe {
-            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
-            let t1 = _mm_shuffle_epi8(a.into(), mask);
-            let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpackhi_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+                let t1 = _mm_shuffle_epi8(a.into(), mask);
+                let t2 = _mm_shuffle_epi8(b.into(), mask);
+                _mm_unpackhi_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> (i16x8<Self>, i16x8<Self>) {
@@ -1278,31 +1724,73 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_min_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_min_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_max_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_max_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self> {
-        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>, b: i16x8<Avx512>) -> i16x16<Avx512> {
+                _mm256_setr_m128i(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
-        unsafe { _mm_sub_epi16(_mm_setzero_si128(), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>) -> i16x8<Avx512> {
+                _mm_sub_epi16(_mm_setzero_si128(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>) -> u8x16<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x8<Avx512>) -> u32x4<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
-        unsafe { _mm_set1_epi16(val.cast_signed()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: u16) -> u16x8<Avx512> {
+                _mm_set1_epi16(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self> {
@@ -1375,27 +1863,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_add_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_add_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_sub_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_mullo_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_mullo_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_and_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_and_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_or_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_or_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_xor_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_xor_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self> {
@@ -1403,7 +1927,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
-        unsafe { _mm_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, shift: u32) -> u16x8<Avx512> {
+                _mm_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1411,7 +1941,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
-        unsafe { _mm_srl_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, shift: u32) -> u16x8<Avx512> {
+                _mm_srl_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1464,29 +2000,49 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn zip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_unpacklo_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_unpacklo_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_unpackhi_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_unpackhi_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe {
-            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
-            let t1 = _mm_shuffle_epi8(a.into(), mask);
-            let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+                let t1 = _mm_shuffle_epi8(a.into(), mask);
+                let t2 = _mm_shuffle_epi8(b.into(), mask);
+                _mm_unpacklo_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe {
-            let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
-            let t1 = _mm_shuffle_epi8(a.into(), mask);
-            let t2 = _mm_shuffle_epi8(b.into(), mask);
-            _mm_unpackhi_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+                let t1 = _mm_shuffle_epi8(a.into(), mask);
+                let t2 = _mm_shuffle_epi8(b.into(), mask);
+                _mm_unpackhi_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> (u16x8<Self>, u16x8<Self>) {
@@ -1502,23 +2058,53 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_min_epu16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_min_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        unsafe { _mm_max_epu16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x8<Avx512> {
+                _mm_max_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self> {
-        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>, b: u16x8<Avx512>) -> u16x16<Avx512> {
+                _mm256_setr_m128i(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>) -> u8x16<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x8<Avx512>) -> u32x4<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -1649,7 +2235,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
-        unsafe { _mm_set1_epi32(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: i32) -> i32x4<Avx512> {
+                _mm_set1_epi32(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_i32x4(self, val: [i32; 4usize]) -> i32x4<Self> {
@@ -1722,27 +2314,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_add_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_add_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_sub_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_mullo_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_mullo_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_and_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_and_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_or_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_or_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_xor_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_xor_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
@@ -1750,19 +2378,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        unsafe { _mm_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, shift: u32) -> i32x4<Avx512> {
+                _mm_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_sllv_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_sllv_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
-        unsafe { _mm_sra_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, shift: u32) -> i32x4<Avx512> {
+                _mm_sra_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_srav_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_srav_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -1811,27 +2463,47 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn zip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_unpacklo_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_unpacklo_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_unpackhi_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_unpackhi_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe {
-            let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
-            let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+                let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
+                _mm_unpacklo_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe {
-            let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
-            let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
-            _mm_unpackhi_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+                let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
+                _mm_unpackhi_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> (i32x4<Self>, i32x4<Self>) {
@@ -1847,35 +2519,83 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_min_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_min_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_max_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_max_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self> {
-        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>, b: i32x4<Avx512>) -> i32x8<Avx512> {
+                _mm256_setr_m128i(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
-        unsafe { _mm_sub_epi32(_mm_setzero_si128(), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>) -> i32x4<Avx512> {
+                _mm_sub_epi32(_mm_setzero_si128(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>) -> u8x16<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>) -> u32x4<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
-        unsafe { _mm_cvtepi32_ps(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x4<Avx512>) -> f32x4<Avx512> {
+                _mm_cvtepi32_ps(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u32x4(self, val: u32) -> u32x4<Self> {
-        unsafe { _mm_set1_epi32(val.cast_signed()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: u32) -> u32x4<Avx512> {
+                _mm_set1_epi32(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self> {
@@ -1948,27 +2668,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_add_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_add_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_sub_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_mullo_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_mullo_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_and_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_and_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_or_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_or_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_xor_si128(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_xor_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self> {
@@ -1976,19 +2732,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        unsafe { _mm_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, shift: u32) -> u32x4<Avx512> {
+                _mm_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_sllv_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_sllv_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
-        unsafe { _mm_srl_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, shift: u32) -> u32x4<Avx512> {
+                _mm_srl_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_srlv_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_srlv_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
@@ -2037,27 +2817,47 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn zip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_unpacklo_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_unpacklo_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_unpackhi_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_unpackhi_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe {
-            let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
-            let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
-            _mm_unpacklo_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+                let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
+                _mm_unpacklo_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe {
-            let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
-            let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
-            _mm_unpackhi_epi64(t1, t2).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                let t1 = _mm_shuffle_epi32::<0b11_01_10_00>(a.into());
+                let t2 = _mm_shuffle_epi32::<0b11_01_10_00>(b.into());
+                _mm_unpackhi_epi64(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> (u32x4<Self>, u32x4<Self>) {
@@ -2073,33 +2873,62 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_min_epu32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_min_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        unsafe { _mm_max_epu32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x4<Avx512> {
+                _mm_max_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self> {
-        unsafe { _mm256_setr_m128i(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>, b: u32x4<Avx512>) -> u32x8<Avx512> {
+                _mm256_setr_m128i(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        __m128i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>) -> u8x16<Avx512> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
-        unsafe {
-            let a = a.into();
-            let lo = _mm_blend_epi16::<0xAA>(a, _mm_set1_epi32(0x4B000000));
-            let hi = _mm_blend_epi16::<0xAA>(_mm_srli_epi32::<16>(a), _mm_set1_epi32(0x53000000));
-            let fhi = _mm_sub_ps(
-                _mm_castsi128_ps(hi),
-                _mm_set1_ps(f32::from_bits(0x53000080)),
-            );
-            let result = _mm_add_ps(_mm_castsi128_ps(lo), fhi);
-            result.simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x4<Avx512>) -> f32x4<Avx512> {
+                let a = a.into();
+                let lo = _mm_blend_epi16::<0xAA>(a, _mm_set1_epi32(0x4B000000));
+                let hi =
+                    _mm_blend_epi16::<0xAA>(_mm_srli_epi32::<16>(a), _mm_set1_epi32(0x53000000));
+                let fhi = _mm_sub_ps(
+                    _mm_castsi128_ps(hi),
+                    _mm_set1_ps(f32::from_bits(0x53000080)),
+                );
+                let result = _mm_add_ps(_mm_castsi128_ps(lo), fhi);
+                result.simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask32x4(self, val: bool) -> mask32x4<Self> {
@@ -2230,7 +3059,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
-        unsafe { _mm_set1_pd(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: f64) -> f64x2<Avx512> {
+                _mm_set1_pd(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_f64x2(self, val: [f64; 2usize]) -> f64x2<Self> {
@@ -2303,15 +3138,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_andnot_pd(_mm_set1_pd(-0.0), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_andnot_pd(_mm_set1_pd(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_xor_pd(a.into(), _mm_set1_pd(-0.0)).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_xor_pd(a.into(), _mm_set1_pd(-0.0)).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn sqrt_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_sqrt_pd(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_sqrt_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn approximate_recip_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -2319,26 +3172,55 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_add_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_add_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_sub_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_sub_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_mul_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_mul_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn div_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_div_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_div_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn copysign_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe {
-            let mask = _mm_set1_pd(-0.0);
-            _mm_or_pd(_mm_and_pd(mask, b.into()), _mm_andnot_pd(mask, a.into())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                let mask = _mm_set1_pd(-0.0);
+                _mm_or_pd(_mm_and_pd(mask, b.into()), _mm_andnot_pd(mask, a.into()))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> mask64x2<Self> {
@@ -2387,19 +3269,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn zip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_unpacklo_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_unpacklo_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn zip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_unpackhi_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_unpackhi_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_low_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_shuffle_pd::<0b00>(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_shuffle_pd::<0b00>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn unzip_high_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_shuffle_pd::<0b11>(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_shuffle_pd::<0b11>(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn interleave_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> (f64x2<Self>, f64x2<Self>) {
@@ -2411,11 +3317,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_max_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_max_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn min_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_min_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_min_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_precise_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -2427,30 +3345,66 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn mul_add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_fmadd_pd(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f64x2<Avx512>,
+                b: f64x2<Avx512>,
+                c: f64x2<Avx512>,
+            ) -> f64x2<Avx512> {
+                _mm_fmadd_pd(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f64x2(self, a: f64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
-        unsafe { _mm_fmsub_pd(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f64x2<Avx512>,
+                b: f64x2<Avx512>,
+                c: f64x2<Avx512>,
+            ) -> f64x2<Avx512> {
+                _mm_fmsub_pd(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn floor_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe {
-            _mm_round_pd::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_round_pd::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn ceil_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe {
-            _mm_round_pd::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_round_pd::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn round_ties_even_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe {
-            _mm_round_pd::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
-                .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_round_pd::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn fract_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -2458,9 +3412,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn trunc_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
-        unsafe {
-            _mm_round_pd::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f64x2<Avx512> {
+                _mm_round_pd::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self> {
@@ -2468,11 +3427,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self> {
-        unsafe { _mm256_setr_m128d(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f64x4<Avx512> {
+                _mm256_setr_m128d(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self> {
-        unsafe { _mm_castpd_ps(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f32x4<Avx512> {
+                _mm_castpd_ps(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -2603,7 +3574,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_f32x8(self, val: f32) -> f32x8<Self> {
-        unsafe { _mm256_set1_ps(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: f32) -> f32x8<Avx512> {
+                _mm256_set1_ps(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_f32x8(self, val: [f32; 8usize]) -> f32x8<Self> {
@@ -2697,15 +3674,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_andnot_ps(_mm256_set1_ps(-0.0), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_andnot_ps(_mm256_set1_ps(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_xor_ps(a.into(), _mm256_set1_ps(-0.0)).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_xor_ps(a.into(), _mm256_set1_ps(-0.0)).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn sqrt_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_sqrt_ps(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_sqrt_ps(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn approximate_recip_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -2713,30 +3708,58 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_add_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_add_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_sub_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_sub_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_mul_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_mul_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn div_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_div_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_div_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn copysign_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe {
-            let mask = _mm256_set1_ps(-0.0);
-            _mm256_or_ps(
-                _mm256_and_ps(mask, b.into()),
-                _mm256_andnot_ps(mask, a.into()),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                let mask = _mm256_set1_ps(-0.0);
+                _mm256_or_ps(
+                    _mm256_and_ps(mask, b.into()),
+                    _mm256_andnot_ps(mask, a.into()),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> mask32x8<Self> {
@@ -2855,11 +3878,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_max_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_max_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn min_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_min_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>, b: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_min_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_precise_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -2871,32 +3906,66 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn mul_add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_fmadd_ps(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f32x8<Avx512>,
+                b: f32x8<Avx512>,
+                c: f32x8<Avx512>,
+            ) -> f32x8<Avx512> {
+                _mm256_fmadd_ps(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f32x8(self, a: f32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_fmsub_ps(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f32x8<Avx512>,
+                b: f32x8<Avx512>,
+                c: f32x8<Avx512>,
+            ) -> f32x8<Avx512> {
+                _mm256_fmsub_ps(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn floor_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        unsafe {
-            _mm256_round_ps::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
-                .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_round_ps::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn ceil_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        unsafe {
-            _mm256_round_ps::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
-                .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_round_ps::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn round_ties_even_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        unsafe {
-            _mm256_round_ps::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
-                .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_round_ps::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn fract_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
@@ -2904,9 +3973,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn trunc_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
-        unsafe {
-            _mm256_round_ps::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_round_ps::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn select_f32x8(self, a: mask32x8<Self>, b: f32x8<Self>, c: f32x8<Self>) -> f32x8<Self> {
@@ -2920,28 +3994,56 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn split_f32x8(self, a: f32x8<Self>) -> (f32x4<Self>, f32x4<Self>) {
-        unsafe {
-            (
-                _mm256_extractf128_ps::<0>(a.into()).simd_into(self),
-                _mm256_extractf128_ps::<1>(a.into()).simd_into(self),
-            )
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> (f32x4<Avx512>, f32x4<Avx512>) {
+                (
+                    _mm256_extractf128_ps::<0>(a.into()).simd_into(token),
+                    _mm256_extractf128_ps::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
-        unsafe { _mm256_castps_pd(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f64x4<Avx512> {
+                _mm256_castps_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_castps_si256(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_castps_si256(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        unsafe { _mm256_castps_si256(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> u8x32<Avx512> {
+                _mm256_castps_si256(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_castps_si256(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_castps_si256(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
@@ -2964,30 +4066,46 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn cvt_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_cvttps_epi32(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_cvttps_epi32(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_i32_precise_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        unsafe {
-            let a = a.into();
-            let mut converted = _mm256_cvttps_epi32(a);
-            let in_range = _mm256_cmp_ps::<17i32>(a, _mm256_set1_ps(2147483648.0));
-            let all_in_range = _mm256_movemask_ps(in_range) == 0b11111111;
-            if !all_in_range {
-                converted = _mm256_blendv_epi8(
-                    _mm256_set1_epi32(i32::MAX),
-                    converted,
-                    _mm256_castps_si256(in_range),
-                );
-                let is_not_nan = _mm256_castps_si256(_mm256_cmp_ps::<7i32>(a, a));
-                converted = _mm256_and_si256(converted, is_not_nan);
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> i32x8<Avx512> {
+                let a = a.into();
+                let mut converted = _mm256_cvttps_epi32(a);
+                let in_range = _mm256_cmp_ps::<17i32>(a, _mm256_set1_ps(2147483648.0));
+                let all_in_range = _mm256_movemask_ps(in_range) == 0b11111111;
+                if !all_in_range {
+                    converted = _mm256_blendv_epi8(
+                        _mm256_set1_epi32(i32::MAX),
+                        converted,
+                        _mm256_castps_si256(in_range),
+                    );
+                    let is_not_nan = _mm256_castps_si256(_mm256_cmp_ps::<7i32>(a, a));
+                    converted = _mm256_and_si256(converted, is_not_nan);
+                }
+                converted.simd_into(token)
             }
-            converted.simd_into(self)
-        }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_i8x32(self, val: i8) -> i8x32<Self> {
-        unsafe { _mm256_set1_epi8(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: i8) -> i8x32<Avx512> {
+                _mm256_set1_epi8(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_i8x32(self, val: [i8; 32usize]) -> i8x32<Self> {
@@ -3081,38 +4199,72 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        unsafe { _mm256_add_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_add_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        unsafe { _mm256_sub_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        unsafe {
-            let dst_even = _mm256_mullo_epi16(a.into(), b.into());
-            let dst_odd = _mm256_mullo_epi16(
-                _mm256_srli_epi16::<8>(a.into()),
-                _mm256_srli_epi16::<8>(b.into()),
-            );
-            _mm256_or_si256(
-                _mm256_slli_epi16(dst_odd, 8),
-                _mm256_and_si256(dst_even, _mm256_set1_epi16(0xFF)),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                let dst_even = _mm256_mullo_epi16(a.into(), b.into());
+                let dst_odd = _mm256_mullo_epi16(
+                    _mm256_srli_epi16::<8>(a.into()),
+                    _mm256_srli_epi16::<8>(b.into()),
+                );
+                _mm256_or_si256(
+                    _mm256_slli_epi16(dst_odd, 8),
+                    _mm256_and_si256(dst_even, _mm256_set1_epi16(0xFF)),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_and_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_or_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
@@ -3120,15 +4272,21 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm256_unpacklo_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
-            let hi_16 = _mm256_unpackhi_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
-            let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
-            let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
-            _mm256_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, shift: u32) -> i8x32<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 =
+                    _mm256_unpacklo_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
+                let hi_16 =
+                    _mm256_unpackhi_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
+                let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
+                let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
+                _mm256_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -3149,15 +4307,21 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm256_unpacklo_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
-            let hi_16 = _mm256_unpackhi_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
-            let lo_shifted = _mm256_sra_epi16(lo_16, shift_count);
-            let hi_shifted = _mm256_sra_epi16(hi_16, shift_count);
-            _mm256_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, shift: u32) -> i8x32<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 =
+                    _mm256_unpacklo_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
+                let hi_16 =
+                    _mm256_unpackhi_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
+                let lo_shifted = _mm256_sra_epi16(lo_16, shift_count);
+                let hi_shifted = _mm256_sra_epi16(hi_16, shift_count);
+                _mm256_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -3337,11 +4501,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        unsafe { _mm256_min_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_min_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        unsafe { _mm256_max_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>, b: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_max_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x64<Self> {
@@ -3351,28 +4527,56 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn split_i8x32(self, a: i8x32<Self>) -> (i8x16<Self>, i8x16<Self>) {
-        unsafe {
-            (
-                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
-                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
-            )
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>) -> (i8x16<Avx512>, i8x16<Avx512>) {
+                (
+                    _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
+                    _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self> {
-        unsafe { _mm256_sub_epi8(_mm256_setzero_si256(), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>) -> i8x32<Avx512> {
+                _mm256_sub_epi8(_mm256_setzero_si256(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>) -> u8x32<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x32<Avx512>) -> u32x8<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
-        unsafe { _mm256_set1_epi8(val.cast_signed()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: u8) -> u8x32<Avx512> {
+                _mm256_set1_epi8(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_u8x32(self, val: [u8; 32usize]) -> u8x32<Self> {
@@ -3466,38 +4670,72 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        unsafe { _mm256_add_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_add_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        unsafe { _mm256_sub_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        unsafe {
-            let dst_even = _mm256_mullo_epi16(a.into(), b.into());
-            let dst_odd = _mm256_mullo_epi16(
-                _mm256_srli_epi16::<8>(a.into()),
-                _mm256_srli_epi16::<8>(b.into()),
-            );
-            _mm256_or_si256(
-                _mm256_slli_epi16(dst_odd, 8),
-                _mm256_and_si256(dst_even, _mm256_set1_epi16(0xFF)),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                let dst_even = _mm256_mullo_epi16(a.into(), b.into());
+                let dst_odd = _mm256_mullo_epi16(
+                    _mm256_srli_epi16::<8>(a.into()),
+                    _mm256_srli_epi16::<8>(b.into()),
+                );
+                _mm256_or_si256(
+                    _mm256_slli_epi16(dst_odd, 8),
+                    _mm256_and_si256(dst_even, _mm256_set1_epi16(0xFF)),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_and_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_or_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
@@ -3505,15 +4743,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
-            let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
-            let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
-            let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
-            _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, shift: u32) -> u8x32<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
+                let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
+                let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
+                let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
+                _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -3534,15 +4776,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
-            let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
-            let lo_shifted = _mm256_srl_epi16(lo_16, shift_count);
-            let hi_shifted = _mm256_srl_epi16(hi_16, shift_count);
-            _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, shift: u32) -> u8x32<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
+                let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
+                let lo_shifted = _mm256_srl_epi16(lo_16, shift_count);
+                let hi_shifted = _mm256_srl_epi16(hi_16, shift_count);
+                _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -3722,11 +4968,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        unsafe { _mm256_min_epu8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_min_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        unsafe { _mm256_max_epu8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>, b: u8x32<Avx512>) -> u8x32<Avx512> {
+                _mm256_max_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self> {
@@ -3736,20 +4994,36 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn split_u8x32(self, a: u8x32<Self>) -> (u8x16<Self>, u8x16<Self>) {
-        unsafe {
-            (
-                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
-                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
-            )
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>) -> (u8x16<Avx512>, u8x16<Avx512>) {
+                (
+                    _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
+                    _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
-        unsafe { _mm512_cvtepu8_epi16(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_cvtepu8_epi16(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x32<Avx512>) -> u32x8<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
@@ -3894,7 +5168,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_i16x16(self, val: i16) -> i16x16<Self> {
-        unsafe { _mm256_set1_epi16(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: i16) -> i16x16<Avx512> {
+                _mm256_set1_epi16(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_i16x16(self, val: [i16; 16usize]) -> i16x16<Self> {
@@ -3988,27 +5268,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        unsafe { _mm256_add_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_add_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        unsafe { _mm256_sub_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        unsafe { _mm256_mullo_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_mullo_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_and_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_or_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
@@ -4016,9 +5332,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self> {
-        unsafe {
-            _mm256_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, shift: u32) -> i16x16<Avx512> {
+                _mm256_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -4026,9 +5346,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self> {
-        unsafe {
-            _mm256_sra_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, shift: u32) -> i16x16<Avx512> {
+                _mm256_sra_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -4171,11 +5495,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        unsafe { _mm256_min_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_min_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        unsafe { _mm256_max_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>, b: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_max_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x32<Self> {
@@ -4185,28 +5521,56 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn split_i16x16(self, a: i16x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
-        unsafe {
-            (
-                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
-                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
-            )
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>) -> (i16x8<Avx512>, i16x8<Avx512>) {
+                (
+                    _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
+                    _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self> {
-        unsafe { _mm256_sub_epi16(_mm256_setzero_si256(), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>) -> i16x16<Avx512> {
+                _mm256_sub_epi16(_mm256_setzero_si256(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>) -> u8x32<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x16<Avx512>) -> u32x8<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
-        unsafe { _mm256_set1_epi16(val.cast_signed()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: u16) -> u16x16<Avx512> {
+                _mm256_set1_epi16(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_u16x16(self, val: [u16; 16usize]) -> u16x16<Self> {
@@ -4300,27 +5664,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        unsafe { _mm256_add_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_add_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        unsafe { _mm256_sub_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        unsafe { _mm256_mullo_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_mullo_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_and_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_or_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self> {
@@ -4328,9 +5728,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self> {
-        unsafe {
-            _mm256_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, shift: u32) -> u16x16<Avx512> {
+                _mm256_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -4338,9 +5742,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self> {
-        unsafe {
-            _mm256_srl_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, shift: u32) -> u16x16<Avx512> {
+                _mm256_srl_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -4483,11 +5891,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        unsafe { _mm256_min_epu16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_min_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        unsafe { _mm256_max_epu16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>, b: u16x16<Avx512>) -> u16x16<Avx512> {
+                _mm256_max_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self> {
@@ -4497,24 +5917,46 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn split_u16x16(self, a: u16x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
-        unsafe {
-            (
-                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
-                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
-            )
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>) -> (u16x8<Avx512>, u16x8<Avx512>) {
+                (
+                    _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
+                    _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
-        unsafe { _mm256_cvtepi16_epi8(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u8x16<Avx512> {
+                _mm256_cvtepi16_epi8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u8x32<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u32x8<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -4659,7 +6101,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_i32x8(self, val: i32) -> i32x8<Self> {
-        unsafe { _mm256_set1_epi32(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: i32) -> i32x8<Avx512> {
+                _mm256_set1_epi32(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_i32x8(self, val: [i32; 8usize]) -> i32x8<Self> {
@@ -4753,27 +6201,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_add_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_add_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_sub_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_mullo_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_mullo_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_and_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_or_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
@@ -4781,23 +6265,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self> {
-        unsafe {
-            _mm256_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, shift: u32) -> i32x8<Avx512> {
+                _mm256_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_sllv_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_sllv_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self> {
-        unsafe {
-            _mm256_sra_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, shift: u32) -> i32x8<Avx512> {
+                _mm256_sra_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_srav_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_srav_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self> {
@@ -4920,11 +6424,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_min_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_min_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_max_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>, b: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_max_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x16<Self> {
@@ -4934,32 +6450,66 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn split_i32x8(self, a: i32x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
-        unsafe {
-            (
-                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
-                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
-            )
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> (i32x4<Avx512>, i32x4<Avx512>) {
+                (
+                    _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
+                    _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self> {
-        unsafe { _mm256_sub_epi32(_mm256_setzero_si256(), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> i32x8<Avx512> {
+                _mm256_sub_epi32(_mm256_setzero_si256(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> u8x32<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i32x8(self, a: i32x8<Self>) -> u32x8<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> u32x8<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
-        unsafe { _mm256_cvtepi32_ps(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x8<Avx512>) -> f32x8<Avx512> {
+                _mm256_cvtepi32_ps(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u32x8(self, val: u32) -> u32x8<Self> {
-        unsafe { _mm256_set1_epi32(val.cast_signed()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: u32) -> u32x8<Avx512> {
+                _mm256_set1_epi32(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_u32x8(self, val: [u32; 8usize]) -> u32x8<Self> {
@@ -5053,27 +6603,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_add_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_add_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_sub_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_mullo_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_mullo_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_and_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_and_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_or_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_or_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_xor_si256(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self> {
@@ -5081,23 +6667,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self> {
-        unsafe {
-            _mm256_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, shift: u32) -> u32x8<Avx512> {
+                _mm256_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_sllv_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_sllv_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self> {
-        unsafe {
-            _mm256_srl_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, shift: u32) -> u32x8<Avx512> {
+                _mm256_srl_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_srlv_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_srlv_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self> {
@@ -5220,11 +6826,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_min_epu32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_min_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
-        unsafe { _mm256_max_epu32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>, b: u32x8<Avx512>) -> u32x8<Avx512> {
+                _mm256_max_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self> {
@@ -5234,33 +6852,47 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn split_u32x8(self, a: u32x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
-        unsafe {
-            (
-                _mm256_extracti128_si256::<0>(a.into()).simd_into(self),
-                _mm256_extracti128_si256::<1>(a.into()).simd_into(self),
-            )
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>) -> (u32x4<Avx512>, u32x4<Avx512>) {
+                (
+                    _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
+                    _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        __m256i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>) -> u8x32<Avx512> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
-        unsafe {
-            let a = a.into();
-            let lo = _mm256_blend_epi16::<0xAA>(a, _mm256_set1_epi32(0x4B000000));
-            let hi = _mm256_blend_epi16::<0xAA>(
-                _mm256_srli_epi32::<16>(a),
-                _mm256_set1_epi32(0x53000000),
-            );
-            let fhi = _mm256_sub_ps(
-                _mm256_castsi256_ps(hi),
-                _mm256_set1_ps(f32::from_bits(0x53000080)),
-            );
-            let result = _mm256_add_ps(_mm256_castsi256_ps(lo), fhi);
-            result.simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x8<Avx512>) -> f32x8<Avx512> {
+                let a = a.into();
+                let lo = _mm256_blend_epi16::<0xAA>(a, _mm256_set1_epi32(0x4B000000));
+                let hi = _mm256_blend_epi16::<0xAA>(
+                    _mm256_srli_epi32::<16>(a),
+                    _mm256_set1_epi32(0x53000000),
+                );
+                let fhi = _mm256_sub_ps(
+                    _mm256_castsi256_ps(hi),
+                    _mm256_set1_ps(f32::from_bits(0x53000080)),
+                );
+                let result = _mm256_add_ps(_mm256_castsi256_ps(lo), fhi);
+                result.simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask32x8(self, val: bool) -> mask32x8<Self> {
@@ -5405,7 +7037,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_f64x4(self, val: f64) -> f64x4<Self> {
-        unsafe { _mm256_set1_pd(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: f64) -> f64x4<Avx512> {
+                _mm256_set1_pd(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_f64x4(self, val: [f64; 4usize]) -> f64x4<Self> {
@@ -5499,15 +7137,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_andnot_pd(_mm256_set1_pd(-0.0), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_andnot_pd(_mm256_set1_pd(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_xor_pd(a.into(), _mm256_set1_pd(-0.0)).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_xor_pd(a.into(), _mm256_set1_pd(-0.0)).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn sqrt_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_sqrt_pd(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_sqrt_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn approximate_recip_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -5515,30 +7171,58 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_add_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_add_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_sub_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_sub_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_mul_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_mul_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn div_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_div_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_div_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn copysign_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe {
-            let mask = _mm256_set1_pd(-0.0);
-            _mm256_or_pd(
-                _mm256_and_pd(mask, b.into()),
-                _mm256_andnot_pd(mask, a.into()),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                let mask = _mm256_set1_pd(-0.0);
+                _mm256_or_pd(
+                    _mm256_and_pd(mask, b.into()),
+                    _mm256_andnot_pd(mask, a.into()),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> mask64x4<Self> {
@@ -5637,11 +7321,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_max_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_max_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn min_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_min_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_min_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_precise_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -5653,32 +7349,66 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn mul_add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_fmadd_pd(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f64x4<Avx512>,
+                b: f64x4<Avx512>,
+                c: f64x4<Avx512>,
+            ) -> f64x4<Avx512> {
+                _mm256_fmadd_pd(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f64x4(self, a: f64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
-        unsafe { _mm256_fmsub_pd(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f64x4<Avx512>,
+                b: f64x4<Avx512>,
+                c: f64x4<Avx512>,
+            ) -> f64x4<Avx512> {
+                _mm256_fmsub_pd(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn floor_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        unsafe {
-            _mm256_round_pd::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
-                .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_round_pd::<{ _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn ceil_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        unsafe {
-            _mm256_round_pd::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
-                .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_round_pd::<{ _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn round_ties_even_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        unsafe {
-            _mm256_round_pd::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
-                .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_round_pd::<{ _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn fract_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
@@ -5686,9 +7416,14 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn trunc_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
-        unsafe {
-            _mm256_round_pd::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into()).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f64x4<Avx512> {
+                _mm256_round_pd::<{ _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC }>(a.into())
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn select_f64x4(self, a: mask64x4<Self>, b: f64x4<Self>, c: f64x4<Self>) -> f64x4<Self> {
@@ -5702,16 +7437,26 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
-        unsafe {
-            (
-                _mm256_extractf128_pd::<0>(a.into()).simd_into(self),
-                _mm256_extractf128_pd::<1>(a.into()).simd_into(self),
-            )
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> (f64x2<Avx512>, f64x2<Avx512>) {
+                (
+                    _mm256_extractf128_pd::<0>(a.into()).simd_into(token),
+                    _mm256_extractf128_pd::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
-        unsafe { _mm256_castpd_ps(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f32x8<Avx512> {
+                _mm256_castpd_ps(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
@@ -5856,7 +7601,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_f32x16(self, val: f32) -> f32x16<Self> {
-        unsafe { _mm512_set1_ps(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: f32) -> f32x16<Avx512> {
+                _mm512_set1_ps(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self> {
@@ -5952,15 +7703,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_andnot_ps(_mm512_set1_ps(-0.0), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_andnot_ps(_mm512_set1_ps(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_xor_ps(a.into(), _mm512_set1_ps(-0.0)).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_xor_ps(a.into(), _mm512_set1_ps(-0.0)).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_sqrt_ps(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_sqrt_ps(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn approximate_recip_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -5968,30 +7737,58 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_add_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_add_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_sub_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_sub_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_mul_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_mul_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn div_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_div_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_div_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn copysign_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        unsafe {
-            let mask = _mm512_set1_ps(-0.0);
-            _mm512_or_ps(
-                _mm512_and_ps(mask, b.into()),
-                _mm512_andnot_ps(mask, a.into()),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                let mask = _mm512_set1_ps(-0.0);
+                _mm512_or_ps(
+                    _mm512_and_ps(mask, b.into()),
+                    _mm512_andnot_ps(mask, a.into()),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> mask32x16<Self> {
@@ -6126,11 +7923,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_max_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_max_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn min_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_min_ps(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, b: f32x16<Avx512>) -> f32x16<Avx512> {
+                _mm512_min_ps(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_precise_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -6142,11 +7951,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn mul_add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_fmadd_ps(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f32x16<Avx512>,
+                b: f32x16<Avx512>,
+                c: f32x16<Avx512>,
+            ) -> f32x16<Avx512> {
+                _mm512_fmadd_ps(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f32x16(self, a: f32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self> {
-        unsafe { _mm512_fmsub_ps(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f32x16<Avx512>,
+                b: f32x16<Avx512>,
+                c: f32x16<Avx512>,
+            ) -> f32x16<Avx512> {
+                _mm512_fmsub_ps(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn floor_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -6195,11 +8026,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
-        unsafe { _mm512_castps_pd(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> f64x8<Avx512> {
+                _mm512_castps_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_castps_si512(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_castps_si512(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
@@ -6224,11 +8067,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        unsafe { _mm512_castps_si512(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> u8x64<Avx512> {
+                _mm512_castps_si512(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_castps_si512(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_castps_si512(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
@@ -6267,7 +8122,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_i8x64(self, val: i8) -> i8x64<Self> {
-        unsafe { _mm512_set1_epi8(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: i8) -> i8x64<Avx512> {
+                _mm512_set1_epi8(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self> {
@@ -6363,38 +8224,72 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        unsafe { _mm512_add_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_add_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        unsafe { _mm512_sub_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        unsafe {
-            let dst_even = _mm512_mullo_epi16(a.into(), b.into());
-            let dst_odd = _mm512_mullo_epi16(
-                _mm512_srli_epi16::<8>(a.into()),
-                _mm512_srli_epi16::<8>(b.into()),
-            );
-            _mm512_or_si512(
-                _mm512_slli_epi16(dst_odd, 8),
-                _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                let dst_even = _mm512_mullo_epi16(a.into(), b.into());
+                let dst_odd = _mm512_mullo_epi16(
+                    _mm512_srli_epi16::<8>(a.into()),
+                    _mm512_srli_epi16::<8>(b.into()),
+                );
+                _mm512_or_si512(
+                    _mm512_slli_epi16(dst_odd, 8),
+                    _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_and_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_or_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
@@ -6402,21 +8297,25 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm512_unpacklo_epi8(
-                val,
-                _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
-            );
-            let hi_16 = _mm512_unpackhi_epi8(
-                val,
-                _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
-            );
-            let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
-            let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
-            _mm512_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, shift: u32) -> i8x64<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm512_unpacklo_epi8(
+                    val,
+                    _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
+                );
+                let hi_16 = _mm512_unpackhi_epi8(
+                    val,
+                    _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
+                );
+                let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
+                let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
+                _mm512_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -6437,21 +8336,25 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm512_unpacklo_epi8(
-                val,
-                _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
-            );
-            let hi_16 = _mm512_unpackhi_epi8(
-                val,
-                _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
-            );
-            let lo_shifted = _mm512_sra_epi16(lo_16, shift_count);
-            let hi_shifted = _mm512_sra_epi16(hi_16, shift_count);
-            _mm512_packs_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, shift: u32) -> i8x64<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm512_unpacklo_epi8(
+                    val,
+                    _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
+                );
+                let hi_16 = _mm512_unpackhi_epi8(
+                    val,
+                    _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
+                );
+                let lo_shifted = _mm512_sra_epi16(lo_16, shift_count);
+                let hi_shifted = _mm512_sra_epi16(hi_16, shift_count);
+                _mm512_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -6647,11 +8550,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        unsafe { _mm512_min_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_min_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
-        unsafe { _mm512_max_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>, b: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_max_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>) {
@@ -6664,19 +8579,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
-        unsafe { _mm512_sub_epi8(_mm512_setzero_si512(), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>) -> i8x64<Avx512> {
+                _mm512_sub_epi8(_mm512_setzero_si512(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>) -> u8x64<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x64<Avx512>) -> u32x16<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
-        unsafe { _mm512_set1_epi8(val.cast_signed()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: u8) -> u8x64<Avx512> {
+                _mm512_set1_epi8(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self> {
@@ -6772,38 +8711,72 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        unsafe { _mm512_add_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_add_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        unsafe { _mm512_sub_epi8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_sub_epi8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        unsafe {
-            let dst_even = _mm512_mullo_epi16(a.into(), b.into());
-            let dst_odd = _mm512_mullo_epi16(
-                _mm512_srli_epi16::<8>(a.into()),
-                _mm512_srli_epi16::<8>(b.into()),
-            );
-            _mm512_or_si512(
-                _mm512_slli_epi16(dst_odd, 8),
-                _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                let dst_even = _mm512_mullo_epi16(a.into(), b.into());
+                let dst_odd = _mm512_mullo_epi16(
+                    _mm512_srli_epi16::<8>(a.into()),
+                    _mm512_srli_epi16::<8>(b.into()),
+                );
+                _mm512_or_si512(
+                    _mm512_slli_epi16(dst_odd, 8),
+                    _mm512_and_si512(dst_even, _mm512_set1_epi16(0xFF)),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_and_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_or_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
@@ -6811,15 +8784,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm512_unpacklo_epi8(val, _mm512_setzero_si512());
-            let hi_16 = _mm512_unpackhi_epi8(val, _mm512_setzero_si512());
-            let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
-            let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
-            _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, shift: u32) -> u8x64<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm512_unpacklo_epi8(val, _mm512_setzero_si512());
+                let hi_16 = _mm512_unpackhi_epi8(val, _mm512_setzero_si512());
+                let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
+                let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
+                _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -6840,15 +8817,19 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self> {
-        unsafe {
-            let val = a.into();
-            let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-            let lo_16 = _mm512_unpacklo_epi8(val, _mm512_setzero_si512());
-            let hi_16 = _mm512_unpackhi_epi8(val, _mm512_setzero_si512());
-            let lo_shifted = _mm512_srl_epi16(lo_16, shift_count);
-            let hi_shifted = _mm512_srl_epi16(hi_16, shift_count);
-            _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, shift: u32) -> u8x64<Avx512> {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let lo_16 = _mm512_unpacklo_epi8(val, _mm512_setzero_si512());
+                let hi_16 = _mm512_unpackhi_epi8(val, _mm512_setzero_si512());
+                let lo_shifted = _mm512_srl_epi16(lo_16, shift_count);
+                let hi_shifted = _mm512_srl_epi16(hi_16, shift_count);
+                _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -7044,11 +9025,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        unsafe { _mm512_min_epu8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_min_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
-        unsafe { _mm512_max_epu8(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, b: u8x64<Avx512>) -> u8x64<Avx512> {
+                _mm512_max_epu8(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>) {
@@ -7093,7 +9086,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>) -> u32x16<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
@@ -7230,7 +9229,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_i16x32(self, val: i16) -> i16x32<Self> {
-        unsafe { _mm512_set1_epi16(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: i16) -> i16x32<Avx512> {
+                _mm512_set1_epi16(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self> {
@@ -7326,27 +9331,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        unsafe { _mm512_add_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_add_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        unsafe { _mm512_sub_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        unsafe { _mm512_mullo_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_mullo_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_and_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_or_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
@@ -7354,9 +9395,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
-        unsafe {
-            _mm512_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, shift: u32) -> i16x32<Avx512> {
+                _mm512_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -7364,9 +9409,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self> {
-        unsafe {
-            _mm512_sra_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, shift: u32) -> i16x32<Avx512> {
+                _mm512_sra_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -7533,11 +9582,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        unsafe { _mm512_min_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_min_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
-        unsafe { _mm512_max_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>, b: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_max_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>) {
@@ -7550,19 +9611,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self> {
-        unsafe { _mm512_sub_epi16(_mm512_setzero_si512(), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>) -> i16x32<Avx512> {
+                _mm512_sub_epi16(_mm512_setzero_si512(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>) -> u8x64<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i16x32<Avx512>) -> u32x16<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
-        unsafe { _mm512_set1_epi16(val.cast_signed()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: u16) -> u16x32<Avx512> {
+                _mm512_set1_epi16(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self> {
@@ -7658,27 +9743,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        unsafe { _mm512_add_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_add_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        unsafe { _mm512_sub_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_sub_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        unsafe { _mm512_mullo_epi16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_mullo_epi16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_and_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_or_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self> {
@@ -7686,9 +9807,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
-        unsafe {
-            _mm512_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, shift: u32) -> u16x32<Avx512> {
+                _mm512_sll_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -7696,9 +9821,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self> {
-        unsafe {
-            _mm512_srl_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, shift: u32) -> u16x32<Avx512> {
+                _mm512_srl_epi16(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -7865,11 +9994,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        unsafe { _mm512_min_epu16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_min_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
-        unsafe { _mm512_max_epu16(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, b: u16x32<Avx512>) -> u16x32<Avx512> {
+                _mm512_max_epu16(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>) {
@@ -7910,15 +10051,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
-        unsafe { _mm512_cvtepi16_epi8(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u8x32<Avx512> {
+                _mm512_cvtepi16_epi8(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u8x64<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u32x16<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
@@ -8055,7 +10214,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_i32x16(self, val: i32) -> i32x16<Self> {
-        unsafe { _mm512_set1_epi32(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: i32) -> i32x16<Avx512> {
+                _mm512_set1_epi32(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self> {
@@ -8151,27 +10316,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_add_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_add_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_sub_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_mullo_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_mullo_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_and_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_or_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
@@ -8179,23 +10380,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
-        unsafe {
-            _mm512_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, shift: u32) -> i32x16<Avx512> {
+                _mm512_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_sllv_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_sllv_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self> {
-        unsafe {
-            _mm512_sra_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, shift: u32) -> i32x16<Avx512> {
+                _mm512_sra_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_srav_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_srav_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self> {
@@ -8334,11 +10555,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_min_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_min_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_max_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>, b: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_max_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>) {
@@ -8351,15 +10584,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
-        unsafe { _mm512_sub_epi32(_mm512_setzero_si512(), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>) -> i32x16<Avx512> {
+                _mm512_sub_epi32(_mm512_setzero_si512(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>) -> u8x64<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i32x16<Avx512>) -> u32x16<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
@@ -8367,7 +10618,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_u32x16(self, val: u32) -> u32x16<Self> {
-        unsafe { _mm512_set1_epi32(val.cast_signed()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: u32) -> u32x16<Avx512> {
+                _mm512_set1_epi32(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self> {
@@ -8463,27 +10720,63 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_add_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_add_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_sub_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_sub_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_mullo_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_mullo_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn and_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_and_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_and_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn or_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_or_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_or_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_xor_si512(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_xor_si512(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self> {
@@ -8491,23 +10784,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
-        unsafe {
-            _mm512_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, shift: u32) -> u32x16<Avx512> {
+                _mm512_sll_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shlv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_sllv_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_sllv_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self> {
-        unsafe {
-            _mm512_srl_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, shift: u32) -> u32x16<Avx512> {
+                _mm512_srl_epi32(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
     }
     #[inline(always)]
     fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_srlv_epi32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_srlv_epi32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self> {
@@ -8646,11 +10959,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn min_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_min_epu32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_min_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
-        unsafe { _mm512_max_epu32(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, b: u32x16<Avx512>) -> u32x16<Avx512> {
+                _mm512_max_epu32(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>) {
@@ -8685,7 +11010,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        __m512i::from(a).simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>) -> u8x64<Avx512> {
+                __m512i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
@@ -8826,7 +11157,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn splat_f64x8(self, val: f64) -> f64x8<Self> {
-        unsafe { _mm512_set1_pd(val).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, val: f64) -> f64x8<Avx512> {
+                _mm512_set1_pd(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
     }
     #[inline(always)]
     fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self> {
@@ -8922,15 +11259,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_andnot_pd(_mm512_set1_pd(-0.0), a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_andnot_pd(_mm512_set1_pd(-0.0), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_xor_pd(a.into(), _mm512_set1_pd(-0.0)).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_xor_pd(a.into(), _mm512_set1_pd(-0.0)).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_sqrt_pd(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_sqrt_pd(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn approximate_recip_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -8938,30 +11293,58 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_add_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_add_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_sub_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_sub_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn mul_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_mul_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_mul_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn div_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_div_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_div_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn copysign_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        unsafe {
-            let mask = _mm512_set1_pd(-0.0);
-            _mm512_or_pd(
-                _mm512_and_pd(mask, b.into()),
-                _mm512_andnot_pd(mask, a.into()),
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                let mask = _mm512_set1_pd(-0.0);
+                _mm512_or_pd(
+                    _mm512_and_pd(mask, b.into()),
+                    _mm512_andnot_pd(mask, a.into()),
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> mask64x8<Self> {
@@ -9080,11 +11463,23 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn max_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_max_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_max_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn min_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_min_pd(a.into(), b.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f64x8<Avx512> {
+                _mm512_min_pd(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn max_precise_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -9096,11 +11491,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn mul_add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_fmadd_pd(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f64x8<Avx512>,
+                b: f64x8<Avx512>,
+                c: f64x8<Avx512>,
+            ) -> f64x8<Avx512> {
+                _mm512_fmadd_pd(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn mul_sub_f64x8(self, a: f64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self> {
-        unsafe { _mm512_fmsub_pd(a.into(), b.into(), c.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                a: f64x8<Avx512>,
+                b: f64x8<Avx512>,
+                c: f64x8<Avx512>,
+            ) -> f64x8<Avx512> {
+                _mm512_fmsub_pd(a.into(), b.into(), c.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
     }
     #[inline(always)]
     fn floor_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
@@ -9149,7 +11566,13 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {
-        unsafe { _mm512_castpd_ps(a.into()).simd_into(self) }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>) -> f32x16<Avx512> {
+                _mm512_castpd_ps(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
