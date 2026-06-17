@@ -478,10 +478,8 @@ impl Level for WasmSimd128 {
                             return b;
                         }
 
-                        unsafe {
-                            let result = #slide_op(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift);
-                            self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
-                        }
+                        let result = #slide_op(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift);
+                        self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
                     }
                 }
             }
@@ -799,12 +797,10 @@ fn mk_slide_helpers() -> TokenStream {
         /// The shift is still expected to be constant in practice, so the match statement will be optimized out.
         /// This exists because Rust doesn't currently let you do math on const generics.
         #[inline(always)]
-        unsafe fn dyn_slide_128(a: v128, b: v128, shift: usize) -> v128 {
-            unsafe {
-                match shift {
-                    #(#shifts,)*
-                    _ => unreachable!()
-                }
+        fn dyn_slide_128(a: v128, b: v128, shift: usize) -> v128 {
+            match shift {
+                #(#shifts,)*
+                _ => unreachable!()
             }
         }
     });
@@ -819,7 +815,7 @@ fn mk_slide_helpers() -> TokenStream {
                 quote! {
                     {
                         let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, #i, shift_bytes);
-                        unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+                        dyn_slide_128(lo, hi, shift_bytes % 16)
                     }
                 }
             })
@@ -828,7 +824,7 @@ fn mk_slide_helpers() -> TokenStream {
         fns.push(quote! {
             /// Concatenates `a` and `b` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`.
             #[inline(always)]
-            unsafe fn #helper_name(a: [v128; #num_blocks], b: [v128; #num_blocks], shift_bytes: usize) -> [v128; #num_blocks] {
+            fn #helper_name(a: [v128; #num_blocks], b: [v128; #num_blocks], shift_bytes: usize) -> [v128; #num_blocks] {
                 // Explicitly unrolled to help LLVM optimize
                 [#(#block_calls),*]
             }

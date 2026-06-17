@@ -145,13 +145,12 @@ impl Simd for Neon {
         if SHIFT >= 4usize {
             return b;
         }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_f32x4(a).val.0,
-                self.cvt_to_bytes_f32x4(b).val.0,
-                SHIFT * 4usize,
-            )
-        };
+        let result = dyn_vext_128(
+            self,
+            self.cvt_to_bytes_f32x4(a).val.0,
+            self.cvt_to_bytes_f32x4(b).val.0,
+            SHIFT * 4usize,
+        );
         self.cvt_from_bytes_f32x4(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -623,13 +622,12 @@ impl Simd for Neon {
         if SHIFT >= 16usize {
             return b;
         }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_i8x16(a).val.0,
-                self.cvt_to_bytes_i8x16(b).val.0,
-                SHIFT,
-            )
-        };
+        let result = dyn_vext_128(
+            self,
+            self.cvt_to_bytes_i8x16(a).val.0,
+            self.cvt_to_bytes_i8x16(b).val.0,
+            SHIFT,
+        );
         self.cvt_from_bytes_i8x16(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -990,13 +988,12 @@ impl Simd for Neon {
         if SHIFT >= 16usize {
             return b;
         }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_u8x16(a).val.0,
-                self.cvt_to_bytes_u8x16(b).val.0,
-                SHIFT,
-            )
-        };
+        let result = dyn_vext_128(
+            self,
+            self.cvt_to_bytes_u8x16(a).val.0,
+            self.cvt_to_bytes_u8x16(b).val.0,
+            SHIFT,
+        );
         self.cvt_from_bytes_u8x16(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -1536,13 +1533,12 @@ impl Simd for Neon {
         if SHIFT >= 8usize {
             return b;
         }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_i16x8(a).val.0,
-                self.cvt_to_bytes_i16x8(b).val.0,
-                SHIFT * 2usize,
-            )
-        };
+        let result = dyn_vext_128(
+            self,
+            self.cvt_to_bytes_i16x8(a).val.0,
+            self.cvt_to_bytes_i16x8(b).val.0,
+            SHIFT * 2usize,
+        );
         self.cvt_from_bytes_i16x8(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -1903,13 +1899,12 @@ impl Simd for Neon {
         if SHIFT >= 8usize {
             return b;
         }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_u16x8(a).val.0,
-                self.cvt_to_bytes_u16x8(b).val.0,
-                SHIFT * 2usize,
-            )
-        };
+        let result = dyn_vext_128(
+            self,
+            self.cvt_to_bytes_u16x8(a).val.0,
+            self.cvt_to_bytes_u16x8(b).val.0,
+            SHIFT * 2usize,
+        );
         self.cvt_from_bytes_u16x8(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -2439,13 +2434,12 @@ impl Simd for Neon {
         if SHIFT >= 4usize {
             return b;
         }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_i32x4(a).val.0,
-                self.cvt_to_bytes_i32x4(b).val.0,
-                SHIFT * 4usize,
-            )
-        };
+        let result = dyn_vext_128(
+            self,
+            self.cvt_to_bytes_i32x4(a).val.0,
+            self.cvt_to_bytes_i32x4(b).val.0,
+            SHIFT * 4usize,
+        );
         self.cvt_from_bytes_i32x4(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -2816,13 +2810,12 @@ impl Simd for Neon {
         if SHIFT >= 4usize {
             return b;
         }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_u32x4(a).val.0,
-                self.cvt_to_bytes_u32x4(b).val.0,
-                SHIFT * 4usize,
-            )
-        };
+        let result = dyn_vext_128(
+            self,
+            self.cvt_to_bytes_u32x4(a).val.0,
+            self.cvt_to_bytes_u32x4(b).val.0,
+            SHIFT * 4usize,
+        );
         self.cvt_from_bytes_u32x4(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -3351,13 +3344,12 @@ impl Simd for Neon {
         if SHIFT >= 2usize {
             return b;
         }
-        let result = unsafe {
-            dyn_vext_128(
-                self.cvt_to_bytes_f64x2(a).val.0,
-                self.cvt_to_bytes_f64x2(b).val.0,
-                SHIFT * 8usize,
-            )
-        };
+        let result = dyn_vext_128(
+            self,
+            self.cvt_to_bytes_f64x2(a).val.0,
+            self.cvt_to_bytes_f64x2(b).val.0,
+            SHIFT * 8usize,
+        );
         self.cvt_from_bytes_f64x2(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
@@ -3943,7 +3935,7 @@ impl Simd for Neon {
         if SHIFT >= 8usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_f32x8(a).val.0;
             let b_bytes = self.cvt_to_bytes_f32x8(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1];
@@ -3957,7 +3949,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -3966,7 +3958,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -4337,7 +4329,7 @@ impl Simd for Neon {
         if SHIFT >= 32usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_i8x32(a).val.0;
             let b_bytes = self.cvt_to_bytes_i8x32(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1];
@@ -4351,7 +4343,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -4360,7 +4352,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -4638,7 +4630,7 @@ impl Simd for Neon {
         if SHIFT >= 32usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_u8x32(a).val.0;
             let b_bytes = self.cvt_to_bytes_u8x32(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1];
@@ -4652,7 +4644,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -4661,7 +4653,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -5060,7 +5052,7 @@ impl Simd for Neon {
         if SHIFT >= 16usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_i16x16(a).val.0;
             let b_bytes = self.cvt_to_bytes_i16x16(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1];
@@ -5074,7 +5066,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -5083,7 +5075,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -5361,7 +5353,7 @@ impl Simd for Neon {
         if SHIFT >= 16usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_u16x16(a).val.0;
             let b_bytes = self.cvt_to_bytes_u16x16(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1];
@@ -5375,7 +5367,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -5384,7 +5376,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -5796,7 +5788,7 @@ impl Simd for Neon {
         if SHIFT >= 8usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_i32x8(a).val.0;
             let b_bytes = self.cvt_to_bytes_i32x8(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1];
@@ -5810,7 +5802,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -5819,7 +5811,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -6102,7 +6094,7 @@ impl Simd for Neon {
         if SHIFT >= 8usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_u32x8(a).val.0;
             let b_bytes = self.cvt_to_bytes_u32x8(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1];
@@ -6116,7 +6108,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -6125,7 +6117,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -6521,7 +6513,7 @@ impl Simd for Neon {
         if SHIFT >= 4usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_f64x4(a).val.0;
             let b_bytes = self.cvt_to_bytes_f64x4(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1];
@@ -6535,7 +6527,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -6544,7 +6536,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -6994,7 +6986,7 @@ impl Simd for Neon {
         if SHIFT >= 16usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_f32x16(a).val.0;
             let b_bytes = self.cvt_to_bytes_f32x16(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
@@ -7008,7 +7000,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -7017,7 +7009,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -7026,7 +7018,7 @@ impl Simd for Neon {
                         2,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -7035,7 +7027,7 @@ impl Simd for Neon {
                         3,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -7405,7 +7397,7 @@ impl Simd for Neon {
         if SHIFT >= 64usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_i8x64(a).val.0;
             let b_bytes = self.cvt_to_bytes_i8x64(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
@@ -7419,7 +7411,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -7428,7 +7420,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -7437,7 +7429,7 @@ impl Simd for Neon {
                         2,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -7446,7 +7438,7 @@ impl Simd for Neon {
                         3,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -7715,7 +7707,7 @@ impl Simd for Neon {
         if SHIFT >= 64usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_u8x64(a).val.0;
             let b_bytes = self.cvt_to_bytes_u8x64(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
@@ -7729,7 +7721,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -7738,7 +7730,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -7747,7 +7739,7 @@ impl Simd for Neon {
                         2,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -7756,7 +7748,7 @@ impl Simd for Neon {
                         3,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -8140,7 +8132,7 @@ impl Simd for Neon {
         if SHIFT >= 32usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_i16x32(a).val.0;
             let b_bytes = self.cvt_to_bytes_i16x32(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
@@ -8154,7 +8146,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -8163,7 +8155,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -8172,7 +8164,7 @@ impl Simd for Neon {
                         2,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -8181,7 +8173,7 @@ impl Simd for Neon {
                         3,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -8459,7 +8451,7 @@ impl Simd for Neon {
         if SHIFT >= 32usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_u16x32(a).val.0;
             let b_bytes = self.cvt_to_bytes_u16x32(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
@@ -8473,7 +8465,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -8482,7 +8474,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -8491,7 +8483,7 @@ impl Simd for Neon {
                         2,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -8500,7 +8492,7 @@ impl Simd for Neon {
                         3,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -8906,7 +8898,7 @@ impl Simd for Neon {
         if SHIFT >= 16usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_i32x16(a).val.0;
             let b_bytes = self.cvt_to_bytes_i32x16(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
@@ -8920,7 +8912,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -8929,7 +8921,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -8938,7 +8930,7 @@ impl Simd for Neon {
                         2,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -8947,7 +8939,7 @@ impl Simd for Neon {
                         3,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -9221,7 +9213,7 @@ impl Simd for Neon {
         if SHIFT >= 16usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_u32x16(a).val.0;
             let b_bytes = self.cvt_to_bytes_u32x16(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
@@ -9235,7 +9227,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -9244,7 +9236,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -9253,7 +9245,7 @@ impl Simd for Neon {
                         2,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -9262,7 +9254,7 @@ impl Simd for Neon {
                         3,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -9648,7 +9640,7 @@ impl Simd for Neon {
         if SHIFT >= 8usize {
             return b;
         }
-        let result = unsafe {
+        let result = {
             let a_bytes = self.cvt_to_bytes_f64x8(a).val.0;
             let b_bytes = self.cvt_to_bytes_f64x8(b).val.0;
             let a_blocks = [a_bytes.0, a_bytes.1, a_bytes.2, a_bytes.3];
@@ -9662,7 +9654,7 @@ impl Simd for Neon {
                         0,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -9671,7 +9663,7 @@ impl Simd for Neon {
                         1,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -9680,7 +9672,7 @@ impl Simd for Neon {
                         2,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
                 {
                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(
@@ -9689,7 +9681,7 @@ impl Simd for Neon {
                         3,
                         shift_bytes,
                     );
-                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                 },
             )
         };
@@ -10608,12 +10600,12 @@ impl<S: Simd> From<mask64x8<S>> for int64x2x4_t {
         crate::transmute::checked_transmute_copy(&value.val)
     }
 }
-#[doc = r" This is a version of the `vext` intrinsic that takes a non-const shift argument. The shift is still"]
-#[doc = r" expected to be constant in practice, so the match statement will be optimized out. This exists because"]
-#[doc = r" Rust doesn't currently let you do math on const generics."]
-#[inline(always)]
-unsafe fn dyn_vext_128(a: uint8x16_t, b: uint8x16_t, shift: usize) -> uint8x16_t {
-    unsafe {
+crate::kernel!(
+    #[doc = r" This is a version of the `vext` intrinsic that takes a non-const shift argument. The shift is still"]
+    #[doc = r" expected to be constant in practice, so the match statement will be optimized out. This exists because"]
+    #[doc = r" Rust doesn't currently let you do math on const generics."]
+    #[inline(always)]
+    fn dyn_vext_128(neon: Neon, a: uint8x16_t, b: uint8x16_t, shift: usize) -> uint8x16_t {
         match shift {
             0usize => vextq_u8::<0i32>(a, b),
             1usize => vextq_u8::<1i32>(a, b),
@@ -10634,4 +10626,4 @@ unsafe fn dyn_vext_128(a: uint8x16_t, b: uint8x16_t, shift: usize) -> uint8x16_t
             _ => unreachable!(),
         }
     }
-}
+);

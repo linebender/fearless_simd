@@ -383,9 +383,7 @@ impl Level for Neon {
                     }
                     (WithinBlocks, _) | (_, 128) => {
                         quote! {
-                            unsafe {
-                                dyn_vext_128(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift)
-                            }
+                            dyn_vext_128(self, self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift)
                         }
                     }
                     (AcrossBlocks, 256 | 512) => {
@@ -398,7 +396,7 @@ impl Level for Neon {
                         let bytes_arch_ty = self.arch_ty(&bytes_ty);
 
                         quote! {
-                            unsafe {
+                            {
                                 let a_bytes = self.#to_bytes(a).val.0;
                                 let b_bytes = self.#to_bytes(b).val.0;
                                 let a_blocks = [#( a_bytes.#blocks ),*];
@@ -407,7 +405,7 @@ impl Level for Neon {
                                 let shift_bytes = #byte_shift;
                                 #bytes_arch_ty(#({
                                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a_blocks, &b_blocks, #blocks3, shift_bytes);
-                                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                                 }),*)
                             }
                         }
@@ -641,17 +639,17 @@ fn mk_slide_helpers() -> TokenStream {
     });
 
     quote! {
-        /// This is a version of the `vext` intrinsic that takes a non-const shift argument. The shift is still
-        /// expected to be constant in practice, so the match statement will be optimized out. This exists because
-        /// Rust doesn't currently let you do math on const generics.
-        #[inline(always)]
-        unsafe fn dyn_vext_128(a: uint8x16_t, b: uint8x16_t, shift: usize) -> uint8x16_t {
-            unsafe {
+        crate::kernel!(
+            /// This is a version of the `vext` intrinsic that takes a non-const shift argument. The shift is still
+            /// expected to be constant in practice, so the match statement will be optimized out. This exists because
+            /// Rust doesn't currently let you do math on const generics.
+            #[inline(always)]
+            fn dyn_vext_128(neon: Neon, a: uint8x16_t, b: uint8x16_t, shift: usize) -> uint8x16_t {
                 match shift {
                     #(#shifts,)*
                     _ => unreachable!()
                 }
             }
-        }
+        );
     }
 }
