@@ -2855,12 +2855,7 @@ impl X86 {
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
         if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
-            return self.handle_avx512_load_interleaved(
-                op,
-                vec_ty,
-                block_size,
-                block_count,
-            );
+            return self.handle_avx512_load_interleaved(op, vec_ty, block_size, block_count);
         }
         match vec_ty.scalar_bits {
             32 | 16 | 8 => {
@@ -3035,12 +3030,7 @@ impl X86 {
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
         if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
-            return self.handle_avx512_store_interleaved(
-                op,
-                vec_ty,
-                block_size,
-                block_count,
-            );
+            return self.handle_avx512_store_interleaved(op, vec_ty, block_size, block_count);
         }
         match vec_ty.scalar_bits {
             32 | 16 | 8 => {
