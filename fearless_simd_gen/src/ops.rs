@@ -227,6 +227,12 @@ impl Op {
         let arg_decls = sig.arg_decls();
         let call_args = &sig.arg_names;
         let ret = &sig.ret;
+        let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. } | OpSig::StoreArray)
+        {
+            quote! { kernel(self #(, #call_args)*); }
+        } else {
+            quote! { kernel(self #(, #call_args)*) }
+        };
 
         quote! {
             #method_sig {
@@ -237,7 +243,7 @@ impl Op {
                     }
                 );
 
-                kernel(self #(, #call_args)*)
+                #kernel_call
             }
         }
     }
@@ -641,7 +647,7 @@ const FLOAT_OPS: &[Op] = &[
         "Compute an approximate reciprocal (`1. / x`) for each element.\n\n\
          This uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\n\
          On x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. \
-         On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. \
+         On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. \
          The precision of this operation may change as new platform support is added.",
     ),
     Op::new(
@@ -1347,7 +1353,13 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 block_size: 128,
                 block_count: 4,
             },
-            "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector.",
+            "Load elements from an array with 4-way interleaving.\n\n\
+            This is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded \
+            vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks \
+            into one vector.\n\n\
+            For example, with 32-bit lanes, memory laid out as \
+            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as \
+            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`.",
         ));
     }
 
@@ -1359,7 +1371,13 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 block_size: 128,
                 block_count: 4,
             },
-            "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory.",
+            "Store elements to an array with 4-way interleaving.\n\n\
+            This is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: \
+            `interleave` combines two already-loaded vectors, while this operation transposes one vector into four \
+            consecutive 128-bit blocks in memory.\n\n\
+            For example, with 32-bit lanes, a vector containing \
+            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as \
+            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`.",
         ));
     }
 

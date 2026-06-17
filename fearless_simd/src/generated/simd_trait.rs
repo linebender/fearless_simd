@@ -150,7 +150,7 @@ pub trait Simd:
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
@@ -869,7 +869,7 @@ pub trait Simd:
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
@@ -1000,7 +1000,7 @@ pub trait Simd:
     fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
@@ -1741,7 +1741,7 @@ pub trait Simd:
     fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
@@ -1876,7 +1876,7 @@ pub trait Simd:
     fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
@@ -1940,9 +1940,9 @@ pub trait Simd:
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `i32` elements.\n\nThis is a bitwise reinterpretation only, and does not perform any conversions."]
     fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
@@ -2118,9 +2118,9 @@ pub trait Simd:
     fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>);
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self>;
@@ -2323,9 +2323,9 @@ pub trait Simd:
     fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>);
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
     #[doc = "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input."]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self>;
@@ -2534,9 +2534,9 @@ pub trait Simd:
     fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>);
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
@@ -2611,7 +2611,7 @@ pub trait Simd:
     fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
@@ -2862,7 +2862,7 @@ pub trait SimdFloat<S: Simd>:
     fn abs(self) -> Self;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt(self) -> Self;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip(self) -> Self;
     #[doc = "Return a vector with the magnitude of `self` and the sign of `rhs` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self;
