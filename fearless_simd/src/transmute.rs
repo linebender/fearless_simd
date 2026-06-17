@@ -1,10 +1,17 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! We have bytemuck at home
+//! Safe wrappers for SIMD loads/stores and reference casts.
 //!
-//! This all serves a small set of checked transmute and cast functions;
-//! if we find this growing in complexity we should probably just use the real bytemuck
+//! This fulfills the purpose of both `safe_unaligned_simd` and `bytemuck` crates.
+//! The implementation is bytemuck-like, but far smaller than either of those crates,
+//! mostly by virtue of supporting less features (e.g. no by-value transmute).
+//!
+//! Unlike bytemuck, this verifies that sizes match at compile time,
+//! so we won't accidentally ship always-panicking code even if it's not covered by tests.
+//!
+//! It's not possible to get rid of `unsafe` here entirely, even if we were to use external crates,
+//! because we need to implement Pod for wrappers like Aligned512 which cannot be safely derived.
 
 use core::mem::{align_of, size_of};
 
