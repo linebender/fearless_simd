@@ -868,47 +868,46 @@ fn all_false_mask8x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn load_interleaved_128_f32x16<S: Simd>(simd: S) {
-    let data: [f32; 16] = [
+    let data = [
         0.0,
-        f32::NAN,
-        f32::INFINITY,
-        -3.0,
         4.0,
-        -0.0,
-        6.0,
-        f32::NEG_INFINITY,
         8.0,
-        9.0,
-        -10.0,
-        11.0,
         f32::MIN,
+        f32::NAN,
+        -0.0,
+        9.0,
         13.0,
+        f32::INFINITY,
+        6.0,
+        -10.0,
         f32::MAX,
+        -3.0,
+        f32::NEG_INFINITY,
+        11.0,
         15.0,
     ];
-    let result = simd.load_interleaved_128_f32x16(&data);
-
     let expected = [
         0.0,
-        4.0,
-        8.0,
-        f32::MIN,
         f32::NAN,
-        -0.0,
-        9.0,
-        13.0,
         f32::INFINITY,
-        6.0,
-        -10.0,
-        f32::MAX,
         -3.0,
+        4.0,
+        -0.0,
+        6.0,
         f32::NEG_INFINITY,
+        8.0,
+        9.0,
+        -10.0,
         11.0,
+        f32::MIN,
+        13.0,
+        f32::MAX,
         15.0,
     ];
 
     // Note: f32::NAN != f32::NAN hence we compare the bit pattern.
-    assert_eq!((*result).map(f32::to_bits), expected.map(f32::to_bits));
+    let result = simd.load_interleaved_128_f32x16(&data);
+    assert_eq!((*result).map(f32::to_bits), expected.map(f32::to_bits),);
 }
 
 #[simd_test]

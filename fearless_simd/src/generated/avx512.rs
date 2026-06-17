@@ -8020,24 +8020,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        let lanes: __m512 = crate::transmute::checked_transmute_copy::<[f32; 16usize], __m512>(src);
-        unsafe {
-            _mm512_permutexvar_ps(
-                _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
-                lanes,
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[f32; 16usize]) -> f32x16<Avx512> {
+                let lanes: __m512 =
+                    crate::transmute::checked_transmute_copy::<[f32; 16usize], __m512>(src);
+                _mm512_permutexvar_ps(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    lanes,
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, src)
     }
     #[inline(always)]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        unsafe {
-            let lanes = _mm512_permutexvar_ps(
-                _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
-                a.into(),
-            );
-            _mm512_storeu_ps(dest.as_mut_ptr() as *mut _, lanes);
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>, dest: &mut [f32; 16usize]) -> () {
+                let lanes = _mm512_permutexvar_ps(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    a.into(),
+                );
+                crate::transmute::checked_transmute_store::<__m512, [f32; 16usize]>(lanes, dest);
+            }
+        );
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
@@ -9024,35 +9033,43 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        let lanes: __m512i =
-            crate::transmute::checked_transmute_copy::<[u8; 64usize], __m512i>(src);
-        unsafe {
-            _mm512_permutexvar_epi8(
-                _mm512_set_epi8(
-                    63, 59, 55, 51, 47, 43, 39, 35, 31, 27, 23, 19, 15, 11, 7, 3, 62, 58, 54, 50,
-                    46, 42, 38, 34, 30, 26, 22, 18, 14, 10, 6, 2, 61, 57, 53, 49, 45, 41, 37, 33,
-                    29, 25, 21, 17, 13, 9, 5, 1, 60, 56, 52, 48, 44, 40, 36, 32, 28, 24, 20, 16,
-                    12, 8, 4, 0,
-                ),
-                lanes,
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[u8; 64usize]) -> u8x64<Avx512> {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[u8; 64usize], __m512i>(src);
+                _mm512_permutexvar_epi8(
+                    _mm512_set_epi8(
+                        63, 59, 55, 51, 47, 43, 39, 35, 31, 27, 23, 19, 15, 11, 7, 3, 62, 58, 54,
+                        50, 46, 42, 38, 34, 30, 26, 22, 18, 14, 10, 6, 2, 61, 57, 53, 49, 45, 41,
+                        37, 33, 29, 25, 21, 17, 13, 9, 5, 1, 60, 56, 52, 48, 44, 40, 36, 32, 28,
+                        24, 20, 16, 12, 8, 4, 0,
+                    ),
+                    lanes,
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, src)
     }
     #[inline(always)]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        unsafe {
-            let lanes = _mm512_permutexvar_epi8(
-                _mm512_set_epi8(
-                    63, 47, 31, 15, 62, 46, 30, 14, 61, 45, 29, 13, 60, 44, 28, 12, 59, 43, 27, 11,
-                    58, 42, 26, 10, 57, 41, 25, 9, 56, 40, 24, 8, 55, 39, 23, 7, 54, 38, 22, 6, 53,
-                    37, 21, 5, 52, 36, 20, 4, 51, 35, 19, 3, 50, 34, 18, 2, 49, 33, 17, 1, 48, 32,
-                    16, 0,
-                ),
-                a.into(),
-            );
-            _mm512_storeu_si512(dest.as_mut_ptr() as *mut _, lanes);
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x64<Avx512>, dest: &mut [u8; 64usize]) -> () {
+                let lanes = _mm512_permutexvar_epi8(
+                    _mm512_set_epi8(
+                        63, 47, 31, 15, 62, 46, 30, 14, 61, 45, 29, 13, 60, 44, 28, 12, 59, 43, 27,
+                        11, 58, 42, 26, 10, 57, 41, 25, 9, 56, 40, 24, 8, 55, 39, 23, 7, 54, 38,
+                        22, 6, 53, 37, 21, 5, 52, 36, 20, 4, 51, 35, 19, 3, 50, 34, 18, 2, 49, 33,
+                        17, 1, 48, 32, 16, 0,
+                    ),
+                    a.into(),
+                );
+                crate::transmute::checked_transmute_store::<__m512i, [u8; 64usize]>(lanes, dest);
+            }
+        );
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
@@ -9989,31 +10006,39 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        let lanes: __m512i =
-            crate::transmute::checked_transmute_copy::<[u16; 32usize], __m512i>(src);
-        unsafe {
-            _mm512_permutexvar_epi16(
-                _mm512_set_epi16(
-                    31, 27, 23, 19, 15, 11, 7, 3, 30, 26, 22, 18, 14, 10, 6, 2, 29, 25, 21, 17, 13,
-                    9, 5, 1, 28, 24, 20, 16, 12, 8, 4, 0,
-                ),
-                lanes,
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[u16; 32usize]) -> u16x32<Avx512> {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[u16; 32usize], __m512i>(src);
+                _mm512_permutexvar_epi16(
+                    _mm512_set_epi16(
+                        31, 27, 23, 19, 15, 11, 7, 3, 30, 26, 22, 18, 14, 10, 6, 2, 29, 25, 21, 17,
+                        13, 9, 5, 1, 28, 24, 20, 16, 12, 8, 4, 0,
+                    ),
+                    lanes,
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, src)
     }
     #[inline(always)]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        unsafe {
-            let lanes = _mm512_permutexvar_epi16(
-                _mm512_set_epi16(
-                    31, 23, 15, 7, 30, 22, 14, 6, 29, 21, 13, 5, 28, 20, 12, 4, 27, 19, 11, 3, 26,
-                    18, 10, 2, 25, 17, 9, 1, 24, 16, 8, 0,
-                ),
-                a.into(),
-            );
-            _mm512_storeu_si512(dest.as_mut_ptr() as *mut _, lanes);
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u16x32<Avx512>, dest: &mut [u16; 32usize]) -> () {
+                let lanes = _mm512_permutexvar_epi16(
+                    _mm512_set_epi16(
+                        31, 23, 15, 7, 30, 22, 14, 6, 29, 21, 13, 5, 28, 20, 12, 4, 27, 19, 11, 3,
+                        26, 18, 10, 2, 25, 17, 9, 1, 24, 16, 8, 0,
+                    ),
+                    a.into(),
+                );
+                crate::transmute::checked_transmute_store::<__m512i, [u16; 32usize]>(lanes, dest);
+            }
+        );
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
@@ -10950,25 +10975,33 @@ impl Simd for Avx512 {
     }
     #[inline(always)]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        let lanes: __m512i =
-            crate::transmute::checked_transmute_copy::<[u32; 16usize], __m512i>(src);
-        unsafe {
-            _mm512_permutexvar_epi32(
-                _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
-                lanes,
-            )
-            .simd_into(self)
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[u32; 16usize]) -> u32x16<Avx512> {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[u32; 16usize], __m512i>(src);
+                _mm512_permutexvar_epi32(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    lanes,
+                )
+                .simd_into(token)
+            }
+        );
+        kernel(self, src)
     }
     #[inline(always)]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        unsafe {
-            let lanes = _mm512_permutexvar_epi32(
-                _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
-                a.into(),
-            );
-            _mm512_storeu_si512(dest.as_mut_ptr() as *mut _, lanes);
-        }
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u32x16<Avx512>, dest: &mut [u32; 16usize]) -> () {
+                let lanes = _mm512_permutexvar_epi32(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    a.into(),
+                );
+                crate::transmute::checked_transmute_store::<__m512i, [u32; 16usize]>(lanes, dest);
+            }
+        );
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
