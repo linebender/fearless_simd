@@ -9,8 +9,7 @@
 //!
 //! This approach also relies less on the optimizer than using `bytemuck` would.
 //! We've verified that it emits the same IR as using intrinsics directly,
-//! since they lower into direct loads/stores anyway:
-//! https://github.com/rust-lang/stdarch/pull/2004
+//! since they [lower into generic loads/stores anyway](https://github.com/rust-lang/stdarch/pull/2004).
 //! With bytemuck the optimizer would need to do more work to remove the abstractions,
 //! and for single load/store instructions an inlining failure would be devastating.
 //!
