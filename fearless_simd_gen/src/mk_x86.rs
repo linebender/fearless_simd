@@ -1502,17 +1502,15 @@ impl X86 {
 
         quote! {
             #method_sig {
-                unsafe {
-                    if SHIFT >= #max_shift {
-                        return b;
-                    }
-
-                    // b and a are swapped here to match ARM's vext semantics. For vext, we can think of `a` as the "left",
-                    // and we concatenate `b` to its "right". This makes sense, since `a` is the left-hand side and `b` is
-                    // the right-hand side. x86's `alignr` is backwards, and treats `b` as the high/left block.
-                    let result = #alignr_op(self.#to_bytes(b).val.0, self.#to_bytes(a).val.0, #byte_shift);
-                    self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                if SHIFT >= #max_shift {
+                    return b;
                 }
+
+                // b and a are swapped here to match ARM's vext semantics. For vext, we can think of `a` as the "left",
+                // and we concatenate `b` to its "right". This makes sense, since `a` is the left-hand side and `b` is
+                // the right-hand side. x86's `alignr` is backwards, and treats `b` as the high/left block.
+                let result = #alignr_op(self, self.#to_bytes(b).val.0, self.#to_bytes(a).val.0, #byte_shift);
+                self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
             }
         }
     }
@@ -2057,6 +2055,7 @@ impl X86 {
     /// `vext` and our `slide` operation, and the 256-bit AVX2 version still operates *within* 128-bit lanes.
     fn dyn_alignr_helpers(&self) -> TokenStream {
         let mut fns = vec![];
+        let token_ty = self.token();
 
         let vec_widths: &[usize] = match self {
             Self::Sse4_2 => &[128],
@@ -2077,18 +2076,18 @@ impl X86 {
             });
 
             fns.push(quote! {
-                /// This is a version of the `alignr` intrinsic that takes a non-const shift argument. The shift is still
-                /// expected to be constant in practice, so the match statement will be optimized out. This exists because
-                /// Rust doesn't currently let you do math on const generics.
-                #[inline(always)]
-                unsafe fn #helper_name(a: #arch_ty, b: #arch_ty, shift: usize) -> #arch_ty {
-                    unsafe {
+                crate::kernel!(
+                    /// This is a version of the `alignr` intrinsic that takes a non-const shift argument. The shift is still
+                    /// expected to be constant in practice, so the match statement will be optimized out. This exists because
+                    /// Rust doesn't currently let you do math on const generics.
+                    #[inline(always)]
+                    fn #helper_name(token: #token_ty, a: #arch_ty, b: #arch_ty, shift: usize) -> #arch_ty {
                         match shift {
                             #(#shifts,)*
                             _ => unreachable!()
                         }
                     }
-                }
+                );
             });
         }
 
@@ -2105,15 +2104,17 @@ impl X86 {
             // Unroll the construction of the blocks. I tried using `array::from_fn`, but the compiler thought the
             // closure was too big and didn't inline it.
             fns.push(quote! {
-                /// Concatenates `b` and `a` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`.
-                /// Extracts from [b : a] (b in low bytes, a in high bytes), matching `alignr` semantics.
-                #[inline(always)]
-                unsafe fn #helper_name(a: [__m128i; #num_blocks], b: [__m128i; #num_blocks], shift_bytes: usize) -> [__m128i; #num_blocks] {
-                    [#({
-                        let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, #blocks_idx, shift_bytes);
-                        unsafe { dyn_alignr_128(hi, lo, shift_bytes % 16) }
-                    }),*]
-                }
+                crate::kernel!(
+                    /// Concatenates `b` and `a` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`.
+                    /// Extracts from [b : a] (b in low bytes, a in high bytes), matching `alignr` semantics.
+                    #[inline(always)]
+                    fn #helper_name(token: Sse4_2, a: [__m128i; #num_blocks], b: [__m128i; #num_blocks], shift_bytes: usize) -> [__m128i; #num_blocks] {
+                        [#({
+                            let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, #blocks_idx, shift_bytes);
+                            dyn_alignr_128(token, hi, lo, shift_bytes % 16)
+                        }),*]
+                    }
+                );
             });
         }
 
@@ -2124,57 +2125,59 @@ impl X86 {
 
     fn avx2_slide_helpers() -> TokenStream {
         quote! {
-            /// Computes one output __m256i for `cross_block_alignr_*` operations.
-            ///
-            /// Given an array of registers, each containing two 128-bit blocks, extracts two adjacent blocks (`lo_idx` and
-            /// `hi_idx` = `lo_idx + 1`) and performs `alignr` with `intra_shift`.
-            #[inline(always)]
-            unsafe fn cross_block_alignr_one(regs: &[__m256i], block_idx: usize, shift_bytes: usize) -> __m256i {
-                let lo_idx = block_idx + (shift_bytes / 16);
-                let intra_shift = shift_bytes % 16;
-                let lo_blocks = if lo_idx & 1 == 0 {
-                    regs[lo_idx / 2]
-                } else {
-                    unsafe { _mm256_permute2x128_si256::<0x21>(regs[lo_idx / 2], regs[(lo_idx / 2) + 1]) }
-                };
+            crate::kernel!(
+                /// Computes one output __m256i for `cross_block_alignr_*` operations.
+                ///
+                /// Given an array of registers, each containing two 128-bit blocks, extracts two adjacent blocks (`lo_idx` and
+                /// `hi_idx` = `lo_idx + 1`) and performs `alignr` with `intra_shift`.
+                #[inline(always)]
+                fn cross_block_alignr_one(token: Avx2, regs: &[__m256i], block_idx: usize, shift_bytes: usize) -> __m256i {
+                    let lo_idx = block_idx + (shift_bytes / 16);
+                    let intra_shift = shift_bytes % 16;
+                    let lo_blocks = if lo_idx & 1 == 0 {
+                        regs[lo_idx / 2]
+                    } else {
+                        _mm256_permute2x128_si256::<0x21>(regs[lo_idx / 2], regs[(lo_idx / 2) + 1])
+                    };
 
-                // For hi_blocks, we need blocks (`lo_idx + 1`) and (`lo_idx + 2`)
-                let hi_idx = lo_idx + 1;
-                let hi_blocks = if hi_idx & 1 == 0 {
-                    regs[hi_idx / 2]
-                } else {
-                    unsafe { _mm256_permute2x128_si256::<0x21>(regs[hi_idx / 2], regs[(hi_idx / 2) + 1]) }
-                };
+                    // For hi_blocks, we need blocks (`lo_idx + 1`) and (`lo_idx + 2`)
+                    let hi_idx = lo_idx + 1;
+                    let hi_blocks = if hi_idx & 1 == 0 {
+                        regs[hi_idx / 2]
+                    } else {
+                        _mm256_permute2x128_si256::<0x21>(regs[hi_idx / 2], regs[(hi_idx / 2) + 1])
+                    };
 
-                unsafe { dyn_alignr_256(hi_blocks, lo_blocks, intra_shift) }
-            }
+                    dyn_alignr_256(token, hi_blocks, lo_blocks, intra_shift)
+                }
+            );
 
-            /// Concatenates `b` and `a` (each 2 x __m256i = 4 blocks) and extracts 4 blocks starting at byte offset
-            /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
-            #[inline(always)]
-            unsafe fn cross_block_alignr_256x2(a: [__m256i; 2], b: [__m256i; 2], shift_bytes: usize) -> [__m256i; 2] {
-                // Concatenation is [b : a], so b blocks come first
-                let regs = [b[0], b[1], a[0], a[1]];
+            crate::kernel!(
+                /// Concatenates `b` and `a` (each 2 x __m256i = 4 blocks) and extracts 4 blocks starting at byte offset
+                /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+                #[inline(always)]
+                fn cross_block_alignr_256x2(token: Avx2, a: [__m256i; 2], b: [__m256i; 2], shift_bytes: usize) -> [__m256i; 2] {
+                    // Concatenation is [b : a], so b blocks come first
+                    let regs = [b[0], b[1], a[0], a[1]];
 
-                unsafe {
                     [
-                        cross_block_alignr_one(&regs, 0, shift_bytes),
-                        cross_block_alignr_one(&regs, 2, shift_bytes),
+                        cross_block_alignr_one(token, &regs, 0, shift_bytes),
+                        cross_block_alignr_one(token, &regs, 2, shift_bytes),
                     ]
                 }
-            }
+            );
 
-            /// Concatenates `b` and `a` (each 1 x __m256i = 2 blocks) and extracts 2 blocks starting at byte offset
-            /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
-            #[inline(always)]
-            unsafe fn cross_block_alignr_256x1(a: __m256i, b: __m256i, shift_bytes: usize) -> __m256i {
-                // Concatenation is [b : a], so b comes first
-                let regs = [b, a];
+            crate::kernel!(
+                /// Concatenates `b` and `a` (each 1 x __m256i = 2 blocks) and extracts 2 blocks starting at byte offset
+                /// `shift_bytes`. Extracts from [b : a] (b in low bytes, a in high bytes), matching alignr semantics.
+                #[inline(always)]
+                fn cross_block_alignr_256x1(token: Avx2, a: __m256i, b: __m256i, shift_bytes: usize) -> __m256i {
+                    // Concatenation is [b : a], so b comes first
+                    let regs = [b, a];
 
-                unsafe {
-                    cross_block_alignr_one(&regs, 0, shift_bytes)
+                    cross_block_alignr_one(token, &regs, 0, shift_bytes)
                 }
-            }
+            );
         }
     }
 }
