@@ -2781,14 +2781,14 @@ impl X86 {
         if *self == Self::Avx512 {
             let lane_mask = avx512_mask_lane_bits(vec_ty);
             let bits = avx512_mask_bits_expr(quote! { a });
-        let expr = match (quantifier, condition) {
-            (Quantifier::Any, true) => quote! { bits != 0 },
-            (Quantifier::Any, false) => quote! { bits != #lane_mask },
-            (Quantifier::All, true) => quote! { bits == #lane_mask },
-            (Quantifier::All, false) => quote! { bits == 0 },
-        };
-        let method_sig = method_op.simd_trait_method_sig(vec_ty);
-        return quote! {
+            let expr = match (quantifier, condition) {
+                (Quantifier::Any, true) => quote! { bits != 0 },
+                (Quantifier::Any, false) => quote! { bits != #lane_mask },
+                (Quantifier::All, true) => quote! { bits == #lane_mask },
+                (Quantifier::All, false) => quote! { bits == 0 },
+            };
+            let method_sig = method_op.simd_trait_method_sig(vec_ty);
+            return quote! {
             #method_sig {
                 let bits = #bits & #lane_mask;
                 #expr
