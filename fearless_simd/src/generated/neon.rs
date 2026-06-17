@@ -81,7 +81,7 @@ impl Simd for Neon {
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(enable = "neon")]
-        unsafe fn vectorize_neon<F: FnOnce() -> R, R>(f: F) -> R {
+        fn vectorize_neon<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }
         unsafe { vectorize_neon(f) }
