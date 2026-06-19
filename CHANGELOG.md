@@ -6,8 +6,8 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-The latest published Fearless SIMD release is [0.4.1](#041-2026-05-16) which was released on 2026-05-16.
-You can find its changes [documented below](#041-2026-05-16).
+The latest published Fearless SIMD release is [0.5.0](#050-2026-06-18) which was released on 2026-06-18.
+You can find its changes [documented below](#050-2026-06-18).
 
 ## [Unreleased]
 
@@ -20,6 +20,27 @@ This release has an [MSRV][] of 1.89.
 ### Changed
 
 - The MSRV is now Rust 1.89.
+
+## [0.5.0][] (2026-06-18)
+
+This release has an [MSRV][] of 1.88.
+
+### Added
+
+- The `kernel!` macro, which creates safe wrappers around SIMD-level-specific kernels so platform intrinsics from `core::arch` or `std::arch` can be used safely when a token proves the required target features. ([#214][] by [@Shnatsel][])
+- The `approximate_recip` method on floating-point SIMD vector types. It uses fast hardware reciprocal estimates where available and exact division otherwise. ([#204][] by [@tomcur][])
+- `SimdMask::from_bitmask`, `SimdMask::to_bitmask`, `SimdMask::test`, and `SimdMask::set`, mirroring the `std::simd` mask API. ([#226][] by [@Shnatsel][])
+
+### Changed
+
+- Breaking change: the crate's SIMD extension traits are now sealed, so external crates can no longer implement them for their own types. ([#211][] by [@LaurenzV][])
+- Breaking change: mask types now have opaque storage and use the new `SimdMask` trait instead of `SimdBase`. Masks no longer expose integer-vector APIs such as `Deref`, indexing, `Bytes`, public `SimdSplit`/`SimdCombine`, `slide`, `slide_within_blocks`, byte conversions, or scalar bit-operator overloads. ([#218][] by [@Shnatsel][])
+- Generated SIMD loads, stores, reference casts, transmute-like conversions, helpers, const-generic functions, and intrinsic calls now use checked wrappers or `kernel!`, removing most `unsafe` from generated code. ([#232][], [#233][], [#234][], [#235][], [#236][], [#237][], [#238][], [#239][], [#244][], [#245][] by [@Shnatsel][])
+- Documentation and examples have been expanded and cleaned up for SIMD level tokens, mask types, platform-specific intrinsics, custom transmute wrappers, README consistency, and docs.rs visibility for NEON and WebAssembly APIs. ([#213][], [#221][], [#222][], [#230][], [#240][], [#243][] by [@Shnatsel][], [#224][], [#225][] by [@DJMcNab][])
+
+### Removed
+
+- Breaking change: the `core_arch` wrapper module and the `safe_wrappers` feature have been removed. Use `kernel!` with `core::arch` or `std::arch` intrinsics instead. ([#216][] by [@Shnatsel][])
 
 ## [0.4.1][] (2026-05-16)
 
@@ -199,10 +220,36 @@ No changelog was kept for this release.
 [#181]: https://github.com/linebender/fearless_simd/pull/181
 [#185]: https://github.com/linebender/fearless_simd/pull/185
 [#188]: https://github.com/linebender/fearless_simd/pull/188
+[#204]: https://github.com/linebender/fearless_simd/pull/204
 [#206]: https://github.com/linebender/fearless_simd/pull/206
 [#208]: https://github.com/linebender/fearless_simd/pull/208
+[#211]: https://github.com/linebender/fearless_simd/pull/211
+[#213]: https://github.com/linebender/fearless_simd/pull/213
+[#214]: https://github.com/linebender/fearless_simd/pull/214
+[#215]: https://github.com/linebender/fearless_simd/pull/215
+[#216]: https://github.com/linebender/fearless_simd/pull/216
+[#218]: https://github.com/linebender/fearless_simd/pull/218
+[#221]: https://github.com/linebender/fearless_simd/pull/221
+[#222]: https://github.com/linebender/fearless_simd/pull/222
+[#224]: https://github.com/linebender/fearless_simd/pull/224
+[#225]: https://github.com/linebender/fearless_simd/pull/225
+[#226]: https://github.com/linebender/fearless_simd/pull/226
+[#230]: https://github.com/linebender/fearless_simd/pull/230
+[#232]: https://github.com/linebender/fearless_simd/pull/232
+[#233]: https://github.com/linebender/fearless_simd/pull/233
+[#234]: https://github.com/linebender/fearless_simd/pull/234
+[#235]: https://github.com/linebender/fearless_simd/pull/235
+[#236]: https://github.com/linebender/fearless_simd/pull/236
+[#237]: https://github.com/linebender/fearless_simd/pull/237
+[#238]: https://github.com/linebender/fearless_simd/pull/238
+[#239]: https://github.com/linebender/fearless_simd/pull/239
+[#240]: https://github.com/linebender/fearless_simd/pull/240
+[#243]: https://github.com/linebender/fearless_simd/pull/243
+[#244]: https://github.com/linebender/fearless_simd/pull/244
+[#245]: https://github.com/linebender/fearless_simd/pull/245
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/linebender/fearless_simd/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/linebender/fearless_simd/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/linebender/fearless_simd/compare/v0.4.0...v0.3.0
 [0.3.0]: https://github.com/linebender/fearless_simd/compare/v0.3.0...v0.2.0
