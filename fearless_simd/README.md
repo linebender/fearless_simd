@@ -150,7 +150,7 @@ case. There's also Q&A on [Zulip](https://xi.zulipchat.com/#narrow/channel/51423
 - Aarch64: Baseline [NEON](https://en.wikipedia.org/wiki/Arm_architecture_family#Advanced_SIMD_(Neon))
 - WebAssembly: [128-bit packed SIMD](https://github.com/WebAssembly/spec/blob/main/proposals/simd/SIMD.md), [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 
-A scalar fallback is also provided for plaftorms, so your code still works even if SIMD is not available.
+A scalar fallback is also provided for platforms, so your code still works even if SIMD is not available.
 
 ### WebAssembly
 
