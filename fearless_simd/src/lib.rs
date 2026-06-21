@@ -179,6 +179,10 @@
 #![cfg_attr(not(test), deny(clippy::disallowed_methods))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(non_camel_case_types, reason = "TODO")]
+#![expect(
+    clippy::doc_markdown,
+    reason = "No, Clippy, I'm not going to put 'x86/x86_64' in documentation into backticks."
+)]
 #![expect(clippy::unused_unit, reason = "easier for code generation")]
 #![no_std]
 
