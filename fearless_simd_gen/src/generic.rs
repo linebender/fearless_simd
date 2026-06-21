@@ -187,16 +187,41 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
+        OpSig::MaskFromBitmask => {
+            let half_len = half.len;
+            quote! {
+                #method_sig {
+                    let lo = self.#do_half(bits);
+                    let hi = self.#do_half(bits >> #half_len);
+                    self.#combine(lo, hi)
+                }
+            }
+        }
+        OpSig::MaskToBitmask => {
+            let half_len = half.len;
+            quote! {
+                #method_sig {
+                    let (lo, hi) = self.#split(a);
+                    let lo = self.#do_half(lo);
+                    let hi = self.#do_half(hi);
+                    lo | (hi << #half_len)
+                }
+            }
+        }
         OpSig::LoadInterleaved {
             block_size,
             block_count,
         } => {
             let split_len = (block_size * block_count) as usize / (ty.scalar_bits * 2);
+            let ty_rust = ty.rust();
             quote! {
                 #method_sig {
                     let (chunks, _) = src.as_chunks::<#split_len>();
-                    unsafe {
-                        core::mem::transmute([self.#do_half(&chunks[0]), self.#do_half(&chunks[1])])
+                    let lo = self.#do_half(&chunks[0]);
+                    let hi = self.#do_half(&chunks[1]);
+                    #ty_rust {
+                        val: crate::transmute::checked_transmute_copy(&[lo.val, hi.val]),
+                        simd: self,
                     }
                 }
             }
@@ -355,19 +380,7 @@ pub(crate) fn generic_from_array(
     // lower to LLVM intrinsics, they will likely not be optimized until much later in the pipeline (if at all),
     // resulting in substantially worse codegen. See https://github.com/linebender/fearless_simd/pull/185.
     let expr = quote! {
-        // Safety: The native vector type backing any implementation will be:
-        // - A `#[repr(simd)]` type, which has the same layout as an array of scalars
-        // - An array of `#[repr(simd)]` types
-        // - For AArch64 specifically, a `#[repr(C)]` tuple of `#[repr(simd)]` types
-        //
-        // These all have the same layout as a flat array of the corresponding scalars. The native vector types probably
-        // have greater alignment requirements than the source array type we're copying from, but that's explicitly
-        // allowed by transmute_copy:
-        //
-        // > This function will unsafely assume the pointer src is valid for size_of::<Dst> bytes by transmuting &Src to
-        // > &Dst and then reading the &Dst **(except that this is done in a way that is correct even when &Dst has
-        // > stricter alignment requirements than &Src).**
-        unsafe { core::mem::transmute_copy(#inner_ref) }
+        crate::transmute::checked_transmute_copy(#inner_ref)
     };
     let vec_rust = vec_ty.rust();
 
@@ -388,46 +401,32 @@ pub(crate) fn generic_as_array<T: ToTokens>(
     let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let num_scalars = vec_ty.len;
 
-    let ref_tok = kind.token();
     let native_ty =
         vec_ty.wrapped_native_ty(|vec_ty| arch_ty(vec_ty).into_token_stream(), max_block_size);
 
-    quote! {
-        #method_sig {
-            unsafe {
-                // Safety: The native vector type backing any implementation will be:
-                // - A `#[repr(simd)]` type, which has the same layout as an array of scalars
-                // - An array of `#[repr(simd)]` types
-                // - For AArch64 specifically, a `#[repr(C)]` tuple of `#[repr(simd)]` types
-                //
-                // Not only do these all have the same layout as a flat array of the corresponding scalars, but they
-                // wrap primitives where all bit patterns are valid (ints and floats).
-                core::mem::transmute::<#ref_tok #native_ty, #ref_tok [#rust_scalar; #num_scalars]>(#ref_tok a.val.0)
+    match kind {
+        RefKind::Value => quote! {
+            #method_sig {
+                crate::transmute::checked_transmute_copy::<#native_ty, [#rust_scalar; #num_scalars]>(&a.val.0)
             }
-        }
+        },
+        RefKind::Ref => quote! {
+            #method_sig {
+                crate::transmute::checked_cast_ref::<#native_ty, [#rust_scalar; #num_scalars]>(&a.val.0)
+            }
+        },
+        RefKind::Mut => quote! {
+            #method_sig {
+                crate::transmute::checked_cast_mut::<#native_ty, [#rust_scalar; #num_scalars]>(&mut a.val.0)
+            }
+        },
     }
 }
 
-pub(crate) fn generic_store_array(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let count = vec_ty.len;
-
-    let store_expr = quote! {
-        unsafe {
-            // Copies `count` scalars from the backing type, which has the same layout as the destination array (see
-            // `generic_as_array`). The backing type is aligned to its own size, and the destination array must *by
-            // definition* be aligned to at least the alignment of the scalar.
-            core::ptr::copy_nonoverlapping(
-                (&raw const a.val.0) as *const #scalar_ty,
-                dest.as_mut_ptr(),
-                #count,
-            );
-        }
-    };
-
+pub(crate) fn generic_store_array(method_sig: TokenStream, _vec_ty: &VecType) -> TokenStream {
     quote! {
         #method_sig {
-            #store_expr
+            crate::transmute::checked_transmute_store(a.val.0, dest);
         }
     }
 }
@@ -436,9 +435,7 @@ pub(crate) fn generic_to_bytes(method_sig: TokenStream, vec_ty: &VecType) -> Tok
     let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
     quote! {
         #method_sig {
-            unsafe {
-                #bytes_ty { val: core::mem::transmute(a.val), simd: self }
-            }
+            #bytes_ty { val: crate::transmute::checked_transmute_copy(&a.val), simd: self }
         }
     }
 }
@@ -447,11 +444,40 @@ pub(crate) fn generic_from_bytes(method_sig: TokenStream, vec_ty: &VecType) -> T
     let ty = vec_ty.rust();
     quote! {
         #method_sig {
-            unsafe {
-                // Safety: All values are wrapped in alignment wrappers (`Aligned128`, `Aligned256`, `Aligned512`), so
-                // we're transmuting between types with all valid bit patterns and the same size and alignment.
-                #ty { val: core::mem::transmute(a.val), simd: self }
+            #ty { val: crate::transmute::checked_transmute_copy(&a.val), simd: self }
+        }
+    }
+}
+
+pub(crate) fn generic_mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+    let len = vec_ty.len;
+
+    quote! {
+        #method_sig {
+            let lanes: [#scalar; #len] =
+                core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
+            lanes.simd_into(self)
+        }
+    }
+}
+
+pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let as_array = generic_op_name("as_array", vec_ty);
+    let len = vec_ty.len;
+
+    quote! {
+        #method_sig {
+            let lanes = self.#as_array(a);
+            let mut bits = 0u64;
+            let mut i = 0;
+            while i < #len {
+                if lanes[i] != 0 {
+                    bits |= 1u64 << i;
+                }
+                i += 1;
             }
+            bits
         }
     }
 }

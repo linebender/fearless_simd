@@ -150,7 +150,7 @@ pub trait Simd:
     fn neg_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
@@ -398,6 +398,10 @@ pub trait Simd:
     fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -597,6 +601,10 @@ pub trait Simd:
     fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -798,6 +806,10 @@ pub trait Simd:
     fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -857,7 +869,7 @@ pub trait Simd:
     fn neg_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f64x2(self, a: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
@@ -925,6 +937,10 @@ pub trait Simd:
     fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -984,7 +1000,7 @@ pub trait Simd:
     fn neg_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f32x8(self, a: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
@@ -1238,6 +1254,10 @@ pub trait Simd:
     fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask8x32(self, a: mask8x32<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1445,6 +1465,10 @@ pub trait Simd:
     fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask16x16(self, a: mask16x16<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1652,6 +1676,10 @@ pub trait Simd:
     fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask32x8(self, a: mask32x8<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1713,7 +1741,7 @@ pub trait Simd:
     fn neg_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f64x4(self, a: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
@@ -1783,6 +1811,10 @@ pub trait Simd:
     fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask64x4(self, a: mask64x4<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -1844,7 +1876,7 @@ pub trait Simd:
     fn neg_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f32x16(self, a: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f32x16(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
@@ -1908,9 +1940,9 @@ pub trait Simd:
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `i32` elements.\n\nThis is a bitwise reinterpretation only, and does not perform any conversions."]
     fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
@@ -2086,9 +2118,9 @@ pub trait Simd:
     fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>);
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self>;
@@ -2098,6 +2130,10 @@ pub trait Simd:
     fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask8x64(self, a: mask8x64<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2287,9 +2323,9 @@ pub trait Simd:
     fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>);
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
     #[doc = "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input."]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self>;
@@ -2303,6 +2339,10 @@ pub trait Simd:
     fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask16x32(self, a: mask16x32<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2494,9 +2534,9 @@ pub trait Simd:
     fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>);
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
@@ -2508,6 +2548,10 @@ pub trait Simd:
     fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask32x16(self, a: mask32x16<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2567,7 +2611,7 @@ pub trait Simd:
     fn neg_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip_f64x8(self, a: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Add two vectors element-wise."]
     fn add_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
@@ -2635,6 +2679,10 @@ pub trait Simd:
     fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self>;
     #[doc = "Convert a SIMD mask to signed integer mask lanes."]
     fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize];
+    #[doc = "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored."]
+    fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self>;
+    #[doc = "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared."]
+    fn to_bitmask_mask64x8(self, a: mask64x8<Self>) -> u64;
     #[doc = "Compute the logical AND of two masks."]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self>;
     #[doc = "Compute the logical OR of two masks."]
@@ -2664,47 +2712,48 @@ pub trait Simd:
     fn split_mask64x8(self, a: mask64x8<Self>) -> (mask64x4<Self>, mask64x4<Self>);
 }
 pub(crate) mod arch_types {
+    use crate::transmute::SimdPod;
     #[expect(
         unnameable_types,
         reason = "The native vector types that back a `Simd` implementation are an internal implementation detail, and intentionally kept private"
     )]
     pub trait ArchTypes {
-        type f32x4: Copy + Send + Sync;
-        type i8x16: Copy + Send + Sync;
-        type u8x16: Copy + Send + Sync;
-        type mask8x16: Copy + Send + Sync;
-        type i16x8: Copy + Send + Sync;
-        type u16x8: Copy + Send + Sync;
-        type mask16x8: Copy + Send + Sync;
-        type i32x4: Copy + Send + Sync;
-        type u32x4: Copy + Send + Sync;
-        type mask32x4: Copy + Send + Sync;
-        type f64x2: Copy + Send + Sync;
-        type mask64x2: Copy + Send + Sync;
-        type f32x8: Copy + Send + Sync;
-        type i8x32: Copy + Send + Sync;
-        type u8x32: Copy + Send + Sync;
-        type mask8x32: Copy + Send + Sync;
-        type i16x16: Copy + Send + Sync;
-        type u16x16: Copy + Send + Sync;
-        type mask16x16: Copy + Send + Sync;
-        type i32x8: Copy + Send + Sync;
-        type u32x8: Copy + Send + Sync;
-        type mask32x8: Copy + Send + Sync;
-        type f64x4: Copy + Send + Sync;
-        type mask64x4: Copy + Send + Sync;
-        type f32x16: Copy + Send + Sync;
-        type i8x64: Copy + Send + Sync;
-        type u8x64: Copy + Send + Sync;
-        type mask8x64: Copy + Send + Sync;
-        type i16x32: Copy + Send + Sync;
-        type u16x32: Copy + Send + Sync;
-        type mask16x32: Copy + Send + Sync;
-        type i32x16: Copy + Send + Sync;
-        type u32x16: Copy + Send + Sync;
-        type mask32x16: Copy + Send + Sync;
-        type f64x8: Copy + Send + Sync;
-        type mask64x8: Copy + Send + Sync;
+        type f32x4: Copy + Send + Sync + SimdPod;
+        type i8x16: Copy + Send + Sync + SimdPod;
+        type u8x16: Copy + Send + Sync + SimdPod;
+        type mask8x16: Copy + Send + Sync + SimdPod;
+        type i16x8: Copy + Send + Sync + SimdPod;
+        type u16x8: Copy + Send + Sync + SimdPod;
+        type mask16x8: Copy + Send + Sync + SimdPod;
+        type i32x4: Copy + Send + Sync + SimdPod;
+        type u32x4: Copy + Send + Sync + SimdPod;
+        type mask32x4: Copy + Send + Sync + SimdPod;
+        type f64x2: Copy + Send + Sync + SimdPod;
+        type mask64x2: Copy + Send + Sync + SimdPod;
+        type f32x8: Copy + Send + Sync + SimdPod;
+        type i8x32: Copy + Send + Sync + SimdPod;
+        type u8x32: Copy + Send + Sync + SimdPod;
+        type mask8x32: Copy + Send + Sync + SimdPod;
+        type i16x16: Copy + Send + Sync + SimdPod;
+        type u16x16: Copy + Send + Sync + SimdPod;
+        type mask16x16: Copy + Send + Sync + SimdPod;
+        type i32x8: Copy + Send + Sync + SimdPod;
+        type u32x8: Copy + Send + Sync + SimdPod;
+        type mask32x8: Copy + Send + Sync + SimdPod;
+        type f64x4: Copy + Send + Sync + SimdPod;
+        type mask64x4: Copy + Send + Sync + SimdPod;
+        type f32x16: Copy + Send + Sync + SimdPod;
+        type i8x64: Copy + Send + Sync + SimdPod;
+        type u8x64: Copy + Send + Sync + SimdPod;
+        type mask8x64: Copy + Send + Sync + SimdPod;
+        type i16x32: Copy + Send + Sync + SimdPod;
+        type u16x32: Copy + Send + Sync + SimdPod;
+        type mask16x32: Copy + Send + Sync + SimdPod;
+        type i32x16: Copy + Send + Sync + SimdPod;
+        type u32x16: Copy + Send + Sync + SimdPod;
+        type mask32x16: Copy + Send + Sync + SimdPod;
+        type f64x8: Copy + Send + Sync + SimdPod;
+        type mask64x8: Copy + Send + Sync + SimdPod;
     }
 }
 #[doc = r" Base functionality implemented by all SIMD vectors."]
@@ -2813,7 +2862,7 @@ pub trait SimdFloat<S: Simd>:
     fn abs(self) -> Self;
     #[doc = "Compute the square root of each element.\n\nNegative elements other than `-0.0` will become NaN."]
     fn sqrt(self) -> Self;
-    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
+    #[doc = "Compute an approximate reciprocal (`1. / x`) for each element.\n\nThis uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\nOn x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. The precision of this operation may change as new platform support is added."]
     fn approximate_recip(self) -> Self;
     #[doc = "Return a vector with the magnitude of `self` and the sign of `rhs` for each element.\n\nThis operation copies the sign bit, so if an input element is NaN, the output element will be a NaN with the same payload and a copied sign bit."]
     fn copysign(self, rhs: impl SimdInto<Self, S>) -> Self;
@@ -2965,6 +3014,32 @@ pub trait SimdMask<S: Simd>:
     fn witness(&self) -> S;
     #[doc = r" Create a SIMD mask with all lanes set to the given boolean value."]
     fn splat(simd: S, val: bool) -> Self;
+    #[doc = r" Create a mask from a compact bitmask."]
+    #[doc = r""]
+    #[doc = r" Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above"]
+    #[doc = r" [`Self::N`] are ignored."]
+    fn from_bitmask(simd: S, bits: u64) -> Self;
+    #[doc = r" Convert this mask to a compact bitmask."]
+    #[doc = r""]
+    #[doc = r" Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above"]
+    #[doc = r" [`Self::N`] are cleared."]
+    fn to_bitmask(self) -> u64;
+    #[doc = r" Test whether one logical lane is set."]
+    #[doc = r""]
+    #[doc = r" Panics if `index` is greater than or equal to the number of lanes in the mask."]
+    #[inline(always)]
+    fn test(&self, index: usize) -> bool {
+        assert!(
+            index < Self::N,
+            "mask lane index {index} is out of bounds for {} lanes",
+            Self::N
+        );
+        (((*self).to_bitmask() >> index) & 1) != 0
+    }
+    #[doc = r" Sets the value of one logical lane."]
+    #[doc = r""]
+    #[doc = r" Panics if `index` is greater than or equal to the number of lanes in the mask."]
+    fn set(&mut self, index: usize, value: bool);
     #[doc = r" Create a SIMD mask from signed integer mask lanes."]
     #[doc = r""]
     #[doc = r" The slice must be exactly the size of the SIMD mask."]

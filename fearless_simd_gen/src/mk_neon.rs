@@ -83,14 +83,12 @@ impl Level for Neon {
             OpSig::Splat => {
                 let expr = neon::expr(method, vec_ty, &[quote! { val }]);
                 let normalize_mask = integer_lane_mask_splat_arg(vec_ty);
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #normalize_mask
-                            #expr.simd_into(self)
-                        }
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        #normalize_mask
+                        #expr.simd_into(#token)
                     }
-                }
+                })
             }
             OpSig::Shift => {
                 let dup_type = vec_ty.cast(ScalarType::Int);
@@ -109,26 +107,18 @@ impl Level for Neon {
                     vec_ty,
                     &[quote! { a.into() }, quote! { #dup_intrinsic ( #shift ) }],
                 );
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #expr.simd_into(self)
-                        }
-                    }
-                }
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { #expr.simd_into(#token) }
+                })
             }
             OpSig::Unary => {
                 let args = [quote! { a.into() }];
 
                 let expr = neon::expr(method, vec_ty, &args);
 
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #expr.simd_into(self)
-                        }
-                    }
-                }
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { #expr.simd_into(#token) }
+                })
             }
             OpSig::LoadInterleaved {
                 block_size,
@@ -187,17 +177,15 @@ impl Level for Neon {
                     let id2 =
                         Ident::new(&format!("vcombine_{}", target_scalar_ty), Span::call_site());
 
-                    quote! {
-                        #method_sig {
-                            unsafe {
-                                let converted: #arch = a.into();
-                                let low = #id1(converted.0);
-                                let high = #id1(converted.1);
+                    self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            let converted: #arch = a.into();
+                            let low = #id1(converted.0);
+                            let high = #id1(converted.1);
 
-                                #id2(low, high).simd_into(self)
-                            }
+                            #id2(low, high).simd_into(#token)
                         }
-                    }
+                    })
                 } else {
                     let arch = self.arch_ty(&target_ty);
                     let id1 = Ident::new(&format!("vmovl_{}", vec_scalar_ty), Span::call_site());
@@ -205,72 +193,60 @@ impl Level for Neon {
                     let id3 =
                         Ident::new(&format!("vget_high_{}", vec_scalar_ty), Span::call_site());
 
+                    self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            let low = #id1(#id2(a.into()));
+                            let high = #id1(#id3(a.into()));
+
+                            #arch(low, high).simd_into(#token)
+                        }
+                    })
+                }
+            }
+            OpSig::Binary => self.kernel_method(op, vec_ty, |token| match method {
+                "shlv" | "shrv" => {
+                    let mut args = if vec_ty.scalar == ScalarType::Int {
+                        // Signed case
+                        [quote! { a.into() }, quote! { b.into() }]
+                    } else {
+                        // Unsigned case
+                        let bits = vec_ty.scalar_bits;
+                        let reinterpret = format_ident!("vreinterpretq_s{bits}_u{bits}");
+                        [quote! { a.into() }, quote! { #reinterpret(b.into()) }]
+                    };
+
+                    // For a right shift, we need to negate the shift amount
+                    if method == "shrv" {
+                        let neg = simple_intrinsic("vneg", &vec_ty.cast(ScalarType::Int));
+                        let arg1 = &args[1];
+                        args[1] = quote! { #neg(#arg1) };
+                    }
+
+                    let expr = neon::expr(method, vec_ty, &args);
                     quote! {
-                        #method_sig {
-                            unsafe {
-                                let low = #id1(#id2(a.into()));
-                                let high = #id1(#id3(a.into()));
-
-                                #arch(low, high).simd_into(self)
-                            }
-                        }
+                        #expr.simd_into(#token)
                     }
                 }
-            }
-            OpSig::Binary => {
-                let expr = match method {
-                    "shlv" | "shrv" => {
-                        let mut args = if vec_ty.scalar == ScalarType::Int {
-                            // Signed case
-                            [quote! { a.into() }, quote! { b.into() }]
-                        } else {
-                            // Unsigned case
-                            let bits = vec_ty.scalar_bits;
-                            let reinterpret = format_ident!("vreinterpretq_s{bits}_u{bits}");
-                            [quote! { a.into() }, quote! { #reinterpret(b.into()) }]
-                        };
+                "copysign" => {
+                    let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
+                    let unsigned_ty = vec_ty.cast(ScalarType::Unsigned);
+                    let sign_mask =
+                        neon::expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
+                    let vbsl = simple_intrinsic("vbsl", vec_ty);
 
-                        // For a right shift, we need to negate the shift amount
-                        if method == "shrv" {
-                            let neg = simple_intrinsic("vneg", &vec_ty.cast(ScalarType::Int));
-                            let arg1 = &args[1];
-                            args[1] = quote! { #neg(#arg1) };
-                        }
-
-                        let expr = neon::expr(method, vec_ty, &args);
-                        quote! {
-                            #expr.simd_into(self)
-                        }
-                    }
-                    "copysign" => {
-                        let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
-                        let unsigned_ty = vec_ty.cast(ScalarType::Unsigned);
-                        let sign_mask =
-                            neon::expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
-                        let vbsl = simple_intrinsic("vbsl", vec_ty);
-
-                        quote! {
-                            let sign_mask = #sign_mask;
-                            #vbsl(sign_mask, b.into(), a.into()).simd_into(self)
-                        }
-                    }
-                    _ => {
-                        let args = [quote! { a.into() }, quote! { b.into() }];
-                        let expr = neon::expr(method, vec_ty, &args);
-                        quote! {
-                            #expr.simd_into(self)
-                        }
-                    }
-                };
-
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #expr
-                        }
+                    quote! {
+                        let sign_mask = #sign_mask;
+                        #vbsl(sign_mask, b.into(), a.into()).simd_into(#token)
                     }
                 }
-            }
+                _ => {
+                    let args = [quote! { a.into() }, quote! { b.into() }];
+                    let expr = neon::expr(method, vec_ty, &args);
+                    quote! {
+                        #expr.simd_into(#token)
+                    }
+                }
+            }),
             OpSig::Ternary => {
                 let args = match method {
                     "mul_add" | "mul_sub" => [
@@ -291,13 +267,9 @@ impl Level for Neon {
                     let neg = simple_intrinsic("vneg", vec_ty);
                     expr = quote! { #neg(#expr) };
                 }
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #expr.simd_into(self)
-                        }
-                    }
-                }
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { #expr.simd_into(#token) }
+                })
             }
             OpSig::Compare => {
                 let args = [quote! { a.into() }, quote! { b.into() }];
@@ -306,13 +278,11 @@ impl Level for Neon {
                 let scalar_bits = vec_ty.scalar_bits;
                 let reinterpret_str = format!("vreinterpret{opt_q}_s{scalar_bits}_u{scalar_bits}");
                 let reinterpret = Ident::new(&reinterpret_str, Span::call_site());
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #reinterpret(#expr).simd_into(self)
-                        }
-                    }
-                }
+                self.kernel_method(
+                    op,
+                    vec_ty,
+                    |token| quote! { #reinterpret(#expr).simd_into(#token) },
+                )
             }
             OpSig::Select => {
                 let opt_q = neon::opt_q(vec_ty);
@@ -320,13 +290,9 @@ impl Level for Neon {
                 let reinterpret_str = format!("vreinterpret{opt_q}_u{scalar_bits}_s{scalar_bits}");
                 let reinterpret = Ident::new(&reinterpret_str, Span::call_site());
                 let vbsl = simple_intrinsic("vbsl", vec_ty);
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #vbsl(#reinterpret(a.into()), b.into(), c.into()).simd_into(self)
-                        }
-                    }
-                }
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { #vbsl(#reinterpret(a.into()), b.into(), c.into()).simd_into(#token) }
+                })
             }
             OpSig::Combine { combined_ty } => {
                 let combined_wrapper = combined_ty.aligned_wrapper();
@@ -375,28 +341,24 @@ impl Level for Neon {
             OpSig::Zip { select_low } => {
                 let neon = if select_low { "vzip1" } else { "vzip2" };
                 let zip = simple_intrinsic(neon, vec_ty);
-                quote! {
-                    #method_sig {
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
                         let x = a.into();
                         let y = b.into();
-                        unsafe {
-                            #zip(x, y).simd_into(self)
-                        }
+                        #zip(x, y).simd_into(#token)
                     }
-                }
+                })
             }
             OpSig::Unzip { select_even } => {
                 let neon = if select_even { "vuzp1" } else { "vuzp2" };
                 let zip = simple_intrinsic(neon, vec_ty);
-                quote! {
-                    #method_sig {
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
                         let x = a.into();
                         let y = b.into();
-                        unsafe {
-                            #zip(x, y).simd_into(self)
-                        }
+                        #zip(x, y).simd_into(#token)
                     }
-                }
+                })
             }
             OpSig::Slide { granularity } => {
                 use SlideGranularity::*;
@@ -421,9 +383,7 @@ impl Level for Neon {
                     }
                     (WithinBlocks, _) | (_, 128) => {
                         quote! {
-                            unsafe {
-                                dyn_vext_128(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift)
-                            }
+                            dyn_vext_128(self, self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift)
                         }
                     }
                     (AcrossBlocks, 256 | 512) => {
@@ -436,7 +396,7 @@ impl Level for Neon {
                         let bytes_arch_ty = self.arch_ty(&bytes_ty);
 
                         quote! {
-                            unsafe {
+                            {
                                 let a_bytes = self.#to_bytes(a).val.0;
                                 let b_bytes = self.#to_bytes(b).val.0;
                                 let a_blocks = [#( a_bytes.#blocks ),*];
@@ -445,7 +405,7 @@ impl Level for Neon {
                                 let shift_bytes = #byte_shift;
                                 #bytes_arch_ty(#({
                                     let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a_blocks, &b_blocks, #blocks3, shift_bytes);
-                                    dyn_vext_128(lo, hi, shift_bytes % 16)
+                                    dyn_vext_128(self, lo, hi, shift_bytes % 16)
                                 }),*)
                             }
                         }
@@ -480,13 +440,11 @@ impl Level for Neon {
                 } else {
                     let to_ty = &vec_ty.reinterpret(target_ty, scalar_bits);
                     let neon = cvt_intrinsic("vcvt", to_ty, vec_ty);
-                    quote! {
-                        #method_sig {
-                            unsafe {
-                                #neon(a.into()).simd_into(self)
-                            }
-                        }
-                    }
+                    self.kernel_method(
+                        op,
+                        vec_ty,
+                        |token| quote! { #neon(a.into()).simd_into(#token) },
+                    )
                 }
             }
             OpSig::Reinterpret {
@@ -497,13 +455,11 @@ impl Level for Neon {
                     let to_ty = vec_ty.reinterpret(target_ty, scalar_bits);
                     let neon = cvt_intrinsic("vreinterpret", &to_ty, vec_ty);
 
-                    quote! {
-                        #method_sig {
-                            unsafe {
-                                #neon(a.into()).simd_into(self)
-                            }
-                        }
-                    }
+                    self.kernel_method(
+                        op,
+                        vec_ty,
+                        |token| quote! { #neon(a.into()).simd_into(#token) },
+                    )
                 } else {
                     quote! {}
                 }
@@ -522,14 +478,14 @@ impl Level for Neon {
                 let u32_ty = vec_ty.reinterpret(ScalarType::Unsigned, 32);
                 let min_max = simple_intrinsic(reduction, &u32_ty);
                 let reinterpret = format_ident!("vreinterpretq_u32_s{}", vec_ty.scalar_bits);
-                quote! {
-                    #method_sig {
-                        unsafe {
-                            #min_max(#reinterpret(a.into())) #target
-                        }
-                    }
-                }
+                self.kernel_method(
+                    op,
+                    vec_ty,
+                    |_| quote! { #min_max(#reinterpret(a.into())) #target },
+                )
             }
+            OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(op, vec_ty),
+            OpSig::MaskToBitmask => self.handle_mask_to_bitmask(op, vec_ty),
             OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
             OpSig::AsArray { kind } => {
                 generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
@@ -561,6 +517,120 @@ impl Level for Neon {
     }
 }
 
+impl Neon {
+    fn handle_mask_from_bitmask(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "mask bitmask conversion only operates on masks"
+        );
+        assert_eq!(
+            vec_ty.n_bits(),
+            self.native_width(),
+            "wide masks should use the generic split implementation"
+        );
+
+        self.kernel_method(op, vec_ty, |token| match vec_ty.scalar_bits {
+            8 => quote! {
+                let shifts =
+                    crate::transmute::checked_transmute_copy::<[i16; 8], int16x8_t>(
+                        &[15, 14, 13, 12, 11, 10, 9, 8],
+                    );
+                let lo = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
+                let hi = vshlq_u16(vdupq_n_u16((bits >> 8) as u16), shifts);
+                let lo = vcltq_s16(vreinterpretq_s16_u16(lo), vdupq_n_s16(0));
+                let hi = vcltq_s16(vreinterpretq_s16_u16(hi), vdupq_n_s16(0));
+                vcombine_s8(
+                    vmovn_s16(vreinterpretq_s16_u16(lo)),
+                    vmovn_s16(vreinterpretq_s16_u16(hi)),
+                ).simd_into(#token)
+            },
+            16 => quote! {
+                let shifts =
+                    crate::transmute::checked_transmute_copy::<[i16; 8], int16x8_t>(
+                        &[15, 14, 13, 12, 11, 10, 9, 8],
+                    );
+                let shifted = vshlq_u16(vdupq_n_u16(bits as u16), shifts);
+                let mask = vcltq_s16(vreinterpretq_s16_u16(shifted), vdupq_n_s16(0));
+                vreinterpretq_s16_u16(mask).simd_into(#token)
+            },
+            32 => quote! {
+                let shifts =
+                    crate::transmute::checked_transmute_copy::<[i32; 4], int32x4_t>(
+                        &[31, 30, 29, 28],
+                    );
+                let shifted = vshlq_u32(vdupq_n_u32(bits as u32), shifts);
+                let mask = vcltq_s32(vreinterpretq_s32_u32(shifted), vdupq_n_s32(0));
+                vreinterpretq_s32_u32(mask).simd_into(#token)
+            },
+            64 => quote! {
+                let shifts =
+                    crate::transmute::checked_transmute_copy::<[i64; 2], int64x2_t>(
+                        &[63, 62],
+                    );
+                let shifted = vshlq_u64(vdupq_n_u64(bits), shifts);
+                let mask = vcltq_s64(vreinterpretq_s64_u64(shifted), vdupq_n_s64(0));
+                vreinterpretq_s64_u64(mask).simd_into(#token)
+            },
+            _ => unimplemented!(),
+        })
+    }
+
+    fn handle_mask_to_bitmask(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        assert_eq!(
+            vec_ty.scalar,
+            ScalarType::Mask,
+            "mask bitmask conversion only operates on masks"
+        );
+        assert_eq!(
+            vec_ty.n_bits(),
+            self.native_width(),
+            "wide masks should use the generic split implementation"
+        );
+
+        self.kernel_method(op, vec_ty, |_| match vec_ty.scalar_bits {
+            8 => quote! {
+                let weights =
+                    crate::transmute::checked_transmute_copy::<[u8; 16], uint8x16_t>(
+                        &[
+                            1, 2, 4, 8, 16, 32, 64, 128,
+                            1, 2, 4, 8, 16, 32, 64, 128,
+                        ],
+                    );
+                let bits = vandq_u8(vreinterpretq_u8_s8(a.into()), weights);
+                let lo = vaddv_u8(vget_low_u8(bits)) as u64;
+                let hi = vaddv_u8(vget_high_u8(bits)) as u64;
+                lo | (hi << 8)
+            },
+            16 => quote! {
+                let weights =
+                    crate::transmute::checked_transmute_copy::<[u16; 8], uint16x8_t>(
+                        &[1, 2, 4, 8, 16, 32, 64, 128],
+                    );
+                let bits = vandq_u16(vreinterpretq_u16_s16(a.into()), weights);
+                vaddvq_u16(bits) as u64
+            },
+            32 => quote! {
+                let weights =
+                    crate::transmute::checked_transmute_copy::<[u32; 4], uint32x4_t>(
+                        &[1, 2, 4, 8],
+                    );
+                let bits = vandq_u32(vreinterpretq_u32_s32(a.into()), weights);
+                vaddvq_u32(bits) as u64
+            },
+            64 => quote! {
+                let weights =
+                    crate::transmute::checked_transmute_copy::<[u64; 2], uint64x2_t>(
+                        &[1, 2],
+                    );
+                let bits = vandq_u64(vreinterpretq_u64_s64(a.into()), weights);
+                vaddvq_u64(bits)
+            },
+            _ => unimplemented!(),
+        })
+    }
+}
+
 fn mk_slide_helpers() -> TokenStream {
     let shifts = (0_usize..16).map(|shift| {
         let shift_i32 = i32::try_from(shift).unwrap();
@@ -568,17 +638,17 @@ fn mk_slide_helpers() -> TokenStream {
     });
 
     quote! {
-        /// This is a version of the `vext` intrinsic that takes a non-const shift argument. The shift is still
-        /// expected to be constant in practice, so the match statement will be optimized out. This exists because
-        /// Rust doesn't currently let you do math on const generics.
-        #[inline(always)]
-        unsafe fn dyn_vext_128(a: uint8x16_t, b: uint8x16_t, shift: usize) -> uint8x16_t {
-            unsafe {
+        crate::kernel!(
+            /// This is a version of the `vext` intrinsic that takes a non-const shift argument. The shift is still
+            /// expected to be constant in practice, so the match statement will be optimized out. This exists because
+            /// Rust doesn't currently let you do math on const generics.
+            #[inline(always)]
+            fn dyn_vext_128(neon: Neon, a: uint8x16_t, b: uint8x16_t, shift: usize) -> uint8x16_t {
                 match shift {
                     #(#shifts,)*
                     _ => unreachable!()
                 }
             }
-        }
+        );
     }
 }

@@ -26,11 +26,11 @@
 /// #[cfg(target_arch = "x86_64")]
 /// use std::arch::x86_64::{__m256i, _mm256_add_epi32};
 ///
-/// fearless_simd::kernel! {
+/// fearless_simd::kernel!(
 ///     fn add_i32x8(avx2: Avx2, a: __m256i, b: __m256i) -> __m256i {
 ///         _mm256_add_epi32(a, b)
 ///     }
-/// }
+/// );
 ///
 /// # fn main() {
 /// #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -60,9 +60,9 @@
 /// For soundness, this macro only accepts safe functions.
 ///
 /// ```compile_fail
-/// fearless_simd::kernel! {
+/// fearless_simd::kernel!(
 ///     unsafe fn should_not_compile(avx2: Avx2) {}
-/// }
+/// );
 #[macro_export]
 macro_rules! kernel {
     (
@@ -259,24 +259,24 @@ mod tests {
     #[cfg(all(feature = "avx2", target_arch = "x86_64"))]
     use core::arch::x86_64::{__m256i, _mm256_add_epi32};
 
-    crate::kernel! {
+    crate::kernel!(
         fn add_f32x4_neon(neon: Neon, a: float32x4_t, b: float32x4_t) -> float32x4_t {
             vaddq_f32(a, b)
         }
-    }
+    );
 
-    crate::kernel! {
+    crate::kernel!(
         fn add_f32x4_wasm(wasm: WasmSimd128, a: v128, b: v128) -> v128 {
             f32x4_add(a, b)
         }
-    }
+    );
 
     #[cfg(all(feature = "avx2", any(target_arch = "x86", target_arch = "x86_64")))]
-    crate::kernel! {
+    crate::kernel!(
         fn add_i32x8_avx2(avx2: Avx2, a: __m256i, b: __m256i) -> __m256i {
             _mm256_add_epi32(a, b)
         }
-    }
+    );
 
     #[cfg(target_arch = "aarch64")]
     #[test]

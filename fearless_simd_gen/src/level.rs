@@ -46,8 +46,22 @@ pub(crate) trait Level {
     /// Generate a single operation's method on the `Simd` implementation.
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream;
 
+    /// Determine whether an operation should defer to the generic split/combine implementation.
+    fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
+        op.sig.should_use_generic_op(vec_ty, self.native_width())
+    }
+
     fn token(&self) -> Ident {
         Ident::new(self.name(), Span::call_site())
+    }
+
+    fn kernel_method(
+        &self,
+        op: Op,
+        vec_ty: &VecType,
+        body: impl FnOnce(&Ident) -> TokenStream,
+    ) -> TokenStream {
+        op.simd_trait_kernel_method(self.token(), vec_ty, body)
     }
 
     fn impl_arch_types(&self) -> TokenStream {
@@ -104,7 +118,7 @@ pub(crate) trait Level {
         let mut methods = vec![];
         for vec_ty in SIMD_TYPES {
             for op in ops_for_type(vec_ty) {
-                if op.sig.should_use_generic_op(vec_ty, native_width) {
+                if self.should_use_generic_op(&op, vec_ty) {
                     methods.push(generic_op(&op, vec_ty));
                     continue;
                 }
@@ -121,7 +135,7 @@ pub(crate) trait Level {
                 // The closure passed to it is already required to be #[inline(always)],
                 // so this wrapper is the only opportunity for the compiler to make inlining decisions.
                 #[target_feature(enable = #target_features)]
-                unsafe fn #vectorize<F: FnOnce() -> R, R>(f: F) -> R {
+                fn #vectorize<F: FnOnce() -> R, R>(f: F) -> R {
                     f()
                 }
                 unsafe { #vectorize(f) }
@@ -201,7 +215,7 @@ pub(crate) trait Level {
                     #[inline(always)]
                     fn simd_from(simd: S, arch: #arch) -> Self {
                         Self {
-                            val: unsafe { core::mem::transmute_copy(&arch) },
+                            val: crate::transmute::checked_transmute_copy(&arch),
                             simd
                         }
                     }
@@ -210,7 +224,7 @@ pub(crate) trait Level {
                 impl<S: Simd> From<#simd<S>> for #arch {
                     #[inline(always)]
                     fn from(value: #simd<S>) -> Self {
-                        unsafe { core::mem::transmute_copy(&value.val) }
+                        crate::transmute::checked_transmute_copy(&value.val)
                     }
                 }
             });

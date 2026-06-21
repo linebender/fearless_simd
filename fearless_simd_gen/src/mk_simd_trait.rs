@@ -114,12 +114,14 @@ pub(crate) fn mk_arch_types() -> TokenStream {
     for vec_ty in SIMD_TYPES {
         let ty_name = vec_ty.rust();
         types.push(quote! {
-            type #ty_name: Copy + Send + Sync;
+            type #ty_name: Copy + Send + Sync + SimdPod;
         });
     }
 
     quote! {
         pub(crate) mod arch_types {
+            use crate::transmute::SimdPod;
+
             #[expect(
                 unnameable_types,
                 reason = "The native vector types that back a `Simd` implementation are an internal implementation detail, and intentionally kept private"
@@ -307,6 +309,36 @@ fn mk_simd_mask() -> TokenStream {
 
             /// Create a SIMD mask with all lanes set to the given boolean value.
             fn splat(simd: S, val: bool) -> Self;
+
+            /// Create a mask from a compact bitmask.
+            ///
+            /// Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above
+            /// [`Self::N`] are ignored.
+            fn from_bitmask(simd: S, bits: u64) -> Self;
+
+            /// Convert this mask to a compact bitmask.
+            ///
+            /// Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above
+            /// [`Self::N`] are cleared.
+            fn to_bitmask(self) -> u64;
+
+            /// Test whether one logical lane is set.
+            ///
+            /// Panics if `index` is greater than or equal to the number of lanes in the mask.
+            #[inline(always)]
+            fn test(&self, index: usize) -> bool {
+                assert!(
+                    index < Self::N,
+                    "mask lane index {index} is out of bounds for {} lanes",
+                    Self::N
+                );
+                (((*self).to_bitmask() >> index) & 1) != 0
+            }
+
+            /// Sets the value of one logical lane.
+            ///
+            /// Panics if `index` is greater than or equal to the number of lanes in the mask.
+            fn set(&mut self, index: usize, value: bool);
 
             /// Create a SIMD mask from signed integer mask lanes.
             ///

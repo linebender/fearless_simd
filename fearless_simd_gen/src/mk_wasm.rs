@@ -21,6 +21,77 @@ use crate::{
 #[derive(Clone, Copy)]
 pub(crate) struct WasmSimd128;
 
+fn mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "mask bitmask conversion only operates on masks"
+    );
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "WASM SIMD mask bitmask lowering only handles one native vector"
+    );
+
+    let expr = match vec_ty.scalar_bits {
+        8 => quote! {
+            let lo = i8x16_splat(bits as i8);
+            let hi = i8x16_splat((bits >> 8) as i8);
+            let bytes =
+                u8x16_shuffle::<0, 0, 0, 0, 0, 0, 0, 0, 16, 16, 16, 16, 16, 16, 16, 16>(lo, hi);
+            let powers = u8x16(1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128);
+            let selected = v128_and(bytes, powers);
+            i8x16_ne(selected, i8x16_splat(0)).simd_into(self)
+        },
+        16 => quote! {
+            let bitset = i16x8_splat(bits as i16);
+            let powers = u16x8(1, 2, 4, 8, 16, 32, 64, 128);
+            let selected = v128_and(bitset, powers);
+            i16x8_ne(selected, i16x8_splat(0)).simd_into(self)
+        },
+        32 => quote! {
+            let bitset = i32x4_splat(bits as i32);
+            let powers = u32x4(1, 2, 4, 8);
+            let selected = v128_and(bitset, powers);
+            i32x4_ne(selected, i32x4_splat(0)).simd_into(self)
+        },
+        64 => quote! {
+            let bitset = i64x2_splat(bits as i64);
+            let powers = u64x2(1, 2);
+            let selected = v128_and(bitset, powers);
+            i64x2_ne(selected, i64x2_splat(0)).simd_into(self)
+        },
+        _ => unreachable!("WASM only supports mask lane widths of 8, 16, 32, and 64 bits"),
+    };
+
+    quote! {
+        #method_sig {
+            #expr
+        }
+    }
+}
+
+fn mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    assert_eq!(
+        vec_ty.scalar,
+        ScalarType::Mask,
+        "mask bitmask conversion only operates on masks"
+    );
+    assert_eq!(
+        vec_ty.n_bits(),
+        128,
+        "WASM SIMD mask bitmask lowering only handles one native vector"
+    );
+
+    let intrinsic = format_ident!("i{}x{}_bitmask", vec_ty.scalar_bits, vec_ty.len);
+
+    quote! {
+        #method_sig {
+            #intrinsic(a.into()) as u64
+        }
+    }
+}
+
 impl Level for WasmSimd128 {
     fn name(&self) -> &'static str {
         "WasmSimd128"
@@ -407,10 +478,8 @@ impl Level for WasmSimd128 {
                             return b;
                         }
 
-                        unsafe {
-                            let result = #slide_op(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift);
-                            self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
-                        }
+                        let result = #slide_op(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift);
+                        self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
                     }
                 }
             }
@@ -521,12 +590,15 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
+            OpSig::MaskFromBitmask => mask_from_bitmask(method_sig, vec_ty),
+            OpSig::MaskToBitmask => mask_to_bitmask(method_sig, vec_ty),
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,
             } => {
                 assert_eq!(block_count, 4, "only count of 4 is currently supported");
                 let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
+                let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
 
                 // For WASM we need to simulate interleaving with shuffle, and we only have
                 // access to 2, 4 and 16 lanes. So, for 64 u8's, we need to split and recombine
@@ -571,10 +643,21 @@ impl Level for WasmSimd128 {
 
                 quote! {
                     #method_sig {
-                            let v0: v128 = unsafe { v128_load(src[0 * #elems_per_vec..].as_ptr() as *const v128) };
-                            let v1: v128 = unsafe { v128_load(src[1 * #elems_per_vec..].as_ptr() as *const v128) };
-                            let v2: v128 = unsafe { v128_load(src[2 * #elems_per_vec..].as_ptr() as *const v128) };
-                            let v3: v128 = unsafe { v128_load(src[3 * #elems_per_vec..].as_ptr() as *const v128) };
+                            let (chunks, []) = src.as_chunks::<#elems_per_vec>() else {
+                                unreachable!()
+                            };
+                            let v0: v128 = crate::transmute::checked_transmute_copy::<[#scalar_ty; #elems_per_vec], v128>(
+                                &chunks[0],
+                            );
+                            let v1: v128 = crate::transmute::checked_transmute_copy::<[#scalar_ty; #elems_per_vec], v128>(
+                                &chunks[1],
+                            );
+                            let v2: v128 = crate::transmute::checked_transmute_copy::<[#scalar_ty; #elems_per_vec], v128>(
+                                &chunks[2],
+                            );
+                            let v3: v128 = crate::transmute::checked_transmute_copy::<[#scalar_ty; #elems_per_vec], v128>(
+                                &chunks[3],
+                            );
 
                             // InterleaveLowerLanes(v0, v2) and InterleaveLowerLanes(v1, v3)
                             let v01_lower = #shuffle_fn::<#i1>(v0, v1);
@@ -600,6 +683,7 @@ impl Level for WasmSimd128 {
             } => {
                 assert_eq!(block_count, 4, "only count of 4 is currently supported");
                 let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
+                let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
 
                 let (lower_indices, upper_indices, shuffle_fn) = match vec_ty.scalar_bits {
                     8 => (
@@ -658,12 +742,14 @@ impl Level for WasmSimd128 {
                         let out2 = #shuffle_fn::<#lower_indices>(v02_upper, v13_upper);
                         let out3 = #shuffle_fn::<#upper_indices>(v02_upper, v13_upper);
 
-                        unsafe {
-                            v128_store(dest[0 * #elems_per_vec..].as_mut_ptr() as *mut v128, out0);
-                            v128_store(dest[1 * #elems_per_vec..].as_mut_ptr() as *mut v128, out1);
-                            v128_store(dest[2 * #elems_per_vec..].as_mut_ptr() as *mut v128, out2);
-                            v128_store(dest[3 * #elems_per_vec..].as_mut_ptr() as *mut v128, out3);
-                        }
+                        let (chunks, []) = dest.as_chunks_mut::<#elems_per_vec>() else {
+                            unreachable!()
+                        };
+
+                        crate::transmute::checked_transmute_store::<v128, [#scalar_ty; #elems_per_vec]>(out0, &mut chunks[0]);
+                        crate::transmute::checked_transmute_store::<v128, [#scalar_ty; #elems_per_vec]>(out1, &mut chunks[1]);
+                        crate::transmute::checked_transmute_store::<v128, [#scalar_ty; #elems_per_vec]>(out2, &mut chunks[2]);
+                        crate::transmute::checked_transmute_store::<v128, [#scalar_ty; #elems_per_vec]>(out3, &mut chunks[3]);
                     }
                 }
             }
@@ -713,12 +799,10 @@ fn mk_slide_helpers() -> TokenStream {
         /// The shift is still expected to be constant in practice, so the match statement will be optimized out.
         /// This exists because Rust doesn't currently let you do math on const generics.
         #[inline(always)]
-        unsafe fn dyn_slide_128(a: v128, b: v128, shift: usize) -> v128 {
-            unsafe {
-                match shift {
-                    #(#shifts,)*
-                    _ => unreachable!()
-                }
+        fn dyn_slide_128(a: v128, b: v128, shift: usize) -> v128 {
+            match shift {
+                #(#shifts,)*
+                _ => unreachable!()
             }
         }
     });
@@ -733,7 +817,7 @@ fn mk_slide_helpers() -> TokenStream {
                 quote! {
                     {
                         let [lo, hi] = crate::support::cross_block_slide_blocks_at(&a, &b, #i, shift_bytes);
-                        unsafe { dyn_slide_128(lo, hi, shift_bytes % 16) }
+                        dyn_slide_128(lo, hi, shift_bytes % 16)
                     }
                 }
             })
@@ -742,7 +826,7 @@ fn mk_slide_helpers() -> TokenStream {
         fns.push(quote! {
             /// Concatenates `a` and `b` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`.
             #[inline(always)]
-            unsafe fn #helper_name(a: [v128; #num_blocks], b: [v128; #num_blocks], shift_bytes: usize) -> [v128; #num_blocks] {
+            fn #helper_name(a: [v128; #num_blocks], b: [v128; #num_blocks], shift_bytes: usize) -> [v128; #num_blocks] {
                 // Explicitly unrolled to help LLVM optimize
                 [#(#block_calls),*]
             }

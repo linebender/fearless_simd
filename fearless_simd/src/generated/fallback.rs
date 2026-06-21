@@ -187,20 +187,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self> {
-        unsafe {
-            f32x4 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        f32x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -587,20 +583,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self> {
-        unsafe {
-            i8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        i8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -1216,20 +1208,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -1822,6 +1810,25 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
+        let lanes: [i8; 16usize] =
+            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
+        lanes.simd_into(self)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
+        let lanes = self.as_array_mask8x16(a);
+        let mut bits = 0u64;
+        let mut i = 0;
+        while i < 16usize {
+            if lanes[i] != 0 {
+                bits |= 1u64 << i;
+            }
+            i += 1;
+        }
+        bits
+    }
+    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         [
             i8::bitand(a.val.0[0usize], &b.val.0[0usize]),
@@ -2141,20 +2148,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self> {
-        unsafe {
-            i16x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        i16x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -2571,20 +2574,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self> {
-        unsafe {
-            u16x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u16x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -2968,6 +2967,25 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
+        let lanes: [i16; 8usize] =
+            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
+        lanes.simd_into(self)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64 {
+        let lanes = self.as_array_mask16x8(a);
+        let mut bits = 0u64;
+        let mut i = 0;
+        while i < 8usize {
+            if lanes[i] != 0 {
+                bits |= 1u64 << i;
+            }
+            i += 1;
+        }
+        bits
+    }
+    #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
         [
             i16::bitand(a.val.0[0usize], &b.val.0[0usize]),
@@ -3175,20 +3193,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self> {
-        unsafe {
-            i32x4 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        i32x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -3507,20 +3521,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self> {
-        unsafe {
-            u32x4 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u32x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -3806,6 +3816,25 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
+        let lanes: [i32; 4usize] =
+            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
+        lanes.simd_into(self)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64 {
+        let lanes = self.as_array_mask32x4(a);
+        let mut bits = 0u64;
+        let mut i = 0;
+        while i < 4usize {
+            if lanes[i] != 0 {
+                bits |= 1u64 << i;
+            }
+            i += 1;
+        }
+        bits
+    }
+    #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         [
             i32::bitand(a.val.0[0usize], &b.val.0[0usize]),
@@ -3945,20 +3974,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self> {
-        unsafe {
-            f64x2 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        f64x2 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_f64x2(self, a: f64x2<Self>) -> u8x16<Self> {
-        unsafe {
-            u8x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -4204,6 +4229,25 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
+        let lanes: [i64; 2usize] =
+            core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
+        lanes.simd_into(self)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64 {
+        let lanes = self.as_array_mask64x2(a);
+        let mut bits = 0u64;
+        let mut i = 0;
+        while i < 2usize {
+            if lanes[i] != 0 {
+                bits |= 1u64 << i;
+            }
+            i += 1;
+        }
+        bits
+    }
+    #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
         [
             i64::bitand(a.val.0[0usize], &b.val.0[0usize]),
@@ -4320,20 +4364,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self> {
-        unsafe {
-            f32x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        f32x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -4681,20 +4721,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self> {
-        unsafe {
-            i8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        i8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -4949,20 +4985,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -5192,6 +5224,19 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self> {
+        let lo = self.from_bitmask_mask8x16(bits);
+        let hi = self.from_bitmask_mask8x16(bits >> 16usize);
+        self.combine_mask8x16(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask8x32(self, a: mask8x32<Self>) -> u64 {
+        let (lo, hi) = self.split_mask8x32(a);
+        let lo = self.to_bitmask_mask8x16(lo);
+        let hi = self.to_bitmask_mask8x16(hi);
+        lo | (hi << 16usize)
+    }
+    #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_mask8x32(b);
@@ -5307,20 +5352,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self> {
-        unsafe {
-            i16x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        i16x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -5575,20 +5616,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self> {
-        unsafe {
-            u16x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u16x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -5840,6 +5877,19 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self> {
+        let lo = self.from_bitmask_mask16x8(bits);
+        let hi = self.from_bitmask_mask16x8(bits >> 8usize);
+        self.combine_mask16x8(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask16x16(self, a: mask16x16<Self>) -> u64 {
+        let (lo, hi) = self.split_mask16x16(a);
+        let lo = self.to_bitmask_mask16x8(lo);
+        let hi = self.to_bitmask_mask16x8(hi);
+        lo | (hi << 8usize)
+    }
+    #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_mask16x16(b);
@@ -5955,20 +6005,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self> {
-        unsafe {
-            i32x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        i32x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -6228,20 +6274,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self> {
-        unsafe {
-            u32x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u32x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -6468,6 +6510,19 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self> {
+        let lo = self.from_bitmask_mask32x4(bits);
+        let hi = self.from_bitmask_mask32x4(bits >> 4usize);
+        self.combine_mask32x4(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask32x8(self, a: mask32x8<Self>) -> u64 {
+        let (lo, hi) = self.split_mask32x8(a);
+        let lo = self.to_bitmask_mask32x4(lo);
+        let hi = self.to_bitmask_mask32x4(hi);
+        lo | (hi << 4usize)
+    }
+    #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_mask32x8(b);
@@ -6583,20 +6638,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self> {
-        unsafe {
-            f64x4 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        f64x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_f64x4(self, a: f64x4<Self>) -> u8x32<Self> {
-        unsafe {
-            u8x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -6877,6 +6928,19 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self> {
+        let lo = self.from_bitmask_mask64x2(bits);
+        let hi = self.from_bitmask_mask64x2(bits >> 2usize);
+        self.combine_mask64x2(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask64x4(self, a: mask64x4<Self>) -> u64 {
+        let (lo, hi) = self.split_mask64x4(a);
+        let lo = self.to_bitmask_mask64x2(lo);
+        let hi = self.to_bitmask_mask64x2(hi);
+        lo | (hi << 2usize)
+    }
+    #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
         let (a0, a1) = self.split_mask64x4(a);
         let (b0, b1) = self.split_mask64x4(b);
@@ -6992,20 +7056,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self> {
-        unsafe {
-            f32x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        f32x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -7376,20 +7436,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self> {
-        unsafe {
-            i8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        i8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -7637,20 +7693,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -7953,6 +8005,19 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
+        let lo = self.from_bitmask_mask8x32(bits);
+        let hi = self.from_bitmask_mask8x32(bits >> 32usize);
+        self.combine_mask8x32(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask8x64(self, a: mask8x64<Self>) -> u64 {
+        let (lo, hi) = self.split_mask8x64(a);
+        let lo = self.to_bitmask_mask8x32(lo);
+        let hi = self.to_bitmask_mask8x32(hi);
+        lo | (hi << 32usize)
+    }
+    #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_mask8x64(b);
@@ -8061,20 +8126,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self> {
-        unsafe {
-            i16x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        i16x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -8331,20 +8392,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self> {
-        unsafe {
-            u16x32 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u16x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -8629,6 +8686,19 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self> {
+        let lo = self.from_bitmask_mask16x16(bits);
+        let hi = self.from_bitmask_mask16x16(bits >> 16usize);
+        self.combine_mask16x16(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask16x32(self, a: mask16x32<Self>) -> u64 {
+        let (lo, hi) = self.split_mask16x32(a);
+        let lo = self.to_bitmask_mask16x16(lo);
+        let hi = self.to_bitmask_mask16x16(hi);
+        lo | (hi << 16usize)
+    }
+    #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_mask16x32(b);
@@ -8740,20 +8810,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self> {
-        unsafe {
-            i32x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        i32x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -9006,20 +9072,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self> {
-        unsafe {
-            u32x16 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u32x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -9269,6 +9331,19 @@ impl Simd for Fallback {
         a.val.0
     }
     #[inline(always)]
+    fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
+        let lo = self.from_bitmask_mask32x8(bits);
+        let hi = self.from_bitmask_mask32x8(bits >> 8usize);
+        self.combine_mask32x8(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask32x16(self, a: mask32x16<Self>) -> u64 {
+        let (lo, hi) = self.split_mask32x16(a);
+        let lo = self.to_bitmask_mask32x8(lo);
+        let hi = self.to_bitmask_mask32x8(hi);
+        lo | (hi << 8usize)
+    }
+    #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_mask32x16(b);
@@ -9377,20 +9452,16 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self> {
-        unsafe {
-            f64x8 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        f64x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
     fn cvt_to_bytes_f64x8(self, a: f64x8<Self>) -> u8x64<Self> {
-        unsafe {
-            u8x64 {
-                val: core::mem::transmute(a.val),
-                simd: self,
-            }
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
         }
     }
     #[inline(always)]
@@ -9662,6 +9733,19 @@ impl Simd for Fallback {
     #[inline(always)]
     fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
         a.val.0
+    }
+    #[inline(always)]
+    fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {
+        let lo = self.from_bitmask_mask64x4(bits);
+        let hi = self.from_bitmask_mask64x4(bits >> 4usize);
+        self.combine_mask64x4(lo, hi)
+    }
+    #[inline(always)]
+    fn to_bitmask_mask64x8(self, a: mask64x8<Self>) -> u64 {
+        let (lo, hi) = self.split_mask64x8(a);
+        let lo = self.to_bitmask_mask64x4(lo);
+        let hi = self.to_bitmask_mask64x4(hi);
+        lo | (hi << 4usize)
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {

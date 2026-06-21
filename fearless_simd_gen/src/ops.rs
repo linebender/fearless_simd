@@ -106,6 +106,10 @@ pub(crate) enum OpSig {
         quantifier: Quantifier,
         condition: bool,
     },
+    /// Takes a compact bitmask and returns the corresponding mask vector type.
+    MaskFromBitmask,
+    /// Takes a mask vector type and returns its compact bitmask representation.
+    MaskToBitmask,
     /// Takes an argument of an array of a certain scalar type, with the length (`block_size` * `block_count`) / [scalar
     /// type's byte size]. Returns a vector type of that scalar type and length.
     ///
@@ -161,6 +165,23 @@ pub(crate) struct Op {
     pub(crate) doc: &'static str,
 }
 
+struct SimdTraitSigParts {
+    const_params: TokenStream,
+    arg_names: Vec<Ident>,
+    arg_tys: Vec<TokenStream>,
+    ret: TokenStream,
+}
+
+impl SimdTraitSigParts {
+    fn arg_decls(&self) -> Vec<TokenStream> {
+        self.arg_names
+            .iter()
+            .zip(&self.arg_tys)
+            .map(|(name, ty)| quote! { #name: #ty })
+            .collect()
+    }
+}
+
 impl Op {
     const fn new(method: &'static str, kind: OpKind, sig: OpSig, doc: &'static str) -> Self {
         Self {
@@ -172,6 +193,62 @@ impl Op {
     }
 
     pub(crate) fn simd_trait_method_sig(&self, vec_ty: &VecType) -> TokenStream {
+        let method_ident = generic_op_name(self.method, vec_ty);
+        let sig = self.simd_trait_sig_parts(vec_ty, quote! { Self });
+        let const_params = &sig.const_params;
+        let arg_decls = sig.arg_decls();
+        let ret = &sig.ret;
+
+        quote! {
+            fn #method_ident #const_params(self #(, #arg_decls)*) -> #ret
+        }
+    }
+
+    /// Generate a `Simd` trait method that delegates its body to a local `kernel!` function.
+    ///
+    /// The generated method keeps the trait signature using `Self`, while the local kernel uses
+    /// the concrete SIMD token type required by `kernel!`. Const-generic operations are rejected
+    /// because `kernel!` currently only accepts plain non-generic functions.
+    pub(crate) fn simd_trait_kernel_method(
+        &self,
+        level: Ident,
+        vec_ty: &VecType,
+        body: impl FnOnce(&Ident) -> TokenStream,
+    ) -> TokenStream {
+        assert!(
+            !matches!(self.sig, OpSig::Slide { .. }),
+            "kernel! does not support const-generic methods"
+        );
+
+        let method_sig = self.simd_trait_method_sig(vec_ty);
+        let token = Ident::new("token", Span::call_site());
+        let kernel_body = body(&token);
+        let sig = self.simd_trait_sig_parts(vec_ty, quote! { #level });
+        let arg_decls = sig.arg_decls();
+        let call_args = &sig.arg_names;
+        let ret = &sig.ret;
+        let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. } | OpSig::StoreArray)
+        {
+            quote! { kernel(self #(, #call_args)*); }
+        } else {
+            quote! { kernel(self #(, #call_args)*) }
+        };
+
+        quote! {
+            #method_sig {
+                crate::kernel!(
+                    #[inline(always)]
+                    fn kernel(#token: #level #(, #arg_decls)*) -> #ret {
+                        #kernel_body
+                    }
+                );
+
+                #kernel_call
+            }
+        }
+    }
+
+    fn simd_trait_sig_parts(&self, vec_ty: &VecType, simd_ty: TokenStream) -> SimdTraitSigParts {
         let ty = vec_ty.rust();
         let arg_names = self
             .sig
@@ -179,148 +256,118 @@ impl Op {
             .iter()
             .map(|n| Ident::new(n, Span::call_site()))
             .collect::<Vec<_>>();
-        let method_ident = generic_op_name(self.method, vec_ty);
-        let sig_inner = match &self.sig {
+        let vec = quote! { #ty<#simd_ty> };
+        let const_params = if matches!(self.sig, OpSig::Slide { .. }) {
+            quote! { <const SHIFT: usize> }
+        } else {
+            TokenStream::new()
+        };
+
+        let (arg_tys, ret) = match &self.sig {
             OpSig::Splat => {
-                let arg0 = &arg_names[0];
                 let arg_ty = splat_arg_ty(vec_ty);
-                quote! { (self, #arg0: #arg_ty) -> #ty<Self> }
+                (vec![arg_ty], vec)
             }
             OpSig::LoadInterleaved {
                 block_size,
                 block_count,
             } => {
-                let arg0 = &arg_names[0];
                 let arg_ty = load_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                quote! { (self, #arg0: #arg_ty) -> #ty<Self> }
+                (vec![arg_ty], vec)
             }
             OpSig::StoreInterleaved {
                 block_size,
                 block_count,
             } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
                 let arg_ty = store_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                quote! { (self, #arg0: #ty<Self>, #arg1: #arg_ty) -> () }
+                (vec![vec.clone(), arg_ty], quote! { () })
             }
             OpSig::Compare => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
                 let result = vec_ty.mask_ty().rust();
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
+                (vec![vec.clone(), vec.clone()], quote! { #result<#simd_ty> })
             }
             OpSig::Split { half_ty } => {
-                let arg0 = &arg_names[0];
                 let result = half_ty.rust();
-                quote! { (self, #arg0: #ty<Self>) -> (#result<Self>, #result<Self>) }
+                (vec![vec], quote! { (#result<#simd_ty>, #result<#simd_ty>) })
             }
             OpSig::Combine { combined_ty } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
                 let result = combined_ty.rust();
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #result<Self> }
+                (vec![vec.clone(), vec], quote! { #result<#simd_ty> })
             }
-            OpSig::Unary => {
-                let arg0 = &arg_names[0];
-                quote! { (self, #arg0: #ty<Self>) -> #ty<Self> }
-            }
+            OpSig::Unary => (vec![vec.clone()], vec),
             OpSig::Binary | OpSig::Zip { .. } | OpSig::Unzip { .. } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
+                (vec![vec.clone(), vec.clone()], vec)
             }
             OpSig::Interleave | OpSig::Deinterleave => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> (#ty<Self>, #ty<Self>) }
+                (vec![vec.clone(), vec.clone()], quote! { (#vec, #vec) })
             }
-            OpSig::Slide { .. } => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { <const SHIFT: usize>(self, #arg0: #ty<Self>, #arg1: #ty<Self>) -> #ty<Self> }
-            }
+            OpSig::Slide { .. } => (vec![vec.clone(), vec.clone()], vec),
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
                 ..
-            } => {
-                let arg0 = &arg_names[0];
-                let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
-                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
             }
-            OpSig::Reinterpret {
+            | OpSig::Reinterpret {
                 target_ty,
                 scalar_bits,
             } => {
-                let arg0 = &arg_names[0];
                 let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
-                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
+                (vec![vec], quote! { #result<#simd_ty> })
             }
             OpSig::WidenNarrow { target_ty } => {
-                let arg0 = &arg_names[0];
                 let result = target_ty.rust();
-                quote! { (self, #arg0: #ty<Self>) -> #result<Self> }
+                (vec![vec], quote! { #result<#simd_ty> })
             }
-            OpSig::MaskReduce { .. } => {
-                let arg0 = &arg_names[0];
-                quote! { (self, #arg0: #ty<Self>) -> bool }
-            }
-            OpSig::Shift => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                quote! { (self, #arg0: #ty<Self>, #arg1: u32) -> #ty<Self> }
-            }
-            OpSig::Ternary => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let arg2 = &arg_names[2];
-                quote! { (self, #arg0: #ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
-            }
+            OpSig::MaskReduce { .. } => (vec![vec], quote! { bool }),
+            OpSig::MaskFromBitmask => (vec![quote! { u64 }], vec),
+            OpSig::MaskToBitmask => (vec![vec], quote! { u64 }),
+            OpSig::Shift => (vec![vec.clone(), quote! { u32 }], vec),
+            OpSig::Ternary => (vec![vec.clone(), vec.clone(), vec.clone()], vec),
             OpSig::Select => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
-                let arg2 = &arg_names[2];
                 let mask_ty = vec_ty.mask_ty().rust();
-                quote! { (self, #arg0: #mask_ty<Self>, #arg1: #ty<Self>, #arg2: #ty<Self>) -> #ty<Self> }
+                (
+                    vec![quote! { #mask_ty<#simd_ty> }, vec.clone(), vec.clone()],
+                    vec,
+                )
             }
             OpSig::FromArray { kind } => {
-                let arg0 = &arg_names[0];
                 let ref_tok = kind.token();
                 let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
                 let len = vec_ty.len;
                 let array_ty = quote! { [#rust_scalar; #len] };
-                quote! { (self, #arg0: #ref_tok #array_ty) -> #ty<Self> }
+                (vec![quote! { #ref_tok #array_ty }], vec)
             }
             OpSig::AsArray { kind } => {
-                let arg0 = &arg_names[0];
                 let ref_tok = kind.token();
                 let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
                 let len = vec_ty.len;
                 let array_ty = quote! { [#rust_scalar; #len] };
-                quote! { (self, #arg0: #ref_tok #ty<Self>) -> #ref_tok #array_ty }
+                (
+                    vec![quote! { #ref_tok #vec }],
+                    quote! { #ref_tok #array_ty },
+                )
             }
             OpSig::StoreArray => {
-                let arg0 = &arg_names[0];
-                let arg1 = &arg_names[1];
                 let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
                 let len = vec_ty.len;
                 let array_ty = quote! { [#rust_scalar; #len] };
-                quote! { (self, #arg0: #ty<Self>, #arg1: &mut #array_ty) -> () }
+                (vec![vec, quote! { &mut #array_ty }], quote! { () })
             }
             OpSig::FromBytes => {
-                let arg0 = &arg_names[0];
                 let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-                quote! { (self, #arg0: #bytes_ty<Self>) -> #ty<Self> }
+                (vec![quote! { #bytes_ty<#simd_ty> }], vec)
             }
             OpSig::ToBytes => {
-                let arg0 = &arg_names[0];
                 let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-                quote! { (self, #arg0: #ty<Self>) -> #bytes_ty<Self> }
+                (vec![vec], quote! { #bytes_ty<#simd_ty> })
             }
         };
 
-        quote! {
-            fn #method_ident #sig_inner
+        SimdTraitSigParts {
+            const_params,
+            arg_names,
+            arg_tys,
+            ret,
         }
     }
 
@@ -341,6 +388,7 @@ impl Op {
             OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } | OpSig::StoreArray => {
                 return None;
             }
+            OpSig::MaskFromBitmask | OpSig::MaskToBitmask => return None,
             OpSig::Unary
             | OpSig::Cvt { .. }
             | OpSig::Reinterpret { .. }
@@ -558,6 +606,18 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
         },
         "Convert a SIMD mask to signed integer mask lanes.",
     ),
+    Op::new(
+        "from_bitmask",
+        OpKind::AssociatedOnly,
+        OpSig::MaskFromBitmask,
+        "Create a SIMD mask from a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are ignored.",
+    ),
+    Op::new(
+        "to_bitmask",
+        OpKind::AssociatedOnly,
+        OpSig::MaskToBitmask,
+        "Convert a SIMD mask to a compact bitmask.\n\nBit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above the number of lanes in this mask are cleared.",
+    ),
 ];
 
 const FLOAT_OPS: &[Op] = &[
@@ -587,7 +647,7 @@ const FLOAT_OPS: &[Op] = &[
         "Compute an approximate reciprocal (`1. / x`) for each element.\n\n\
          This uses a fast hardware estimate where available, and falls back to exact division otherwise.\n\n\
          On x86 for `f32`, this has a relative error less than `1.5 × 2^-12`. \
-         On AArch64 (`f32` and `f64`), this has a relative error less than `2^-8`. \
+         On `AArch64` (`f32` and `f64`), this has a relative error less than `2^-8`. \
          The precision of this operation may change as new platform support is added.",
     ),
     Op::new(
@@ -1293,7 +1353,13 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 block_size: 128,
                 block_count: 4,
             },
-            "Load elements from an array with 4-way interleaving.\n\nReads consecutive elements and deinterleaves them into a single vector.",
+            "Load elements from an array with 4-way interleaving.\n\n\
+            This is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded \
+            vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks \
+            into one vector.\n\n\
+            For example, with 32-bit lanes, memory laid out as \
+            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as \
+            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`.",
         ));
     }
 
@@ -1305,7 +1371,13 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 block_size: 128,
                 block_count: 4,
             },
-            "Store elements to an array with 4-way interleaving.\n\nInterleaves the vector elements and writes them consecutively to memory.",
+            "Store elements to an array with 4-way interleaving.\n\n\
+            This is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: \
+            `interleave` combines two already-loaded vectors, while this operation transposes one vector into four \
+            consecutive 128-bit blocks in memory.\n\n\
+            For example, with 32-bit lanes, a vector containing \
+            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as \
+            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`.",
         ));
     }
 
@@ -1514,12 +1586,14 @@ impl OpSig {
     fn simd_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
             Self::Splat | Self::FromArray { .. } => &["val"],
+            Self::MaskFromBitmask => &["bits"],
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
+            | Self::MaskToBitmask
             | Self::AsArray { .. }
             | Self::FromBytes
             | Self::ToBytes => &["a"],
@@ -1543,6 +1617,8 @@ impl OpSig {
             Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }
+            | Self::MaskFromBitmask
+            | Self::MaskToBitmask
             | Self::FromBytes { .. }
             | Self::StoreArray => &[],
             Self::Unary
@@ -1603,6 +1679,8 @@ impl OpSig {
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
             | Self::Shift
+            | Self::MaskFromBitmask
+            | Self::MaskToBitmask
             | Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
             | Self::FromArray { .. }

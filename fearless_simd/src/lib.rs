@@ -136,6 +136,7 @@
 // Targeting e.g. 32-bit means structs containing usize can give false positives for 64-bit.
 #![cfg_attr(target_pointer_width = "64", warn(clippy::trivially_copy_pass_by_ref))]
 // END LINEBENDER LINT SET
+#![cfg_attr(not(test), deny(clippy::disallowed_methods))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(non_camel_case_types, reason = "TODO")]
 #![expect(clippy::unused_unit, reason = "easier for code generation")]
@@ -156,6 +157,7 @@ mod kernel_macros;
 mod macros;
 mod support;
 mod traits;
+mod transmute;
 
 pub use generated::*;
 pub use traits::*;

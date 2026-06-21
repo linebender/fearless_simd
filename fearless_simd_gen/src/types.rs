@@ -177,9 +177,34 @@ impl VecType {
         let len = self.len;
         if self.scalar == ScalarType::Mask {
             let scalar_bits = self.scalar_bits;
+            let rust_name = self.rust_name();
+            let lane_example = (0..self.len)
+                .map(|i| if i == 0 { "-1" } else { "0" })
+                .collect::<Vec<_>>()
+                .join(", ");
             format!(
                 "A SIMD mask of {len} logical lanes corresponding to {scalar_bits}-bit vector elements.\n\n\
-                The storage representation of this type is intentionally opaque. For compatibility with existing APIs, it may be converted to and from signed integer lanes where false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).",
+                The storage representation of this type is intentionally opaque and may vary depending on the SIMD level.\n\n\
+                You can construct this mask type using the [`Self::splat`], [`Self::from_bitmask`], [`Self::from_slice`], and [`Self::simd_from`] methods.\n\n\
+                ```rust\n\
+# use fearless_simd::{{prelude::*, {rust_name}}};
+fn construct_mask<S: Simd>(simd: S) {{
+    // From a single boolean value:
+    let a = {rust_name}::splat(simd, true);
+    let b = {rust_name}::simd_from(simd, true);
+
+    // From signed integer mask lanes:
+    let c = {rust_name}::from_slice(simd, &[{lane_example}]);
+    let d = {rust_name}::simd_from(simd, [{lane_example}]);
+
+    // From a compact bitmask (same mask as above, least significant bit maps to lane 0):
+    let e = {rust_name}::from_bitmask(simd, 0b0001);
+
+    // By setting individual lanes:
+    let mut f = {rust_name}::splat(simd, false);
+    f.set(0, true);
+}}
+```",
             )
         } else {
             let scalar_name = self.scalar.rust_name(self.scalar_bits);
