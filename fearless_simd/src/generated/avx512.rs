@@ -3210,16 +3210,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u32x4<Avx512>) -> f32x4<Avx512> {
-                let a = a.into();
-                let lo = _mm_blend_epi16::<0xAA>(a, _mm_set1_epi32(0x4B000000));
-                let hi =
-                    _mm_blend_epi16::<0xAA>(_mm_srli_epi32::<16>(a), _mm_set1_epi32(0x53000000));
-                let fhi = _mm_sub_ps(
-                    _mm_castsi128_ps(hi),
-                    _mm_set1_ps(f32::from_bits(0x53000080)),
-                );
-                let result = _mm_add_ps(_mm_castsi128_ps(lo), fhi);
-                result.simd_into(token)
+                _mm512_castps512_ps128(_mm512_cvtepu32_ps(_mm512_zextsi128_si512(a.into())))
+                    .simd_into(token)
             }
         );
         kernel(self, a)
@@ -7858,18 +7850,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u32x8<Avx512>) -> f32x8<Avx512> {
-                let a = a.into();
-                let lo = _mm256_blend_epi16::<0xAA>(a, _mm256_set1_epi32(0x4B000000));
-                let hi = _mm256_blend_epi16::<0xAA>(
-                    _mm256_srli_epi32::<16>(a),
-                    _mm256_set1_epi32(0x53000000),
-                );
-                let fhi = _mm256_sub_ps(
-                    _mm256_castsi256_ps(hi),
-                    _mm256_set1_ps(f32::from_bits(0x53000080)),
-                );
-                let result = _mm256_add_ps(_mm256_castsi256_ps(lo), fhi);
-                result.simd_into(token)
+                _mm512_castps512_ps256(_mm512_cvtepu32_ps(_mm512_zextsi256_si512(a.into())))
+                    .simd_into(token)
             }
         );
         kernel(self, a)

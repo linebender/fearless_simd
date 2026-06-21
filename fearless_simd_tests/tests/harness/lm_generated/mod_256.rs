@@ -405,6 +405,22 @@ fn cvt_u32_f32x8_rounding<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn cvt_f32_u32x8<S: Simd>(simd: S) {
+    let values = [
+        0,
+        42,
+        1_000_000,
+        i32::MAX as u32,
+        0x8000_0000,
+        0xffff_ff00,
+        u32::MAX - 1,
+        u32::MAX,
+    ];
+    let a = u32x8::from_slice(simd, &values);
+    assert_eq!(*a.to_float::<f32x8<_>>(), values.map(|x| x as f32));
+}
+
+#[simd_test]
 fn cvt_u32_precise_f32x8_inf<S: Simd>(simd: S) {
     let a = f32x8::from_slice(
         simd,

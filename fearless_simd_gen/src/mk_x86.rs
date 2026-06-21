@@ -2502,6 +2502,27 @@ impl X86 {
             });
         }
 
+        if *self == Self::Avx512
+            && matches!(vec_ty.n_bits(), 128 | 256)
+            && vec_ty.scalar == ScalarType::Unsigned
+            && target_scalar == ScalarType::Float
+            && vec_ty.scalar_bits == 32
+        {
+            // We cannot emit the intrinsics for the conversion instructions
+            // because the required intrinsics are mysteriously absent from stdarch:
+            // https://github.com/rust-lang/rust/issues/158196
+            // Fortunately LLVM optimizes this sequence into the single instruction we're after.
+            let bits = vec_ty.n_bits();
+            let zext = format_ident!("_mm512_zextsi{bits}_si512");
+            let convert = intrinsic_ident("cvtepu32", "ps", 512);
+            let cast = format_ident!("_mm512_castps512_ps{bits}");
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! {
+                    #cast(#convert(#zext(a.into()))).simd_into(#token)
+                }
+            });
+        }
+
         if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
             let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
             return self.kernel_method(op, vec_ty, |token| match (vec_ty.scalar, target_scalar) {
