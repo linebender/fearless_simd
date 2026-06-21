@@ -813,6 +813,13 @@ fn avx512_permutex2var_intrinsic(vec_ty: &VecType) -> Ident {
     intrinsic_ident("permutex2var", suffix, vec_ty.n_bits())
 }
 
+fn avx512_should_use_unzip_permutex2var(vec_ty: &VecType) -> bool {
+    vec_ty.scalar != ScalarType::Mask
+        && (vec_ty.n_bits() >= 256
+            || (vec_ty.n_bits() == 128
+                && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)))
+}
+
 fn avx512_permutexvar_intrinsic(vec_ty: &VecType) -> Ident {
     let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits, false);
     intrinsic_ident("permutexvar", suffix, vec_ty.n_bits())
@@ -2117,7 +2124,7 @@ impl X86 {
     }
 
     pub(crate) fn handle_deinterleave(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        if *self == Self::Avx512 && vec_ty.scalar != ScalarType::Mask && vec_ty.n_bits() >= 256 {
+        if *self == Self::Avx512 && avx512_should_use_unzip_permutex2var(vec_ty) {
             let even_indices = (0..vec_ty.len).map(|i| {
                 if i < vec_ty.len / 2 {
                     i * 2
@@ -2233,7 +2240,7 @@ impl X86 {
     }
 
     pub(crate) fn handle_unzip(&self, op: Op, vec_ty: &VecType, select_even: bool) -> TokenStream {
-        if *self == Self::Avx512 && vec_ty.scalar != ScalarType::Mask && vec_ty.n_bits() >= 256 {
+        if *self == Self::Avx512 && avx512_should_use_unzip_permutex2var(vec_ty) {
             let lane_offset = if select_even { 0 } else { 1 };
             let indices = (0..vec_ty.len).map(|i| {
                 if i < vec_ty.len / 2 {
