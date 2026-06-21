@@ -45,5 +45,9 @@ force_support_fallback = []
 [lints]
 workspace = true
 
+[[example]]
+name = "srgb"
+required-features = ["sse4_2"]
+
 [dependencies]
 libm = { version = "0.2.15", optional = true }
