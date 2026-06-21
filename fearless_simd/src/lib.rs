@@ -114,7 +114,7 @@
 //!
 //! ## Instruction set support
 //!
-//! - x86/x86_64: [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2)
+//! - x86/x86-64: [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2)
 //! - Aarch64: Baseline [NEON](https://en.wikipedia.org/wiki/Arm_architecture_family#Advanced_SIMD_(Neon))
 //! - WebAssembly: [128-bit packed SIMD](https://github.com/WebAssembly/spec/blob/main/proposals/simd/SIMD.md), [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 //!
@@ -179,10 +179,6 @@
 #![cfg_attr(not(test), deny(clippy::disallowed_methods))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(non_camel_case_types, reason = "TODO")]
-#![expect(
-    clippy::doc_markdown,
-    reason = "No, Clippy, I'm not going to put 'x86/x86_64' in documentation into backticks."
-)]
 #![expect(clippy::unused_unit, reason = "easier for code generation")]
 #![no_std]
 
