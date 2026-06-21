@@ -2503,6 +2503,40 @@ impl X86 {
         }
 
         if *self == Self::Avx512
+            && vec_ty.scalar == ScalarType::Float
+            && target_scalar == ScalarType::Int
+            && vec_ty.scalar_bits == 32
+        {
+            let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
+            let convert = intrinsic_ident("cvttps", "epi32", vec_ty.n_bits());
+            return self.kernel_method(op, vec_ty, |token| {
+                if precise {
+                    let masked_convert = intrinsic_ident("mask_cvttps", "epi32", vec_ty.n_bits());
+                    let cmp = intrinsic_ident("cmp", "ps_mask", vec_ty.n_bits());
+                    let blend = avx512_mask_blend_intrinsic(&target_ty);
+                    let set1_float = set1_intrinsic(vec_ty);
+                    let set1_int = set1_intrinsic(&target_ty);
+                    let set0_int =
+                        intrinsic_ident("setzero", coarse_type(&target_ty), target_ty.n_bits());
+                    let lt = avx512_float_compare_predicate("simd_lt");
+                    let ord = avx512_float_compare_predicate("ord");
+                    quote! {
+                        let a = a.into();
+                        let in_range = #cmp::<#lt>(a, #set1_float(2147483648.0));
+                        let mut converted = #masked_convert(#set1_int(i32::MAX), in_range, a);
+                        let is_not_nan = #cmp::<#ord>(a, a);
+                        converted = #blend(is_not_nan, #set0_int(), converted);
+                        converted.simd_into(#token)
+                    }
+                } else {
+                    quote! {
+                        #convert(a.into()).simd_into(#token)
+                    }
+                }
+            });
+        }
+
+        if *self == Self::Avx512
             && matches!(vec_ty.n_bits(), 128 | 256)
             && vec_ty.scalar == ScalarType::Unsigned
             && target_scalar == ScalarType::Float
@@ -2526,32 +2560,6 @@ impl X86 {
         if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
             let target_ty = vec_ty.reinterpret(target_scalar, target_scalar_bits);
             return self.kernel_method(op, vec_ty, |token| match (vec_ty.scalar, target_scalar) {
-                (ScalarType::Float, ScalarType::Int) => {
-                    let convert = intrinsic_ident("cvttps", "epi32", vec_ty.n_bits());
-                    if precise {
-                        let cmp = intrinsic_ident("cmp", "ps_mask", vec_ty.n_bits());
-                        let blend = avx512_mask_blend_intrinsic(&target_ty);
-                        let set1_float = set1_intrinsic(vec_ty);
-                        let set1_int = set1_intrinsic(&target_ty);
-                        let set0_int =
-                            intrinsic_ident("setzero", coarse_type(&target_ty), target_ty.n_bits());
-                        let lt = avx512_float_compare_predicate("simd_lt");
-                        let ord = avx512_float_compare_predicate("ord");
-                        quote! {
-                            let a = a.into();
-                            let mut converted = #convert(a);
-                            let in_range = #cmp::<#lt>(a, #set1_float(2147483648.0));
-                            converted = #blend(in_range, #set1_int(i32::MAX), converted);
-                            let is_not_nan = #cmp::<#ord>(a, a);
-                            converted = #blend(is_not_nan, #set0_int(), converted);
-                            converted.simd_into(#token)
-                        }
-                    } else {
-                        quote! {
-                            #convert(a.into()).simd_into(#token)
-                        }
-                    }
-                }
                 (ScalarType::Int, ScalarType::Float) => {
                     let intrinsic = simple_intrinsic("cvtepi32", &target_ty);
                     quote! {

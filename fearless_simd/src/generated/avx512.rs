@@ -614,18 +614,10 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x4<Avx512>) -> i32x4<Avx512> {
                 let a = a.into();
-                let mut converted = _mm_cvttps_epi32(a);
-                let in_range = _mm_cmplt_ps(a, _mm_set1_ps(2147483648.0));
-                let all_in_range = _mm_movemask_ps(in_range) == 0b1111;
-                if !all_in_range {
-                    converted = _mm_blendv_epi8(
-                        _mm_set1_epi32(i32::MAX),
-                        converted,
-                        _mm_castps_si128(in_range),
-                    );
-                    let is_not_nan = _mm_castps_si128(_mm_cmpord_ps(a, a));
-                    converted = _mm_and_si128(converted, is_not_nan);
-                }
+                let in_range = _mm_cmp_ps_mask::<17i32>(a, _mm_set1_ps(2147483648.0));
+                let mut converted = _mm_mask_cvttps_epi32(_mm_set1_epi32(i32::MAX), in_range, a);
+                let is_not_nan = _mm_cmp_ps_mask::<7i32>(a, a);
+                converted = _mm_mask_blend_epi32(is_not_nan, _mm_setzero_si128(), converted);
                 converted.simd_into(token)
             }
         );
@@ -4532,18 +4524,11 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x8<Avx512>) -> i32x8<Avx512> {
                 let a = a.into();
-                let mut converted = _mm256_cvttps_epi32(a);
-                let in_range = _mm256_cmp_ps::<17i32>(a, _mm256_set1_ps(2147483648.0));
-                let all_in_range = _mm256_movemask_ps(in_range) == 0b11111111;
-                if !all_in_range {
-                    converted = _mm256_blendv_epi8(
-                        _mm256_set1_epi32(i32::MAX),
-                        converted,
-                        _mm256_castps_si256(in_range),
-                    );
-                    let is_not_nan = _mm256_castps_si256(_mm256_cmp_ps::<7i32>(a, a));
-                    converted = _mm256_and_si256(converted, is_not_nan);
-                }
+                let in_range = _mm256_cmp_ps_mask::<17i32>(a, _mm256_set1_ps(2147483648.0));
+                let mut converted =
+                    _mm256_mask_cvttps_epi32(_mm256_set1_epi32(i32::MAX), in_range, a);
+                let is_not_nan = _mm256_cmp_ps_mask::<7i32>(a, a);
+                converted = _mm256_mask_blend_epi32(is_not_nan, _mm256_setzero_si256(), converted);
                 converted.simd_into(token)
             }
         );
@@ -9323,10 +9308,9 @@ impl Simd for Avx512 {
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x16<Avx512>) -> i32x16<Avx512> {
                 let a = a.into();
-                let mut converted = _mm512_cvttps_epi32(a);
                 let in_range = _mm512_cmp_ps_mask::<17i32>(a, _mm512_set1_ps(2147483648.0));
-                converted =
-                    _mm512_mask_blend_epi32(in_range, _mm512_set1_epi32(i32::MAX), converted);
+                let mut converted =
+                    _mm512_mask_cvttps_epi32(_mm512_set1_epi32(i32::MAX), in_range, a);
                 let is_not_nan = _mm512_cmp_ps_mask::<7i32>(a, a);
                 converted = _mm512_mask_blend_epi32(is_not_nan, _mm512_setzero_si512(), converted);
                 converted.simd_into(token)
