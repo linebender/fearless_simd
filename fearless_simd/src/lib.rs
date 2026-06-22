@@ -62,7 +62,7 @@
 //!
 //! ## Explicit intrinsics
 //!
-//! If you need a specific intrinsic, [`kernel!()`][kernel] creates a safe wrapper from a SIMD token:
+//! If you need access to raw intrinsics, [`kernel!`][kernel] creates a function where they can be called safely:
 //!
 //! ```rust
 //! use fearless_simd::{prelude::*, Level, u32x4};
