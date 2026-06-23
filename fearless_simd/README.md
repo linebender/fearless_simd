@@ -43,7 +43,7 @@ intrinsics and nothing more, `fearless_simd` has you covered!
 
 Zero dependencies, from-scratch build time under 1 second, safe public APIs, and [very little](https://gist.github.com/Shnatsel/61fc294987a1e051ce3835c97dc0fc19) `unsafe` under the hood.
 
-### Automatic vectorization
+## Automatic vectorization
 
 Put the code to vectorize in an `#[inline(always)]` function generic over [`Simd`].
 
@@ -65,7 +65,7 @@ dispatch!(level, simd => double_u32s(simd, &mut values));
 assert_eq!(values, [2, 4, 6, 8, 10]);
 ```
 
-### Portable SIMD
+## Portable SIMD
 
 Use the vector types for explicit lane-wise operations while staying generic over the SIMD level:
 
@@ -92,7 +92,7 @@ assert_eq!(values, [2, 4, 6, 8, 10]);
 
 You can also use fixed-size types such as [u32x8] instead of using the hardware's native SIMD width.
 
-### Explicit intrinsics
+## Explicit intrinsics
 
 If you need access to raw intrinsics, [`kernel!`][kernel] creates a function where they can be called safely:
 
@@ -131,7 +131,7 @@ You can also [mix and match](https://github.com/linebender/fearless_simd/blob/ma
 intrinsics with the other approaches, using high-level code most of the time and dropping down to
 hardware-specific intrinsics only when necessary.
 
-### Inlining
+## Inlining
 
 Fearless SIMD relies heavily on Rust's inlining support to create functions which have the given target features enabled.
 
@@ -144,15 +144,15 @@ As a rule of thumb:
 [The article describing the design](https://gist.github.com/Shnatsel/61fc294987a1e051ce3835c97dc0fc19#the-abi-would-like-a-word) covers why this is the
 case. There's also Q&A on [Zulip](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433).
 
-### Instruction set support
+## Instruction set support
 
 - x86/x86-64: [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2)
 - Aarch64: Baseline [NEON](https://en.wikipedia.org/wiki/Arm_architecture_family#Advanced_SIMD_(Neon))
 - WebAssembly: [128-bit packed SIMD](https://github.com/WebAssembly/spec/blob/main/proposals/simd/SIMD.md), [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 
-A scalar fallback is also provided for all operations, so your code still works even if SIMD is not available.
+A scalar fallback is also provided for platforms, so your code still works even if SIMD is not available.
 
-### WebAssembly
+## WebAssembly
 
 WASM SIMD doesn't have feature detection, and so you need to compile two versions of your bundle for WASM, one with SIMD and one without,
 then select the appropriate one for your user's browser. This can be done via [the `wasm-feature-detect`
@@ -172,7 +172,7 @@ If you want to compile both SIMD and non-SIMD versions of your WebAssembly libra
 that builds it once with the `RUSTFLAGS` specified, and once without. [Cargo currently does not allow specifying compiler flags
 per-profile.](https://github.com/rust-lang/cargo/issues/10271)
 
-#### Relaxed SIMD
+### Relaxed SIMD
 
 Fearless SIMD can make use of the [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 WebAssembly instructions, if the requisite target feature is enabled. These instructions can return implementation-dependent results
