@@ -14,12 +14,6 @@
 
 </div>
 
-> [!CAUTION]
-> Fearless SIMD is in extremely early experimental development. As such, there are no stability
-> guarantees, APIs are incomplete, and architectures have missing implementations. Fearless SIMD is
-> being developed in conjunction with the [Vello Sparse
-> Strips](https://github.com/linebender/vello/) renderer.
-
 <!-- We use cargo-rdme to update the README with the contents of lib.rs.
 To edit the following section, update it in lib.rs, then run:
 cargo rdme --workspace-project=fearless_simd
@@ -42,79 +36,121 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 
 <!-- cargo-rdme start -->
 
-A helper library to make SIMD more friendly.
+`fearless_simd` takes `unsafe` out of SIMD.
 
-Fearless SIMD exposes safe SIMD with ergonomic multi-versioning in Rust.
+No matter what level of abstraction you're after, be it autovectorization and multiversioning, or portable SIMD, or safe access to raw
+intrinsics and nothing more, `fearless_simd` has you covered!
 
-Fearless SIMD uses "marker values" which serve as proofs of which target features are available on the current CPU.
-These each implement the [`Simd`] trait, which exposes a core set of SIMD operations which are implemented as
-efficiently as possible on each target platform.
+Zero dependencies, from-scratch build time under 1 second, safe public APIs, and [very little](https://gist.github.com/Shnatsel/61fc294987a1e051ce3835c97dc0fc19) `unsafe` under the hood.
 
-Additionally, there are types for packed vectors of a specific width and element type (such as [`f32x4`]).
-Fearless SIMD does not currently support vectors of less than 128 bits.
-These vector types implement some standard arithmetic traits (i.e. they can be added together using
-`+`, multiplied by a scalar using `*`, among others), which are implemented as efficiently
-as possible using SIMD instructions.
-These can be created in a SIMD context using the [`SimdFrom`] trait, or the
-[`from_slice`][SimdBase::from_slice] associated function.
+## Automatic vectorization
 
-To call a function with the best available target features and get the associated `Simd`
-implementation, use the [`dispatch`] macro:
+Put the code to vectorize in an `#[inline(always)]` function generic over [`Simd`].
+
+This will generate several implementations for different SIMD levels and select the best one at runtime:
 
 ```rust
-use fearless_simd::{Level, Simd, dispatch};
+use fearless_simd::{dispatch, Level, Simd};
 
 #[inline(always)]
-fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) { /* ... */ }
+fn double_u32s<S: Simd>(_: S, values: &mut [u32]) {
+    for value in values {
+        *value = *value * 2;
+    }
+}
 
-// The stored level, which you should only construct once in your application.
-let level = Level::new();
-
-dispatch!(level, simd => sigmoid(simd, &[/*...*/], &mut [/*...*/]));
+let mut values = [1, 2, 3, 4, 5];
+let level = Level::new(); // Detect SIMD available on the CPU. Expensive, so do it once.
+dispatch!(level, simd => double_u32s(simd, &mut values));
+assert_eq!(values, [2, 4, 6, 8, 10]);
 ```
 
-A few things to note:
+## Portable SIMD
 
-1) `sigmoid` is generic over any `Simd` type.
-2) [`dispatch`] is used to invoke the given function with the target features associated with the supplied [`Level`].
-3) The function or closure passed to [`dispatch`] should be `#[inline(always)]`.
-   The performance of the SIMD implementation may be poor if that isn't the case. See [the section on inlining for details](#inlining)
+Use the vector types for explicit lane-wise operations while staying generic over the SIMD level:
 
-The first parameter to [`dispatch`] is the [`Level`].
-If you are writing an application, you should create this once (using [`Level::new`]), and pass it to any function which wants to use SIMD.
-This type stores which instruction sets are available for the current process, which is used
-in the macro to dispatch to the most optimal variant of the supplied function for this process.
+```rust
+use fearless_simd::{dispatch, prelude::*, Level};
+
+#[inline(always)]
+fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
+    let mut chunks = values.chunks_exact_mut(S::u32s::N); // the CPU's native SIMD width
+    for chunk in &mut chunks {
+        let v = S::u32s::from_slice(simd, chunk);
+        (v * 2).store_slice(chunk);
+    }
+    for value in chunks.into_remainder() {
+        *value = *value * 2;
+    }
+}
+
+let mut values = [1, 2, 3, 4, 5];
+let level = Level::new(); // Detect SIMD available on the CPU. Expensive, so do it once.
+dispatch!(level, simd => double_u32s(simd, &mut values));
+assert_eq!(values, [2, 4, 6, 8, 10]);
+```
+
+You can also use fixed-size types such as [u32x8] instead of using the hardware's native SIMD width.
+
+## Explicit intrinsics
+
+If you need access to raw intrinsics, [`kernel!`][kernel] creates a function where they can be called safely:
+
+```rust
+use fearless_simd::{prelude::*, Level, u32x4};
+
+fearless_simd::kernel!(
+    fn double_u32s_neon(neon: Neon, values: &mut [u32]) {
+        use core::arch::aarch64::*;
+
+        let mut chunks = values.chunks_exact_mut(4);
+        for chunk in &mut chunks {
+            let v: uint32x4_t = u32x4::from_slice(neon, chunk).into(); // safe load
+            let doubled = vmulq_u32(v, vdupq_n_u32(2)); // safe access to a NEON intrinsic
+            let doubled: u32x4<_> = doubled.simd_into(neon);
+            doubled.store_slice(chunk);
+        }
+        for value in chunks.into_remainder() {
+            *value = *value * 2;
+        }
+    }
+);
+
+#[cfg(target_arch = "aarch64")]
+{
+    let level = Level::new(); // Detect SIMD available on the CPU. Expensive, so do it once.
+    if let Some(neon) = level.as_neon() {
+        let mut values = [1, 2, 3, 4, 5];
+        double_u32s_neon(neon, &mut values);
+        assert_eq!(values, [2, 4, 6, 8, 10]);
+    }
+}
+```
+
+You can also [mix and match](https://github.com/linebender/fearless_simd/blob/main/fearless_simd/examples/srgb.rs)
+intrinsics with the other approaches, using high-level code most of the time and dropping down to
+hardware-specific intrinsics only when necessary.
 
 ## Inlining
 
-Fearless SIMD relies heavily on Rust's inlining support to create functions which have the
-given target features enabled.
-As such, most functions which you write when using Fearless SIMD should have the `#[inline(always)]` attribute.
+Fearless SIMD relies heavily on Rust's inlining support to create functions which have the given target features enabled.
 
-There is a rule of thumb for how to achieve things in Fearless SIMD:
+As a rule of thumb:
 
 - All SIMD functions need `#[inline(always)]`.
 - Use [`dispatch`] when calling SIMD code from non-SIMD code.
 - Use [`vectorize()`][Simd::vectorize] when calling SIMD from SIMD if you don't want to force inlining.
 
-We currently don't have docs explaining why this is the case.
-You can read [this Zulip conversation](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433)
-for some train of thought explanation.
+[The article describing the design](https://gist.github.com/Shnatsel/61fc294987a1e051ce3835c97dc0fc19#the-abi-would-like-a-word) covers why this is the
+case. There's also Q&A on [Zulip](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433).
 
-<!--
-TODO: Also have concrete examples of each of these.
+## Instruction set support
 
-TODO: This is a really subtle point, and we do need there to be a well-written explanation available.
-E.g. We might want names for these, e.g.:
+- x86/x86-64: [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2)
+- Aarch64: Baseline [NEON](https://en.wikipedia.org/wiki/Arm_architecture_family#Advanced_SIMD_(Neon))
+- WebAssembly: [128-bit packed SIMD](https://github.com/WebAssembly/spec/blob/main/proposals/simd/SIMD.md), [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 
-# Kernels vs not kernels
-
-TODO: Talk about writing versions of functions which can be called in other `S: Simd` functions.
--->
-
-## Platform-specific intrinsics
-
-If the portable APIs are not enough, you can safely invoke platform-specific intrinsics via the [`kernel!()`][kernel] macro.
+A scalar fallback is also provided for platforms, so your code still works even if SIMD is not available.
 
 ## WebAssembly
 

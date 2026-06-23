@@ -23,18 +23,13 @@ For now, prefer updating the package-level readmes, e.g. fearless_simd/README.md
 
 </div>
 
-> [!CAUTION]
-> Fearless SIMD is in extremely early experimental development. As such, there are no stability
-> guarantees, APIs are incomplete, and architectures have missing implementations. Fearless SIMD is
-> being developed in conjunction with the [Vello Sparse
-> Strips](https://github.com/linebender/vello/) renderer.
-
 Full details of how to use Fearless SIMD can be found in the [Fearless SIMD package's README](./fearless_simd/README.md).
 
 ## Motivation
 
-This crate proposes an experimental way to use SIMD intrinsics reasonably safely.
+This crate provides a way to use SIMD safely, both via intrinsics and safe abstractions, while containing remarkably little `unsafe` code itself.
 The blog post [A plan for SIMD] contains the high level motivations, goal, and summary for Fearless SIMD.
+The blog post [Safe SIMD in Rust, even on the inside] describes the design and how the safety is achieved.
 
 ## Repository Structure
 
@@ -96,3 +91,4 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 [fearless_simd 0.1.1]: https://crates.io/crates/fearless_simd/0.1.1
 [std::simd]: https://doc.rust-lang.org/std/simd/index.html
 [Towards fearless SIMD, 7 years later]: https://linebender.org/blog/towards-fearless-simd/
+[Safe SIMD in Rust, even on the inside]: https://shnatsel.medium.com/safe-simd-in-rust-even-on-the-inside-c6f1ff381828
