@@ -20,14 +20,15 @@ pub struct Sse4_2 {
     _private: (),
 }
 impl Sse4_2 {
-    #[doc = r" Create a SIMD token."]
+    #[doc = r" Create a SIMD token, which can be used as future proof that the"]
+    #[doc = r" x86-64-v2 level is available for this run."]
     #[doc = r""]
-    #[doc = r" # Safety"]
-    #[doc = r""]
-    #[doc = r" The `sse4.2`, `cmpxchg16b`, and `popcnt` CPU features must"]
+    #[doc = r" As indicated by the required target features to call this function,"]
+    #[doc = r" `sse4.2`, `cmpxchg16b`, and `popcnt` CPU features must"]
     #[doc = r" be available."]
+    #[target_feature(enable = "sse4.2,cmpxchg16b,popcnt")]
     #[inline]
-    pub const unsafe fn new_unchecked() -> Self {
+    pub const fn new_unchecked() -> Self {
         Sse4_2 { _private: () }
     }
 }

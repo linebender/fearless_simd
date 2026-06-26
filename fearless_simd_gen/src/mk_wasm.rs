@@ -129,6 +129,12 @@ impl Level for WasmSimd128 {
 
     fn make_impl_body(&self) -> TokenStream {
         quote! {
+            /// Create a SIMD token, which can be used as future proof that the
+            /// simd128 wasm feature is enabled for this run.
+            ///
+            /// As WASM does not allow runtime feature detection, this function
+            /// is always available if this library is compiled with the simd128
+            /// feature enabled.
             #[inline]
             pub const fn new_unchecked() -> Self {
                 Self { _private: () }

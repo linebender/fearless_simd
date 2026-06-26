@@ -67,9 +67,18 @@ impl Level for Neon {
     }
 
     fn make_impl_body(&self) -> TokenStream {
+        let features = self
+            .enabled_target_features()
+            .expect("Actual impl can't fail.");
         quote! {
+            /// Create a SIMD token, which can be used as future proof that the
+            /// neon target feature is available for this run.
+            ///
+            /// As indicated by the required target features to call this function,
+            /// the `neon` CPU feature must be available.
             #[inline]
-            pub const unsafe fn new_unchecked() -> Self {
+            #[target_feature(enable = #features)]
+            pub const fn new_unchecked() -> Self {
                 Neon { _private: () }
             }
         }
