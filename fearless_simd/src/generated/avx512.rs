@@ -412,6 +412,7 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x4<Avx512>, b: f32x4<Avx512>) -> f32x4<Avx512> {
+                panic!("reached the instruction");
                 _mm_range_ps::<5i32>(a.into(), b.into()).simd_into(token)
             }
         );
