@@ -6,7 +6,7 @@ use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
     generic_as_array, generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name,
-    generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
+    generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg, scalar_binary_method,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity, valid_reinterpret};
@@ -204,6 +204,18 @@ impl Level for Neon {
                 }
             }
             OpSig::Binary => self.kernel_method(op, vec_ty, |token| match method {
+                "mul"
+                    if vec_ty.scalar_bits == 64
+                        && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+                {
+                    scalar_binary_method("wrapping_mul", vec_ty, token)
+                }
+                "min" | "max"
+                    if vec_ty.scalar_bits == 64
+                        && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+                {
+                    scalar_binary_method(method, vec_ty, token)
+                }
                 "shlv" | "shrv" => {
                     let mut args = if vec_ty.scalar == ScalarType::Int {
                         // Signed case

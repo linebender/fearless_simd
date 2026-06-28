@@ -171,9 +171,10 @@ pub(crate) fn coarse_type(vec_ty: &VecType) -> &'static str {
 
 pub(crate) fn set1_intrinsic(vec_ty: &VecType) -> Ident {
     use ScalarType::*;
-    let suffix = match (vec_ty.scalar, vec_ty.scalar_bits) {
-        (Int | Unsigned | Mask, 64) => "epi64x",
-        (scalar, bits) => op_suffix(scalar, bits, false),
+    let suffix = match (vec_ty.scalar, vec_ty.scalar_bits, vec_ty.n_bits()) {
+        (Int | Unsigned | Mask, 64, 512) => "epi64",
+        (Int | Unsigned | Mask, 64, _) => "epi64x",
+        (scalar, bits, _) => op_suffix(scalar, bits, false),
     };
 
     intrinsic_ident("set1", suffix, vec_ty.n_bits())

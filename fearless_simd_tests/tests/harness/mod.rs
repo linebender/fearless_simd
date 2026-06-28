@@ -11,6 +11,7 @@
 
 //! Tests for `fearless_simd`.
 
+mod int64;
 mod lm_generated;
 
 use fearless_simd::*;
