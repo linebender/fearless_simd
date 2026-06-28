@@ -17,41 +17,6 @@ mod harness;
 #[cfg(not(miri))] // too slow
 mod soundness;
 
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-fn x86_detects_icelake_avx512() -> bool {
-    std::arch::is_x86_feature_detected!("adx")
-        && std::arch::is_x86_feature_detected!("aes")
-        && std::arch::is_x86_feature_detected!("avx512bitalg")
-        && std::arch::is_x86_feature_detected!("avx512bw")
-        && std::arch::is_x86_feature_detected!("avx512cd")
-        && std::arch::is_x86_feature_detected!("avx512dq")
-        && std::arch::is_x86_feature_detected!("avx512f")
-        && std::arch::is_x86_feature_detected!("avx512ifma")
-        && std::arch::is_x86_feature_detected!("avx512vbmi")
-        && std::arch::is_x86_feature_detected!("avx512vbmi2")
-        && std::arch::is_x86_feature_detected!("avx512vl")
-        && std::arch::is_x86_feature_detected!("avx512vnni")
-        && std::arch::is_x86_feature_detected!("avx512vpopcntdq")
-        && std::arch::is_x86_feature_detected!("bmi1")
-        && std::arch::is_x86_feature_detected!("bmi2")
-        && std::arch::is_x86_feature_detected!("cmpxchg16b")
-        && std::arch::is_x86_feature_detected!("fma")
-        && std::arch::is_x86_feature_detected!("gfni")
-        && std::arch::is_x86_feature_detected!("lzcnt")
-        && std::arch::is_x86_feature_detected!("movbe")
-        && std::arch::is_x86_feature_detected!("pclmulqdq")
-        && std::arch::is_x86_feature_detected!("popcnt")
-        && std::arch::is_x86_feature_detected!("rdrand")
-        && std::arch::is_x86_feature_detected!("rdseed")
-        && std::arch::is_x86_feature_detected!("sha")
-        && std::arch::is_x86_feature_detected!("vaes")
-        && std::arch::is_x86_feature_detected!("vpclmulqdq")
-        && std::arch::is_x86_feature_detected!("xsave")
-        && std::arch::is_x86_feature_detected!("xsavec")
-        && std::arch::is_x86_feature_detected!("xsaveopt")
-        && std::arch::is_x86_feature_detected!("xsaves")
-}
-
 // Ensure that we can cast between generic native-width vectors
 #[expect(dead_code, reason = "Compile only test")]
 fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
