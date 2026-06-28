@@ -788,6 +788,8 @@ fn avx512_compare_op(method: &str) -> &'static str {
 }
 
 fn avx512_float_compare_predicate(method: &str) -> i32 {
+    // source for the values:
+    // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmp_ps_mask
     match method {
         "simd_eq" => 0x00,
         "simd_lt" => 0x11,
