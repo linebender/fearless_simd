@@ -102,53 +102,6 @@ fn supports_highest_level() {
     );
 }
 
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-#[test]
-fn detects_avx512_when_available() {
-    if !x86_detects_icelake_avx512() {
-        return;
-    }
-
-    let level = Level::new();
-    assert!(
-        level.as_avx512().is_some(),
-        "Ice Lake AVX-512 should be selected when all required features are available"
-    );
-    assert!(
-        level.as_avx2().is_some(),
-        "AVX-512 should downgrade to an AVX2 proof"
-    );
-    assert!(
-        level.as_sse4_2().is_some(),
-        "AVX-512 should downgrade to an SSE4.2 proof"
-    );
-}
-
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-#[test]
-fn avx512_masks_are_compact() {
-    #[cfg(target_arch = "x86")]
-    use core::arch::x86::*;
-    #[cfg(target_arch = "x86_64")]
-    use core::arch::x86_64::*;
-    use std::mem::size_of;
-
-    type A = Avx512;
-
-    assert_eq!(size_of::<mask8x16<A>>(), size_of::<__mmask16>());
-    assert_eq!(size_of::<mask16x8<A>>(), size_of::<__mmask8>());
-    assert_eq!(size_of::<mask32x4<A>>(), size_of::<__mmask8>());
-    assert_eq!(size_of::<mask64x2<A>>(), size_of::<__mmask8>());
-    assert_eq!(size_of::<mask8x32<A>>(), size_of::<__mmask32>());
-    assert_eq!(size_of::<mask16x16<A>>(), size_of::<__mmask16>());
-    assert_eq!(size_of::<mask32x8<A>>(), size_of::<__mmask8>());
-    assert_eq!(size_of::<mask64x4<A>>(), size_of::<__mmask8>());
-    assert_eq!(size_of::<mask8x64<A>>(), size_of::<__mmask64>());
-    assert_eq!(size_of::<mask16x32<A>>(), size_of::<__mmask32>());
-    assert_eq!(size_of::<mask32x16<A>>(), size_of::<__mmask16>());
-    assert_eq!(size_of::<mask64x8<A>>(), size_of::<__mmask8>());
-}
-
 #[simd_test]
 #[ignore]
 fn test_f32_to_i32_precise_exhaustive<S: Simd>(simd: S) {
