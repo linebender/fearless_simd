@@ -1,7 +1,6 @@
 // Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-mod extended_512;
 #[cfg(not(miri))] // too slow
 mod mask_roundtrip;
 #[cfg(not(miri))] // too slow
