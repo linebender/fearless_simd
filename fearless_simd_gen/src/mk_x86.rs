@@ -2553,6 +2553,7 @@ impl X86 {
             // because the required intrinsics are mysteriously absent from stdarch:
             // https://github.com/rust-lang/rust/issues/158196
             // Fortunately LLVM optimizes this sequence into the single instruction we're after.
+            // TODO: switch to intrinsics once they're added, stabilized, and our MSRV is high enough.
             let bits = vec_ty.n_bits();
             let zext = format_ident!("_mm512_zextsi{bits}_si512");
             let convert = intrinsic_ident("cvtepu32", "ps", 512);
