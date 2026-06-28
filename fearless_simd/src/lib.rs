@@ -230,6 +230,9 @@ pub mod x86 {
     pub use crate::generated::Sse4_2;
 }
 
+// Sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=icelake-server`
+// and pruned against the features implied by `avx512f` which can be viewed via
+// `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'`
 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
 #[inline]
 fn x86_detects_icelake_avx512() -> bool {
