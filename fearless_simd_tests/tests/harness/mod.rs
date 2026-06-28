@@ -320,6 +320,20 @@ fn cvt_f32_u32x4<S: Simd>(simd: S) {
 fn cvt_u32_f32x4_rounding<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[0.0, 0.49, 0.51, 0.99]);
     assert_eq!(*a.to_int::<u32x4<_>>(), [0, 0, 0, 0]);
+    let a = f32x4::from_slice(simd, &[1.01, 1.99, 2.5, 3.75]);
+    assert_eq!(*a.to_int::<u32x4<_>>(), [1, 1, 2, 3]);
+}
+
+#[simd_test]
+fn cvt_i32_f32x4_rounding<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 0.49, 0.51, 0.99]);
+    assert_eq!(*a.to_int::<i32x4<_>>(), [0, 0, 0, 0]);
+    let a = f32x4::from_slice(simd, &[-0.0, -0.49, -0.51, -0.99]);
+    assert_eq!(*a.to_int::<i32x4<_>>(), [0, 0, 0, 0]);
+    let a = f32x4::from_slice(simd, &[1.01, 1.99, 2.5, 3.75]);
+    assert_eq!(*a.to_int::<i32x4<_>>(), [1, 1, 2, 3]);
+    let a = f32x4::from_slice(simd, &[-1.01, -1.99, -2.5, -3.75]);
+    assert_eq!(*a.to_int::<i32x4<_>>(), [-1, -1, -2, -3]);
 }
 
 #[simd_test]

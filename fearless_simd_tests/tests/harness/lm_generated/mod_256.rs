@@ -426,6 +426,17 @@ fn cvt_u32_f32x8_rounding<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn cvt_i32_f32x8_rounding<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 0.49, 0.51, 0.99, 1.01, 1.99, 2.5, 3.75]);
+    assert_eq!(*a.to_int::<i32x8<_>>(), [0, 0, 0, 0, 1, 1, 2, 3]);
+    let a = f32x8::from_slice(
+        simd,
+        &[-0.0, -0.49, -0.51, -0.99, -1.01, -1.99, -2.5, -3.75],
+    );
+    assert_eq!(*a.to_int::<i32x8<_>>(), [0, 0, 0, 0, -1, -1, -2, -3]);
+}
+
+#[simd_test]
 fn cvt_f32_u32x8<S: Simd>(simd: S) {
     let values = [
         0,
