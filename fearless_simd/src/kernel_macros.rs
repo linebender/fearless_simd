@@ -8,7 +8,7 @@
 /// use platform-specific intrinsics for parts of the computation.
 ///
 /// The first argument must be a SIMD token written as `token: Neon`,
-/// `token: WasmSimd128`, `token: Sse4_2`, or `token: Avx2`.
+/// `token: WasmSimd128`, `token: Sse4_2`, `token: Avx2`, or `token: Avx512`.
 ///
 /// For levels with runtime-detected target features, the macro runs your body
 /// inside an inner function annotated with the appropriate `#[target_feature]`
@@ -54,7 +54,7 @@
 /// However, the body of the function can be as complex as you like.
 ///
 /// The SIMD token type must be written as a bare supported name:
-/// literally `Neon`, `WasmSimd128`, `Sse4_2`, or `Avx2`. No paths or aliases.
+/// literally `Neon`, `WasmSimd128`, `Sse4_2`, `Avx2`, or `Avx512`. No paths or aliases.
 ///
 /// For soundness, this macro only accepts safe functions.
 ///
@@ -93,7 +93,7 @@ macro_rules! kernel {
     ) => {
         compile_error!(concat!(
             "fearless_simd::kernel! expects its SIMD token argument type to be written as ",
-            "one of `Neon`, `WasmSimd128`, `Sse4_2`, or `Avx2`; got `",
+            "one of `Neon`, `WasmSimd128`, `Sse4_2`, `Avx2`, or `Avx512`; got `",
             stringify!($token_ty),
             "`",
         ));
@@ -154,12 +154,26 @@ macro_rules! __fearless_simd_kernel_dispatch {
     };
 
     (
+        Avx512,
+        $($body:tt)*
+    ) => {
+        $crate::__fearless_simd_kernel_impl! {
+            @cfg any(target_arch = "x86", target_arch = "x86_64");
+            @token_ty $crate::Avx512;
+            @kernel_attrs #[target_feature(
+                enable = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
+            )];
+            $($body)*
+        }
+    };
+
+    (
         $token_ty:ident,
         $($body:tt)*
     ) => {
         compile_error!(concat!(
             "fearless_simd::kernel! expects its SIMD token argument type to be written as ",
-            "one of `Neon`, `WasmSimd128`, `Sse4_2`, or `Avx2`; got `",
+            "one of `Neon`, `WasmSimd128`, `Sse4_2`, `Avx2`, or `Avx512`; got `",
             stringify!($token_ty),
             "`",
         ));
@@ -216,9 +230,9 @@ mod tests {
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     use core::arch::wasm32::{f32x4_add, v128};
     #[cfg(target_arch = "x86")]
-    use core::arch::x86::{__m256i, _mm256_add_epi32};
+    use core::arch::x86::{__m256i, __m512i, _mm256_add_epi32, _mm512_add_epi32};
     #[cfg(target_arch = "x86_64")]
-    use core::arch::x86_64::{__m256i, _mm256_add_epi32};
+    use core::arch::x86_64::{__m256i, __m512i, _mm256_add_epi32, _mm512_add_epi32};
 
     crate::kernel!(
         fn add_f32x4_neon(neon: Neon, a: float32x4_t, b: float32x4_t) -> float32x4_t {
@@ -237,6 +251,12 @@ mod tests {
             _mm256_add_epi32(a, b)
         }
     );
+
+    crate::kernel! {
+        fn add_i32x16_avx512(avx512: Avx512, a: __m512i, b: __m512i) -> __m512i {
+            _mm512_add_epi32(a, b)
+        }
+    }
 
     #[cfg(target_arch = "aarch64")]
     #[test]
@@ -289,6 +309,30 @@ mod tests {
             <[i32; 8]>::from(sum),
             [11, 22, 33, 44, 55, 66, 77, 88],
             "`kernel!` should instantiate a working AVX2 kernel"
+        );
+    }
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[test]
+    fn kernel_instantiates_for_avx512() {
+        let Some(avx512) = crate::Level::new().as_avx512() else {
+            return;
+        };
+
+        let a: crate::i32x16<_> =
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].simd_into(avx512);
+        let b: crate::i32x16<_> = [
+            10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160,
+        ]
+        .simd_into(avx512);
+        let sum: crate::i32x16<_> = add_i32x16_avx512(avx512, a.into(), b.into()).simd_into(avx512);
+
+        assert_eq!(
+            <[i32; 16]>::from(sum),
+            [
+                11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 121, 132, 143, 154, 165, 176
+            ],
+            "`kernel!` should instantiate a working AVX-512 kernel"
         );
     }
 }

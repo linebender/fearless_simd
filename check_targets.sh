@@ -15,18 +15,20 @@ cargo check -p fearless_simd --target aarch64-linux-android  --features force_su
 cargo check -p fearless_simd --target aarch64-linux-android
 
 # x86_64, at all supported static SIMD levels.
-RUSTFLAGS=-Ctarget-feature=+avx2,+fma cargo check -p fearless_simd --target x86_64-unknown-linux-gnu
-RUSTFLAGS=-Ctarget-feature=+avx2,+fma cargo check -p fearless_simd --target x86_64-unknown-linux-gnu --features force_support_fallback
-RUSTFLAGS=-Ctarget-feature=+sse4.2 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu
-RUSTFLAGS=-Ctarget-feature=+sse4.2 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu  --features force_support_fallback
+RUSTFLAGS=-Ctarget-cpu=icelake-server cargo check -p fearless_simd --target x86_64-unknown-linux-gnu
+RUSTFLAGS=-Ctarget-cpu=icelake-server cargo check -p fearless_simd --target x86_64-unknown-linux-gnu --features force_support_fallback
+RUSTFLAGS=-Ctarget-cpu=x86-64-v3 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu
+RUSTFLAGS=-Ctarget-cpu=x86-64-v3 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu --features force_support_fallback
+RUSTFLAGS=-Ctarget-cpu=x86-64-v2 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu
+RUSTFLAGS=-Ctarget-cpu=x86-64-v2 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu  --features force_support_fallback
 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu
 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu  --features force_support_fallback
 
 # x86 (i.e. 32 bit) at all supported static SIMD levels.
-RUSTFLAGS=-Ctarget-feature=+avx2,+fma cargo check -p fearless_simd --target i686-pc-windows-msvc
-RUSTFLAGS=-Ctarget-feature=+avx2,+fma cargo check -p fearless_simd --target i686-pc-windows-msvc --features force_support_fallback
-RUSTFLAGS=-Ctarget-feature=+sse4.2 cargo check -p fearless_simd --target i686-pc-windows-msvc
-RUSTFLAGS=-Ctarget-feature=+sse4.2 cargo check -p fearless_simd --target i686-pc-windows-msvc  --features force_support_fallback
+RUSTFLAGS=-Ctarget-cpu=x86-64-v3 cargo check -p fearless_simd --target i686-pc-windows-msvc
+RUSTFLAGS=-Ctarget-cpu=x86-64-v3 cargo check -p fearless_simd --target i686-pc-windows-msvc --features force_support_fallback
+RUSTFLAGS=-Ctarget-cpu=x86-64-v2 cargo check -p fearless_simd --target i686-pc-windows-msvc
+RUSTFLAGS=-Ctarget-cpu=x86-64-v2 cargo check -p fearless_simd --target i686-pc-windows-msvc  --features force_support_fallback
 cargo check -p fearless_simd --target i686-pc-windows-msvc
 cargo check -p fearless_simd --target i686-pc-windows-msvc  --features force_support_fallback
 

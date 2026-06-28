@@ -11,7 +11,15 @@ You can find its changes [documented below](#050-2026-06-18).
 
 ## [Unreleased]
 
-This release has an [MSRV][] of 1.88.
+This release has an [MSRV][] of 1.89.
+
+### Added
+
+- Added Ice Lake-class AVX-512 support with a generated `Avx512` level and 512-bit native-width vector types.
+
+### Changed
+
+- The MSRV is now Rust 1.89.
 
 ## [0.5.0][] (2026-06-18)
 

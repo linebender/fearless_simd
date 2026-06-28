@@ -146,7 +146,7 @@ case. There's also Q&A on [Zulip](https://xi.zulipchat.com/#narrow/channel/51423
 
 ## Instruction set support
 
-- x86/x86-64: [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2)
+- x86/x86-64: [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2), [Ice Lake](https://en.wikipedia.org/wiki/AVX-512#CPUs_with_AVX-512) (AVX-512, avoiding early slow implementations)
 - Aarch64: Baseline [NEON](https://en.wikipedia.org/wiki/Arm_architecture_family#Advanced_SIMD_(Neon))
 - WebAssembly: [128-bit packed SIMD](https://github.com/WebAssembly/spec/blob/main/proposals/simd/SIMD.md), [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 
@@ -204,7 +204,7 @@ At least one of `std` and `libm` is required; `std` overrides `libm`.
 
 ## Minimum supported Rust Version (MSRV)
 
-This version of Fearless SIMD has been verified to compile with **Rust 1.88** and later.
+This version of Fearless SIMD has been verified to compile with **Rust 1.89** and later.
 
 Future versions of Fearless SIMD might increase the Rust version requirement.
 It will not be treated as a breaking change and as such can even happen with small patch releases.

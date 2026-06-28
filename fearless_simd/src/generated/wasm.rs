@@ -833,6 +833,17 @@ impl Simd for WasmSimd128 {
         i8x16_bitmask(a.into()) as u64
     }
     #[inline(always)]
+    fn set_mask8x16(self, a: &mut mask8x16<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 16usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            16usize
+        );
+        let mut lanes = self.as_array_mask8x16(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask8x16(lanes);
+    }
+    #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
         v128_and(a.into(), b.into()).simd_into(self)
     }
@@ -1307,6 +1318,17 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64 {
         i16x8_bitmask(a.into()) as u64
+    }
+    #[inline(always)]
+    fn set_mask16x8(self, a: &mut mask16x8<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 8usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            8usize
+        );
+        let mut lanes = self.as_array_mask16x8(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask16x8(lanes);
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -1789,6 +1811,17 @@ impl Simd for WasmSimd128 {
         i32x4_bitmask(a.into()) as u64
     }
     #[inline(always)]
+    fn set_mask32x4(self, a: &mut mask32x4<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 4usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            4usize
+        );
+        let mut lanes = self.as_array_mask32x4(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask32x4(lanes);
+    }
+    #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
         v128_and(a.into(), b.into()).simd_into(self)
     }
@@ -2125,6 +2158,17 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64 {
         i64x2_bitmask(a.into()) as u64
+    }
+    #[inline(always)]
+    fn set_mask64x2(self, a: &mut mask64x2<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 2usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            2usize
+        );
+        let mut lanes = self.as_array_mask64x2(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask64x2(lanes);
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -3134,6 +3178,17 @@ impl Simd for WasmSimd128 {
         lo | (hi << 16usize)
     }
     #[inline(always)]
+    fn set_mask8x32(self, a: &mut mask8x32<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 32usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            32usize
+        );
+        let mut lanes = self.as_array_mask8x32(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask8x32(lanes);
+    }
+    #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
         let (a0, a1) = self.split_mask8x32(a);
         let (b0, b1) = self.split_mask8x32(b);
@@ -3805,6 +3860,17 @@ impl Simd for WasmSimd128 {
         lo | (hi << 8usize)
     }
     #[inline(always)]
+    fn set_mask16x16(self, a: &mut mask16x16<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 16usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            16usize
+        );
+        let mut lanes = self.as_array_mask16x16(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask16x16(lanes);
+    }
+    #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
         let (a0, a1) = self.split_mask16x16(a);
         let (b0, b1) = self.split_mask16x16(b);
@@ -4469,6 +4535,17 @@ impl Simd for WasmSimd128 {
         lo | (hi << 4usize)
     }
     #[inline(always)]
+    fn set_mask32x8(self, a: &mut mask32x8<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 8usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            8usize
+        );
+        let mut lanes = self.as_array_mask32x8(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask32x8(lanes);
+    }
+    #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
         let (a0, a1) = self.split_mask32x8(a);
         let (b0, b1) = self.split_mask32x8(b);
@@ -4903,6 +4980,17 @@ impl Simd for WasmSimd128 {
         let lo = self.to_bitmask_mask64x2(lo);
         let hi = self.to_bitmask_mask64x2(hi);
         lo | (hi << 2usize)
+    }
+    #[inline(always)]
+    fn set_mask64x4(self, a: &mut mask64x4<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 4usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            4usize
+        );
+        let mut lanes = self.as_array_mask64x4(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask64x4(lanes);
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -6027,6 +6115,17 @@ impl Simd for WasmSimd128 {
         lo | (hi << 32usize)
     }
     #[inline(always)]
+    fn set_mask8x64(self, a: &mut mask8x64<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 64usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            64usize
+        );
+        let mut lanes = self.as_array_mask8x64(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask8x64(lanes);
+    }
+    #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
         let (a0, a1) = self.split_mask8x64(a);
         let (b0, b1) = self.split_mask8x64(b);
@@ -6737,6 +6836,17 @@ impl Simd for WasmSimd128 {
         lo | (hi << 16usize)
     }
     #[inline(always)]
+    fn set_mask16x32(self, a: &mut mask16x32<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 32usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            32usize
+        );
+        let mut lanes = self.as_array_mask16x32(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask16x32(lanes);
+    }
+    #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
         let (a0, a1) = self.split_mask16x32(a);
         let (b0, b1) = self.split_mask16x32(b);
@@ -7429,6 +7539,17 @@ impl Simd for WasmSimd128 {
         lo | (hi << 8usize)
     }
     #[inline(always)]
+    fn set_mask32x16(self, a: &mut mask32x16<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 16usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            16usize
+        );
+        let mut lanes = self.as_array_mask32x16(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask32x16(lanes);
+    }
+    #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
         let (a0, a1) = self.split_mask32x16(a);
         let (b0, b1) = self.split_mask32x16(b);
@@ -7849,6 +7970,17 @@ impl Simd for WasmSimd128 {
         let lo = self.to_bitmask_mask64x4(lo);
         let hi = self.to_bitmask_mask64x4(hi);
         lo | (hi << 4usize)
+    }
+    #[inline(always)]
+    fn set_mask64x8(self, a: &mut mask64x8<Self>, index: usize, value: bool) -> () {
+        assert!(
+            index < 8usize,
+            "mask lane index {index} is out of bounds for {} lanes",
+            8usize
+        );
+        let mut lanes = self.as_array_mask64x8(*a);
+        lanes[index] = if value { !0 } else { 0 };
+        *a = self.load_array_mask64x8(lanes);
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {

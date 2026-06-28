@@ -5,11 +5,16 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
+#![allow(
+    clippy::disallowed_methods,
+    reason = "fearless_simd_tests has test-only transmute helpers that should not be forced through the library's private checked transmute machinery"
+)]
 
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
 mod harness;
+#[cfg(not(miri))] // too slow
 mod soundness;
 
 // Ensure that we can cast between generic native-width vectors
@@ -45,7 +50,7 @@ fn supports_highest_level() {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         assert!(
             level.as_avx2().is_some(),
-            "This machine does not support every `Level` supported by Fearless SIMD (currently AVX2 and below).\n{UNSUPPORTED_LEVEL_MESSAGE}",
+            "This machine does not support every routinely local-tested x86 `Level` supported by Fearless SIMD (currently AVX2 and below; AVX-512 is covered by the SDE CI job).\n{UNSUPPORTED_LEVEL_MESSAGE}",
         );
 
         #[cfg(target_arch = "aarch64")]

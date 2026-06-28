@@ -3,12 +3,12 @@ env:
   # version like 1.70. Note that we only specify MAJOR.MINOR and not PATCH so that bugfixes still
   # come automatically. If the version specified here is no longer the latest stable version,
   # then please feel free to submit a PR that adjusts it along with the potential clippy fixes.
-  RUST_STABLE_VER: "1.88" # In quotes because otherwise (e.g.) 1.70 would be interpreted as 1.7
+  RUST_STABLE_VER: "1.89" # In quotes because otherwise (e.g.) 1.70 would be interpreted as 1.7
   # The purpose of checking with the minimum supported Rust toolchain is to detect its staleness.
   # If the compilation fails, then the version specified here needs to be bumped up to reality.
   # Be sure to also update the rust-version property in the workspace Cargo.toml file,
   # plus all the README.md files of the affected packages.
-  RUST_MIN_VER: "1.88"
+  RUST_MIN_VER: "1.89"
   # List of packages that will be checked with the minimum supported Rust version.
   # This should be limited to packages that are intended for publishing.
   RUST_MIN_VER_PKGS: "-p fearless_simd"
@@ -275,8 +275,7 @@ jobs:
       - name: run tests on CPU with AVX-512
         # Github Actions doesn't give us AVX-512 so this is the only way to exercise AVX-512 codepaths on CI.
         # -icl stands for Ice Lake. Technically Skylake added AVX-512 first, but it's mostly useless there due to
-        # downclocking. When we do eventually add explicit AVX-512 support, we'll likely target the Ice Lake feature
-        # level.
+        # downclocking, so our explicit AVX-512 level targets Ice Lake.
         run: ${SDE_PKG}-lin/sde64 -icl -- cargo test $CARGO_TEST_ARGS
 
   test-aarch64-qemu:

@@ -114,7 +114,7 @@
 //!
 //! # Instruction set support
 //!
-//! - x86/x86-64: [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2)
+//! - x86/x86-64: [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2), [Ice Lake](https://en.wikipedia.org/wiki/AVX-512#CPUs_with_AVX-512) (AVX-512, avoiding early slow implementations)
 //! - Aarch64: Baseline [NEON](https://en.wikipedia.org/wiki/Arm_architecture_family#Advanced_SIMD_(Neon))
 //! - WebAssembly: [128-bit packed SIMD](https://github.com/WebAssembly/spec/blob/main/proposals/simd/SIMD.md), [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 //!
@@ -226,7 +226,47 @@ pub mod wasm32 {
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub mod x86 {
     pub use crate::generated::Avx2;
+    pub use crate::generated::Avx512;
     pub use crate::generated::Sse4_2;
+}
+
+// Sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=icelake-server`
+// and pruned against the features implied by `avx512f` which can be viewed via
+// `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'`
+#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+#[inline]
+fn x86_detects_icelake_avx512() -> bool {
+    std::arch::is_x86_feature_detected!("adx")
+        && std::arch::is_x86_feature_detected!("aes")
+        && std::arch::is_x86_feature_detected!("avx512bitalg")
+        && std::arch::is_x86_feature_detected!("avx512bw")
+        && std::arch::is_x86_feature_detected!("avx512cd")
+        && std::arch::is_x86_feature_detected!("avx512dq")
+        && std::arch::is_x86_feature_detected!("avx512f")
+        && std::arch::is_x86_feature_detected!("avx512ifma")
+        && std::arch::is_x86_feature_detected!("avx512vbmi")
+        && std::arch::is_x86_feature_detected!("avx512vbmi2")
+        && std::arch::is_x86_feature_detected!("avx512vl")
+        && std::arch::is_x86_feature_detected!("avx512vnni")
+        && std::arch::is_x86_feature_detected!("avx512vpopcntdq")
+        && std::arch::is_x86_feature_detected!("bmi1")
+        && std::arch::is_x86_feature_detected!("bmi2")
+        && std::arch::is_x86_feature_detected!("cmpxchg16b")
+        && std::arch::is_x86_feature_detected!("fma")
+        && std::arch::is_x86_feature_detected!("gfni")
+        && std::arch::is_x86_feature_detected!("lzcnt")
+        && std::arch::is_x86_feature_detected!("movbe")
+        && std::arch::is_x86_feature_detected!("pclmulqdq")
+        && std::arch::is_x86_feature_detected!("popcnt")
+        && std::arch::is_x86_feature_detected!("rdrand")
+        && std::arch::is_x86_feature_detected!("rdseed")
+        && std::arch::is_x86_feature_detected!("sha")
+        && std::arch::is_x86_feature_detected!("vaes")
+        && std::arch::is_x86_feature_detected!("vpclmulqdq")
+        && std::arch::is_x86_feature_detected!("xsave")
+        && std::arch::is_x86_feature_detected!("xsavec")
+        && std::arch::is_x86_feature_detected!("xsaveopt")
+        && std::arch::is_x86_feature_detected!("xsaves")
 }
 
 /// The level enum with the specific SIMD capabilities available.
@@ -290,6 +330,9 @@ pub enum Level {
         ))
     ))]
     Sse4_2(Sse4_2),
+    /// Ice Lake-class AVX-512 on (32 and 64 bit) x86.
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    Avx512(Avx512),
     /// The x86-64-v3 instruction set on (32 and 64 bit) x86, including AVX2 and FMA.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Avx2(Avx2),
@@ -341,6 +384,10 @@ impl Level {
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
+            if x86_detects_icelake_avx512() {
+                return unsafe { Self::Avx512(Avx512::new_unchecked()) };
+            }
+
             // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
             // However, the following features are implied by avx2 and do not need to be spelled out:
             // avx,fxsr,sse,sse2,sse3,sse4.1,sse4.2,ssse3
@@ -514,6 +561,9 @@ impl Level {
     #[inline]
     pub fn as_sse4_2(self) -> Option<Sse4_2> {
         match self {
+            // Safety: The Avx512 struct represents an Ice Lake feature set, which includes the
+            // `sse4.2`, `cmpxchg16b`, and `popcnt` features required by Sse4_2.
+            Self::Avx512(_avx512) => unsafe { Some(Sse4_2::new_unchecked()) },
             // Safety: The Avx2 struct represents the x86-64-v3 feature set being enabled, which
             // includes the `sse4.2`, `cmpxchg16b`, and `popcnt` features required by Sse4_2.
             Self::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
@@ -557,7 +607,25 @@ impl Level {
             reason = "On machines which statically support `avx2`, there is only one variant."
         )]
         match self {
+            // Safety: The Ice Lake AVX-512 feature set includes the x86-64-v3 features required by Avx2.
+            Self::Avx512(_avx512) => unsafe { Some(Avx2::new_unchecked()) },
             Self::Avx2(avx2) => Some(avx2),
+            _ => None,
+        }
+    }
+
+    /// If this is a proof that the Ice Lake AVX-512 feature set is available, access that
+    /// instruction set.
+    ///
+    /// See [`Avx512::new_unchecked`] for the exact list of CPU features this token enables.
+    ///
+    /// This can be used in combination with the [kernel] macro to safely access level-specific
+    /// SIMD intrinsics.
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[inline]
+    pub fn as_avx512(self) -> Option<Avx512> {
+        match self {
+            Self::Avx512(avx512) => Some(avx512),
             _ => None,
         }
     }
@@ -605,6 +673,40 @@ impl Level {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
             #[cfg(all(
+                target_feature = "adx",
+                target_feature = "aes",
+                target_feature = "avx512bitalg",
+                target_feature = "avx512bw",
+                target_feature = "avx512cd",
+                target_feature = "avx512dq",
+                target_feature = "avx512f",
+                target_feature = "avx512ifma",
+                target_feature = "avx512vbmi",
+                target_feature = "avx512vbmi2",
+                target_feature = "avx512vl",
+                target_feature = "avx512vnni",
+                target_feature = "avx512vpopcntdq",
+                target_feature = "bmi1",
+                target_feature = "bmi2",
+                target_feature = "cmpxchg16b",
+                target_feature = "fma",
+                target_feature = "gfni",
+                target_feature = "lzcnt",
+                target_feature = "movbe",
+                target_feature = "pclmulqdq",
+                target_feature = "popcnt",
+                target_feature = "rdrand",
+                target_feature = "rdseed",
+                target_feature = "sha",
+                target_feature = "vaes",
+                target_feature = "vpclmulqdq",
+                target_feature = "xsave",
+                target_feature = "xsavec",
+                target_feature = "xsaveopt",
+                target_feature = "xsaves"
+            ))]
+            return unsafe { Self::Avx512(Avx512::new_unchecked()) };
+            #[cfg(all(
                 target_feature = "avx2",
                 target_feature = "bmi1",
                 target_feature = "bmi2",
@@ -614,7 +716,40 @@ impl Level {
                 target_feature = "lzcnt",
                 target_feature = "movbe",
                 target_feature = "popcnt",
-                target_feature = "xsave"
+                target_feature = "xsave",
+                not(all(
+                    target_feature = "adx",
+                    target_feature = "aes",
+                    target_feature = "avx512bitalg",
+                    target_feature = "avx512bw",
+                    target_feature = "avx512cd",
+                    target_feature = "avx512dq",
+                    target_feature = "avx512f",
+                    target_feature = "avx512ifma",
+                    target_feature = "avx512vbmi",
+                    target_feature = "avx512vbmi2",
+                    target_feature = "avx512vl",
+                    target_feature = "avx512vnni",
+                    target_feature = "avx512vpopcntdq",
+                    target_feature = "bmi1",
+                    target_feature = "bmi2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "fma",
+                    target_feature = "gfni",
+                    target_feature = "lzcnt",
+                    target_feature = "movbe",
+                    target_feature = "pclmulqdq",
+                    target_feature = "popcnt",
+                    target_feature = "rdrand",
+                    target_feature = "rdseed",
+                    target_feature = "sha",
+                    target_feature = "vaes",
+                    target_feature = "vpclmulqdq",
+                    target_feature = "xsave",
+                    target_feature = "xsavec",
+                    target_feature = "xsaveopt",
+                    target_feature = "xsaves"
+                ))
             ))]
             return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             #[cfg(all(

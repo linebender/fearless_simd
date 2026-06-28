@@ -66,6 +66,30 @@ fn sqrt_f32x8<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn approximate_recip_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[1.0, -2.0, 23.0, 9.0, 3.5, -7.25, 13.0, 0.25]);
+    let result = a.approximate_recip();
+    let expected = [
+        1.0,
+        -0.5,
+        1. / 23.,
+        1. / 9.,
+        1. / 3.5,
+        1. / -7.25,
+        1. / 13.,
+        4.0,
+    ];
+    for i in 0..8 {
+        let rel_error = ((result[i] - expected[i]) / expected[i]).abs();
+        assert!(
+            rel_error < 0.005,
+            "approximate_recip({}) rel_error = {rel_error}",
+            a[i]
+        );
+    }
+}
+
+#[simd_test]
 fn div_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[4.0, 2.0, 1.0, 0.0, 10.0, 12.0, 15.0, 20.0]);
     let b = f32x8::from_slice(simd, &[4.0, 1.0, 3.0, 0.1, 2.0, 3.0, 5.0, 4.0]);
@@ -236,6 +260,44 @@ fn min_precise_f32x8_with_nan<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn max_precise_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[2.0, -3.0, 0.0, 0.5]);
+    let b = f64x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
+    assert_eq!(*a.max_precise(b), [2.0, -2.0, 7.0, 3.0]);
+}
+
+#[simd_test]
+fn min_precise_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[2.0, -3.0, 0.0, 0.5]);
+    let b = f64x4::from_slice(simd, &[1.0, -2.0, 7.0, 3.0]);
+    assert_eq!(*a.min_precise(b), [1.0, -3.0, 0.0, 0.5]);
+}
+
+#[simd_test]
+fn max_precise_f64x4_with_nan<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[f64::NAN, -3.0, f64::INFINITY, 0.5]);
+    let b = f64x4::from_slice(simd, &[1.0, f64::NAN, 7.0, f64::NEG_INFINITY]);
+    let result = a.max_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], f64::INFINITY);
+    assert_eq!(result[3], 0.5);
+}
+
+#[simd_test]
+fn min_precise_f64x4_with_nan<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[f64::NAN, -3.0, f64::INFINITY, 0.5]);
+    let b = f64x4::from_slice(simd, &[1.0, f64::NAN, 7.0, f64::NEG_INFINITY]);
+    let result = a.min_precise(b);
+
+    assert_eq!(result[0], 1.0);
+    assert_eq!(result[1], -3.0);
+    assert_eq!(result[2], 7.0);
+    assert_eq!(result[3], f64::NEG_INFINITY);
+}
+
+#[simd_test]
 fn floor_f32x8<S: Simd>(simd: S) {
     let a = f32x8::from_slice(simd, &[2.0, -3.2, 0.0, 0.5, 1.7, -2.8, 3.1, -4.9]);
     assert_eq!(*a.floor(), [2.0, -4.0, 0.0, 0.0, 1.0, -3.0, 3.0, -5.0]);
@@ -312,6 +374,103 @@ fn trunc_f32x8_special_values<S: Simd>(simd: S) {
             -f32::NAN
         ]
         .map(f32::to_bits)
+    );
+}
+
+#[simd_test]
+fn cvt_u32_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[1.0, 42.7, 3e9, -0.3, 0.0, 17.9, 255.99, 1024.1]);
+    assert_eq!(
+        *a.to_int::<u32x8<_>>(),
+        [1, 42, 3000000000, 0, 0, 17, 255, 1024]
+    );
+}
+
+#[simd_test]
+fn cvt_u32_precise_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(
+        simd,
+        &[-1.0, 42.7, 5e9, f32::NAN, 0.0, 1.9, 3000000000.0, -5e9],
+    );
+    assert_eq!(
+        *a.to_int_precise::<u32x8<_>>(),
+        [0, 42, u32::MAX, 0, 0, 1, 3000000000, 0]
+    );
+}
+
+#[simd_test]
+fn cvt_i32_precise_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(
+        simd,
+        &[
+            -10.3,
+            f32::NAN,
+            5e9,
+            -5e9,
+            f32::INFINITY,
+            f32::NEG_INFINITY,
+            42.7,
+            -0.9,
+        ],
+    );
+    assert_eq!(
+        *a.to_int_precise::<i32x8<_>>(),
+        [-10, 0, i32::MAX, i32::MIN, i32::MAX, i32::MIN, 42, 0]
+    );
+}
+
+#[simd_test]
+fn cvt_u32_f32x8_rounding<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 0.49, 0.51, 0.99, 1.01, 1.99, 2.5, 3.75]);
+    assert_eq!(*a.to_int::<u32x8<_>>(), [0, 0, 0, 0, 1, 1, 2, 3]);
+}
+
+#[simd_test]
+fn cvt_i32_f32x8_rounding<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 0.49, 0.51, 0.99, 1.01, 1.99, 2.5, 3.75]);
+    assert_eq!(*a.to_int::<i32x8<_>>(), [0, 0, 0, 0, 1, 1, 2, 3]);
+    let a = f32x8::from_slice(
+        simd,
+        &[-0.0, -0.49, -0.51, -0.99, -1.01, -1.99, -2.5, -3.75],
+    );
+    assert_eq!(*a.to_int::<i32x8<_>>(), [0, 0, 0, 0, -1, -1, -2, -3]);
+}
+
+#[simd_test]
+fn cvt_f32_u32x8<S: Simd>(simd: S) {
+    let values = [
+        0,
+        42,
+        1_000_000,
+        i32::MAX as u32,
+        0x8000_0000,
+        0xffff_ff00,
+        u32::MAX - 1,
+        u32::MAX,
+    ];
+    let a = u32x8::from_slice(simd, &values);
+    assert_eq!(*a.to_float::<f32x8<_>>(), values.map(|x| x as f32));
+}
+
+#[simd_test]
+fn cvt_u32_precise_f32x8_inf<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(
+        simd,
+        &[
+            -10.3,
+            f32::NAN,
+            f32::INFINITY,
+            f32::NEG_INFINITY,
+            u32::MAX as f32,
+            4294967040.0,
+            4294967296.0,
+            -0.5,
+        ],
+    );
+
+    assert_eq!(
+        *a.to_int_precise::<u32x8<_>>(),
+        [0, 0, u32::MAX, u32::MIN, u32::MAX, 4294967040, u32::MAX, 0]
     );
 }
 

@@ -208,6 +208,9 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
+        OpSig::MaskSet => {
+            panic!("Mask set must operate on the full mask vector")
+        }
         OpSig::LoadInterleaved {
             block_size,
             block_count,
@@ -375,7 +378,6 @@ pub(crate) fn generic_from_array(
     } else {
         quote! { val }
     };
-
     // There are architecture-specific "load" intrinsics, but they can actually be *worse* for performance. If they
     // lower to LLVM intrinsics, they will likely not be optimized until much later in the pipeline (if at all),
     // resulting in substantially worse codegen. See https://github.com/linebender/fearless_simd/pull/185.
@@ -478,6 +480,25 @@ pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType)
                 i += 1;
             }
             bits
+        }
+    }
+}
+
+pub(crate) fn generic_mask_set(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
+    let from_array = generic_op_name("load_array", vec_ty);
+    let as_array = generic_op_name("as_array", vec_ty);
+    let len = vec_ty.len;
+
+    quote! {
+        #method_sig {
+            assert!(
+                index < #len,
+                "mask lane index {index} is out of bounds for {} lanes",
+                #len
+            );
+            let mut lanes = self.#as_array(*a);
+            lanes[index] = if value { !0 } else { 0 };
+            *a = self.#from_array(lanes);
         }
     }
 }
