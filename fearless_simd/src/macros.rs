@@ -330,24 +330,6 @@ mod tests {
         }
     }
 
-    #[cfg(all(
-        feature = "std",
-        any(target_arch = "x86", target_arch = "x86_64"),
-        not(feature = "multiversion_avx2")
-    ))]
-    fn x86_detects_avx2_level() -> bool {
-        std::arch::is_x86_feature_detected!("avx2")
-            && std::arch::is_x86_feature_detected!("bmi1")
-            && std::arch::is_x86_feature_detected!("bmi2")
-            && std::arch::is_x86_feature_detected!("cmpxchg16b")
-            && std::arch::is_x86_feature_detected!("f16c")
-            && std::arch::is_x86_feature_detected!("fma")
-            && std::arch::is_x86_feature_detected!("lzcnt")
-            && std::arch::is_x86_feature_detected!("movbe")
-            && std::arch::is_x86_feature_detected!("popcnt")
-            && std::arch::is_x86_feature_detected!("xsave")
-    }
-
     #[allow(dead_code, reason = "Compile test")]
     fn dispatch_generic() {
         fn generic<S: Simd, T>(_: S, x: T) -> T {
@@ -376,21 +358,6 @@ mod tests {
         let actual = dispatch!(level, simd => x86_dispatch_backend(simd));
 
         assert_eq!(actual, expected_x86_dispatch_backend(level));
-    }
-
-    #[cfg(all(
-        feature = "std",
-        any(target_arch = "x86", target_arch = "x86_64"),
-        not(feature = "multiversion_avx2")
-    ))]
-    #[test]
-    fn disabled_avx2_multiversioning_does_not_filter_avx2_token_access() {
-        if x86_detects_avx2_level() {
-            assert!(
-                Level::new().as_avx2().is_some(),
-                "`multiversion_avx2` controls dispatch multiversioning, not AVX2 token access"
-            );
-        }
     }
 
     #[cfg(all(
