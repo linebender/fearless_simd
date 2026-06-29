@@ -185,7 +185,7 @@ runtime.
 
 ## Multiversioning on x86
 
-x86 CPUs are not guaranteed to have any SIMD particular instruction set, so fearless_simd compiles a version
+x86 CPUs are not guaranteed to have any SIMD particular instruction set, so `fearless_simd` compiles a version
 of each function generic over [`Simd`] for each instruction set, and [`dispatch`] selects the best one at runtime.
 
 This is strictly required to take advantage of SIMD, but results in an increased binary size on x86.
