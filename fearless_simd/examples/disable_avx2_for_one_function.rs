@@ -12,11 +12,8 @@ fn disable_avx2<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
     let level = simd.level();
     match level {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        Level::Avx2(_) => {
-            // downgrade AVX2 to SSE4.2
-            let simd_sse4_2 = level.as_sse4_2().unwrap();
-            sigmoid(simd_sse4_2, x, out)
-        }
+        // Downgrade AVX2 to SSE4.2 when calling `sigmoid()`
+        Level::Avx2(_) => sigmoid(level.as_sse4_2().unwrap(), x, out),
         _ => sigmoid(simd, x, out),
     }
 }
