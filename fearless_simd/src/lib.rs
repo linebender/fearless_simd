@@ -457,20 +457,6 @@ impl Level {
         }
     }
 
-    /// Get the target feature level suitable for this run.
-    ///
-    /// Should be used in libraries if they wish to handle the case where
-    /// target features cannot be detected at runtime.
-    /// Most users should prefer [`new`](Self::new).
-    /// This is discussed in more detail in `new`'s documentation.
-    #[allow(clippy::allow_attributes, reason = "Only needed in some cfgs.")]
-    #[allow(unreachable_code, reason = "Fallback unreachable in some cfgs.")]
-    pub fn try_detect() -> Option<Self> {
-        #[cfg(any(feature = "std", target_arch = "wasm32"))]
-        return Some(Self::new());
-        None
-    }
-
     /// Check whether this is the `Fallback` level; that is, whether no better feature level could
     /// be statically or dynamically detected. This is useful if there's a scalarized version of
     /// your algorithm that runs faster if SIMD isn't supported.
