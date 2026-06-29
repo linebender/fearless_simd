@@ -11,6 +11,7 @@ use fearless_simd::{Level, dispatch, prelude::*};
 fn disable_avx2<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
     let level = simd.level();
     match level {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         Level::Avx2(_) => {
             // downgrade AVX2 to SSE4.2
             let simd_sse4_2 = level.as_sse4_2().unwrap();
