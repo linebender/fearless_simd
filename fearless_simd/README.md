@@ -183,10 +183,24 @@ At the time of writing, relaxed SIMD is only supported in Chrome. To make use of
 with relaxed SIMD enabled (`RUSTFLAGS="-Ctarget-feature=+simd128,+relaxed-simd"`) and one with it disabled, and then feature-detect at
 runtime.
 
-## Credits
+## Multiversioning on x86
 
-This crate was inspired by [`pulp`], [`std::simd`], among others in the Rust ecosystem, though makes many decisions differently.
-It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
+x86 CPUs are not guaranteed to have any SIMD particular instruction set, so fearless_simd compiles a version
+of each function generic over [`Simd`] for each instruction set, and [`dispatch`] selects the best one at runtime.
+
+This is strictly required to take advantage of SIMD, but results in an increased binary size on x86.
+If binary size is a concern, the increase can be partially mitigated by setting
+[`codegen-units=1`](https://nnethercote.github.io/perf-book/build-configuration.html#codegen-units)
+or [`lto=true`](https://nnethercote.github.io/perf-book/build-configuration.html#link-time-optimization) in your Cargo.toml,
+at the cost of longer build times.
+
+As a last resort, you can turn off multiversioning for specific SIMD instruction sets, see "Feature Flags" below.
+Note that later extensions can be beneficial even if you are only using 128-bit vectors:
+AVX2 and AVX-512 provide more efficient instructions for some operations,
+and AVX-512 also more than doubles the number of vector registers of all sizes.
+
+You can also [disable certain instruction sets for select functions](https://github.com/linebender/fearless_simd/blob/main/fearless_simd/examples/sigmoid.rs)
+without disabling them globally.
 
 ## Feature Flags
 
@@ -194,17 +208,22 @@ The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/fe
 
 - `std` (enabled by default): Get floating point functions from the standard library (likely using your target's libc).
   Also allows using [`Level::new`] on all platforms, to detect which target features are enabled.
-- `libm`: Use floating point implementations from [libm].
+- `libm`: Use floating point implementations from [libm]. Useful for `#[no_std]`.
 - `force_support_fallback`: Force scalar fallback, to be supported, even if your compilation target has a better baseline.
 - `multiversion_sse4_2`, `multiversion_avx2`, `multiversion_avx512` (enabled by default): Enable automatic x86 multiversioning for the
   corresponding instruction set in [`dispatch`] and [`Level::dispatch`].
 
 The x86 feature flags only control automatic multiversioning. Disabling one does not remove its token type, its
-[`Simd`] implementation, or explicit [kernel] support; for example, an `Avx2` token can still be used to call an AVX2
-kernel when the CPU supports it. Because Cargo features are additive, opt out of x86 multiversioning with
+[`Simd`] implementation, or explicit [`kernel`] support; for example, an `Avx2` token can still be used to call an
+AVX2 kernel when the CPU supports it. Because Cargo features are additive, opt out of x86 multiversioning with
 `default-features = false`, then enable the pieces you want, for example `features = ["std", "multiversion_sse4_2"]`.
 
 At least one of `std` and `libm` is required; `std` overrides `libm`.
+
+## Credits
+
+This crate was inspired by [`pulp`], [`std::simd`], among others in the Rust ecosystem, though makes many decisions differently.
+It benefited from conversations with Luca Versari, though he is not responsible for any of the mistakes or bad decisions.
 
 [`pulp`]: https://crates.io/crates/pulp
 
