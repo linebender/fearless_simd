@@ -3,7 +3,7 @@
 
 //! This example demonstrates a SIMD function that's never compiled for AVX2.
 //!
-//! This can be useful if benchmarks show a specific insruction set regressing performance.
+//! This can be useful if benchmarks show a specific instruction set regressing performance.
 
 use fearless_simd::{Level, dispatch, prelude::*};
 
