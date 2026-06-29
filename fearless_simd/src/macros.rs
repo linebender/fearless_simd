@@ -77,15 +77,15 @@ macro_rules! dispatch {
                 ))
             ))]
             $crate::Level::Sse4_2(sse4_2) => {
-                $crate::__fearless_simd_dispatch_multiversion_sse4_2!(sse4_2, $simd => $op)
+                $crate::__fearless_simd_dispatch_dispatch_sse4_2!(sse4_2, $simd => $op)
             }
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             $crate::Level::Avx512(avx512) => {
-                $crate::__fearless_simd_dispatch_multiversion_avx512!(avx512, $simd => $op)
+                $crate::__fearless_simd_dispatch_dispatch_avx512!(avx512, $simd => $op)
             }
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             $crate::Level::Avx2(avx2) => {
-                $crate::__fearless_simd_dispatch_multiversion_avx2!(avx2, $simd => $op)
+                $crate::__fearless_simd_dispatch_dispatch_avx2!(avx2, $simd => $op)
             }
             #[cfg(any(
                 all(target_arch = "aarch64", not(target_feature = "neon")),
@@ -146,8 +146,8 @@ macro_rules! __fearless_simd_dispatch_with_token {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "multiversion_avx512")]
-macro_rules! __fearless_simd_dispatch_multiversion_avx512 {
+#[cfg(feature = "dispatch_avx512")]
+macro_rules! __fearless_simd_dispatch_dispatch_avx512 {
     ($avx512:expr, $simd:pat => $op:expr) => {
         $crate::__fearless_simd_dispatch_with_token!($avx512, $simd => $op)
     };
@@ -156,18 +156,18 @@ macro_rules! __fearless_simd_dispatch_multiversion_avx512 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "multiversion_avx512"))]
-macro_rules! __fearless_simd_dispatch_multiversion_avx512 {
+#[cfg(not(feature = "dispatch_avx512"))]
+macro_rules! __fearless_simd_dispatch_dispatch_avx512 {
     ($avx512:expr, $simd:pat => $op:expr) => {{
-        $crate::__fearless_simd_dispatch_multiversion_avx2_from_superset!($avx512, $simd => $op)
+        $crate::__fearless_simd_dispatch_dispatch_avx2_from_superset!($avx512, $simd => $op)
     }};
 }
 
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "multiversion_avx2")]
-macro_rules! __fearless_simd_dispatch_multiversion_avx2 {
+#[cfg(feature = "dispatch_avx2")]
+macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
     ($avx2:expr, $simd:pat => $op:expr) => {
         $crate::__fearless_simd_dispatch_with_token!($avx2, $simd => $op)
     };
@@ -176,18 +176,18 @@ macro_rules! __fearless_simd_dispatch_multiversion_avx2 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "multiversion_avx2"))]
-macro_rules! __fearless_simd_dispatch_multiversion_avx2 {
+#[cfg(not(feature = "dispatch_avx2"))]
+macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
     ($avx2:expr, $simd:pat => $op:expr) => {{
-        $crate::__fearless_simd_dispatch_multiversion_sse4_2_from_superset!($avx2, $simd => $op)
+        $crate::__fearless_simd_dispatch_dispatch_sse4_2_from_superset!($avx2, $simd => $op)
     }};
 }
 
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "multiversion_avx2")]
-macro_rules! __fearless_simd_dispatch_multiversion_avx2_from_superset {
+#[cfg(feature = "dispatch_avx2")]
+macro_rules! __fearless_simd_dispatch_dispatch_avx2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $proof;
         let __fearless_simd_token = $crate::Simd::level(__fearless_simd_proof)
@@ -200,18 +200,18 @@ macro_rules! __fearless_simd_dispatch_multiversion_avx2_from_superset {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "multiversion_avx2"))]
-macro_rules! __fearless_simd_dispatch_multiversion_avx2_from_superset {
+#[cfg(not(feature = "dispatch_avx2"))]
+macro_rules! __fearless_simd_dispatch_dispatch_avx2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
-        $crate::__fearless_simd_dispatch_multiversion_sse4_2_from_superset!($proof, $simd => $op)
+        $crate::__fearless_simd_dispatch_dispatch_sse4_2_from_superset!($proof, $simd => $op)
     }};
 }
 
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "multiversion_sse4_2")]
-macro_rules! __fearless_simd_dispatch_multiversion_sse4_2 {
+#[cfg(feature = "dispatch_sse4_2")]
+macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
     ($sse4_2:expr, $simd:pat => $op:expr) => {
         $crate::__fearless_simd_dispatch_with_token!($sse4_2, $simd => $op)
     };
@@ -220,8 +220,8 @@ macro_rules! __fearless_simd_dispatch_multiversion_sse4_2 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "multiversion_sse4_2"))]
-macro_rules! __fearless_simd_dispatch_multiversion_sse4_2 {
+#[cfg(not(feature = "dispatch_sse4_2"))]
+macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
     ($sse4_2:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $sse4_2;
         let _ = __fearless_simd_proof;
@@ -232,8 +232,8 @@ macro_rules! __fearless_simd_dispatch_multiversion_sse4_2 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "multiversion_sse4_2")]
-macro_rules! __fearless_simd_dispatch_multiversion_sse4_2_from_superset {
+#[cfg(feature = "dispatch_sse4_2")]
+macro_rules! __fearless_simd_dispatch_dispatch_sse4_2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $proof;
         let __fearless_simd_token = $crate::Simd::level(__fearless_simd_proof)
@@ -246,8 +246,8 @@ macro_rules! __fearless_simd_dispatch_multiversion_sse4_2_from_superset {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "multiversion_sse4_2"))]
-macro_rules! __fearless_simd_dispatch_multiversion_sse4_2_from_superset {
+#[cfg(not(feature = "dispatch_sse4_2"))]
+macro_rules! __fearless_simd_dispatch_dispatch_sse4_2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $proof;
         let _ = __fearless_simd_proof;
@@ -319,11 +319,11 @@ mod tests {
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     fn expected_x86_dispatch_backend(level: Level) -> X86DispatchBackend {
-        if cfg!(feature = "multiversion_avx512") && level.as_avx512().is_some() {
+        if cfg!(feature = "dispatch_avx512") && level.as_avx512().is_some() {
             X86DispatchBackend::Avx512
-        } else if cfg!(feature = "multiversion_avx2") && level.as_avx2().is_some() {
+        } else if cfg!(feature = "dispatch_avx2") && level.as_avx2().is_some() {
             X86DispatchBackend::Avx2
-        } else if cfg!(feature = "multiversion_sse4_2") && level.as_sse4_2().is_some() {
+        } else if cfg!(feature = "dispatch_sse4_2") && level.as_sse4_2().is_some() {
             X86DispatchBackend::Sse4_2
         } else {
             X86DispatchBackend::Fallback
@@ -363,14 +363,14 @@ mod tests {
     #[cfg(all(
         feature = "std",
         any(target_arch = "x86", target_arch = "x86_64"),
-        not(feature = "multiversion_avx512")
+        not(feature = "dispatch_avx512")
     ))]
     #[test]
     fn disabled_avx512_multiversioning_does_not_filter_avx512_token_access() {
         if crate::x86_detects_icelake_avx512() {
             assert!(
                 Level::new().as_avx512().is_some(),
-                "`multiversion_avx512` controls dispatch multiversioning, not AVX-512 token access"
+                "`dispatch_avx512` controls dispatch multiversioning, not AVX-512 token access"
             );
         }
     }
