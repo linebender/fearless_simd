@@ -166,6 +166,9 @@
 //! AVX2 and AVX-512 provide more efficient instructions for some operations,
 //! and AVX-512 also more than doubles the number of vector registers of all sizes.
 //!
+//! You can also [disable certain instruction sets for select functions](https://github.com/linebender/fearless_simd/blob/main/fearless_simd/examples/sigmoid.rs)
+//! without disabling them globally.
+//!
 //! # Feature Flags
 //!
 //! The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/features.html#dependency-features) are available:
