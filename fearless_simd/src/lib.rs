@@ -163,6 +163,13 @@
 //!   Also allows using [`Level::new`] on all platforms, to detect which target features are enabled.
 //! - `libm`: Use floating point implementations from [libm].
 //! - `force_support_fallback`: Force scalar fallback, to be supported, even if your compilation target has a better baseline.
+//! - `multiversion_sse4_2`, `multiversion_avx2`, `multiversion_avx512` (enabled by default): Enable automatic x86 multiversioning for the
+//!   corresponding instruction set in [`dispatch`] and [`Level::dispatch`].
+//!
+//! The x86 feature flags only control automatic multiversioning. Disabling one does not remove its token type, its
+//! [`Simd`] implementation, or explicit [`kernel`] support; for example, an `Avx2` token can still be used to call an
+//! AVX2 kernel when the CPU supports it. Because Cargo features are additive, opt out of x86 multiversioning with
+//! `default-features = false`, then enable the pieces you want, for example `features = ["std", "multiversion_sse4_2"]`.
 //!
 //! At least one of `std` and `libm` is required; `std` overrides `libm`.
 //!

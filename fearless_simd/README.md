@@ -30,6 +30,7 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 [`dispatch`]: https://docs.rs/fearless_simd/latest/fearless_simd/macro.dispatch.html
 [`Level`]: https://docs.rs/fearless_simd/latest/fearless_simd/enum.Level.html
 [`Level::new`]: https://docs.rs/fearless_simd/latest/fearless_simd/enum.Level.html#method.new
+[`Level::dispatch`]: https://docs.rs/fearless_simd/latest/fearless_simd/enum.Level.html#method.dispatch
 [`std::simd`]: https://doc.rust-lang.org/std/simd/index.html
 [kernel]: https://docs.rs/fearless_simd/latest/fearless_simd/macro.kernel.html
 [Simd::vectorize]: https://docs.rs/fearless_simd/latest/fearless_simd/trait.Simd.html#tymethod.vectorize
@@ -195,6 +196,13 @@ The following crate [feature flags](https://doc.rust-lang.org/cargo/reference/fe
   Also allows using [`Level::new`] on all platforms, to detect which target features are enabled.
 - `libm`: Use floating point implementations from [libm].
 - `force_support_fallback`: Force scalar fallback, to be supported, even if your compilation target has a better baseline.
+- `multiversion_sse4_2`, `multiversion_avx2`, `multiversion_avx512` (enabled by default): Enable automatic x86 multiversioning for the
+  corresponding instruction set in [`dispatch`] and [`Level::dispatch`].
+
+The x86 feature flags only control automatic multiversioning. Disabling one does not remove its token type, its
+[`Simd`] implementation, or explicit [kernel] support; for example, an `Avx2` token can still be used to call an AVX2
+kernel when the CPU supports it. Because Cargo features are additive, opt out of x86 multiversioning with
+`default-features = false`, then enable the pieces you want, for example `features = ["std", "multiversion_sse4_2"]`.
 
 At least one of `std` and `libm` is required; `std` overrides `libm`.
 

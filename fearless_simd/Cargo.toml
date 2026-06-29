@@ -26,16 +26,29 @@ rustdoc-args = [
 
 
 [features]
-default = ["std"]
+default = ["std", "multiversion_sse4_2", "multiversion_avx2", "multiversion_avx512"]
 # Get floating point functions from the standard library (likely using your targets libc).
 # Also allows using `Level::new` on all platforms, to detect which target features are enabled
 std = []
 # Use floating point implementations from libm
 libm = ["dep:libm"]
 
-# Force the "fallback" SIMD level to be supported
+# Force the "fallback" SIMD level to be supported, even if SIMD is always available.
 # This is primarily used for tests
 force_support_fallback = []
+
+# Enable automatic multiversioning for SSE4.2 through `dispatch!` and `Level::dispatch`.
+# Has no effect on architectures other than x86 and x86-64.
+# Disabling this does not remove the `Sse4_2` token or explicit `kernel!` support.
+multiversion_sse4_2 = []
+# Enable automatic multiversioning for AVX2 through `dispatch!` and `Level::dispatch`.
+# Has no effect on architectures other than x86 and x86-64.
+# Disabling this does not remove the `Avx2` token or explicit `kernel!` support.
+multiversion_avx2 = []
+# Enable automatic multiversioning for AVX-512 through `dispatch!` and `Level::dispatch`.
+# Has no effect on architectures other than x86 and x86-64.
+# Disabling this doeces not remove the `Avx512` token or explicit `kernel!` support.
+multiversion_avx512 = []
 
 [lints]
 workspace = true
