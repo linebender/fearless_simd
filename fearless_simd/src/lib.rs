@@ -353,12 +353,6 @@ impl Level {
     /// Note that in most cases, this function should only be called by end-user applications.
     /// Libraries should instead accept a `Level` argument, probably as they are
     /// creating their data structures, then storing the level for any computations.
-    /// Libraries which wish to abstract away SIMD usage for their common-case clients,
-    /// should make their non-`Level` entrypoint match this function's `cfg`; to instead
-    /// handle this at runtime, they can use [`try_detect`](Self::try_detect),
-    /// handling the `None` case as they deem fit (probably panicking).
-    /// This strategy avoids users of the library inadvertently using the fallback level,
-    /// even if the requisite target features are available.
     ///
     /// If you are on an embedded device where these macros are not supported,
     /// you should construct the relevant variants yourself, using whatever
@@ -620,12 +614,11 @@ impl Level {
     ///
     /// That is, if your compilation run ambiently declares that a target feature is enabled,
     /// this method will take that into account.
-    /// In most cases, you should use [`Level::new`] or [`Level::try_detect`].
+    /// In most cases, you should use [`Level::new`].
     /// This method is mainly useful for libraries, where:
     ///
     /// 1) Your crate features request that you not use the standard library, i.e. doesn't enable
-    ///    your `"std"` crate feature reason (so you can't use [`Level::new`] and
-    ///    [`Level::try_detect`] returns `None`); AND
+    ///    your `"std"` crate feature reason (so you can't use [`Level::new`]; AND
     /// 2) Your caller does not provide a [`Level`]; AND
     /// 3) The library doesn't want to panic when it can't find a SIMD level.
     ///
