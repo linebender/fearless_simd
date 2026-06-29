@@ -26,12 +26,7 @@ rustdoc-args = [
 
 
 [features]
-default = [
-  "std",
-  "dispatch_sse4_2",
-  "dispatch_avx2",
-  "dispatch_avx512",
-]
+default = ["std", "dispatch_sse4_2", "dispatch_avx2", "dispatch_avx512"]
 # Get floating point functions from the standard library (likely using your targets libc).
 # Also allows using `Level::new` on all platforms, to detect which target features are enabled
 std = []
