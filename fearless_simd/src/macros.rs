@@ -190,9 +190,9 @@ macro_rules! __fearless_simd_dispatch_multiversion_avx2 {
 macro_rules! __fearless_simd_dispatch_multiversion_avx2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $proof;
-        let _ = __fearless_simd_proof;
-        // SAFETY: this helper is only called with proof of an x86 level that includes AVX2.
-        let __fearless_simd_token = unsafe { $crate::Avx2::new_unchecked() };
+        let __fearless_simd_token = $crate::Simd::level(__fearless_simd_proof)
+            .as_avx2()
+            .expect("a superset x86 SIMD level should provide an AVX2 token");
         $crate::__fearless_simd_dispatch_with_token!(__fearless_simd_token, $simd => $op)
     }};
 }
@@ -236,9 +236,9 @@ macro_rules! __fearless_simd_dispatch_multiversion_sse4_2 {
 macro_rules! __fearless_simd_dispatch_multiversion_sse4_2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $proof;
-        let _ = __fearless_simd_proof;
-        // SAFETY: this helper is only called with proof of an x86 level that includes SSE4.2.
-        let __fearless_simd_token = unsafe { $crate::Sse4_2::new_unchecked() };
+        let __fearless_simd_token = $crate::Simd::level(__fearless_simd_proof)
+            .as_sse4_2()
+            .expect("a superset x86 SIMD level should provide an SSE4.2 token");
         $crate::__fearless_simd_dispatch_with_token!(__fearless_simd_token, $simd => $op)
     }};
 }
