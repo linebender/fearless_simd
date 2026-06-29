@@ -115,6 +115,11 @@ macro_rules! dispatch {
     }};
 }
 
+// The x86 multiversion helpers are split into cfg-selected macro definitions
+// because exported macro bodies are expanded in the downstream crate,
+// so putting `#[cfg(feature = "...")]` directly inside `dispatch!` would test
+// the downstream crate's features instead of `fearless_simd`'s features.
+
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
