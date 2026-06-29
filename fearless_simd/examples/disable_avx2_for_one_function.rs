@@ -23,9 +23,8 @@ fn disable_avx2<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
 
 #[inline(always)]
 fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
-    // verify that this function is never called with AVX2
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    debug_assert!(!matches!(simd.level(), Level::Avx2(_)));
+    debug_assert!(!matches!(simd.level(), Level::Avx2(_)), "Called with AVX2");
 
     // If this function calls anything else with its `simd`,
     // the callee will also never get an AVX2 implementation.
