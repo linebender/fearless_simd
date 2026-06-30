@@ -1,4 +1,4 @@
-// Copyright 2024 the Fearless_SIMD Authors
+// Copyright 2026 the Fearless_SIMD Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 //! This example demonstrates a SIMD function that's never compiled for AVX2.
