@@ -133,6 +133,9 @@ macro_rules! __fearless_simd_dispatch_with_token {
             x
         }
 
+        // $token can be an arbitrary expression,
+        // so bind the result of evaluating it to a variable before use
+        // so that it's evaluated only once
         let __fearless_simd_token = $token;
         let $simd = launder(__fearless_simd_token);
         $crate::Simd::vectorize(
