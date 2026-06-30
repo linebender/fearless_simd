@@ -11,7 +11,7 @@ You can find its changes [documented below](#060-2026-06-30).
 
 ## [Unreleased]
 
-## [0.6.0][] (2026-06-30)
+## [0.6.0][] (2026-07-01)
 
 This release has an [MSRV][] of 1.89.
 
