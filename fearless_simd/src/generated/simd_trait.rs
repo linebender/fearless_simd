@@ -306,6 +306,8 @@ pub trait Simd:
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Swizzle a vector of elements according to an index vector.\n\nThe behavior for out-of-bound indices is unspecified and backend-dependent, but it is guaranteed to not panic."]
+    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, idxs: u8x16<Self>) -> i8x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
@@ -388,6 +390,8 @@ pub trait Simd:
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self>;
+    #[doc = "Swizzle a vector of elements according to an index vector.\n\nThe behavior for out-of-bound indices is unspecified and backend-dependent, but it is guaranteed to not panic."]
+    fn swizzle_dyn_u8x16(self, a: u8x16<Self>, idxs: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input."]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]

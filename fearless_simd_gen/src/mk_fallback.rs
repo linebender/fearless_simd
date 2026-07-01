@@ -219,6 +219,24 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::SwizzleDyn => {
+                assert!(
+                    matches!(vec_ty.scalar, ScalarType::Unsigned | ScalarType::Int)
+                        && vec_ty.scalar_bits == 8
+                        && vec_ty.len == 16,
+                    "swizzle_dyn is currently only supported for 8-bit 128-bit vectors"
+                );
+
+                quote! {
+                    #method_sig {
+                        let mut dest = [Default::default(); 16];
+                        for (i, idx) in idxs.val.0.iter().copied().enumerate() {
+                            dest[i] = a.val.0.get(idx as usize).copied().unwrap_or(0);
+                        }
+                        dest.simd_into(self)
+                    }
+                }
+            }
             OpSig::Shift => {
                 let items = make_list(
                     (0..vec_ty.len)

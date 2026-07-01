@@ -5,7 +5,7 @@
 
 use crate::{
     Bytes, Select, Simd, SimdBase, SimdCvtFloat, SimdCvtTruncate, SimdFrom, SimdInto, SimdMask,
-    seal::Seal,
+    SimdSwizzleDyn, seal::Seal,
 };
 #[doc = "A SIMD vector of 4 [`f32`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, f32x4};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = f32x4::splat(simd, 1.0);\n    let b = f32x4::simd_from(simd, 1.0);\n\n    // From a slice:\n    let c = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);\n\n    // From an array:\n    let d = f32x4::simd_from(simd, [1.0, 2.0, 3.0, 4.0]);\n\n    // From an element-wise function:\n    let e = f32x4::from_fn(simd, |i| i as f32);\n}\n```"]
 #[derive(Clone, Copy)]
@@ -445,6 +445,13 @@ impl<S: Simd> crate::SimdCombine<S> for i8x16<S> {
         self.simd.combine_i8x16(self, rhs.simd_into(self.simd))
     }
 }
+impl<S: Simd> SimdSwizzleDyn<S> for i8x16<S> {
+    #[doc = "Swizzle a vector of elements according to an index vector.\n\nThe behavior for out-of-bound indices is unspecified and backend-dependent, but it is guaranteed to not panic."]
+    #[inline(always)]
+    fn swizzle_dyn(self, idxs: u8x16<S>) -> Self {
+        self.simd.swizzle_dyn_i8x16(self, idxs)
+    }
+}
 #[doc = "A SIMD vector of 16 [`u8`] elements.\n\nYou may construct this vector type using the [`Self::splat`], [`Self::from_slice`], [`Self::simd_from`], [`Self::from_fn`], and [`Self::block_splat`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, u8x16};\nfn construct_simd<S: Simd>(simd: S) {\n    // From a single scalar value:\n    let a = u8x16::splat(simd, 1);\n    let b = u8x16::simd_from(simd, 1);\n\n    // From a slice:\n    let c = u8x16::from_slice(simd, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an array:\n    let d = u8x16::simd_from(simd, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);\n\n    // From an element-wise function:\n    let e = u8x16::from_fn(simd, |i| i as u8);\n}\n```"]
 #[derive(Clone, Copy)]
 #[repr(C, align(16))]
@@ -628,6 +635,13 @@ impl<S: Simd> crate::SimdCombine<S> for u8x16<S> {
     #[inline(always)]
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
         self.simd.combine_u8x16(self, rhs.simd_into(self.simd))
+    }
+}
+impl<S: Simd> SimdSwizzleDyn<S> for u8x16<S> {
+    #[doc = "Swizzle a vector of elements according to an index vector.\n\nThe behavior for out-of-bound indices is unspecified and backend-dependent, but it is guaranteed to not panic."]
+    #[inline(always)]
+    fn swizzle_dyn(self, idxs: u8x16<S>) -> Self {
+        self.simd.swizzle_dyn_u8x16(self, idxs)
     }
 }
 #[doc = "A SIMD mask of 16 logical lanes corresponding to 8-bit vector elements.\n\nThe storage representation of this type is intentionally opaque and may vary depending on the SIMD level.\n\nYou can construct this mask type using the [`Self::splat`], [`Self::from_bitmask`], [`Self::from_slice`], and [`Self::simd_from`] methods.\n\n```rust\n# use fearless_simd::{prelude::*, mask8x16};\nfn construct_mask<S: Simd>(simd: S) {\n    // From a single boolean value:\n    let a = mask8x16::splat(simd, true);\n    let b = mask8x16::simd_from(simd, true);\n\n    // From signed integer mask lanes:\n    let c = mask8x16::from_slice(simd, &[-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);\n    let d = mask8x16::simd_from(simd, [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);\n\n    // From a compact bitmask (same mask as above, least significant bit maps to lane 0):\n    let e = mask8x16::from_bitmask(simd, 0b0001);\n\n    // By setting individual lanes:\n    let mut f = mask8x16::splat(simd, false);\n    f.set(0, true);\n}\n```"]

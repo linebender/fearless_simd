@@ -306,6 +306,18 @@ impl Level for X86 {
             OpSig::Zip { select_low } => self.handle_zip(op, vec_ty, select_low),
             OpSig::Unzip { select_even } => self.handle_unzip(op, vec_ty, select_even),
             OpSig::Slide { granularity } => self.handle_slide(method_sig, vec_ty, granularity),
+            OpSig::SwizzleDyn => {
+                assert!(
+                    matches!(vec_ty.scalar, ScalarType::Unsigned | ScalarType::Int)
+                        && vec_ty.scalar_bits == 8
+                        && vec_ty.len == 16,
+                    "swizzle_dyn is currently only supported for 8-bit 128-bit vectors"
+                );
+
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { _mm_shuffle_epi8(a.into(), idxs.into()).simd_into(#token) }
+                })
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,

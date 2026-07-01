@@ -8,14 +8,14 @@ use crate::{
     generic::generic_op_name,
     ops::{
         F32_TO_I32, F32_TO_I32_PRECISE, F32_TO_U32, F32_TO_U32_PRECISE, I32_TO_F32, Op, OpSig,
-        TyFlavor, U32_TO_F32, vec_trait_ops_for,
+        SWIZZLE_DYN, TyFlavor, U32_TO_F32, vec_trait_ops_for,
     },
     types::{SIMD_TYPES, ScalarType, VecType},
 };
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, seal::Seal};
+        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, SimdSwizzleDyn, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -210,6 +210,23 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     #[inline(always)]
                     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined {
                         self.simd.#combine_method(self, rhs.simd_into(self.simd))
+                    }
+                }
+            });
+        }
+        if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Int)
+            && ty.scalar_bits == 8
+            && ty.len == 16
+        {
+            let swizzle_dyn = generic_op_name("swizzle_dyn", ty);
+            let idxs_ty = VecType::new(ScalarType::Unsigned, 8, 16).rust();
+            let doc = SWIZZLE_DYN.format_docstring(TyFlavor::VecImpl);
+            conditional_impls.push(quote! {
+                impl<S: Simd> SimdSwizzleDyn<S> for #name<S> {
+                    #[doc = #doc]
+                    #[inline(always)]
+                    fn swizzle_dyn(self, idxs: #idxs_ty<S>) -> Self {
+                        self.simd.#swizzle_dyn(self, idxs)
                     }
                 }
             });

@@ -294,6 +294,23 @@ impl Level for Neon {
                     quote! { #vbsl(#reinterpret(a.into()), b.into(), c.into()).simd_into(#token) }
                 })
             }
+            OpSig::SwizzleDyn => {
+                assert!(
+                    matches!(vec_ty.scalar, ScalarType::Unsigned | ScalarType::Int)
+                        && vec_ty.scalar_bits == 8
+                        && vec_ty.len == 16,
+                    "swizzle_dyn is currently only supported for 8-bit 128-bit vectors"
+                );
+
+                let (tbl, idxs) = match vec_ty.scalar {
+                    ScalarType::Unsigned => (quote! { vqtbl1q_u8 }, quote! { idxs.into() }),
+                    ScalarType::Int => (quote! { vqtbl1q_s8 }, quote! { idxs.into() }),
+                    _ => unreachable!(),
+                };
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! { #tbl(a.into(), #idxs).simd_into(#token) }
+                })
+            }
             OpSig::Combine { combined_ty } => {
                 let combined_wrapper = combined_ty.aligned_wrapper();
                 let combined_arch_ty = self.arch_ty(&combined_ty);

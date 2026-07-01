@@ -585,6 +585,10 @@ impl Simd for WasmSimd128 {
         i8x16_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, idxs: u8x16<Self>) -> i8x16<Self> {
+        i8x16_swizzle(a.into(), idxs.into()).simd_into(self)
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
         <v128>::from(a).simd_into(self)
     }
@@ -792,6 +796,10 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn swizzle_dyn_u8x16(self, a: u8x16<Self>, idxs: u8x16<Self>) -> u8x16<Self> {
+        i8x16_swizzle(a.into(), idxs.into()).simd_into(self)
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {

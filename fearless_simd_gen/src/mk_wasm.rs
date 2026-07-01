@@ -330,6 +330,20 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
+            OpSig::SwizzleDyn => {
+                assert!(
+                    matches!(vec_ty.scalar, ScalarType::Unsigned | ScalarType::Int)
+                        && vec_ty.scalar_bits == 8
+                        && vec_ty.len == 16,
+                    "swizzle_dyn is currently only supported for 8-bit 128-bit vectors"
+                );
+
+                quote! {
+                    #method_sig {
+                        i8x16_swizzle(a.into(), idxs.into()).simd_into(self)
+                    }
+                }
+            }
             OpSig::Combine { combined_ty } => generic_block_combine(method_sig, &combined_ty, 128),
             OpSig::Split { half_ty } => generic_block_split(method_sig, &half_ty, 128),
             OpSig::Zip { select_low } => {
