@@ -6,20 +6,24 @@ Subheadings to categorize changes are `added, changed, deprecated, removed, fixe
 
 -->
 
-The latest published Fearless SIMD release is [0.5.0](#050-2026-06-18) which was released on 2026-06-18.
-You can find its changes [documented below](#050-2026-06-18).
+The latest published Fearless SIMD release is [0.6.0](#060-2026-06-30) which was released on 2026-06-30.
+You can find its changes [documented below](#060-2026-06-30).
 
 ## [Unreleased]
+
+## [0.6.0][] (2026-07-01)
 
 This release has an [MSRV][] of 1.89.
 
 ### Added
 
-- Added Ice Lake-class AVX-512 support with a generated `Avx512` level and 512-bit native-width vector types.
+- Added Ice Lake-class AVX-512 support with a generated `Avx512` level and 512-bit native-width vector types. ([#231][] by [@Shnatsel][])
+- Added `dispatch_sse4_2`, `dispatch_avx2`, and `dispatch_avx512` feature flags to control which x86 SIMD levels are used by automatic multiversioning via `dispatch!` and `Level::dispatch`. ([#258][] by [@Shnatsel][])
 
 ### Changed
 
-- The MSRV is now Rust 1.89.
+- The MSRV is now Rust 1.89. ([#231][] by [@Shnatsel][])
+- Documentation and examples have been expanded and cleaned up for safer SIMD use cases, inlining, supported instruction sets, x86 multiversioning, and feature flags. ([#252][], [#258][] by [@Shnatsel][])
 
 ## [0.5.0][] (2026-06-18)
 
@@ -235,6 +239,7 @@ No changelog was kept for this release.
 [#225]: https://github.com/linebender/fearless_simd/pull/225
 [#226]: https://github.com/linebender/fearless_simd/pull/226
 [#230]: https://github.com/linebender/fearless_simd/pull/230
+[#231]: https://github.com/linebender/fearless_simd/pull/231
 [#232]: https://github.com/linebender/fearless_simd/pull/232
 [#233]: https://github.com/linebender/fearless_simd/pull/233
 [#234]: https://github.com/linebender/fearless_simd/pull/234
@@ -247,8 +252,11 @@ No changelog was kept for this release.
 [#243]: https://github.com/linebender/fearless_simd/pull/243
 [#244]: https://github.com/linebender/fearless_simd/pull/244
 [#245]: https://github.com/linebender/fearless_simd/pull/245
+[#252]: https://github.com/linebender/fearless_simd/pull/252
+[#258]: https://github.com/linebender/fearless_simd/pull/258
 
-[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/linebender/fearless_simd/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/linebender/fearless_simd/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/linebender/fearless_simd/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/linebender/fearless_simd/compare/v0.4.0...v0.3.0
