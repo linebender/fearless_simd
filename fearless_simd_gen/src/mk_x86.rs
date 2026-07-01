@@ -9,7 +9,7 @@ use crate::arch::x86::{
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
     generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array, generic_to_bytes,
-    integer_lane_mask_splat_arg, scalar_binary,
+    integer_lane_mask_splat_arg, scalar_binary, scalar_binary_method, scalar_compare, scalar_shift,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
@@ -1200,6 +1200,13 @@ impl X86 {
             });
         }
 
+        if vec_ty.scalar_bits == 64
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && method != "simd_eq"
+        {
+            return self.kernel_method(op, vec_ty, |token| scalar_compare(method, vec_ty, token));
+        }
+
         let args = [quote! { a.into() }, quote! { b.into() }];
 
         let expr = if vec_ty.scalar != ScalarType::Float {
@@ -1568,7 +1575,36 @@ impl X86 {
             });
         }
 
+        if *self != Self::Avx512
+            && vec_ty.scalar_bits == 64
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && matches!(method, "mul" | "min" | "max")
+        {
+            let body = if method == "mul" {
+                scalar_binary_method("wrapping_mul", vec_ty, quote! { self })
+            } else {
+                scalar_binary_method(method, vec_ty, quote! { self })
+            };
+            return quote! {
+                #method_sig {
+                    #body
+                }
+            };
+        }
+
         match method {
+            "shrv"
+                if *self != Self::Avx512
+                    && vec_ty.scalar == ScalarType::Int
+                    && vec_ty.scalar_bits == 64 =>
+            {
+                let body = scalar_binary(quote!(core::ops::Shr::shr), vec_ty, quote! { self });
+                quote! {
+                    #method_sig {
+                        #body
+                    }
+                }
+            }
             "shlv" | "shrv"
                 if *self == Self::Avx512
                     && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
@@ -1583,8 +1619,8 @@ impl X86 {
             {
                 // SSE2 has shift operations, but they shift every lane by the same amount, so we can't use them here.
                 let body = match method {
-                    "shlv" => scalar_binary(quote!(core::ops::Shl::shl)),
-                    "shrv" => scalar_binary(quote!(core::ops::Shr::shr)),
+                    "shlv" => scalar_binary(quote!(core::ops::Shl::shl), vec_ty, quote! { self }),
+                    "shrv" => scalar_binary(quote!(core::ops::Shr::shr), vec_ty, quote! { self }),
                     _ => unreachable!(),
                 };
                 quote! {
@@ -1697,6 +1733,20 @@ impl X86 {
     }
 
     pub(crate) fn handle_shift(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {
+        let method_sig = op.simd_trait_method_sig(vec_ty);
+        if *self != Self::Avx512
+            && method == "shr"
+            && vec_ty.scalar == ScalarType::Int
+            && vec_ty.scalar_bits == 64
+        {
+            let body = scalar_shift(quote!(core::ops::Shr::shr), vec_ty, quote! { self });
+            return quote! {
+                #method_sig {
+                    #body
+                }
+            };
+        }
+
         let shift_op = match (method, vec_ty.scalar) {
             ("shr", ScalarType::Unsigned) => "srl",
             ("shr", ScalarType::Int) => "sra",
@@ -2276,6 +2326,14 @@ impl X86 {
                     };
 
                     quote! { #intrinsic::<#mask>(a.into(), b.into()).simd_into(#token) }
+                }
+                (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 64) => {
+                    let op = if select_even { "unpacklo" } else { "unpackhi" };
+                    let intrinsic = intrinsic_ident(op, "epi64", vec_ty.n_bits());
+
+                    quote! {
+                        #intrinsic(a.into(), b.into()).simd_into(#token)
+                    }
                 }
                 (ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned, 128, 32) => {
                     // 128-bit shuffle of 32-bit integers; unlike with floats, there is no single shuffle instruction that
@@ -2870,9 +2928,14 @@ impl X86 {
             return self.handle_avx512_load_interleaved(op, vec_ty, block_size, block_count);
         }
         match vec_ty.scalar_bits {
-            32 | 16 | 8 => {
-                let block_ty =
-                    VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
+            64 | 32 | 16 | 8 => {
+                let avx2_u64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
+                let block_len = if avx2_u64 {
+                    4
+                } else {
+                    block_size as usize / vec_ty.scalar_bits
+                };
+                let block_ty = VecType::new(vec_ty.scalar, vec_ty.scalar_bits, block_len);
                 let scalar_ty = block_ty.scalar.rust(block_ty.scalar_bits);
                 let native_ty = self.arch_ty(&block_ty);
                 let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
@@ -2892,7 +2955,24 @@ impl X86 {
                     &format!("combine_{}", vec_combined.rust_name()),
                     Span::call_site(),
                 );
-                let block_len = block_size as usize / vec_ty.scalar_bits;
+                if avx2_u64 {
+                    return self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            let (chunks, []) = src.as_chunks::<4>() else {
+                                unreachable!()
+                            };
+                            let v0: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; 4], #native_ty>(&chunks[0]);
+                            let v1: #native_ty = crate::transmute::checked_transmute_copy::<[#scalar_ty; 4], #native_ty>(&chunks[1]);
+
+                            let lo = #unpacklo_64(v0, v1); // [0,4,2,6]
+                            let hi = #unpackhi_64(v0, v1); // [1,5,3,7]
+                            let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi); // [0,4,1,5]
+                            let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi); // [2,6,3,7]
+
+                            #token.#combine_half(out0.simd_into(#token), out1.simd_into(#token))
+                        }
+                    });
+                }
 
                 let init_shuffle = match vec_ty.scalar_bits {
                     16 => Some(quote! {
@@ -2922,36 +3002,53 @@ impl X86 {
                     _ => None,
                 };
 
-                let final_unpack = if vec_ty.scalar == ScalarType::Float && vec_ty.scalar_bits == 32
-                {
-                    let cast_32 = cast_ident(
-                        ScalarType::Float,
-                        ScalarType::Float,
-                        64,
-                        32,
-                        block_ty.n_bits(),
-                    );
-                    let cast_64 = cast_ident(
-                        ScalarType::Float,
-                        ScalarType::Float,
-                        32,
-                        64,
-                        block_ty.n_bits(),
-                    );
-
-                    quote! {
-                        let out0 = #cast_32(#unpacklo_64(#cast_64(tmp0), #cast_64(tmp2))); // [0,4,8,12]
-                        let out1 = #cast_32(#unpackhi_64(#cast_64(tmp0), #cast_64(tmp2))); // [1,5,9,13]
-                        let out2 = #cast_32(#unpacklo_64(#cast_64(tmp1), #cast_64(tmp3))); // [2,6,10,14]
-                        let out3 = #cast_32(#unpackhi_64(#cast_64(tmp1), #cast_64(tmp3))); // [3,7,11,15]
-                    }
+                let initial_unpack = if vec_ty.scalar_bits == 64 {
+                    None
                 } else {
-                    quote! {
+                    Some(quote! {
+                        let tmp0 = #unpacklo_32(v0, v1); // [0,4,1,5]
+                        let tmp1 = #unpackhi_32(v0, v1); // [2,6,3,7]
+                        let tmp2 = #unpacklo_32(v2, v3); // [8,12,9,13]
+                        let tmp3 = #unpackhi_32(v2, v3); // [10,14,11,15]
+                    })
+                };
+
+                let final_unpack = match (vec_ty.scalar, vec_ty.scalar_bits) {
+                    (_, 64) => quote! {
+                        let out0 = #unpacklo_64(v0, v2); // [0,4]
+                        let out1 = #unpackhi_64(v0, v2); // [1,5]
+                        let out2 = #unpacklo_64(v1, v3); // [2,6]
+                        let out3 = #unpackhi_64(v1, v3); // [3,7]
+                    },
+                    (ScalarType::Float, 32) => {
+                        let cast_32 = cast_ident(
+                            ScalarType::Float,
+                            ScalarType::Float,
+                            64,
+                            32,
+                            block_ty.n_bits(),
+                        );
+                        let cast_64 = cast_ident(
+                            ScalarType::Float,
+                            ScalarType::Float,
+                            32,
+                            64,
+                            block_ty.n_bits(),
+                        );
+
+                        quote! {
+                            let out0 = #cast_32(#unpacklo_64(#cast_64(tmp0), #cast_64(tmp2))); // [0,4,8,12]
+                            let out1 = #cast_32(#unpackhi_64(#cast_64(tmp0), #cast_64(tmp2))); // [1,5,9,13]
+                            let out2 = #cast_32(#unpacklo_64(#cast_64(tmp1), #cast_64(tmp3))); // [2,6,10,14]
+                            let out3 = #cast_32(#unpackhi_64(#cast_64(tmp1), #cast_64(tmp3))); // [3,7,11,15]
+                        }
+                    }
+                    _ => quote! {
                         let out0 = #unpacklo_64(tmp0, tmp2); // [0,4,8,12]
                         let out1 = #unpackhi_64(tmp0, tmp2); // [1,5,9,13]
                         let out2 = #unpacklo_64(tmp1, tmp3); // [2,6,10,14]
                         let out3 = #unpackhi_64(tmp1, tmp3); // [3,7,11,15]
-                    }
+                    },
                 };
 
                 self.kernel_method(op, vec_ty, |token| {
@@ -2974,11 +3071,7 @@ impl X86 {
 
                         #init_shuffle
 
-                        let tmp0 = #unpacklo_32(v0, v1); // [0,4,1,5]
-                        let tmp1 = #unpackhi_32(v0, v1); // [2,6,3,7]
-                        let tmp2 = #unpacklo_32(v2, v3); // [8,12,9,13]
-                        let tmp3 = #unpackhi_32(v2, v3); // [10,14,11,15]
-
+                        #initial_unpack
                         #final_unpack
 
                         #token.#combine_full(
@@ -3045,9 +3138,14 @@ impl X86 {
             return self.handle_avx512_store_interleaved(op, vec_ty, block_size, block_count);
         }
         match vec_ty.scalar_bits {
-            32 | 16 | 8 => {
-                let block_ty =
-                    VecType::new(vec_ty.scalar, vec_ty.scalar_bits, 128 / vec_ty.scalar_bits);
+            64 | 32 | 16 | 8 => {
+                let avx2_u64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
+                let block_len = if avx2_u64 {
+                    4
+                } else {
+                    block_size as usize / vec_ty.scalar_bits
+                };
+                let block_ty = VecType::new(vec_ty.scalar, vec_ty.scalar_bits, block_len);
                 let scalar_ty = block_ty.scalar.rust(block_ty.scalar_bits);
                 let native_ty = self.arch_ty(&block_ty);
                 let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
@@ -3065,7 +3163,28 @@ impl X86 {
                 );
                 let split_full =
                     Ident::new(&format!("split_{}", vec_ty.rust_name()), Span::call_site());
-                let block_len = block_size as usize / vec_ty.scalar_bits;
+
+                if avx2_u64 {
+                    return self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            let (v0, v1) = #token.#split_full(a);
+                            let v0: #native_ty = v0.into();
+                            let v1: #native_ty = v1.into();
+
+                            let lo = _mm256_permute2x128_si256::<0x20>(v0, v1); // [0,4,2,6]
+                            let hi = _mm256_permute2x128_si256::<0x31>(v0, v1); // [1,5,3,7]
+                            let out0 = #unpacklo_64(lo, hi); // [0,1,2,3]
+                            let out1 = #unpackhi_64(lo, hi); // [4,5,6,7]
+
+                            let (chunks, []) = dest.as_chunks_mut::<4>() else {
+                                unreachable!()
+                            };
+
+                            crate::transmute::checked_transmute_store::<#native_ty, [#scalar_ty; 4]>(out0, &mut chunks[0]);
+                            crate::transmute::checked_transmute_store::<#native_ty, [#scalar_ty; 4]>(out1, &mut chunks[1]);
+                        }
+                    });
+                }
 
                 let post_shuffle = match vec_ty.scalar_bits {
                     16 => Some(quote! {
@@ -3095,36 +3214,53 @@ impl X86 {
                     _ => None,
                 };
 
-                let final_unpack = if vec_ty.scalar == ScalarType::Float && vec_ty.scalar_bits == 32
-                {
-                    let cast_32 = cast_ident(
-                        ScalarType::Float,
-                        ScalarType::Float,
-                        64,
-                        32,
-                        block_ty.n_bits(),
-                    );
-                    let cast_64 = cast_ident(
-                        ScalarType::Float,
-                        ScalarType::Float,
-                        32,
-                        64,
-                        block_ty.n_bits(),
-                    );
-
-                    quote! {
-                        let out0 = #cast_32(#unpacklo_64(#cast_64(tmp0), #cast_64(tmp2))); // [0,4,8,12]
-                        let out1 = #cast_32(#unpackhi_64(#cast_64(tmp0), #cast_64(tmp2))); // [1,5,9,13]
-                        let out2 = #cast_32(#unpacklo_64(#cast_64(tmp1), #cast_64(tmp3))); // [2,6,10,14]
-                        let out3 = #cast_32(#unpackhi_64(#cast_64(tmp1), #cast_64(tmp3))); // [3,7,11,15]
-                    }
+                let initial_unpack = if vec_ty.scalar_bits == 64 {
+                    None
                 } else {
-                    quote! {
+                    Some(quote! {
+                        let tmp0 = #unpacklo_32(v0, v1); // [0,4,1,5]
+                        let tmp1 = #unpackhi_32(v0, v1); // [2,6,3,7]
+                        let tmp2 = #unpacklo_32(v2, v3); // [8,12,9,13]
+                        let tmp3 = #unpackhi_32(v2, v3); // [10,14,11,15]
+                    })
+                };
+
+                let final_unpack = match (vec_ty.scalar, vec_ty.scalar_bits) {
+                    (_, 64) => quote! {
+                        let out0 = #unpacklo_64(v0, v1); // [0,1]
+                        let out1 = #unpacklo_64(v2, v3); // [2,3]
+                        let out2 = #unpackhi_64(v0, v1); // [4,5]
+                        let out3 = #unpackhi_64(v2, v3); // [6,7]
+                    },
+                    (ScalarType::Float, 32) => {
+                        let cast_32 = cast_ident(
+                            ScalarType::Float,
+                            ScalarType::Float,
+                            64,
+                            32,
+                            block_ty.n_bits(),
+                        );
+                        let cast_64 = cast_ident(
+                            ScalarType::Float,
+                            ScalarType::Float,
+                            32,
+                            64,
+                            block_ty.n_bits(),
+                        );
+
+                        quote! {
+                            let out0 = #cast_32(#unpacklo_64(#cast_64(tmp0), #cast_64(tmp2))); // [0,4,8,12]
+                            let out1 = #cast_32(#unpackhi_64(#cast_64(tmp0), #cast_64(tmp2))); // [1,5,9,13]
+                            let out2 = #cast_32(#unpacklo_64(#cast_64(tmp1), #cast_64(tmp3))); // [2,6,10,14]
+                            let out3 = #cast_32(#unpackhi_64(#cast_64(tmp1), #cast_64(tmp3))); // [3,7,11,15]
+                        }
+                    }
+                    _ => quote! {
                         let out0 = #unpacklo_64(tmp0, tmp2); // [0,4,8,12]
                         let out1 = #unpackhi_64(tmp0, tmp2); // [1,5,9,13]
                         let out2 = #unpacklo_64(tmp1, tmp3); // [2,6,10,14]
                         let out3 = #unpackhi_64(tmp1, tmp3); // [3,7,11,15]
-                    }
+                    },
                 };
 
                 self.kernel_method(op, vec_ty, |token| {
@@ -3137,11 +3273,7 @@ impl X86 {
                         let v2 = v2.into();
                         let v3 = v3.into();
 
-                        let tmp0 = #unpacklo_32(v0, v1); // [0,4,1,5]
-                        let tmp1 = #unpackhi_32(v0, v1); // [2,6,3,7]
-                        let tmp2 = #unpacklo_32(v2, v3); // [8,12,9,13]
-                        let tmp3 = #unpackhi_32(v2, v3); // [10,14,11,15]
-
+                        #initial_unpack
                         #final_unpack
 
                         #post_shuffle

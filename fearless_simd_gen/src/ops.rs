@@ -1367,11 +1367,11 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             },
             "Load elements from an array with 4-way interleaving.\n\n\
             This is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded \
-            vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks \
+            vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them \
             into one vector.\n\n\
             For example, with 32-bit lanes, memory laid out as \
-            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as \
-            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`.",
+            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as \
+            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`.",
         ));
     }
 
@@ -1385,11 +1385,11 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             },
             "Store elements to an array with 4-way interleaving.\n\n\
             This is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: \
-            `interleave` combines two already-loaded vectors, while this operation transposes one vector into four \
-            consecutive 128-bit blocks in memory.\n\n\
+            `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit \
+            vectors into lane-interleaved memory.\n\n\
             For example, with 32-bit lanes, a vector containing \
-            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as \
-            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`.",
+            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as \
+            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`.",
         ));
     }
 

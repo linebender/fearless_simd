@@ -8,7 +8,7 @@ use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
     generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array, generic_to_bytes,
-    integer_lane_mask_splat_arg, scalar_binary,
+    integer_lane_mask_splat_arg, scalar_binary, scalar_binary_method, scalar_compare,
 };
 use crate::level::Level;
 use crate::ops::{Op, Quantifier, SlideGranularity, valid_reinterpret};
@@ -246,8 +246,14 @@ impl Level for WasmSimd128 {
                             { #expr.simd_into(self) }
                         }
                     }
-                    "shlv" => scalar_binary(quote!(core::ops::Shl::shl)),
-                    "shrv" => scalar_binary(quote!(core::ops::Shr::shr)),
+                    "min" | "max"
+                        if vec_ty.scalar_bits == 64
+                            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+                    {
+                        scalar_binary_method(method, vec_ty, quote! { self })
+                    }
+                    "shlv" => scalar_binary(quote!(core::ops::Shl::shl), vec_ty, quote! { self }),
+                    "shrv" => scalar_binary(quote!(core::ops::Shr::shr), vec_ty, quote! { self }),
                     "copysign" => {
                         let splat = simple_intrinsic("splat", vec_ty);
                         let sign_mask_literal = match vec_ty.scalar_bits {
@@ -306,11 +312,16 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Compare => {
-                let args = [quote! { a.into() }, quote! { b.into() }];
-                let expr = wasm::expr(method, vec_ty, &args);
+                let expr = if vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 64 {
+                    scalar_compare(method, vec_ty, quote! { self })
+                } else {
+                    let args = [quote! { a.into() }, quote! { b.into() }];
+                    let expr = wasm::expr(method, vec_ty, &args);
+                    quote! { #expr.simd_into(self) }
+                };
                 quote! {
                     #method_sig {
-                        #expr.simd_into(self)
+                        #expr
                     }
                 }
             }
@@ -626,6 +637,13 @@ impl Level for WasmSimd128 {
                         quote! { 2, 3, 6, 7 },
                         quote! { u32x4_shuffle },
                     ),
+                    64 => (
+                        quote! { 0, 2 },
+                        quote! { 1, 3 },
+                        quote! { 0, 2 },
+                        quote! { 1, 3 },
+                        quote! { u64x2_shuffle },
+                    ),
                     _ => panic!("unsupported scalar_bits"),
                 };
 
@@ -640,6 +658,31 @@ impl Level for WasmSimd128 {
                     let combined_lower = self.#combine_method(out0.simd_into(self), out1.simd_into(self));
                     let combined_upper = self.#combine_method(out2.simd_into(self), out3.simd_into(self));
                     self.#combine_method_2x(combined_lower, combined_upper)
+                };
+
+                let shuffle_code = if vec_ty.scalar_bits == 64 {
+                    quote! {
+                        let out0 = #shuffle_fn::<#i1>(v0, v2);
+                        let out1 = #shuffle_fn::<#i2>(v0, v2);
+                        let out2 = #shuffle_fn::<#i1>(v1, v3);
+                        let out3 = #shuffle_fn::<#i2>(v1, v3);
+                    }
+                } else {
+                    quote! {
+                        // InterleaveLowerLanes(v0, v1) and InterleaveLowerLanes(v2, v3)
+                        let v01_lower = #shuffle_fn::<#i1>(v0, v1);
+                        let v23_lower = #shuffle_fn::<#i1>(v2, v3);
+
+                        // InterleaveUpperLanes(v0, v1) and InterleaveUpperLanes(v2, v3)
+                        let v01_upper = #shuffle_fn::<#i2>(v0, v1);
+                        let v23_upper = #shuffle_fn::<#i2>(v2, v3);
+
+                        // Interleave lower and upper to get final result
+                        let out0 = #shuffle_fn::<#i3>(v01_lower, v23_lower);
+                        let out1 = #shuffle_fn::<#i4>(v01_lower, v23_lower);
+                        let out2 = #shuffle_fn::<#i3>(v01_upper, v23_upper);
+                        let out3 = #shuffle_fn::<#i4>(v01_upper, v23_upper);
+                    }
                 };
 
                 quote! {
@@ -660,20 +703,7 @@ impl Level for WasmSimd128 {
                                 &chunks[3],
                             );
 
-                            // InterleaveLowerLanes(v0, v2) and InterleaveLowerLanes(v1, v3)
-                            let v01_lower = #shuffle_fn::<#i1>(v0, v1);
-                            let v23_lower = #shuffle_fn::<#i1>(v2, v3);
-
-                            // InterleaveUpperLanes(v0, v2) and InterleaveUpperLanes(v1, v3)
-                            let v01_upper = #shuffle_fn::<#i2>(v0, v1);
-                            let v23_upper = #shuffle_fn::<#i2>(v2, v3);
-
-                            // Interleave lower and upper to get final result
-                            let out0 = #shuffle_fn::<#i3>(v01_lower, v23_lower);
-                            let out1 = #shuffle_fn::<#i4>(v01_lower, v23_lower);
-                            let out2 = #shuffle_fn::<#i3>(v01_upper, v23_upper);
-                            let out3 = #shuffle_fn::<#i4>(v01_upper, v23_upper);
-
+                            #shuffle_code
                             #combine_code
                     }
                 }
@@ -702,6 +732,7 @@ impl Level for WasmSimd128 {
                         quote! { 2, 6, 3, 7 },
                         quote! { u32x4_shuffle },
                     ),
+                    64 => (quote! { 0, 2 }, quote! { 1, 3 }, quote! { u64x2_shuffle }),
                     _ => panic!("unsupported scalar_bits"),
                 };
 
@@ -725,10 +756,15 @@ impl Level for WasmSimd128 {
                     let v3: v128 = v3_vec.into();
                 };
 
-                quote! {
-                    #method_sig {
-                        #split_code
-
+                let shuffle_code = if vec_ty.scalar_bits == 64 {
+                    quote! {
+                        let out0 = #shuffle_fn::<#lower_indices>(v0, v1);
+                        let out1 = #shuffle_fn::<#lower_indices>(v2, v3);
+                        let out2 = #shuffle_fn::<#upper_indices>(v0, v1);
+                        let out3 = #shuffle_fn::<#upper_indices>(v2, v3);
+                    }
+                } else {
+                    quote! {
                         // InterleaveLowerLanes(v0, v2) and InterleaveLowerLanes(v1, v3)
                         let v02_lower = #shuffle_fn::<#lower_indices>(v0, v2);
                         let v13_lower = #shuffle_fn::<#lower_indices>(v1, v3);
@@ -742,6 +778,14 @@ impl Level for WasmSimd128 {
                         let out1 = #shuffle_fn::<#upper_indices>(v02_lower, v13_lower);
                         let out2 = #shuffle_fn::<#lower_indices>(v02_upper, v13_upper);
                         let out3 = #shuffle_fn::<#upper_indices>(v02_upper, v13_upper);
+                    }
+                };
+
+                quote! {
+                    #method_sig {
+                        #split_code
+
+                        #shuffle_code
 
                         let (chunks, []) = dest.as_chunks_mut::<#elems_per_vec>() else {
                             unreachable!()

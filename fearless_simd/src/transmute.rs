@@ -26,7 +26,7 @@ use core::arch::aarch64::{
     int8x16_t, int8x16x2_t, int8x16x4_t, int16x8_t, int16x8x2_t, int16x8x4_t, int32x4_t,
     int32x4x2_t, int32x4x4_t, int64x2_t, int64x2x2_t, int64x2x4_t, uint8x16_t, uint8x16x2_t,
     uint8x16x4_t, uint16x8_t, uint16x8x2_t, uint16x8x4_t, uint32x4_t, uint32x4x2_t, uint32x4x4_t,
-    uint64x2_t,
+    uint64x2_t, uint64x2x2_t, uint64x2x4_t,
 };
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 use core::arch::wasm32::v128;
@@ -102,6 +102,7 @@ impl_aligned_simd_pod!(
     Aligned128<[u8; 16]>,
     Aligned128<[u16; 8]>,
     Aligned128<[u32; 4]>,
+    Aligned128<[u64; 2]>,
     Aligned256<[f32; 8]>,
     Aligned256<[f64; 4]>,
     Aligned256<[i8; 32]>,
@@ -111,6 +112,7 @@ impl_aligned_simd_pod!(
     Aligned256<[u8; 32]>,
     Aligned256<[u16; 16]>,
     Aligned256<[u32; 8]>,
+    Aligned256<[u64; 4]>,
     Aligned512<[f32; 16]>,
     Aligned512<[f64; 8]>,
     Aligned512<[i8; 64]>,
@@ -120,6 +122,7 @@ impl_aligned_simd_pod!(
     Aligned512<[u8; 64]>,
     Aligned512<[u16; 32]>,
     Aligned512<[u32; 16]>,
+    Aligned512<[u64; 8]>,
 );
 
 // the `const` is just to only use a single cfg annotation, nothing to do with const evaluation
@@ -179,6 +182,8 @@ const _: () = {
     unsafe impl SimdPod for uint32x4x2_t {}
     unsafe impl SimdPod for uint32x4x4_t {}
     unsafe impl SimdPod for uint64x2_t {}
+    unsafe impl SimdPod for uint64x2x2_t {}
+    unsafe impl SimdPod for uint64x2x4_t {}
 };
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -221,6 +226,7 @@ impl_aligned_simd_pod!(
     Aligned128<uint8x16_t>,
     Aligned128<uint16x8_t>,
     Aligned128<uint32x4_t>,
+    Aligned128<uint64x2_t>,
     Aligned256<float32x4x2_t>,
     Aligned256<float64x2x2_t>,
     Aligned256<int8x16x2_t>,
@@ -230,6 +236,7 @@ impl_aligned_simd_pod!(
     Aligned256<uint8x16x2_t>,
     Aligned256<uint16x8x2_t>,
     Aligned256<uint32x4x2_t>,
+    Aligned256<uint64x2x2_t>,
     Aligned512<float32x4x4_t>,
     Aligned512<float64x2x4_t>,
     Aligned512<int8x16x4_t>,
@@ -239,6 +246,7 @@ impl_aligned_simd_pod!(
     Aligned512<uint8x16x4_t>,
     Aligned512<uint16x8x4_t>,
     Aligned512<uint32x4x4_t>,
+    Aligned512<uint64x2x4_t>,
 );
 
 /// Like [`core::mem::transmute_copy`], but statically rejects differently-sized

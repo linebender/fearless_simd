@@ -5,7 +5,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generic::generic_op_name,
+    generic::{generic_op_name, unrolled_array},
     ops::{
         F32_TO_I32, F32_TO_I32_PRECISE, F32_TO_U32, F32_TO_U32_PRECISE, I32_TO_F32, Op, OpSig,
         TyFlavor, U32_TO_F32, vec_trait_ops_for,
@@ -374,6 +374,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
     let scalar = ty.scalar.rust(ty.scalar_bits);
     let len = Literal::usize_unsuffixed(ty.len);
+    let from_fn_items = unrolled_array(ty.len, |idx| quote! { f(#idx) });
     let vec_trait = match ty.scalar {
         ScalarType::Float => "SimdFloat",
         ScalarType::Unsigned | ScalarType::Int => "SimdInt",
@@ -473,8 +474,8 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             }
 
             #[inline(always)]
-            fn from_fn(simd: S, f: impl FnMut(usize) -> #scalar) -> Self {
-                simd.#from_array_op(core::array::from_fn(f))
+            fn from_fn(simd: S, mut f: impl FnMut(usize) -> #scalar) -> Self {
+                simd.#from_array_op(#from_fn_items)
             }
 
             #[inline(always)]

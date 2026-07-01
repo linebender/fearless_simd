@@ -225,6 +225,8 @@ macro_rules! test_slide_exhaustive {
 // 128-bit vectors (block size == vector size, so within_blocks uses same range as vector-wide)
 test_slide_exhaustive!(slide_exhaustive_f32x4, f32x4, f32, 4, vec4, block4);
 test_slide_exhaustive!(slide_exhaustive_f64x2, f64x2, f64, 2, vec2, block2);
+test_slide_exhaustive!(slide_exhaustive_i64x2, i64x2, i64, 2, vec2, block2);
+test_slide_exhaustive!(slide_exhaustive_u64x2, u64x2, u64, 2, vec2, block2);
 test_slide_exhaustive!(slide_exhaustive_i8x16, i8x16, i8, 16, vec16, block16);
 test_slide_exhaustive!(slide_exhaustive_u8x16, u8x16, u8, 16, vec16, block16);
 test_slide_exhaustive!(slide_exhaustive_i16x8, i16x8, i16, 8, vec8, block8);
@@ -235,6 +237,8 @@ test_slide_exhaustive!(slide_exhaustive_u32x4, u32x4, u32, 4, vec4, block4);
 // 256-bit vectors (block size = 128 bits = half the vector size)
 test_slide_exhaustive!(slide_exhaustive_f32x8, f32x8, f32, 8, vec8, block4);
 test_slide_exhaustive!(slide_exhaustive_f64x4, f64x4, f64, 4, vec4, block2);
+test_slide_exhaustive!(slide_exhaustive_i64x4, i64x4, i64, 4, vec4, block2);
+test_slide_exhaustive!(slide_exhaustive_u64x4, u64x4, u64, 4, vec4, block2);
 test_slide_exhaustive!(slide_exhaustive_i8x32, i8x32, i8, 32, vec32, block16);
 test_slide_exhaustive!(slide_exhaustive_u8x32, u8x32, u8, 32, vec32, block16);
 test_slide_exhaustive!(slide_exhaustive_i16x16, i16x16, i16, 16, vec16, block8);
@@ -245,6 +249,8 @@ test_slide_exhaustive!(slide_exhaustive_u32x8, u32x8, u32, 8, vec8, block4);
 // 512-bit vectors (block size = 128 bits = quarter the vector size)
 test_slide_exhaustive!(slide_exhaustive_f32x16, f32x16, f32, 16, vec16, block4);
 test_slide_exhaustive!(slide_exhaustive_f64x8, f64x8, f64, 8, vec8, block2);
+test_slide_exhaustive!(slide_exhaustive_i64x8, i64x8, i64, 8, vec8, block2);
+test_slide_exhaustive!(slide_exhaustive_u64x8, u64x8, u64, 8, vec8, block2);
 test_slide_exhaustive!(slide_exhaustive_i8x64, i8x64, i8, 64, vec64, block16);
 test_slide_exhaustive!(slide_exhaustive_u8x64, u8x64, u8, 64, vec64, block16);
 test_slide_exhaustive!(slide_exhaustive_i16x32, i16x32, i16, 32, vec32, block8);

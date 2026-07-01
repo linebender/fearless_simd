@@ -66,6 +66,7 @@ impl Seal for u16 {}
 impl Seal for i16 {}
 impl Seal for u32 {}
 impl Seal for i32 {}
+impl Seal for u64 {}
 impl Seal for i64 {}
 
 /// Value conversion, adding a SIMD blessing.
@@ -139,6 +140,10 @@ impl SimdElement for u32 {
 
 impl SimdElement for i32 {
     type Mask = Self;
+}
+
+impl SimdElement for u64 {
+    type Mask = i64;
 }
 
 impl SimdElement for i64 {
