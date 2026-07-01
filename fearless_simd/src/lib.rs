@@ -303,29 +303,6 @@ pub enum Level {
     /// Scalar fallback level, i.e. no supported SIMD features are to be used.
     ///
     /// This can be created with [`Level::fallback`].
-    // We only want to compile the fallback implementation if:
-    // - We're on a supported architecture, but don't statically support the lowest alternative level; OR
-    // - We're on an unsupported architecture; OR
-    // - The fallback is forcibly enabled
-    #[cfg(any(
-        all(target_arch = "aarch64", not(target_feature = "neon")),
-        all(
-            any(target_arch = "x86", target_arch = "x86_64"),
-            not(all(
-                target_feature = "sse4.2",
-                target_feature = "cmpxchg16b",
-                target_feature = "popcnt"
-            ))
-        ),
-        all(target_arch = "wasm32", not(target_feature = "simd128")),
-        not(any(
-            target_arch = "x86",
-            target_arch = "x86_64",
-            target_arch = "aarch64",
-            target_arch = "wasm32"
-        )),
-        feature = "force_support_fallback"
-    ))]
     Fallback(Fallback),
     /// The Neon instruction set on 64 bit ARM.
     #[cfg(target_arch = "aarch64")]
@@ -337,22 +314,7 @@ pub enum Level {
     /// Also known as x86-64-v2.
     ///
     /// All production CPUs with SSE4.2 also support the other two extensions, so it is safe to require them.
-    // We don't need to support this if the compilation target definitely supports something better.
-    #[cfg(all(
-        any(target_arch = "x86", target_arch = "x86_64"),
-        not(all(
-            target_feature = "avx2",
-            target_feature = "bmi1",
-            target_feature = "bmi2",
-            target_feature = "cmpxchg16b",
-            target_feature = "f16c",
-            target_feature = "fma",
-            target_feature = "lzcnt",
-            target_feature = "movbe",
-            target_feature = "popcnt",
-            target_feature = "xsave"
-        ))
-    ))]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Sse4_2(Sse4_2),
     /// Ice Lake-class AVX-512 on (32 and 64 bit) x86.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -436,18 +398,6 @@ impl Level {
                 && std::arch::is_x86_feature_detected!("cmpxchg16b")
                 && std::arch::is_x86_feature_detected!("popcnt")
             {
-                #[cfg(not(all(
-                    target_feature = "avx2",
-                    target_feature = "bmi1",
-                    target_feature = "bmi2",
-                    target_feature = "cmpxchg16b",
-                    target_feature = "f16c",
-                    target_feature = "fma",
-                    target_feature = "lzcnt",
-                    target_feature = "movbe",
-                    target_feature = "popcnt",
-                    target_feature = "xsave"
-                )))]
                 return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
             }
         }
@@ -499,33 +449,9 @@ impl Level {
     /// be statically or dynamically detected. This is useful if there's a scalarized version of
     /// your algorithm that runs faster if SIMD isn't supported.
     ///
-    /// This method is always available, even in cases where `Fallback` is not; for instance, if
-    /// you're targeting a platform that always supports some level of SIMD. In such cases, it will
-    /// always return false.
+    /// This method is always available.
     pub fn is_fallback(self) -> bool {
-        #[cfg(any(
-            all(target_arch = "aarch64", not(target_feature = "neon")),
-            all(
-                any(target_arch = "x86", target_arch = "x86_64"),
-                not(all(
-                    target_feature = "sse4.2",
-                    target_feature = "cmpxchg16b",
-                    target_feature = "popcnt"
-                ))
-            ),
-            all(target_arch = "wasm32", not(target_feature = "simd128")),
-            not(any(
-                target_arch = "x86",
-                target_arch = "x86_64",
-                target_arch = "aarch64",
-                target_arch = "wasm32"
-            )),
-            feature = "force_support_fallback"
-        ))]
-        return matches!(self, Self::Fallback(_));
-
-        #[allow(unreachable_code, reason = "Fallback unreachable in some cfgs.")]
-        false
+        matches!(self, Self::Fallback(_))
     }
 
     /// If this is a proof that Neon (or better) is available, access that instruction set.
@@ -591,23 +517,7 @@ impl Level {
             // Safety: The Avx2 struct represents the x86-64-v3 feature set being enabled, which
             // includes the `sse4.2`, `cmpxchg16b`, and `popcnt` features required by Sse4_2.
             Self::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
-            #[cfg(not(all(
-                target_feature = "avx2",
-                target_feature = "bmi1",
-                target_feature = "bmi2",
-                target_feature = "cmpxchg16b",
-                target_feature = "f16c",
-                target_feature = "fma",
-                target_feature = "lzcnt",
-                target_feature = "movbe",
-                target_feature = "popcnt",
-                target_feature = "xsave"
-            )))]
             Self::Sse4_2(sse42) => Some(sse42),
-            #[allow(
-                unreachable_patterns,
-                reason = "This arm is reachable on baseline x86/x86_64."
-            )]
             _ => None,
         }
     }
