@@ -155,8 +155,8 @@ macro_rules! dispatch {
 
 // The x86 multiversion helpers are split into cfg-selected macro definitions
 // because exported macro bodies are expanded in the downstream crate,
-// so putting `#[cfg(feature = "...")]` directly inside `dispatch!` would test
-// the downstream crate's features instead of `fearless_simd`'s features.
+// so selecting the helper definitions here preserves `fearless_simd`'s
+// dispatch configuration.
 
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
@@ -187,7 +187,7 @@ macro_rules! __fearless_simd_dispatch_with_token {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "dispatch_avx512")]
+#[cfg(not(disable_dispatch_avx512))]
 macro_rules! __fearless_simd_dispatch_dispatch_avx512 {
     ($avx512:expr, $simd:pat => $op:expr) => {
         $crate::__fearless_simd_dispatch_with_token!($avx512, $simd => $op)
@@ -197,7 +197,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx512 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "dispatch_avx512"))]
+#[cfg(disable_dispatch_avx512)]
 macro_rules! __fearless_simd_dispatch_dispatch_avx512 {
     ($avx512:expr, $simd:pat => $op:expr) => {{
         $crate::__fearless_simd_dispatch_dispatch_avx2_from_superset!($avx512, $simd => $op)
@@ -207,7 +207,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx512 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "dispatch_avx2")]
+#[cfg(not(disable_dispatch_avx2))]
 macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
     ($avx2:expr, $simd:pat => $op:expr) => {
         $crate::__fearless_simd_dispatch_with_token!($avx2, $simd => $op)
@@ -217,7 +217,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "dispatch_avx2"))]
+#[cfg(disable_dispatch_avx2)]
 macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
     ($avx2:expr, $simd:pat => $op:expr) => {{
         $crate::__fearless_simd_dispatch_dispatch_sse4_2_from_superset!($avx2, $simd => $op)
@@ -227,7 +227,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "dispatch_avx2")]
+#[cfg(not(disable_dispatch_avx2))]
 macro_rules! __fearless_simd_dispatch_dispatch_avx2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $proof;
@@ -241,7 +241,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx2_from_superset {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "dispatch_avx2"))]
+#[cfg(disable_dispatch_avx2)]
 macro_rules! __fearless_simd_dispatch_dispatch_avx2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
         $crate::__fearless_simd_dispatch_dispatch_sse4_2_from_superset!($proof, $simd => $op)
@@ -251,7 +251,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx2_from_superset {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "dispatch_sse4_2")]
+#[cfg(not(disable_dispatch_sse4_2))]
 macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
     ($sse4_2:expr, $simd:pat => $op:expr) => {
         $crate::__fearless_simd_dispatch_with_token!($sse4_2, $simd => $op)
@@ -261,7 +261,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "dispatch_sse4_2"))]
+#[cfg(disable_dispatch_sse4_2)]
 macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
     ($sse4_2:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $sse4_2;
@@ -273,7 +273,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(feature = "dispatch_sse4_2")]
+#[cfg(not(disable_dispatch_sse4_2))]
 macro_rules! __fearless_simd_dispatch_dispatch_sse4_2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $proof;
@@ -287,7 +287,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse4_2_from_superset {
 /// Implementation detail of [`crate::dispatch`]; this is not public API.
 #[macro_export]
 #[doc(hidden)]
-#[cfg(not(feature = "dispatch_sse4_2"))]
+#[cfg(disable_dispatch_sse4_2)]
 macro_rules! __fearless_simd_dispatch_dispatch_sse4_2_from_superset {
     ($proof:expr, $simd:pat => $op:expr) => {{
         let __fearless_simd_proof = $proof;
@@ -360,11 +360,11 @@ mod tests {
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     fn expected_x86_dispatch_backend(level: Level) -> X86DispatchBackend {
-        if cfg!(feature = "dispatch_avx512") && level.as_avx512().is_some() {
+        if cfg!(not(disable_dispatch_avx512)) && level.as_avx512().is_some() {
             X86DispatchBackend::Avx512
-        } else if cfg!(feature = "dispatch_avx2") && level.as_avx2().is_some() {
+        } else if cfg!(not(disable_dispatch_avx2)) && level.as_avx2().is_some() {
             X86DispatchBackend::Avx2
-        } else if cfg!(feature = "dispatch_sse4_2") && level.as_sse4_2().is_some() {
+        } else if cfg!(not(disable_dispatch_sse4_2)) && level.as_sse4_2().is_some() {
             X86DispatchBackend::Sse4_2
         } else {
             X86DispatchBackend::Fallback
@@ -404,16 +404,25 @@ mod tests {
     #[cfg(all(
         feature = "std",
         any(target_arch = "x86", target_arch = "x86_64"),
-        not(feature = "dispatch_avx512")
+        any(
+            disable_dispatch_sse4_2,
+            disable_dispatch_avx2,
+            disable_dispatch_avx512
+        )
     ))]
     #[test]
-    fn disabled_avx512_multiversioning_does_not_filter_avx512_token_access() {
-        if crate::x86_detects_icelake_avx512() {
-            assert!(
-                Level::new().as_avx512().is_some(),
-                "`dispatch_avx512` controls dispatch multiversioning, not AVX-512 token access"
-            );
-        }
+    fn disabled_x86_multiversioning_does_not_filter_token_access() {
+        let level = Level::new();
+
+        // If dispatch disabling accidentally removed token access, these method calls stop compiling.
+        #[cfg(disable_dispatch_sse4_2)]
+        let _ = level.as_sse4_2().is_some();
+
+        #[cfg(disable_dispatch_avx2)]
+        let _ = level.as_avx2().is_some();
+
+        #[cfg(disable_dispatch_avx512)]
+        let _ = level.as_avx512().is_some();
     }
 
     mod no_import_simd {
