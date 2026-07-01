@@ -229,7 +229,7 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::StoreInterleaved { .. } => {
+        OpSig::StoreInterleaved { .. } | OpSig::SwizzleDyn => {
             panic!("The generic fallback is not implemented for this operation")
         }
         OpSig::Split { .. }

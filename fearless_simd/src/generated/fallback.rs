@@ -1165,6 +1165,14 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, idxs: u8x16<Self>) -> i8x16<Self> {
+        let mut dest = [Default::default(); 16];
+        for (i, idx) in idxs.val.0.iter().copied().enumerate() {
+            dest[i] = a.val.0.get(idx as usize).copied().unwrap_or(0);
+        }
+        dest.simd_into(self)
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
         a.bitcast()
     }
@@ -1766,6 +1774,14 @@ impl Simd for Fallback {
         result[0..16usize].copy_from_slice(&a.val.0);
         result[16usize..32usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_u8x16(self, a: u8x16<Self>, idxs: u8x16<Self>) -> u8x16<Self> {
+        let mut dest = [Default::default(); 16];
+        for (i, idx) in idxs.val.0.iter().copied().enumerate() {
+            dest[i] = a.val.0.get(idx as usize).copied().unwrap_or(0);
+        }
+        dest.simd_into(self)
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {

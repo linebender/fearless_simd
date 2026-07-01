@@ -156,6 +156,11 @@ pub trait SimdCvtFloat<T: Seal>: Seal {
     fn float_from(x: T) -> Self;
 }
 
+/// Dynamic swizzle for byte vectors.
+pub trait SimdSwizzleDyn<S: Simd>: SimdBase<S> + Seal {
+    fn swizzle_dyn(self, idxs: crate::u8x16<S>) -> Self;
+}
+
 /// Concatenation of two SIMD vectors.
 ///
 /// This is implemented on all vectors 256 bits and lower, producing vectors of up to 512 bits.

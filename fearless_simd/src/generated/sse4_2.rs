@@ -975,6 +975,16 @@ impl Simd for Sse4_2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, idxs: u8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, idxs: u8x16<Sse4_2>) -> i8x16<Sse4_2> {
+                _mm_shuffle_epi8(a.into(), idxs.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, idxs)
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1334,6 +1344,16 @@ impl Simd for Sse4_2 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn swizzle_dyn_u8x16(self, a: u8x16<Self>, idxs: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, idxs: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
+                _mm_shuffle_epi8(a.into(), idxs.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, idxs)
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {

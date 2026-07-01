@@ -1050,6 +1050,16 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, idxs: u8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i8x16<Avx512>, idxs: u8x16<Avx512>) -> i8x16<Avx512> {
+                _mm_shuffle_epi8(a.into(), idxs.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, idxs)
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1484,6 +1494,16 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_u8x16(self, a: u8x16<Self>, idxs: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u8x16<Avx512>, idxs: u8x16<Avx512>) -> u8x16<Avx512> {
+                _mm_shuffle_epi8(a.into(), idxs.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, idxs)
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {

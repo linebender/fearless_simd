@@ -82,6 +82,10 @@ pub(crate) enum OpSig {
     Deinterleave,
     /// Takes two arguments of a vector type, plus a const generic shift amount, and returns that same vector type.
     Slide { granularity: SlideGranularity },
+    /// Takes two arguments of a vector type, and returns a new vector of
+    /// elements, where the second vector is used as an index into the elements
+    /// of the first vector.
+    SwizzleDyn,
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -304,6 +308,10 @@ impl Op {
                 (vec![vec.clone(), vec.clone()], quote! { (#vec, #vec) })
             }
             OpSig::Slide { .. } => (vec![vec.clone(), vec.clone()], vec),
+            OpSig::SwizzleDyn => {
+                let idxs_ty = VecType::new(ScalarType::Unsigned, 8, 16).rust();
+                (vec![vec.clone(), quote! { #idxs_ty<#simd_ty> }], vec)
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -437,6 +445,8 @@ impl Op {
                 let arg2 = &arg_names[2];
                 quote! { (#arg0, #arg1: impl SimdInto<Self, S>, #arg2: impl SimdInto<Self, S>) -> Self }
             }
+            // Currently not implemented for all vector types.
+            OpSig::SwizzleDyn => return None,
             // select is currently done by trait, but maybe we'll implement for
             // masks.
             OpSig::Select => return None,
@@ -1198,6 +1208,15 @@ const NEGATE_INT: Op = Op::new(
     "Negate each element of the vector, wrapping on overflow.",
 );
 
+pub(crate) const SWIZZLE_DYN: Op = Op::new(
+    "swizzle_dyn",
+    OpKind::AssociatedOnly,
+    OpSig::SwizzleDyn,
+    "Swizzle a vector of elements according to an index vector.\n\n\
+    The behavior for out-of-bound indices is unspecified and backend-dependent, \
+    but it is guaranteed to not panic.",
+);
+
 pub(crate) fn overloaded_ops_for(scalar: ScalarType) -> Vec<Op> {
     let base = match scalar {
         ScalarType::Float => FLOAT_OPS,
@@ -1316,6 +1335,13 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
     }
     if ty.scalar == ScalarType::Int {
         ops.push(NEGATE_INT);
+    }
+
+    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Int)
+        && ty.scalar_bits == 8
+        && ty.len == 16
+    {
+        ops.push(SWIZZLE_DYN);
     }
 
     if ty.scalar == ScalarType::Float {
@@ -1619,6 +1645,7 @@ impl OpSig {
             | Self::Interleave
             | Self::Deinterleave
             | Self::Slide { .. } => &["a", "b"],
+            Self::SwizzleDyn => &["a", "idxs"],
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
@@ -1635,6 +1662,7 @@ impl OpSig {
             | Self::MaskToBitmask
             | Self::MaskSet
             | Self::FromBytes { .. }
+            | Self::SwizzleDyn
             | Self::StoreArray => &[],
             Self::Unary
             | Self::Cvt { .. }
@@ -1704,7 +1732,8 @@ impl OpSig {
             | Self::StoreArray
             | Self::FromBytes
             | Self::ToBytes
-            | Self::Slide { .. } => return None,
+            | Self::Slide { .. }
+            | Self::SwizzleDyn => return None,
         };
         Some(args)
     }

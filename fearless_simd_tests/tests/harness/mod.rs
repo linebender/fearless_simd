@@ -41,6 +41,64 @@ fn splat_native_mask<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn swizzle_dyn_u8x16<S: Simd>(simd: S) {
+    let bytes = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let idxs = u8x16::from_slice(simd, &[15, 14, 13, 12, 0, 0, 7, 7, 8, 9, 10, 4, 3, 2, 1, 0]);
+
+    assert_eq!(
+        *bytes.swizzle_dyn(idxs),
+        [15, 14, 13, 12, 0, 0, 7, 7, 8, 9, 10, 4, 3, 2, 1, 0]
+    );
+}
+
+#[simd_test]
+fn swizzle_dyn_u8x16_oob_indices<S: Simd>(simd: S) {
+    let bytes = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    let idxs = u8x16::from_slice(
+        simd,
+        &[15, 16, 17, 255, 0, 1, 2, 3, 128, 129, 4, 5, 6, 7, 8, 9],
+    );
+
+    // Just make sure we don't panic.
+    let _ = bytes.swizzle_dyn(idxs);
+}
+
+#[simd_test]
+fn swizzle_dyn_i8x16<S: Simd>(simd: S) {
+    let bytes = i8x16::from_slice(
+        simd,
+        &[0, -1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11, 12, -13, 14, -15],
+    );
+    let idxs = u8x16::from_slice(simd, &[15, 14, 13, 12, 1, 1, 7, 7, 8, 9, 10, 4, 3, 2, 1, 0]);
+
+    assert_eq!(
+        *bytes.swizzle_dyn(idxs),
+        [-15, 14, -13, 12, -1, -1, -7, -7, 8, -9, 10, 4, -3, 2, -1, 0]
+    );
+}
+
+#[simd_test]
+fn swizzle_dyn_i8x16_oob_indices<S: Simd>(simd: S) {
+    let bytes = i8x16::from_slice(
+        simd,
+        &[0, -1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11, 12, -13, 14, -15],
+    );
+    let idxs = u8x16::from_slice(
+        simd,
+        &[15, 16, 17, 255, 0, 1, 2, 3, 128, 129, 4, 5, 6, 7, 8, 9],
+    );
+
+    // Just make sure we don't panic.
+    let _ = bytes.swizzle_dyn(idxs);
+}
+
+#[simd_test]
 fn abs_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[-1.0, 2.0, -3.0, 4.0]);
     assert_eq!(*a.abs(), [1.0, 2.0, 3.0, 4.0]);

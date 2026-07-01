@@ -910,6 +910,16 @@ impl Simd for Neon {
         kernel(self, a)
     }
     #[inline(always)]
+    fn swizzle_dyn_i8x16(self, a: i8x16<Self>, idxs: u8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: i8x16<Neon>, idxs: u8x16<Neon>) -> i8x16<Neon> {
+                vqtbl1q_s8(a.into(), idxs.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, idxs)
+    }
+    #[inline(always)]
     fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1264,6 +1274,16 @@ impl Simd for Neon {
             val: crate::support::Aligned256(uint8x16x2_t(a.val.0, b.val.0)),
             simd: self,
         }
+    }
+    #[inline(always)]
+    fn swizzle_dyn_u8x16(self, a: u8x16<Self>, idxs: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Neon, a: u8x16<Neon>, idxs: u8x16<Neon>) -> u8x16<Neon> {
+                vqtbl1q_u8(a.into(), idxs.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, idxs)
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
