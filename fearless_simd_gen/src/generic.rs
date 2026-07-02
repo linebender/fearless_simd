@@ -69,6 +69,20 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
+        OpSig::SwizzleDynWithinBlocks => {
+            let indices_ty = ty.indices_ty();
+            let split_indices = generic_op_name("split", &indices_ty);
+            quote! {
+                #method_sig {
+                    let (a0, a1) = self.#split(a);
+                    let (indices0, indices1) = self.#split_indices(indices);
+                    self.#combine(
+                        self.#do_half(a0, indices0),
+                        self.#do_half(a1, indices1),
+                    )
+                }
+            }
+        }
         OpSig::Ternary => {
             quote! {
                 #method_sig {

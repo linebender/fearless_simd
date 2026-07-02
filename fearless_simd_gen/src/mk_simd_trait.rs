@@ -168,6 +168,8 @@ fn mk_simd_base() -> TokenStream {
             type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
             /// A 128-bit SIMD vector of the same scalar type.
             type Block: SimdBase<S, Element = Self::Element>;
+            /// A same-width byte vector used to dynamically index bytes in this vector.
+            type Indices: SimdBase<S, Element = u8>;
             /// The array type that this vector type corresponds to, which will
             /// always be `[Self::Element; Self::N]`. It has the same layout as
             /// this vector type, but likely has a lower alignment.
