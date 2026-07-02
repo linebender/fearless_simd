@@ -483,6 +483,26 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
+            OpSig::SwizzleDynWithinBlocks => {
+                assert_eq!(
+                    vec_ty.n_bits(),
+                    self.native_width(),
+                    "wide swizzles should use the generic split implementation"
+                );
+
+                let bytes_ty = vec_ty.indices_ty();
+                let bytes = bytes_ty.rust();
+                let wrapper = bytes_ty.aligned_wrapper();
+                let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+                let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+                quote! {
+                    #method_sig {
+                        let result = u8x16_swizzle(self.#to_bytes(a).val.0, indices.into());
+                        self.#from_bytes(#bytes { val: #wrapper(result), simd: self })
+                    }
+                }
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,

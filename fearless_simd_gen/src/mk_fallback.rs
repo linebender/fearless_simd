@@ -392,6 +392,38 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::SwizzleDynWithinBlocks => {
+                assert_eq!(
+                    vec_ty.n_bits(),
+                    self.native_width(),
+                    "wide swizzles should use the generic split implementation"
+                );
+                let bytes_ty = vec_ty.indices_ty();
+                let bytes_rust = bytes_ty.rust();
+                let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+                let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+                let byte_count = bytes_ty.len;
+                let items = make_list(
+                    (0..byte_count)
+                        .map(|idx| {
+                            quote! {
+                                {
+                                    let index = indices[#idx] as usize;
+                                    bytes[index % #byte_count]
+                                }
+                            }
+                        })
+                        .collect::<Vec<_>>(),
+                );
+
+                quote! {
+                    #method_sig {
+                        let bytes = self.#to_bytes(a);
+                        let result: #bytes_rust<Self> = #items.simd_into(self);
+                        self.#from_bytes(result)
+                    }
+                }
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,

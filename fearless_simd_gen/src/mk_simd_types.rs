@@ -399,6 +399,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     }
     let mask_ty = ty.mask_ty().rust();
     let block_ty = ty.block_ty().rust();
+    let indices_ty = ty.indices_ty().rust();
     let block_splat_body = match ty.n_bits() {
         128 => quote! {
             block
@@ -429,12 +430,14 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let as_array_mut_op = generic_op_name("as_array_mut", ty);
     let slide_op = generic_op_name("slide", ty);
     let slide_blockwise_op = generic_op_name("slide_within_blocks", ty);
+    let swizzle_dyn_within_blocks_op = generic_op_name("swizzle_dyn_within_blocks", ty);
     quote! {
         impl<S: Simd> SimdBase<S> for #name<S> {
             type Element = #scalar;
             const N: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
+            type Indices = #indices_ty<S>;
             type Array = [#scalar; #len];
 
             #[inline(always)]
@@ -485,6 +488,11 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
                 self.simd.#slide_blockwise_op::<SHIFT>(self, rhs.simd_into(self.simd))
+            }
+
+            #[inline(always)]
+            fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+                self.simd.#swizzle_dyn_within_blocks_op(self, indices.simd_into(self.simd))
             }
         }
         impl<S: Simd> crate::#vec_trait_id<S> for #name<S> {
