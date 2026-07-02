@@ -3802,10 +3802,19 @@ fn expected_swizzle_within_blocks<const N: usize>(bytes: [u8; N], indices: [u8; 
     })
 }
 
+#[allow(clippy::cast_possible_truncation)] // truncation is deliberate
+fn swizzle_test_byte(i: usize) -> u8 {
+    (i * 37 + 11) as u8
+}
+
+fn swizzle_test_index(i: usize) -> u8 {
+    u8::try_from(15 - (i % 16)).unwrap()
+}
+
 #[simd_test]
 fn swizzle_dyn_within_blocks_f32x4<S: Simd>(simd: S) {
-    let bytes: [u8; 16] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 16] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 16] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 16] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x16::simd_from(simd, bytes);
@@ -3818,8 +3827,8 @@ fn swizzle_dyn_within_blocks_f32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_i8x16<S: Simd>(simd: S) {
-    let bytes: [u8; 16] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 16] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 16] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 16] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x16::simd_from(simd, bytes);
@@ -3832,8 +3841,8 @@ fn swizzle_dyn_within_blocks_i8x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_u8x16<S: Simd>(simd: S) {
-    let bytes: [u8; 16] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 16] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 16] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 16] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x16::simd_from(simd, bytes);
@@ -3846,8 +3855,8 @@ fn swizzle_dyn_within_blocks_u8x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_i16x8<S: Simd>(simd: S) {
-    let bytes: [u8; 16] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 16] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 16] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 16] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x16::simd_from(simd, bytes);
@@ -3860,8 +3869,8 @@ fn swizzle_dyn_within_blocks_i16x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_u16x8<S: Simd>(simd: S) {
-    let bytes: [u8; 16] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 16] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 16] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 16] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x16::simd_from(simd, bytes);
@@ -3874,8 +3883,8 @@ fn swizzle_dyn_within_blocks_u16x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_i32x4<S: Simd>(simd: S) {
-    let bytes: [u8; 16] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 16] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 16] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 16] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x16::simd_from(simd, bytes);
@@ -3888,8 +3897,8 @@ fn swizzle_dyn_within_blocks_i32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_u32x4<S: Simd>(simd: S) {
-    let bytes: [u8; 16] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 16] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 16] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 16] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x16::simd_from(simd, bytes);
@@ -3902,8 +3911,8 @@ fn swizzle_dyn_within_blocks_u32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_f64x2<S: Simd>(simd: S) {
-    let bytes: [u8; 16] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 16] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 16] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 16] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x16::simd_from(simd, bytes);
@@ -3916,8 +3925,8 @@ fn swizzle_dyn_within_blocks_f64x2<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_f32x8<S: Simd>(simd: S) {
-    let bytes: [u8; 32] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 32] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 32] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 32] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x32::simd_from(simd, bytes);
@@ -3930,8 +3939,8 @@ fn swizzle_dyn_within_blocks_f32x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_i8x32<S: Simd>(simd: S) {
-    let bytes: [u8; 32] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 32] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 32] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 32] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x32::simd_from(simd, bytes);
@@ -3944,8 +3953,8 @@ fn swizzle_dyn_within_blocks_i8x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_u8x32<S: Simd>(simd: S) {
-    let bytes: [u8; 32] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 32] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 32] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 32] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x32::simd_from(simd, bytes);
@@ -3958,8 +3967,8 @@ fn swizzle_dyn_within_blocks_u8x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_i16x16<S: Simd>(simd: S) {
-    let bytes: [u8; 32] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 32] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 32] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 32] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x32::simd_from(simd, bytes);
@@ -3972,8 +3981,8 @@ fn swizzle_dyn_within_blocks_i16x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_u16x16<S: Simd>(simd: S) {
-    let bytes: [u8; 32] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 32] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 32] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 32] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x32::simd_from(simd, bytes);
@@ -3986,8 +3995,8 @@ fn swizzle_dyn_within_blocks_u16x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_i32x8<S: Simd>(simd: S) {
-    let bytes: [u8; 32] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 32] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 32] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 32] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x32::simd_from(simd, bytes);
@@ -4000,8 +4009,8 @@ fn swizzle_dyn_within_blocks_i32x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_u32x8<S: Simd>(simd: S) {
-    let bytes: [u8; 32] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 32] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 32] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 32] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x32::simd_from(simd, bytes);
@@ -4014,8 +4023,8 @@ fn swizzle_dyn_within_blocks_u32x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_f64x4<S: Simd>(simd: S) {
-    let bytes: [u8; 32] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 32] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 32] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 32] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x32::simd_from(simd, bytes);
@@ -4028,8 +4037,8 @@ fn swizzle_dyn_within_blocks_f64x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_f32x16<S: Simd>(simd: S) {
-    let bytes: [u8; 64] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 64] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 64] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 64] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x64::simd_from(simd, bytes);
@@ -4042,8 +4051,8 @@ fn swizzle_dyn_within_blocks_f32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_i8x64<S: Simd>(simd: S) {
-    let bytes: [u8; 64] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 64] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 64] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 64] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x64::simd_from(simd, bytes);
@@ -4056,8 +4065,8 @@ fn swizzle_dyn_within_blocks_i8x64<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_u8x64<S: Simd>(simd: S) {
-    let bytes: [u8; 64] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 64] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 64] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 64] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x64::simd_from(simd, bytes);
@@ -4070,8 +4079,8 @@ fn swizzle_dyn_within_blocks_u8x64<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_i16x32<S: Simd>(simd: S) {
-    let bytes: [u8; 64] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 64] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 64] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 64] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x64::simd_from(simd, bytes);
@@ -4084,8 +4093,8 @@ fn swizzle_dyn_within_blocks_i16x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_u16x32<S: Simd>(simd: S) {
-    let bytes: [u8; 64] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 64] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 64] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 64] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x64::simd_from(simd, bytes);
@@ -4098,8 +4107,8 @@ fn swizzle_dyn_within_blocks_u16x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_i32x16<S: Simd>(simd: S) {
-    let bytes: [u8; 64] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 64] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 64] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 64] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x64::simd_from(simd, bytes);
@@ -4112,8 +4121,8 @@ fn swizzle_dyn_within_blocks_i32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_u32x16<S: Simd>(simd: S) {
-    let bytes: [u8; 64] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 64] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 64] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 64] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x64::simd_from(simd, bytes);
@@ -4126,8 +4135,8 @@ fn swizzle_dyn_within_blocks_u32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn swizzle_dyn_within_blocks_f64x8<S: Simd>(simd: S) {
-    let bytes: [u8; 64] = core::array::from_fn(|i| ((i * 37 + 11) & 0xff) as u8);
-    let indices: [u8; 64] = core::array::from_fn(|i| (15 - (i % 16)) as u8);
+    let bytes: [u8; 64] = core::array::from_fn(swizzle_test_byte);
+    let indices: [u8; 64] = core::array::from_fn(swizzle_test_index);
     let expected = expected_swizzle_within_blocks(bytes, indices);
 
     let byte_vec = u8x64::simd_from(simd, bytes);
@@ -4145,8 +4154,8 @@ fn swizzle_dyn_within_blocks_generic_indices<S: Simd>(simd: S) {
         value.swizzle_dyn_within_blocks(indices)
     }
 
-    let value = u8x16::from_fn(simd, |i| i as u8);
-    let indices = u8x16::from_fn(simd, |i| (15 - i) as u8);
+    let value = u8x16::from_fn(simd, |i| u8::try_from(i).unwrap());
+    let indices = u8x16::from_fn(simd, |i| u8::try_from(15 - i).unwrap());
     let result = do_swizzle::<S, u8x16<S>>(value, indices);
 
     assert_eq!(
@@ -4166,7 +4175,7 @@ fn swizzle_dyn_within_blocks_x86_pshufb_oob<S: Simd>(simd: S) {
             return;
         }
 
-        let value = u8x16::from_fn(simd, |i| i as u8);
+        let value = u8x16::from_fn(simd, |i| u8::try_from(i).unwrap());
         let indices = u8x16::simd_from(
             simd,
             [
