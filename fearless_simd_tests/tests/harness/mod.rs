@@ -3802,7 +3802,7 @@ fn expected_swizzle_within_blocks<const N: usize>(bytes: [u8; N], indices: [u8; 
     })
 }
 
-#[allow(clippy::cast_possible_truncation)] // truncation is deliberate
+#[expect(clippy::cast_possible_truncation, reason = "truncation is deliberate")]
 fn swizzle_test_byte(i: usize) -> u8 {
     (i * 37 + 11) as u8
 }
