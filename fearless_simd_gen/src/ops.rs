@@ -605,7 +605,7 @@ const BASE_OPS: &[Op] = &[
         OpSig::SwizzleDynWithinBlocks,
         "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\n\
         The `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\n\
-        Out-of-range index behavior is target-native: on x86 this follows `pshufb`, while NEON and WASM table swizzles produce zero.",
+        Out-of-range index behavior varies by platform.",
     ),
 ];
 

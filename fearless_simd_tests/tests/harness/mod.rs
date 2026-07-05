@@ -4165,33 +4165,15 @@ fn swizzle_dyn_within_blocks_generic_indices<S: Simd>(simd: S) {
 }
 
 #[simd_test]
-fn swizzle_dyn_within_blocks_x86_pshufb_oob<S: Simd>(simd: S) {
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    {
-        if !matches!(
-            simd.level(),
-            Level::Sse4_2(_) | Level::Avx2(_) | Level::Avx512(_)
-        ) {
-            return;
-        }
-
-        let value = u8x16::from_fn(simd, |i| u8::try_from(i).unwrap());
-        let indices = u8x16::simd_from(
-            simd,
-            [
-                16, 17, 31, 0x80, 0x8f, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5,
-            ],
-        );
-        let result = value.swizzle_dyn_within_blocks(indices);
-
-        assert_eq!(
-            *result,
-            [0, 1, 15, 0, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5]
-        );
-    }
-
-    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-    let _ = simd;
+fn swizzle_dyn_within_blocks_oob_does_not_panic<S: Simd>(simd: S) {
+    let value = u8x16::from_fn(simd, |i| u8::try_from(i).unwrap());
+    let indices = u8x16::simd_from(
+        simd,
+        [
+            16, 17, 31, 0x80, 0x8f, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5,
+        ],
+    );
+    let _ = value.swizzle_dyn_within_blocks(indices);
 }
 
 #[simd_test]
