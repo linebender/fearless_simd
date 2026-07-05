@@ -82,6 +82,9 @@ pub(crate) enum OpSig {
     Deinterleave,
     /// Takes two arguments of a vector type, plus a const generic shift amount, and returns that same vector type.
     Slide { granularity: SlideGranularity },
+    /// Takes a vector and a same-width byte-index vector, and returns the original vector type with its bytes
+    /// dynamically swizzled within each 128-bit block.
+    SwizzleDynWithinBlocks,
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -304,6 +307,10 @@ impl Op {
                 (vec![vec.clone(), vec.clone()], quote! { (#vec, #vec) })
             }
             OpSig::Slide { .. } => (vec![vec.clone(), vec.clone()], vec),
+            OpSig::SwizzleDynWithinBlocks => {
+                let bytes_ty = vec_ty.bytes_ty().rust();
+                (vec![vec.clone(), quote! { #bytes_ty<#simd_ty> }], vec)
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -420,6 +427,11 @@ impl Op {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { <const SHIFT: usize>(#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
+            }
+            OpSig::SwizzleDynWithinBlocks => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { (#arg0, #arg1: impl SimdInto<Self::Bytes, S>) -> Self }
             }
             OpSig::Compare => {
                 let arg0 = &arg_names[0];
@@ -586,6 +598,14 @@ const BASE_OPS: &[Op] = &[
             granularity: SlideGranularity::WithinBlocks,
         },
         "Like `slide`, but operates independently on each 128-bit block.",
+    ),
+    Op::new(
+        "swizzle_dyn_within_blocks",
+        OpKind::BaseTraitMethod,
+        OpSig::SwizzleDynWithinBlocks,
+        "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\n\
+        The `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\n\
+        Out-of-range index behavior varies by platform.",
     ),
 ];
 
@@ -1611,6 +1631,7 @@ impl OpSig {
             | Self::AsArray { .. }
             | Self::FromBytes
             | Self::ToBytes => &["a"],
+            Self::SwizzleDynWithinBlocks => &["a", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -1643,6 +1664,7 @@ impl OpSig {
             | Self::MaskReduce { .. }
             | Self::AsArray { .. }
             | Self::ToBytes => &["self"],
+            Self::SwizzleDynWithinBlocks => &["self", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Zip { .. }
@@ -1704,6 +1726,7 @@ impl OpSig {
             | Self::StoreArray
             | Self::FromBytes
             | Self::ToBytes
+            | Self::SwizzleDynWithinBlocks
             | Self::Slide { .. } => return None,
         };
         Some(args)

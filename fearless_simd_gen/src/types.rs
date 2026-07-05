@@ -157,6 +157,10 @@ impl VecType {
         Self::new(self.scalar, self.scalar_bits, 128 / self.scalar_bits)
     }
 
+    pub(crate) fn bytes_ty(&self) -> Self {
+        Self::new(ScalarType::Unsigned, 8, self.n_bits() / 8)
+    }
+
     pub(crate) fn split_operand(&self) -> Option<Self> {
         if self.n_bits() <= 128 {
             return None;
