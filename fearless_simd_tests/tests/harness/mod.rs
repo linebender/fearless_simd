@@ -4150,7 +4150,7 @@ fn swizzle_dyn_within_blocks_f64x8<S: Simd>(simd: S) {
 #[simd_test]
 fn swizzle_dyn_within_blocks_generic_indices<S: Simd>(simd: S) {
     #[inline(always)]
-    fn do_swizzle<S: Simd, V: SimdBase<S>>(value: V, indices: V::Indices) -> V {
+    fn do_swizzle<S: Simd, V: SimdBase<S>>(value: V, indices: V::Bytes) -> V {
         value.swizzle_dyn_within_blocks(indices)
     }
 

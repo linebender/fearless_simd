@@ -308,8 +308,8 @@ impl Op {
             }
             OpSig::Slide { .. } => (vec![vec.clone(), vec.clone()], vec),
             OpSig::SwizzleDynWithinBlocks => {
-                let indices_ty = vec_ty.indices_ty().rust();
-                (vec![vec.clone(), quote! { #indices_ty<#simd_ty> }], vec)
+                let bytes_ty = vec_ty.bytes_ty().rust();
+                (vec![vec.clone(), quote! { #bytes_ty<#simd_ty> }], vec)
             }
             OpSig::Cvt {
                 target_ty,
@@ -431,7 +431,7 @@ impl Op {
             OpSig::SwizzleDynWithinBlocks => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
-                quote! { (#arg0, #arg1: impl SimdInto<Self::Indices, S>) -> Self }
+                quote! { (#arg0, #arg1: impl SimdInto<Self::Bytes, S>) -> Self }
             }
             OpSig::Compare => {
                 let arg0 = &arg_names[0];

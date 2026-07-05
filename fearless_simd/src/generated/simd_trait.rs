@@ -2884,8 +2884,6 @@ pub trait SimdBase<S: Simd>:
     type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
     #[doc = r" A 128-bit SIMD vector of the same scalar type."]
     type Block: SimdBase<S, Element = Self::Element>;
-    #[doc = r" A same-width byte vector used to dynamically index bytes in this vector."]
-    type Indices: SimdBase<S, Element = u8>;
     #[doc = r" The array type that this vector type corresponds to, which will"]
     #[doc = r" always be `[Self::Element; Self::N]`. It has the same layout as"]
     #[doc = r" this vector type, but likely has a lower alignment."]
@@ -2916,7 +2914,7 @@ pub trait SimdBase<S: Simd>:
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
     fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self;
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self;
 }
 #[doc = r" Functionality implemented by floating-point SIMD vectors."]
 pub trait SimdFloat<S: Simd>:

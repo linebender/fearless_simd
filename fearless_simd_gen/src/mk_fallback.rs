@@ -398,7 +398,7 @@ impl Level for Fallback {
                     self.native_width(),
                     "wide swizzles should use the generic split implementation"
                 );
-                let bytes_ty = vec_ty.indices_ty();
+                let bytes_ty = vec_ty.bytes_ty();
                 let bytes_rust = bytes_ty.rust();
                 let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
                 let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);

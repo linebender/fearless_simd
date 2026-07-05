@@ -157,7 +157,7 @@ impl VecType {
         Self::new(self.scalar, self.scalar_bits, 128 / self.scalar_bits)
     }
 
-    pub(crate) fn indices_ty(&self) -> Self {
+    pub(crate) fn bytes_ty(&self) -> Self {
         Self::new(ScalarType::Unsigned, 8, self.n_bits() / 8)
     }
 

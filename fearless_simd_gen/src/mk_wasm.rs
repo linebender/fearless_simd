@@ -490,7 +490,7 @@ impl Level for WasmSimd128 {
                     "wide swizzles should use the generic split implementation"
                 );
 
-                let bytes_ty = vec_ty.indices_ty();
+                let bytes_ty = vec_ty.bytes_ty();
                 let bytes = bytes_ty.rust();
                 let wrapper = bytes_ty.aligned_wrapper();
                 let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);

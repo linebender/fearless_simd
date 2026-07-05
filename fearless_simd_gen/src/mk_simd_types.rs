@@ -32,7 +32,7 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         let as_array_mut_op = generic_op_name("as_array_mut", ty);
         let from_bytes_op = generic_op_name("cvt_from_bytes", ty);
         let to_bytes_op = generic_op_name("cvt_to_bytes", ty);
-        let bytes = VecType::new(ScalarType::Unsigned, 8, align).rust();
+        let bytes = ty.bytes_ty().rust();
         let mask = ty.mask_ty().rust();
 
         if ty.scalar == ScalarType::Mask {
@@ -399,7 +399,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     }
     let mask_ty = ty.mask_ty().rust();
     let block_ty = ty.block_ty().rust();
-    let indices_ty = ty.indices_ty().rust();
     let block_splat_body = match ty.n_bits() {
         128 => quote! {
             block
@@ -437,7 +436,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             const N: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
-            type Indices = #indices_ty<S>;
             type Array = [#scalar; #len];
 
             #[inline(always)]
@@ -491,7 +489,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             }
 
             #[inline(always)]
-            fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+            fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
                 self.simd.#swizzle_dyn_within_blocks_op(self, indices.simd_into(self.simd))
             }
         }

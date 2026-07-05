@@ -86,7 +86,6 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = f32x4<S>;
-    type Indices = u8x16<S>;
     type Array = [f32; 4];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -132,7 +131,7 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
             .slide_within_blocks_f32x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f32x4(self, indices.simd_into(self.simd))
     }
@@ -345,7 +344,6 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
     const N: usize = 16;
     type Mask = mask8x16<S>;
     type Block = i8x16<S>;
-    type Indices = u8x16<S>;
     type Array = [i8; 16];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -391,7 +389,7 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
             .slide_within_blocks_i8x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i8x16(self, indices.simd_into(self.simd))
     }
@@ -536,7 +534,6 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     const N: usize = 16;
     type Mask = mask8x16<S>;
     type Block = u8x16<S>;
-    type Indices = u8x16<S>;
     type Array = [u8; 16];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -582,7 +579,7 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
             .slide_within_blocks_u8x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u8x16(self, indices.simd_into(self.simd))
     }
@@ -818,7 +815,6 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
     const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = i16x8<S>;
-    type Indices = u8x16<S>;
     type Array = [i16; 8];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -864,7 +860,7 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
             .slide_within_blocks_i16x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i16x8(self, indices.simd_into(self.simd))
     }
@@ -1009,7 +1005,6 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = u16x8<S>;
-    type Indices = u8x16<S>;
     type Array = [u16; 8];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -1055,7 +1050,7 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
             .slide_within_blocks_u16x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u16x8(self, indices.simd_into(self.simd))
     }
@@ -1291,7 +1286,6 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = i32x4<S>;
-    type Indices = u8x16<S>;
     type Array = [i32; 4];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -1337,7 +1331,7 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
             .slide_within_blocks_i32x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i32x4(self, indices.simd_into(self.simd))
     }
@@ -1494,7 +1488,6 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = u32x4<S>;
-    type Indices = u8x16<S>;
     type Array = [u32; 4];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -1540,7 +1533,7 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
             .slide_within_blocks_u32x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u32x4(self, indices.simd_into(self.simd))
     }
@@ -1788,7 +1781,6 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
     const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = f64x2<S>;
-    type Indices = u8x16<S>;
     type Array = [f64; 2];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -1834,7 +1826,7 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
             .slide_within_blocks_f64x2::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f64x2(self, indices.simd_into(self.simd))
     }
@@ -2124,7 +2116,6 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = f32x4<S>;
-    type Indices = u8x32<S>;
     type Array = [f32; 8];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -2170,7 +2161,7 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
             .slide_within_blocks_f32x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f32x8(self, indices.simd_into(self.simd))
     }
@@ -2390,7 +2381,6 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
     const N: usize = 32;
     type Mask = mask8x32<S>;
     type Block = i8x16<S>;
-    type Indices = u8x32<S>;
     type Array = [i8; 32];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -2436,7 +2426,7 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
             .slide_within_blocks_i8x32::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i8x32(self, indices.simd_into(self.simd))
     }
@@ -2588,7 +2578,6 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     const N: usize = 32;
     type Mask = mask8x32<S>;
     type Block = u8x16<S>;
-    type Indices = u8x32<S>;
     type Array = [u8; 32];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -2634,7 +2623,7 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
             .slide_within_blocks_u8x32::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u8x32(self, indices.simd_into(self.simd))
     }
@@ -2882,7 +2871,6 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
     const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = i16x8<S>;
-    type Indices = u8x32<S>;
     type Array = [i16; 16];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -2928,7 +2916,7 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
             .slide_within_blocks_i16x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i16x16(self, indices.simd_into(self.simd))
     }
@@ -3086,7 +3074,6 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = u16x8<S>;
-    type Indices = u8x32<S>;
     type Array = [u16; 16];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -3132,7 +3119,7 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
             .slide_within_blocks_u16x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u16x16(self, indices.simd_into(self.simd))
     }
@@ -3376,7 +3363,6 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = i32x4<S>;
-    type Indices = u8x32<S>;
     type Array = [i32; 8];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -3422,7 +3408,7 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
             .slide_within_blocks_i32x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i32x8(self, indices.simd_into(self.simd))
     }
@@ -3586,7 +3572,6 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = u32x4<S>;
-    type Indices = u8x32<S>;
     type Array = [u32; 8];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -3632,7 +3617,7 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
             .slide_within_blocks_u32x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u32x8(self, indices.simd_into(self.simd))
     }
@@ -3887,7 +3872,6 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
     const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = f64x2<S>;
-    type Indices = u8x32<S>;
     type Array = [f64; 4];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -3933,7 +3917,7 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
             .slide_within_blocks_f64x4::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f64x4(self, indices.simd_into(self.simd))
     }
@@ -4235,7 +4219,6 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = f32x4<S>;
-    type Indices = u8x64<S>;
     type Array = [f32; 16];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -4282,7 +4265,7 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
             .slide_within_blocks_f32x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f32x16(self, indices.simd_into(self.simd))
     }
@@ -4496,7 +4479,6 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
     const N: usize = 64;
     type Mask = mask8x64<S>;
     type Block = i8x16<S>;
-    type Indices = u8x64<S>;
     type Array = [i8; 64];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -4543,7 +4525,7 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
             .slide_within_blocks_i8x64::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i8x64(self, indices.simd_into(self.simd))
     }
@@ -4688,7 +4670,6 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     const N: usize = 64;
     type Mask = mask8x64<S>;
     type Block = u8x16<S>;
-    type Indices = u8x64<S>;
     type Array = [u8; 64];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -4735,7 +4716,7 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
             .slide_within_blocks_u8x64::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u8x64(self, indices.simd_into(self.simd))
     }
@@ -4976,7 +4957,6 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
     const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = i16x8<S>;
-    type Indices = u8x64<S>;
     type Array = [i16; 32];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -5023,7 +5003,7 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
             .slide_within_blocks_i16x32::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i16x32(self, indices.simd_into(self.simd))
     }
@@ -5174,7 +5154,6 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = u16x8<S>;
-    type Indices = u8x64<S>;
     type Array = [u16; 32];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -5221,7 +5200,7 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
             .slide_within_blocks_u16x32::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u16x32(self, indices.simd_into(self.simd))
     }
@@ -5463,7 +5442,6 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = i32x4<S>;
-    type Indices = u8x64<S>;
     type Array = [i32; 16];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -5510,7 +5488,7 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
             .slide_within_blocks_i32x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_i32x16(self, indices.simd_into(self.simd))
     }
@@ -5673,7 +5651,6 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = u32x4<S>;
-    type Indices = u8x64<S>;
     type Array = [u32; 16];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -5720,7 +5697,7 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
             .slide_within_blocks_u32x16::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u32x16(self, indices.simd_into(self.simd))
     }
@@ -5969,7 +5946,6 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
     const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = f64x2<S>;
-    type Indices = u8x64<S>;
     type Array = [f64; 8];
     #[inline(always)]
     fn witness(&self) -> S {
@@ -6016,7 +5992,7 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
             .slide_within_blocks_f64x8::<SHIFT>(self, rhs.simd_into(self.simd))
     }
     #[inline(always)]
-    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Indices, S>) -> Self {
+    fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_f64x8(self, indices.simd_into(self.simd))
     }
