@@ -35,13 +35,15 @@ pub(crate) fn mk_ops() -> TokenStream {
             } else {
                 doc.clone()
             };
+            let doc_attrs = make_doc_attrs(&doc);
+            let method_doc_attrs = make_doc_attrs(&method_doc);
 
             match core_op {
                 CoreOpTrait::ShlVectored | CoreOpTrait::ShrVectored => {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
-                            #[doc = #method_doc]
+                            #method_doc_attrs
                             #[inline(always)]
                             fn #opfn(self, rhs: Self) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs)
@@ -49,7 +51,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                         }
 
                         impl<S: Simd> core::ops::#trait_assign_id for #simd<S> {
-                            #[doc = #doc]
+                            #doc_attrs
                             #[inline(always)]
                             fn #op_assign_fn(&mut self, rhs: Self) {
                                 *self = self.simd.#simd_fn(*self, rhs);
@@ -61,7 +63,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id<u32> for #simd<S> {
                             type Output = Self;
-                            #[doc = #method_doc]
+                            #method_doc_attrs
                             #[inline(always)]
                             fn #opfn(self, rhs: u32) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs)
@@ -80,7 +82,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
-                            #[doc = #method_doc]
+                            #method_doc_attrs
                             #[inline(always)]
                             fn #opfn(self) -> Self::Output {
                                 self.simd.#simd_fn(self)
@@ -119,7 +121,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
-                            #[doc = #method_doc]
+                            #method_doc_attrs
                             #[inline(always)]
                             fn #opfn(self, rhs: Self) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs)
@@ -127,7 +129,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                         }
 
                         impl<S: Simd> core::ops::#trait_assign_id for #simd<S> {
-                            #[doc = #doc]
+                            #doc_attrs
                             #[inline(always)]
                             fn #op_assign_fn(&mut self, rhs: Self) {
                                 *self = self.simd.#simd_fn(*self, rhs);
@@ -145,6 +147,13 @@ pub(crate) fn mk_ops() -> TokenStream {
         use crate::{Simd, SimdInto};
         #imports
         #( #impls )*
+    }
+}
+
+fn make_doc_attrs(doc: &str) -> TokenStream {
+    let lines = doc.lines();
+    quote! {
+        #(#[doc = #lines])*
     }
 }
 

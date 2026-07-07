@@ -20,7 +20,35 @@ impl<S: Simd> core::ops::Neg for f32x4<S> {
 }
 impl<S: Simd> core::ops::Add for f32x4<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise.\n\n```rust\n# use fearless_simd::{prelude::*, f32x4};\n# fearless_simd::__simd_doctest! { add_f32x4,\n#[inline(always)]\nfn add_f32x4<S: Simd>(simd: S) {\n    let a = f32x4::simd_from(\n        simd,\n        [\n            0.0, 2.0, 4.0, 6.0,\n        ],\n    );\n    let b = f32x4::simd_from(\n        simd,\n        [\n            1.0, 3.0, 5.0, 7.0,\n        ],\n    );\n\n    assert_eq!(\n        <[f32; 4]>::from(a + b),\n        [\n            1.0, 5.0, 9.0, 13.0,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, f32x4};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_f32x4,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_f32x4<S: Simd>(simd: S) {"]
+    #[doc = "    let a = f32x4::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0.0, 2.0, 4.0, 6.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = f32x4::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 3.0, 5.0, 7.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[f32; 4]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 5.0, 9.0, 13.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f32x4(self, rhs)
@@ -168,7 +196,38 @@ impl<S: Simd> core::ops::Neg for i8x16<S> {
 }
 impl<S: Simd> core::ops::Add for i8x16<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, i8x16};\n# fearless_simd::__simd_doctest! { add_i8x16,\n#[inline(always)]\nfn add_i8x16<S: Simd>(simd: S) {\n    let a = i8x16::simd_from(\n        simd,\n        [\n            1, -1, 3, -3, 5, -5, 7, -7,\n            9, -9, 11, -11, 13, -13, 15, -15,\n        ],\n    );\n    let b = i8x16::simd_from(\n        simd,\n        [\n            2, -2, 4, -4, 6, -6, 8, -8,\n            10, -10, 12, -12, 14, -14, 16, -16,\n        ],\n    );\n\n    assert_eq!(\n        <[i8; 16]>::from(a + b),\n        [\n            3, -3, 7, -7, 11, -11, 15, -15,\n            19, -19, 23, -23, 27, -27, 31, -31,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, i8x16};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_i8x16,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_i8x16<S: Simd>(simd: S) {"]
+    #[doc = "    let a = i8x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, -1, 3, -3, 5, -5, 7, -7,"]
+    #[doc = "            9, -9, 11, -11, 13, -13, 15, -15,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = i8x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            2, -2, 4, -4, 6, -6, 8, -8,"]
+    #[doc = "            10, -10, 12, -12, 14, -14, 16, -16,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[i8; 16]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            3, -3, 7, -7, 11, -11, 15, -15,"]
+    #[doc = "            19, -19, 23, -23, 27, -27, 31, -31,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i8x16(self, rhs)
@@ -386,7 +445,9 @@ impl<S: Simd> core::ops::Not for i8x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i8x16(self, rhs)
@@ -400,14 +461,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i8x16<S> {
 }
 impl<S: Simd> core::ops::Shl for i8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i8x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i8x16(*self, rhs);
@@ -415,7 +484,9 @@ impl<S: Simd> core::ops::ShlAssign for i8x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i8x16(self, rhs)
@@ -429,14 +500,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i8x16<S> {
 }
 impl<S: Simd> core::ops::Shr for i8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i8x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i8x16(*self, rhs);
@@ -444,7 +523,38 @@ impl<S: Simd> core::ops::ShrAssign for i8x16<S> {
 }
 impl<S: Simd> core::ops::Add for u8x16<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, u8x16};\n# fearless_simd::__simd_doctest! { add_u8x16,\n#[inline(always)]\nfn add_u8x16<S: Simd>(simd: S) {\n    let a = u8x16::simd_from(\n        simd,\n        [\n            0, 2, 4, 6, 8, 10, 12, 14,\n            16, 18, 20, 22, 24, 26, 28, 30,\n        ],\n    );\n    let b = u8x16::simd_from(\n        simd,\n        [\n            1, 3, 5, 7, 9, 11, 13, 15,\n            17, 19, 21, 23, 25, 27, 29, 31,\n        ],\n    );\n\n    assert_eq!(\n        <[u8; 16]>::from(a + b),\n        [\n            1, 5, 9, 13, 17, 21, 25, 29,\n            33, 37, 41, 45, 49, 53, 57, 61,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, u8x16};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_u8x16,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_u8x16<S: Simd>(simd: S) {"]
+    #[doc = "    let a = u8x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0, 2, 4, 6, 8, 10, 12, 14,"]
+    #[doc = "            16, 18, 20, 22, 24, 26, 28, 30,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = u8x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, 3, 5, 7, 9, 11, 13, 15,"]
+    #[doc = "            17, 19, 21, 23, 25, 27, 29, 31,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[u8; 16]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1, 5, 9, 13, 17, 21, 25, 29,"]
+    #[doc = "            33, 37, 41, 45, 49, 53, 57, 61,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u8x16(self, rhs)
@@ -662,7 +772,9 @@ impl<S: Simd> core::ops::Not for u8x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u8x16(self, rhs)
@@ -676,14 +788,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u8x16<S> {
 }
 impl<S: Simd> core::ops::Shl for u8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u8x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u8x16(*self, rhs);
@@ -691,7 +811,9 @@ impl<S: Simd> core::ops::ShlAssign for u8x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u8x16(self, rhs)
@@ -705,14 +827,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u8x16<S> {
 }
 impl<S: Simd> core::ops::Shr for u8x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u8x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u8x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u8x16(*self, rhs);
@@ -781,7 +911,35 @@ impl<S: Simd> core::ops::Neg for i16x8<S> {
 }
 impl<S: Simd> core::ops::Add for i16x8<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, i16x8};\n# fearless_simd::__simd_doctest! { add_i16x8,\n#[inline(always)]\nfn add_i16x8<S: Simd>(simd: S) {\n    let a = i16x8::simd_from(\n        simd,\n        [\n            1, -1, 3, -3, 5, -5, 7, -7,\n        ],\n    );\n    let b = i16x8::simd_from(\n        simd,\n        [\n            2, -2, 4, -4, 6, -6, 8, -8,\n        ],\n    );\n\n    assert_eq!(\n        <[i16; 8]>::from(a + b),\n        [\n            3, -3, 7, -7, 11, -11, 15, -15,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, i16x8};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_i16x8,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_i16x8<S: Simd>(simd: S) {"]
+    #[doc = "    let a = i16x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, -1, 3, -3, 5, -5, 7, -7,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = i16x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            2, -2, 4, -4, 6, -6, 8, -8,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[i16; 8]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            3, -3, 7, -7, 11, -11, 15, -15,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i16x8(self, rhs)
@@ -999,7 +1157,9 @@ impl<S: Simd> core::ops::Not for i16x8<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i16x8(self, rhs)
@@ -1013,14 +1173,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i16x8<S> {
 }
 impl<S: Simd> core::ops::Shl for i16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i16x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i16x8(*self, rhs);
@@ -1028,7 +1196,9 @@ impl<S: Simd> core::ops::ShlAssign for i16x8<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i16x8(self, rhs)
@@ -1042,14 +1212,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i16x8<S> {
 }
 impl<S: Simd> core::ops::Shr for i16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i16x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i16x8(*self, rhs);
@@ -1057,7 +1235,35 @@ impl<S: Simd> core::ops::ShrAssign for i16x8<S> {
 }
 impl<S: Simd> core::ops::Add for u16x8<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, u16x8};\n# fearless_simd::__simd_doctest! { add_u16x8,\n#[inline(always)]\nfn add_u16x8<S: Simd>(simd: S) {\n    let a = u16x8::simd_from(\n        simd,\n        [\n            0, 2, 4, 6, 8, 10, 12, 14,\n        ],\n    );\n    let b = u16x8::simd_from(\n        simd,\n        [\n            1, 3, 5, 7, 9, 11, 13, 15,\n        ],\n    );\n\n    assert_eq!(\n        <[u16; 8]>::from(a + b),\n        [\n            1, 5, 9, 13, 17, 21, 25, 29,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, u16x8};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_u16x8,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_u16x8<S: Simd>(simd: S) {"]
+    #[doc = "    let a = u16x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0, 2, 4, 6, 8, 10, 12, 14,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = u16x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, 3, 5, 7, 9, 11, 13, 15,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[u16; 8]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1, 5, 9, 13, 17, 21, 25, 29,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u16x8(self, rhs)
@@ -1275,7 +1481,9 @@ impl<S: Simd> core::ops::Not for u16x8<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u16x8(self, rhs)
@@ -1289,14 +1497,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u16x8<S> {
 }
 impl<S: Simd> core::ops::Shl for u16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u16x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u16x8(*self, rhs);
@@ -1304,7 +1520,9 @@ impl<S: Simd> core::ops::ShlAssign for u16x8<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u16x8(self, rhs)
@@ -1318,14 +1536,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u16x8<S> {
 }
 impl<S: Simd> core::ops::Shr for u16x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u16x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u16x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u16x8(*self, rhs);
@@ -1394,7 +1620,35 @@ impl<S: Simd> core::ops::Neg for i32x4<S> {
 }
 impl<S: Simd> core::ops::Add for i32x4<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, i32x4};\n# fearless_simd::__simd_doctest! { add_i32x4,\n#[inline(always)]\nfn add_i32x4<S: Simd>(simd: S) {\n    let a = i32x4::simd_from(\n        simd,\n        [\n            1, -1, 3, -3,\n        ],\n    );\n    let b = i32x4::simd_from(\n        simd,\n        [\n            2, -2, 4, -4,\n        ],\n    );\n\n    assert_eq!(\n        <[i32; 4]>::from(a + b),\n        [\n            3, -3, 7, -7,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, i32x4};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_i32x4,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_i32x4<S: Simd>(simd: S) {"]
+    #[doc = "    let a = i32x4::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, -1, 3, -3,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = i32x4::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            2, -2, 4, -4,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[i32; 4]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            3, -3, 7, -7,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i32x4(self, rhs)
@@ -1612,7 +1866,9 @@ impl<S: Simd> core::ops::Not for i32x4<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i32x4(self, rhs)
@@ -1626,14 +1882,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::Shl for i32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i32x4<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i32x4(*self, rhs);
@@ -1641,7 +1905,9 @@ impl<S: Simd> core::ops::ShlAssign for i32x4<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i32x4(self, rhs)
@@ -1655,14 +1921,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i32x4<S> {
 }
 impl<S: Simd> core::ops::Shr for i32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i32x4<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i32x4(*self, rhs);
@@ -1670,7 +1944,35 @@ impl<S: Simd> core::ops::ShrAssign for i32x4<S> {
 }
 impl<S: Simd> core::ops::Add for u32x4<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, u32x4};\n# fearless_simd::__simd_doctest! { add_u32x4,\n#[inline(always)]\nfn add_u32x4<S: Simd>(simd: S) {\n    let a = u32x4::simd_from(\n        simd,\n        [\n            0, 2, 4, 6,\n        ],\n    );\n    let b = u32x4::simd_from(\n        simd,\n        [\n            1, 3, 5, 7,\n        ],\n    );\n\n    assert_eq!(\n        <[u32; 4]>::from(a + b),\n        [\n            1, 5, 9, 13,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, u32x4};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_u32x4,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_u32x4<S: Simd>(simd: S) {"]
+    #[doc = "    let a = u32x4::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0, 2, 4, 6,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = u32x4::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, 3, 5, 7,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[u32; 4]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1, 5, 9, 13,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u32x4(self, rhs)
@@ -1888,7 +2190,9 @@ impl<S: Simd> core::ops::Not for u32x4<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u32x4(self, rhs)
@@ -1902,14 +2206,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::Shl for u32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u32x4<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u32x4(*self, rhs);
@@ -1917,7 +2229,9 @@ impl<S: Simd> core::ops::ShlAssign for u32x4<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u32x4(self, rhs)
@@ -1931,14 +2245,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u32x4<S> {
 }
 impl<S: Simd> core::ops::Shr for u32x4<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u32x4(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u32x4<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u32x4(*self, rhs);
@@ -2007,7 +2329,35 @@ impl<S: Simd> core::ops::Neg for f64x2<S> {
 }
 impl<S: Simd> core::ops::Add for f64x2<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise.\n\n```rust\n# use fearless_simd::{prelude::*, f64x2};\n# fearless_simd::__simd_doctest! { add_f64x2,\n#[inline(always)]\nfn add_f64x2<S: Simd>(simd: S) {\n    let a = f64x2::simd_from(\n        simd,\n        [\n            0.0, 2.0,\n        ],\n    );\n    let b = f64x2::simd_from(\n        simd,\n        [\n            1.0, 3.0,\n        ],\n    );\n\n    assert_eq!(\n        <[f64; 2]>::from(a + b),\n        [\n            1.0, 5.0,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, f64x2};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_f64x2,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_f64x2<S: Simd>(simd: S) {"]
+    #[doc = "    let a = f64x2::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0.0, 2.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = f64x2::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 3.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[f64; 2]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 5.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f64x2(self, rhs)
@@ -2208,7 +2558,35 @@ impl<S: Simd> core::ops::Neg for f32x8<S> {
 }
 impl<S: Simd> core::ops::Add for f32x8<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise.\n\n```rust\n# use fearless_simd::{prelude::*, f32x8};\n# fearless_simd::__simd_doctest! { add_f32x8,\n#[inline(always)]\nfn add_f32x8<S: Simd>(simd: S) {\n    let a = f32x8::simd_from(\n        simd,\n        [\n            0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0,\n        ],\n    );\n    let b = f32x8::simd_from(\n        simd,\n        [\n            1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0,\n        ],\n    );\n\n    assert_eq!(\n        <[f32; 8]>::from(a + b),\n        [\n            1.0, 5.0, 9.0, 13.0, 17.0, 21.0, 25.0, 29.0,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, f32x8};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_f32x8,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_f32x8<S: Simd>(simd: S) {"]
+    #[doc = "    let a = f32x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = f32x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[f32; 8]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 5.0, 9.0, 13.0, 17.0, 21.0, 25.0, 29.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f32x8(self, rhs)
@@ -2356,7 +2734,44 @@ impl<S: Simd> core::ops::Neg for i8x32<S> {
 }
 impl<S: Simd> core::ops::Add for i8x32<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, i8x32};\n# fearless_simd::__simd_doctest! { add_i8x32,\n#[inline(always)]\nfn add_i8x32<S: Simd>(simd: S) {\n    let a = i8x32::simd_from(\n        simd,\n        [\n            1, -1, 3, -3, 5, -5, 7, -7,\n            9, -9, 11, -11, 13, -13, 15, -15,\n            17, -17, 19, -19, 21, -21, 23, -23,\n            25, -25, 27, -27, 29, -29, 31, -31,\n        ],\n    );\n    let b = i8x32::simd_from(\n        simd,\n        [\n            2, -2, 4, -4, 6, -6, 8, -8,\n            10, -10, 12, -12, 14, -14, 16, -16,\n            18, -18, 20, -20, 22, -22, 24, -24,\n            26, -26, 28, -28, 30, -30, 32, -32,\n        ],\n    );\n\n    assert_eq!(\n        <[i8; 32]>::from(a + b),\n        [\n            3, -3, 7, -7, 11, -11, 15, -15,\n            19, -19, 23, -23, 27, -27, 31, -31,\n            35, -35, 39, -39, 43, -43, 47, -47,\n            51, -51, 55, -55, 59, -59, 63, -63,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, i8x32};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_i8x32,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_i8x32<S: Simd>(simd: S) {"]
+    #[doc = "    let a = i8x32::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, -1, 3, -3, 5, -5, 7, -7,"]
+    #[doc = "            9, -9, 11, -11, 13, -13, 15, -15,"]
+    #[doc = "            17, -17, 19, -19, 21, -21, 23, -23,"]
+    #[doc = "            25, -25, 27, -27, 29, -29, 31, -31,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = i8x32::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            2, -2, 4, -4, 6, -6, 8, -8,"]
+    #[doc = "            10, -10, 12, -12, 14, -14, 16, -16,"]
+    #[doc = "            18, -18, 20, -20, 22, -22, 24, -24,"]
+    #[doc = "            26, -26, 28, -28, 30, -30, 32, -32,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[i8; 32]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            3, -3, 7, -7, 11, -11, 15, -15,"]
+    #[doc = "            19, -19, 23, -23, 27, -27, 31, -31,"]
+    #[doc = "            35, -35, 39, -39, 43, -43, 47, -47,"]
+    #[doc = "            51, -51, 55, -55, 59, -59, 63, -63,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i8x32(self, rhs)
@@ -2574,7 +2989,9 @@ impl<S: Simd> core::ops::Not for i8x32<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i8x32(self, rhs)
@@ -2588,14 +3005,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i8x32<S> {
 }
 impl<S: Simd> core::ops::Shl for i8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i8x32<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i8x32(*self, rhs);
@@ -2603,7 +3028,9 @@ impl<S: Simd> core::ops::ShlAssign for i8x32<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i8x32(self, rhs)
@@ -2617,14 +3044,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i8x32<S> {
 }
 impl<S: Simd> core::ops::Shr for i8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i8x32<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i8x32(*self, rhs);
@@ -2632,7 +3067,44 @@ impl<S: Simd> core::ops::ShrAssign for i8x32<S> {
 }
 impl<S: Simd> core::ops::Add for u8x32<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, u8x32};\n# fearless_simd::__simd_doctest! { add_u8x32,\n#[inline(always)]\nfn add_u8x32<S: Simd>(simd: S) {\n    let a = u8x32::simd_from(\n        simd,\n        [\n            0, 2, 4, 6, 8, 10, 12, 14,\n            16, 18, 20, 22, 24, 26, 28, 30,\n            32, 34, 36, 38, 40, 42, 44, 46,\n            48, 50, 52, 54, 56, 58, 60, 62,\n        ],\n    );\n    let b = u8x32::simd_from(\n        simd,\n        [\n            1, 3, 5, 7, 9, 11, 13, 15,\n            17, 19, 21, 23, 25, 27, 29, 31,\n            33, 35, 37, 39, 41, 43, 45, 47,\n            49, 51, 53, 55, 57, 59, 61, 63,\n        ],\n    );\n\n    assert_eq!(\n        <[u8; 32]>::from(a + b),\n        [\n            1, 5, 9, 13, 17, 21, 25, 29,\n            33, 37, 41, 45, 49, 53, 57, 61,\n            65, 69, 73, 77, 81, 85, 89, 93,\n            97, 101, 105, 109, 113, 117, 121, 125,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, u8x32};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_u8x32,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_u8x32<S: Simd>(simd: S) {"]
+    #[doc = "    let a = u8x32::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0, 2, 4, 6, 8, 10, 12, 14,"]
+    #[doc = "            16, 18, 20, 22, 24, 26, 28, 30,"]
+    #[doc = "            32, 34, 36, 38, 40, 42, 44, 46,"]
+    #[doc = "            48, 50, 52, 54, 56, 58, 60, 62,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = u8x32::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, 3, 5, 7, 9, 11, 13, 15,"]
+    #[doc = "            17, 19, 21, 23, 25, 27, 29, 31,"]
+    #[doc = "            33, 35, 37, 39, 41, 43, 45, 47,"]
+    #[doc = "            49, 51, 53, 55, 57, 59, 61, 63,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[u8; 32]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1, 5, 9, 13, 17, 21, 25, 29,"]
+    #[doc = "            33, 37, 41, 45, 49, 53, 57, 61,"]
+    #[doc = "            65, 69, 73, 77, 81, 85, 89, 93,"]
+    #[doc = "            97, 101, 105, 109, 113, 117, 121, 125,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u8x32(self, rhs)
@@ -2850,7 +3322,9 @@ impl<S: Simd> core::ops::Not for u8x32<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u8x32(self, rhs)
@@ -2864,14 +3338,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u8x32<S> {
 }
 impl<S: Simd> core::ops::Shl for u8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u8x32<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u8x32(*self, rhs);
@@ -2879,7 +3361,9 @@ impl<S: Simd> core::ops::ShlAssign for u8x32<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u8x32(self, rhs)
@@ -2893,14 +3377,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u8x32<S> {
 }
 impl<S: Simd> core::ops::Shr for u8x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u8x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u8x32<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u8x32(*self, rhs);
@@ -2969,7 +3461,38 @@ impl<S: Simd> core::ops::Neg for i16x16<S> {
 }
 impl<S: Simd> core::ops::Add for i16x16<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, i16x16};\n# fearless_simd::__simd_doctest! { add_i16x16,\n#[inline(always)]\nfn add_i16x16<S: Simd>(simd: S) {\n    let a = i16x16::simd_from(\n        simd,\n        [\n            1, -1, 3, -3, 5, -5, 7, -7,\n            9, -9, 11, -11, 13, -13, 15, -15,\n        ],\n    );\n    let b = i16x16::simd_from(\n        simd,\n        [\n            2, -2, 4, -4, 6, -6, 8, -8,\n            10, -10, 12, -12, 14, -14, 16, -16,\n        ],\n    );\n\n    assert_eq!(\n        <[i16; 16]>::from(a + b),\n        [\n            3, -3, 7, -7, 11, -11, 15, -15,\n            19, -19, 23, -23, 27, -27, 31, -31,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, i16x16};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_i16x16,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_i16x16<S: Simd>(simd: S) {"]
+    #[doc = "    let a = i16x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, -1, 3, -3, 5, -5, 7, -7,"]
+    #[doc = "            9, -9, 11, -11, 13, -13, 15, -15,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = i16x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            2, -2, 4, -4, 6, -6, 8, -8,"]
+    #[doc = "            10, -10, 12, -12, 14, -14, 16, -16,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[i16; 16]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            3, -3, 7, -7, 11, -11, 15, -15,"]
+    #[doc = "            19, -19, 23, -23, 27, -27, 31, -31,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i16x16(self, rhs)
@@ -3187,7 +3710,9 @@ impl<S: Simd> core::ops::Not for i16x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i16x16(self, rhs)
@@ -3201,14 +3726,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i16x16<S> {
 }
 impl<S: Simd> core::ops::Shl for i16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i16x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i16x16(*self, rhs);
@@ -3216,7 +3749,9 @@ impl<S: Simd> core::ops::ShlAssign for i16x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i16x16(self, rhs)
@@ -3230,14 +3765,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i16x16<S> {
 }
 impl<S: Simd> core::ops::Shr for i16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i16x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i16x16(*self, rhs);
@@ -3245,7 +3788,38 @@ impl<S: Simd> core::ops::ShrAssign for i16x16<S> {
 }
 impl<S: Simd> core::ops::Add for u16x16<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, u16x16};\n# fearless_simd::__simd_doctest! { add_u16x16,\n#[inline(always)]\nfn add_u16x16<S: Simd>(simd: S) {\n    let a = u16x16::simd_from(\n        simd,\n        [\n            0, 2, 4, 6, 8, 10, 12, 14,\n            16, 18, 20, 22, 24, 26, 28, 30,\n        ],\n    );\n    let b = u16x16::simd_from(\n        simd,\n        [\n            1, 3, 5, 7, 9, 11, 13, 15,\n            17, 19, 21, 23, 25, 27, 29, 31,\n        ],\n    );\n\n    assert_eq!(\n        <[u16; 16]>::from(a + b),\n        [\n            1, 5, 9, 13, 17, 21, 25, 29,\n            33, 37, 41, 45, 49, 53, 57, 61,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, u16x16};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_u16x16,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_u16x16<S: Simd>(simd: S) {"]
+    #[doc = "    let a = u16x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0, 2, 4, 6, 8, 10, 12, 14,"]
+    #[doc = "            16, 18, 20, 22, 24, 26, 28, 30,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = u16x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, 3, 5, 7, 9, 11, 13, 15,"]
+    #[doc = "            17, 19, 21, 23, 25, 27, 29, 31,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[u16; 16]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1, 5, 9, 13, 17, 21, 25, 29,"]
+    #[doc = "            33, 37, 41, 45, 49, 53, 57, 61,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u16x16(self, rhs)
@@ -3463,7 +4037,9 @@ impl<S: Simd> core::ops::Not for u16x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u16x16(self, rhs)
@@ -3477,14 +4053,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u16x16<S> {
 }
 impl<S: Simd> core::ops::Shl for u16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u16x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u16x16(*self, rhs);
@@ -3492,7 +4076,9 @@ impl<S: Simd> core::ops::ShlAssign for u16x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u16x16(self, rhs)
@@ -3506,14 +4092,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u16x16<S> {
 }
 impl<S: Simd> core::ops::Shr for u16x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u16x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u16x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u16x16(*self, rhs);
@@ -3582,7 +4176,35 @@ impl<S: Simd> core::ops::Neg for i32x8<S> {
 }
 impl<S: Simd> core::ops::Add for i32x8<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, i32x8};\n# fearless_simd::__simd_doctest! { add_i32x8,\n#[inline(always)]\nfn add_i32x8<S: Simd>(simd: S) {\n    let a = i32x8::simd_from(\n        simd,\n        [\n            1, -1, 3, -3, 5, -5, 7, -7,\n        ],\n    );\n    let b = i32x8::simd_from(\n        simd,\n        [\n            2, -2, 4, -4, 6, -6, 8, -8,\n        ],\n    );\n\n    assert_eq!(\n        <[i32; 8]>::from(a + b),\n        [\n            3, -3, 7, -7, 11, -11, 15, -15,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, i32x8};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_i32x8,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_i32x8<S: Simd>(simd: S) {"]
+    #[doc = "    let a = i32x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, -1, 3, -3, 5, -5, 7, -7,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = i32x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            2, -2, 4, -4, 6, -6, 8, -8,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[i32; 8]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            3, -3, 7, -7, 11, -11, 15, -15,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i32x8(self, rhs)
@@ -3800,7 +4422,9 @@ impl<S: Simd> core::ops::Not for i32x8<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i32x8(self, rhs)
@@ -3814,14 +4438,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::Shl for i32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i32x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i32x8(*self, rhs);
@@ -3829,7 +4461,9 @@ impl<S: Simd> core::ops::ShlAssign for i32x8<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i32x8(self, rhs)
@@ -3843,14 +4477,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i32x8<S> {
 }
 impl<S: Simd> core::ops::Shr for i32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i32x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i32x8(*self, rhs);
@@ -3858,7 +4500,35 @@ impl<S: Simd> core::ops::ShrAssign for i32x8<S> {
 }
 impl<S: Simd> core::ops::Add for u32x8<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, u32x8};\n# fearless_simd::__simd_doctest! { add_u32x8,\n#[inline(always)]\nfn add_u32x8<S: Simd>(simd: S) {\n    let a = u32x8::simd_from(\n        simd,\n        [\n            0, 2, 4, 6, 8, 10, 12, 14,\n        ],\n    );\n    let b = u32x8::simd_from(\n        simd,\n        [\n            1, 3, 5, 7, 9, 11, 13, 15,\n        ],\n    );\n\n    assert_eq!(\n        <[u32; 8]>::from(a + b),\n        [\n            1, 5, 9, 13, 17, 21, 25, 29,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, u32x8};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_u32x8,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_u32x8<S: Simd>(simd: S) {"]
+    #[doc = "    let a = u32x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0, 2, 4, 6, 8, 10, 12, 14,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = u32x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, 3, 5, 7, 9, 11, 13, 15,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[u32; 8]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1, 5, 9, 13, 17, 21, 25, 29,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u32x8(self, rhs)
@@ -4076,7 +4746,9 @@ impl<S: Simd> core::ops::Not for u32x8<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u32x8(self, rhs)
@@ -4090,14 +4762,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::Shl for u32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u32x8<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u32x8(*self, rhs);
@@ -4105,7 +4785,9 @@ impl<S: Simd> core::ops::ShlAssign for u32x8<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u32x8(self, rhs)
@@ -4119,14 +4801,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u32x8<S> {
 }
 impl<S: Simd> core::ops::Shr for u32x8<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u32x8(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u32x8<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u32x8(*self, rhs);
@@ -4195,7 +4885,35 @@ impl<S: Simd> core::ops::Neg for f64x4<S> {
 }
 impl<S: Simd> core::ops::Add for f64x4<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise.\n\n```rust\n# use fearless_simd::{prelude::*, f64x4};\n# fearless_simd::__simd_doctest! { add_f64x4,\n#[inline(always)]\nfn add_f64x4<S: Simd>(simd: S) {\n    let a = f64x4::simd_from(\n        simd,\n        [\n            0.0, 2.0, 4.0, 6.0,\n        ],\n    );\n    let b = f64x4::simd_from(\n        simd,\n        [\n            1.0, 3.0, 5.0, 7.0,\n        ],\n    );\n\n    assert_eq!(\n        <[f64; 4]>::from(a + b),\n        [\n            1.0, 5.0, 9.0, 13.0,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, f64x4};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_f64x4,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_f64x4<S: Simd>(simd: S) {"]
+    #[doc = "    let a = f64x4::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0.0, 2.0, 4.0, 6.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = f64x4::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 3.0, 5.0, 7.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[f64; 4]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 5.0, 9.0, 13.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f64x4(self, rhs)
@@ -4396,7 +5114,38 @@ impl<S: Simd> core::ops::Neg for f32x16<S> {
 }
 impl<S: Simd> core::ops::Add for f32x16<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise.\n\n```rust\n# use fearless_simd::{prelude::*, f32x16};\n# fearless_simd::__simd_doctest! { add_f32x16,\n#[inline(always)]\nfn add_f32x16<S: Simd>(simd: S) {\n    let a = f32x16::simd_from(\n        simd,\n        [\n            0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0,\n            16.0, 18.0, 20.0, 22.0, 24.0, 26.0, 28.0, 30.0,\n        ],\n    );\n    let b = f32x16::simd_from(\n        simd,\n        [\n            1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0,\n            17.0, 19.0, 21.0, 23.0, 25.0, 27.0, 29.0, 31.0,\n        ],\n    );\n\n    assert_eq!(\n        <[f32; 16]>::from(a + b),\n        [\n            1.0, 5.0, 9.0, 13.0, 17.0, 21.0, 25.0, 29.0,\n            33.0, 37.0, 41.0, 45.0, 49.0, 53.0, 57.0, 61.0,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, f32x16};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_f32x16,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_f32x16<S: Simd>(simd: S) {"]
+    #[doc = "    let a = f32x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0,"]
+    #[doc = "            16.0, 18.0, 20.0, 22.0, 24.0, 26.0, 28.0, 30.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = f32x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0,"]
+    #[doc = "            17.0, 19.0, 21.0, 23.0, 25.0, 27.0, 29.0, 31.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[f32; 16]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 5.0, 9.0, 13.0, 17.0, 21.0, 25.0, 29.0,"]
+    #[doc = "            33.0, 37.0, 41.0, 45.0, 49.0, 53.0, 57.0, 61.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f32x16(self, rhs)
@@ -4544,7 +5293,56 @@ impl<S: Simd> core::ops::Neg for i8x64<S> {
 }
 impl<S: Simd> core::ops::Add for i8x64<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, i8x64};\n# fearless_simd::__simd_doctest! { add_i8x64,\n#[inline(always)]\nfn add_i8x64<S: Simd>(simd: S) {\n    let a = i8x64::simd_from(\n        simd,\n        [\n            1, -1, 3, -3, 5, -5, 7, -7,\n            9, -9, 11, -11, 13, -13, 15, -15,\n            17, -17, 19, -19, 21, -21, 23, -23,\n            25, -25, 27, -27, 29, -29, 31, -31,\n            33, -33, 35, -35, 37, -37, 39, -39,\n            41, -41, 43, -43, 45, -45, 47, -47,\n            49, -49, 51, -51, 53, -53, 55, -55,\n            57, -57, 59, -59, 61, -61, 63, -63,\n        ],\n    );\n    let b = i8x64::simd_from(\n        simd,\n        [\n            2, -2, 4, -4, 6, -6, 8, -8,\n            10, -10, 12, -12, 14, -14, 16, -16,\n            18, -18, 20, -20, 22, -22, 24, -24,\n            26, -26, 28, -28, 30, -30, 32, -32,\n            34, -34, 36, -36, 38, -38, 40, -40,\n            42, -42, 44, -44, 46, -46, 48, -48,\n            50, -50, 52, -52, 54, -54, 56, -56,\n            58, -58, 60, -60, 62, -62, 64, -64,\n        ],\n    );\n\n    assert_eq!(\n        <[i8; 64]>::from(a + b),\n        [\n            3, -3, 7, -7, 11, -11, 15, -15,\n            19, -19, 23, -23, 27, -27, 31, -31,\n            35, -35, 39, -39, 43, -43, 47, -47,\n            51, -51, 55, -55, 59, -59, 63, -63,\n            67, -67, 71, -71, 75, -75, 79, -79,\n            83, -83, 87, -87, 91, -91, 95, -95,\n            99, -99, 103, -103, 107, -107, 111, -111,\n            115, -115, 119, -119, 123, -123, 127, -127,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, i8x64};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_i8x64,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_i8x64<S: Simd>(simd: S) {"]
+    #[doc = "    let a = i8x64::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, -1, 3, -3, 5, -5, 7, -7,"]
+    #[doc = "            9, -9, 11, -11, 13, -13, 15, -15,"]
+    #[doc = "            17, -17, 19, -19, 21, -21, 23, -23,"]
+    #[doc = "            25, -25, 27, -27, 29, -29, 31, -31,"]
+    #[doc = "            33, -33, 35, -35, 37, -37, 39, -39,"]
+    #[doc = "            41, -41, 43, -43, 45, -45, 47, -47,"]
+    #[doc = "            49, -49, 51, -51, 53, -53, 55, -55,"]
+    #[doc = "            57, -57, 59, -59, 61, -61, 63, -63,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = i8x64::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            2, -2, 4, -4, 6, -6, 8, -8,"]
+    #[doc = "            10, -10, 12, -12, 14, -14, 16, -16,"]
+    #[doc = "            18, -18, 20, -20, 22, -22, 24, -24,"]
+    #[doc = "            26, -26, 28, -28, 30, -30, 32, -32,"]
+    #[doc = "            34, -34, 36, -36, 38, -38, 40, -40,"]
+    #[doc = "            42, -42, 44, -44, 46, -46, 48, -48,"]
+    #[doc = "            50, -50, 52, -52, 54, -54, 56, -56,"]
+    #[doc = "            58, -58, 60, -60, 62, -62, 64, -64,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[i8; 64]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            3, -3, 7, -7, 11, -11, 15, -15,"]
+    #[doc = "            19, -19, 23, -23, 27, -27, 31, -31,"]
+    #[doc = "            35, -35, 39, -39, 43, -43, 47, -47,"]
+    #[doc = "            51, -51, 55, -55, 59, -59, 63, -63,"]
+    #[doc = "            67, -67, 71, -71, 75, -75, 79, -79,"]
+    #[doc = "            83, -83, 87, -87, 91, -91, 95, -95,"]
+    #[doc = "            99, -99, 103, -103, 107, -107, 111, -111,"]
+    #[doc = "            115, -115, 119, -119, 123, -123, 127, -127,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i8x64(self, rhs)
@@ -4762,7 +5560,9 @@ impl<S: Simd> core::ops::Not for i8x64<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i8x64(self, rhs)
@@ -4776,14 +5576,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i8x64<S> {
 }
 impl<S: Simd> core::ops::Shl for i8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i8x64<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i8x64(*self, rhs);
@@ -4791,7 +5599,9 @@ impl<S: Simd> core::ops::ShlAssign for i8x64<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i8x64(self, rhs)
@@ -4805,14 +5615,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i8x64<S> {
 }
 impl<S: Simd> core::ops::Shr for i8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i8x64<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i8x64(*self, rhs);
@@ -4820,7 +5638,56 @@ impl<S: Simd> core::ops::ShrAssign for i8x64<S> {
 }
 impl<S: Simd> core::ops::Add for u8x64<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, u8x64};\n# fearless_simd::__simd_doctest! { add_u8x64,\n#[inline(always)]\nfn add_u8x64<S: Simd>(simd: S) {\n    let a = u8x64::simd_from(\n        simd,\n        [\n            0, 2, 4, 6, 8, 10, 12, 14,\n            16, 18, 20, 22, 24, 26, 28, 30,\n            32, 34, 36, 38, 40, 42, 44, 46,\n            48, 50, 52, 54, 56, 58, 60, 62,\n            64, 66, 68, 70, 72, 74, 76, 78,\n            80, 82, 84, 86, 88, 90, 92, 94,\n            96, 98, 100, 102, 104, 106, 108, 110,\n            112, 114, 116, 118, 120, 122, 124, 126,\n        ],\n    );\n    let b = u8x64::simd_from(\n        simd,\n        [\n            1, 3, 5, 7, 9, 11, 13, 15,\n            17, 19, 21, 23, 25, 27, 29, 31,\n            33, 35, 37, 39, 41, 43, 45, 47,\n            49, 51, 53, 55, 57, 59, 61, 63,\n            65, 67, 69, 71, 73, 75, 77, 79,\n            81, 83, 85, 87, 89, 91, 93, 95,\n            97, 99, 101, 103, 105, 107, 109, 111,\n            113, 115, 117, 119, 121, 123, 125, 127,\n        ],\n    );\n\n    assert_eq!(\n        <[u8; 64]>::from(a + b),\n        [\n            1, 5, 9, 13, 17, 21, 25, 29,\n            33, 37, 41, 45, 49, 53, 57, 61,\n            65, 69, 73, 77, 81, 85, 89, 93,\n            97, 101, 105, 109, 113, 117, 121, 125,\n            129, 133, 137, 141, 145, 149, 153, 157,\n            161, 165, 169, 173, 177, 181, 185, 189,\n            193, 197, 201, 205, 209, 213, 217, 221,\n            225, 229, 233, 237, 241, 245, 249, 253,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, u8x64};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_u8x64,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_u8x64<S: Simd>(simd: S) {"]
+    #[doc = "    let a = u8x64::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0, 2, 4, 6, 8, 10, 12, 14,"]
+    #[doc = "            16, 18, 20, 22, 24, 26, 28, 30,"]
+    #[doc = "            32, 34, 36, 38, 40, 42, 44, 46,"]
+    #[doc = "            48, 50, 52, 54, 56, 58, 60, 62,"]
+    #[doc = "            64, 66, 68, 70, 72, 74, 76, 78,"]
+    #[doc = "            80, 82, 84, 86, 88, 90, 92, 94,"]
+    #[doc = "            96, 98, 100, 102, 104, 106, 108, 110,"]
+    #[doc = "            112, 114, 116, 118, 120, 122, 124, 126,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = u8x64::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, 3, 5, 7, 9, 11, 13, 15,"]
+    #[doc = "            17, 19, 21, 23, 25, 27, 29, 31,"]
+    #[doc = "            33, 35, 37, 39, 41, 43, 45, 47,"]
+    #[doc = "            49, 51, 53, 55, 57, 59, 61, 63,"]
+    #[doc = "            65, 67, 69, 71, 73, 75, 77, 79,"]
+    #[doc = "            81, 83, 85, 87, 89, 91, 93, 95,"]
+    #[doc = "            97, 99, 101, 103, 105, 107, 109, 111,"]
+    #[doc = "            113, 115, 117, 119, 121, 123, 125, 127,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[u8; 64]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1, 5, 9, 13, 17, 21, 25, 29,"]
+    #[doc = "            33, 37, 41, 45, 49, 53, 57, 61,"]
+    #[doc = "            65, 69, 73, 77, 81, 85, 89, 93,"]
+    #[doc = "            97, 101, 105, 109, 113, 117, 121, 125,"]
+    #[doc = "            129, 133, 137, 141, 145, 149, 153, 157,"]
+    #[doc = "            161, 165, 169, 173, 177, 181, 185, 189,"]
+    #[doc = "            193, 197, 201, 205, 209, 213, 217, 221,"]
+    #[doc = "            225, 229, 233, 237, 241, 245, 249, 253,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u8x64(self, rhs)
@@ -5038,7 +5905,9 @@ impl<S: Simd> core::ops::Not for u8x64<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u8x64(self, rhs)
@@ -5052,14 +5921,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u8x64<S> {
 }
 impl<S: Simd> core::ops::Shl for u8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u8x64<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u8x64(*self, rhs);
@@ -5067,7 +5944,9 @@ impl<S: Simd> core::ops::ShlAssign for u8x64<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u8x64(self, rhs)
@@ -5081,14 +5960,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u8x64<S> {
 }
 impl<S: Simd> core::ops::Shr for u8x64<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u8x64(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u8x64<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u8x64(*self, rhs);
@@ -5157,7 +6044,44 @@ impl<S: Simd> core::ops::Neg for i16x32<S> {
 }
 impl<S: Simd> core::ops::Add for i16x32<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, i16x32};\n# fearless_simd::__simd_doctest! { add_i16x32,\n#[inline(always)]\nfn add_i16x32<S: Simd>(simd: S) {\n    let a = i16x32::simd_from(\n        simd,\n        [\n            1, -1, 3, -3, 5, -5, 7, -7,\n            9, -9, 11, -11, 13, -13, 15, -15,\n            17, -17, 19, -19, 21, -21, 23, -23,\n            25, -25, 27, -27, 29, -29, 31, -31,\n        ],\n    );\n    let b = i16x32::simd_from(\n        simd,\n        [\n            2, -2, 4, -4, 6, -6, 8, -8,\n            10, -10, 12, -12, 14, -14, 16, -16,\n            18, -18, 20, -20, 22, -22, 24, -24,\n            26, -26, 28, -28, 30, -30, 32, -32,\n        ],\n    );\n\n    assert_eq!(\n        <[i16; 32]>::from(a + b),\n        [\n            3, -3, 7, -7, 11, -11, 15, -15,\n            19, -19, 23, -23, 27, -27, 31, -31,\n            35, -35, 39, -39, 43, -43, 47, -47,\n            51, -51, 55, -55, 59, -59, 63, -63,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, i16x32};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_i16x32,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_i16x32<S: Simd>(simd: S) {"]
+    #[doc = "    let a = i16x32::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, -1, 3, -3, 5, -5, 7, -7,"]
+    #[doc = "            9, -9, 11, -11, 13, -13, 15, -15,"]
+    #[doc = "            17, -17, 19, -19, 21, -21, 23, -23,"]
+    #[doc = "            25, -25, 27, -27, 29, -29, 31, -31,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = i16x32::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            2, -2, 4, -4, 6, -6, 8, -8,"]
+    #[doc = "            10, -10, 12, -12, 14, -14, 16, -16,"]
+    #[doc = "            18, -18, 20, -20, 22, -22, 24, -24,"]
+    #[doc = "            26, -26, 28, -28, 30, -30, 32, -32,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[i16; 32]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            3, -3, 7, -7, 11, -11, 15, -15,"]
+    #[doc = "            19, -19, 23, -23, 27, -27, 31, -31,"]
+    #[doc = "            35, -35, 39, -39, 43, -43, 47, -47,"]
+    #[doc = "            51, -51, 55, -55, 59, -59, 63, -63,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i16x32(self, rhs)
@@ -5375,7 +6299,9 @@ impl<S: Simd> core::ops::Not for i16x32<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i16x32(self, rhs)
@@ -5389,14 +6315,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i16x32<S> {
 }
 impl<S: Simd> core::ops::Shl for i16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i16x32<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i16x32(*self, rhs);
@@ -5404,7 +6338,9 @@ impl<S: Simd> core::ops::ShlAssign for i16x32<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i16x32(self, rhs)
@@ -5418,14 +6354,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i16x32<S> {
 }
 impl<S: Simd> core::ops::Shr for i16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i16x32<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i16x32(*self, rhs);
@@ -5433,7 +6377,44 @@ impl<S: Simd> core::ops::ShrAssign for i16x32<S> {
 }
 impl<S: Simd> core::ops::Add for u16x32<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, u16x32};\n# fearless_simd::__simd_doctest! { add_u16x32,\n#[inline(always)]\nfn add_u16x32<S: Simd>(simd: S) {\n    let a = u16x32::simd_from(\n        simd,\n        [\n            0, 2, 4, 6, 8, 10, 12, 14,\n            16, 18, 20, 22, 24, 26, 28, 30,\n            32, 34, 36, 38, 40, 42, 44, 46,\n            48, 50, 52, 54, 56, 58, 60, 62,\n        ],\n    );\n    let b = u16x32::simd_from(\n        simd,\n        [\n            1, 3, 5, 7, 9, 11, 13, 15,\n            17, 19, 21, 23, 25, 27, 29, 31,\n            33, 35, 37, 39, 41, 43, 45, 47,\n            49, 51, 53, 55, 57, 59, 61, 63,\n        ],\n    );\n\n    assert_eq!(\n        <[u16; 32]>::from(a + b),\n        [\n            1, 5, 9, 13, 17, 21, 25, 29,\n            33, 37, 41, 45, 49, 53, 57, 61,\n            65, 69, 73, 77, 81, 85, 89, 93,\n            97, 101, 105, 109, 113, 117, 121, 125,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, u16x32};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_u16x32,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_u16x32<S: Simd>(simd: S) {"]
+    #[doc = "    let a = u16x32::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0, 2, 4, 6, 8, 10, 12, 14,"]
+    #[doc = "            16, 18, 20, 22, 24, 26, 28, 30,"]
+    #[doc = "            32, 34, 36, 38, 40, 42, 44, 46,"]
+    #[doc = "            48, 50, 52, 54, 56, 58, 60, 62,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = u16x32::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, 3, 5, 7, 9, 11, 13, 15,"]
+    #[doc = "            17, 19, 21, 23, 25, 27, 29, 31,"]
+    #[doc = "            33, 35, 37, 39, 41, 43, 45, 47,"]
+    #[doc = "            49, 51, 53, 55, 57, 59, 61, 63,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[u16; 32]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1, 5, 9, 13, 17, 21, 25, 29,"]
+    #[doc = "            33, 37, 41, 45, 49, 53, 57, 61,"]
+    #[doc = "            65, 69, 73, 77, 81, 85, 89, 93,"]
+    #[doc = "            97, 101, 105, 109, 113, 117, 121, 125,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u16x32(self, rhs)
@@ -5651,7 +6632,9 @@ impl<S: Simd> core::ops::Not for u16x32<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u16x32(self, rhs)
@@ -5665,14 +6648,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u16x32<S> {
 }
 impl<S: Simd> core::ops::Shl for u16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u16x32<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u16x32(*self, rhs);
@@ -5680,7 +6671,9 @@ impl<S: Simd> core::ops::ShlAssign for u16x32<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u16x32(self, rhs)
@@ -5694,14 +6687,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u16x32<S> {
 }
 impl<S: Simd> core::ops::Shr for u16x32<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u16x32(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u16x32<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u16x32(*self, rhs);
@@ -5770,7 +6771,38 @@ impl<S: Simd> core::ops::Neg for i32x16<S> {
 }
 impl<S: Simd> core::ops::Add for i32x16<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, i32x16};\n# fearless_simd::__simd_doctest! { add_i32x16,\n#[inline(always)]\nfn add_i32x16<S: Simd>(simd: S) {\n    let a = i32x16::simd_from(\n        simd,\n        [\n            1, -1, 3, -3, 5, -5, 7, -7,\n            9, -9, 11, -11, 13, -13, 15, -15,\n        ],\n    );\n    let b = i32x16::simd_from(\n        simd,\n        [\n            2, -2, 4, -4, 6, -6, 8, -8,\n            10, -10, 12, -12, 14, -14, 16, -16,\n        ],\n    );\n\n    assert_eq!(\n        <[i32; 16]>::from(a + b),\n        [\n            3, -3, 7, -7, 11, -11, 15, -15,\n            19, -19, 23, -23, 27, -27, 31, -31,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, i32x16};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_i32x16,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_i32x16<S: Simd>(simd: S) {"]
+    #[doc = "    let a = i32x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, -1, 3, -3, 5, -5, 7, -7,"]
+    #[doc = "            9, -9, 11, -11, 13, -13, 15, -15,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = i32x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            2, -2, 4, -4, 6, -6, 8, -8,"]
+    #[doc = "            10, -10, 12, -12, 14, -14, 16, -16,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[i32; 16]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            3, -3, 7, -7, 11, -11, 15, -15,"]
+    #[doc = "            19, -19, 23, -23, 27, -27, 31, -31,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_i32x16(self, rhs)
@@ -5988,7 +7020,9 @@ impl<S: Simd> core::ops::Not for i32x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_i32x16(self, rhs)
@@ -6002,14 +7036,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::Shl for i32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for i32x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_i32x16(*self, rhs);
@@ -6017,7 +7059,9 @@ impl<S: Simd> core::ops::ShlAssign for i32x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for i32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_i32x16(self, rhs)
@@ -6031,14 +7075,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for i32x16<S> {
 }
 impl<S: Simd> core::ops::Shr for i32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_i32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for i32x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_i32x16(*self, rhs);
@@ -6046,7 +7098,38 @@ impl<S: Simd> core::ops::ShrAssign for i32x16<S> {
 }
 impl<S: Simd> core::ops::Add for u32x16<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise, wrapping on overflow.\n\n```rust\n# use fearless_simd::{prelude::*, u32x16};\n# fearless_simd::__simd_doctest! { add_u32x16,\n#[inline(always)]\nfn add_u32x16<S: Simd>(simd: S) {\n    let a = u32x16::simd_from(\n        simd,\n        [\n            0, 2, 4, 6, 8, 10, 12, 14,\n            16, 18, 20, 22, 24, 26, 28, 30,\n        ],\n    );\n    let b = u32x16::simd_from(\n        simd,\n        [\n            1, 3, 5, 7, 9, 11, 13, 15,\n            17, 19, 21, 23, 25, 27, 29, 31,\n        ],\n    );\n\n    assert_eq!(\n        <[u32; 16]>::from(a + b),\n        [\n            1, 5, 9, 13, 17, 21, 25, 29,\n            33, 37, 41, 45, 49, 53, 57, 61,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, u32x16};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_u32x16,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_u32x16<S: Simd>(simd: S) {"]
+    #[doc = "    let a = u32x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0, 2, 4, 6, 8, 10, 12, 14,"]
+    #[doc = "            16, 18, 20, 22, 24, 26, 28, 30,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = u32x16::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1, 3, 5, 7, 9, 11, 13, 15,"]
+    #[doc = "            17, 19, 21, 23, 25, 27, 29, 31,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[u32; 16]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1, 5, 9, 13, 17, 21, 25, 29,"]
+    #[doc = "            33, 37, 41, 45, 49, 53, 57, 61,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_u32x16(self, rhs)
@@ -6264,7 +7347,9 @@ impl<S: Simd> core::ops::Not for u32x16<S> {
 }
 impl<S: Simd> core::ops::Shl<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
     #[inline(always)]
     fn shl(self, rhs: u32) -> Self::Output {
         self.simd.shl_u32x16(self, rhs)
@@ -6278,14 +7363,22 @@ impl<S: Simd> core::ops::ShlAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::Shl for u32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl(self, rhs: Self) -> Self::Output {
         self.simd.shlv_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShlAssign for u32x16<S> {
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits."]
+    #[doc = ""]
+    #[doc = "Bits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shl_assign(&mut self, rhs: Self) {
         *self = self.simd.shlv_u32x16(*self, rhs);
@@ -6293,7 +7386,9 @@ impl<S: Simd> core::ops::ShlAssign for u32x16<S> {
 }
 impl<S: Simd> core::ops::Shr<u32> for u32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
     #[inline(always)]
     fn shr(self, rhs: u32) -> Self::Output {
         self.simd.shr_u32x16(self, rhs)
@@ -6307,14 +7402,22 @@ impl<S: Simd> core::ops::ShrAssign<u32> for u32x16<S> {
 }
 impl<S: Simd> core::ops::Shr for u32x16<S> {
     type Output = Self;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr(self, rhs: Self) -> Self::Output {
         self.simd.shrv_u32x16(self, rhs)
     }
 }
 impl<S: Simd> core::ops::ShrAssign for u32x16<S> {
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector."]
+    #[doc = ""]
+    #[doc = "For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = ""]
+    #[doc = "This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     #[inline(always)]
     fn shr_assign(&mut self, rhs: Self) {
         *self = self.simd.shrv_u32x16(*self, rhs);
@@ -6383,7 +7486,35 @@ impl<S: Simd> core::ops::Neg for f64x8<S> {
 }
 impl<S: Simd> core::ops::Add for f64x8<S> {
     type Output = Self;
-    #[doc = "Add two vectors element-wise.\n\n```rust\n# use fearless_simd::{prelude::*, f64x8};\n# fearless_simd::__simd_doctest! { add_f64x8,\n#[inline(always)]\nfn add_f64x8<S: Simd>(simd: S) {\n    let a = f64x8::simd_from(\n        simd,\n        [\n            0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0,\n        ],\n    );\n    let b = f64x8::simd_from(\n        simd,\n        [\n            1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0,\n        ],\n    );\n\n    assert_eq!(\n        <[f64; 8]>::from(a + b),\n        [\n            1.0, 5.0, 9.0, 13.0, 17.0, 21.0, 25.0, 29.0,\n        ],\n    );\n}\n# }\n```"]
+    #[doc = "Add two vectors element-wise."]
+    #[doc = ""]
+    #[doc = "```rust"]
+    #[doc = "# use fearless_simd::{prelude::*, f64x8};"]
+    #[doc = "# fearless_simd::__simd_doctest! { add_f64x8,"]
+    #[doc = "#[inline(always)]"]
+    #[doc = "fn add_f64x8<S: Simd>(simd: S) {"]
+    #[doc = "    let a = f64x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "    let b = f64x8::simd_from("]
+    #[doc = "        simd,"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = ""]
+    #[doc = "    assert_eq!("]
+    #[doc = "        <[f64; 8]>::from(a + b),"]
+    #[doc = "        ["]
+    #[doc = "            1.0, 5.0, 9.0, 13.0, 17.0, 21.0, 25.0, 29.0,"]
+    #[doc = "        ],"]
+    #[doc = "    );"]
+    #[doc = "}"]
+    #[doc = "# }"]
+    #[doc = "```"]
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         self.simd.add_f64x8(self, rhs)
