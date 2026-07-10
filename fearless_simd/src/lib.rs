@@ -448,8 +448,6 @@ impl Level {
     /// Check whether this is the `Fallback` level; that is, whether no better feature level could
     /// be statically or dynamically detected. This is useful if there's a scalarized version of
     /// your algorithm that runs faster if SIMD isn't supported.
-    ///
-    /// This method is always available.
     pub fn is_fallback(self) -> bool {
         matches!(self, Self::Fallback(_))
     }
@@ -759,9 +757,6 @@ impl Level {
             }
         }
 
-        // NEON and wasm SIMD do not have x86-style runtime multiversioning.
-        // These branches still normalize `Level::Fallback` to the ambient baseline
-        // when SIMD is statically enabled, while preserving explicit SIMD tokens.
         #[cfg(target_arch = "aarch64")]
         {
             let baseline = Self::baseline();
