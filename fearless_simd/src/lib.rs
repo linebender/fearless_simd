@@ -740,6 +740,7 @@ impl Level {
 
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
+            #[allow(unused_variables, reason = "Unused with all cfgs active")]
             let baseline = Self::baseline();
 
             #[cfg(not(disable_dispatch_avx512))]
