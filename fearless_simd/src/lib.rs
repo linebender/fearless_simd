@@ -722,6 +722,67 @@ impl Level {
         }
     }
 
+    #[doc(hidden)]
+    #[inline]
+    pub fn __dispatch_target(self) -> Self {
+        // Dispatch compiles only the selected multiversioned backends, but public tokens can
+        // still name lower levels even when the ambient target baseline makes those backends
+        // redundant. Normalize the proof to the best dispatchable level, while leaving exact
+        // token identity available for `kernel!` and explicit token use.
+        #[cfg(feature = "force_support_fallback")]
+        #[allow(
+            irrefutable_let_patterns,
+            reason = "On targets without supported SIMD, Fallback is the only Level variant."
+        )]
+        if let Self::Fallback(fallback) = self {
+            return Self::Fallback(fallback);
+        }
+
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            let baseline = Self::baseline();
+
+            #[cfg(not(disable_dispatch_avx512))]
+            if let Some(avx512) = self.as_avx512().or_else(|| baseline.as_avx512()) {
+                return Self::Avx512(avx512);
+            }
+
+            #[cfg(not(disable_dispatch_avx2))]
+            if let Some(avx2) = self.as_avx2().or_else(|| baseline.as_avx2()) {
+                return Self::Avx2(avx2);
+            }
+
+            #[cfg(not(disable_dispatch_sse4_2))]
+            if let Some(sse4_2) = self.as_sse4_2().or_else(|| baseline.as_sse4_2()) {
+                return Self::Sse4_2(sse4_2);
+            }
+        }
+
+        // NEON and wasm SIMD do not have x86-style runtime multiversioning.
+        // These branches still normalize `Level::Fallback` to the ambient baseline
+        // when SIMD is statically enabled, while preserving explicit SIMD tokens.
+        #[cfg(target_arch = "aarch64")]
+        {
+            let baseline = Self::baseline();
+            if let Some(neon) = self.as_neon().or_else(|| baseline.as_neon()) {
+                return Self::Neon(neon);
+            }
+        }
+
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        {
+            let baseline = Self::baseline();
+            if let Some(wasm) = self
+                .as_wasm_simd128()
+                .or_else(|| baseline.as_wasm_simd128())
+            {
+                return Self::WasmSimd128(wasm);
+            }
+        }
+
+        Self::Fallback(Fallback::new())
+    }
+
     /// Create a scalar fallback level, which uses no SIMD instructions.
     ///
     /// This is primarily intended for tests; most users should prefer [`Level::new`] or [`Level::baseline`].
