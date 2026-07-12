@@ -1213,10 +1213,13 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, b: u8x16<Sse4_2>) -> mask8x16<Sse4_2> {
-                let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
-                let a_signed = _mm_xor_si128(a.into(), sign_bit);
-                let b_signed = _mm_xor_si128(b.into(), sign_bit);
-                _mm_cmpgt_epi8(b_signed, a_signed).simd_into(token)
+                {
+                    let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
+                    let lhs_signed = _mm_xor_si128(b.into(), sign_bit);
+                    let rhs_signed = _mm_xor_si128(a.into(), sign_bit);
+                    _mm_cmpgt_epi8(lhs_signed, rhs_signed)
+                }
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -1246,10 +1249,13 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, b: u8x16<Sse4_2>) -> mask8x16<Sse4_2> {
-                let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
-                let a_signed = _mm_xor_si128(a.into(), sign_bit);
-                let b_signed = _mm_xor_si128(b.into(), sign_bit);
-                _mm_cmpgt_epi8(a_signed, b_signed).simd_into(token)
+                {
+                    let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
+                    let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
+                    let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
+                    _mm_cmpgt_epi8(lhs_signed, rhs_signed)
+                }
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2106,10 +2112,13 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, b: u16x8<Sse4_2>) -> mask16x8<Sse4_2> {
-                let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
-                let a_signed = _mm_xor_si128(a.into(), sign_bit);
-                let b_signed = _mm_xor_si128(b.into(), sign_bit);
-                _mm_cmpgt_epi16(b_signed, a_signed).simd_into(token)
+                {
+                    let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
+                    let lhs_signed = _mm_xor_si128(b.into(), sign_bit);
+                    let rhs_signed = _mm_xor_si128(a.into(), sign_bit);
+                    _mm_cmpgt_epi16(lhs_signed, rhs_signed)
+                }
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -2139,10 +2148,13 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, b: u16x8<Sse4_2>) -> mask16x8<Sse4_2> {
-                let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
-                let a_signed = _mm_xor_si128(a.into(), sign_bit);
-                let b_signed = _mm_xor_si128(b.into(), sign_bit);
-                _mm_cmpgt_epi16(a_signed, b_signed).simd_into(token)
+                {
+                    let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
+                    let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
+                    let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
+                    _mm_cmpgt_epi16(lhs_signed, rhs_signed)
+                }
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3002,10 +3014,13 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, b: u32x4<Sse4_2>) -> mask32x4<Sse4_2> {
-                let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
-                let a_signed = _mm_xor_si128(a.into(), sign_bit);
-                let b_signed = _mm_xor_si128(b.into(), sign_bit);
-                _mm_cmpgt_epi32(b_signed, a_signed).simd_into(token)
+                {
+                    let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
+                    let lhs_signed = _mm_xor_si128(b.into(), sign_bit);
+                    let rhs_signed = _mm_xor_si128(a.into(), sign_bit);
+                    _mm_cmpgt_epi32(lhs_signed, rhs_signed)
+                }
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -3035,10 +3050,13 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, b: u32x4<Sse4_2>) -> mask32x4<Sse4_2> {
-                let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
-                let a_signed = _mm_xor_si128(a.into(), sign_bit);
-                let b_signed = _mm_xor_si128(b.into(), sign_bit);
-                _mm_cmpgt_epi32(a_signed, b_signed).simd_into(token)
+                {
+                    let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
+                    let lhs_signed = _mm_xor_si128(a.into(), sign_bit);
+                    let rhs_signed = _mm_xor_si128(b.into(), sign_bit);
+                    _mm_cmpgt_epi32(lhs_signed, rhs_signed)
+                }
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -10103,182 +10121,6 @@ impl Simd for Sse4_2 {
                 simd: self,
             },
         )
-    }
-}
-impl<S: Simd> SimdFrom<__m128, S> for f32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<f32x4<S>> for __m128 {
-    #[inline(always)]
-    fn from(value: f32x4<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i8x16<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i8x16<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i8x16<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u8x16<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u8x16<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u8x16<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask8x16<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i8; 16usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask8x16<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask8x16<S>) -> Self {
-        let lanes: [i8; 16usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i16x8<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i16x8<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i16x8<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u16x8<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u16x8<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u16x8<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask16x8<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask16x8<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask16x8<S>) -> Self {
-        let lanes: [i16; 8usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i32x4<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i32x4<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u32x4<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u32x4<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i32; 4usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask32x4<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask32x4<S>) -> Self {
-        let lanes: [i32; 4usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-impl<S: Simd> SimdFrom<__m128d, S> for f64x2<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128d) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<f64x2<S>> for __m128d {
-    #[inline(always)]
-    fn from(value: f64x2<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask64x2<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i64; 2usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask64x2<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask64x2<S>) -> Self {
-        let lanes: [i64; 2usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
     }
 }
 crate::kernel!(

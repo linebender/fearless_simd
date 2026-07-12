@@ -15,7 +15,7 @@ use crate::{
 };
 #[doc = r" The main SIMD trait, implemented by all SIMD token types."]
 #[doc = r""]
-#[doc = r#" Each implementor of this trait (e.g. `Avx2`, `Sse4_2`, `Neon`, `Fallback`) is a zero-sized "token" type"#]
+#[doc = r#" Each implementor of this trait (e.g. `Avx2`, `Sse4_2`, `Sse2`, `Neon`, `Fallback`) is a zero-sized "token" type"#]
 #[doc = r" representing a specific SIMD instruction set. These tokens are obtained at runtime via [`Level`] and the"]
 #[doc = r" [`dispatch!`](crate::dispatch) macro, which selects the best available backend for the current CPU."]
 #[doc = r""]
@@ -28,7 +28,7 @@ use crate::{
 #[doc = r""]
 #[doc = r#" The trait defines associated types for the highest "native" vector width of each scalar type (e.g. `f32s`,"#]
 #[doc = r" `u32s`). These are always at least 128 bits, but may be larger. Currently, they are 128 bits on the"]
-#[doc = r" fallback, NEON, WASM, and SSE4.2 backends, 256 bits on AVX2, and 512 bits on AVX-512."]
+#[doc = r" fallback, NEON, WASM, SSE2, and SSE4.2 backends, 256 bits on AVX2, and 512 bits on AVX-512."]
 #[doc = r""]
 #[doc = r" # Example"]
 #[doc = r""]

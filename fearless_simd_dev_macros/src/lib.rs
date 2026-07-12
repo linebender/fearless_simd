@@ -19,6 +19,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let fallback_name = get_ident("fallback");
     let neon_name = get_ident("neon");
+    let sse2_name = get_ident("sse2");
     let sse4_name = get_ident("sse4");
     let avx2_name = get_ident("avx2");
     let avx512_name = get_ident("avx512");
@@ -39,6 +40,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
 
     let ignore_fallback = ignore_attr(exclude_fallback);
     let ignore_neon = ignore_attr(exclude_neon);
+    let ignore_sse2 = ignore_attr(exclude_sse2);
     let ignore_sse4 = ignore_attr(exclude_sse4);
     let ignore_avx2 = ignore_attr(exclude_avx2);
     let ignore_avx512 = ignore_attr(exclude_avx512);
@@ -88,6 +90,24 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
                 sse4.vectorize(
                     #[inline(always)]
                     || #input_fn_name(sse4)
+                );
+            }
+        }
+    };
+
+    let sse2_snippet = quote! {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #[test]
+        #ignore_sse2
+        fn #sse2_name() {
+            if std::arch::is_x86_feature_detected!("fxsr")
+                && std::arch::is_x86_feature_detected!("sse")
+                && std::arch::is_x86_feature_detected!("sse2")
+            {
+                let sse2 = unsafe { fearless_simd::x86::Sse2::new_unchecked() };
+                sse2.vectorize(
+                    #[inline(always)]
+                    || #input_fn_name(sse2)
                 );
             }
         }
@@ -181,6 +201,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #fallback_snippet
         #neon_snippet
         #wasm_snippet
+        #sse2_snippet
         #sse4_snippet
         #avx2_snippet
         #avx512_snippet
@@ -200,6 +221,10 @@ fn exclude_fallback(_test_name: &str) -> bool {
 }
 
 fn exclude_sse4(_test_name: &str) -> bool {
+    false
+}
+
+fn exclude_sse2(_test_name: &str) -> bool {
     false
 }
 

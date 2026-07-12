@@ -8,7 +8,7 @@
 /// use platform-specific intrinsics for parts of the computation.
 ///
 /// The first argument must be a SIMD token written as `token: Neon`,
-/// `token: WasmSimd128`, `token: Sse4_2`, `token: Avx2`, or `token: Avx512`.
+/// `token: WasmSimd128`, `token: Sse2`, `token: Sse4_2`, `token: Avx2`, or `token: Avx512`.
 ///
 /// For levels with runtime-detected target features, the macro runs your body
 /// inside an inner function annotated with the appropriate `#[target_feature]`
@@ -54,7 +54,7 @@
 /// However, the body of the function can be as complex as you like.
 ///
 /// The SIMD token type must be written as a bare supported name:
-/// literally `Neon`, `WasmSimd128`, `Sse4_2`, `Avx2`, or `Avx512`. No paths or aliases.
+/// literally `Neon`, `WasmSimd128`, `Sse2`, `Sse4_2`, `Avx2`, or `Avx512`. No paths or aliases.
 ///
 /// For soundness, this macro only accepts safe functions.
 ///
@@ -93,7 +93,7 @@ macro_rules! kernel {
     ) => {
         compile_error!(concat!(
             "fearless_simd::kernel! expects its SIMD token argument type to be written as ",
-            "one of `Neon`, `WasmSimd128`, `Sse4_2`, `Avx2`, or `Avx512`; got `",
+            "one of `Neon`, `WasmSimd128`, `Sse2`, `Sse4_2`, `Avx2`, or `Avx512`; got `",
             stringify!($token_ty),
             "`",
         ));
@@ -123,6 +123,18 @@ macro_rules! __fearless_simd_kernel_dispatch {
             @cfg all(target_arch = "wasm32", target_feature = "simd128");
             @token_ty $crate::WasmSimd128;
             @kernel_attrs;
+            $($body)*
+        }
+    };
+
+    (
+        Sse2,
+        $($body:tt)*
+    ) => {
+        $crate::__fearless_simd_kernel_impl! {
+            @cfg any(target_arch = "x86", target_arch = "x86_64");
+            @token_ty $crate::Sse2;
+            @kernel_attrs #[target_feature(enable = "fxsr,sse,sse2")];
             $($body)*
         }
     };
@@ -173,7 +185,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
     ) => {
         compile_error!(concat!(
             "fearless_simd::kernel! expects its SIMD token argument type to be written as ",
-            "one of `Neon`, `WasmSimd128`, `Sse4_2`, `Avx2`, or `Avx512`; got `",
+            "one of `Neon`, `WasmSimd128`, `Sse2`, `Sse4_2`, `Avx2`, or `Avx512`; got `",
             stringify!($token_ty),
             "`",
         ));
@@ -230,9 +242,13 @@ mod tests {
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     use core::arch::wasm32::{f32x4_add, v128};
     #[cfg(target_arch = "x86")]
-    use core::arch::x86::{__m256i, __m512i, _mm256_add_epi32, _mm512_add_epi32};
+    use core::arch::x86::{
+        __m128i, __m256i, __m512i, _mm_add_epi32, _mm256_add_epi32, _mm512_add_epi32,
+    };
     #[cfg(target_arch = "x86_64")]
-    use core::arch::x86_64::{__m256i, __m512i, _mm256_add_epi32, _mm512_add_epi32};
+    use core::arch::x86_64::{
+        __m128i, __m256i, __m512i, _mm_add_epi32, _mm256_add_epi32, _mm512_add_epi32,
+    };
 
     crate::kernel!(
         fn add_f32x4_neon(neon: Neon, a: float32x4_t, b: float32x4_t) -> float32x4_t {
@@ -243,6 +259,12 @@ mod tests {
     crate::kernel!(
         fn add_f32x4_wasm(wasm: WasmSimd128, a: v128, b: v128) -> v128 {
             f32x4_add(a, b)
+        }
+    );
+
+    crate::kernel!(
+        fn add_i32x4_sse2(sse2: Sse2, a: __m128i, b: __m128i) -> __m128i {
+            _mm_add_epi32(a, b)
         }
     );
 
@@ -291,6 +313,24 @@ mod tests {
             <[f32; 4]>::from(sum),
             [11.0, 22.0, 33.0, 44.0],
             "`kernel!` should instantiate a working WASM SIMD128 kernel"
+        );
+    }
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[test]
+    fn kernel_instantiates_for_sse2() {
+        let Some(sse2) = crate::Level::new().as_sse2() else {
+            return;
+        };
+
+        let a: crate::i32x4<_> = [1, 2, 3, 4].simd_into(sse2);
+        let b: crate::i32x4<_> = [10, 20, 30, 40].simd_into(sse2);
+        let sum: crate::i32x4<_> = add_i32x4_sse2(sse2, a.into(), b.into()).simd_into(sse2);
+
+        assert_eq!(
+            <[i32; 4]>::from(sum),
+            [11, 22, 33, 44],
+            "`kernel!` should instantiate a working SSE2 kernel"
         );
     }
 

@@ -8,8 +8,8 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array, generic_to_bytes,
-    integer_lane_mask_splat_arg, scalar_binary,
+    generic_from_bytes, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
+    generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg, scalar_binary,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
@@ -19,16 +19,19 @@ use quote::{ToTokens as _, format_ident, quote};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum X86 {
+    Sse2,
     Sse4_2,
     Avx2,
     Avx512,
 }
 
+pub(crate) const SSE2_FEATURES: &str = "fxsr,sse,sse2";
 pub(crate) const AVX512_FEATURES: &str = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves";
 
 impl Level for X86 {
     fn name(&self) -> &'static str {
         match self {
+            Self::Sse2 => "Sse2",
             Self::Sse4_2 => "Sse4_2",
             Self::Avx2 => "Avx2",
             Self::Avx512 => "Avx512",
@@ -37,6 +40,7 @@ impl Level for X86 {
 
     fn native_width(&self) -> usize {
         match self {
+            Self::Sse2 => 128,
             Self::Sse4_2 => 128,
             Self::Avx2 => 256,
             Self::Avx512 => 512,
@@ -49,6 +53,7 @@ impl Level for X86 {
 
     fn enabled_target_features(&self) -> Option<&'static str> {
         Some(match self {
+            Self::Sse2 => SSE2_FEATURES,
             Self::Sse4_2 => "sse4.2,cmpxchg16b,popcnt",
             Self::Avx2 => "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave",
             Self::Avx512 => AVX512_FEATURES,
@@ -83,6 +88,9 @@ impl Level for X86 {
 
     fn token_doc(&self) -> &'static str {
         match self {
+            Self::Sse2 => {
+                "A token for SSE2 intrinsics on `x86` and `x86_64`, representing the x86-64 baseline."
+            }
             Self::Sse4_2 => {
                 "A token for SSE4.2 intrinsics on `x86` and `x86_64`, representing the x86-64-v2 level."
             }
@@ -96,11 +104,18 @@ impl Level for X86 {
     }
 
     fn make_module_prelude(&self) -> TokenStream {
+        let float_ext = if *self == Self::Sse2 {
+            crate::mk_fallback::float_ext_prelude()
+        } else {
+            TokenStream::new()
+        };
+
         quote! {
             #[cfg(target_arch = "x86")]
             use core::arch::x86::*;
             #[cfg(target_arch = "x86_64")]
             use core::arch::x86_64::*;
+            #float_ext
         }
     }
 
@@ -124,7 +139,7 @@ impl Level for X86 {
     fn make_module_footer(&self) -> TokenStream {
         let alignr_helpers = self.dyn_alignr_helpers();
         let slide_helpers = match self {
-            Self::Sse4_2 => Self::sse42_slide_helpers(),
+            Self::Sse2 | Self::Sse4_2 => Self::sse_slide_helpers(self.token()),
             Self::Avx2 => Self::avx2_slide_helpers(),
             Self::Avx512 => TokenStream::new(),
         };
@@ -144,10 +159,16 @@ impl Level for X86 {
     }
 
     fn should_impl_arch_type_conversion(&self, ty: &VecType) -> bool {
+        if *self == Self::Sse4_2 {
+            return false; // already covered by SSE2 which has the same vector widths
+        }
+
         let n_bits = ty.n_bits();
+        // AVX-512 masks are not 512-bit vectors and need special handling
         if *self == Self::Avx512 && ty.scalar == ScalarType::Mask {
             return n_bits <= self.max_block_size();
         }
+
         n_bits <= self.max_block_size() && n_bits >= self.native_width()
     }
 
@@ -186,6 +207,17 @@ impl Level for X86 {
 
     fn make_impl_body(&self) -> TokenStream {
         match self {
+            Self::Sse2 => quote! {
+                /// Create a SIMD token.
+                ///
+                /// # Safety
+                ///
+                /// The `fxsr`, `sse`, and `sse2` CPU features must be available.
+                #[inline]
+                pub const unsafe fn new_unchecked() -> Self {
+                    Self { _private: () }
+                }
+            },
             Self::Sse4_2 => quote! {
                 /// Create a SIMD token.
                 ///
@@ -683,6 +715,134 @@ fn signed_literal(value: u64, bits: u32) -> TokenStream {
     }
 }
 
+fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    crate::mk_fallback::Fallback.make_method(op, vec_ty)
+}
+
+/// Invert an SSE2 mask expression.
+///
+/// SSE2 has no vector NOT intrinsic, so we synthesize an all-ones vector by
+/// comparing zero with itself and XOR the mask with that.
+fn sse2_not_mask_expr(mask: TokenStream) -> TokenStream {
+    quote! {
+        {
+            let zero = _mm_setzero_si128();
+            let all_ones = _mm_cmpeq_epi8(zero, zero);
+            _mm_xor_si128(#mask, all_ones)
+        }
+    }
+}
+
+/// Build a signed or unsigned integer `>` comparison using SSE2 operations.
+///
+/// SSE2 only provides signed greater-than comparisons for these integer lane
+/// widths. Unsigned comparisons are lowered by flipping the sign bit in both
+/// operands, which preserves unsigned ordering when interpreted as signed.
+fn sse2_cmpgt_expr(vec_ty: &VecType, lhs: TokenStream, rhs: TokenStream) -> TokenStream {
+    let gt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
+    if vec_ty.scalar != ScalarType::Unsigned {
+        return quote! { #gt(#lhs, #rhs) };
+    }
+
+    let set = set1_intrinsic(vec_ty);
+    let xor = intrinsic_ident("xor", coarse_type(vec_ty), vec_ty.n_bits());
+    let sign = match vec_ty.scalar_bits {
+        8 => quote! { 0x80u8 },
+        16 => quote! { 0x8000u16 },
+        32 => quote! { 0x80000000u32 },
+        _ => unimplemented!(),
+    };
+
+    quote! {
+        {
+            let sign_bit = #set(#sign.cast_signed());
+            let lhs_signed = #xor(#lhs, sign_bit);
+            let rhs_signed = #xor(#rhs, sign_bit);
+            #gt(lhs_signed, rhs_signed)
+        }
+    }
+}
+
+/// Build an integer comparison expression that stays within SSE2.
+///
+/// Later x86 levels have richer comparisons, but SSE2 needs comparisons like
+/// `<`, `<=`, and `>=` expressed in terms of signed `>` plus operand swapping
+/// or mask inversion. Equality for 64-bit lanes is also synthesized from
+/// 32-bit equality because SSE2 has no `_mm_cmpeq_epi64`.
+fn sse2_int_compare_expr(method: &str, vec_ty: &VecType) -> TokenStream {
+    match method {
+        "simd_eq" if vec_ty.scalar_bits == 64 => quote! {
+            {
+                let eq32 = _mm_cmpeq_epi32(a.into(), b.into());
+                let swapped = _mm_shuffle_epi32::<0b10_11_00_01>(eq32);
+                _mm_and_si128(eq32, swapped)
+            }
+        },
+        "simd_eq" => {
+            let eq = simple_sign_unaware_intrinsic("cmpeq", vec_ty);
+            quote! { #eq(a.into(), b.into()) }
+        }
+        "simd_lt" => sse2_cmpgt_expr(vec_ty, quote! { b.into() }, quote! { a.into() }),
+        "simd_gt" => sse2_cmpgt_expr(vec_ty, quote! { a.into() }, quote! { b.into() }),
+        "simd_le" => {
+            let gt = sse2_cmpgt_expr(vec_ty, quote! { a.into() }, quote! { b.into() });
+            sse2_not_mask_expr(gt)
+        }
+        "simd_ge" => {
+            let gt = sse2_cmpgt_expr(vec_ty, quote! { b.into() }, quote! { a.into() });
+            sse2_not_mask_expr(gt)
+        }
+        _ => unreachable!(),
+    }
+}
+
+/// Select between two vectors using an SSE2 mask.
+///
+/// SSE2 predates `blendv`, but these masks are represented as all-zero or
+/// all-one bits, so selection can be implemented as `(mask & true) |
+/// (!mask & false)`.
+fn sse2_select_expr(
+    vec_ty: &VecType,
+    mask: TokenStream,
+    if_true: TokenStream,
+    if_false: TokenStream,
+) -> TokenStream {
+    let and = intrinsic_ident("and", coarse_type(vec_ty), vec_ty.n_bits());
+    let andnot = intrinsic_ident("andnot", coarse_type(vec_ty), vec_ty.n_bits());
+    let or = intrinsic_ident("or", coarse_type(vec_ty), vec_ty.n_bits());
+
+    quote! {
+        #or(#and(#mask, #if_true), #andnot(#mask, #if_false))
+    }
+}
+
+/// Build an integer min/max expression that is available on SSE2.
+///
+/// SSE2 has native min/max only for unsigned 8-bit and signed 16-bit lanes.
+/// Other 8/16/32-bit integer min/max operations are synthesized with an SSE2
+/// comparison and the bitwise select helper above.
+fn sse2_min_max_expr(method: &str, vec_ty: &VecType) -> TokenStream {
+    match (method, vec_ty.scalar, vec_ty.scalar_bits) {
+        ("min", ScalarType::Unsigned, 8) | ("max", ScalarType::Unsigned, 8) => {
+            let intrinsic = simple_intrinsic(method, vec_ty);
+            quote! { #intrinsic(a.into(), b.into()) }
+        }
+        ("min", ScalarType::Int, 16) | ("max", ScalarType::Int, 16) => {
+            let intrinsic = simple_intrinsic(method, vec_ty);
+            quote! { #intrinsic(a.into(), b.into()) }
+        }
+        ("min" | "max", ScalarType::Int | ScalarType::Unsigned, 8 | 16 | 32) => {
+            let gt = sse2_cmpgt_expr(vec_ty, quote! { a.into() }, quote! { b.into() });
+            if method == "max" {
+                sse2_select_expr(vec_ty, gt, quote! { a.into() }, quote! { b.into() })
+            } else {
+                sse2_select_expr(vec_ty, gt, quote! { b.into() }, quote! { a.into() })
+            }
+        }
+        _ => unimplemented!(),
+    }
+}
+
 fn avx512_mask_register_bits(vec_ty: &VecType) -> usize {
     match vec_ty.len {
         0..=8 => 8,
@@ -921,7 +1081,10 @@ impl X86 {
     fn has_wide_byte_mask_from_bitmask(&self, vec_ty: &VecType) -> bool {
         // 512-bit byte masks can be constructed directly from one broadcast, avoiding the
         // shift-and-rebroadcast shape from generic split/combine.
-        vec_ty.scalar == ScalarType::Mask && vec_ty.n_bits() == 512 && vec_ty.scalar_bits == 8
+        *self != Self::Sse2
+            && vec_ty.scalar == ScalarType::Mask
+            && vec_ty.n_bits() == 512
+            && vec_ty.scalar_bits == 8
     }
 
     fn has_wide_avx2_mask_from_bitmask(&self, vec_ty: &VecType) -> bool {
@@ -1051,6 +1214,10 @@ impl X86 {
             };
         }
 
+        if *self == Self::Sse2 && matches!(vec_ty.scalar_bits, 8 | 64) {
+            return generic_mask_from_bitmask(op.simd_trait_method_sig(vec_ty), vec_ty);
+        }
+
         if self.has_wide_byte_mask_from_bitmask(vec_ty) {
             return self.kernel_method(op, vec_ty, |token| {
                 mask_from_bitmask_wide_bytes(self.native_width(), vec_ty, token)
@@ -1167,6 +1334,17 @@ impl X86 {
             });
         }
 
+        if *self == Self::Sse2 && vec_ty.scalar != ScalarType::Float {
+            if vec_ty.scalar_bits == 64 && method != "simd_eq" {
+                return fallback_method(op, vec_ty);
+            }
+
+            let expr = sse2_int_compare_expr(method, vec_ty);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! { #expr.simd_into(#token) }
+            });
+        }
+
         let args = [quote! { a.into() }, quote! { b.into() }];
 
         let expr = if vec_ty.scalar != ScalarType::Float {
@@ -1183,43 +1361,8 @@ impl X86 {
                     let max_min_expr = x86::expr(max_min, vec_ty, &args);
                     quote! { #eq_intrinsic(#max_min_expr, a.into()) }
                 }
-                "simd_lt" | "simd_gt" => {
-                    let gt = simple_sign_unaware_intrinsic("cmpgt", vec_ty);
-
-                    if vec_ty.scalar == ScalarType::Unsigned {
-                        // Below AVX-512, we only have signed GT/LT, not unsigned.
-                        let set = set1_intrinsic(vec_ty);
-                        let sign = match vec_ty.scalar_bits {
-                            8 => quote! { 0x80u8 },
-                            16 => quote! { 0x8000u16 },
-                            32 => quote! { 0x80000000u32 },
-                            _ => unimplemented!(),
-                        };
-                        let xor_op = intrinsic_ident("xor", coarse_type(vec_ty), vec_ty.n_bits());
-                        let args = if method == "simd_lt" {
-                            quote! { b_signed, a_signed }
-                        } else {
-                            quote! { a_signed, b_signed }
-                        };
-
-                        quote! {
-                            let sign_bit = #set(#sign.cast_signed());
-                            let a_signed = #xor_op(a.into(), sign_bit);
-                            let b_signed = #xor_op(b.into(), sign_bit);
-
-                            #gt(#args)
-                        }
-                    } else {
-                        let args = if method == "simd_lt" {
-                            quote! { b.into(), a.into() }
-                        } else {
-                            quote! { a.into(), b.into() }
-                        };
-                        quote! {
-                            #gt(#args)
-                        }
-                    }
-                }
+                // Below AVX-512 we only have signed GT/LT, not unsigned. We have to emulate it.
+                "simd_lt" | "simd_gt" => sse2_int_compare_expr(method, vec_ty),
                 "simd_eq" => x86::expr(method, vec_ty, &args),
                 _ => unreachable!(),
             }
@@ -1299,6 +1442,13 @@ impl X86 {
                 }
                 _ => {}
             }
+        }
+
+        if *self == Self::Sse2
+            && vec_ty.scalar == ScalarType::Float
+            && matches!(method, "floor" | "ceil" | "round_ties_even" | "trunc")
+        {
+            return fallback_method(op, vec_ty);
         }
 
         match method {
@@ -1395,6 +1545,25 @@ impl X86 {
                             #token.#combine(high, low)
                         }
                     }
+                    (Self::Sse2, 256, 128) => {
+                        assert_eq!(
+                            vec_ty.scalar,
+                            ScalarType::Unsigned,
+                            "only unsigned widen operations are currently generated"
+                        );
+                        assert_eq!(
+                            vec_ty.scalar_bits, 8,
+                            "SSE2 widen only handles u8 to u16"
+                        );
+                        let combine = generic_op_name("combine", &target_ty.block_ty());
+                        quote! {
+                            let raw = a.into();
+                            let zero = _mm_setzero_si128();
+                            let lo = _mm_unpacklo_epi8(raw, zero).simd_into(#token);
+                            let hi = _mm_unpackhi_epi8(raw, zero).simd_into(#token);
+                            #token.#combine(lo, hi)
+                        }
+                    }
                     (Self::Sse4_2, 256, 128) => {
                         let extend = extend_intrinsic(
                             vec_ty.scalar,
@@ -1467,7 +1636,7 @@ impl X86 {
                             result.simd_into(#token)
                         }
                     }
-                    (Self::Sse4_2, 128, 256) => {
+                    (Self::Sse2 | Self::Sse4_2, 128, 256) => {
                         let mask = set1_intrinsic(&VecType::new(
                             vec_ty.scalar,
                             vec_ty.scalar_bits,
@@ -1533,6 +1702,54 @@ impl X86 {
                     #range::<#imm>(a.into(), b.into()).simd_into(#token)
                 }
             });
+        }
+
+        if *self == Self::Sse2
+            && vec_ty.scalar == ScalarType::Float
+            && matches!(method, "min_precise" | "max_precise")
+        {
+            let intrinsic = simple_intrinsic(
+                if method == "max_precise" {
+                    "max"
+                } else {
+                    "min"
+                },
+                vec_ty,
+            );
+            let cmpunord = float_compare_method("unord", vec_ty);
+            return self.kernel_method(op, vec_ty, |token| {
+                let expr = sse2_select_expr(
+                    vec_ty,
+                    quote! { b_is_nan },
+                    quote! { a },
+                    quote! { intermediate },
+                );
+                quote! {
+                    let a = a.into();
+                    let b = b.into();
+                    let intermediate = #intrinsic(a, b);
+                    let b_is_nan = #cmpunord(b, b);
+                    #expr.simd_into(#token)
+                }
+            });
+        }
+
+        if *self == Self::Sse2
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && matches!(method, "min" | "max")
+        {
+            let expr = sse2_min_max_expr(method, vec_ty);
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! { #expr.simd_into(#token) }
+            });
+        }
+
+        if *self == Self::Sse2
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && method == "mul"
+            && vec_ty.scalar_bits == 32
+        {
+            return fallback_method(op, vec_ty);
         }
 
         match method {
@@ -1807,6 +2024,26 @@ impl X86 {
                 quote! {
                     #blend(a.val, c.into(), b.into()).simd_into(#token)
                 }
+            });
+        }
+
+        if *self == Self::Sse2 {
+            let mask = match vec_ty.scalar {
+                ScalarType::Float => {
+                    let cast = cast_ident(
+                        ScalarType::Mask,
+                        ScalarType::Float,
+                        vec_ty.scalar_bits,
+                        vec_ty.scalar_bits,
+                        vec_ty.n_bits(),
+                    );
+                    quote! { #cast(a.into()) }
+                }
+                _ => quote! { a.into() },
+            };
+            let expr = sse2_select_expr(vec_ty, mask, quote! { b.into() }, quote! { c.into() });
+            return self.kernel_method(op, vec_ty, |token| {
+                quote! { #expr.simd_into(#token) }
             });
         }
 
@@ -2227,6 +2464,17 @@ impl X86 {
             });
         }
 
+        if *self == Self::Sse2
+            && vec_ty.n_bits() == 128
+            && matches!(
+                vec_ty.scalar,
+                ScalarType::Int | ScalarType::Mask | ScalarType::Unsigned
+            )
+            && matches!(vec_ty.scalar_bits, 8 | 16)
+        {
+            return fallback_method(op, vec_ty);
+        }
+
         self.kernel_method(op, vec_ty, |token| {
             match (vec_ty.scalar, vec_ty.n_bits(), vec_ty.scalar_bits) {
                 (ScalarType::Float, 128, _) => {
@@ -2399,8 +2647,8 @@ impl X86 {
                 // For WithinBlocks, use elements per 128-bit block; for 128-bit vectors, use total elements
                 format_ident!("dyn_alignr_{}", vec_ty.n_bits())
             }
-            (AcrossBlocks, 256 | 512, Self::Sse4_2) => {
-                // Inter-block shift or rotate in SSE4.2: use cross_block_alignr
+            (AcrossBlocks, 256 | 512, Self::Sse2 | Self::Sse4_2) => {
+                // Inter-block shift or rotate in 128-bit x86 backends: use cross_block_alignr
 
                 format_ident!("cross_block_alignr_128x{}", vec_ty.n_bits() / 128)
             }
@@ -2436,6 +2684,10 @@ impl X86 {
         let wrapper = bytes_ty.aligned_wrapper();
         let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
         let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+        if *self == Self::Sse2 {
+            return fallback_method(op, vec_ty);
+        }
 
         self.kernel_method(op, vec_ty, |token| {
             let body = if *self == Self::Avx512 {
@@ -2479,6 +2731,14 @@ impl X86 {
             vec_ty.scalar_bits, target_scalar_bits,
             "we currently only support converting between types of the same width"
         );
+
+        if *self == Self::Sse2
+            && (precise
+                || vec_ty.scalar == ScalarType::Unsigned
+                || target_scalar == ScalarType::Unsigned)
+        {
+            return fallback_method(op, vec_ty);
+        }
 
         if *self == Self::Avx512
             && vec_ty.scalar == ScalarType::Float
@@ -2873,6 +3133,9 @@ impl X86 {
         if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
             return self.handle_avx512_load_interleaved(op, vec_ty, block_size, block_count);
         }
+        if *self == Self::Sse2 && matches!(vec_ty.scalar_bits, 8 | 16) {
+            return fallback_method(op, vec_ty);
+        }
         match vec_ty.scalar_bits {
             32 | 16 | 8 => {
                 let block_ty =
@@ -3048,6 +3311,9 @@ impl X86 {
         if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
             return self.handle_avx512_store_interleaved(op, vec_ty, block_size, block_count);
         }
+        if *self == Self::Sse2 && matches!(vec_ty.scalar_bits, 8 | 16) {
+            return fallback_method(op, vec_ty);
+        }
         match vec_ty.scalar_bits {
             32 | 16 | 8 => {
                 let block_ty =
@@ -3211,7 +3477,7 @@ impl X86 {
         let token_ty = self.token();
 
         let vec_widths: &[usize] = match self {
-            Self::Sse4_2 => &[128],
+            Self::Sse2 | Self::Sse4_2 => &[128],
             Self::Avx2 => &[128, 256],
             Self::Avx512 => &[128, 256, 512],
         };
@@ -3223,10 +3489,21 @@ impl X86 {
             let arch_ty = self.arch_ty(&vec_ty);
 
             let helper_name = format_ident!("dyn_alignr_{}", vec_ty.n_bits());
-            let alignr_intrinsic = simple_sign_unaware_intrinsic("alignr", &vec_ty);
             let shifts = (0_usize..16).map(|shift| {
                 let shift_i32 = i32::try_from(shift).unwrap();
-                quote! { #shift => #alignr_intrinsic::<#shift_i32>(a, b) }
+                if *self == Self::Sse2 {
+                    let inverse_shift_i32 = i32::try_from(16 - shift).unwrap();
+                    quote! {
+                        #shift => {
+                            let lo = _mm_srli_si128::<#shift_i32>(b);
+                            let hi = _mm_slli_si128::<#inverse_shift_i32>(a);
+                            _mm_or_si128(lo, hi)
+                        }
+                    }
+                } else {
+                    let alignr_intrinsic = simple_sign_unaware_intrinsic("alignr", &vec_ty);
+                    quote! { #shift => #alignr_intrinsic::<#shift_i32>(a, b) }
+                }
             });
 
             fns.push(quote! {
@@ -3248,7 +3525,7 @@ impl X86 {
         quote! { #( #fns )* }
     }
 
-    fn sse42_slide_helpers() -> TokenStream {
+    fn sse_slide_helpers(token_ty: Ident) -> TokenStream {
         let mut fns = vec![];
 
         for num_blocks in [2_usize, 4_usize] {
@@ -3262,7 +3539,7 @@ impl X86 {
                     /// Concatenates `b` and `a` (each N blocks) and extracts N blocks starting at byte offset `shift_bytes`.
                     /// Extracts from [b : a] (b in low bytes, a in high bytes), matching `alignr` semantics.
                     #[inline(always)]
-                    fn #helper_name(token: Sse4_2, a: [__m128i; #num_blocks], b: [__m128i; #num_blocks], shift_bytes: usize) -> [__m128i; #num_blocks] {
+                    fn #helper_name(token: #token_ty, a: [__m128i; #num_blocks], b: [__m128i; #num_blocks], shift_bytes: usize) -> [__m128i; #num_blocks] {
                         [#({
                             let [lo, hi] = crate::support::cross_block_slide_blocks_at(&b, &a, #blocks_idx, shift_bytes);
                             dyn_alignr_128(token, hi, lo, shift_bytes % 16)

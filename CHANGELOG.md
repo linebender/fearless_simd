@@ -11,6 +11,14 @@ You can find its changes [documented below](#060-2026-07-10).
 
 ## [Unreleased]
 
+### Added
+
+- Added an `Sse2` level as the x86/x86_64 baseline, with runtime dispatch upgrading through SSE4.2, AVX2, and AVX-512 where available.
+
+### Changed
+
+- On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`.
+
 ## [0.6.0][] (2026-07-10)
 
 This release has an [MSRV][] of 1.89.
