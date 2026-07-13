@@ -370,65 +370,65 @@ impl Level {
         }
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         {
-            if x86_detects_icelake_avx512() {
-                return unsafe { Self::Avx512(Avx512::new_unchecked()) };
+            use core::sync::atomic::{AtomicU8, Ordering};
+
+            static CACHE: AtomicU8 = AtomicU8::new(0);
+            mod code {
+                pub(super) const SSE4_2: u8 = 1;
+                pub(super) const AVX2: u8 = 2;
+                pub(super) const AVX512: u8 = 3;
+                pub(super) const FALLBACK: u8 = 4;
             }
 
-            // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
-            // However, the following features are implied by avx2 and do not need to be spelled out:
-            // avx,fxsr,sse,sse2,sse3,sse4.1,sse4.2,ssse3
-            // This can be verified by running:
-            // rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'
-            if std::arch::is_x86_feature_detected!("avx2")
-                && std::arch::is_x86_feature_detected!("bmi1")
-                && std::arch::is_x86_feature_detected!("bmi2")
-                && std::arch::is_x86_feature_detected!("cmpxchg16b")
-                && std::arch::is_x86_feature_detected!("f16c")
-                && std::arch::is_x86_feature_detected!("fma")
-                && std::arch::is_x86_feature_detected!("lzcnt")
-                && std::arch::is_x86_feature_detected!("movbe")
-                && std::arch::is_x86_feature_detected!("popcnt")
-                && std::arch::is_x86_feature_detected!("xsave")
-            {
-                return unsafe { Self::Avx2(Avx2::new_unchecked()) };
-            // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
-            // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
-            // and have these extensions already.
-            } else if std::arch::is_x86_feature_detected!("sse4.2")
-                && std::arch::is_x86_feature_detected!("cmpxchg16b")
-                && std::arch::is_x86_feature_detected!("popcnt")
-            {
-                return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
+            #[inline(never)]
+            #[cold]
+            fn run_x86_feature_detect() -> u8 {
+                let result = if x86_detects_icelake_avx512() {
+                    code::AVX512
+                } else if std::arch::is_x86_feature_detected!("avx2")
+                    && std::arch::is_x86_feature_detected!("bmi1")
+                    && std::arch::is_x86_feature_detected!("bmi2")
+                    && std::arch::is_x86_feature_detected!("cmpxchg16b")
+                    && std::arch::is_x86_feature_detected!("f16c")
+                    && std::arch::is_x86_feature_detected!("fma")
+                    && std::arch::is_x86_feature_detected!("lzcnt")
+                    && std::arch::is_x86_feature_detected!("movbe")
+                    && std::arch::is_x86_feature_detected!("popcnt")
+                    && std::arch::is_x86_feature_detected!("xsave")
+                {
+                    // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
+                    // However, the following features are implied by avx2 and do not need to be spelled out:
+                    // avx,fxsr,sse,sse2,sse3,sse4.1,sse4.2,ssse3
+                    // This can be verified by running:
+                    // rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'
+                    code::AVX2
+                } else if std::arch::is_x86_feature_detected!("sse4.2")
+                    && std::arch::is_x86_feature_detected!("cmpxchg16b")
+                    && std::arch::is_x86_feature_detected!("popcnt")
+                {
+                    code::SSE4_2
+                } else {
+                    code::FALLBACK
+                };
+                CACHE.store(result, Ordering::Relaxed);
+                result
             }
+
+            let mut cached = CACHE.load(Ordering::Relaxed);
+            if cached == 0 {
+                cached = run_x86_feature_detect();
+            }
+            return match cached {
+                code::AVX512 => unsafe { Self::Avx512(Avx512::new_unchecked()) },
+                code::AVX2 => unsafe { Self::Avx2(Avx2::new_unchecked()) },
+                code::SSE4_2 => unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) },
+                code::FALLBACK => Self::Fallback(Fallback::new()),
+                _ => unreachable!(),
+            };
         }
-        #[cfg(any(
-            all(target_arch = "aarch64", not(target_feature = "neon")),
-            all(
-                any(target_arch = "x86", target_arch = "x86_64"),
-                not(all(
-                    target_feature = "sse4.2",
-                    target_feature = "cmpxchg16b",
-                    target_feature = "popcnt"
-                ))
-            ),
-            all(target_arch = "wasm32", not(target_feature = "simd128")),
-            not(any(
-                target_arch = "x86",
-                target_arch = "x86_64",
-                target_arch = "aarch64",
-                target_arch = "wasm32"
-            )),
-        ))]
-        {
-            return Self::Fallback(Fallback::new());
-        }
-        #[allow(
-            unreachable_code,
-            reason = "`is_x86_feature_detected` or equivalents will have returned `true`, or Fallback was used."
-        )]
-        {
-            unreachable!()
-        }
+
+        #[allow(unreachable_code, reason = "All supported architectures return above.")]
+        Self::Fallback(Fallback::new())
     }
 
     /// Get the target feature level suitable for this run.
