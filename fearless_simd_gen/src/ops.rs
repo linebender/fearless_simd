@@ -630,7 +630,7 @@ const BASE_OPS: &[Op] = &[
             direction: ElementDirection::Left,
         },
         "Rotate the vector elements to the left by `OFFSET`.\n\n\
-        Panics if `OFFSET` is greater than `Self::N`.",
+        If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.",
     ),
     Op::new(
         "rotate_elements_right",
@@ -639,7 +639,7 @@ const BASE_OPS: &[Op] = &[
             direction: ElementDirection::Right,
         },
         "Rotate the vector elements to the right by `OFFSET`.\n\n\
-        Panics if `OFFSET` is greater than `Self::N`.",
+        If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.",
     ),
     Op::new(
         "shift_elements_left",
@@ -648,7 +648,7 @@ const BASE_OPS: &[Op] = &[
             direction: ElementDirection::Left,
         },
         "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\n\
-        Panics if `OFFSET` is greater than `Self::N`.",
+        If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`.",
     ),
     Op::new(
         "shift_elements_right",
@@ -657,7 +657,7 @@ const BASE_OPS: &[Op] = &[
             direction: ElementDirection::Right,
         },
         "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\n\
-        Panics if `OFFSET` is greater than `Self::N`.",
+        If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`.",
     ),
     Op::new(
         "swizzle_dyn_within_blocks",

@@ -176,28 +176,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_f32x4<const OFFSET: usize>(self, a: f32x4<Self>) -> f32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
-        self.slide_f32x4::<OFFSET>(a, a)
+        match OFFSET % 4 {
+            0 => self.slide_f32x4::<0>(a, a),
+            1 => self.slide_f32x4::<1>(a, a),
+            2 => self.slide_f32x4::<2>(a, a),
+            3 => self.slide_f32x4::<3>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_f32x4<const OFFSET: usize>(self, a: f32x4<Self>) -> f32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
-        match OFFSET {
+        match OFFSET % 4 {
             0 => self.slide_f32x4::<4>(a, a),
             1 => self.slide_f32x4::<3>(a, a),
             2 => self.slide_f32x4::<2>(a, a),
             3 => self.slide_f32x4::<1>(a, a),
-            4 => self.slide_f32x4::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -207,14 +200,15 @@ impl Simd for Avx2 {
         a: f32x4<Self>,
         padding: f32,
     ) -> f32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
         let padding = self.splat_f32x4(padding);
-        self.slide_f32x4::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_f32x4::<0>(a, padding),
+            1 => self.slide_f32x4::<1>(a, padding),
+            2 => self.slide_f32x4::<2>(a, padding),
+            3 => self.slide_f32x4::<3>(a, padding),
+            4 => self.slide_f32x4::<4>(a, padding),
+            _ => self.slide_f32x4::<4>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_f32x4<const OFFSET: usize>(
@@ -222,12 +216,6 @@ impl Simd for Avx2 {
         a: f32x4<Self>,
         padding: f32,
     ) -> f32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
         let padding = self.splat_f32x4(padding);
         match OFFSET {
             0 => self.slide_f32x4::<4>(padding, a),
@@ -235,7 +223,7 @@ impl Simd for Avx2 {
             2 => self.slide_f32x4::<2>(padding, a),
             3 => self.slide_f32x4::<1>(padding, a),
             4 => self.slide_f32x4::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_f32x4::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -776,23 +764,29 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_i8x16<const OFFSET: usize>(self, a: i8x16<Self>) -> i8x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        self.slide_i8x16::<OFFSET>(a, a)
+        match OFFSET % 16 {
+            0 => self.slide_i8x16::<0>(a, a),
+            1 => self.slide_i8x16::<1>(a, a),
+            2 => self.slide_i8x16::<2>(a, a),
+            3 => self.slide_i8x16::<3>(a, a),
+            4 => self.slide_i8x16::<4>(a, a),
+            5 => self.slide_i8x16::<5>(a, a),
+            6 => self.slide_i8x16::<6>(a, a),
+            7 => self.slide_i8x16::<7>(a, a),
+            8 => self.slide_i8x16::<8>(a, a),
+            9 => self.slide_i8x16::<9>(a, a),
+            10 => self.slide_i8x16::<10>(a, a),
+            11 => self.slide_i8x16::<11>(a, a),
+            12 => self.slide_i8x16::<12>(a, a),
+            13 => self.slide_i8x16::<13>(a, a),
+            14 => self.slide_i8x16::<14>(a, a),
+            15 => self.slide_i8x16::<15>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_i8x16<const OFFSET: usize>(self, a: i8x16<Self>) -> i8x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        match OFFSET {
+        match OFFSET % 16 {
             0 => self.slide_i8x16::<16>(a, a),
             1 => self.slide_i8x16::<15>(a, a),
             2 => self.slide_i8x16::<14>(a, a),
@@ -809,7 +803,6 @@ impl Simd for Avx2 {
             13 => self.slide_i8x16::<3>(a, a),
             14 => self.slide_i8x16::<2>(a, a),
             15 => self.slide_i8x16::<1>(a, a),
-            16 => self.slide_i8x16::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -819,14 +812,27 @@ impl Simd for Avx2 {
         a: i8x16<Self>,
         padding: i8,
     ) -> i8x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_i8x16(padding);
-        self.slide_i8x16::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_i8x16::<0>(a, padding),
+            1 => self.slide_i8x16::<1>(a, padding),
+            2 => self.slide_i8x16::<2>(a, padding),
+            3 => self.slide_i8x16::<3>(a, padding),
+            4 => self.slide_i8x16::<4>(a, padding),
+            5 => self.slide_i8x16::<5>(a, padding),
+            6 => self.slide_i8x16::<6>(a, padding),
+            7 => self.slide_i8x16::<7>(a, padding),
+            8 => self.slide_i8x16::<8>(a, padding),
+            9 => self.slide_i8x16::<9>(a, padding),
+            10 => self.slide_i8x16::<10>(a, padding),
+            11 => self.slide_i8x16::<11>(a, padding),
+            12 => self.slide_i8x16::<12>(a, padding),
+            13 => self.slide_i8x16::<13>(a, padding),
+            14 => self.slide_i8x16::<14>(a, padding),
+            15 => self.slide_i8x16::<15>(a, padding),
+            16 => self.slide_i8x16::<16>(a, padding),
+            _ => self.slide_i8x16::<16>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_i8x16<const OFFSET: usize>(
@@ -834,12 +840,6 @@ impl Simd for Avx2 {
         a: i8x16<Self>,
         padding: i8,
     ) -> i8x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_i8x16(padding);
         match OFFSET {
             0 => self.slide_i8x16::<16>(padding, a),
@@ -859,7 +859,7 @@ impl Simd for Avx2 {
             14 => self.slide_i8x16::<2>(padding, a),
             15 => self.slide_i8x16::<1>(padding, a),
             16 => self.slide_i8x16::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_i8x16::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -1246,23 +1246,29 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_u8x16<const OFFSET: usize>(self, a: u8x16<Self>) -> u8x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        self.slide_u8x16::<OFFSET>(a, a)
+        match OFFSET % 16 {
+            0 => self.slide_u8x16::<0>(a, a),
+            1 => self.slide_u8x16::<1>(a, a),
+            2 => self.slide_u8x16::<2>(a, a),
+            3 => self.slide_u8x16::<3>(a, a),
+            4 => self.slide_u8x16::<4>(a, a),
+            5 => self.slide_u8x16::<5>(a, a),
+            6 => self.slide_u8x16::<6>(a, a),
+            7 => self.slide_u8x16::<7>(a, a),
+            8 => self.slide_u8x16::<8>(a, a),
+            9 => self.slide_u8x16::<9>(a, a),
+            10 => self.slide_u8x16::<10>(a, a),
+            11 => self.slide_u8x16::<11>(a, a),
+            12 => self.slide_u8x16::<12>(a, a),
+            13 => self.slide_u8x16::<13>(a, a),
+            14 => self.slide_u8x16::<14>(a, a),
+            15 => self.slide_u8x16::<15>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_u8x16<const OFFSET: usize>(self, a: u8x16<Self>) -> u8x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        match OFFSET {
+        match OFFSET % 16 {
             0 => self.slide_u8x16::<16>(a, a),
             1 => self.slide_u8x16::<15>(a, a),
             2 => self.slide_u8x16::<14>(a, a),
@@ -1279,7 +1285,6 @@ impl Simd for Avx2 {
             13 => self.slide_u8x16::<3>(a, a),
             14 => self.slide_u8x16::<2>(a, a),
             15 => self.slide_u8x16::<1>(a, a),
-            16 => self.slide_u8x16::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -1289,14 +1294,27 @@ impl Simd for Avx2 {
         a: u8x16<Self>,
         padding: u8,
     ) -> u8x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_u8x16(padding);
-        self.slide_u8x16::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_u8x16::<0>(a, padding),
+            1 => self.slide_u8x16::<1>(a, padding),
+            2 => self.slide_u8x16::<2>(a, padding),
+            3 => self.slide_u8x16::<3>(a, padding),
+            4 => self.slide_u8x16::<4>(a, padding),
+            5 => self.slide_u8x16::<5>(a, padding),
+            6 => self.slide_u8x16::<6>(a, padding),
+            7 => self.slide_u8x16::<7>(a, padding),
+            8 => self.slide_u8x16::<8>(a, padding),
+            9 => self.slide_u8x16::<9>(a, padding),
+            10 => self.slide_u8x16::<10>(a, padding),
+            11 => self.slide_u8x16::<11>(a, padding),
+            12 => self.slide_u8x16::<12>(a, padding),
+            13 => self.slide_u8x16::<13>(a, padding),
+            14 => self.slide_u8x16::<14>(a, padding),
+            15 => self.slide_u8x16::<15>(a, padding),
+            16 => self.slide_u8x16::<16>(a, padding),
+            _ => self.slide_u8x16::<16>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_u8x16<const OFFSET: usize>(
@@ -1304,12 +1322,6 @@ impl Simd for Avx2 {
         a: u8x16<Self>,
         padding: u8,
     ) -> u8x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_u8x16(padding);
         match OFFSET {
             0 => self.slide_u8x16::<16>(padding, a),
@@ -1329,7 +1341,7 @@ impl Simd for Avx2 {
             14 => self.slide_u8x16::<2>(padding, a),
             15 => self.slide_u8x16::<1>(padding, a),
             16 => self.slide_u8x16::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_u8x16::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -1889,23 +1901,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_i16x8<const OFFSET: usize>(self, a: i16x8<Self>) -> i16x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        self.slide_i16x8::<OFFSET>(a, a)
+        match OFFSET % 8 {
+            0 => self.slide_i16x8::<0>(a, a),
+            1 => self.slide_i16x8::<1>(a, a),
+            2 => self.slide_i16x8::<2>(a, a),
+            3 => self.slide_i16x8::<3>(a, a),
+            4 => self.slide_i16x8::<4>(a, a),
+            5 => self.slide_i16x8::<5>(a, a),
+            6 => self.slide_i16x8::<6>(a, a),
+            7 => self.slide_i16x8::<7>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_i16x8<const OFFSET: usize>(self, a: i16x8<Self>) -> i16x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        match OFFSET {
+        match OFFSET % 8 {
             0 => self.slide_i16x8::<8>(a, a),
             1 => self.slide_i16x8::<7>(a, a),
             2 => self.slide_i16x8::<6>(a, a),
@@ -1914,7 +1924,6 @@ impl Simd for Avx2 {
             5 => self.slide_i16x8::<3>(a, a),
             6 => self.slide_i16x8::<2>(a, a),
             7 => self.slide_i16x8::<1>(a, a),
-            8 => self.slide_i16x8::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -1924,14 +1933,19 @@ impl Simd for Avx2 {
         a: i16x8<Self>,
         padding: i16,
     ) -> i16x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_i16x8(padding);
-        self.slide_i16x8::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_i16x8::<0>(a, padding),
+            1 => self.slide_i16x8::<1>(a, padding),
+            2 => self.slide_i16x8::<2>(a, padding),
+            3 => self.slide_i16x8::<3>(a, padding),
+            4 => self.slide_i16x8::<4>(a, padding),
+            5 => self.slide_i16x8::<5>(a, padding),
+            6 => self.slide_i16x8::<6>(a, padding),
+            7 => self.slide_i16x8::<7>(a, padding),
+            8 => self.slide_i16x8::<8>(a, padding),
+            _ => self.slide_i16x8::<8>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_i16x8<const OFFSET: usize>(
@@ -1939,12 +1953,6 @@ impl Simd for Avx2 {
         a: i16x8<Self>,
         padding: i16,
     ) -> i16x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_i16x8(padding);
         match OFFSET {
             0 => self.slide_i16x8::<8>(padding, a),
@@ -1956,7 +1964,7 @@ impl Simd for Avx2 {
             6 => self.slide_i16x8::<2>(padding, a),
             7 => self.slide_i16x8::<1>(padding, a),
             8 => self.slide_i16x8::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_i16x8::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -2324,23 +2332,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_u16x8<const OFFSET: usize>(self, a: u16x8<Self>) -> u16x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        self.slide_u16x8::<OFFSET>(a, a)
+        match OFFSET % 8 {
+            0 => self.slide_u16x8::<0>(a, a),
+            1 => self.slide_u16x8::<1>(a, a),
+            2 => self.slide_u16x8::<2>(a, a),
+            3 => self.slide_u16x8::<3>(a, a),
+            4 => self.slide_u16x8::<4>(a, a),
+            5 => self.slide_u16x8::<5>(a, a),
+            6 => self.slide_u16x8::<6>(a, a),
+            7 => self.slide_u16x8::<7>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_u16x8<const OFFSET: usize>(self, a: u16x8<Self>) -> u16x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        match OFFSET {
+        match OFFSET % 8 {
             0 => self.slide_u16x8::<8>(a, a),
             1 => self.slide_u16x8::<7>(a, a),
             2 => self.slide_u16x8::<6>(a, a),
@@ -2349,7 +2355,6 @@ impl Simd for Avx2 {
             5 => self.slide_u16x8::<3>(a, a),
             6 => self.slide_u16x8::<2>(a, a),
             7 => self.slide_u16x8::<1>(a, a),
-            8 => self.slide_u16x8::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -2359,14 +2364,19 @@ impl Simd for Avx2 {
         a: u16x8<Self>,
         padding: u16,
     ) -> u16x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_u16x8(padding);
-        self.slide_u16x8::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_u16x8::<0>(a, padding),
+            1 => self.slide_u16x8::<1>(a, padding),
+            2 => self.slide_u16x8::<2>(a, padding),
+            3 => self.slide_u16x8::<3>(a, padding),
+            4 => self.slide_u16x8::<4>(a, padding),
+            5 => self.slide_u16x8::<5>(a, padding),
+            6 => self.slide_u16x8::<6>(a, padding),
+            7 => self.slide_u16x8::<7>(a, padding),
+            8 => self.slide_u16x8::<8>(a, padding),
+            _ => self.slide_u16x8::<8>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_u16x8<const OFFSET: usize>(
@@ -2374,12 +2384,6 @@ impl Simd for Avx2 {
         a: u16x8<Self>,
         padding: u16,
     ) -> u16x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_u16x8(padding);
         match OFFSET {
             0 => self.slide_u16x8::<8>(padding, a),
@@ -2391,7 +2395,7 @@ impl Simd for Avx2 {
             6 => self.slide_u16x8::<2>(padding, a),
             7 => self.slide_u16x8::<1>(padding, a),
             8 => self.slide_u16x8::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_u16x8::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -2930,28 +2934,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_i32x4<const OFFSET: usize>(self, a: i32x4<Self>) -> i32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
-        self.slide_i32x4::<OFFSET>(a, a)
+        match OFFSET % 4 {
+            0 => self.slide_i32x4::<0>(a, a),
+            1 => self.slide_i32x4::<1>(a, a),
+            2 => self.slide_i32x4::<2>(a, a),
+            3 => self.slide_i32x4::<3>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_i32x4<const OFFSET: usize>(self, a: i32x4<Self>) -> i32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
-        match OFFSET {
+        match OFFSET % 4 {
             0 => self.slide_i32x4::<4>(a, a),
             1 => self.slide_i32x4::<3>(a, a),
             2 => self.slide_i32x4::<2>(a, a),
             3 => self.slide_i32x4::<1>(a, a),
-            4 => self.slide_i32x4::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -2961,14 +2958,15 @@ impl Simd for Avx2 {
         a: i32x4<Self>,
         padding: i32,
     ) -> i32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
         let padding = self.splat_i32x4(padding);
-        self.slide_i32x4::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_i32x4::<0>(a, padding),
+            1 => self.slide_i32x4::<1>(a, padding),
+            2 => self.slide_i32x4::<2>(a, padding),
+            3 => self.slide_i32x4::<3>(a, padding),
+            4 => self.slide_i32x4::<4>(a, padding),
+            _ => self.slide_i32x4::<4>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_i32x4<const OFFSET: usize>(
@@ -2976,12 +2974,6 @@ impl Simd for Avx2 {
         a: i32x4<Self>,
         padding: i32,
     ) -> i32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
         let padding = self.splat_i32x4(padding);
         match OFFSET {
             0 => self.slide_i32x4::<4>(padding, a),
@@ -2989,7 +2981,7 @@ impl Simd for Avx2 {
             2 => self.slide_i32x4::<2>(padding, a),
             3 => self.slide_i32x4::<1>(padding, a),
             4 => self.slide_i32x4::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_i32x4::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -3377,28 +3369,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_u32x4<const OFFSET: usize>(self, a: u32x4<Self>) -> u32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
-        self.slide_u32x4::<OFFSET>(a, a)
+        match OFFSET % 4 {
+            0 => self.slide_u32x4::<0>(a, a),
+            1 => self.slide_u32x4::<1>(a, a),
+            2 => self.slide_u32x4::<2>(a, a),
+            3 => self.slide_u32x4::<3>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_u32x4<const OFFSET: usize>(self, a: u32x4<Self>) -> u32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
-        match OFFSET {
+        match OFFSET % 4 {
             0 => self.slide_u32x4::<4>(a, a),
             1 => self.slide_u32x4::<3>(a, a),
             2 => self.slide_u32x4::<2>(a, a),
             3 => self.slide_u32x4::<1>(a, a),
-            4 => self.slide_u32x4::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -3408,14 +3393,15 @@ impl Simd for Avx2 {
         a: u32x4<Self>,
         padding: u32,
     ) -> u32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
         let padding = self.splat_u32x4(padding);
-        self.slide_u32x4::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_u32x4::<0>(a, padding),
+            1 => self.slide_u32x4::<1>(a, padding),
+            2 => self.slide_u32x4::<2>(a, padding),
+            3 => self.slide_u32x4::<3>(a, padding),
+            4 => self.slide_u32x4::<4>(a, padding),
+            _ => self.slide_u32x4::<4>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_u32x4<const OFFSET: usize>(
@@ -3423,12 +3409,6 @@ impl Simd for Avx2 {
         a: u32x4<Self>,
         padding: u32,
     ) -> u32x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
         let padding = self.splat_u32x4(padding);
         match OFFSET {
             0 => self.slide_u32x4::<4>(padding, a),
@@ -3436,7 +3416,7 @@ impl Simd for Avx2 {
             2 => self.slide_u32x4::<2>(padding, a),
             3 => self.slide_u32x4::<1>(padding, a),
             4 => self.slide_u32x4::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_u32x4::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -3991,26 +3971,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_f64x2<const OFFSET: usize>(self, a: f64x2<Self>) -> f64x2<Self> {
-        assert!(
-            OFFSET <= 2,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            2,
-        );
-        self.slide_f64x2::<OFFSET>(a, a)
+        match OFFSET % 2 {
+            0 => self.slide_f64x2::<0>(a, a),
+            1 => self.slide_f64x2::<1>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_f64x2<const OFFSET: usize>(self, a: f64x2<Self>) -> f64x2<Self> {
-        assert!(
-            OFFSET <= 2,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            2,
-        );
-        match OFFSET {
+        match OFFSET % 2 {
             0 => self.slide_f64x2::<2>(a, a),
             1 => self.slide_f64x2::<1>(a, a),
-            2 => self.slide_f64x2::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -4020,14 +3991,13 @@ impl Simd for Avx2 {
         a: f64x2<Self>,
         padding: f64,
     ) -> f64x2<Self> {
-        assert!(
-            OFFSET <= 2,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            2,
-        );
         let padding = self.splat_f64x2(padding);
-        self.slide_f64x2::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_f64x2::<0>(a, padding),
+            1 => self.slide_f64x2::<1>(a, padding),
+            2 => self.slide_f64x2::<2>(a, padding),
+            _ => self.slide_f64x2::<2>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_f64x2<const OFFSET: usize>(
@@ -4035,18 +4005,12 @@ impl Simd for Avx2 {
         a: f64x2<Self>,
         padding: f64,
     ) -> f64x2<Self> {
-        assert!(
-            OFFSET <= 2,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            2,
-        );
         let padding = self.splat_f64x2(padding);
         match OFFSET {
             0 => self.slide_f64x2::<2>(padding, a),
             1 => self.slide_f64x2::<1>(padding, a),
             2 => self.slide_f64x2::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_f64x2::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -4658,23 +4622,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_f32x8<const OFFSET: usize>(self, a: f32x8<Self>) -> f32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        self.slide_f32x8::<OFFSET>(a, a)
+        match OFFSET % 8 {
+            0 => self.slide_f32x8::<0>(a, a),
+            1 => self.slide_f32x8::<1>(a, a),
+            2 => self.slide_f32x8::<2>(a, a),
+            3 => self.slide_f32x8::<3>(a, a),
+            4 => self.slide_f32x8::<4>(a, a),
+            5 => self.slide_f32x8::<5>(a, a),
+            6 => self.slide_f32x8::<6>(a, a),
+            7 => self.slide_f32x8::<7>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_f32x8<const OFFSET: usize>(self, a: f32x8<Self>) -> f32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        match OFFSET {
+        match OFFSET % 8 {
             0 => self.slide_f32x8::<8>(a, a),
             1 => self.slide_f32x8::<7>(a, a),
             2 => self.slide_f32x8::<6>(a, a),
@@ -4683,7 +4645,6 @@ impl Simd for Avx2 {
             5 => self.slide_f32x8::<3>(a, a),
             6 => self.slide_f32x8::<2>(a, a),
             7 => self.slide_f32x8::<1>(a, a),
-            8 => self.slide_f32x8::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -4693,14 +4654,19 @@ impl Simd for Avx2 {
         a: f32x8<Self>,
         padding: f32,
     ) -> f32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_f32x8(padding);
-        self.slide_f32x8::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_f32x8::<0>(a, padding),
+            1 => self.slide_f32x8::<1>(a, padding),
+            2 => self.slide_f32x8::<2>(a, padding),
+            3 => self.slide_f32x8::<3>(a, padding),
+            4 => self.slide_f32x8::<4>(a, padding),
+            5 => self.slide_f32x8::<5>(a, padding),
+            6 => self.slide_f32x8::<6>(a, padding),
+            7 => self.slide_f32x8::<7>(a, padding),
+            8 => self.slide_f32x8::<8>(a, padding),
+            _ => self.slide_f32x8::<8>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_f32x8<const OFFSET: usize>(
@@ -4708,12 +4674,6 @@ impl Simd for Avx2 {
         a: f32x8<Self>,
         padding: f32,
     ) -> f32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_f32x8(padding);
         match OFFSET {
             0 => self.slide_f32x8::<8>(padding, a),
@@ -4725,7 +4685,7 @@ impl Simd for Avx2 {
             6 => self.slide_f32x8::<2>(padding, a),
             7 => self.slide_f32x8::<1>(padding, a),
             8 => self.slide_f32x8::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_f32x8::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -5329,23 +5289,45 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_i8x32<const OFFSET: usize>(self, a: i8x32<Self>) -> i8x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
-        self.slide_i8x32::<OFFSET>(a, a)
+        match OFFSET % 32 {
+            0 => self.slide_i8x32::<0>(a, a),
+            1 => self.slide_i8x32::<1>(a, a),
+            2 => self.slide_i8x32::<2>(a, a),
+            3 => self.slide_i8x32::<3>(a, a),
+            4 => self.slide_i8x32::<4>(a, a),
+            5 => self.slide_i8x32::<5>(a, a),
+            6 => self.slide_i8x32::<6>(a, a),
+            7 => self.slide_i8x32::<7>(a, a),
+            8 => self.slide_i8x32::<8>(a, a),
+            9 => self.slide_i8x32::<9>(a, a),
+            10 => self.slide_i8x32::<10>(a, a),
+            11 => self.slide_i8x32::<11>(a, a),
+            12 => self.slide_i8x32::<12>(a, a),
+            13 => self.slide_i8x32::<13>(a, a),
+            14 => self.slide_i8x32::<14>(a, a),
+            15 => self.slide_i8x32::<15>(a, a),
+            16 => self.slide_i8x32::<16>(a, a),
+            17 => self.slide_i8x32::<17>(a, a),
+            18 => self.slide_i8x32::<18>(a, a),
+            19 => self.slide_i8x32::<19>(a, a),
+            20 => self.slide_i8x32::<20>(a, a),
+            21 => self.slide_i8x32::<21>(a, a),
+            22 => self.slide_i8x32::<22>(a, a),
+            23 => self.slide_i8x32::<23>(a, a),
+            24 => self.slide_i8x32::<24>(a, a),
+            25 => self.slide_i8x32::<25>(a, a),
+            26 => self.slide_i8x32::<26>(a, a),
+            27 => self.slide_i8x32::<27>(a, a),
+            28 => self.slide_i8x32::<28>(a, a),
+            29 => self.slide_i8x32::<29>(a, a),
+            30 => self.slide_i8x32::<30>(a, a),
+            31 => self.slide_i8x32::<31>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_i8x32<const OFFSET: usize>(self, a: i8x32<Self>) -> i8x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
-        match OFFSET {
+        match OFFSET % 32 {
             0 => self.slide_i8x32::<32>(a, a),
             1 => self.slide_i8x32::<31>(a, a),
             2 => self.slide_i8x32::<30>(a, a),
@@ -5378,7 +5360,6 @@ impl Simd for Avx2 {
             29 => self.slide_i8x32::<3>(a, a),
             30 => self.slide_i8x32::<2>(a, a),
             31 => self.slide_i8x32::<1>(a, a),
-            32 => self.slide_i8x32::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -5388,14 +5369,43 @@ impl Simd for Avx2 {
         a: i8x32<Self>,
         padding: i8,
     ) -> i8x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
         let padding = self.splat_i8x32(padding);
-        self.slide_i8x32::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_i8x32::<0>(a, padding),
+            1 => self.slide_i8x32::<1>(a, padding),
+            2 => self.slide_i8x32::<2>(a, padding),
+            3 => self.slide_i8x32::<3>(a, padding),
+            4 => self.slide_i8x32::<4>(a, padding),
+            5 => self.slide_i8x32::<5>(a, padding),
+            6 => self.slide_i8x32::<6>(a, padding),
+            7 => self.slide_i8x32::<7>(a, padding),
+            8 => self.slide_i8x32::<8>(a, padding),
+            9 => self.slide_i8x32::<9>(a, padding),
+            10 => self.slide_i8x32::<10>(a, padding),
+            11 => self.slide_i8x32::<11>(a, padding),
+            12 => self.slide_i8x32::<12>(a, padding),
+            13 => self.slide_i8x32::<13>(a, padding),
+            14 => self.slide_i8x32::<14>(a, padding),
+            15 => self.slide_i8x32::<15>(a, padding),
+            16 => self.slide_i8x32::<16>(a, padding),
+            17 => self.slide_i8x32::<17>(a, padding),
+            18 => self.slide_i8x32::<18>(a, padding),
+            19 => self.slide_i8x32::<19>(a, padding),
+            20 => self.slide_i8x32::<20>(a, padding),
+            21 => self.slide_i8x32::<21>(a, padding),
+            22 => self.slide_i8x32::<22>(a, padding),
+            23 => self.slide_i8x32::<23>(a, padding),
+            24 => self.slide_i8x32::<24>(a, padding),
+            25 => self.slide_i8x32::<25>(a, padding),
+            26 => self.slide_i8x32::<26>(a, padding),
+            27 => self.slide_i8x32::<27>(a, padding),
+            28 => self.slide_i8x32::<28>(a, padding),
+            29 => self.slide_i8x32::<29>(a, padding),
+            30 => self.slide_i8x32::<30>(a, padding),
+            31 => self.slide_i8x32::<31>(a, padding),
+            32 => self.slide_i8x32::<32>(a, padding),
+            _ => self.slide_i8x32::<32>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_i8x32<const OFFSET: usize>(
@@ -5403,12 +5413,6 @@ impl Simd for Avx2 {
         a: i8x32<Self>,
         padding: i8,
     ) -> i8x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
         let padding = self.splat_i8x32(padding);
         match OFFSET {
             0 => self.slide_i8x32::<32>(padding, a),
@@ -5444,7 +5448,7 @@ impl Simd for Avx2 {
             30 => self.slide_i8x32::<2>(padding, a),
             31 => self.slide_i8x32::<1>(padding, a),
             32 => self.slide_i8x32::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_i8x32::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -5919,23 +5923,45 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_u8x32<const OFFSET: usize>(self, a: u8x32<Self>) -> u8x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
-        self.slide_u8x32::<OFFSET>(a, a)
+        match OFFSET % 32 {
+            0 => self.slide_u8x32::<0>(a, a),
+            1 => self.slide_u8x32::<1>(a, a),
+            2 => self.slide_u8x32::<2>(a, a),
+            3 => self.slide_u8x32::<3>(a, a),
+            4 => self.slide_u8x32::<4>(a, a),
+            5 => self.slide_u8x32::<5>(a, a),
+            6 => self.slide_u8x32::<6>(a, a),
+            7 => self.slide_u8x32::<7>(a, a),
+            8 => self.slide_u8x32::<8>(a, a),
+            9 => self.slide_u8x32::<9>(a, a),
+            10 => self.slide_u8x32::<10>(a, a),
+            11 => self.slide_u8x32::<11>(a, a),
+            12 => self.slide_u8x32::<12>(a, a),
+            13 => self.slide_u8x32::<13>(a, a),
+            14 => self.slide_u8x32::<14>(a, a),
+            15 => self.slide_u8x32::<15>(a, a),
+            16 => self.slide_u8x32::<16>(a, a),
+            17 => self.slide_u8x32::<17>(a, a),
+            18 => self.slide_u8x32::<18>(a, a),
+            19 => self.slide_u8x32::<19>(a, a),
+            20 => self.slide_u8x32::<20>(a, a),
+            21 => self.slide_u8x32::<21>(a, a),
+            22 => self.slide_u8x32::<22>(a, a),
+            23 => self.slide_u8x32::<23>(a, a),
+            24 => self.slide_u8x32::<24>(a, a),
+            25 => self.slide_u8x32::<25>(a, a),
+            26 => self.slide_u8x32::<26>(a, a),
+            27 => self.slide_u8x32::<27>(a, a),
+            28 => self.slide_u8x32::<28>(a, a),
+            29 => self.slide_u8x32::<29>(a, a),
+            30 => self.slide_u8x32::<30>(a, a),
+            31 => self.slide_u8x32::<31>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_u8x32<const OFFSET: usize>(self, a: u8x32<Self>) -> u8x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
-        match OFFSET {
+        match OFFSET % 32 {
             0 => self.slide_u8x32::<32>(a, a),
             1 => self.slide_u8x32::<31>(a, a),
             2 => self.slide_u8x32::<30>(a, a),
@@ -5968,7 +5994,6 @@ impl Simd for Avx2 {
             29 => self.slide_u8x32::<3>(a, a),
             30 => self.slide_u8x32::<2>(a, a),
             31 => self.slide_u8x32::<1>(a, a),
-            32 => self.slide_u8x32::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -5978,14 +6003,43 @@ impl Simd for Avx2 {
         a: u8x32<Self>,
         padding: u8,
     ) -> u8x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
         let padding = self.splat_u8x32(padding);
-        self.slide_u8x32::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_u8x32::<0>(a, padding),
+            1 => self.slide_u8x32::<1>(a, padding),
+            2 => self.slide_u8x32::<2>(a, padding),
+            3 => self.slide_u8x32::<3>(a, padding),
+            4 => self.slide_u8x32::<4>(a, padding),
+            5 => self.slide_u8x32::<5>(a, padding),
+            6 => self.slide_u8x32::<6>(a, padding),
+            7 => self.slide_u8x32::<7>(a, padding),
+            8 => self.slide_u8x32::<8>(a, padding),
+            9 => self.slide_u8x32::<9>(a, padding),
+            10 => self.slide_u8x32::<10>(a, padding),
+            11 => self.slide_u8x32::<11>(a, padding),
+            12 => self.slide_u8x32::<12>(a, padding),
+            13 => self.slide_u8x32::<13>(a, padding),
+            14 => self.slide_u8x32::<14>(a, padding),
+            15 => self.slide_u8x32::<15>(a, padding),
+            16 => self.slide_u8x32::<16>(a, padding),
+            17 => self.slide_u8x32::<17>(a, padding),
+            18 => self.slide_u8x32::<18>(a, padding),
+            19 => self.slide_u8x32::<19>(a, padding),
+            20 => self.slide_u8x32::<20>(a, padding),
+            21 => self.slide_u8x32::<21>(a, padding),
+            22 => self.slide_u8x32::<22>(a, padding),
+            23 => self.slide_u8x32::<23>(a, padding),
+            24 => self.slide_u8x32::<24>(a, padding),
+            25 => self.slide_u8x32::<25>(a, padding),
+            26 => self.slide_u8x32::<26>(a, padding),
+            27 => self.slide_u8x32::<27>(a, padding),
+            28 => self.slide_u8x32::<28>(a, padding),
+            29 => self.slide_u8x32::<29>(a, padding),
+            30 => self.slide_u8x32::<30>(a, padding),
+            31 => self.slide_u8x32::<31>(a, padding),
+            32 => self.slide_u8x32::<32>(a, padding),
+            _ => self.slide_u8x32::<32>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_u8x32<const OFFSET: usize>(
@@ -5993,12 +6047,6 @@ impl Simd for Avx2 {
         a: u8x32<Self>,
         padding: u8,
     ) -> u8x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
         let padding = self.splat_u8x32(padding);
         match OFFSET {
             0 => self.slide_u8x32::<32>(padding, a),
@@ -6034,7 +6082,7 @@ impl Simd for Avx2 {
             30 => self.slide_u8x32::<2>(padding, a),
             31 => self.slide_u8x32::<1>(padding, a),
             32 => self.slide_u8x32::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_u8x32::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -6696,23 +6744,29 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_i16x16<const OFFSET: usize>(self, a: i16x16<Self>) -> i16x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        self.slide_i16x16::<OFFSET>(a, a)
+        match OFFSET % 16 {
+            0 => self.slide_i16x16::<0>(a, a),
+            1 => self.slide_i16x16::<1>(a, a),
+            2 => self.slide_i16x16::<2>(a, a),
+            3 => self.slide_i16x16::<3>(a, a),
+            4 => self.slide_i16x16::<4>(a, a),
+            5 => self.slide_i16x16::<5>(a, a),
+            6 => self.slide_i16x16::<6>(a, a),
+            7 => self.slide_i16x16::<7>(a, a),
+            8 => self.slide_i16x16::<8>(a, a),
+            9 => self.slide_i16x16::<9>(a, a),
+            10 => self.slide_i16x16::<10>(a, a),
+            11 => self.slide_i16x16::<11>(a, a),
+            12 => self.slide_i16x16::<12>(a, a),
+            13 => self.slide_i16x16::<13>(a, a),
+            14 => self.slide_i16x16::<14>(a, a),
+            15 => self.slide_i16x16::<15>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_i16x16<const OFFSET: usize>(self, a: i16x16<Self>) -> i16x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        match OFFSET {
+        match OFFSET % 16 {
             0 => self.slide_i16x16::<16>(a, a),
             1 => self.slide_i16x16::<15>(a, a),
             2 => self.slide_i16x16::<14>(a, a),
@@ -6729,7 +6783,6 @@ impl Simd for Avx2 {
             13 => self.slide_i16x16::<3>(a, a),
             14 => self.slide_i16x16::<2>(a, a),
             15 => self.slide_i16x16::<1>(a, a),
-            16 => self.slide_i16x16::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -6739,14 +6792,27 @@ impl Simd for Avx2 {
         a: i16x16<Self>,
         padding: i16,
     ) -> i16x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_i16x16(padding);
-        self.slide_i16x16::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_i16x16::<0>(a, padding),
+            1 => self.slide_i16x16::<1>(a, padding),
+            2 => self.slide_i16x16::<2>(a, padding),
+            3 => self.slide_i16x16::<3>(a, padding),
+            4 => self.slide_i16x16::<4>(a, padding),
+            5 => self.slide_i16x16::<5>(a, padding),
+            6 => self.slide_i16x16::<6>(a, padding),
+            7 => self.slide_i16x16::<7>(a, padding),
+            8 => self.slide_i16x16::<8>(a, padding),
+            9 => self.slide_i16x16::<9>(a, padding),
+            10 => self.slide_i16x16::<10>(a, padding),
+            11 => self.slide_i16x16::<11>(a, padding),
+            12 => self.slide_i16x16::<12>(a, padding),
+            13 => self.slide_i16x16::<13>(a, padding),
+            14 => self.slide_i16x16::<14>(a, padding),
+            15 => self.slide_i16x16::<15>(a, padding),
+            16 => self.slide_i16x16::<16>(a, padding),
+            _ => self.slide_i16x16::<16>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_i16x16<const OFFSET: usize>(
@@ -6754,12 +6820,6 @@ impl Simd for Avx2 {
         a: i16x16<Self>,
         padding: i16,
     ) -> i16x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_i16x16(padding);
         match OFFSET {
             0 => self.slide_i16x16::<16>(padding, a),
@@ -6779,7 +6839,7 @@ impl Simd for Avx2 {
             14 => self.slide_i16x16::<2>(padding, a),
             15 => self.slide_i16x16::<1>(padding, a),
             16 => self.slide_i16x16::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_i16x16::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -7242,23 +7302,29 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_u16x16<const OFFSET: usize>(self, a: u16x16<Self>) -> u16x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        self.slide_u16x16::<OFFSET>(a, a)
+        match OFFSET % 16 {
+            0 => self.slide_u16x16::<0>(a, a),
+            1 => self.slide_u16x16::<1>(a, a),
+            2 => self.slide_u16x16::<2>(a, a),
+            3 => self.slide_u16x16::<3>(a, a),
+            4 => self.slide_u16x16::<4>(a, a),
+            5 => self.slide_u16x16::<5>(a, a),
+            6 => self.slide_u16x16::<6>(a, a),
+            7 => self.slide_u16x16::<7>(a, a),
+            8 => self.slide_u16x16::<8>(a, a),
+            9 => self.slide_u16x16::<9>(a, a),
+            10 => self.slide_u16x16::<10>(a, a),
+            11 => self.slide_u16x16::<11>(a, a),
+            12 => self.slide_u16x16::<12>(a, a),
+            13 => self.slide_u16x16::<13>(a, a),
+            14 => self.slide_u16x16::<14>(a, a),
+            15 => self.slide_u16x16::<15>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_u16x16<const OFFSET: usize>(self, a: u16x16<Self>) -> u16x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        match OFFSET {
+        match OFFSET % 16 {
             0 => self.slide_u16x16::<16>(a, a),
             1 => self.slide_u16x16::<15>(a, a),
             2 => self.slide_u16x16::<14>(a, a),
@@ -7275,7 +7341,6 @@ impl Simd for Avx2 {
             13 => self.slide_u16x16::<3>(a, a),
             14 => self.slide_u16x16::<2>(a, a),
             15 => self.slide_u16x16::<1>(a, a),
-            16 => self.slide_u16x16::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -7285,14 +7350,27 @@ impl Simd for Avx2 {
         a: u16x16<Self>,
         padding: u16,
     ) -> u16x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_u16x16(padding);
-        self.slide_u16x16::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_u16x16::<0>(a, padding),
+            1 => self.slide_u16x16::<1>(a, padding),
+            2 => self.slide_u16x16::<2>(a, padding),
+            3 => self.slide_u16x16::<3>(a, padding),
+            4 => self.slide_u16x16::<4>(a, padding),
+            5 => self.slide_u16x16::<5>(a, padding),
+            6 => self.slide_u16x16::<6>(a, padding),
+            7 => self.slide_u16x16::<7>(a, padding),
+            8 => self.slide_u16x16::<8>(a, padding),
+            9 => self.slide_u16x16::<9>(a, padding),
+            10 => self.slide_u16x16::<10>(a, padding),
+            11 => self.slide_u16x16::<11>(a, padding),
+            12 => self.slide_u16x16::<12>(a, padding),
+            13 => self.slide_u16x16::<13>(a, padding),
+            14 => self.slide_u16x16::<14>(a, padding),
+            15 => self.slide_u16x16::<15>(a, padding),
+            16 => self.slide_u16x16::<16>(a, padding),
+            _ => self.slide_u16x16::<16>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_u16x16<const OFFSET: usize>(
@@ -7300,12 +7378,6 @@ impl Simd for Avx2 {
         a: u16x16<Self>,
         padding: u16,
     ) -> u16x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_u16x16(padding);
         match OFFSET {
             0 => self.slide_u16x16::<16>(padding, a),
@@ -7325,7 +7397,7 @@ impl Simd for Avx2 {
             14 => self.slide_u16x16::<2>(padding, a),
             15 => self.slide_u16x16::<1>(padding, a),
             16 => self.slide_u16x16::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_u16x16::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -7990,23 +8062,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_i32x8<const OFFSET: usize>(self, a: i32x8<Self>) -> i32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        self.slide_i32x8::<OFFSET>(a, a)
+        match OFFSET % 8 {
+            0 => self.slide_i32x8::<0>(a, a),
+            1 => self.slide_i32x8::<1>(a, a),
+            2 => self.slide_i32x8::<2>(a, a),
+            3 => self.slide_i32x8::<3>(a, a),
+            4 => self.slide_i32x8::<4>(a, a),
+            5 => self.slide_i32x8::<5>(a, a),
+            6 => self.slide_i32x8::<6>(a, a),
+            7 => self.slide_i32x8::<7>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_i32x8<const OFFSET: usize>(self, a: i32x8<Self>) -> i32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        match OFFSET {
+        match OFFSET % 8 {
             0 => self.slide_i32x8::<8>(a, a),
             1 => self.slide_i32x8::<7>(a, a),
             2 => self.slide_i32x8::<6>(a, a),
@@ -8015,7 +8085,6 @@ impl Simd for Avx2 {
             5 => self.slide_i32x8::<3>(a, a),
             6 => self.slide_i32x8::<2>(a, a),
             7 => self.slide_i32x8::<1>(a, a),
-            8 => self.slide_i32x8::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -8025,14 +8094,19 @@ impl Simd for Avx2 {
         a: i32x8<Self>,
         padding: i32,
     ) -> i32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_i32x8(padding);
-        self.slide_i32x8::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_i32x8::<0>(a, padding),
+            1 => self.slide_i32x8::<1>(a, padding),
+            2 => self.slide_i32x8::<2>(a, padding),
+            3 => self.slide_i32x8::<3>(a, padding),
+            4 => self.slide_i32x8::<4>(a, padding),
+            5 => self.slide_i32x8::<5>(a, padding),
+            6 => self.slide_i32x8::<6>(a, padding),
+            7 => self.slide_i32x8::<7>(a, padding),
+            8 => self.slide_i32x8::<8>(a, padding),
+            _ => self.slide_i32x8::<8>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_i32x8<const OFFSET: usize>(
@@ -8040,12 +8114,6 @@ impl Simd for Avx2 {
         a: i32x8<Self>,
         padding: i32,
     ) -> i32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_i32x8(padding);
         match OFFSET {
             0 => self.slide_i32x8::<8>(padding, a),
@@ -8057,7 +8125,7 @@ impl Simd for Avx2 {
             6 => self.slide_i32x8::<2>(padding, a),
             7 => self.slide_i32x8::<1>(padding, a),
             8 => self.slide_i32x8::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_i32x8::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -8511,23 +8579,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_u32x8<const OFFSET: usize>(self, a: u32x8<Self>) -> u32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        self.slide_u32x8::<OFFSET>(a, a)
+        match OFFSET % 8 {
+            0 => self.slide_u32x8::<0>(a, a),
+            1 => self.slide_u32x8::<1>(a, a),
+            2 => self.slide_u32x8::<2>(a, a),
+            3 => self.slide_u32x8::<3>(a, a),
+            4 => self.slide_u32x8::<4>(a, a),
+            5 => self.slide_u32x8::<5>(a, a),
+            6 => self.slide_u32x8::<6>(a, a),
+            7 => self.slide_u32x8::<7>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_u32x8<const OFFSET: usize>(self, a: u32x8<Self>) -> u32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        match OFFSET {
+        match OFFSET % 8 {
             0 => self.slide_u32x8::<8>(a, a),
             1 => self.slide_u32x8::<7>(a, a),
             2 => self.slide_u32x8::<6>(a, a),
@@ -8536,7 +8602,6 @@ impl Simd for Avx2 {
             5 => self.slide_u32x8::<3>(a, a),
             6 => self.slide_u32x8::<2>(a, a),
             7 => self.slide_u32x8::<1>(a, a),
-            8 => self.slide_u32x8::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -8546,14 +8611,19 @@ impl Simd for Avx2 {
         a: u32x8<Self>,
         padding: u32,
     ) -> u32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_u32x8(padding);
-        self.slide_u32x8::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_u32x8::<0>(a, padding),
+            1 => self.slide_u32x8::<1>(a, padding),
+            2 => self.slide_u32x8::<2>(a, padding),
+            3 => self.slide_u32x8::<3>(a, padding),
+            4 => self.slide_u32x8::<4>(a, padding),
+            5 => self.slide_u32x8::<5>(a, padding),
+            6 => self.slide_u32x8::<6>(a, padding),
+            7 => self.slide_u32x8::<7>(a, padding),
+            8 => self.slide_u32x8::<8>(a, padding),
+            _ => self.slide_u32x8::<8>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_u32x8<const OFFSET: usize>(
@@ -8561,12 +8631,6 @@ impl Simd for Avx2 {
         a: u32x8<Self>,
         padding: u32,
     ) -> u32x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_u32x8(padding);
         match OFFSET {
             0 => self.slide_u32x8::<8>(padding, a),
@@ -8578,7 +8642,7 @@ impl Simd for Avx2 {
             6 => self.slide_u32x8::<2>(padding, a),
             7 => self.slide_u32x8::<1>(padding, a),
             8 => self.slide_u32x8::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_u32x8::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -9211,28 +9275,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_f64x4<const OFFSET: usize>(self, a: f64x4<Self>) -> f64x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
-        self.slide_f64x4::<OFFSET>(a, a)
+        match OFFSET % 4 {
+            0 => self.slide_f64x4::<0>(a, a),
+            1 => self.slide_f64x4::<1>(a, a),
+            2 => self.slide_f64x4::<2>(a, a),
+            3 => self.slide_f64x4::<3>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_f64x4<const OFFSET: usize>(self, a: f64x4<Self>) -> f64x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
-        match OFFSET {
+        match OFFSET % 4 {
             0 => self.slide_f64x4::<4>(a, a),
             1 => self.slide_f64x4::<3>(a, a),
             2 => self.slide_f64x4::<2>(a, a),
             3 => self.slide_f64x4::<1>(a, a),
-            4 => self.slide_f64x4::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -9242,14 +9299,15 @@ impl Simd for Avx2 {
         a: f64x4<Self>,
         padding: f64,
     ) -> f64x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
         let padding = self.splat_f64x4(padding);
-        self.slide_f64x4::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_f64x4::<0>(a, padding),
+            1 => self.slide_f64x4::<1>(a, padding),
+            2 => self.slide_f64x4::<2>(a, padding),
+            3 => self.slide_f64x4::<3>(a, padding),
+            4 => self.slide_f64x4::<4>(a, padding),
+            _ => self.slide_f64x4::<4>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_f64x4<const OFFSET: usize>(
@@ -9257,12 +9315,6 @@ impl Simd for Avx2 {
         a: f64x4<Self>,
         padding: f64,
     ) -> f64x4<Self> {
-        assert!(
-            OFFSET <= 4,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            4,
-        );
         let padding = self.splat_f64x4(padding);
         match OFFSET {
             0 => self.slide_f64x4::<4>(padding, a),
@@ -9270,7 +9322,7 @@ impl Simd for Avx2 {
             2 => self.slide_f64x4::<2>(padding, a),
             3 => self.slide_f64x4::<1>(padding, a),
             4 => self.slide_f64x4::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_f64x4::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -9923,23 +9975,29 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_f32x16<const OFFSET: usize>(self, a: f32x16<Self>) -> f32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        self.slide_f32x16::<OFFSET>(a, a)
+        match OFFSET % 16 {
+            0 => self.slide_f32x16::<0>(a, a),
+            1 => self.slide_f32x16::<1>(a, a),
+            2 => self.slide_f32x16::<2>(a, a),
+            3 => self.slide_f32x16::<3>(a, a),
+            4 => self.slide_f32x16::<4>(a, a),
+            5 => self.slide_f32x16::<5>(a, a),
+            6 => self.slide_f32x16::<6>(a, a),
+            7 => self.slide_f32x16::<7>(a, a),
+            8 => self.slide_f32x16::<8>(a, a),
+            9 => self.slide_f32x16::<9>(a, a),
+            10 => self.slide_f32x16::<10>(a, a),
+            11 => self.slide_f32x16::<11>(a, a),
+            12 => self.slide_f32x16::<12>(a, a),
+            13 => self.slide_f32x16::<13>(a, a),
+            14 => self.slide_f32x16::<14>(a, a),
+            15 => self.slide_f32x16::<15>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_f32x16<const OFFSET: usize>(self, a: f32x16<Self>) -> f32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        match OFFSET {
+        match OFFSET % 16 {
             0 => self.slide_f32x16::<16>(a, a),
             1 => self.slide_f32x16::<15>(a, a),
             2 => self.slide_f32x16::<14>(a, a),
@@ -9956,7 +10014,6 @@ impl Simd for Avx2 {
             13 => self.slide_f32x16::<3>(a, a),
             14 => self.slide_f32x16::<2>(a, a),
             15 => self.slide_f32x16::<1>(a, a),
-            16 => self.slide_f32x16::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -9966,14 +10023,27 @@ impl Simd for Avx2 {
         a: f32x16<Self>,
         padding: f32,
     ) -> f32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_f32x16(padding);
-        self.slide_f32x16::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_f32x16::<0>(a, padding),
+            1 => self.slide_f32x16::<1>(a, padding),
+            2 => self.slide_f32x16::<2>(a, padding),
+            3 => self.slide_f32x16::<3>(a, padding),
+            4 => self.slide_f32x16::<4>(a, padding),
+            5 => self.slide_f32x16::<5>(a, padding),
+            6 => self.slide_f32x16::<6>(a, padding),
+            7 => self.slide_f32x16::<7>(a, padding),
+            8 => self.slide_f32x16::<8>(a, padding),
+            9 => self.slide_f32x16::<9>(a, padding),
+            10 => self.slide_f32x16::<10>(a, padding),
+            11 => self.slide_f32x16::<11>(a, padding),
+            12 => self.slide_f32x16::<12>(a, padding),
+            13 => self.slide_f32x16::<13>(a, padding),
+            14 => self.slide_f32x16::<14>(a, padding),
+            15 => self.slide_f32x16::<15>(a, padding),
+            16 => self.slide_f32x16::<16>(a, padding),
+            _ => self.slide_f32x16::<16>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_f32x16<const OFFSET: usize>(
@@ -9981,12 +10051,6 @@ impl Simd for Avx2 {
         a: f32x16<Self>,
         padding: f32,
     ) -> f32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_f32x16(padding);
         match OFFSET {
             0 => self.slide_f32x16::<16>(padding, a),
@@ -10006,7 +10070,7 @@ impl Simd for Avx2 {
             14 => self.slide_f32x16::<2>(padding, a),
             15 => self.slide_f32x16::<1>(padding, a),
             16 => self.slide_f32x16::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_f32x16::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -10463,23 +10527,77 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_i8x64<const OFFSET: usize>(self, a: i8x64<Self>) -> i8x64<Self> {
-        assert!(
-            OFFSET <= 64,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            64,
-        );
-        self.slide_i8x64::<OFFSET>(a, a)
+        match OFFSET % 64 {
+            0 => self.slide_i8x64::<0>(a, a),
+            1 => self.slide_i8x64::<1>(a, a),
+            2 => self.slide_i8x64::<2>(a, a),
+            3 => self.slide_i8x64::<3>(a, a),
+            4 => self.slide_i8x64::<4>(a, a),
+            5 => self.slide_i8x64::<5>(a, a),
+            6 => self.slide_i8x64::<6>(a, a),
+            7 => self.slide_i8x64::<7>(a, a),
+            8 => self.slide_i8x64::<8>(a, a),
+            9 => self.slide_i8x64::<9>(a, a),
+            10 => self.slide_i8x64::<10>(a, a),
+            11 => self.slide_i8x64::<11>(a, a),
+            12 => self.slide_i8x64::<12>(a, a),
+            13 => self.slide_i8x64::<13>(a, a),
+            14 => self.slide_i8x64::<14>(a, a),
+            15 => self.slide_i8x64::<15>(a, a),
+            16 => self.slide_i8x64::<16>(a, a),
+            17 => self.slide_i8x64::<17>(a, a),
+            18 => self.slide_i8x64::<18>(a, a),
+            19 => self.slide_i8x64::<19>(a, a),
+            20 => self.slide_i8x64::<20>(a, a),
+            21 => self.slide_i8x64::<21>(a, a),
+            22 => self.slide_i8x64::<22>(a, a),
+            23 => self.slide_i8x64::<23>(a, a),
+            24 => self.slide_i8x64::<24>(a, a),
+            25 => self.slide_i8x64::<25>(a, a),
+            26 => self.slide_i8x64::<26>(a, a),
+            27 => self.slide_i8x64::<27>(a, a),
+            28 => self.slide_i8x64::<28>(a, a),
+            29 => self.slide_i8x64::<29>(a, a),
+            30 => self.slide_i8x64::<30>(a, a),
+            31 => self.slide_i8x64::<31>(a, a),
+            32 => self.slide_i8x64::<32>(a, a),
+            33 => self.slide_i8x64::<33>(a, a),
+            34 => self.slide_i8x64::<34>(a, a),
+            35 => self.slide_i8x64::<35>(a, a),
+            36 => self.slide_i8x64::<36>(a, a),
+            37 => self.slide_i8x64::<37>(a, a),
+            38 => self.slide_i8x64::<38>(a, a),
+            39 => self.slide_i8x64::<39>(a, a),
+            40 => self.slide_i8x64::<40>(a, a),
+            41 => self.slide_i8x64::<41>(a, a),
+            42 => self.slide_i8x64::<42>(a, a),
+            43 => self.slide_i8x64::<43>(a, a),
+            44 => self.slide_i8x64::<44>(a, a),
+            45 => self.slide_i8x64::<45>(a, a),
+            46 => self.slide_i8x64::<46>(a, a),
+            47 => self.slide_i8x64::<47>(a, a),
+            48 => self.slide_i8x64::<48>(a, a),
+            49 => self.slide_i8x64::<49>(a, a),
+            50 => self.slide_i8x64::<50>(a, a),
+            51 => self.slide_i8x64::<51>(a, a),
+            52 => self.slide_i8x64::<52>(a, a),
+            53 => self.slide_i8x64::<53>(a, a),
+            54 => self.slide_i8x64::<54>(a, a),
+            55 => self.slide_i8x64::<55>(a, a),
+            56 => self.slide_i8x64::<56>(a, a),
+            57 => self.slide_i8x64::<57>(a, a),
+            58 => self.slide_i8x64::<58>(a, a),
+            59 => self.slide_i8x64::<59>(a, a),
+            60 => self.slide_i8x64::<60>(a, a),
+            61 => self.slide_i8x64::<61>(a, a),
+            62 => self.slide_i8x64::<62>(a, a),
+            63 => self.slide_i8x64::<63>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_i8x64<const OFFSET: usize>(self, a: i8x64<Self>) -> i8x64<Self> {
-        assert!(
-            OFFSET <= 64,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            64,
-        );
-        match OFFSET {
+        match OFFSET % 64 {
             0 => self.slide_i8x64::<64>(a, a),
             1 => self.slide_i8x64::<63>(a, a),
             2 => self.slide_i8x64::<62>(a, a),
@@ -10544,7 +10662,6 @@ impl Simd for Avx2 {
             61 => self.slide_i8x64::<3>(a, a),
             62 => self.slide_i8x64::<2>(a, a),
             63 => self.slide_i8x64::<1>(a, a),
-            64 => self.slide_i8x64::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -10554,14 +10671,75 @@ impl Simd for Avx2 {
         a: i8x64<Self>,
         padding: i8,
     ) -> i8x64<Self> {
-        assert!(
-            OFFSET <= 64,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            64,
-        );
         let padding = self.splat_i8x64(padding);
-        self.slide_i8x64::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_i8x64::<0>(a, padding),
+            1 => self.slide_i8x64::<1>(a, padding),
+            2 => self.slide_i8x64::<2>(a, padding),
+            3 => self.slide_i8x64::<3>(a, padding),
+            4 => self.slide_i8x64::<4>(a, padding),
+            5 => self.slide_i8x64::<5>(a, padding),
+            6 => self.slide_i8x64::<6>(a, padding),
+            7 => self.slide_i8x64::<7>(a, padding),
+            8 => self.slide_i8x64::<8>(a, padding),
+            9 => self.slide_i8x64::<9>(a, padding),
+            10 => self.slide_i8x64::<10>(a, padding),
+            11 => self.slide_i8x64::<11>(a, padding),
+            12 => self.slide_i8x64::<12>(a, padding),
+            13 => self.slide_i8x64::<13>(a, padding),
+            14 => self.slide_i8x64::<14>(a, padding),
+            15 => self.slide_i8x64::<15>(a, padding),
+            16 => self.slide_i8x64::<16>(a, padding),
+            17 => self.slide_i8x64::<17>(a, padding),
+            18 => self.slide_i8x64::<18>(a, padding),
+            19 => self.slide_i8x64::<19>(a, padding),
+            20 => self.slide_i8x64::<20>(a, padding),
+            21 => self.slide_i8x64::<21>(a, padding),
+            22 => self.slide_i8x64::<22>(a, padding),
+            23 => self.slide_i8x64::<23>(a, padding),
+            24 => self.slide_i8x64::<24>(a, padding),
+            25 => self.slide_i8x64::<25>(a, padding),
+            26 => self.slide_i8x64::<26>(a, padding),
+            27 => self.slide_i8x64::<27>(a, padding),
+            28 => self.slide_i8x64::<28>(a, padding),
+            29 => self.slide_i8x64::<29>(a, padding),
+            30 => self.slide_i8x64::<30>(a, padding),
+            31 => self.slide_i8x64::<31>(a, padding),
+            32 => self.slide_i8x64::<32>(a, padding),
+            33 => self.slide_i8x64::<33>(a, padding),
+            34 => self.slide_i8x64::<34>(a, padding),
+            35 => self.slide_i8x64::<35>(a, padding),
+            36 => self.slide_i8x64::<36>(a, padding),
+            37 => self.slide_i8x64::<37>(a, padding),
+            38 => self.slide_i8x64::<38>(a, padding),
+            39 => self.slide_i8x64::<39>(a, padding),
+            40 => self.slide_i8x64::<40>(a, padding),
+            41 => self.slide_i8x64::<41>(a, padding),
+            42 => self.slide_i8x64::<42>(a, padding),
+            43 => self.slide_i8x64::<43>(a, padding),
+            44 => self.slide_i8x64::<44>(a, padding),
+            45 => self.slide_i8x64::<45>(a, padding),
+            46 => self.slide_i8x64::<46>(a, padding),
+            47 => self.slide_i8x64::<47>(a, padding),
+            48 => self.slide_i8x64::<48>(a, padding),
+            49 => self.slide_i8x64::<49>(a, padding),
+            50 => self.slide_i8x64::<50>(a, padding),
+            51 => self.slide_i8x64::<51>(a, padding),
+            52 => self.slide_i8x64::<52>(a, padding),
+            53 => self.slide_i8x64::<53>(a, padding),
+            54 => self.slide_i8x64::<54>(a, padding),
+            55 => self.slide_i8x64::<55>(a, padding),
+            56 => self.slide_i8x64::<56>(a, padding),
+            57 => self.slide_i8x64::<57>(a, padding),
+            58 => self.slide_i8x64::<58>(a, padding),
+            59 => self.slide_i8x64::<59>(a, padding),
+            60 => self.slide_i8x64::<60>(a, padding),
+            61 => self.slide_i8x64::<61>(a, padding),
+            62 => self.slide_i8x64::<62>(a, padding),
+            63 => self.slide_i8x64::<63>(a, padding),
+            64 => self.slide_i8x64::<64>(a, padding),
+            _ => self.slide_i8x64::<64>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_i8x64<const OFFSET: usize>(
@@ -10569,12 +10747,6 @@ impl Simd for Avx2 {
         a: i8x64<Self>,
         padding: i8,
     ) -> i8x64<Self> {
-        assert!(
-            OFFSET <= 64,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            64,
-        );
         let padding = self.splat_i8x64(padding);
         match OFFSET {
             0 => self.slide_i8x64::<64>(padding, a),
@@ -10642,7 +10814,7 @@ impl Simd for Avx2 {
             62 => self.slide_i8x64::<2>(padding, a),
             63 => self.slide_i8x64::<1>(padding, a),
             64 => self.slide_i8x64::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_i8x64::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -10927,23 +11099,77 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_u8x64<const OFFSET: usize>(self, a: u8x64<Self>) -> u8x64<Self> {
-        assert!(
-            OFFSET <= 64,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            64,
-        );
-        self.slide_u8x64::<OFFSET>(a, a)
+        match OFFSET % 64 {
+            0 => self.slide_u8x64::<0>(a, a),
+            1 => self.slide_u8x64::<1>(a, a),
+            2 => self.slide_u8x64::<2>(a, a),
+            3 => self.slide_u8x64::<3>(a, a),
+            4 => self.slide_u8x64::<4>(a, a),
+            5 => self.slide_u8x64::<5>(a, a),
+            6 => self.slide_u8x64::<6>(a, a),
+            7 => self.slide_u8x64::<7>(a, a),
+            8 => self.slide_u8x64::<8>(a, a),
+            9 => self.slide_u8x64::<9>(a, a),
+            10 => self.slide_u8x64::<10>(a, a),
+            11 => self.slide_u8x64::<11>(a, a),
+            12 => self.slide_u8x64::<12>(a, a),
+            13 => self.slide_u8x64::<13>(a, a),
+            14 => self.slide_u8x64::<14>(a, a),
+            15 => self.slide_u8x64::<15>(a, a),
+            16 => self.slide_u8x64::<16>(a, a),
+            17 => self.slide_u8x64::<17>(a, a),
+            18 => self.slide_u8x64::<18>(a, a),
+            19 => self.slide_u8x64::<19>(a, a),
+            20 => self.slide_u8x64::<20>(a, a),
+            21 => self.slide_u8x64::<21>(a, a),
+            22 => self.slide_u8x64::<22>(a, a),
+            23 => self.slide_u8x64::<23>(a, a),
+            24 => self.slide_u8x64::<24>(a, a),
+            25 => self.slide_u8x64::<25>(a, a),
+            26 => self.slide_u8x64::<26>(a, a),
+            27 => self.slide_u8x64::<27>(a, a),
+            28 => self.slide_u8x64::<28>(a, a),
+            29 => self.slide_u8x64::<29>(a, a),
+            30 => self.slide_u8x64::<30>(a, a),
+            31 => self.slide_u8x64::<31>(a, a),
+            32 => self.slide_u8x64::<32>(a, a),
+            33 => self.slide_u8x64::<33>(a, a),
+            34 => self.slide_u8x64::<34>(a, a),
+            35 => self.slide_u8x64::<35>(a, a),
+            36 => self.slide_u8x64::<36>(a, a),
+            37 => self.slide_u8x64::<37>(a, a),
+            38 => self.slide_u8x64::<38>(a, a),
+            39 => self.slide_u8x64::<39>(a, a),
+            40 => self.slide_u8x64::<40>(a, a),
+            41 => self.slide_u8x64::<41>(a, a),
+            42 => self.slide_u8x64::<42>(a, a),
+            43 => self.slide_u8x64::<43>(a, a),
+            44 => self.slide_u8x64::<44>(a, a),
+            45 => self.slide_u8x64::<45>(a, a),
+            46 => self.slide_u8x64::<46>(a, a),
+            47 => self.slide_u8x64::<47>(a, a),
+            48 => self.slide_u8x64::<48>(a, a),
+            49 => self.slide_u8x64::<49>(a, a),
+            50 => self.slide_u8x64::<50>(a, a),
+            51 => self.slide_u8x64::<51>(a, a),
+            52 => self.slide_u8x64::<52>(a, a),
+            53 => self.slide_u8x64::<53>(a, a),
+            54 => self.slide_u8x64::<54>(a, a),
+            55 => self.slide_u8x64::<55>(a, a),
+            56 => self.slide_u8x64::<56>(a, a),
+            57 => self.slide_u8x64::<57>(a, a),
+            58 => self.slide_u8x64::<58>(a, a),
+            59 => self.slide_u8x64::<59>(a, a),
+            60 => self.slide_u8x64::<60>(a, a),
+            61 => self.slide_u8x64::<61>(a, a),
+            62 => self.slide_u8x64::<62>(a, a),
+            63 => self.slide_u8x64::<63>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_u8x64<const OFFSET: usize>(self, a: u8x64<Self>) -> u8x64<Self> {
-        assert!(
-            OFFSET <= 64,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            64,
-        );
-        match OFFSET {
+        match OFFSET % 64 {
             0 => self.slide_u8x64::<64>(a, a),
             1 => self.slide_u8x64::<63>(a, a),
             2 => self.slide_u8x64::<62>(a, a),
@@ -11008,7 +11234,6 @@ impl Simd for Avx2 {
             61 => self.slide_u8x64::<3>(a, a),
             62 => self.slide_u8x64::<2>(a, a),
             63 => self.slide_u8x64::<1>(a, a),
-            64 => self.slide_u8x64::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -11018,14 +11243,75 @@ impl Simd for Avx2 {
         a: u8x64<Self>,
         padding: u8,
     ) -> u8x64<Self> {
-        assert!(
-            OFFSET <= 64,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            64,
-        );
         let padding = self.splat_u8x64(padding);
-        self.slide_u8x64::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_u8x64::<0>(a, padding),
+            1 => self.slide_u8x64::<1>(a, padding),
+            2 => self.slide_u8x64::<2>(a, padding),
+            3 => self.slide_u8x64::<3>(a, padding),
+            4 => self.slide_u8x64::<4>(a, padding),
+            5 => self.slide_u8x64::<5>(a, padding),
+            6 => self.slide_u8x64::<6>(a, padding),
+            7 => self.slide_u8x64::<7>(a, padding),
+            8 => self.slide_u8x64::<8>(a, padding),
+            9 => self.slide_u8x64::<9>(a, padding),
+            10 => self.slide_u8x64::<10>(a, padding),
+            11 => self.slide_u8x64::<11>(a, padding),
+            12 => self.slide_u8x64::<12>(a, padding),
+            13 => self.slide_u8x64::<13>(a, padding),
+            14 => self.slide_u8x64::<14>(a, padding),
+            15 => self.slide_u8x64::<15>(a, padding),
+            16 => self.slide_u8x64::<16>(a, padding),
+            17 => self.slide_u8x64::<17>(a, padding),
+            18 => self.slide_u8x64::<18>(a, padding),
+            19 => self.slide_u8x64::<19>(a, padding),
+            20 => self.slide_u8x64::<20>(a, padding),
+            21 => self.slide_u8x64::<21>(a, padding),
+            22 => self.slide_u8x64::<22>(a, padding),
+            23 => self.slide_u8x64::<23>(a, padding),
+            24 => self.slide_u8x64::<24>(a, padding),
+            25 => self.slide_u8x64::<25>(a, padding),
+            26 => self.slide_u8x64::<26>(a, padding),
+            27 => self.slide_u8x64::<27>(a, padding),
+            28 => self.slide_u8x64::<28>(a, padding),
+            29 => self.slide_u8x64::<29>(a, padding),
+            30 => self.slide_u8x64::<30>(a, padding),
+            31 => self.slide_u8x64::<31>(a, padding),
+            32 => self.slide_u8x64::<32>(a, padding),
+            33 => self.slide_u8x64::<33>(a, padding),
+            34 => self.slide_u8x64::<34>(a, padding),
+            35 => self.slide_u8x64::<35>(a, padding),
+            36 => self.slide_u8x64::<36>(a, padding),
+            37 => self.slide_u8x64::<37>(a, padding),
+            38 => self.slide_u8x64::<38>(a, padding),
+            39 => self.slide_u8x64::<39>(a, padding),
+            40 => self.slide_u8x64::<40>(a, padding),
+            41 => self.slide_u8x64::<41>(a, padding),
+            42 => self.slide_u8x64::<42>(a, padding),
+            43 => self.slide_u8x64::<43>(a, padding),
+            44 => self.slide_u8x64::<44>(a, padding),
+            45 => self.slide_u8x64::<45>(a, padding),
+            46 => self.slide_u8x64::<46>(a, padding),
+            47 => self.slide_u8x64::<47>(a, padding),
+            48 => self.slide_u8x64::<48>(a, padding),
+            49 => self.slide_u8x64::<49>(a, padding),
+            50 => self.slide_u8x64::<50>(a, padding),
+            51 => self.slide_u8x64::<51>(a, padding),
+            52 => self.slide_u8x64::<52>(a, padding),
+            53 => self.slide_u8x64::<53>(a, padding),
+            54 => self.slide_u8x64::<54>(a, padding),
+            55 => self.slide_u8x64::<55>(a, padding),
+            56 => self.slide_u8x64::<56>(a, padding),
+            57 => self.slide_u8x64::<57>(a, padding),
+            58 => self.slide_u8x64::<58>(a, padding),
+            59 => self.slide_u8x64::<59>(a, padding),
+            60 => self.slide_u8x64::<60>(a, padding),
+            61 => self.slide_u8x64::<61>(a, padding),
+            62 => self.slide_u8x64::<62>(a, padding),
+            63 => self.slide_u8x64::<63>(a, padding),
+            64 => self.slide_u8x64::<64>(a, padding),
+            _ => self.slide_u8x64::<64>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_u8x64<const OFFSET: usize>(
@@ -11033,12 +11319,6 @@ impl Simd for Avx2 {
         a: u8x64<Self>,
         padding: u8,
     ) -> u8x64<Self> {
-        assert!(
-            OFFSET <= 64,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            64,
-        );
         let padding = self.splat_u8x64(padding);
         match OFFSET {
             0 => self.slide_u8x64::<64>(padding, a),
@@ -11106,7 +11386,7 @@ impl Simd for Avx2 {
             62 => self.slide_u8x64::<2>(padding, a),
             63 => self.slide_u8x64::<1>(padding, a),
             64 => self.slide_u8x64::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_u8x64::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -11618,23 +11898,45 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_i16x32<const OFFSET: usize>(self, a: i16x32<Self>) -> i16x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
-        self.slide_i16x32::<OFFSET>(a, a)
+        match OFFSET % 32 {
+            0 => self.slide_i16x32::<0>(a, a),
+            1 => self.slide_i16x32::<1>(a, a),
+            2 => self.slide_i16x32::<2>(a, a),
+            3 => self.slide_i16x32::<3>(a, a),
+            4 => self.slide_i16x32::<4>(a, a),
+            5 => self.slide_i16x32::<5>(a, a),
+            6 => self.slide_i16x32::<6>(a, a),
+            7 => self.slide_i16x32::<7>(a, a),
+            8 => self.slide_i16x32::<8>(a, a),
+            9 => self.slide_i16x32::<9>(a, a),
+            10 => self.slide_i16x32::<10>(a, a),
+            11 => self.slide_i16x32::<11>(a, a),
+            12 => self.slide_i16x32::<12>(a, a),
+            13 => self.slide_i16x32::<13>(a, a),
+            14 => self.slide_i16x32::<14>(a, a),
+            15 => self.slide_i16x32::<15>(a, a),
+            16 => self.slide_i16x32::<16>(a, a),
+            17 => self.slide_i16x32::<17>(a, a),
+            18 => self.slide_i16x32::<18>(a, a),
+            19 => self.slide_i16x32::<19>(a, a),
+            20 => self.slide_i16x32::<20>(a, a),
+            21 => self.slide_i16x32::<21>(a, a),
+            22 => self.slide_i16x32::<22>(a, a),
+            23 => self.slide_i16x32::<23>(a, a),
+            24 => self.slide_i16x32::<24>(a, a),
+            25 => self.slide_i16x32::<25>(a, a),
+            26 => self.slide_i16x32::<26>(a, a),
+            27 => self.slide_i16x32::<27>(a, a),
+            28 => self.slide_i16x32::<28>(a, a),
+            29 => self.slide_i16x32::<29>(a, a),
+            30 => self.slide_i16x32::<30>(a, a),
+            31 => self.slide_i16x32::<31>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_i16x32<const OFFSET: usize>(self, a: i16x32<Self>) -> i16x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
-        match OFFSET {
+        match OFFSET % 32 {
             0 => self.slide_i16x32::<32>(a, a),
             1 => self.slide_i16x32::<31>(a, a),
             2 => self.slide_i16x32::<30>(a, a),
@@ -11667,7 +11969,6 @@ impl Simd for Avx2 {
             29 => self.slide_i16x32::<3>(a, a),
             30 => self.slide_i16x32::<2>(a, a),
             31 => self.slide_i16x32::<1>(a, a),
-            32 => self.slide_i16x32::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -11677,14 +11978,43 @@ impl Simd for Avx2 {
         a: i16x32<Self>,
         padding: i16,
     ) -> i16x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
         let padding = self.splat_i16x32(padding);
-        self.slide_i16x32::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_i16x32::<0>(a, padding),
+            1 => self.slide_i16x32::<1>(a, padding),
+            2 => self.slide_i16x32::<2>(a, padding),
+            3 => self.slide_i16x32::<3>(a, padding),
+            4 => self.slide_i16x32::<4>(a, padding),
+            5 => self.slide_i16x32::<5>(a, padding),
+            6 => self.slide_i16x32::<6>(a, padding),
+            7 => self.slide_i16x32::<7>(a, padding),
+            8 => self.slide_i16x32::<8>(a, padding),
+            9 => self.slide_i16x32::<9>(a, padding),
+            10 => self.slide_i16x32::<10>(a, padding),
+            11 => self.slide_i16x32::<11>(a, padding),
+            12 => self.slide_i16x32::<12>(a, padding),
+            13 => self.slide_i16x32::<13>(a, padding),
+            14 => self.slide_i16x32::<14>(a, padding),
+            15 => self.slide_i16x32::<15>(a, padding),
+            16 => self.slide_i16x32::<16>(a, padding),
+            17 => self.slide_i16x32::<17>(a, padding),
+            18 => self.slide_i16x32::<18>(a, padding),
+            19 => self.slide_i16x32::<19>(a, padding),
+            20 => self.slide_i16x32::<20>(a, padding),
+            21 => self.slide_i16x32::<21>(a, padding),
+            22 => self.slide_i16x32::<22>(a, padding),
+            23 => self.slide_i16x32::<23>(a, padding),
+            24 => self.slide_i16x32::<24>(a, padding),
+            25 => self.slide_i16x32::<25>(a, padding),
+            26 => self.slide_i16x32::<26>(a, padding),
+            27 => self.slide_i16x32::<27>(a, padding),
+            28 => self.slide_i16x32::<28>(a, padding),
+            29 => self.slide_i16x32::<29>(a, padding),
+            30 => self.slide_i16x32::<30>(a, padding),
+            31 => self.slide_i16x32::<31>(a, padding),
+            32 => self.slide_i16x32::<32>(a, padding),
+            _ => self.slide_i16x32::<32>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_i16x32<const OFFSET: usize>(
@@ -11692,12 +12022,6 @@ impl Simd for Avx2 {
         a: i16x32<Self>,
         padding: i16,
     ) -> i16x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
         let padding = self.splat_i16x32(padding);
         match OFFSET {
             0 => self.slide_i16x32::<32>(padding, a),
@@ -11733,7 +12057,7 @@ impl Simd for Avx2 {
             30 => self.slide_i16x32::<2>(padding, a),
             31 => self.slide_i16x32::<1>(padding, a),
             32 => self.slide_i16x32::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_i16x32::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -12031,23 +12355,45 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_u16x32<const OFFSET: usize>(self, a: u16x32<Self>) -> u16x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
-        self.slide_u16x32::<OFFSET>(a, a)
+        match OFFSET % 32 {
+            0 => self.slide_u16x32::<0>(a, a),
+            1 => self.slide_u16x32::<1>(a, a),
+            2 => self.slide_u16x32::<2>(a, a),
+            3 => self.slide_u16x32::<3>(a, a),
+            4 => self.slide_u16x32::<4>(a, a),
+            5 => self.slide_u16x32::<5>(a, a),
+            6 => self.slide_u16x32::<6>(a, a),
+            7 => self.slide_u16x32::<7>(a, a),
+            8 => self.slide_u16x32::<8>(a, a),
+            9 => self.slide_u16x32::<9>(a, a),
+            10 => self.slide_u16x32::<10>(a, a),
+            11 => self.slide_u16x32::<11>(a, a),
+            12 => self.slide_u16x32::<12>(a, a),
+            13 => self.slide_u16x32::<13>(a, a),
+            14 => self.slide_u16x32::<14>(a, a),
+            15 => self.slide_u16x32::<15>(a, a),
+            16 => self.slide_u16x32::<16>(a, a),
+            17 => self.slide_u16x32::<17>(a, a),
+            18 => self.slide_u16x32::<18>(a, a),
+            19 => self.slide_u16x32::<19>(a, a),
+            20 => self.slide_u16x32::<20>(a, a),
+            21 => self.slide_u16x32::<21>(a, a),
+            22 => self.slide_u16x32::<22>(a, a),
+            23 => self.slide_u16x32::<23>(a, a),
+            24 => self.slide_u16x32::<24>(a, a),
+            25 => self.slide_u16x32::<25>(a, a),
+            26 => self.slide_u16x32::<26>(a, a),
+            27 => self.slide_u16x32::<27>(a, a),
+            28 => self.slide_u16x32::<28>(a, a),
+            29 => self.slide_u16x32::<29>(a, a),
+            30 => self.slide_u16x32::<30>(a, a),
+            31 => self.slide_u16x32::<31>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_u16x32<const OFFSET: usize>(self, a: u16x32<Self>) -> u16x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
-        match OFFSET {
+        match OFFSET % 32 {
             0 => self.slide_u16x32::<32>(a, a),
             1 => self.slide_u16x32::<31>(a, a),
             2 => self.slide_u16x32::<30>(a, a),
@@ -12080,7 +12426,6 @@ impl Simd for Avx2 {
             29 => self.slide_u16x32::<3>(a, a),
             30 => self.slide_u16x32::<2>(a, a),
             31 => self.slide_u16x32::<1>(a, a),
-            32 => self.slide_u16x32::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -12090,14 +12435,43 @@ impl Simd for Avx2 {
         a: u16x32<Self>,
         padding: u16,
     ) -> u16x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
         let padding = self.splat_u16x32(padding);
-        self.slide_u16x32::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_u16x32::<0>(a, padding),
+            1 => self.slide_u16x32::<1>(a, padding),
+            2 => self.slide_u16x32::<2>(a, padding),
+            3 => self.slide_u16x32::<3>(a, padding),
+            4 => self.slide_u16x32::<4>(a, padding),
+            5 => self.slide_u16x32::<5>(a, padding),
+            6 => self.slide_u16x32::<6>(a, padding),
+            7 => self.slide_u16x32::<7>(a, padding),
+            8 => self.slide_u16x32::<8>(a, padding),
+            9 => self.slide_u16x32::<9>(a, padding),
+            10 => self.slide_u16x32::<10>(a, padding),
+            11 => self.slide_u16x32::<11>(a, padding),
+            12 => self.slide_u16x32::<12>(a, padding),
+            13 => self.slide_u16x32::<13>(a, padding),
+            14 => self.slide_u16x32::<14>(a, padding),
+            15 => self.slide_u16x32::<15>(a, padding),
+            16 => self.slide_u16x32::<16>(a, padding),
+            17 => self.slide_u16x32::<17>(a, padding),
+            18 => self.slide_u16x32::<18>(a, padding),
+            19 => self.slide_u16x32::<19>(a, padding),
+            20 => self.slide_u16x32::<20>(a, padding),
+            21 => self.slide_u16x32::<21>(a, padding),
+            22 => self.slide_u16x32::<22>(a, padding),
+            23 => self.slide_u16x32::<23>(a, padding),
+            24 => self.slide_u16x32::<24>(a, padding),
+            25 => self.slide_u16x32::<25>(a, padding),
+            26 => self.slide_u16x32::<26>(a, padding),
+            27 => self.slide_u16x32::<27>(a, padding),
+            28 => self.slide_u16x32::<28>(a, padding),
+            29 => self.slide_u16x32::<29>(a, padding),
+            30 => self.slide_u16x32::<30>(a, padding),
+            31 => self.slide_u16x32::<31>(a, padding),
+            32 => self.slide_u16x32::<32>(a, padding),
+            _ => self.slide_u16x32::<32>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_u16x32<const OFFSET: usize>(
@@ -12105,12 +12479,6 @@ impl Simd for Avx2 {
         a: u16x32<Self>,
         padding: u16,
     ) -> u16x32<Self> {
-        assert!(
-            OFFSET <= 32,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            32,
-        );
         let padding = self.splat_u16x32(padding);
         match OFFSET {
             0 => self.slide_u16x32::<32>(padding, a),
@@ -12146,7 +12514,7 @@ impl Simd for Avx2 {
             30 => self.slide_u16x32::<2>(padding, a),
             31 => self.slide_u16x32::<1>(padding, a),
             32 => self.slide_u16x32::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_u16x32::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -12670,23 +13038,29 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_i32x16<const OFFSET: usize>(self, a: i32x16<Self>) -> i32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        self.slide_i32x16::<OFFSET>(a, a)
+        match OFFSET % 16 {
+            0 => self.slide_i32x16::<0>(a, a),
+            1 => self.slide_i32x16::<1>(a, a),
+            2 => self.slide_i32x16::<2>(a, a),
+            3 => self.slide_i32x16::<3>(a, a),
+            4 => self.slide_i32x16::<4>(a, a),
+            5 => self.slide_i32x16::<5>(a, a),
+            6 => self.slide_i32x16::<6>(a, a),
+            7 => self.slide_i32x16::<7>(a, a),
+            8 => self.slide_i32x16::<8>(a, a),
+            9 => self.slide_i32x16::<9>(a, a),
+            10 => self.slide_i32x16::<10>(a, a),
+            11 => self.slide_i32x16::<11>(a, a),
+            12 => self.slide_i32x16::<12>(a, a),
+            13 => self.slide_i32x16::<13>(a, a),
+            14 => self.slide_i32x16::<14>(a, a),
+            15 => self.slide_i32x16::<15>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_i32x16<const OFFSET: usize>(self, a: i32x16<Self>) -> i32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        match OFFSET {
+        match OFFSET % 16 {
             0 => self.slide_i32x16::<16>(a, a),
             1 => self.slide_i32x16::<15>(a, a),
             2 => self.slide_i32x16::<14>(a, a),
@@ -12703,7 +13077,6 @@ impl Simd for Avx2 {
             13 => self.slide_i32x16::<3>(a, a),
             14 => self.slide_i32x16::<2>(a, a),
             15 => self.slide_i32x16::<1>(a, a),
-            16 => self.slide_i32x16::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -12713,14 +13086,27 @@ impl Simd for Avx2 {
         a: i32x16<Self>,
         padding: i32,
     ) -> i32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_i32x16(padding);
-        self.slide_i32x16::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_i32x16::<0>(a, padding),
+            1 => self.slide_i32x16::<1>(a, padding),
+            2 => self.slide_i32x16::<2>(a, padding),
+            3 => self.slide_i32x16::<3>(a, padding),
+            4 => self.slide_i32x16::<4>(a, padding),
+            5 => self.slide_i32x16::<5>(a, padding),
+            6 => self.slide_i32x16::<6>(a, padding),
+            7 => self.slide_i32x16::<7>(a, padding),
+            8 => self.slide_i32x16::<8>(a, padding),
+            9 => self.slide_i32x16::<9>(a, padding),
+            10 => self.slide_i32x16::<10>(a, padding),
+            11 => self.slide_i32x16::<11>(a, padding),
+            12 => self.slide_i32x16::<12>(a, padding),
+            13 => self.slide_i32x16::<13>(a, padding),
+            14 => self.slide_i32x16::<14>(a, padding),
+            15 => self.slide_i32x16::<15>(a, padding),
+            16 => self.slide_i32x16::<16>(a, padding),
+            _ => self.slide_i32x16::<16>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_i32x16<const OFFSET: usize>(
@@ -12728,12 +13114,6 @@ impl Simd for Avx2 {
         a: i32x16<Self>,
         padding: i32,
     ) -> i32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_i32x16(padding);
         match OFFSET {
             0 => self.slide_i32x16::<16>(padding, a),
@@ -12753,7 +13133,7 @@ impl Simd for Avx2 {
             14 => self.slide_i32x16::<2>(padding, a),
             15 => self.slide_i32x16::<1>(padding, a),
             16 => self.slide_i32x16::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_i32x16::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -13047,23 +13427,29 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_u32x16<const OFFSET: usize>(self, a: u32x16<Self>) -> u32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        self.slide_u32x16::<OFFSET>(a, a)
+        match OFFSET % 16 {
+            0 => self.slide_u32x16::<0>(a, a),
+            1 => self.slide_u32x16::<1>(a, a),
+            2 => self.slide_u32x16::<2>(a, a),
+            3 => self.slide_u32x16::<3>(a, a),
+            4 => self.slide_u32x16::<4>(a, a),
+            5 => self.slide_u32x16::<5>(a, a),
+            6 => self.slide_u32x16::<6>(a, a),
+            7 => self.slide_u32x16::<7>(a, a),
+            8 => self.slide_u32x16::<8>(a, a),
+            9 => self.slide_u32x16::<9>(a, a),
+            10 => self.slide_u32x16::<10>(a, a),
+            11 => self.slide_u32x16::<11>(a, a),
+            12 => self.slide_u32x16::<12>(a, a),
+            13 => self.slide_u32x16::<13>(a, a),
+            14 => self.slide_u32x16::<14>(a, a),
+            15 => self.slide_u32x16::<15>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_u32x16<const OFFSET: usize>(self, a: u32x16<Self>) -> u32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
-        match OFFSET {
+        match OFFSET % 16 {
             0 => self.slide_u32x16::<16>(a, a),
             1 => self.slide_u32x16::<15>(a, a),
             2 => self.slide_u32x16::<14>(a, a),
@@ -13080,7 +13466,6 @@ impl Simd for Avx2 {
             13 => self.slide_u32x16::<3>(a, a),
             14 => self.slide_u32x16::<2>(a, a),
             15 => self.slide_u32x16::<1>(a, a),
-            16 => self.slide_u32x16::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -13090,14 +13475,27 @@ impl Simd for Avx2 {
         a: u32x16<Self>,
         padding: u32,
     ) -> u32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_u32x16(padding);
-        self.slide_u32x16::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_u32x16::<0>(a, padding),
+            1 => self.slide_u32x16::<1>(a, padding),
+            2 => self.slide_u32x16::<2>(a, padding),
+            3 => self.slide_u32x16::<3>(a, padding),
+            4 => self.slide_u32x16::<4>(a, padding),
+            5 => self.slide_u32x16::<5>(a, padding),
+            6 => self.slide_u32x16::<6>(a, padding),
+            7 => self.slide_u32x16::<7>(a, padding),
+            8 => self.slide_u32x16::<8>(a, padding),
+            9 => self.slide_u32x16::<9>(a, padding),
+            10 => self.slide_u32x16::<10>(a, padding),
+            11 => self.slide_u32x16::<11>(a, padding),
+            12 => self.slide_u32x16::<12>(a, padding),
+            13 => self.slide_u32x16::<13>(a, padding),
+            14 => self.slide_u32x16::<14>(a, padding),
+            15 => self.slide_u32x16::<15>(a, padding),
+            16 => self.slide_u32x16::<16>(a, padding),
+            _ => self.slide_u32x16::<16>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_u32x16<const OFFSET: usize>(
@@ -13105,12 +13503,6 @@ impl Simd for Avx2 {
         a: u32x16<Self>,
         padding: u32,
     ) -> u32x16<Self> {
-        assert!(
-            OFFSET <= 16,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            16,
-        );
         let padding = self.splat_u32x16(padding);
         match OFFSET {
             0 => self.slide_u32x16::<16>(padding, a),
@@ -13130,7 +13522,7 @@ impl Simd for Avx2 {
             14 => self.slide_u32x16::<2>(padding, a),
             15 => self.slide_u32x16::<1>(padding, a),
             16 => self.slide_u32x16::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_u32x16::<0>(padding, a),
         }
     }
     #[inline(always)]
@@ -13624,23 +14016,21 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn rotate_elements_left_f64x8<const OFFSET: usize>(self, a: f64x8<Self>) -> f64x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        self.slide_f64x8::<OFFSET>(a, a)
+        match OFFSET % 8 {
+            0 => self.slide_f64x8::<0>(a, a),
+            1 => self.slide_f64x8::<1>(a, a),
+            2 => self.slide_f64x8::<2>(a, a),
+            3 => self.slide_f64x8::<3>(a, a),
+            4 => self.slide_f64x8::<4>(a, a),
+            5 => self.slide_f64x8::<5>(a, a),
+            6 => self.slide_f64x8::<6>(a, a),
+            7 => self.slide_f64x8::<7>(a, a),
+            _ => unreachable!(),
+        }
     }
     #[inline(always)]
     fn rotate_elements_right_f64x8<const OFFSET: usize>(self, a: f64x8<Self>) -> f64x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
-        match OFFSET {
+        match OFFSET % 8 {
             0 => self.slide_f64x8::<8>(a, a),
             1 => self.slide_f64x8::<7>(a, a),
             2 => self.slide_f64x8::<6>(a, a),
@@ -13649,7 +14039,6 @@ impl Simd for Avx2 {
             5 => self.slide_f64x8::<3>(a, a),
             6 => self.slide_f64x8::<2>(a, a),
             7 => self.slide_f64x8::<1>(a, a),
-            8 => self.slide_f64x8::<0>(a, a),
             _ => unreachable!(),
         }
     }
@@ -13659,14 +14048,19 @@ impl Simd for Avx2 {
         a: f64x8<Self>,
         padding: f64,
     ) -> f64x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_f64x8(padding);
-        self.slide_f64x8::<OFFSET>(a, padding)
+        match OFFSET {
+            0 => self.slide_f64x8::<0>(a, padding),
+            1 => self.slide_f64x8::<1>(a, padding),
+            2 => self.slide_f64x8::<2>(a, padding),
+            3 => self.slide_f64x8::<3>(a, padding),
+            4 => self.slide_f64x8::<4>(a, padding),
+            5 => self.slide_f64x8::<5>(a, padding),
+            6 => self.slide_f64x8::<6>(a, padding),
+            7 => self.slide_f64x8::<7>(a, padding),
+            8 => self.slide_f64x8::<8>(a, padding),
+            _ => self.slide_f64x8::<8>(a, padding),
+        }
     }
     #[inline(always)]
     fn shift_elements_right_f64x8<const OFFSET: usize>(
@@ -13674,12 +14068,6 @@ impl Simd for Avx2 {
         a: f64x8<Self>,
         padding: f64,
     ) -> f64x8<Self> {
-        assert!(
-            OFFSET <= 8,
-            "OFFSET ({}) must be less than or equal to the number of lanes ({})",
-            OFFSET,
-            8,
-        );
         let padding = self.splat_f64x8(padding);
         match OFFSET {
             0 => self.slide_f64x8::<8>(padding, a),
@@ -13691,7 +14079,7 @@ impl Simd for Avx2 {
             6 => self.slide_f64x8::<2>(padding, a),
             7 => self.slide_f64x8::<1>(padding, a),
             8 => self.slide_f64x8::<0>(padding, a),
-            _ => unreachable!(),
+            _ => self.slide_f64x8::<0>(padding, a),
         }
     }
     #[inline(always)]

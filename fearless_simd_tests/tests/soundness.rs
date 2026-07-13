@@ -138,21 +138,3 @@ fn mask_test_rejects_out_of_bounds<S: Simd>(simd: S) {
 fn mask_set_rejects_out_of_bounds<S: Simd>(simd: S) {
     for_each_mask_type!(check_mask_set_oob, simd);
 }
-
-#[simd_test]
-fn element_moves_reject_out_of_bounds_offset<S: Simd>(simd: S) {
-    let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
-
-    assert_panics("f32x4::rotate_elements_left", || {
-        let _ = a.rotate_elements_left::<5>();
-    });
-    assert_panics("f32x4::rotate_elements_right", || {
-        let _ = a.rotate_elements_right::<5>();
-    });
-    assert_panics("f32x4::shift_elements_left", || {
-        let _ = a.shift_elements_left::<5>(99.0);
-    });
-    assert_panics("f32x4::shift_elements_right", || {
-        let _ = a.shift_elements_right::<5>(99.0);
-    });
-}

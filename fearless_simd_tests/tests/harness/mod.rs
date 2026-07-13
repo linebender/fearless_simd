@@ -4441,14 +4441,34 @@ fn slide_f32x4<S: Simd>(simd: S) {
 fn rotate_elements_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
     assert_eq!(*a.rotate_elements_left::<3>(), [3.0, 0.0, 1.0, 2.0]);
+    assert_eq!(*a.rotate_elements_left::<7>(), [3.0, 0.0, 1.0, 2.0]);
+    assert_eq!(
+        *a.rotate_elements_left::<{ usize::MAX }>(),
+        [3.0, 0.0, 1.0, 2.0]
+    );
     assert_eq!(*a.rotate_elements_right::<3>(), [1.0, 2.0, 3.0, 0.0]);
+    assert_eq!(*a.rotate_elements_right::<7>(), [1.0, 2.0, 3.0, 0.0]);
+    assert_eq!(
+        *a.rotate_elements_right::<{ usize::MAX }>(),
+        [1.0, 2.0, 3.0, 0.0]
+    );
 }
 
 #[simd_test]
 fn shift_elements_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
     assert_eq!(*a.shift_elements_left::<3>(99.0), [3.0, 99.0, 99.0, 99.0]);
+    assert_eq!(*a.shift_elements_left::<7>(99.0), [99.0, 99.0, 99.0, 99.0]);
+    assert_eq!(
+        *a.shift_elements_left::<{ usize::MAX }>(99.0),
+        [99.0, 99.0, 99.0, 99.0]
+    );
     assert_eq!(*a.shift_elements_right::<3>(99.0), [99.0, 99.0, 99.0, 0.0]);
+    assert_eq!(*a.shift_elements_right::<7>(99.0), [99.0, 99.0, 99.0, 99.0]);
+    assert_eq!(
+        *a.shift_elements_right::<{ usize::MAX }>(99.0),
+        [99.0, 99.0, 99.0, 99.0]
+    );
 }
 
 #[simd_test]
@@ -4614,6 +4634,14 @@ fn rotate_elements_f32x8<S: Simd>(simd: S) {
         *a.rotate_elements_right::<5>(),
         [3.0, 4.0, 5.0, 6.0, 7.0, 0.0, 1.0, 2.0]
     );
+    assert_eq!(
+        *a.rotate_elements_left::<{ usize::MAX }>(),
+        [7.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<{ usize::MAX }>(),
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 0.0]
+    );
 }
 
 #[simd_test]
@@ -4626,6 +4654,14 @@ fn shift_elements_f32x8<S: Simd>(simd: S) {
     assert_eq!(
         *a.shift_elements_right::<5>(99.0),
         [99.0, 99.0, 99.0, 99.0, 99.0, 0.0, 1.0, 2.0]
+    );
+    assert_eq!(
+        *a.shift_elements_left::<{ usize::MAX }>(99.0),
+        [99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<{ usize::MAX }>(99.0),
+        [99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0]
     );
 }
 
