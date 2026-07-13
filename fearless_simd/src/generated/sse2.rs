@@ -15,6 +15,10 @@ use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 #[cfg(all(feature = "libm", not(feature = "std")))]
+#[allow(
+    dead_code,
+    reason = "Generated backends use different subsets of these helpers"
+)]
 trait FloatExt {
     fn floor(self) -> Self;
     fn ceil(self) -> Self;

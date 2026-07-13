@@ -18,6 +18,7 @@ pub(crate) struct Fallback;
 pub(crate) fn float_ext_prelude() -> TokenStream {
     quote! {
         #[cfg(all(feature = "libm", not(feature = "std")))]
+        #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
         trait FloatExt {
             fn floor(self) -> Self;
             fn ceil(self) -> Self;
