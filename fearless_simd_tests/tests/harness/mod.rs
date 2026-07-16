@@ -4438,6 +4438,813 @@ fn slide_f32x4<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn rotate_elements_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(*a.rotate_elements_left::<3>(), [3.0, 0.0, 1.0, 2.0]);
+    assert_eq!(*a.rotate_elements_left::<7>(), [3.0, 0.0, 1.0, 2.0]);
+    assert_eq!(
+        *a.rotate_elements_left::<{ usize::MAX }>(),
+        [3.0, 0.0, 1.0, 2.0]
+    );
+    assert_eq!(*a.rotate_elements_right::<3>(), [1.0, 2.0, 3.0, 0.0]);
+    assert_eq!(*a.rotate_elements_right::<7>(), [1.0, 2.0, 3.0, 0.0]);
+    assert_eq!(
+        *a.rotate_elements_right::<{ usize::MAX }>(),
+        [1.0, 2.0, 3.0, 0.0]
+    );
+}
+
+#[simd_test]
+fn shift_elements_f32x4<S: Simd>(simd: S) {
+    let a = f32x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(*a.shift_elements_left::<3>(99.0), [3.0, 99.0, 99.0, 99.0]);
+    assert_eq!(*a.shift_elements_left::<7>(99.0), [99.0, 99.0, 99.0, 99.0]);
+    assert_eq!(
+        *a.shift_elements_left::<{ usize::MAX }>(99.0),
+        [99.0, 99.0, 99.0, 99.0]
+    );
+    assert_eq!(*a.shift_elements_right::<3>(99.0), [99.0, 99.0, 99.0, 0.0]);
+    assert_eq!(*a.shift_elements_right::<7>(99.0), [99.0, 99.0, 99.0, 99.0]);
+    assert_eq!(
+        *a.shift_elements_right::<{ usize::MAX }>(99.0),
+        [99.0, 99.0, 99.0, 99.0]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_i8x16<S: Simd>(simd: S) {
+    let a = i8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<9>(),
+        [9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<9>(),
+        [7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6]
+    );
+}
+
+#[simd_test]
+fn shift_elements_i8x16<S: Simd>(simd: S) {
+    let a = i8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<9>(-1),
+        [
+            9, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<9>(-1),
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_u8x16<S: Simd>(simd: S) {
+    let a = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<9>(),
+        [9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<9>(),
+        [7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6]
+    );
+}
+
+#[simd_test]
+fn shift_elements_u8x16<S: Simd>(simd: S) {
+    let a = u8x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<9>(255),
+        [
+            9, 10, 11, 12, 13, 14, 15, 255, 255, 255, 255, 255, 255, 255, 255, 255
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<9>(255),
+        [
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 1, 2, 3, 4, 5, 6
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_i16x8<S: Simd>(simd: S) {
+    let a = i16x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(*a.rotate_elements_left::<5>(), [5, 6, 7, 0, 1, 2, 3, 4]);
+    assert_eq!(*a.rotate_elements_right::<5>(), [3, 4, 5, 6, 7, 0, 1, 2]);
+}
+
+#[simd_test]
+fn shift_elements_i16x8<S: Simd>(simd: S) {
+    let a = i16x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(
+        *a.shift_elements_left::<5>(-1),
+        [5, 6, 7, -1, -1, -1, -1, -1]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<5>(-1),
+        [-1, -1, -1, -1, -1, 0, 1, 2]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_u16x8<S: Simd>(simd: S) {
+    let a = u16x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(*a.rotate_elements_left::<5>(), [5, 6, 7, 0, 1, 2, 3, 4]);
+    assert_eq!(*a.rotate_elements_right::<5>(), [3, 4, 5, 6, 7, 0, 1, 2]);
+}
+
+#[simd_test]
+fn shift_elements_u16x8<S: Simd>(simd: S) {
+    let a = u16x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(
+        *a.shift_elements_left::<5>(255),
+        [5, 6, 7, 255, 255, 255, 255, 255]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<5>(255),
+        [255, 255, 255, 255, 255, 0, 1, 2]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_i32x4<S: Simd>(simd: S) {
+    let a = i32x4::from_slice(simd, &[0, 1, 2, 3]);
+    assert_eq!(*a.rotate_elements_left::<3>(), [3, 0, 1, 2]);
+    assert_eq!(*a.rotate_elements_right::<3>(), [1, 2, 3, 0]);
+}
+
+#[simd_test]
+fn shift_elements_i32x4<S: Simd>(simd: S) {
+    let a = i32x4::from_slice(simd, &[0, 1, 2, 3]);
+    assert_eq!(*a.shift_elements_left::<3>(-1), [3, -1, -1, -1]);
+    assert_eq!(*a.shift_elements_right::<3>(-1), [-1, -1, -1, 0]);
+}
+
+#[simd_test]
+fn rotate_elements_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0, 1, 2, 3]);
+    assert_eq!(*a.rotate_elements_left::<3>(), [3, 0, 1, 2]);
+    assert_eq!(*a.rotate_elements_right::<3>(), [1, 2, 3, 0]);
+}
+
+#[simd_test]
+fn shift_elements_u32x4<S: Simd>(simd: S) {
+    let a = u32x4::from_slice(simd, &[0, 1, 2, 3]);
+    assert_eq!(*a.shift_elements_left::<3>(255), [3, 255, 255, 255]);
+    assert_eq!(*a.shift_elements_right::<3>(255), [255, 255, 255, 0]);
+}
+
+#[simd_test]
+fn rotate_elements_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[0.0, 1.0]);
+    assert_eq!(*a.rotate_elements_left::<1>(), [1.0, 0.0]);
+    assert_eq!(*a.rotate_elements_right::<1>(), [1.0, 0.0]);
+}
+
+#[simd_test]
+fn shift_elements_f64x2<S: Simd>(simd: S) {
+    let a = f64x2::from_slice(simd, &[0.0, 1.0]);
+    assert_eq!(*a.shift_elements_left::<1>(99.0), [1.0, 99.0]);
+    assert_eq!(*a.shift_elements_right::<1>(99.0), [99.0, 0.0]);
+}
+
+#[simd_test]
+fn rotate_elements_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    assert_eq!(
+        *a.rotate_elements_left::<5>(),
+        [5.0, 6.0, 7.0, 0.0, 1.0, 2.0, 3.0, 4.0]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<5>(),
+        [3.0, 4.0, 5.0, 6.0, 7.0, 0.0, 1.0, 2.0]
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<{ usize::MAX }>(),
+        [7.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<{ usize::MAX }>(),
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 0.0]
+    );
+}
+
+#[simd_test]
+fn shift_elements_f32x8<S: Simd>(simd: S) {
+    let a = f32x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    assert_eq!(
+        *a.shift_elements_left::<5>(99.0),
+        [5.0, 6.0, 7.0, 99.0, 99.0, 99.0, 99.0, 99.0]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<5>(99.0),
+        [99.0, 99.0, 99.0, 99.0, 99.0, 0.0, 1.0, 2.0]
+    );
+    assert_eq!(
+        *a.shift_elements_left::<{ usize::MAX }>(99.0),
+        [99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<{ usize::MAX }>(99.0),
+        [99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_i8x32<S: Simd>(simd: S) {
+    let a = i8x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<17>(),
+        [
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 11, 12, 13, 14, 15, 16
+        ]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<17>(),
+        [
+            15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 2, 3, 4, 5,
+            6, 7, 8, 9, 10, 11, 12, 13, 14
+        ]
+    );
+}
+
+#[simd_test]
+fn shift_elements_i8x32<S: Simd>(simd: S) {
+    let a = i8x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<17>(-1),
+        [
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<17>(-1),
+        [
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5,
+            6, 7, 8, 9, 10, 11, 12, 13, 14
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_u8x32<S: Simd>(simd: S) {
+    let a = u8x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<17>(),
+        [
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 11, 12, 13, 14, 15, 16
+        ]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<17>(),
+        [
+            15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 2, 3, 4, 5,
+            6, 7, 8, 9, 10, 11, 12, 13, 14
+        ]
+    );
+}
+
+#[simd_test]
+fn shift_elements_u8x32<S: Simd>(simd: S) {
+    let a = u8x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<17>(255),
+        [
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<17>(255),
+        [
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_i16x16<S: Simd>(simd: S) {
+    let a = i16x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<9>(),
+        [9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<9>(),
+        [7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6]
+    );
+}
+
+#[simd_test]
+fn shift_elements_i16x16<S: Simd>(simd: S) {
+    let a = i16x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<9>(-1),
+        [
+            9, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<9>(-1),
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_u16x16<S: Simd>(simd: S) {
+    let a = u16x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<9>(),
+        [9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<9>(),
+        [7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6]
+    );
+}
+
+#[simd_test]
+fn shift_elements_u16x16<S: Simd>(simd: S) {
+    let a = u16x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<9>(255),
+        [
+            9, 10, 11, 12, 13, 14, 15, 255, 255, 255, 255, 255, 255, 255, 255, 255
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<9>(255),
+        [
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 1, 2, 3, 4, 5, 6
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_i32x8<S: Simd>(simd: S) {
+    let a = i32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(*a.rotate_elements_left::<5>(), [5, 6, 7, 0, 1, 2, 3, 4]);
+    assert_eq!(*a.rotate_elements_right::<5>(), [3, 4, 5, 6, 7, 0, 1, 2]);
+}
+
+#[simd_test]
+fn shift_elements_i32x8<S: Simd>(simd: S) {
+    let a = i32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(
+        *a.shift_elements_left::<5>(-1),
+        [5, 6, 7, -1, -1, -1, -1, -1]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<5>(-1),
+        [-1, -1, -1, -1, -1, 0, 1, 2]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_u32x8<S: Simd>(simd: S) {
+    let a = u32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(*a.rotate_elements_left::<5>(), [5, 6, 7, 0, 1, 2, 3, 4]);
+    assert_eq!(*a.rotate_elements_right::<5>(), [3, 4, 5, 6, 7, 0, 1, 2]);
+}
+
+#[simd_test]
+fn shift_elements_u32x8<S: Simd>(simd: S) {
+    let a = u32x8::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(
+        *a.shift_elements_left::<5>(255),
+        [5, 6, 7, 255, 255, 255, 255, 255]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<5>(255),
+        [255, 255, 255, 255, 255, 0, 1, 2]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(*a.rotate_elements_left::<3>(), [3.0, 0.0, 1.0, 2.0]);
+    assert_eq!(*a.rotate_elements_right::<3>(), [1.0, 2.0, 3.0, 0.0]);
+}
+
+#[simd_test]
+fn shift_elements_f64x4<S: Simd>(simd: S) {
+    let a = f64x4::from_slice(simd, &[0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(*a.shift_elements_left::<3>(99.0), [3.0, 99.0, 99.0, 99.0]);
+    assert_eq!(*a.shift_elements_right::<3>(99.0), [99.0, 99.0, 99.0, 0.0]);
+}
+
+#[simd_test]
+fn rotate_elements_f32x16<S: Simd>(simd: S) {
+    let a = f32x16::from_slice(
+        simd,
+        &[
+            0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
+        ],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<9>(),
+        [
+            9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0
+        ]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<9>(),
+        [
+            7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0
+        ]
+    );
+}
+
+#[simd_test]
+fn shift_elements_f32x16<S: Simd>(simd: S) {
+    let a = f32x16::from_slice(
+        simd,
+        &[
+            0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
+        ],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<9>(99.0),
+        [
+            9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0,
+            99.0, 99.0
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<9>(99.0),
+        [
+            99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 99.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_i8x64<S: Simd>(simd: S) {
+    let a = i8x64::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+            46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        ],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<33>(),
+        [
+            33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+            55, 56, 57, 58, 59, 60, 61, 62, 63, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+            15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+        ]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<33>(),
+        [
+            31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
+            53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+            13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+        ]
+    );
+}
+
+#[simd_test]
+fn shift_elements_i8x64<S: Simd>(simd: S) {
+    let a = i8x64::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+            46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        ],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<33>(-1),
+        [
+            33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+            55, 56, 57, 58, 59, 60, 61, 62, 63, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<33>(-1),
+        [
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+            13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_u8x64<S: Simd>(simd: S) {
+    let a = u8x64::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+            46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        ],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<33>(),
+        [
+            33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+            55, 56, 57, 58, 59, 60, 61, 62, 63, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+            15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+        ]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<33>(),
+        [
+            31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
+            53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+            13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+        ]
+    );
+}
+
+#[simd_test]
+fn shift_elements_u8x64<S: Simd>(simd: S) {
+    let a = u8x64::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+            46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        ],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<33>(255),
+        [
+            33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+            55, 56, 57, 58, 59, 60, 61, 62, 63, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<33>(255),
+        [
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 1,
+            2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+            26, 27, 28, 29, 30
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_i16x32<S: Simd>(simd: S) {
+    let a = i16x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<17>(),
+        [
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 11, 12, 13, 14, 15, 16
+        ]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<17>(),
+        [
+            15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 2, 3, 4, 5,
+            6, 7, 8, 9, 10, 11, 12, 13, 14
+        ]
+    );
+}
+
+#[simd_test]
+fn shift_elements_i16x32<S: Simd>(simd: S) {
+    let a = i16x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<17>(-1),
+        [
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<17>(-1),
+        [
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5,
+            6, 7, 8, 9, 10, 11, 12, 13, 14
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_u16x32<S: Simd>(simd: S) {
+    let a = u16x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<17>(),
+        [
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 11, 12, 13, 14, 15, 16
+        ]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<17>(),
+        [
+            15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 2, 3, 4, 5,
+            6, 7, 8, 9, 10, 11, 12, 13, 14
+        ]
+    );
+}
+
+#[simd_test]
+fn shift_elements_u16x32<S: Simd>(simd: S) {
+    let a = u16x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29, 30, 31,
+        ],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<17>(255),
+        [
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<17>(255),
+        [
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_i32x16<S: Simd>(simd: S) {
+    let a = i32x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<9>(),
+        [9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<9>(),
+        [7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6]
+    );
+}
+
+#[simd_test]
+fn shift_elements_i32x16<S: Simd>(simd: S) {
+    let a = i32x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<9>(-1),
+        [
+            9, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<9>(-1),
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_u32x16<S: Simd>(simd: S) {
+    let a = u32x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.rotate_elements_left::<9>(),
+        [9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<9>(),
+        [7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6]
+    );
+}
+
+#[simd_test]
+fn shift_elements_u32x16<S: Simd>(simd: S) {
+    let a = u32x16::from_slice(
+        simd,
+        &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    );
+    assert_eq!(
+        *a.shift_elements_left::<9>(255),
+        [
+            9, 10, 11, 12, 13, 14, 15, 255, 255, 255, 255, 255, 255, 255, 255, 255
+        ]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<9>(255),
+        [
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 1, 2, 3, 4, 5, 6
+        ]
+    );
+}
+
+#[simd_test]
+fn rotate_elements_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    assert_eq!(
+        *a.rotate_elements_left::<5>(),
+        [5.0, 6.0, 7.0, 0.0, 1.0, 2.0, 3.0, 4.0]
+    );
+    assert_eq!(
+        *a.rotate_elements_right::<5>(),
+        [3.0, 4.0, 5.0, 6.0, 7.0, 0.0, 1.0, 2.0]
+    );
+}
+
+#[simd_test]
+fn shift_elements_f64x8<S: Simd>(simd: S) {
+    let a = f64x8::from_slice(simd, &[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+    assert_eq!(
+        *a.shift_elements_left::<5>(99.0),
+        [5.0, 6.0, 7.0, 99.0, 99.0, 99.0, 99.0, 99.0]
+    );
+    assert_eq!(
+        *a.shift_elements_right::<5>(99.0),
+        [99.0, 99.0, 99.0, 99.0, 99.0, 0.0, 1.0, 2.0]
+    );
+}
+
+#[simd_test]
 fn slide_within_blocks_f32x4<S: Simd>(simd: S) {
     let a = f32x4::from_slice(simd, &[1.0, 2.0, 3.0, 4.0]);
     let b = f32x4::from_slice(simd, &[5.0, 6.0, 7.0, 8.0]);

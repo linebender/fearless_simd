@@ -429,6 +429,10 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let as_array_mut_op = generic_op_name("as_array_mut", ty);
     let slide_op = generic_op_name("slide", ty);
     let slide_blockwise_op = generic_op_name("slide_within_blocks", ty);
+    let rotate_elements_left_op = generic_op_name("rotate_elements_left", ty);
+    let rotate_elements_right_op = generic_op_name("rotate_elements_right", ty);
+    let shift_elements_left_op = generic_op_name("shift_elements_left", ty);
+    let shift_elements_right_op = generic_op_name("shift_elements_right", ty);
     let swizzle_dyn_within_blocks_op = generic_op_name("swizzle_dyn_within_blocks", ty);
     quote! {
         impl<S: Simd> SimdBase<S> for #name<S> {
@@ -486,6 +490,26 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn slide_within_blocks<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
                 self.simd.#slide_blockwise_op::<SHIFT>(self, rhs.simd_into(self.simd))
+            }
+
+            #[inline(always)]
+            fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+                self.simd.#rotate_elements_left_op::<OFFSET>(self)
+            }
+
+            #[inline(always)]
+            fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+                self.simd.#rotate_elements_right_op::<OFFSET>(self)
+            }
+
+            #[inline(always)]
+            fn shift_elements_left<const OFFSET: usize>(self, padding: Self::Element) -> Self {
+                self.simd.#shift_elements_left_op::<OFFSET>(self, padding)
+            }
+
+            #[inline(always)]
+            fn shift_elements_right<const OFFSET: usize>(self, padding: Self::Element) -> Self {
+                self.simd.#shift_elements_right_op::<OFFSET>(self, padding)
             }
 
             #[inline(always)]

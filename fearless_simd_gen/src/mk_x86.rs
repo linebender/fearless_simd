@@ -272,6 +272,9 @@ impl Level for X86 {
             OpSig::Zip { select_low } => self.handle_zip(op, vec_ty, select_low),
             OpSig::Unzip { select_even } => self.handle_unzip(op, vec_ty, select_even),
             OpSig::Slide { granularity } => self.handle_slide(method_sig, vec_ty, granularity),
+            OpSig::ElementRotate { .. } | OpSig::ElementShift { .. } => {
+                unreachable!("element moves use generic lowering")
+            }
             OpSig::SwizzleDynWithinBlocks => self.handle_swizzle_dyn_within_blocks(op, vec_ty),
             OpSig::Cvt {
                 target_ty,
