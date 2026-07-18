@@ -8,7 +8,7 @@
     clippy::missing_assert_message,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-#![allow(
+#![expect(
     clippy::cast_possible_truncation,
     clippy::cast_possible_wrap,
     reason = "Test values are generated from tiny bounded ranges and then cast to the lane type under test."
