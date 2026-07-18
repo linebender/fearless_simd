@@ -147,7 +147,7 @@ case. There's also Q&A on [Zulip](https://xi.zulipchat.com/#narrow/channel/51423
 
 ## Instruction set support
 
-- x86/x86-64: [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2), [Ice Lake](https://en.wikipedia.org/wiki/AVX-512#CPUs_with_AVX-512) (AVX-512, avoiding early slow implementations)
+- x86/x86-64: SSE2 baseline, [v2](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (SSE4.2), [v3](https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels) (AVX2), [Ice Lake](https://en.wikipedia.org/wiki/AVX-512#CPUs_with_AVX-512) (AVX-512, avoiding early slow implementations)
 - Aarch64: Baseline [NEON](https://en.wikipedia.org/wiki/Arm_architecture_family#Advanced_SIMD_(Neon))
 - WebAssembly: [128-bit packed SIMD](https://github.com/WebAssembly/spec/blob/main/proposals/simd/SIMD.md), [relaxed SIMD](https://github.com/WebAssembly/relaxed-simd/blob/main/proposals/relaxed-simd/Overview.md)
 
@@ -195,7 +195,7 @@ or [`lto=true`](https://nnethercote.github.io/perf-book/build-configuration.html
 at the cost of longer build times.
 
 As a last resort, you can turn off multiversioning for specific SIMD instruction sets by passing
-`--cfg disable_dispatch_sse4_2`, `--cfg disable_dispatch_avx2`, or `--cfg disable_dispatch_avx512` in `RUSTFLAGS`.
+`--cfg disable_dispatch_sse2`, `--cfg disable_dispatch_sse4_2`, `--cfg disable_dispatch_avx2`, or `--cfg disable_dispatch_avx512` in `RUSTFLAGS`.
 These configuration flags only control automatic multiversioning. Disabling one does not remove its token type, its
 [`Simd`] implementation, or explicit [`kernel`] support; for example, an `Avx2` token can still be used to call an
 AVX2 kernel when the CPU supports it.

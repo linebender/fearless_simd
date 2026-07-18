@@ -12,6 +12,10 @@ use crate::{
 };
 use core::ops::*;
 #[cfg(all(feature = "libm", not(feature = "std")))]
+#[allow(
+    dead_code,
+    reason = "Generated backends use different subsets of these helpers"
+)]
 trait FloatExt {
     fn floor(self) -> Self;
     fn ceil(self) -> Self;
@@ -663,7 +667,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_u32_precise_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        self.cvt_u32_f32x4(a)
+        [
+            a[0usize] as u32,
+            a[1usize] as u32,
+            a[2usize] as u32,
+            a[3usize] as u32,
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn cvt_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
@@ -677,7 +687,13 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn cvt_i32_precise_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        self.cvt_i32_f32x4(a)
+        [
+            a[0usize] as i32,
+            a[1usize] as i32,
+            a[2usize] as i32,
+            a[3usize] as i32,
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {

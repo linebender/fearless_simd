@@ -50,6 +50,8 @@ mod ops;
 pub(crate) mod simd_trait;
 mod simd_types;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod sse2;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod sse4_2;
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
 mod wasm;
@@ -63,6 +65,8 @@ pub use fallback::*;
 pub use neon::*;
 pub use simd_trait::*;
 pub use simd_types::*;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use sse2::*;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use sse4_2::*;
 #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]

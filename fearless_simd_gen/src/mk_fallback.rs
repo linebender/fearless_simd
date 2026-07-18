@@ -15,6 +15,76 @@ use quote::quote;
 #[derive(Clone, Copy)]
 pub(crate) struct Fallback;
 
+pub(crate) fn float_ext_prelude() -> TokenStream {
+    quote! {
+        #[cfg(all(feature = "libm", not(feature = "std")))]
+        #[allow(dead_code, reason = "Generated backends use different subsets of these helpers")]
+        trait FloatExt {
+            fn floor(self) -> Self;
+            fn ceil(self) -> Self;
+            fn round_ties_even(self) -> Self;
+            fn fract(self) -> Self;
+            fn sqrt(self) -> Self;
+            fn trunc(self) -> Self;
+        }
+        #[cfg(all(feature = "libm", not(feature = "std")))]
+        impl FloatExt for f32 {
+            #[inline(always)]
+            fn floor(self) -> f32 {
+                libm::floorf(self)
+            }
+            #[inline(always)]
+            fn ceil(self) -> f32 {
+                libm::ceilf(self)
+            }
+            #[inline(always)]
+            fn round_ties_even(self) -> f32 {
+                libm::rintf(self)
+            }
+            #[inline(always)]
+            fn sqrt(self) -> f32 {
+                libm::sqrtf(self)
+            }
+            #[inline(always)]
+            fn fract(self) -> f32 {
+                self - self.trunc()
+            }
+            #[inline(always)]
+            fn trunc(self) -> f32 {
+                libm::truncf(self)
+            }
+        }
+
+        #[cfg(all(feature = "libm", not(feature = "std")))]
+        impl FloatExt for f64 {
+            #[inline(always)]
+            fn floor(self) -> f64 {
+                libm::floor(self)
+            }
+            #[inline(always)]
+            fn ceil(self) -> f64 {
+                libm::ceil(self)
+            }
+            #[inline(always)]
+            fn round_ties_even(self) -> f64 {
+                libm::rint(self)
+            }
+            #[inline(always)]
+            fn sqrt(self) -> f64 {
+                libm::sqrt(self)
+            }
+            #[inline(always)]
+            fn fract(self) -> f64 {
+                self - self.trunc()
+            }
+            #[inline(always)]
+            fn trunc(self) -> f64 {
+                libm::trunc(self)
+            }
+        }
+    }
+}
+
 impl Level for Fallback {
     fn name(&self) -> &'static str {
         "Fallback"
@@ -43,73 +113,12 @@ impl Level for Fallback {
     }
 
     fn make_module_prelude(&self) -> TokenStream {
+        let float_ext = float_ext_prelude();
+
         quote! {
             use core::ops::*;
 
-            #[cfg(all(feature = "libm", not(feature = "std")))]
-            trait FloatExt {
-                fn floor(self) -> Self;
-                fn ceil(self) -> Self;
-                fn round_ties_even(self) -> Self;
-                fn fract(self) -> Self;
-                fn sqrt(self) -> Self;
-                fn trunc(self) -> Self;
-            }
-            #[cfg(all(feature = "libm", not(feature = "std")))]
-            impl FloatExt for f32 {
-                #[inline(always)]
-                fn floor(self) -> f32 {
-                    libm::floorf(self)
-                }
-                #[inline(always)]
-                fn ceil(self) -> f32 {
-                    libm::ceilf(self)
-                }
-                #[inline(always)]
-                fn round_ties_even(self) -> f32 {
-                    libm::rintf(self)
-                }
-                #[inline(always)]
-                fn sqrt(self) -> f32 {
-                    libm::sqrtf(self)
-                }
-                #[inline(always)]
-                fn fract(self) -> f32 {
-                    self - self.trunc()
-                }
-                #[inline(always)]
-                fn trunc(self) -> f32 {
-                    libm::truncf(self)
-                }
-            }
-
-            #[cfg(all(feature = "libm", not(feature = "std")))]
-            impl FloatExt for f64 {
-                #[inline(always)]
-                fn floor(self) -> f64 {
-                    libm::floor(self)
-                }
-                #[inline(always)]
-                fn ceil(self) -> f64 {
-                    libm::ceil(self)
-                }
-                #[inline(always)]
-                fn round_ties_even(self) -> f64 {
-                    libm::rint(self)
-                }
-                #[inline(always)]
-                fn sqrt(self) -> f64 {
-                    libm::sqrt(self)
-                }
-                #[inline(always)]
-                fn fract(self) -> f64 {
-                    self - self.trunc()
-                }
-                #[inline(always)]
-                fn trunc(self) -> f64 {
-                    libm::trunc(self)
-                }
-            }
+            #float_ext
         }
     }
 
@@ -430,31 +439,21 @@ impl Level for Fallback {
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
-                precise,
+                precise: _,
             } => {
-                if precise {
-                    let non_precise =
-                        generic_op_name(method.strip_suffix("_precise").unwrap(), vec_ty);
-                    quote! {
-                        #method_sig {
-                            self.#non_precise(a)
-                        }
-                    }
-                } else {
-                    let to_ty = vec_ty.reinterpret(target_ty, scalar_bits);
-                    let scalar = to_ty.scalar.rust(scalar_bits);
-                    let items = make_list(
-                        (0..vec_ty.len)
-                            .map(|idx| {
-                                let a = lane(quote! { a }, vec_ty, idx);
-                                quote! { #a as #scalar }
-                            })
-                            .collect::<Vec<_>>(),
-                    );
-                    quote! {
-                        #method_sig {
-                            #items.simd_into(self)
-                        }
+                let to_ty = vec_ty.reinterpret(target_ty, scalar_bits);
+                let scalar = to_ty.scalar.rust(scalar_bits);
+                let items = make_list(
+                    (0..vec_ty.len)
+                        .map(|idx| {
+                            let a = lane(quote! { a }, vec_ty, idx);
+                            quote! { #a as #scalar }
+                        })
+                        .collect::<Vec<_>>(),
+                );
+                quote! {
+                    #method_sig {
+                        #items.simd_into(self)
                     }
                 }
             }
