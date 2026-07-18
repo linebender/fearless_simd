@@ -837,11 +837,19 @@ fn sse2_min_max_expr(method: &str, vec_ty: &VecType) -> TokenStream {
             quote! { #intrinsic(a.into(), b.into()) }
         }
         ("min" | "max", ScalarType::Int | ScalarType::Unsigned, 8 | 16 | 32) => {
-            let gt = sse2_cmpgt_expr(vec_ty, quote! { a.into() }, quote! { b.into() });
-            if method == "max" {
-                sse2_select_expr(vec_ty, gt, quote! { a.into() }, quote! { b.into() })
+            let gt = sse2_cmpgt_expr(vec_ty, quote! { a }, quote! { b });
+            let select = if method == "max" {
+                sse2_select_expr(vec_ty, quote! { gt }, quote! { a }, quote! { b })
             } else {
-                sse2_select_expr(vec_ty, gt, quote! { b.into() }, quote! { a.into() })
+                sse2_select_expr(vec_ty, quote! { gt }, quote! { b }, quote! { a })
+            };
+            quote! {
+                {
+                    let a = a.into();
+                    let b = b.into();
+                    let gt = #gt;
+                    #select
+                }
             }
         }
         _ => unimplemented!(),
