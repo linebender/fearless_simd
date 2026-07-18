@@ -3269,6 +3269,9 @@ impl X86 {
                         let out3 = #unpackhi_64(v1, v3); // [3,7]
                     },
                     (ScalarType::Float, 32) => {
+                        // The second stage needs a 64-bit unpack so each pair of f32 lanes
+                        // moves together. x86 exposes that as the f64 `pd` intrinsic, whose
+                        // register type differs from f32 `ps`, so cast around the unpack.
                         let cast_32 = cast_ident(
                             ScalarType::Float,
                             ScalarType::Float,
@@ -3487,6 +3490,9 @@ impl X86 {
                         let out3 = #unpackhi_64(v2, v3); // [6,7]
                     },
                     (ScalarType::Float, 32) => {
+                        // The second stage needs a 64-bit unpack so each pair of f32 lanes
+                        // moves together. x86 exposes that as the f64 `pd` intrinsic, whose
+                        // register type differs from f32 `ps`, so cast around the unpack.
                         let cast_32 = cast_ident(
                             ScalarType::Float,
                             ScalarType::Float,
