@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn store_interleaved_128_f32x16<S: Simd>(simd: S) {
@@ -137,7 +137,7 @@ fn store_interleaved_128_u32x16<S: Simd>(simd: S) {
     assert_eq!(dest, expected);
 }
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn store_interleaved_128_u64x8<S: Simd>(simd: S) {

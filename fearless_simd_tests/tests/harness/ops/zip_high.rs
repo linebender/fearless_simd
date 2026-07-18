@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn zip_high_f32x4<S: Simd>(simd: S) {
@@ -296,7 +296,7 @@ fn zip_high_u32x16<S: Simd>(simd: S) {
     );
 }
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn zip_high_i16x32<S: Simd>(simd: S) {
@@ -416,4 +416,57 @@ fn zip_high_u64x8<S: Simd>(simd: S) {
         *simd.zip_high_u64x8(a, b),
         [5_u64, 13_u64, 6_u64, 14_u64, 7_u64, 15_u64, 8_u64, 16_u64]
     );
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn zip_high_u8x64<S: Simd>(simd: S) {
+    let a_values: [u8; 64] = core::array::from_fn(|i| (i % 23) as u8 + 10_u8);
+    let b_values: [u8; 64] = core::array::from_fn(|i| (i % 7) as u8 + 1_u8);
+    let a = u8x64::from_slice(simd, &a_values);
+    let b = u8x64::from_slice(simd, &b_values);
+    let expected: [u8; 64] = core::array::from_fn(|i| {
+        if i % 2 == 0 {
+            a_values[32 + i / 2]
+        } else {
+            b_values[32 + i / 2]
+        }
+    });
+    let result = simd.zip_high_u8x64(a, b);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn zip_high_f64x2<S: Simd>(simd: S) {
+    let a_values: [f64; 2] = core::array::from_fn(|i| i as f64 + 1.25_f64);
+    let b_values: [f64; 2] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let a = f64x2::from_slice(simd, &a_values);
+    let b = f64x2::from_slice(simd, &b_values);
+    let expected: [f64; 2] = core::array::from_fn(|i| {
+        if i % 2 == 0 {
+            a_values[1 + i / 2]
+        } else {
+            b_values[1 + i / 2]
+        }
+    });
+    let result = simd.zip_high_f64x2(a, b);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn zip_high_f64x8<S: Simd>(simd: S) {
+    let a_values: [f64; 8] = core::array::from_fn(|i| i as f64 + 1.25_f64);
+    let b_values: [f64; 8] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let a = f64x8::from_slice(simd, &a_values);
+    let b = f64x8::from_slice(simd, &b_values);
+    let expected: [f64; 8] = core::array::from_fn(|i| {
+        if i % 2 == 0 {
+            a_values[4 + i / 2]
+        } else {
+            b_values[4 + i / 2]
+        }
+    });
+    let result = simd.zip_high_f64x8(a, b);
+    assert_eq!(result.as_slice(), expected.as_slice());
 }

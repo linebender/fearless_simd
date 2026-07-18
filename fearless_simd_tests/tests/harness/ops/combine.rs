@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn combine_f32x4<S: Simd>(simd: S) {
@@ -222,7 +222,7 @@ fn combine_f64x4<S: Simd>(simd: S) {
     assert_eq!(*a.combine(b), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 }
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn combine_i64x2<S: Simd>(simd: S) {
@@ -276,4 +276,105 @@ fn combine_mask64x4<S: Simd>(simd: S) {
         <[i64; 8]>::from(simd.combine_mask64x4(a, b)),
         [-1_i64, 0_i64, -1_i64, 0_i64, 0_i64, -1_i64, 0_i64, -1_i64]
     );
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn combine_f64x2<S: Simd>(simd: S) {
+    let a_values: [f64; 2] = core::array::from_fn(|i| i as f64 + 1.25_f64);
+    let b_values: [f64; 2] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let a = f64x2::from_slice(simd, &a_values);
+    let b = f64x2::from_slice(simd, &b_values);
+    let expected: [f64; 4] =
+        core::array::from_fn(|i| if i < 2 { a_values[i] } else { b_values[i - 2] });
+    let result = simd.combine_f64x2(a, b);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn combine_mask8x16<S: Simd>(simd: S) {
+    let a_values: [i8; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let b_values: [i8; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let a = mask8x16::from_slice(simd, &a_values);
+    let b = mask8x16::from_slice(simd, &b_values);
+    let expected: [i8; 32] = core::array::from_fn(|i| {
+        if i < 16 {
+            a_values[i]
+        } else {
+            b_values[i - 16]
+        }
+    });
+    let result = simd.combine_mask8x16(a, b);
+    assert_eq!(<[i8; 32]>::from(result), expected);
+}
+
+#[simd_test]
+fn combine_mask8x32<S: Simd>(simd: S) {
+    let a_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let b_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let a = mask8x32::from_slice(simd, &a_values);
+    let b = mask8x32::from_slice(simd, &b_values);
+    let expected: [i8; 64] = core::array::from_fn(|i| {
+        if i < 32 {
+            a_values[i]
+        } else {
+            b_values[i - 32]
+        }
+    });
+    let result = simd.combine_mask8x32(a, b);
+    assert_eq!(<[i8; 64]>::from(result), expected);
+}
+
+#[simd_test]
+fn combine_mask16x8<S: Simd>(simd: S) {
+    let a_values: [i16; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let b_values: [i16; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let a = mask16x8::from_slice(simd, &a_values);
+    let b = mask16x8::from_slice(simd, &b_values);
+    let expected: [i16; 16] =
+        core::array::from_fn(|i| if i < 8 { a_values[i] } else { b_values[i - 8] });
+    let result = simd.combine_mask16x8(a, b);
+    assert_eq!(<[i16; 16]>::from(result), expected);
+}
+
+#[simd_test]
+fn combine_mask16x16<S: Simd>(simd: S) {
+    let a_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let b_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let a = mask16x16::from_slice(simd, &a_values);
+    let b = mask16x16::from_slice(simd, &b_values);
+    let expected: [i16; 32] = core::array::from_fn(|i| {
+        if i < 16 {
+            a_values[i]
+        } else {
+            b_values[i - 16]
+        }
+    });
+    let result = simd.combine_mask16x16(a, b);
+    assert_eq!(<[i16; 32]>::from(result), expected);
+}
+
+#[simd_test]
+fn combine_mask32x4<S: Simd>(simd: S) {
+    let a_values: [i32; 4] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let b_values: [i32; 4] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let a = mask32x4::from_slice(simd, &a_values);
+    let b = mask32x4::from_slice(simd, &b_values);
+    let expected: [i32; 8] =
+        core::array::from_fn(|i| if i < 4 { a_values[i] } else { b_values[i - 4] });
+    let result = simd.combine_mask32x4(a, b);
+    assert_eq!(<[i32; 8]>::from(result), expected);
+}
+
+#[simd_test]
+fn combine_mask32x8<S: Simd>(simd: S) {
+    let a_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let b_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let a = mask32x8::from_slice(simd, &a_values);
+    let b = mask32x8::from_slice(simd, &b_values);
+    let expected: [i32; 16] =
+        core::array::from_fn(|i| if i < 8 { a_values[i] } else { b_values[i - 8] });
+    let result = simd.combine_mask32x8(a, b);
+    assert_eq!(<[i32; 16]>::from(result), expected);
 }

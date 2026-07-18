@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 fn expected_swizzle_within_blocks<const N: usize>(bytes: [u8; N], indices: [u8; N]) -> [u8; N] {
     assert_eq!(N % 16, 0);
@@ -386,4 +386,66 @@ fn swizzle_dyn_within_blocks_oob_does_not_panic<S: Simd>(simd: S) {
         ],
     );
     let _ = value.swizzle_dyn_within_blocks(indices);
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn swizzle_dyn_within_blocks_i64x2<S: Simd>(simd: S) {
+    let values: [i64; 2] = core::array::from_fn(|i| (i % 23) as i64 + 10_i64);
+    let indices_values: [u8; 16] = core::array::from_fn(|i| (i % 16) as u8);
+    let a = i64x2::from_slice(simd, &values);
+    let indices = u8x16::from_slice(simd, &indices_values);
+    let result = simd.swizzle_dyn_within_blocks_i64x2(a, indices);
+    assert_eq!(result.as_slice(), values.as_slice());
+}
+
+#[simd_test]
+fn swizzle_dyn_within_blocks_u64x2<S: Simd>(simd: S) {
+    let values: [u64; 2] = core::array::from_fn(|i| (i % 23) as u64 + 10_u64);
+    let indices_values: [u8; 16] = core::array::from_fn(|i| (i % 16) as u8);
+    let a = u64x2::from_slice(simd, &values);
+    let indices = u8x16::from_slice(simd, &indices_values);
+    let result = simd.swizzle_dyn_within_blocks_u64x2(a, indices);
+    assert_eq!(result.as_slice(), values.as_slice());
+}
+
+#[simd_test]
+fn swizzle_dyn_within_blocks_i64x4<S: Simd>(simd: S) {
+    let values: [i64; 4] = core::array::from_fn(|i| (i % 23) as i64 + 10_i64);
+    let indices_values: [u8; 32] = core::array::from_fn(|i| (i % 16) as u8);
+    let a = i64x4::from_slice(simd, &values);
+    let indices = u8x32::from_slice(simd, &indices_values);
+    let result = simd.swizzle_dyn_within_blocks_i64x4(a, indices);
+    assert_eq!(result.as_slice(), values.as_slice());
+}
+
+#[simd_test]
+fn swizzle_dyn_within_blocks_u64x4<S: Simd>(simd: S) {
+    let values: [u64; 4] = core::array::from_fn(|i| (i % 23) as u64 + 10_u64);
+    let indices_values: [u8; 32] = core::array::from_fn(|i| (i % 16) as u8);
+    let a = u64x4::from_slice(simd, &values);
+    let indices = u8x32::from_slice(simd, &indices_values);
+    let result = simd.swizzle_dyn_within_blocks_u64x4(a, indices);
+    assert_eq!(result.as_slice(), values.as_slice());
+}
+
+#[simd_test]
+fn swizzle_dyn_within_blocks_i64x8<S: Simd>(simd: S) {
+    let values: [i64; 8] = core::array::from_fn(|i| (i % 23) as i64 + 10_i64);
+    let indices_values: [u8; 64] = core::array::from_fn(|i| (i % 16) as u8);
+    let a = i64x8::from_slice(simd, &values);
+    let indices = u8x64::from_slice(simd, &indices_values);
+    let result = simd.swizzle_dyn_within_blocks_i64x8(a, indices);
+    assert_eq!(result.as_slice(), values.as_slice());
+}
+
+#[simd_test]
+fn swizzle_dyn_within_blocks_u64x8<S: Simd>(simd: S) {
+    let values: [u64; 8] = core::array::from_fn(|i| (i % 23) as u64 + 10_u64);
+    let indices_values: [u8; 64] = core::array::from_fn(|i| (i % 16) as u8);
+    let a = u64x8::from_slice(simd, &values);
+    let indices = u8x64::from_slice(simd, &indices_values);
+    let result = simd.swizzle_dyn_within_blocks_u64x8(a, indices);
+    assert_eq!(result.as_slice(), values.as_slice());
 }

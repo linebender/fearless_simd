@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn not_i8x16<S: Simd>(simd: S) {
@@ -118,7 +118,7 @@ fn not_u8x64<S: Simd>(simd: S) {
     );
 }
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn not_i64x2<S: Simd>(simd: S) {
@@ -213,4 +213,186 @@ fn not_mask64x8<S: Simd>(simd: S) {
         <[i64; 8]>::from(simd.not_mask64x8(a)),
         [0_i64, -1_i64, 0_i64, -1_i64, 0_i64, -1_i64, 0_i64, -1_i64]
     );
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn not_i16x8<S: Simd>(simd: S) {
+    let values: [i16; 8] = core::array::from_fn(|i| (i % 5) as i16 + 1_i16);
+    let a = i16x8::from_slice(simd, &values);
+    let expected: [i16; 8] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_i16x8(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_u16x8<S: Simd>(simd: S) {
+    let values: [u16; 8] = core::array::from_fn(|i| (i % 5) as u16 + 1_u16);
+    let a = u16x8::from_slice(simd, &values);
+    let expected: [u16; 8] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_u16x8(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_i16x16<S: Simd>(simd: S) {
+    let values: [i16; 16] = core::array::from_fn(|i| (i % 5) as i16 + 1_i16);
+    let a = i16x16::from_slice(simd, &values);
+    let expected: [i16; 16] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_i16x16(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_u16x16<S: Simd>(simd: S) {
+    let values: [u16; 16] = core::array::from_fn(|i| (i % 5) as u16 + 1_u16);
+    let a = u16x16::from_slice(simd, &values);
+    let expected: [u16; 16] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_u16x16(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_i16x32<S: Simd>(simd: S) {
+    let values: [i16; 32] = core::array::from_fn(|i| (i % 5) as i16 + 1_i16);
+    let a = i16x32::from_slice(simd, &values);
+    let expected: [i16; 32] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_i16x32(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_u16x32<S: Simd>(simd: S) {
+    let values: [u16; 32] = core::array::from_fn(|i| (i % 5) as u16 + 1_u16);
+    let a = u16x32::from_slice(simd, &values);
+    let expected: [u16; 32] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_u16x32(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_i32x4<S: Simd>(simd: S) {
+    let values: [i32; 4] = core::array::from_fn(|i| (i % 5) as i32 + 1_i32);
+    let a = i32x4::from_slice(simd, &values);
+    let expected: [i32; 4] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_i32x4(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_u32x4<S: Simd>(simd: S) {
+    let values: [u32; 4] = core::array::from_fn(|i| (i % 5) as u32 + 1_u32);
+    let a = u32x4::from_slice(simd, &values);
+    let expected: [u32; 4] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_u32x4(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_i32x8<S: Simd>(simd: S) {
+    let values: [i32; 8] = core::array::from_fn(|i| (i % 5) as i32 + 1_i32);
+    let a = i32x8::from_slice(simd, &values);
+    let expected: [i32; 8] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_i32x8(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_u32x8<S: Simd>(simd: S) {
+    let values: [u32; 8] = core::array::from_fn(|i| (i % 5) as u32 + 1_u32);
+    let a = u32x8::from_slice(simd, &values);
+    let expected: [u32; 8] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_u32x8(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_i32x16<S: Simd>(simd: S) {
+    let values: [i32; 16] = core::array::from_fn(|i| (i % 5) as i32 + 1_i32);
+    let a = i32x16::from_slice(simd, &values);
+    let expected: [i32; 16] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_i32x16(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_u32x16<S: Simd>(simd: S) {
+    let values: [u32; 16] = core::array::from_fn(|i| (i % 5) as u32 + 1_u32);
+    let a = u32x16::from_slice(simd, &values);
+    let expected: [u32; 16] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_u32x16(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn not_mask8x32<S: Simd>(simd: S) {
+    let values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let a = mask8x32::from_slice(simd, &values);
+    let expected: [i8; 32] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_mask8x32(a);
+    assert_eq!(<[i8; 32]>::from(result), expected);
+}
+
+#[simd_test]
+fn not_mask8x64<S: Simd>(simd: S) {
+    let values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let a = mask8x64::from_slice(simd, &values);
+    let expected: [i8; 64] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_mask8x64(a);
+    assert_eq!(<[i8; 64]>::from(result), expected);
+}
+
+#[simd_test]
+fn not_mask16x8<S: Simd>(simd: S) {
+    let values: [i16; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let a = mask16x8::from_slice(simd, &values);
+    let expected: [i16; 8] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_mask16x8(a);
+    assert_eq!(<[i16; 8]>::from(result), expected);
+}
+
+#[simd_test]
+fn not_mask16x16<S: Simd>(simd: S) {
+    let values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let a = mask16x16::from_slice(simd, &values);
+    let expected: [i16; 16] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_mask16x16(a);
+    assert_eq!(<[i16; 16]>::from(result), expected);
+}
+
+#[simd_test]
+fn not_mask16x32<S: Simd>(simd: S) {
+    let values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let a = mask16x32::from_slice(simd, &values);
+    let expected: [i16; 32] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_mask16x32(a);
+    assert_eq!(<[i16; 32]>::from(result), expected);
+}
+
+#[simd_test]
+fn not_mask32x4<S: Simd>(simd: S) {
+    let values: [i32; 4] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let a = mask32x4::from_slice(simd, &values);
+    let expected: [i32; 4] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_mask32x4(a);
+    assert_eq!(<[i32; 4]>::from(result), expected);
+}
+
+#[simd_test]
+fn not_mask32x8<S: Simd>(simd: S) {
+    let values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let a = mask32x8::from_slice(simd, &values);
+    let expected: [i32; 8] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_mask32x8(a);
+    assert_eq!(<[i32; 8]>::from(result), expected);
+}
+
+#[simd_test]
+fn not_mask32x16<S: Simd>(simd: S) {
+    let values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let a = mask32x16::from_slice(simd, &values);
+    let expected: [i32; 16] = core::array::from_fn(|i| !values[i]);
+    let result = simd.not_mask32x16(a);
+    assert_eq!(<[i32; 16]>::from(result), expected);
 }

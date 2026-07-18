@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn split_f32x8<S: Simd>(simd: S) {
@@ -225,7 +225,7 @@ fn split_u32x16<S: Simd>(simd: S) {
     assert_eq!(*hi, [8, 9, 10, 11, 12, 13, 14, 15]);
 }
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn split_i64x4<S: Simd>(simd: S) {
@@ -282,4 +282,83 @@ fn split_mask64x8<S: Simd>(simd: S) {
     let (lo, hi) = simd.split_mask64x8(a);
     assert_eq!(<[i64; 4]>::from(lo), [-1_i64, 0_i64, -1_i64, 0_i64]);
     assert_eq!(<[i64; 4]>::from(hi), [-1_i64, 0_i64, -1_i64, 0_i64]);
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn split_f64x8<S: Simd>(simd: S) {
+    let values: [f64; 8] = core::array::from_fn(|i| i as f64 + 1.25_f64);
+    let a = f64x8::from_slice(simd, &values);
+    let expected_0: [f64; 4] = core::array::from_fn(|i| values[i]);
+    let expected_1: [f64; 4] = core::array::from_fn(|i| values[i + 4]);
+    let (result_0, result_1) = simd.split_f64x8(a);
+    assert_eq!(result_0.as_slice(), expected_0.as_slice());
+    assert_eq!(result_1.as_slice(), expected_1.as_slice());
+}
+
+#[simd_test]
+fn split_mask8x32<S: Simd>(simd: S) {
+    let values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let a = mask8x32::from_slice(simd, &values);
+    let expected_0: [i8; 16] = core::array::from_fn(|i| values[i]);
+    let expected_1: [i8; 16] = core::array::from_fn(|i| values[i + 16]);
+    let (result_0, result_1) = simd.split_mask8x32(a);
+    assert_eq!(<[i8; 16]>::from(result_0), expected_0);
+    assert_eq!(<[i8; 16]>::from(result_1), expected_1);
+}
+
+#[simd_test]
+fn split_mask8x64<S: Simd>(simd: S) {
+    let values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let a = mask8x64::from_slice(simd, &values);
+    let expected_0: [i8; 32] = core::array::from_fn(|i| values[i]);
+    let expected_1: [i8; 32] = core::array::from_fn(|i| values[i + 32]);
+    let (result_0, result_1) = simd.split_mask8x64(a);
+    assert_eq!(<[i8; 32]>::from(result_0), expected_0);
+    assert_eq!(<[i8; 32]>::from(result_1), expected_1);
+}
+
+#[simd_test]
+fn split_mask16x16<S: Simd>(simd: S) {
+    let values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let a = mask16x16::from_slice(simd, &values);
+    let expected_0: [i16; 8] = core::array::from_fn(|i| values[i]);
+    let expected_1: [i16; 8] = core::array::from_fn(|i| values[i + 8]);
+    let (result_0, result_1) = simd.split_mask16x16(a);
+    assert_eq!(<[i16; 8]>::from(result_0), expected_0);
+    assert_eq!(<[i16; 8]>::from(result_1), expected_1);
+}
+
+#[simd_test]
+fn split_mask16x32<S: Simd>(simd: S) {
+    let values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let a = mask16x32::from_slice(simd, &values);
+    let expected_0: [i16; 16] = core::array::from_fn(|i| values[i]);
+    let expected_1: [i16; 16] = core::array::from_fn(|i| values[i + 16]);
+    let (result_0, result_1) = simd.split_mask16x32(a);
+    assert_eq!(<[i16; 16]>::from(result_0), expected_0);
+    assert_eq!(<[i16; 16]>::from(result_1), expected_1);
+}
+
+#[simd_test]
+fn split_mask32x8<S: Simd>(simd: S) {
+    let values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let a = mask32x8::from_slice(simd, &values);
+    let expected_0: [i32; 4] = core::array::from_fn(|i| values[i]);
+    let expected_1: [i32; 4] = core::array::from_fn(|i| values[i + 4]);
+    let (result_0, result_1) = simd.split_mask32x8(a);
+    assert_eq!(<[i32; 4]>::from(result_0), expected_0);
+    assert_eq!(<[i32; 4]>::from(result_1), expected_1);
+}
+
+#[simd_test]
+fn split_mask32x16<S: Simd>(simd: S) {
+    let values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let a = mask32x16::from_slice(simd, &values);
+    let expected_0: [i32; 8] = core::array::from_fn(|i| values[i]);
+    let expected_1: [i32; 8] = core::array::from_fn(|i| values[i + 8]);
+    let (result_0, result_1) = simd.split_mask32x16(a);
+    assert_eq!(<[i32; 8]>::from(result_0), expected_0);
+    assert_eq!(<[i32; 8]>::from(result_1), expected_1);
 }

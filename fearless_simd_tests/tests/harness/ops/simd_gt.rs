@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn simd_gt_f32x4<S: Simd>(simd: S) {
@@ -338,7 +338,7 @@ fn simd_gt_f64x8<S: Simd>(simd: S) {
     assert_eq!(<[i64; 8]>::from(a.simd_gt(b)), [-1, -1, 0, 0, 0, 0, 0, -1]);
 }
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn simd_gt_i64x2<S: Simd>(simd: S) {
@@ -406,4 +406,40 @@ fn simd_gt_u64x8<S: Simd>(simd: S) {
             -1_i64, -1_i64, -1_i64, -1_i64, -1_i64, -1_i64, -1_i64, -1_i64
         ]
     );
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn simd_gt_f64x2<S: Simd>(simd: S) {
+    let a_values: [f64; 2] = core::array::from_fn(|i| i as f64 + 1.25_f64);
+    let b_values: [f64; 2] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let a = f64x2::from_slice(simd, &a_values);
+    let b = f64x2::from_slice(simd, &b_values);
+    let expected: [i64; 2] = core::array::from_fn(|i| {
+        if a_values[i] > b_values[i] {
+            -1_i64
+        } else {
+            0_i64
+        }
+    });
+    let result = simd.simd_gt_f64x2(a, b);
+    assert_eq!(<[i64; 2]>::from(result), expected);
+}
+
+#[simd_test]
+fn simd_gt_f64x4<S: Simd>(simd: S) {
+    let a_values: [f64; 4] = core::array::from_fn(|i| i as f64 + 1.25_f64);
+    let b_values: [f64; 4] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let a = f64x4::from_slice(simd, &a_values);
+    let b = f64x4::from_slice(simd, &b_values);
+    let expected: [i64; 4] = core::array::from_fn(|i| {
+        if a_values[i] > b_values[i] {
+            -1_i64
+        } else {
+            0_i64
+        }
+    });
+    let result = simd.simd_gt_f64x4(a, b);
+    assert_eq!(<[i64; 4]>::from(result), expected);
 }

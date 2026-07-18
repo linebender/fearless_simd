@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn shl_u32x4<S: Simd>(simd: S) {
@@ -117,7 +117,7 @@ fn shl_u32x16<S: Simd>(simd: S) {
     );
 }
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn shl_i64x2<S: Simd>(simd: S) {
@@ -167,4 +167,105 @@ fn shl_u64x8<S: Simd>(simd: S) {
         *simd.shl_u64x8(a, 1),
         [2_u64, 4_u64, 6_u64, 8_u64, 10_u64, 12_u64, 14_u64, 16_u64]
     );
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn shl_i8x16<S: Simd>(simd: S) {
+    let values: [i8; 16] = core::array::from_fn(|i| (i % 31) as i8 + 1_i8);
+    let a = i8x16::from_slice(simd, &values);
+    let expected: [i8; 16] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_i8x16(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_u8x16<S: Simd>(simd: S) {
+    let values: [u8; 16] = core::array::from_fn(|i| (i % 31) as u8 + 1_u8);
+    let a = u8x16::from_slice(simd, &values);
+    let expected: [u8; 16] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_u8x16(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_i8x32<S: Simd>(simd: S) {
+    let values: [i8; 32] = core::array::from_fn(|i| (i % 31) as i8 + 1_i8);
+    let a = i8x32::from_slice(simd, &values);
+    let expected: [i8; 32] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_i8x32(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_u8x32<S: Simd>(simd: S) {
+    let values: [u8; 32] = core::array::from_fn(|i| (i % 31) as u8 + 1_u8);
+    let a = u8x32::from_slice(simd, &values);
+    let expected: [u8; 32] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_u8x32(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_i16x8<S: Simd>(simd: S) {
+    let values: [i16; 8] = core::array::from_fn(|i| (i % 31) as i16 + 1_i16);
+    let a = i16x8::from_slice(simd, &values);
+    let expected: [i16; 8] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_i16x8(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_u16x8<S: Simd>(simd: S) {
+    let values: [u16; 8] = core::array::from_fn(|i| (i % 31) as u16 + 1_u16);
+    let a = u16x8::from_slice(simd, &values);
+    let expected: [u16; 8] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_u16x8(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_i16x16<S: Simd>(simd: S) {
+    let values: [i16; 16] = core::array::from_fn(|i| (i % 31) as i16 + 1_i16);
+    let a = i16x16::from_slice(simd, &values);
+    let expected: [i16; 16] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_i16x16(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_u16x16<S: Simd>(simd: S) {
+    let values: [u16; 16] = core::array::from_fn(|i| (i % 31) as u16 + 1_u16);
+    let a = u16x16::from_slice(simd, &values);
+    let expected: [u16; 16] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_u16x16(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_i32x4<S: Simd>(simd: S) {
+    let values: [i32; 4] = core::array::from_fn(|i| (i % 31) as i32 + 1_i32);
+    let a = i32x4::from_slice(simd, &values);
+    let expected: [i32; 4] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_i32x4(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_i32x8<S: Simd>(simd: S) {
+    let values: [i32; 8] = core::array::from_fn(|i| (i % 31) as i32 + 1_i32);
+    let a = i32x8::from_slice(simd, &values);
+    let expected: [i32; 8] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_i32x8(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shl_u32x8<S: Simd>(simd: S) {
+    let values: [u32; 8] = core::array::from_fn(|i| (i % 31) as u32 + 1_u32);
+    let a = u32x8::from_slice(simd, &values);
+    let expected: [u32; 8] = core::array::from_fn(|i| values[i] << 1);
+    let result = simd.shl_u32x8(a, 1);
+    assert_eq!(result.as_slice(), expected.as_slice());
 }

@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn floor_f32x4<S: Simd>(simd: S) {
@@ -44,4 +44,15 @@ fn floor_f32x16<S: Simd>(simd: S) {
 fn floor_f64x8<S: Simd>(simd: S) {
     let a = f64x8::from_slice(simd, &[2.0, -3.2, 0.0, 0.5, 1.7, -2.8, 3.1, -4.9]);
     assert_eq!(*a.floor(), [2.0, -4.0, 0.0, 0.0, 1.0, -3.0, 3.0, -5.0]);
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn floor_f64x4<S: Simd>(simd: S) {
+    let values: [f64; 4] = core::array::from_fn(|i| i as f64 - 3.5_f64);
+    let a = f64x4::from_slice(simd, &values);
+    let expected: [f64; 4] = core::array::from_fn(|i| values[i].floor());
+    let result = simd.floor_f64x4(a);
+    assert_eq!(result.as_slice(), expected.as_slice());
 }

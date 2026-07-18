@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn select_f32x4<S: Simd>(simd: S) {
@@ -303,7 +303,7 @@ fn select_u64x8<S: Simd>(simd: S) {
     );
 }
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn select_mask64x2<S: Simd>(simd: S) {
@@ -339,4 +339,386 @@ fn select_mask64x8<S: Simd>(simd: S) {
         <[i64; 8]>::from(simd.select_mask64x8(mask, t, f)),
         [-1_i64, 0_i64, -1_i64, 0_i64, -1_i64, 0_i64, -1_i64, 0_i64]
     );
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn select_i8x32<S: Simd>(simd: S) {
+    let mask_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let true_values: [i8; 32] = core::array::from_fn(|i| (i % 23) as i8 + 10_i8);
+    let false_values: [i8; 32] = core::array::from_fn(|i| (i % 7) as i8 + 1_i8);
+    let mask = mask8x32::from_slice(simd, &mask_values);
+    let if_true = i8x32::from_slice(simd, &true_values);
+    let if_false = i8x32::from_slice(simd, &false_values);
+    let expected: [i8; 32] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_i8x32(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_u8x32<S: Simd>(simd: S) {
+    let mask_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let true_values: [u8; 32] = core::array::from_fn(|i| (i % 23) as u8 + 10_u8);
+    let false_values: [u8; 32] = core::array::from_fn(|i| (i % 7) as u8 + 1_u8);
+    let mask = mask8x32::from_slice(simd, &mask_values);
+    let if_true = u8x32::from_slice(simd, &true_values);
+    let if_false = u8x32::from_slice(simd, &false_values);
+    let expected: [u8; 32] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_u8x32(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_i8x64<S: Simd>(simd: S) {
+    let mask_values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let true_values: [i8; 64] = core::array::from_fn(|i| (i % 23) as i8 + 10_i8);
+    let false_values: [i8; 64] = core::array::from_fn(|i| (i % 7) as i8 + 1_i8);
+    let mask = mask8x64::from_slice(simd, &mask_values);
+    let if_true = i8x64::from_slice(simd, &true_values);
+    let if_false = i8x64::from_slice(simd, &false_values);
+    let expected: [i8; 64] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_i8x64(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_u8x64<S: Simd>(simd: S) {
+    let mask_values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let true_values: [u8; 64] = core::array::from_fn(|i| (i % 23) as u8 + 10_u8);
+    let false_values: [u8; 64] = core::array::from_fn(|i| (i % 7) as u8 + 1_u8);
+    let mask = mask8x64::from_slice(simd, &mask_values);
+    let if_true = u8x64::from_slice(simd, &true_values);
+    let if_false = u8x64::from_slice(simd, &false_values);
+    let expected: [u8; 64] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_u8x64(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_i16x16<S: Simd>(simd: S) {
+    let mask_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let true_values: [i16; 16] = core::array::from_fn(|i| (i % 23) as i16 + 10_i16);
+    let false_values: [i16; 16] = core::array::from_fn(|i| (i % 7) as i16 + 1_i16);
+    let mask = mask16x16::from_slice(simd, &mask_values);
+    let if_true = i16x16::from_slice(simd, &true_values);
+    let if_false = i16x16::from_slice(simd, &false_values);
+    let expected: [i16; 16] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_i16x16(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_u16x16<S: Simd>(simd: S) {
+    let mask_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let true_values: [u16; 16] = core::array::from_fn(|i| (i % 23) as u16 + 10_u16);
+    let false_values: [u16; 16] = core::array::from_fn(|i| (i % 7) as u16 + 1_u16);
+    let mask = mask16x16::from_slice(simd, &mask_values);
+    let if_true = u16x16::from_slice(simd, &true_values);
+    let if_false = u16x16::from_slice(simd, &false_values);
+    let expected: [u16; 16] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_u16x16(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_i16x32<S: Simd>(simd: S) {
+    let mask_values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let true_values: [i16; 32] = core::array::from_fn(|i| (i % 23) as i16 + 10_i16);
+    let false_values: [i16; 32] = core::array::from_fn(|i| (i % 7) as i16 + 1_i16);
+    let mask = mask16x32::from_slice(simd, &mask_values);
+    let if_true = i16x32::from_slice(simd, &true_values);
+    let if_false = i16x32::from_slice(simd, &false_values);
+    let expected: [i16; 32] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_i16x32(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_u16x32<S: Simd>(simd: S) {
+    let mask_values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let true_values: [u16; 32] = core::array::from_fn(|i| (i % 23) as u16 + 10_u16);
+    let false_values: [u16; 32] = core::array::from_fn(|i| (i % 7) as u16 + 1_u16);
+    let mask = mask16x32::from_slice(simd, &mask_values);
+    let if_true = u16x32::from_slice(simd, &true_values);
+    let if_false = u16x32::from_slice(simd, &false_values);
+    let expected: [u16; 32] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_u16x32(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_i32x8<S: Simd>(simd: S) {
+    let mask_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let true_values: [i32; 8] = core::array::from_fn(|i| (i % 23) as i32 + 10_i32);
+    let false_values: [i32; 8] = core::array::from_fn(|i| (i % 7) as i32 + 1_i32);
+    let mask = mask32x8::from_slice(simd, &mask_values);
+    let if_true = i32x8::from_slice(simd, &true_values);
+    let if_false = i32x8::from_slice(simd, &false_values);
+    let expected: [i32; 8] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_i32x8(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_u32x8<S: Simd>(simd: S) {
+    let mask_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let true_values: [u32; 8] = core::array::from_fn(|i| (i % 23) as u32 + 10_u32);
+    let false_values: [u32; 8] = core::array::from_fn(|i| (i % 7) as u32 + 1_u32);
+    let mask = mask32x8::from_slice(simd, &mask_values);
+    let if_true = u32x8::from_slice(simd, &true_values);
+    let if_false = u32x8::from_slice(simd, &false_values);
+    let expected: [u32; 8] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_u32x8(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_i32x16<S: Simd>(simd: S) {
+    let mask_values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let true_values: [i32; 16] = core::array::from_fn(|i| (i % 23) as i32 + 10_i32);
+    let false_values: [i32; 16] = core::array::from_fn(|i| (i % 7) as i32 + 1_i32);
+    let mask = mask32x16::from_slice(simd, &mask_values);
+    let if_true = i32x16::from_slice(simd, &true_values);
+    let if_false = i32x16::from_slice(simd, &false_values);
+    let expected: [i32; 16] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_i32x16(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_u32x16<S: Simd>(simd: S) {
+    let mask_values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let true_values: [u32; 16] = core::array::from_fn(|i| (i % 23) as u32 + 10_u32);
+    let false_values: [u32; 16] = core::array::from_fn(|i| (i % 7) as u32 + 1_u32);
+    let mask = mask32x16::from_slice(simd, &mask_values);
+    let if_true = u32x16::from_slice(simd, &true_values);
+    let if_false = u32x16::from_slice(simd, &false_values);
+    let expected: [u32; 16] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_u32x16(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_f64x2<S: Simd>(simd: S) {
+    let mask_values: [i64; 2] = core::array::from_fn(|i| if i % 2 == 0 { -1_i64 } else { 0_i64 });
+    let true_values: [f64; 2] = core::array::from_fn(|i| i as f64 + 1.25_f64);
+    let false_values: [f64; 2] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let mask = mask64x2::from_slice(simd, &mask_values);
+    let if_true = f64x2::from_slice(simd, &true_values);
+    let if_false = f64x2::from_slice(simd, &false_values);
+    let expected: [f64; 2] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_f64x2(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_f64x4<S: Simd>(simd: S) {
+    let mask_values: [i64; 4] = core::array::from_fn(|i| if i % 2 == 0 { -1_i64 } else { 0_i64 });
+    let true_values: [f64; 4] = core::array::from_fn(|i| i as f64 + 1.25_f64);
+    let false_values: [f64; 4] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let mask = mask64x4::from_slice(simd, &mask_values);
+    let if_true = f64x4::from_slice(simd, &true_values);
+    let if_false = f64x4::from_slice(simd, &false_values);
+    let expected: [f64; 4] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_f64x4(mask, if_true, if_false);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn select_mask8x32<S: Simd>(simd: S) {
+    let mask_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let true_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let false_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let mask = mask8x32::from_slice(simd, &mask_values);
+    let if_true = mask8x32::from_slice(simd, &true_values);
+    let if_false = mask8x32::from_slice(simd, &false_values);
+    let expected: [i8; 32] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_mask8x32(mask, if_true, if_false);
+    assert_eq!(<[i8; 32]>::from(result), expected);
+}
+
+#[simd_test]
+fn select_mask8x64<S: Simd>(simd: S) {
+    let mask_values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let true_values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let false_values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let mask = mask8x64::from_slice(simd, &mask_values);
+    let if_true = mask8x64::from_slice(simd, &true_values);
+    let if_false = mask8x64::from_slice(simd, &false_values);
+    let expected: [i8; 64] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_mask8x64(mask, if_true, if_false);
+    assert_eq!(<[i8; 64]>::from(result), expected);
+}
+
+#[simd_test]
+fn select_mask16x16<S: Simd>(simd: S) {
+    let mask_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let true_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let false_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let mask = mask16x16::from_slice(simd, &mask_values);
+    let if_true = mask16x16::from_slice(simd, &true_values);
+    let if_false = mask16x16::from_slice(simd, &false_values);
+    let expected: [i16; 16] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_mask16x16(mask, if_true, if_false);
+    assert_eq!(<[i16; 16]>::from(result), expected);
+}
+
+#[simd_test]
+fn select_mask16x32<S: Simd>(simd: S) {
+    let mask_values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let true_values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let false_values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let mask = mask16x32::from_slice(simd, &mask_values);
+    let if_true = mask16x32::from_slice(simd, &true_values);
+    let if_false = mask16x32::from_slice(simd, &false_values);
+    let expected: [i16; 32] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_mask16x32(mask, if_true, if_false);
+    assert_eq!(<[i16; 32]>::from(result), expected);
+}
+
+#[simd_test]
+fn select_mask32x8<S: Simd>(simd: S) {
+    let mask_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let true_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let false_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let mask = mask32x8::from_slice(simd, &mask_values);
+    let if_true = mask32x8::from_slice(simd, &true_values);
+    let if_false = mask32x8::from_slice(simd, &false_values);
+    let expected: [i32; 8] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_mask32x8(mask, if_true, if_false);
+    assert_eq!(<[i32; 8]>::from(result), expected);
+}
+
+#[simd_test]
+fn select_mask32x16<S: Simd>(simd: S) {
+    let mask_values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let true_values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let false_values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let mask = mask32x16::from_slice(simd, &mask_values);
+    let if_true = mask32x16::from_slice(simd, &true_values);
+    let if_false = mask32x16::from_slice(simd, &false_values);
+    let expected: [i32; 16] = core::array::from_fn(|i| {
+        if mask_values[i] != 0 {
+            true_values[i]
+        } else {
+            false_values[i]
+        }
+    });
+    let result = simd.select_mask32x16(mask, if_true, if_false);
+    assert_eq!(<[i32; 16]>::from(result), expected);
 }

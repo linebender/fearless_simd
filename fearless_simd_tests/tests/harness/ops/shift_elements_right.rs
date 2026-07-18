@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn shift_elements_right_f32x4<S: Simd>(simd: S) {
@@ -368,4 +368,60 @@ fn shift_elements_right_f64x8<S: Simd>(simd: S) {
         *simd.shift_elements_right_f64x8::<1>(a, 0.0),
         [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
     );
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn shift_elements_right_i64x2<S: Simd>(simd: S) {
+    let values: [i64; 2] = core::array::from_fn(|i| (i % 23) as i64 + 10_i64);
+    let a = i64x2::from_slice(simd, &values);
+    let expected: [i64; 2] = core::array::from_fn(|i| if i == 0 { -7_i64 } else { values[i - 1] });
+    let result = simd.shift_elements_right_i64x2::<1>(a, -7_i64);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shift_elements_right_u64x2<S: Simd>(simd: S) {
+    let values: [u64; 2] = core::array::from_fn(|i| (i % 23) as u64 + 10_u64);
+    let a = u64x2::from_slice(simd, &values);
+    let expected: [u64; 2] = core::array::from_fn(|i| if i == 0 { 7_u64 } else { values[i - 1] });
+    let result = simd.shift_elements_right_u64x2::<1>(a, 7_u64);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shift_elements_right_i64x4<S: Simd>(simd: S) {
+    let values: [i64; 4] = core::array::from_fn(|i| (i % 23) as i64 + 10_i64);
+    let a = i64x4::from_slice(simd, &values);
+    let expected: [i64; 4] = core::array::from_fn(|i| if i == 0 { -7_i64 } else { values[i - 1] });
+    let result = simd.shift_elements_right_i64x4::<1>(a, -7_i64);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shift_elements_right_u64x4<S: Simd>(simd: S) {
+    let values: [u64; 4] = core::array::from_fn(|i| (i % 23) as u64 + 10_u64);
+    let a = u64x4::from_slice(simd, &values);
+    let expected: [u64; 4] = core::array::from_fn(|i| if i == 0 { 7_u64 } else { values[i - 1] });
+    let result = simd.shift_elements_right_u64x4::<1>(a, 7_u64);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shift_elements_right_i64x8<S: Simd>(simd: S) {
+    let values: [i64; 8] = core::array::from_fn(|i| (i % 23) as i64 + 10_i64);
+    let a = i64x8::from_slice(simd, &values);
+    let expected: [i64; 8] = core::array::from_fn(|i| if i == 0 { -7_i64 } else { values[i - 1] });
+    let result = simd.shift_elements_right_i64x8::<1>(a, -7_i64);
+    assert_eq!(result.as_slice(), expected.as_slice());
+}
+
+#[simd_test]
+fn shift_elements_right_u64x8<S: Simd>(simd: S) {
+    let values: [u64; 8] = core::array::from_fn(|i| (i % 23) as u64 + 10_u64);
+    let a = u64x8::from_slice(simd, &values);
+    let expected: [u64; 8] = core::array::from_fn(|i| if i == 0 { 7_u64 } else { values[i - 1] });
+    let result = simd.shift_elements_right_u64x8::<1>(a, 7_u64);
+    assert_eq!(result.as_slice(), expected.as_slice());
 }

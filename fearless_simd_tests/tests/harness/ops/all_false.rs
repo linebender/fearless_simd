@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These are direct moves of the pre-existing op tests. Coverage gaps are intentionally left unchanged.
+// One concrete test row per supported vector type.
 
 #[simd_test]
 fn all_false_mask8x16<S: Simd>(simd: S) {
@@ -139,7 +139,7 @@ fn all_false_mask32x16<S: Simd>(simd: S) {
     assert!(!simd.all_false_mask32x16(one_neg));
 }
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn all_false_mask64x4<S: Simd>(simd: S) {
@@ -151,4 +151,27 @@ fn all_false_mask64x4<S: Simd>(simd: S) {
 fn all_false_mask64x8<S: Simd>(simd: S) {
     assert!(simd.all_false_mask64x8(simd.splat_mask64x8(false)));
     assert!(!simd.all_false_mask64x8(simd.from_bitmask_mask64x8(1)));
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn all_false_mask8x32<S: Simd>(simd: S) {
+    let values: [i8; 32] = core::array::from_fn(|_| 0_i8);
+    let mask = mask8x32::from_slice(simd, &values);
+    assert_eq!(simd.all_false_mask8x32(mask), true);
+}
+
+#[simd_test]
+fn all_false_mask16x16<S: Simd>(simd: S) {
+    let values: [i16; 16] = core::array::from_fn(|_| 0_i16);
+    let mask = mask16x16::from_slice(simd, &values);
+    assert_eq!(simd.all_false_mask16x16(mask), true);
+}
+
+#[simd_test]
+fn all_false_mask32x8<S: Simd>(simd: S) {
+    let values: [i32; 8] = core::array::from_fn(|_| 0_i32);
+    let mask = mask32x8::from_slice(simd, &values);
+    assert_eq!(simd.all_false_mask32x8(mask), true);
 }

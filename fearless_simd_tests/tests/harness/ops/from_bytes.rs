@@ -4,7 +4,7 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// These rows were split out of pre-existing bundled tests; they do not add new vector/type coverage.
+// Additional concrete rows for this operation.
 
 #[simd_test]
 fn from_bytes_i64x2<S: Simd>(simd: S) {
@@ -58,4 +58,198 @@ fn from_bytes_u64x8<S: Simd>(simd: S) {
     let bytes = a.to_bytes();
     let roundtrip = u64x8::from_bytes(bytes);
     assert_eq!(roundtrip.as_slice(), a.as_slice());
+}
+
+// Generated gap-fill coverage rows.
+
+#[simd_test]
+fn from_bytes_i8x16<S: Simd>(simd: S) {
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i8x16(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_u8x16<S: Simd>(simd: S) {
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u8x16(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_i8x32<S: Simd>(simd: S) {
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i8x32(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_u8x32<S: Simd>(simd: S) {
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u8x32(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_i8x64<S: Simd>(simd: S) {
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i8x64(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_u8x64<S: Simd>(simd: S) {
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u8x64(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_i16x8<S: Simd>(simd: S) {
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i16x8(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_u16x8<S: Simd>(simd: S) {
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u16x8(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_i16x16<S: Simd>(simd: S) {
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i16x16(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_u16x16<S: Simd>(simd: S) {
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u16x16(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_i16x32<S: Simd>(simd: S) {
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i16x32(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_u16x32<S: Simd>(simd: S) {
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u16x32(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_f32x4<S: Simd>(simd: S) {
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_f32x4(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_i32x4<S: Simd>(simd: S) {
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i32x4(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_u32x4<S: Simd>(simd: S) {
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u32x4(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_f32x8<S: Simd>(simd: S) {
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_f32x8(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_i32x8<S: Simd>(simd: S) {
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i32x8(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_u32x8<S: Simd>(simd: S) {
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u32x8(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_f32x16<S: Simd>(simd: S) {
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_f32x16(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_i32x16<S: Simd>(simd: S) {
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i32x16(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_u32x16<S: Simd>(simd: S) {
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u32x16(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_f64x2<S: Simd>(simd: S) {
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_f64x2(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_f64x4<S: Simd>(simd: S) {
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_f64x4(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
+}
+
+#[simd_test]
+fn from_bytes_f64x8<S: Simd>(simd: S) {
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_f64x8(bytes);
+    assert_eq!(result.to_bytes().as_slice(), byte_values.as_slice());
 }
