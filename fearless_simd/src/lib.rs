@@ -384,10 +384,8 @@ impl Level {
             // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
             // However, the following features are implied by avx2 and do not need to be spelled out:
             // avx,sse,sse2,sse3,sse4.1,sse4.2,ssse3
-            // We still check `fxsr` explicitly because the `Sse2` token requires it, and
-            // some exotic environments can expose SSE2-family features without FXSR.
             // This can be verified by running:
-            // rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'
+            // rustc --print=cfg --target=i586-unknown-linux-gnu -C target-feature=+avx2
             if std::arch::is_x86_feature_detected!("avx2")
                 && std::arch::is_x86_feature_detected!("bmi1")
                 && std::arch::is_x86_feature_detected!("bmi2")
@@ -404,6 +402,12 @@ impl Level {
             // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
             // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
             // and have these extensions already.
+            //
+            // This set of instructions maps to the x86-64-v2 level:
+            // rustc --print=cfg --target=x86_64-unknown-linux-gnu -C target-cpu=x86-64-v2
+            //
+            // All SSE levels are implied by SSE4.2, which can be verified by running:
+            // rustc --print=cfg --target=i586-unknown-linux-gnu -C target-feature=+sse4.2
             } else if std::arch::is_x86_feature_detected!("fxsr")
                 && std::arch::is_x86_feature_detected!("sse4.2")
                 && std::arch::is_x86_feature_detected!("cmpxchg16b")
