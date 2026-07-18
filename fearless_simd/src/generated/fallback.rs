@@ -4921,6 +4921,78 @@ impl Simd for Fallback {
         self.slide_i64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
+        let bytes = self.cvt_to_bytes_i64x2(a);
+        let result: u8x16<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes[index % 16usize]
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_i64x2(result)
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
             i64::wrapping_add(a[0usize], b[0usize]),
@@ -5173,6 +5245,78 @@ impl Simd for Fallback {
         b: u64x2<Self>,
     ) -> u64x2<Self> {
         self.slide_u64x2::<SHIFT>(a, b)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
+        let bytes = self.cvt_to_bytes_u64x2(a);
+        let result: u8x16<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes[index % 16usize]
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes[index % 16usize]
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_u64x2(result)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -8256,6 +8400,15 @@ impl Simd for Fallback {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (indices0, indices1) = self.split_u8x32(indices);
+        self.combine_i64x2(
+            self.swizzle_dyn_within_blocks_i64x2(a0, indices0),
+            self.swizzle_dyn_within_blocks_i64x2(a1, indices1),
+        )
+    }
+    #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         let (a0, a1) = self.split_i64x4(a);
         let (b0, b1) = self.split_i64x4(b);
@@ -8517,6 +8670,15 @@ impl Simd for Fallback {
         self.combine_u64x2(
             self.slide_within_blocks_u64x2::<SHIFT>(a0, b0),
             self.slide_within_blocks_u64x2::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (indices0, indices1) = self.split_u8x32(indices);
+        self.combine_u64x2(
+            self.swizzle_dyn_within_blocks_u64x2(a0, indices0),
+            self.swizzle_dyn_within_blocks_u64x2(a1, indices1),
         )
     }
     #[inline(always)]
@@ -11722,6 +11884,15 @@ impl Simd for Fallback {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (indices0, indices1) = self.split_u8x64(indices);
+        self.combine_i64x4(
+            self.swizzle_dyn_within_blocks_i64x4(a0, indices0),
+            self.swizzle_dyn_within_blocks_i64x4(a1, indices1),
+        )
+    }
+    #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         let (b0, b1) = self.split_i64x8(b);
@@ -11976,6 +12147,15 @@ impl Simd for Fallback {
         self.combine_u64x4(
             self.slide_within_blocks_u64x4::<SHIFT>(a0, b0),
             self.slide_within_blocks_u64x4::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (indices0, indices1) = self.split_u8x64(indices);
+        self.combine_u64x4(
+            self.swizzle_dyn_within_blocks_u64x4(a0, indices0),
+            self.swizzle_dyn_within_blocks_u64x4(a1, indices1),
         )
     }
     #[inline(always)]

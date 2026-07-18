@@ -4017,6 +4017,20 @@ impl Simd for Sse4_2 {
         self.slide_i64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> i64x2<Sse4_2> {
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i64x2(a).val.0, indices.into());
+                token.cvt_from_bytes_i64x2(u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4424,6 +4438,20 @@ impl Simd for Sse4_2 {
         b: u64x2<Self>,
     ) -> u64x2<Self> {
         self.slide_u64x2::<SHIFT>(a, b)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> u64x2<Sse4_2> {
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u64x2(a).val.0, indices.into());
+                token.cvt_from_bytes_u64x2(u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -7818,6 +7846,15 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
+        let (a0, a1) = self.split_i64x4(a);
+        let (indices0, indices1) = self.split_u8x32(indices);
+        self.combine_i64x2(
+            self.swizzle_dyn_within_blocks_i64x2(a0, indices0),
+            self.swizzle_dyn_within_blocks_i64x2(a1, indices1),
+        )
+    }
+    #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         let (a0, a1) = self.split_i64x4(a);
         let (b0, b1) = self.split_i64x4(b);
@@ -8093,6 +8130,15 @@ impl Simd for Sse4_2 {
         self.combine_u64x2(
             self.slide_within_blocks_u64x2::<SHIFT>(a0, b0),
             self.slide_within_blocks_u64x2::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
+        let (a0, a1) = self.split_u64x4(a);
+        let (indices0, indices1) = self.split_u8x32(indices);
+        self.combine_u64x2(
+            self.swizzle_dyn_within_blocks_u64x2(a0, indices0),
+            self.swizzle_dyn_within_blocks_u64x2(a1, indices1),
         )
     }
     #[inline(always)]
@@ -11621,6 +11667,15 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (indices0, indices1) = self.split_u8x64(indices);
+        self.combine_i64x4(
+            self.swizzle_dyn_within_blocks_i64x4(a0, indices0),
+            self.swizzle_dyn_within_blocks_i64x4(a1, indices1),
+        )
+    }
+    #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         let (b0, b1) = self.split_i64x8(b);
@@ -11889,6 +11944,15 @@ impl Simd for Sse4_2 {
         self.combine_u64x4(
             self.slide_within_blocks_u64x4::<SHIFT>(a0, b0),
             self.slide_within_blocks_u64x4::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (indices0, indices1) = self.split_u8x64(indices);
+        self.combine_u64x4(
+            self.swizzle_dyn_within_blocks_u64x4(a0, indices0),
+            self.swizzle_dyn_within_blocks_u64x4(a1, indices1),
         )
     }
     #[inline(always)]
