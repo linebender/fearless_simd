@@ -3425,10 +3425,10 @@ impl X86 {
                             let v0: #native_ty = v0.into();
                             let v1: #native_ty = v1.into();
 
-                            let lo = _mm256_permute2x128_si256::<0x20>(v0, v1); // [0,4,2,6]
-                            let hi = _mm256_permute2x128_si256::<0x31>(v0, v1); // [1,5,3,7]
-                            let out0 = #unpacklo_64(lo, hi); // [0,1,2,3]
-                            let out1 = #unpackhi_64(lo, hi); // [4,5,6,7]
+                            let lo = _mm256_permute2x128_si256::<0x20>(v0, v1); // [0,1,4,5]
+                            let hi = _mm256_permute2x128_si256::<0x31>(v0, v1); // [2,3,6,7]
+                            let out0 = #unpacklo_64(lo, hi); // [0,2,4,6]
+                            let out1 = #unpackhi_64(lo, hi); // [1,3,5,7]
 
                             let (chunks, []) = dest.as_chunks_mut::<4>() else {
                                 unreachable!()
