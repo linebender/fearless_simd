@@ -155,13 +155,18 @@
 //! x86 CPUs are not guaranteed to have any SIMD particular instruction set, so `fearless_simd` compiles a version
 //! of each function generic over [`Simd`] for each instruction set, and [`dispatch`] selects the best one at runtime.
 //!
-//! This is strictly required to take advantage of SIMD, but results in an increased binary size on x86.
+//! This is necessary to take advantage of SIMD, but results in an increased binary size on x86.
 //! If binary size is a concern, the increase can be partially mitigated by setting
 //! [`codegen-units=1`](https://nnethercote.github.io/perf-book/build-configuration.html#codegen-units)
 //! or [`lto=true`](https://nnethercote.github.io/perf-book/build-configuration.html#link-time-optimization) in your Cargo.toml,
 //! at the cost of longer build times.
 //!
-//! As a last resort, you can turn off multiversioning for specific SIMD instruction sets, see "Feature Flags" below.
+//! As a last resort, you can turn off multiversioning for specific SIMD instruction sets by passing
+//! `--cfg disable_dispatch_sse4_2`, `--cfg disable_dispatch_avx2`, or `--cfg disable_dispatch_avx512` in `RUSTFLAGS`.
+//! These configuration flags only control automatic multiversioning. Disabling one does not remove its token type, its
+//! [`Simd`] implementation, or explicit [`kernel`] support; for example, an `Avx2` token can still be used to call an
+//! AVX2 kernel when the CPU supports it.
+//!
 //! Note that later extensions can be beneficial even if you are only using 128-bit vectors:
 //! AVX2 and AVX-512 provide more efficient instructions for some operations,
 //! and AVX-512 also more than doubles the number of vector registers of all sizes.
@@ -177,13 +182,6 @@
 //!   Also allows using [`Level::new`] on all platforms, to detect which target features are enabled.
 //! - `libm`: Use floating point implementations from [libm]. Useful for `#[no_std]`.
 //! - `force_support_fallback`: Force scalar fallback, to be supported, even if your compilation target has a better baseline.
-//! - `dispatch_sse4_2`, `dispatch_avx2`, `dispatch_avx512` (enabled by default): Enable automatic x86 multiversioning for the
-//!   corresponding instruction set in [`dispatch`] and [`Level::dispatch`].
-//!
-//! The x86 feature flags only control automatic multiversioning. Disabling one does not remove its token type, its
-//! [`Simd`] implementation, or explicit [`kernel`] support; for example, an `Avx2` token can still be used to call an
-//! AVX2 kernel when the CPU supports it. Because Cargo features are additive, opt out of x86 multiversioning with
-//! `default-features = false`, then enable the pieces you want, for example `features = ["std", "dispatch_sse4_2"]`.
 //!
 //! At least one of `std` and `libm` is required; `std` overrides `libm`.
 //!
@@ -305,29 +303,6 @@ pub enum Level {
     /// Scalar fallback level, i.e. no supported SIMD features are to be used.
     ///
     /// This can be created with [`Level::fallback`].
-    // We only want to compile the fallback implementation if:
-    // - We're on a supported architecture, but don't statically support the lowest alternative level; OR
-    // - We're on an unsupported architecture; OR
-    // - The fallback is forcibly enabled
-    #[cfg(any(
-        all(target_arch = "aarch64", not(target_feature = "neon")),
-        all(
-            any(target_arch = "x86", target_arch = "x86_64"),
-            not(all(
-                target_feature = "sse4.2",
-                target_feature = "cmpxchg16b",
-                target_feature = "popcnt"
-            ))
-        ),
-        all(target_arch = "wasm32", not(target_feature = "simd128")),
-        not(any(
-            target_arch = "x86",
-            target_arch = "x86_64",
-            target_arch = "aarch64",
-            target_arch = "wasm32"
-        )),
-        feature = "force_support_fallback"
-    ))]
     Fallback(Fallback),
     /// The Neon instruction set on 64 bit ARM.
     #[cfg(target_arch = "aarch64")]
@@ -339,22 +314,7 @@ pub enum Level {
     /// Also known as x86-64-v2.
     ///
     /// All production CPUs with SSE4.2 also support the other two extensions, so it is safe to require them.
-    // We don't need to support this if the compilation target definitely supports something better.
-    #[cfg(all(
-        any(target_arch = "x86", target_arch = "x86_64"),
-        not(all(
-            target_feature = "avx2",
-            target_feature = "bmi1",
-            target_feature = "bmi2",
-            target_feature = "cmpxchg16b",
-            target_feature = "f16c",
-            target_feature = "fma",
-            target_feature = "lzcnt",
-            target_feature = "movbe",
-            target_feature = "popcnt",
-            target_feature = "xsave"
-        ))
-    ))]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Sse4_2(Sse4_2),
     /// Ice Lake-class AVX-512 on (32 and 64 bit) x86.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -438,18 +398,6 @@ impl Level {
                 && std::arch::is_x86_feature_detected!("cmpxchg16b")
                 && std::arch::is_x86_feature_detected!("popcnt")
             {
-                #[cfg(not(all(
-                    target_feature = "avx2",
-                    target_feature = "bmi1",
-                    target_feature = "bmi2",
-                    target_feature = "cmpxchg16b",
-                    target_feature = "f16c",
-                    target_feature = "fma",
-                    target_feature = "lzcnt",
-                    target_feature = "movbe",
-                    target_feature = "popcnt",
-                    target_feature = "xsave"
-                )))]
                 return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
             }
         }
@@ -500,34 +448,8 @@ impl Level {
     /// Check whether this is the `Fallback` level; that is, whether no better feature level could
     /// be statically or dynamically detected. This is useful if there's a scalarized version of
     /// your algorithm that runs faster if SIMD isn't supported.
-    ///
-    /// This method is always available, even in cases where `Fallback` is not; for instance, if
-    /// you're targeting a platform that always supports some level of SIMD. In such cases, it will
-    /// always return false.
     pub fn is_fallback(self) -> bool {
-        #[cfg(any(
-            all(target_arch = "aarch64", not(target_feature = "neon")),
-            all(
-                any(target_arch = "x86", target_arch = "x86_64"),
-                not(all(
-                    target_feature = "sse4.2",
-                    target_feature = "cmpxchg16b",
-                    target_feature = "popcnt"
-                ))
-            ),
-            all(target_arch = "wasm32", not(target_feature = "simd128")),
-            not(any(
-                target_arch = "x86",
-                target_arch = "x86_64",
-                target_arch = "aarch64",
-                target_arch = "wasm32"
-            )),
-            feature = "force_support_fallback"
-        ))]
-        return matches!(self, Self::Fallback(_));
-
-        #[allow(unreachable_code, reason = "Fallback unreachable in some cfgs.")]
-        false
+        matches!(self, Self::Fallback(_))
     }
 
     /// If this is a proof that Neon (or better) is available, access that instruction set.
@@ -593,23 +515,7 @@ impl Level {
             // Safety: The Avx2 struct represents the x86-64-v3 feature set being enabled, which
             // includes the `sse4.2`, `cmpxchg16b`, and `popcnt` features required by Sse4_2.
             Self::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
-            #[cfg(not(all(
-                target_feature = "avx2",
-                target_feature = "bmi1",
-                target_feature = "bmi2",
-                target_feature = "cmpxchg16b",
-                target_feature = "f16c",
-                target_feature = "fma",
-                target_feature = "lzcnt",
-                target_feature = "movbe",
-                target_feature = "popcnt",
-                target_feature = "xsave"
-            )))]
             Self::Sse4_2(sse42) => Some(sse42),
-            #[allow(
-                unreachable_patterns,
-                reason = "This arm is reachable on baseline x86/x86_64."
-            )]
             _ => None,
         }
     }
@@ -812,6 +718,65 @@ impl Level {
             #[cfg(not(target_feature = "simd128"))]
             return Self::Fallback(Fallback::new());
         }
+    }
+
+    #[doc(hidden)]
+    #[inline]
+    pub fn __dispatch_target(self) -> Self {
+        // Dispatch compiles only the selected multiversioned backends, but public tokens can
+        // still name lower levels even when the ambient target baseline makes those backends
+        // redundant. Normalize the proof to the best dispatchable level, while leaving exact
+        // token identity available for `kernel!` and explicit token use.
+        #[cfg(feature = "force_support_fallback")]
+        #[allow(
+            irrefutable_let_patterns,
+            reason = "On targets without supported SIMD, Fallback is the only Level variant."
+        )]
+        if let Self::Fallback(fallback) = self {
+            return Self::Fallback(fallback);
+        }
+
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            #[allow(unused_variables, reason = "Unused with all cfgs active")]
+            let baseline = Self::baseline();
+
+            #[cfg(not(disable_dispatch_avx512))]
+            if let Some(avx512) = self.as_avx512().or_else(|| baseline.as_avx512()) {
+                return Self::Avx512(avx512);
+            }
+
+            #[cfg(not(disable_dispatch_avx2))]
+            if let Some(avx2) = self.as_avx2().or_else(|| baseline.as_avx2()) {
+                return Self::Avx2(avx2);
+            }
+
+            #[cfg(not(disable_dispatch_sse4_2))]
+            if let Some(sse4_2) = self.as_sse4_2().or_else(|| baseline.as_sse4_2()) {
+                return Self::Sse4_2(sse4_2);
+            }
+        }
+
+        #[cfg(target_arch = "aarch64")]
+        {
+            let baseline = Self::baseline();
+            if let Some(neon) = self.as_neon().or_else(|| baseline.as_neon()) {
+                return Self::Neon(neon);
+            }
+        }
+
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        {
+            let baseline = Self::baseline();
+            if let Some(wasm) = self
+                .as_wasm_simd128()
+                .or_else(|| baseline.as_wasm_simd128())
+            {
+                return Self::WasmSimd128(wasm);
+            }
+        }
+
+        Self::Fallback(Fallback::new())
     }
 
     /// Create a scalar fallback level, which uses no SIMD instructions.

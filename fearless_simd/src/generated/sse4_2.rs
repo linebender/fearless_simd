@@ -93,34 +93,7 @@ impl Simd for Sse4_2 {
     type mask64s = mask64x2<Self>;
     #[inline(always)]
     fn level(self) -> Level {
-        #[cfg(not(all(
-            target_feature = "avx2",
-            target_feature = "bmi1",
-            target_feature = "bmi2",
-            target_feature = "cmpxchg16b",
-            target_feature = "f16c",
-            target_feature = "fma",
-            target_feature = "lzcnt",
-            target_feature = "movbe",
-            target_feature = "popcnt",
-            target_feature = "xsave"
-        )))]
-        return Level::Sse4_2(self);
-        #[cfg(all(
-            target_feature = "avx2",
-            target_feature = "bmi1",
-            target_feature = "bmi2",
-            target_feature = "cmpxchg16b",
-            target_feature = "f16c",
-            target_feature = "fma",
-            target_feature = "lzcnt",
-            target_feature = "movbe",
-            target_feature = "popcnt",
-            target_feature = "xsave"
-        ))]
-        {
-            Level::baseline()
-        }
+        Level::Sse4_2(self)
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {

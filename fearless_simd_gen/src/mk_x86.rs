@@ -137,43 +137,9 @@ impl Level for X86 {
 
     fn make_level_body(&self) -> TokenStream {
         let level_tok = self.token();
-        match self {
-            Self::Sse4_2 => quote! {
-                #[cfg(not(all(
-                    target_feature = "avx2",
-                    target_feature = "bmi1",
-                    target_feature = "bmi2",
-                    target_feature = "cmpxchg16b",
-                    target_feature = "f16c",
-                    target_feature = "fma",
-                    target_feature = "lzcnt",
-                    target_feature = "movbe",
-                    target_feature = "popcnt",
-                    target_feature = "xsave"
-                )))]
-                return Level::#level_tok(self);
-                #[cfg(all(
-                    target_feature = "avx2",
-                    target_feature = "bmi1",
-                    target_feature = "bmi2",
-                    target_feature = "cmpxchg16b",
-                    target_feature = "f16c",
-                    target_feature = "fma",
-                    target_feature = "lzcnt",
-                    target_feature = "movbe",
-                    target_feature = "popcnt",
-                    target_feature = "xsave"
-                ))]
-                {
-                    Level::baseline()
-                }
-            },
-            Self::Avx2 => quote! {
-                Level::#level_tok(self)
-            },
-            Self::Avx512 => quote! {
-                Level::#level_tok(self)
-            },
+
+        quote! {
+            Level::#level_tok(self)
         }
     }
 
