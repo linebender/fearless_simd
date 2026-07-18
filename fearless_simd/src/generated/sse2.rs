@@ -1154,8 +1154,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: i8x16<Sse2>, b: i8x16<Sse2>) -> mask8x16<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(_mm_cmpgt_epi8(a.into(), b.into()), all_ones)
                 }
                 .simd_into(token)
@@ -1169,8 +1168,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: i8x16<Sse2>, b: i8x16<Sse2>) -> mask8x16<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(_mm_cmpgt_epi8(b.into(), a.into()), all_ones)
                 }
                 .simd_into(token)
@@ -1711,8 +1709,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: u8x16<Sse2>, b: u8x16<Sse2>) -> mask8x16<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(
                         {
                             let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
@@ -1734,8 +1731,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: u8x16<Sse2>, b: u8x16<Sse2>) -> mask8x16<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(
                         {
                             let sign_bit = _mm_set1_epi8(0x80u8.cast_signed());
@@ -2383,8 +2379,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: i16x8<Sse2>, b: i16x8<Sse2>) -> mask16x8<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(_mm_cmpgt_epi16(a.into(), b.into()), all_ones)
                 }
                 .simd_into(token)
@@ -2398,8 +2393,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: i16x8<Sse2>, b: i16x8<Sse2>) -> mask16x8<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(_mm_cmpgt_epi16(b.into(), a.into()), all_ones)
                 }
                 .simd_into(token)
@@ -2877,8 +2871,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: u16x8<Sse2>, b: u16x8<Sse2>) -> mask16x8<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(
                         {
                             let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
@@ -2900,8 +2893,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: u16x8<Sse2>, b: u16x8<Sse2>) -> mask16x8<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(
                         {
                             let sign_bit = _mm_set1_epi16(0x8000u16.cast_signed());
@@ -3577,8 +3569,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: i32x4<Sse2>, b: i32x4<Sse2>) -> mask32x4<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(_mm_cmpgt_epi32(a.into(), b.into()), all_ones)
                 }
                 .simd_into(token)
@@ -3592,8 +3583,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: i32x4<Sse2>, b: i32x4<Sse2>) -> mask32x4<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(_mm_cmpgt_epi32(b.into(), a.into()), all_ones)
                 }
                 .simd_into(token)
@@ -4083,8 +4073,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: u32x4<Sse2>, b: u32x4<Sse2>) -> mask32x4<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(
                         {
                             let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());
@@ -4106,8 +4095,7 @@ impl Simd for Sse2 {
             #[inline(always)]
             fn kernel(token: Sse2, a: u32x4<Sse2>, b: u32x4<Sse2>) -> mask32x4<Sse2> {
                 {
-                    let zero = _mm_setzero_si128();
-                    let all_ones = _mm_cmpeq_epi8(zero, zero);
+                    let all_ones = _mm_set1_epi8(-1);
                     _mm_xor_si128(
                         {
                             let sign_bit = _mm_set1_epi32(0x80000000u32.cast_signed());

@@ -728,13 +728,11 @@ fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
 
 /// Invert an SSE2 mask expression.
 ///
-/// SSE2 has no vector NOT intrinsic, so we synthesize an all-ones vector by
-/// comparing zero with itself and XOR the mask with that.
+/// SSE2 has no vector NOT intrinsic, so we XOR the mask with an all-ones vector.
 fn sse2_not_mask_expr(mask: TokenStream) -> TokenStream {
     quote! {
         {
-            let zero = _mm_setzero_si128();
-            let all_ones = _mm_cmpeq_epi8(zero, zero);
+            let all_ones = _mm_set1_epi8(-1);
             _mm_xor_si128(#mask, all_ones)
         }
     }
