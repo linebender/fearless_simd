@@ -60,7 +60,8 @@ macro_rules! dispatch {
             $crate::Level::WasmSimd128(wasm) => {
                 $crate::__fearless_simd_dispatch_with_token!(wasm, $simd => $op)
             }
-            // This fallthrough logic is documented at the definition site of `Level`.
+            // Do not even compile x86-64-v2 (SSE4.2) codepaths when x86-64-v3 (AVX2) is guaranteed
+            // to reduce binary size and build times
             #[cfg(all(
                 any(target_arch = "x86", target_arch = "x86_64"),
                 not(all(
@@ -79,13 +80,50 @@ macro_rules! dispatch {
             $crate::Level::Sse4_2(sse4_2) => {
                 $crate::__fearless_simd_dispatch_dispatch_sse4_2!(sse4_2, $simd => $op)
             }
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            $crate::Level::Avx512(avx512) => {
-                $crate::__fearless_simd_dispatch_dispatch_avx512!(avx512, $simd => $op)
-            }
+            // Do not even compile x86-64-v3 (AVX2) codepaths when Ice Lake (AVX-512) is guaranteed
+            // to reduce binary size and build times
+            #[cfg(all(
+                any(target_arch = "x86", target_arch = "x86_64"),
+                not(all(
+                    target_feature = "aes",
+                    target_feature = "avx512bitalg",
+                    target_feature = "avx512bw",
+                    target_feature = "avx512cd",
+                    target_feature = "avx512dq",
+                    target_feature = "avx512f",
+                    target_feature = "avx512ifma",
+                    target_feature = "avx512vbmi",
+                    target_feature = "avx512vbmi2",
+                    target_feature = "avx512vl",
+                    target_feature = "avx512vnni",
+                    target_feature = "avx512vpopcntdq",
+                    target_feature = "bmi1",
+                    target_feature = "bmi2",
+                    target_feature = "cmpxchg16b",
+                    target_feature = "fma",
+                    target_feature = "gfni",
+                    target_feature = "lzcnt",
+                    target_feature = "movbe",
+                    target_feature = "pclmulqdq",
+                    target_feature = "popcnt",
+                    target_feature = "rdrand",
+                    target_feature = "rdseed",
+                    target_feature = "sha",
+                    target_feature = "vaes",
+                    target_feature = "vpclmulqdq",
+                    target_feature = "xsave",
+                    target_feature = "xsavec",
+                    target_feature = "xsaveopt",
+                    target_feature = "xsaves",
+                ))
+            ))]
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             $crate::Level::Avx2(avx2) => {
                 $crate::__fearless_simd_dispatch_dispatch_avx2!(avx2, $simd => $op)
+            }
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            $crate::Level::Avx512(avx512) => {
+                $crate::__fearless_simd_dispatch_dispatch_avx512!(avx512, $simd => $op)
             }
             #[cfg(any(
                 all(target_arch = "aarch64", not(target_feature = "neon")),
