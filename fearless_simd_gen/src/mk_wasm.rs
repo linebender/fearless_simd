@@ -494,6 +494,9 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
+            OpSig::ElementRotate { .. } | OpSig::ElementShift { .. } => {
+                unreachable!("element moves use generic lowering")
+            }
             OpSig::SwizzleDynWithinBlocks => {
                 assert_eq!(
                     vec_ty.n_bits(),

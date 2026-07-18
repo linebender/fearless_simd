@@ -49,6 +49,12 @@ pub(crate) enum SlideGranularity {
     AcrossBlocks,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ElementDirection {
+    Left,
+    Right,
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum OpSig {
     /// Takes a single scalar argument, and returns the corresponding vector type.
@@ -80,6 +86,11 @@ pub(crate) enum OpSig {
     /// This is equivalent to calling `unzip_low` and `unzip_high` and returning both results.
     /// This is the inverse of `Interleave`.
     Deinterleave,
+    /// Takes a vector plus a const-generic offset, and returns that same vector type with elements rotated.
+    ElementRotate { direction: ElementDirection },
+    /// Takes a vector, a scalar padding value, plus a const-generic offset, and returns that same vector type with
+    /// elements shifted.
+    ElementShift { direction: ElementDirection },
     /// Takes two arguments of a vector type, plus a const generic shift amount, and returns that same vector type.
     Slide { granularity: SlideGranularity },
     /// Takes a vector and a same-width byte-index vector, and returns the original vector type with its bytes
@@ -262,10 +273,12 @@ impl Op {
             .map(|n| Ident::new(n, Span::call_site()))
             .collect::<Vec<_>>();
         let vec = quote! { #ty<#simd_ty> };
-        let const_params = if matches!(self.sig, OpSig::Slide { .. }) {
-            quote! { <const SHIFT: usize> }
-        } else {
-            TokenStream::new()
+        let const_params = match self.sig {
+            OpSig::Slide { .. } => quote! { <const SHIFT: usize> },
+            OpSig::ElementRotate { .. } | OpSig::ElementShift { .. } => {
+                quote! { <const OFFSET: usize> }
+            }
+            _ => TokenStream::new(),
         };
 
         let (arg_tys, ret) = match &self.sig {
@@ -306,6 +319,8 @@ impl Op {
             OpSig::Interleave | OpSig::Deinterleave => {
                 (vec![vec.clone(), vec.clone()], quote! { (#vec, #vec) })
             }
+            OpSig::ElementRotate { .. } => (vec![vec.clone()], vec),
+            OpSig::ElementShift { .. } => (vec![vec.clone(), splat_arg_ty(vec_ty)], vec),
             OpSig::Slide { .. } => (vec![vec.clone(), vec.clone()], vec),
             OpSig::SwizzleDynWithinBlocks => {
                 let bytes_ty = vec_ty.bytes_ty().rust();
@@ -422,6 +437,15 @@ impl Op {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> (Self, Self) }
+            }
+            OpSig::ElementRotate { .. } => {
+                let arg0 = &arg_names[0];
+                quote! { <const OFFSET: usize>(#arg0) -> Self }
+            }
+            OpSig::ElementShift { .. } => {
+                let arg0 = &arg_names[0];
+                let arg1 = &arg_names[1];
+                quote! { <const OFFSET: usize>(#arg0, #arg1: Self::Element) -> Self }
             }
             OpSig::Slide { .. } => {
                 let arg0 = &arg_names[0];
@@ -598,6 +622,42 @@ const BASE_OPS: &[Op] = &[
             granularity: SlideGranularity::WithinBlocks,
         },
         "Like `slide`, but operates independently on each 128-bit block.",
+    ),
+    Op::new(
+        "rotate_elements_left",
+        OpKind::BaseTraitMethod,
+        OpSig::ElementRotate {
+            direction: ElementDirection::Left,
+        },
+        "Rotate the vector elements to the left by `OFFSET`.\n\n\
+        If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.",
+    ),
+    Op::new(
+        "rotate_elements_right",
+        OpKind::BaseTraitMethod,
+        OpSig::ElementRotate {
+            direction: ElementDirection::Right,
+        },
+        "Rotate the vector elements to the right by `OFFSET`.\n\n\
+        If `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`.",
+    ),
+    Op::new(
+        "shift_elements_left",
+        OpKind::BaseTraitMethod,
+        OpSig::ElementShift {
+            direction: ElementDirection::Left,
+        },
+        "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\n\
+        If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`.",
+    ),
+    Op::new(
+        "shift_elements_right",
+        OpKind::BaseTraitMethod,
+        OpSig::ElementShift {
+            direction: ElementDirection::Right,
+        },
+        "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\n\
+        If `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`.",
     ),
     Op::new(
         "swizzle_dyn_within_blocks",
@@ -1580,6 +1640,10 @@ impl OpSig {
             return false;
         }
 
+        if matches!(self, Self::ElementRotate { .. } | Self::ElementShift { .. }) {
+            return true;
+        }
+
         // These operations need to work on the full vector type.
         if matches!(
             self,
@@ -1640,6 +1704,8 @@ impl OpSig {
             | Self::Interleave
             | Self::Deinterleave
             | Self::Slide { .. } => &["a", "b"],
+            Self::ElementRotate { .. } => &["a"],
+            Self::ElementShift { .. } => &["a", "padding"],
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
@@ -1672,6 +1738,8 @@ impl OpSig {
             | Self::Interleave
             | Self::Deinterleave
             | Self::Slide { .. } => &["self", "rhs"],
+            Self::ElementRotate { .. } => &["self"],
+            Self::ElementShift { .. } => &["self", "padding"],
             Self::Shift => &["self", "shift"],
             Self::Ternary => &["self", "op1", "op2"],
             Self::Select | Self::Split { .. } | Self::Combine { .. } => &[],
@@ -1716,6 +1784,8 @@ impl OpSig {
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
             | Self::Shift
+            | Self::ElementRotate { .. }
+            | Self::ElementShift { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
             | Self::MaskSet
