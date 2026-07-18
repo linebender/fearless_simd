@@ -3415,6 +3415,9 @@ impl X86 {
                 let split_full =
                     Ident::new(&format!("split_{}", vec_ty.rust_name()), Span::call_site());
 
+                // For 64-bit values, AVX2 permits a more efficient implementation.
+                // It is special-cased here as a full early return because plumbing it
+                // through the rest of the logic in this function complicates it significantly.
                 if avx2_u64 {
                     return self.kernel_method(op, vec_ty, |token| {
                         quote! {
