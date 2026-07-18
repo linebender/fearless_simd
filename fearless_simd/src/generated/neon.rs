@@ -4518,19 +4518,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn mul_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i64x2<Neon>, b: i64x2<Neon>) -> i64x2<Neon> {
-                let a: [i64; 2usize] = a.into();
-                let b: [i64; 2usize] = b.into();
-                let result: [i64; 2usize] = [
-                    a[0usize].wrapping_mul(b[0usize]),
-                    a[1usize].wrapping_mul(b[1usize]),
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            i64::wrapping_mul(a[0usize], b[0usize]),
+            i64::wrapping_mul(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -4735,29 +4727,19 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i64x2<Neon>, b: i64x2<Neon>) -> i64x2<Neon> {
-                let a: [i64; 2usize] = a.into();
-                let b: [i64; 2usize] = b.into();
-                let result: [i64; 2usize] = [a[0usize].min(b[0usize]), a[1usize].min(b[1usize])];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            i64::min(a[0usize], b[0usize]),
+            i64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: i64x2<Neon>, b: i64x2<Neon>) -> i64x2<Neon> {
-                let a: [i64; 2usize] = a.into();
-                let b: [i64; 2usize] = b.into();
-                let result: [i64; 2usize] = [a[0usize].max(b[0usize]), a[1usize].max(b[1usize])];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            i64::max(a[0usize], b[0usize]),
+            i64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self> {
@@ -4954,19 +4936,11 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn mul_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u64x2<Neon>, b: u64x2<Neon>) -> u64x2<Neon> {
-                let a: [u64; 2usize] = a.into();
-                let b: [u64; 2usize] = b.into();
-                let result: [u64; 2usize] = [
-                    a[0usize].wrapping_mul(b[0usize]),
-                    a[1usize].wrapping_mul(b[1usize]),
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            u64::wrapping_mul(a[0usize], b[0usize]),
+            u64::wrapping_mul(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -5171,29 +5145,19 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u64x2<Neon>, b: u64x2<Neon>) -> u64x2<Neon> {
-                let a: [u64; 2usize] = a.into();
-                let b: [u64; 2usize] = b.into();
-                let result: [u64; 2usize] = [a[0usize].min(b[0usize]), a[1usize].min(b[1usize])];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            u64::min(a[0usize], b[0usize]),
+            u64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u64x2<Neon>, b: u64x2<Neon>) -> u64x2<Neon> {
-                let a: [u64; 2usize] = a.into();
-                let b: [u64; 2usize] = b.into();
-                let result: [u64; 2usize] = [a[0usize].max(b[0usize]), a[1usize].max(b[1usize])];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            u64::max(a[0usize], b[0usize]),
+            u64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self> {

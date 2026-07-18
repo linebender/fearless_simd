@@ -6,9 +6,9 @@ use quote::{format_ident, quote};
 
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
-    generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array, generic_to_bytes,
-    integer_lane_mask_splat_arg, scalar_binary, scalar_binary_method, scalar_compare,
+    fallback_method, generic_as_array, generic_block_combine, generic_block_split,
+    generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array,
+    generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, Quantifier, SlideGranularity, valid_reinterpret};
@@ -120,6 +120,7 @@ impl Level for WasmSimd128 {
     fn make_module_prelude(&self) -> TokenStream {
         quote! {
             use core::arch::wasm32::*;
+            use core::ops::*;
         }
     }
 
@@ -186,6 +187,14 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Binary => {
+                if matches!(method, "shlv" | "shrv")
+                    || (matches!(method, "min" | "max")
+                        && vec_ty.scalar_bits == 64
+                        && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned))
+                {
+                    return fallback_method(op, vec_ty);
+                }
+
                 let args = [quote! { a.into() }, quote! { b.into() }];
                 let expr = match method {
                     "mul" if vec_ty.scalar_bits == 8 && vec_ty.len == 16 => {
@@ -246,14 +255,6 @@ impl Level for WasmSimd128 {
                             { #expr.simd_into(self) }
                         }
                     }
-                    "min" | "max"
-                        if vec_ty.scalar_bits == 64
-                            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
-                    {
-                        scalar_binary_method(method, vec_ty, quote! { self })
-                    }
-                    "shlv" => scalar_binary(quote!(core::ops::Shl::shl), vec_ty, quote! { self }),
-                    "shrv" => scalar_binary(quote!(core::ops::Shr::shr), vec_ty, quote! { self }),
                     "copysign" => {
                         let splat = simple_intrinsic("splat", vec_ty);
                         let sign_mask_literal = match vec_ty.scalar_bits {
@@ -312,16 +313,15 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Compare => {
-                let expr = if vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 64 {
-                    scalar_compare(method, vec_ty, quote! { self })
-                } else {
-                    let args = [quote! { a.into() }, quote! { b.into() }];
-                    let expr = wasm::expr(method, vec_ty, &args);
-                    quote! { #expr.simd_into(self) }
-                };
+                if vec_ty.scalar == ScalarType::Unsigned && vec_ty.scalar_bits == 64 {
+                    return fallback_method(op, vec_ty);
+                }
+
+                let args = [quote! { a.into() }, quote! { b.into() }];
+                let expr = wasm::expr(method, vec_ty, &args);
                 quote! {
                     #method_sig {
-                        #expr
+                        #expr.simd_into(self)
                     }
                 }
             }

@@ -5,8 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    generic_as_array, generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name,
-    generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg, scalar_binary_method,
+    fallback_method, generic_as_array, generic_from_array, generic_from_bytes, generic_mask_set,
+    generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity, valid_reinterpret};
@@ -203,62 +203,59 @@ impl Level for Neon {
                     })
                 }
             }
-            OpSig::Binary => self.kernel_method(op, vec_ty, |token| match method {
-                "mul"
-                    if vec_ty.scalar_bits == 64
-                        && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
+            OpSig::Binary => {
+                if vec_ty.scalar_bits == 64
+                    && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+                    && matches!(method, "mul" | "min" | "max")
                 {
-                    scalar_binary_method("wrapping_mul", vec_ty, token)
+                    return fallback_method(op, vec_ty);
                 }
-                "min" | "max"
-                    if vec_ty.scalar_bits == 64
-                        && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned) =>
-                {
-                    scalar_binary_method(method, vec_ty, token)
-                }
-                "shlv" | "shrv" => {
-                    let mut args = if vec_ty.scalar == ScalarType::Int {
-                        // Signed case
-                        [quote! { a.into() }, quote! { b.into() }]
-                    } else {
-                        // Unsigned case
-                        let bits = vec_ty.scalar_bits;
-                        let reinterpret = format_ident!("vreinterpretq_s{bits}_u{bits}");
-                        [quote! { a.into() }, quote! { #reinterpret(b.into()) }]
-                    };
 
-                    // For a right shift, we need to negate the shift amount
-                    if method == "shrv" {
-                        let neg = simple_intrinsic("vneg", &vec_ty.cast(ScalarType::Int));
-                        let arg1 = &args[1];
-                        args[1] = quote! { #neg(#arg1) };
-                    }
+                self.kernel_method(op, vec_ty, |token| match method {
+                    "shlv" | "shrv" => {
+                        let mut args = if vec_ty.scalar == ScalarType::Int {
+                            // Signed case
+                            [quote! { a.into() }, quote! { b.into() }]
+                        } else {
+                            // Unsigned case
+                            let bits = vec_ty.scalar_bits;
+                            let reinterpret = format_ident!("vreinterpretq_s{bits}_u{bits}");
+                            [quote! { a.into() }, quote! { #reinterpret(b.into()) }]
+                        };
 
-                    let expr = neon::expr(method, vec_ty, &args);
-                    quote! {
-                        #expr.simd_into(#token)
-                    }
-                }
-                "copysign" => {
-                    let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
-                    let unsigned_ty = vec_ty.cast(ScalarType::Unsigned);
-                    let sign_mask =
-                        neon::expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
-                    let vbsl = simple_intrinsic("vbsl", vec_ty);
+                        // For a right shift, we need to negate the shift amount
+                        if method == "shrv" {
+                            let neg = simple_intrinsic("vneg", &vec_ty.cast(ScalarType::Int));
+                            let arg1 = &args[1];
+                            args[1] = quote! { #neg(#arg1) };
+                        }
 
-                    quote! {
-                        let sign_mask = #sign_mask;
-                        #vbsl(sign_mask, b.into(), a.into()).simd_into(#token)
+                        let expr = neon::expr(method, vec_ty, &args);
+                        quote! {
+                            #expr.simd_into(#token)
+                        }
                     }
-                }
-                _ => {
-                    let args = [quote! { a.into() }, quote! { b.into() }];
-                    let expr = neon::expr(method, vec_ty, &args);
-                    quote! {
-                        #expr.simd_into(#token)
+                    "copysign" => {
+                        let shift_amt = Literal::usize_unsuffixed(vec_ty.scalar_bits - 1);
+                        let unsigned_ty = vec_ty.cast(ScalarType::Unsigned);
+                        let sign_mask =
+                            neon::expr("splat", &unsigned_ty, &[quote! { 1 << #shift_amt }]);
+                        let vbsl = simple_intrinsic("vbsl", vec_ty);
+
+                        quote! {
+                            let sign_mask = #sign_mask;
+                            #vbsl(sign_mask, b.into(), a.into()).simd_into(#token)
+                        }
                     }
-                }
-            }),
+                    _ => {
+                        let args = [quote! { a.into() }, quote! { b.into() }];
+                        let expr = neon::expr(method, vec_ty, &args);
+                        quote! {
+                            #expr.simd_into(#token)
+                        }
+                    }
+                })
+            }
             OpSig::Ternary => {
                 let args = match method {
                     "mul_add" | "mul_sub" => [

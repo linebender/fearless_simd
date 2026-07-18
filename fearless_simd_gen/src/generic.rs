@@ -5,12 +5,17 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens, quote};
 
 use crate::{
+    level::Level,
     ops::{ElementDirection, Op, OpSig, RefKind, SlideGranularity},
     types::{ScalarType, VecType},
 };
 
 pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
     Ident::new(&format!("{op}_{}", ty.rust_name()), Span::call_site())
+}
+
+pub(crate) fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    crate::mk_fallback::Fallback.make_method(op, vec_ty)
 }
 
 /// For backends that store masks as all-zero/all-one integer lanes, convert the public
@@ -434,63 +439,6 @@ fn right_offset_arms(
 pub(crate) fn unrolled_array(len: usize, item: impl FnMut(usize) -> TokenStream) -> TokenStream {
     let items = (0..len).map(item).collect::<Vec<_>>();
     quote! { [#(#items),*] }
-}
-
-pub(crate) fn scalar_binary(f: TokenStream, vec_ty: &VecType, simd: impl ToTokens) -> TokenStream {
-    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let len = vec_ty.len;
-    let items = unrolled_array(len, |idx| quote! { #f(a[#idx], b[#idx]) });
-
-    quote! {
-        let a: [#scalar; #len] = a.into();
-        let b: [#scalar; #len] = b.into();
-        let result: [#scalar; #len] = #items;
-        result.simd_into(#simd)
-    }
-}
-
-pub(crate) fn scalar_binary_method(
-    method: &str,
-    vec_ty: &VecType,
-    simd: impl ToTokens,
-) -> TokenStream {
-    let method = Ident::new(method, Span::call_site());
-    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let len = vec_ty.len;
-    let items = unrolled_array(len, |idx| quote! { a[#idx].#method(b[#idx]) });
-
-    quote! {
-        let a: [#scalar; #len] = a.into();
-        let b: [#scalar; #len] = b.into();
-        let result: [#scalar; #len] = #items;
-        result.simd_into(#simd)
-    }
-}
-
-pub(crate) fn scalar_compare(method: &str, vec_ty: &VecType, simd: impl ToTokens) -> TokenStream {
-    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let mask_scalar = ScalarType::Mask.rust(vec_ty.scalar_bits);
-    let len = vec_ty.len;
-    let op = match method {
-        "simd_eq" => quote! { == },
-        "simd_lt" => quote! { < },
-        "simd_le" => quote! { <= },
-        "simd_ge" => quote! { >= },
-        "simd_gt" => quote! { > },
-        _ => unreachable!("unsupported scalar comparison: {method}"),
-    };
-    let items = unrolled_array(len, |idx| {
-        quote! { if a[#idx] #op b[#idx] { true_lane } else { false_lane } }
-    });
-
-    quote! {
-        let a: [#scalar; #len] = a.into();
-        let b: [#scalar; #len] = b.into();
-        let true_lane: #mask_scalar = !0;
-        let false_lane: #mask_scalar = 0;
-        let result: [#mask_scalar; #len] = #items;
-        result.simd_into(#simd)
-    }
 }
 
 pub(crate) fn generic_block_split(

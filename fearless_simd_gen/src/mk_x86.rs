@@ -7,9 +7,9 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{
-    generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-    generic_from_bytes, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
-    generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
+    fallback_method, generic_as_array, generic_block_combine, generic_block_split,
+    generic_from_array, generic_from_bytes, generic_mask_from_bitmask, generic_mask_set,
+    generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
@@ -721,10 +721,6 @@ fn signed_literal(value: u64, bits: u32) -> TokenStream {
         let value = Literal::u64_unsuffixed(value as u64);
         quote! { #value }
     }
-}
-
-fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
-    crate::mk_fallback::Fallback.make_method(op, vec_ty)
 }
 
 /// Invert an SSE2 mask expression.

@@ -11,6 +11,7 @@ use crate::{
     u16x8, u16x16, u16x32, u32x4, u32x8, u32x16, u64x2, u64x4, u64x8,
 };
 use core::arch::wasm32::*;
+use core::ops::*;
 #[doc = "A token for WASM SIMD128, representing the \"wasm128\" level."]
 #[derive(Clone, Copy, Debug)]
 pub struct WasmSimd128 {
@@ -663,27 +664,25 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shlv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        let a: [i8; 16usize] = a.into();
-        let b: [i8; 16usize] = b.into();
-        let result: [i8; 16usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-            core::ops::Shl::shl(a[4usize], b[4usize]),
-            core::ops::Shl::shl(a[5usize], b[5usize]),
-            core::ops::Shl::shl(a[6usize], b[6usize]),
-            core::ops::Shl::shl(a[7usize], b[7usize]),
-            core::ops::Shl::shl(a[8usize], b[8usize]),
-            core::ops::Shl::shl(a[9usize], b[9usize]),
-            core::ops::Shl::shl(a[10usize], b[10usize]),
-            core::ops::Shl::shl(a[11usize], b[11usize]),
-            core::ops::Shl::shl(a[12usize], b[12usize]),
-            core::ops::Shl::shl(a[13usize], b[13usize]),
-            core::ops::Shl::shl(a[14usize], b[14usize]),
-            core::ops::Shl::shl(a[15usize], b[15usize]),
-        ];
-        result.simd_into(self)
+        [
+            i8::shl(a[0usize], &b[0usize]),
+            i8::shl(a[1usize], &b[1usize]),
+            i8::shl(a[2usize], &b[2usize]),
+            i8::shl(a[3usize], &b[3usize]),
+            i8::shl(a[4usize], &b[4usize]),
+            i8::shl(a[5usize], &b[5usize]),
+            i8::shl(a[6usize], &b[6usize]),
+            i8::shl(a[7usize], &b[7usize]),
+            i8::shl(a[8usize], &b[8usize]),
+            i8::shl(a[9usize], &b[9usize]),
+            i8::shl(a[10usize], &b[10usize]),
+            i8::shl(a[11usize], &b[11usize]),
+            i8::shl(a[12usize], &b[12usize]),
+            i8::shl(a[13usize], &b[13usize]),
+            i8::shl(a[14usize], &b[14usize]),
+            i8::shl(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
@@ -691,27 +690,25 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        let a: [i8; 16usize] = a.into();
-        let b: [i8; 16usize] = b.into();
-        let result: [i8; 16usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-            core::ops::Shr::shr(a[4usize], b[4usize]),
-            core::ops::Shr::shr(a[5usize], b[5usize]),
-            core::ops::Shr::shr(a[6usize], b[6usize]),
-            core::ops::Shr::shr(a[7usize], b[7usize]),
-            core::ops::Shr::shr(a[8usize], b[8usize]),
-            core::ops::Shr::shr(a[9usize], b[9usize]),
-            core::ops::Shr::shr(a[10usize], b[10usize]),
-            core::ops::Shr::shr(a[11usize], b[11usize]),
-            core::ops::Shr::shr(a[12usize], b[12usize]),
-            core::ops::Shr::shr(a[13usize], b[13usize]),
-            core::ops::Shr::shr(a[14usize], b[14usize]),
-            core::ops::Shr::shr(a[15usize], b[15usize]),
-        ];
-        result.simd_into(self)
+        [
+            i8::shr(a[0usize], &b[0usize]),
+            i8::shr(a[1usize], &b[1usize]),
+            i8::shr(a[2usize], &b[2usize]),
+            i8::shr(a[3usize], &b[3usize]),
+            i8::shr(a[4usize], &b[4usize]),
+            i8::shr(a[5usize], &b[5usize]),
+            i8::shr(a[6usize], &b[6usize]),
+            i8::shr(a[7usize], &b[7usize]),
+            i8::shr(a[8usize], &b[8usize]),
+            i8::shr(a[9usize], &b[9usize]),
+            i8::shr(a[10usize], &b[10usize]),
+            i8::shr(a[11usize], &b[11usize]),
+            i8::shr(a[12usize], &b[12usize]),
+            i8::shr(a[13usize], &b[13usize]),
+            i8::shr(a[14usize], &b[14usize]),
+            i8::shr(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -1024,27 +1021,25 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shlv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        let a: [u8; 16usize] = a.into();
-        let b: [u8; 16usize] = b.into();
-        let result: [u8; 16usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-            core::ops::Shl::shl(a[4usize], b[4usize]),
-            core::ops::Shl::shl(a[5usize], b[5usize]),
-            core::ops::Shl::shl(a[6usize], b[6usize]),
-            core::ops::Shl::shl(a[7usize], b[7usize]),
-            core::ops::Shl::shl(a[8usize], b[8usize]),
-            core::ops::Shl::shl(a[9usize], b[9usize]),
-            core::ops::Shl::shl(a[10usize], b[10usize]),
-            core::ops::Shl::shl(a[11usize], b[11usize]),
-            core::ops::Shl::shl(a[12usize], b[12usize]),
-            core::ops::Shl::shl(a[13usize], b[13usize]),
-            core::ops::Shl::shl(a[14usize], b[14usize]),
-            core::ops::Shl::shl(a[15usize], b[15usize]),
-        ];
-        result.simd_into(self)
+        [
+            u8::shl(a[0usize], &b[0usize]),
+            u8::shl(a[1usize], &b[1usize]),
+            u8::shl(a[2usize], &b[2usize]),
+            u8::shl(a[3usize], &b[3usize]),
+            u8::shl(a[4usize], &b[4usize]),
+            u8::shl(a[5usize], &b[5usize]),
+            u8::shl(a[6usize], &b[6usize]),
+            u8::shl(a[7usize], &b[7usize]),
+            u8::shl(a[8usize], &b[8usize]),
+            u8::shl(a[9usize], &b[9usize]),
+            u8::shl(a[10usize], &b[10usize]),
+            u8::shl(a[11usize], &b[11usize]),
+            u8::shl(a[12usize], &b[12usize]),
+            u8::shl(a[13usize], &b[13usize]),
+            u8::shl(a[14usize], &b[14usize]),
+            u8::shl(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
@@ -1052,27 +1047,25 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        let a: [u8; 16usize] = a.into();
-        let b: [u8; 16usize] = b.into();
-        let result: [u8; 16usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-            core::ops::Shr::shr(a[4usize], b[4usize]),
-            core::ops::Shr::shr(a[5usize], b[5usize]),
-            core::ops::Shr::shr(a[6usize], b[6usize]),
-            core::ops::Shr::shr(a[7usize], b[7usize]),
-            core::ops::Shr::shr(a[8usize], b[8usize]),
-            core::ops::Shr::shr(a[9usize], b[9usize]),
-            core::ops::Shr::shr(a[10usize], b[10usize]),
-            core::ops::Shr::shr(a[11usize], b[11usize]),
-            core::ops::Shr::shr(a[12usize], b[12usize]),
-            core::ops::Shr::shr(a[13usize], b[13usize]),
-            core::ops::Shr::shr(a[14usize], b[14usize]),
-            core::ops::Shr::shr(a[15usize], b[15usize]),
-        ];
-        result.simd_into(self)
+        [
+            u8::shr(a[0usize], &b[0usize]),
+            u8::shr(a[1usize], &b[1usize]),
+            u8::shr(a[2usize], &b[2usize]),
+            u8::shr(a[3usize], &b[3usize]),
+            u8::shr(a[4usize], &b[4usize]),
+            u8::shr(a[5usize], &b[5usize]),
+            u8::shr(a[6usize], &b[6usize]),
+            u8::shr(a[7usize], &b[7usize]),
+            u8::shr(a[8usize], &b[8usize]),
+            u8::shr(a[9usize], &b[9usize]),
+            u8::shr(a[10usize], &b[10usize]),
+            u8::shr(a[11usize], &b[11usize]),
+            u8::shr(a[12usize], &b[12usize]),
+            u8::shr(a[13usize], &b[13usize]),
+            u8::shr(a[14usize], &b[14usize]),
+            u8::shr(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -1447,19 +1440,17 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        let a: [i16; 8usize] = a.into();
-        let b: [i16; 8usize] = b.into();
-        let result: [i16; 8usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-            core::ops::Shl::shl(a[4usize], b[4usize]),
-            core::ops::Shl::shl(a[5usize], b[5usize]),
-            core::ops::Shl::shl(a[6usize], b[6usize]),
-            core::ops::Shl::shl(a[7usize], b[7usize]),
-        ];
-        result.simd_into(self)
+        [
+            i16::shl(a[0usize], &b[0usize]),
+            i16::shl(a[1usize], &b[1usize]),
+            i16::shl(a[2usize], &b[2usize]),
+            i16::shl(a[3usize], &b[3usize]),
+            i16::shl(a[4usize], &b[4usize]),
+            i16::shl(a[5usize], &b[5usize]),
+            i16::shl(a[6usize], &b[6usize]),
+            i16::shl(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
@@ -1467,19 +1458,17 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        let a: [i16; 8usize] = a.into();
-        let b: [i16; 8usize] = b.into();
-        let result: [i16; 8usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-            core::ops::Shr::shr(a[4usize], b[4usize]),
-            core::ops::Shr::shr(a[5usize], b[5usize]),
-            core::ops::Shr::shr(a[6usize], b[6usize]),
-            core::ops::Shr::shr(a[7usize], b[7usize]),
-        ];
-        result.simd_into(self)
+        [
+            i16::shr(a[0usize], &b[0usize]),
+            i16::shr(a[1usize], &b[1usize]),
+            i16::shr(a[2usize], &b[2usize]),
+            i16::shr(a[3usize], &b[3usize]),
+            i16::shr(a[4usize], &b[4usize]),
+            i16::shr(a[5usize], &b[5usize]),
+            i16::shr(a[6usize], &b[6usize]),
+            i16::shr(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -1744,19 +1733,17 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        let a: [u16; 8usize] = a.into();
-        let b: [u16; 8usize] = b.into();
-        let result: [u16; 8usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-            core::ops::Shl::shl(a[4usize], b[4usize]),
-            core::ops::Shl::shl(a[5usize], b[5usize]),
-            core::ops::Shl::shl(a[6usize], b[6usize]),
-            core::ops::Shl::shl(a[7usize], b[7usize]),
-        ];
-        result.simd_into(self)
+        [
+            u16::shl(a[0usize], &b[0usize]),
+            u16::shl(a[1usize], &b[1usize]),
+            u16::shl(a[2usize], &b[2usize]),
+            u16::shl(a[3usize], &b[3usize]),
+            u16::shl(a[4usize], &b[4usize]),
+            u16::shl(a[5usize], &b[5usize]),
+            u16::shl(a[6usize], &b[6usize]),
+            u16::shl(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
@@ -1764,19 +1751,17 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        let a: [u16; 8usize] = a.into();
-        let b: [u16; 8usize] = b.into();
-        let result: [u16; 8usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-            core::ops::Shr::shr(a[4usize], b[4usize]),
-            core::ops::Shr::shr(a[5usize], b[5usize]),
-            core::ops::Shr::shr(a[6usize], b[6usize]),
-            core::ops::Shr::shr(a[7usize], b[7usize]),
-        ];
-        result.simd_into(self)
+        [
+            u16::shr(a[0usize], &b[0usize]),
+            u16::shr(a[1usize], &b[1usize]),
+            u16::shr(a[2usize], &b[2usize]),
+            u16::shr(a[3usize], &b[3usize]),
+            u16::shr(a[4usize], &b[4usize]),
+            u16::shr(a[5usize], &b[5usize]),
+            u16::shr(a[6usize], &b[6usize]),
+            u16::shr(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -2118,15 +2103,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shlv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        let a: [i32; 4usize] = a.into();
-        let b: [i32; 4usize] = b.into();
-        let result: [i32; 4usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-        ];
-        result.simd_into(self)
+        [
+            i32::shl(a[0usize], &b[0usize]),
+            i32::shl(a[1usize], &b[1usize]),
+            i32::shl(a[2usize], &b[2usize]),
+            i32::shl(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
@@ -2134,15 +2117,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        let a: [i32; 4usize] = a.into();
-        let b: [i32; 4usize] = b.into();
-        let result: [i32; 4usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-        ];
-        result.simd_into(self)
+        [
+            i32::shr(a[0usize], &b[0usize]),
+            i32::shr(a[1usize], &b[1usize]),
+            i32::shr(a[2usize], &b[2usize]),
+            i32::shr(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -2395,15 +2376,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shlv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        let a: [u32; 4usize] = a.into();
-        let b: [u32; 4usize] = b.into();
-        let result: [u32; 4usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-        ];
-        result.simd_into(self)
+        [
+            u32::shl(a[0usize], &b[0usize]),
+            u32::shl(a[1usize], &b[1usize]),
+            u32::shl(a[2usize], &b[2usize]),
+            u32::shl(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
@@ -2411,15 +2390,13 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        let a: [u32; 4usize] = a.into();
-        let b: [u32; 4usize] = b.into();
-        let result: [u32; 4usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-        ];
-        result.simd_into(self)
+        [
+            u32::shr(a[0usize], &b[0usize]),
+            u32::shr(a[1usize], &b[1usize]),
+            u32::shr(a[2usize], &b[2usize]),
+            u32::shr(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
@@ -3057,13 +3034,11 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shlv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let b: [i64; 2usize] = b.into();
-        let result: [i64; 2usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            i64::shl(a[0usize], &b[0usize]),
+            i64::shl(a[1usize], &b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self> {
@@ -3071,13 +3046,11 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let b: [i64; 2usize] = b.into();
-        let result: [i64; 2usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            i64::shr(a[0usize], &b[0usize]),
+            i64::shr(a[1usize], &b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
@@ -3136,17 +3109,19 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let b: [i64; 2usize] = b.into();
-        let result: [i64; 2usize] = [a[0usize].min(b[0usize]), a[1usize].min(b[1usize])];
-        result.simd_into(self)
+        [
+            i64::min(a[0usize], b[0usize]),
+            i64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let b: [i64; 2usize] = b.into();
-        let result: [i64; 2usize] = [a[0usize].max(b[0usize]), a[1usize].max(b[1usize])];
-        result.simd_into(self)
+        [
+            i64::max(a[0usize], b[0usize]),
+            i64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self> {
@@ -3324,13 +3299,11 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shlv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let result: [u64; 2usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            u64::shl(a[0usize], &b[0usize]),
+            u64::shl(a[1usize], &b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self> {
@@ -3338,113 +3311,51 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn shrv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let result: [u64; 2usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            u64::shr(a[0usize], &b[0usize]),
+            u64::shr(a[1usize], &b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let true_lane: i64 = !0;
-        let false_lane: i64 = 0;
-        let result: [i64; 2usize] = [
-            if a[0usize] == b[0usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-            if a[1usize] == b[1usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-        ];
-        result.simd_into(self)
+        [
+            -(u64::eq(&a[0usize], &b[0usize]) as i64),
+            -(u64::eq(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_lt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let true_lane: i64 = !0;
-        let false_lane: i64 = 0;
-        let result: [i64; 2usize] = [
-            if a[0usize] < b[0usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-            if a[1usize] < b[1usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-        ];
-        result.simd_into(self)
+        [
+            -(u64::lt(&a[0usize], &b[0usize]) as i64),
+            -(u64::lt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_le_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let true_lane: i64 = !0;
-        let false_lane: i64 = 0;
-        let result: [i64; 2usize] = [
-            if a[0usize] <= b[0usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-            if a[1usize] <= b[1usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-        ];
-        result.simd_into(self)
+        [
+            -(u64::le(&a[0usize], &b[0usize]) as i64),
+            -(u64::le(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let true_lane: i64 = !0;
-        let false_lane: i64 = 0;
-        let result: [i64; 2usize] = [
-            if a[0usize] >= b[0usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-            if a[1usize] >= b[1usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-        ];
-        result.simd_into(self)
+        [
+            -(u64::ge(&a[0usize], &b[0usize]) as i64),
+            -(u64::ge(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let true_lane: i64 = !0;
-        let false_lane: i64 = 0;
-        let result: [i64; 2usize] = [
-            if a[0usize] > b[0usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-            if a[1usize] > b[1usize] {
-                true_lane
-            } else {
-                false_lane
-            },
-        ];
-        result.simd_into(self)
+        [
+            -(u64::gt(&a[0usize], &b[0usize]) as i64),
+            -(u64::gt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn zip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -3483,17 +3394,19 @@ impl Simd for WasmSimd128 {
     }
     #[inline(always)]
     fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let result: [u64; 2usize] = [a[0usize].min(b[0usize]), a[1usize].min(b[1usize])];
-        result.simd_into(self)
+        [
+            u64::min(a[0usize], b[0usize]),
+            u64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let result: [u64; 2usize] = [a[0usize].max(b[0usize]), a[1usize].max(b[1usize])];
-        result.simd_into(self)
+        [
+            u64::max(a[0usize], b[0usize]),
+            u64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self> {
