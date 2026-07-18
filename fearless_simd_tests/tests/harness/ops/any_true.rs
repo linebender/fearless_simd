@@ -159,19 +159,19 @@ fn any_true_mask64x8<S: Simd>(simd: S) {
 fn any_true_mask8x32<S: Simd>(simd: S) {
     let values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
     let mask = mask8x32::from_slice(simd, &values);
-    assert_eq!(simd.any_true_mask8x32(mask), true);
+    assert!(simd.any_true_mask8x32(mask));
 }
 
 #[simd_test]
 fn any_true_mask16x16<S: Simd>(simd: S) {
     let values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
     let mask = mask16x16::from_slice(simd, &values);
-    assert_eq!(simd.any_true_mask16x16(mask), true);
+    assert!(simd.any_true_mask16x16(mask));
 }
 
 #[simd_test]
 fn any_true_mask32x8<S: Simd>(simd: S) {
     let values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
     let mask = mask32x8::from_slice(simd, &values);
-    assert_eq!(simd.any_true_mask32x8(mask), true);
+    assert!(simd.any_true_mask32x8(mask));
 }
