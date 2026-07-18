@@ -37,8 +37,10 @@ fn sigmoid<S: Simd>(simd: S, x: &[f32], out: &mut [f32]) {
 
 fn main() {
     let level = Level::new();
-    let inp = [0.1, -0.2, 0.001, 0.4, 1., 2., 3., 4.];
-    let mut out = [0.; 8];
+    let inp = [
+        0.1, -0.2, 0.001, 0.4, 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.,
+    ];
+    let mut out = [0.; 16];
     dispatch!(level, simd => disable_avx2(simd, &inp, &mut out));
 
     println!("{out:?}");
