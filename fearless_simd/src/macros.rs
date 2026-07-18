@@ -132,7 +132,10 @@ macro_rules! __fearless_simd_dispatch_pruned {
     all(target_arch = "aarch64", not(target_feature = "neon")),
     all(
         any(target_arch = "x86", target_arch = "x86_64"),
-        any(disable_dispatch_sse2, not(target_feature = "sse2")),
+        any(
+            disable_dispatch_sse2,
+            not(all(target_feature = "sse2", target_feature = "fxsr"))
+        ),
     ),
     all(target_arch = "wasm32", not(target_feature = "simd128")),
     not(any(
@@ -156,7 +159,10 @@ macro_rules! __fearless_simd_dispatch_dispatch_fallback {
     all(target_arch = "aarch64", not(target_feature = "neon")),
     all(
         any(target_arch = "x86", target_arch = "x86_64"),
-        any(disable_dispatch_sse2, not(target_feature = "sse2")),
+        any(
+            disable_dispatch_sse2,
+            not(all(target_feature = "sse2", target_feature = "fxsr"))
+        ),
     ),
     all(target_arch = "wasm32", not(target_feature = "simd128")),
     not(any(

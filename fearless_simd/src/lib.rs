@@ -405,7 +405,9 @@ impl Level {
                 && std::arch::is_x86_feature_detected!("popcnt")
             {
                 return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
-            } else if std::arch::is_x86_feature_detected!("sse2") {
+            } else if std::arch::is_x86_feature_detected!("sse2")
+                && std::arch::is_x86_feature_detected!("fxsr")
+            {
                 return unsafe { Self::Sse2(Sse2::new_unchecked()) };
             }
         }
@@ -413,7 +415,7 @@ impl Level {
             all(target_arch = "aarch64", not(target_feature = "neon")),
             all(
                 any(target_arch = "x86", target_arch = "x86_64"),
-                not(target_feature = "sse2")
+                not(all(target_feature = "sse2", target_feature = "fxsr"))
             ),
             all(target_arch = "wasm32", not(target_feature = "simd128")),
             not(any(
@@ -738,6 +740,7 @@ impl Level {
             return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
             #[cfg(all(
                 target_feature = "sse2",
+                target_feature = "fxsr",
                 not(all(
                     target_feature = "sse4.2",
                     target_feature = "cmpxchg16b",
@@ -745,7 +748,7 @@ impl Level {
                 ))
             ))]
             return unsafe { Self::Sse2(Sse2::new_unchecked()) };
-            #[cfg(not(target_feature = "sse2"))]
+            #[cfg(not(all(target_feature = "sse2", target_feature = "fxsr")))]
             return Self::Fallback(Fallback::new());
         }
         #[cfg(target_arch = "wasm32")]
