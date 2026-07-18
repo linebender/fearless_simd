@@ -24,9 +24,9 @@ impl Avx2 {
     #[doc = r""]
     #[doc = r" # Safety"]
     #[doc = r""]
-    #[doc = r" The `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`,"]
-    #[doc = r" `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features must"]
-    #[doc = r" be available."]
+    #[doc = r" The `fxsr`, `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`,"]
+    #[doc = r" `fma`, `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features"]
+    #[doc = r" must be available."]
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
         Self { _private: () }
@@ -90,7 +90,9 @@ impl Simd for Avx2 {
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-        #[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave")]
+        #[target_feature(
+            enable = "fxsr,avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave"
+        )]
         fn vectorize_avx2<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }

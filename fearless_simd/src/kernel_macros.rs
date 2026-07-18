@@ -146,7 +146,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
         $crate::__fearless_simd_kernel_impl! {
             @cfg any(target_arch = "x86", target_arch = "x86_64");
             @token_ty $crate::Sse4_2;
-            @kernel_attrs #[target_feature(enable = "sse4.2,cmpxchg16b,popcnt")];
+            @kernel_attrs #[target_feature(enable = "fxsr,sse4.2,cmpxchg16b,popcnt")];
             $($body)*
         }
     };
@@ -159,7 +159,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
             @cfg any(target_arch = "x86", target_arch = "x86_64");
             @token_ty $crate::Avx2;
             @kernel_attrs #[target_feature(
-                enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave"
+                enable = "fxsr,avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave"
             )];
             $($body)*
         }
@@ -173,7 +173,7 @@ macro_rules! __fearless_simd_kernel_dispatch {
             @cfg any(target_arch = "x86", target_arch = "x86_64");
             @token_ty $crate::Avx512;
             @kernel_attrs #[target_feature(
-                enable = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
+                enable = "fxsr,adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
             )];
             $($body)*
         }

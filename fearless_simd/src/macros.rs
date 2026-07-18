@@ -219,6 +219,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx512 {
             target_feature = "bmi2",
             target_feature = "cmpxchg16b",
             target_feature = "fma",
+            target_feature = "fxsr",
             target_feature = "gfni",
             target_feature = "lzcnt",
             target_feature = "movbe",
@@ -265,6 +266,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
         target_feature = "bmi2",
         target_feature = "cmpxchg16b",
         target_feature = "fma",
+        target_feature = "fxsr",
         target_feature = "gfni",
         target_feature = "lzcnt",
         target_feature = "movbe",
@@ -299,6 +301,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
             target_feature = "cmpxchg16b",
             target_feature = "f16c",
             target_feature = "fma",
+            target_feature = "fxsr",
             target_feature = "lzcnt",
             target_feature = "movbe",
             target_feature = "popcnt",
@@ -325,6 +328,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
         target_feature = "cmpxchg16b",
         target_feature = "f16c",
         target_feature = "fma",
+        target_feature = "fxsr",
         target_feature = "lzcnt",
         target_feature = "movbe",
         target_feature = "popcnt",
@@ -343,6 +347,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
     any(
         disable_dispatch_sse4_2,
         not(all(
+            target_feature = "fxsr",
             target_feature = "sse4.2",
             target_feature = "cmpxchg16b",
             target_feature = "popcnt",
@@ -362,6 +367,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse2 {
     disable_dispatch_sse2,
     all(
         not(disable_dispatch_sse4_2),
+        target_feature = "fxsr",
         target_feature = "sse4.2",
         target_feature = "cmpxchg16b",
         target_feature = "popcnt",
@@ -461,6 +467,22 @@ mod tests {
         let actual = dispatch!(level, simd => x86_dispatch_backend(simd));
 
         assert_eq!(actual, expected_x86_dispatch_backend(level));
+    }
+
+    #[cfg(all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        target_feature = "sse2",
+        not(target_feature = "fxsr")
+    ))]
+    #[test]
+    fn x86_baseline_does_not_use_sse2_without_fxsr() {
+        assert!(Level::baseline().is_fallback());
+
+        let actual = dispatch!(Level::Fallback(crate::Fallback::new()), simd =>
+            x86_dispatch_backend(simd)
+        );
+
+        assert_eq!(actual, X86DispatchBackend::Fallback);
     }
 
     #[cfg(all(

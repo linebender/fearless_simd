@@ -278,6 +278,7 @@ fn x86_detects_icelake_avx512() -> bool {
         && std::arch::is_x86_feature_detected!("bmi2")
         && std::arch::is_x86_feature_detected!("cmpxchg16b")
         && std::arch::is_x86_feature_detected!("fma")
+        && std::arch::is_x86_feature_detected!("fxsr")
         && std::arch::is_x86_feature_detected!("gfni")
         && std::arch::is_x86_feature_detected!("lzcnt")
         && std::arch::is_x86_feature_detected!("movbe")
@@ -382,7 +383,9 @@ impl Level {
 
             // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
             // However, the following features are implied by avx2 and do not need to be spelled out:
-            // avx,fxsr,sse,sse2,sse3,sse4.1,sse4.2,ssse3
+            // avx,sse,sse2,sse3,sse4.1,sse4.2,ssse3
+            // We still check `fxsr` explicitly because the `Sse2` token requires it, and
+            // some exotic environments can expose SSE2-family features without FXSR.
             // This can be verified by running:
             // rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'
             if std::arch::is_x86_feature_detected!("avx2")
@@ -391,6 +394,7 @@ impl Level {
                 && std::arch::is_x86_feature_detected!("cmpxchg16b")
                 && std::arch::is_x86_feature_detected!("f16c")
                 && std::arch::is_x86_feature_detected!("fma")
+                && std::arch::is_x86_feature_detected!("fxsr")
                 && std::arch::is_x86_feature_detected!("lzcnt")
                 && std::arch::is_x86_feature_detected!("movbe")
                 && std::arch::is_x86_feature_detected!("popcnt")
@@ -400,7 +404,8 @@ impl Level {
             // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
             // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
             // and have these extensions already.
-            } else if std::arch::is_x86_feature_detected!("sse4.2")
+            } else if std::arch::is_x86_feature_detected!("fxsr")
+                && std::arch::is_x86_feature_detected!("sse4.2")
                 && std::arch::is_x86_feature_detected!("cmpxchg16b")
                 && std::arch::is_x86_feature_detected!("popcnt")
             {
@@ -514,8 +519,8 @@ impl Level {
     #[inline]
     pub fn as_sse2(self) -> Option<Sse2> {
         match self {
-            // Safety: Every stronger x86 SIMD level in this crate includes the `sse2`
-            // feature required by Sse2.
+            // Safety: Every stronger x86 SIMD level in this crate includes the `fxsr`,
+            // `sse`, and `sse2` features required by Sse2.
             Self::Avx512(_avx512) => unsafe { Some(Sse2::new_unchecked()) },
             Self::Avx2(_avx2) => unsafe { Some(Sse2::new_unchecked()) },
             Self::Sse4_2(_sse4_2) => unsafe { Some(Sse2::new_unchecked()) },
@@ -656,6 +661,7 @@ impl Level {
                 target_feature = "bmi2",
                 target_feature = "cmpxchg16b",
                 target_feature = "fma",
+                target_feature = "fxsr",
                 target_feature = "gfni",
                 target_feature = "lzcnt",
                 target_feature = "movbe",
@@ -679,6 +685,7 @@ impl Level {
                 target_feature = "cmpxchg16b",
                 target_feature = "f16c",
                 target_feature = "fma",
+                target_feature = "fxsr",
                 target_feature = "lzcnt",
                 target_feature = "movbe",
                 target_feature = "popcnt",
@@ -701,6 +708,7 @@ impl Level {
                     target_feature = "bmi2",
                     target_feature = "cmpxchg16b",
                     target_feature = "fma",
+                    target_feature = "fxsr",
                     target_feature = "gfni",
                     target_feature = "lzcnt",
                     target_feature = "movbe",
@@ -720,6 +728,7 @@ impl Level {
             return unsafe { Self::Avx2(Avx2::new_unchecked()) };
             #[cfg(all(
                 all(
+                    target_feature = "fxsr",
                     target_feature = "sse4.2",
                     target_feature = "cmpxchg16b",
                     target_feature = "popcnt"
@@ -731,6 +740,7 @@ impl Level {
                     target_feature = "cmpxchg16b",
                     target_feature = "f16c",
                     target_feature = "fma",
+                    target_feature = "fxsr",
                     target_feature = "lzcnt",
                     target_feature = "movbe",
                     target_feature = "popcnt",
@@ -742,6 +752,7 @@ impl Level {
                 target_feature = "sse2",
                 target_feature = "fxsr",
                 not(all(
+                    target_feature = "fxsr",
                     target_feature = "sse4.2",
                     target_feature = "cmpxchg16b",
                     target_feature = "popcnt"

@@ -26,7 +26,10 @@ pub(crate) enum X86 {
 }
 
 pub(crate) const SSE2_FEATURES: &str = "fxsr,sse,sse2";
-pub(crate) const AVX512_FEATURES: &str = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves";
+pub(crate) const SSE4_2_FEATURES: &str = "fxsr,sse4.2,cmpxchg16b,popcnt";
+pub(crate) const AVX2_FEATURES: &str =
+    "fxsr,avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave";
+pub(crate) const AVX512_FEATURES: &str = "fxsr,adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves";
 
 impl Level for X86 {
     fn name(&self) -> &'static str {
@@ -54,8 +57,8 @@ impl Level for X86 {
     fn enabled_target_features(&self) -> Option<&'static str> {
         Some(match self {
             Self::Sse2 => SSE2_FEATURES,
-            Self::Sse4_2 => "sse4.2,cmpxchg16b,popcnt",
-            Self::Avx2 => "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave",
+            Self::Sse4_2 => SSE4_2_FEATURES,
+            Self::Avx2 => AVX2_FEATURES,
             Self::Avx512 => AVX512_FEATURES,
         })
     }
@@ -223,8 +226,8 @@ impl Level for X86 {
                 ///
                 /// # Safety
                 ///
-                /// The `sse4.2`, `cmpxchg16b`, and `popcnt` CPU features must
-                /// be available.
+                /// The `fxsr`, `sse4.2`, `cmpxchg16b`, and `popcnt` CPU
+                /// features must be available.
                 #[inline]
                 pub const unsafe fn new_unchecked() -> Self {
                     Sse4_2 { _private: () }
@@ -235,9 +238,9 @@ impl Level for X86 {
                 ///
                 /// # Safety
                 ///
-                /// The `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`,
-                /// `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features must
-                /// be available.
+                /// The `fxsr`, `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`,
+                /// `fma`, `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features
+                /// must be available.
                 #[inline]
                 pub const unsafe fn new_unchecked() -> Self {
                     Self { _private: () }
@@ -248,7 +251,8 @@ impl Level for X86 {
                 ///
                 /// # Safety
                 ///
-                /// The Ice Lake AVX-512 CPU feature set must be available.
+                /// The Ice Lake AVX-512 CPU feature set and `fxsr` must be
+                /// available.
                 #[inline]
                 pub const unsafe fn new_unchecked() -> Self {
                     Self { _private: () }

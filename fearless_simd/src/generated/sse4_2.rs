@@ -24,8 +24,8 @@ impl Sse4_2 {
     #[doc = r""]
     #[doc = r" # Safety"]
     #[doc = r""]
-    #[doc = r" The `sse4.2`, `cmpxchg16b`, and `popcnt` CPU features must"]
-    #[doc = r" be available."]
+    #[doc = r" The `fxsr`, `sse4.2`, `cmpxchg16b`, and `popcnt` CPU"]
+    #[doc = r" features must be available."]
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
         Sse4_2 { _private: () }
@@ -89,7 +89,7 @@ impl Simd for Sse4_2 {
     }
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
-        #[target_feature(enable = "sse4.2,cmpxchg16b,popcnt")]
+        #[target_feature(enable = "fxsr,sse4.2,cmpxchg16b,popcnt")]
         fn vectorize_sse4_2<F: FnOnce() -> R, R>(f: F) -> R {
             f()
         }
