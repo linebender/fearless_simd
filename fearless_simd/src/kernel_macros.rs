@@ -335,4 +335,14 @@ mod tests {
             "`kernel!` should instantiate a working AVX-512 kernel"
         );
     }
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[test]
+    fn x86_kernel_functions_are_not_multiversion_gated() {
+        fn accept_avx2_kernel(_: fn(crate::Avx2, __m256i, __m256i) -> __m256i) {}
+        fn accept_avx512_kernel(_: fn(crate::Avx512, __m512i, __m512i) -> __m512i) {}
+
+        accept_avx2_kernel(add_i32x8_avx2);
+        accept_avx512_kernel(add_i32x16_avx512);
+    }
 }

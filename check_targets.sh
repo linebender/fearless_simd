@@ -23,6 +23,7 @@ RUSTFLAGS=-Ctarget-cpu=x86-64-v2 cargo check -p fearless_simd --target x86_64-un
 RUSTFLAGS=-Ctarget-cpu=x86-64-v2 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu  --features force_support_fallback
 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu
 cargo check -p fearless_simd --target x86_64-unknown-linux-gnu  --features force_support_fallback
+cargo check -p fearless_simd --target x86_64-unknown-linux-gnu --no-default-features --features std
 
 # x86 (i.e. 32 bit) at all supported static SIMD levels.
 RUSTFLAGS=-Ctarget-cpu=x86-64-v3 cargo check -p fearless_simd --target i686-pc-windows-msvc
@@ -31,6 +32,7 @@ RUSTFLAGS=-Ctarget-cpu=x86-64-v2 cargo check -p fearless_simd --target i686-pc-w
 RUSTFLAGS=-Ctarget-cpu=x86-64-v2 cargo check -p fearless_simd --target i686-pc-windows-msvc  --features force_support_fallback
 cargo check -p fearless_simd --target i686-pc-windows-msvc
 cargo check -p fearless_simd --target i686-pc-windows-msvc  --features force_support_fallback
+cargo check -p fearless_simd --target i686-pc-windows-msvc --no-default-features --features std
 
 # Wasm, both with and without SIMD.
 cargo check -p fearless_simd --target wasm32-unknown-unknown
