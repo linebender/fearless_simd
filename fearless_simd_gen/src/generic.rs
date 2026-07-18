@@ -394,7 +394,43 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
     }
 }
 
-<<<<<<< HEAD
+fn modulo_offset_arms(
+    ty: &VecType,
+    mut body: impl FnMut(usize) -> TokenStream,
+) -> Vec<TokenStream> {
+    (0..ty.len)
+        .map(|offset| {
+            let offset_lit = Literal::usize_unsuffixed(offset);
+            let body = body(offset);
+            quote! { #offset_lit => #body }
+        })
+        .collect()
+}
+
+fn offset_arms(ty: &VecType, mut body: impl FnMut(Literal) -> TokenStream) -> Vec<TokenStream> {
+    (0..=ty.len)
+        .map(|offset| {
+            let offset_lit = Literal::usize_unsuffixed(offset);
+            let body = body(offset_lit.clone());
+            quote! { #offset_lit => #body }
+        })
+        .collect()
+}
+
+fn right_offset_arms(
+    ty: &VecType,
+    mut body: impl FnMut(Literal) -> TokenStream,
+) -> Vec<TokenStream> {
+    (0..=ty.len)
+        .map(|offset| {
+            let offset_lit = Literal::usize_unsuffixed(offset);
+            let shift = Literal::usize_unsuffixed(ty.len - offset);
+            let body = body(shift);
+            quote! { #offset_lit => #body }
+        })
+        .collect()
+}
+
 pub(crate) fn unrolled_array(len: usize, item: impl FnMut(usize) -> TokenStream) -> TokenStream {
     let items = (0..len).map(item).collect::<Vec<_>>();
     quote! { [#(#items),*] }
@@ -467,50 +503,6 @@ pub(crate) fn scalar_compare(method: &str, vec_ty: &VecType, simd: impl ToTokens
         let result: [#mask_scalar; #len] = #items;
         result.simd_into(#simd)
     }
-||||||| 3d10e36
-pub(crate) fn scalar_binary(f: TokenStream) -> TokenStream {
-    quote! { core::array::from_fn(|i| #f(a[i], b[i])).simd_into(self) }
-=======
-fn modulo_offset_arms(
-    ty: &VecType,
-    mut body: impl FnMut(usize) -> TokenStream,
-) -> Vec<TokenStream> {
-    (0..ty.len)
-        .map(|offset| {
-            let offset_lit = Literal::usize_unsuffixed(offset);
-            let body = body(offset);
-            quote! { #offset_lit => #body }
-        })
-        .collect()
-}
-
-fn offset_arms(ty: &VecType, mut body: impl FnMut(Literal) -> TokenStream) -> Vec<TokenStream> {
-    (0..=ty.len)
-        .map(|offset| {
-            let offset_lit = Literal::usize_unsuffixed(offset);
-            let body = body(offset_lit.clone());
-            quote! { #offset_lit => #body }
-        })
-        .collect()
-}
-
-fn right_offset_arms(
-    ty: &VecType,
-    mut body: impl FnMut(Literal) -> TokenStream,
-) -> Vec<TokenStream> {
-    (0..=ty.len)
-        .map(|offset| {
-            let offset_lit = Literal::usize_unsuffixed(offset);
-            let shift = Literal::usize_unsuffixed(ty.len - offset);
-            let body = body(shift);
-            quote! { #offset_lit => #body }
-        })
-        .collect()
-}
-
-pub(crate) fn scalar_binary(f: TokenStream) -> TokenStream {
-    quote! { core::array::from_fn(|i| #f(a[i], b[i])).simd_into(self) }
->>>>>>> 45eee37582776b8947c518c07c3296a66e4b7d07
 }
 
 pub(crate) fn generic_block_split(

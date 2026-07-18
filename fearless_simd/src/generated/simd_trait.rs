@@ -1127,6 +1127,22 @@ pub trait Simd:
         a: i64x2<Self>,
         b: i64x2<Self>,
     ) -> i64x2<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_i64x2<const OFFSET: usize>(
+        self,
+        a: i64x2<Self>,
+        padding: i64,
+    ) -> i64x2<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_i64x2<const OFFSET: usize>(
+        self,
+        a: i64x2<Self>,
+        padding: i64,
+    ) -> i64x2<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -1212,6 +1228,22 @@ pub trait Simd:
         self,
         a: u64x2<Self>,
         b: u64x2<Self>,
+    ) -> u64x2<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_u64x2<const OFFSET: usize>(
+        self,
+        a: u64x2<Self>,
+        padding: u64,
+    ) -> u64x2<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_u64x2<const OFFSET: usize>(
+        self,
+        a: u64x2<Self>,
+        padding: u64,
     ) -> u64x2<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self>;
@@ -2331,6 +2363,22 @@ pub trait Simd:
         a: i64x4<Self>,
         b: i64x4<Self>,
     ) -> i64x4<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_i64x4<const OFFSET: usize>(
+        self,
+        a: i64x4<Self>,
+        padding: i64,
+    ) -> i64x4<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_i64x4<const OFFSET: usize>(
+        self,
+        a: i64x4<Self>,
+        padding: i64,
+    ) -> i64x4<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -2418,6 +2466,22 @@ pub trait Simd:
         self,
         a: u64x4<Self>,
         b: u64x4<Self>,
+    ) -> u64x4<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_u64x4<const OFFSET: usize>(
+        self,
+        a: u64x4<Self>,
+        padding: u64,
+    ) -> u64x4<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_u64x4<const OFFSET: usize>(
+        self,
+        a: u64x4<Self>,
+        padding: u64,
     ) -> u64x4<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self>;
@@ -3545,6 +3609,22 @@ pub trait Simd:
         a: i64x8<Self>,
         b: i64x8<Self>,
     ) -> i64x8<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_i64x8<const OFFSET: usize>(
+        self,
+        a: i64x8<Self>,
+        padding: i64,
+    ) -> i64x8<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_i64x8<const OFFSET: usize>(
+        self,
+        a: i64x8<Self>,
+        padding: i64,
+    ) -> i64x8<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
@@ -3630,6 +3710,22 @@ pub trait Simd:
         self,
         a: u64x8<Self>,
         b: u64x8<Self>,
+    ) -> u64x8<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_u64x8<const OFFSET: usize>(
+        self,
+        a: u64x8<Self>,
+        padding: u64,
+    ) -> u64x8<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_u64x8<const OFFSET: usize>(
+        self,
+        a: u64x8<Self>,
+        padding: u64,
     ) -> u64x8<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self>;

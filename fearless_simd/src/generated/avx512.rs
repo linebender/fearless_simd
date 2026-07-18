@@ -4648,6 +4648,50 @@ impl Simd for Avx512 {
         self.slide_i64x2::<SHIFT>(a, b)
     }
     #[inline(always)]
+    fn rotate_elements_left_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self> {
+        match OFFSET % 2 {
+            0 => self.slide_i64x2::<0>(a, a),
+            1 => self.slide_i64x2::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self> {
+        match OFFSET % 2 {
+            0 => self.slide_i64x2::<2>(a, a),
+            1 => self.slide_i64x2::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_i64x2<const OFFSET: usize>(
+        self,
+        a: i64x2<Self>,
+        padding: i64,
+    ) -> i64x2<Self> {
+        let padding = self.splat_i64x2(padding);
+        match OFFSET {
+            0 => self.slide_i64x2::<0>(a, padding),
+            1 => self.slide_i64x2::<1>(a, padding),
+            2 => self.slide_i64x2::<2>(a, padding),
+            _ => self.slide_i64x2::<2>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_i64x2<const OFFSET: usize>(
+        self,
+        a: i64x2<Self>,
+        padding: i64,
+    ) -> i64x2<Self> {
+        let padding = self.splat_i64x2(padding);
+        match OFFSET {
+            0 => self.slide_i64x2::<2>(padding, a),
+            1 => self.slide_i64x2::<1>(padding, a),
+            2 => self.slide_i64x2::<0>(padding, a),
+            _ => self.slide_i64x2::<0>(padding, a),
+        }
+    }
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5046,6 +5090,50 @@ impl Simd for Avx512 {
         b: u64x2<Self>,
     ) -> u64x2<Self> {
         self.slide_u64x2::<SHIFT>(a, b)
+    }
+    #[inline(always)]
+    fn rotate_elements_left_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self> {
+        match OFFSET % 2 {
+            0 => self.slide_u64x2::<0>(a, a),
+            1 => self.slide_u64x2::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self> {
+        match OFFSET % 2 {
+            0 => self.slide_u64x2::<2>(a, a),
+            1 => self.slide_u64x2::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_u64x2<const OFFSET: usize>(
+        self,
+        a: u64x2<Self>,
+        padding: u64,
+    ) -> u64x2<Self> {
+        let padding = self.splat_u64x2(padding);
+        match OFFSET {
+            0 => self.slide_u64x2::<0>(a, padding),
+            1 => self.slide_u64x2::<1>(a, padding),
+            2 => self.slide_u64x2::<2>(a, padding),
+            _ => self.slide_u64x2::<2>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_u64x2<const OFFSET: usize>(
+        self,
+        a: u64x2<Self>,
+        padding: u64,
+    ) -> u64x2<Self> {
+        let padding = self.splat_u64x2(padding);
+        match OFFSET {
+            0 => self.slide_u64x2::<2>(padding, a),
+            1 => self.slide_u64x2::<1>(padding, a),
+            2 => self.slide_u64x2::<0>(padding, a),
+            _ => self.slide_u64x2::<0>(padding, a),
+        }
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
@@ -11105,6 +11193,58 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn rotate_elements_left_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self> {
+        match OFFSET % 4 {
+            0 => self.slide_i64x4::<0>(a, a),
+            1 => self.slide_i64x4::<1>(a, a),
+            2 => self.slide_i64x4::<2>(a, a),
+            3 => self.slide_i64x4::<3>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self> {
+        match OFFSET % 4 {
+            0 => self.slide_i64x4::<4>(a, a),
+            1 => self.slide_i64x4::<3>(a, a),
+            2 => self.slide_i64x4::<2>(a, a),
+            3 => self.slide_i64x4::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_i64x4<const OFFSET: usize>(
+        self,
+        a: i64x4<Self>,
+        padding: i64,
+    ) -> i64x4<Self> {
+        let padding = self.splat_i64x4(padding);
+        match OFFSET {
+            0 => self.slide_i64x4::<0>(a, padding),
+            1 => self.slide_i64x4::<1>(a, padding),
+            2 => self.slide_i64x4::<2>(a, padding),
+            3 => self.slide_i64x4::<3>(a, padding),
+            4 => self.slide_i64x4::<4>(a, padding),
+            _ => self.slide_i64x4::<4>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_i64x4<const OFFSET: usize>(
+        self,
+        a: i64x4<Self>,
+        padding: i64,
+    ) -> i64x4<Self> {
+        let padding = self.splat_i64x4(padding);
+        match OFFSET {
+            0 => self.slide_i64x4::<4>(padding, a),
+            1 => self.slide_i64x4::<3>(padding, a),
+            2 => self.slide_i64x4::<2>(padding, a),
+            3 => self.slide_i64x4::<1>(padding, a),
+            4 => self.slide_i64x4::<0>(padding, a),
+            _ => self.slide_i64x4::<0>(padding, a),
+        }
+    }
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11568,6 +11708,58 @@ impl Simd for Avx512 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn rotate_elements_left_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self> {
+        match OFFSET % 4 {
+            0 => self.slide_u64x4::<0>(a, a),
+            1 => self.slide_u64x4::<1>(a, a),
+            2 => self.slide_u64x4::<2>(a, a),
+            3 => self.slide_u64x4::<3>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self> {
+        match OFFSET % 4 {
+            0 => self.slide_u64x4::<4>(a, a),
+            1 => self.slide_u64x4::<3>(a, a),
+            2 => self.slide_u64x4::<2>(a, a),
+            3 => self.slide_u64x4::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_u64x4<const OFFSET: usize>(
+        self,
+        a: u64x4<Self>,
+        padding: u64,
+    ) -> u64x4<Self> {
+        let padding = self.splat_u64x4(padding);
+        match OFFSET {
+            0 => self.slide_u64x4::<0>(a, padding),
+            1 => self.slide_u64x4::<1>(a, padding),
+            2 => self.slide_u64x4::<2>(a, padding),
+            3 => self.slide_u64x4::<3>(a, padding),
+            4 => self.slide_u64x4::<4>(a, padding),
+            _ => self.slide_u64x4::<4>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_u64x4<const OFFSET: usize>(
+        self,
+        a: u64x4<Self>,
+        padding: u64,
+    ) -> u64x4<Self> {
+        let padding = self.splat_u64x4(padding);
+        match OFFSET {
+            0 => self.slide_u64x4::<4>(padding, a),
+            1 => self.slide_u64x4::<3>(padding, a),
+            2 => self.slide_u64x4::<2>(padding, a),
+            3 => self.slide_u64x4::<1>(padding, a),
+            4 => self.slide_u64x4::<0>(padding, a),
+            _ => self.slide_u64x4::<0>(padding, a),
+        }
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
@@ -18383,6 +18575,74 @@ impl Simd for Avx512 {
         })
     }
     #[inline(always)]
+    fn rotate_elements_left_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self> {
+        match OFFSET % 8 {
+            0 => self.slide_i64x8::<0>(a, a),
+            1 => self.slide_i64x8::<1>(a, a),
+            2 => self.slide_i64x8::<2>(a, a),
+            3 => self.slide_i64x8::<3>(a, a),
+            4 => self.slide_i64x8::<4>(a, a),
+            5 => self.slide_i64x8::<5>(a, a),
+            6 => self.slide_i64x8::<6>(a, a),
+            7 => self.slide_i64x8::<7>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self> {
+        match OFFSET % 8 {
+            0 => self.slide_i64x8::<8>(a, a),
+            1 => self.slide_i64x8::<7>(a, a),
+            2 => self.slide_i64x8::<6>(a, a),
+            3 => self.slide_i64x8::<5>(a, a),
+            4 => self.slide_i64x8::<4>(a, a),
+            5 => self.slide_i64x8::<3>(a, a),
+            6 => self.slide_i64x8::<2>(a, a),
+            7 => self.slide_i64x8::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_i64x8<const OFFSET: usize>(
+        self,
+        a: i64x8<Self>,
+        padding: i64,
+    ) -> i64x8<Self> {
+        let padding = self.splat_i64x8(padding);
+        match OFFSET {
+            0 => self.slide_i64x8::<0>(a, padding),
+            1 => self.slide_i64x8::<1>(a, padding),
+            2 => self.slide_i64x8::<2>(a, padding),
+            3 => self.slide_i64x8::<3>(a, padding),
+            4 => self.slide_i64x8::<4>(a, padding),
+            5 => self.slide_i64x8::<5>(a, padding),
+            6 => self.slide_i64x8::<6>(a, padding),
+            7 => self.slide_i64x8::<7>(a, padding),
+            8 => self.slide_i64x8::<8>(a, padding),
+            _ => self.slide_i64x8::<8>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_i64x8<const OFFSET: usize>(
+        self,
+        a: i64x8<Self>,
+        padding: i64,
+    ) -> i64x8<Self> {
+        let padding = self.splat_i64x8(padding);
+        match OFFSET {
+            0 => self.slide_i64x8::<8>(padding, a),
+            1 => self.slide_i64x8::<7>(padding, a),
+            2 => self.slide_i64x8::<6>(padding, a),
+            3 => self.slide_i64x8::<5>(padding, a),
+            4 => self.slide_i64x8::<4>(padding, a),
+            5 => self.slide_i64x8::<3>(padding, a),
+            6 => self.slide_i64x8::<2>(padding, a),
+            7 => self.slide_i64x8::<1>(padding, a),
+            8 => self.slide_i64x8::<0>(padding, a),
+            _ => self.slide_i64x8::<0>(padding, a),
+        }
+    }
+    #[inline(always)]
     fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18853,6 +19113,74 @@ impl Simd for Avx512 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
+    }
+    #[inline(always)]
+    fn rotate_elements_left_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self> {
+        match OFFSET % 8 {
+            0 => self.slide_u64x8::<0>(a, a),
+            1 => self.slide_u64x8::<1>(a, a),
+            2 => self.slide_u64x8::<2>(a, a),
+            3 => self.slide_u64x8::<3>(a, a),
+            4 => self.slide_u64x8::<4>(a, a),
+            5 => self.slide_u64x8::<5>(a, a),
+            6 => self.slide_u64x8::<6>(a, a),
+            7 => self.slide_u64x8::<7>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self> {
+        match OFFSET % 8 {
+            0 => self.slide_u64x8::<8>(a, a),
+            1 => self.slide_u64x8::<7>(a, a),
+            2 => self.slide_u64x8::<6>(a, a),
+            3 => self.slide_u64x8::<5>(a, a),
+            4 => self.slide_u64x8::<4>(a, a),
+            5 => self.slide_u64x8::<3>(a, a),
+            6 => self.slide_u64x8::<2>(a, a),
+            7 => self.slide_u64x8::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_u64x8<const OFFSET: usize>(
+        self,
+        a: u64x8<Self>,
+        padding: u64,
+    ) -> u64x8<Self> {
+        let padding = self.splat_u64x8(padding);
+        match OFFSET {
+            0 => self.slide_u64x8::<0>(a, padding),
+            1 => self.slide_u64x8::<1>(a, padding),
+            2 => self.slide_u64x8::<2>(a, padding),
+            3 => self.slide_u64x8::<3>(a, padding),
+            4 => self.slide_u64x8::<4>(a, padding),
+            5 => self.slide_u64x8::<5>(a, padding),
+            6 => self.slide_u64x8::<6>(a, padding),
+            7 => self.slide_u64x8::<7>(a, padding),
+            8 => self.slide_u64x8::<8>(a, padding),
+            _ => self.slide_u64x8::<8>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_u64x8<const OFFSET: usize>(
+        self,
+        a: u64x8<Self>,
+        padding: u64,
+    ) -> u64x8<Self> {
+        let padding = self.splat_u64x8(padding);
+        match OFFSET {
+            0 => self.slide_u64x8::<8>(padding, a),
+            1 => self.slide_u64x8::<7>(padding, a),
+            2 => self.slide_u64x8::<6>(padding, a),
+            3 => self.slide_u64x8::<5>(padding, a),
+            4 => self.slide_u64x8::<4>(padding, a),
+            5 => self.slide_u64x8::<3>(padding, a),
+            6 => self.slide_u64x8::<2>(padding, a),
+            7 => self.slide_u64x8::<1>(padding, a),
+            8 => self.slide_u64x8::<0>(padding, a),
+            _ => self.slide_u64x8::<0>(padding, a),
+        }
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
