@@ -11,6 +11,15 @@ You can find its changes [documented below](#060-2026-07-10).
 
 ## [Unreleased]
 
+### Added
+
+- Added an `Sse2` level. This is the new baseline for i686-* and x86_64-* targets, replacing `Fallback`. ([#270][] by [@Shnatsel][])
+
+### Changed
+
+- On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
+- The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
+
 ## [0.6.0][] (2026-07-10)
 
 This release has an [MSRV][] of 1.89.
@@ -264,6 +273,7 @@ No changelog was kept for this release.
 [#263]: https://github.com/linebender/fearless_simd/pull/263
 [#264]: https://github.com/linebender/fearless_simd/pull/264
 [#266]: https://github.com/linebender/fearless_simd/pull/266
+[#270]: https://github.com/linebender/fearless_simd/pull/270
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.6.0...HEAD
 [0.6.0]: https://github.com/linebender/fearless_simd/compare/v0.5.0...v0.6.0

@@ -32,7 +32,8 @@ impl Avx512 {
     #[doc = r""]
     #[doc = r" # Safety"]
     #[doc = r""]
-    #[doc = r" The Ice Lake AVX-512 CPU feature set must be available."]
+    #[doc = r" The Ice Lake AVX-512 CPU feature set and `fxsr` must be"]
+    #[doc = r" available."]
     #[inline]
     pub const unsafe fn new_unchecked() -> Self {
         Self { _private: () }
@@ -97,7 +98,7 @@ impl Simd for Avx512 {
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(
-            enable = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
+            enable = "fxsr,adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
         )]
         fn vectorize_avx512<F: FnOnce() -> R, R>(f: F) -> R {
             f()

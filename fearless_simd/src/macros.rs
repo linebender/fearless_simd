@@ -58,6 +58,10 @@ macro_rules! dispatch {
                 $crate::__fearless_simd_dispatch_with_token!(wasm, $simd => $op)
             }
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            $crate::Level::Sse2(sse2) => {
+                $crate::__fearless_simd_dispatch_dispatch_sse2!(sse2, $simd => $op)
+            }
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             $crate::Level::Sse4_2(sse4_2) => {
                 $crate::__fearless_simd_dispatch_dispatch_sse4_2!(sse4_2, $simd => $op)
             }
@@ -129,12 +133,8 @@ macro_rules! __fearless_simd_dispatch_pruned {
     all(
         any(target_arch = "x86", target_arch = "x86_64"),
         any(
-            disable_dispatch_sse4_2,
-            not(all(
-                target_feature = "sse4.2",
-                target_feature = "cmpxchg16b",
-                target_feature = "popcnt",
-            )),
+            disable_dispatch_sse2,
+            not(all(target_feature = "sse2", target_feature = "fxsr"))
         ),
     ),
     all(target_arch = "wasm32", not(target_feature = "simd128")),
@@ -160,12 +160,8 @@ macro_rules! __fearless_simd_dispatch_dispatch_fallback {
     all(
         any(target_arch = "x86", target_arch = "x86_64"),
         any(
-            disable_dispatch_sse4_2,
-            not(all(
-                target_feature = "sse4.2",
-                target_feature = "cmpxchg16b",
-                target_feature = "popcnt",
-            )),
+            disable_dispatch_sse2,
+            not(all(target_feature = "sse2", target_feature = "fxsr"))
         ),
     ),
     all(target_arch = "wasm32", not(target_feature = "simd128")),
@@ -223,6 +219,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx512 {
             target_feature = "bmi2",
             target_feature = "cmpxchg16b",
             target_feature = "fma",
+            target_feature = "fxsr",
             target_feature = "gfni",
             target_feature = "lzcnt",
             target_feature = "movbe",
@@ -269,6 +266,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
         target_feature = "bmi2",
         target_feature = "cmpxchg16b",
         target_feature = "fma",
+        target_feature = "fxsr",
         target_feature = "gfni",
         target_feature = "lzcnt",
         target_feature = "movbe",
@@ -303,6 +301,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_avx2 {
             target_feature = "cmpxchg16b",
             target_feature = "f16c",
             target_feature = "fma",
+            target_feature = "fxsr",
             target_feature = "lzcnt",
             target_feature = "movbe",
             target_feature = "popcnt",
@@ -329,6 +328,7 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
         target_feature = "cmpxchg16b",
         target_feature = "f16c",
         target_feature = "fma",
+        target_feature = "fxsr",
         target_feature = "lzcnt",
         target_feature = "movbe",
         target_feature = "popcnt",
@@ -337,6 +337,44 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
 ))]
 macro_rules! __fearless_simd_dispatch_dispatch_sse4_2 {
     ($sse4_2:expr, $simd:pat => $op:expr) => {{ $crate::__fearless_simd_dispatch_pruned!($sse4_2) }};
+}
+
+/// Implementation detail of [`crate::dispatch`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(all(
+    not(disable_dispatch_sse2),
+    any(
+        disable_dispatch_sse4_2,
+        not(all(
+            target_feature = "fxsr",
+            target_feature = "sse4.2",
+            target_feature = "cmpxchg16b",
+            target_feature = "popcnt",
+        )),
+    )
+))]
+macro_rules! __fearless_simd_dispatch_dispatch_sse2 {
+    ($sse2:expr, $simd:pat => $op:expr) => {
+        $crate::__fearless_simd_dispatch_with_token!($sse2, $simd => $op)
+    };
+}
+
+/// Implementation detail of [`crate::dispatch`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(any(
+    disable_dispatch_sse2,
+    all(
+        not(disable_dispatch_sse4_2),
+        target_feature = "fxsr",
+        target_feature = "sse4.2",
+        target_feature = "cmpxchg16b",
+        target_feature = "popcnt",
+    ),
+))]
+macro_rules! __fearless_simd_dispatch_dispatch_sse2 {
+    ($sse2:expr, $simd:pat => $op:expr) => {{ $crate::__fearless_simd_dispatch_pruned!($sse2) }};
 }
 
 #[cfg(test)]
@@ -352,6 +390,7 @@ mod tests {
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum X86DispatchBackend {
         Fallback,
+        Sse2,
         Sse4_2,
         Avx2,
         Avx512,
@@ -363,6 +402,8 @@ mod tests {
 
         if TypeId::of::<S>() == TypeId::of::<crate::Fallback>() {
             X86DispatchBackend::Fallback
+        } else if TypeId::of::<S>() == TypeId::of::<crate::Sse2>() {
+            X86DispatchBackend::Sse2
         } else if TypeId::of::<S>() == TypeId::of::<crate::Sse4_2>() {
             X86DispatchBackend::Sse4_2
         } else if TypeId::of::<S>() == TypeId::of::<crate::Avx2>() {
@@ -382,6 +423,8 @@ mod tests {
             X86DispatchBackend::Avx2
         } else if cfg!(not(disable_dispatch_sse4_2)) && level.as_sse4_2().is_some() {
             X86DispatchBackend::Sse4_2
+        } else if cfg!(not(disable_dispatch_sse2)) && level.as_sse2().is_some() {
+            X86DispatchBackend::Sse2
         } else {
             X86DispatchBackend::Fallback
         }
@@ -390,6 +433,7 @@ mod tests {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[allow(dead_code, reason = "Compile test")]
     fn x86_level_variants_remain_available() {
+        let _ = Level::Sse2(unsafe { crate::Sse2::new_unchecked() });
         let _ = Level::Sse4_2(unsafe { crate::Sse4_2::new_unchecked() });
         let _ = Level::Avx2(unsafe { crate::Avx2::new_unchecked() });
         let _ = Level::Avx512(unsafe { crate::Avx512::new_unchecked() });
@@ -426,9 +470,26 @@ mod tests {
     }
 
     #[cfg(all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        target_feature = "sse2",
+        not(target_feature = "fxsr")
+    ))]
+    #[test]
+    fn x86_baseline_does_not_use_sse2_without_fxsr() {
+        assert!(Level::baseline().is_fallback());
+
+        let actual = dispatch!(Level::Fallback(crate::Fallback::new()), simd =>
+            x86_dispatch_backend(simd)
+        );
+
+        assert_eq!(actual, X86DispatchBackend::Fallback);
+    }
+
+    #[cfg(all(
         feature = "std",
         any(target_arch = "x86", target_arch = "x86_64"),
         any(
+            disable_dispatch_sse2,
             disable_dispatch_sse4_2,
             disable_dispatch_avx2,
             disable_dispatch_avx512
@@ -439,6 +500,9 @@ mod tests {
         let level = Level::new();
 
         // If dispatch disabling accidentally removed token access, these method calls stop compiling.
+        #[cfg(disable_dispatch_sse2)]
+        let _ = level.as_sse2().is_some();
+
         #[cfg(disable_dispatch_sse4_2)]
         let _ = level.as_sse4_2().is_some();
 
@@ -453,6 +517,12 @@ mod tests {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[test]
     fn high_baseline_dispatches_lower_tokens() {
+        if let Some(sse2) = Level::baseline().as_sse2() {
+            let actual = dispatch!(sse2.level(), simd => x86_dispatch_backend(simd));
+
+            assert_eq!(actual, expected_x86_dispatch_backend(Level::baseline()));
+        }
+
         if let Some(sse4_2) = Level::baseline().as_sse4_2() {
             let actual = dispatch!(sse4_2.level(), simd => x86_dispatch_backend(simd));
 
