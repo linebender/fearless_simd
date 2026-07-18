@@ -22,6 +22,7 @@ use crate::{
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
+use core::ops::*;
 #[doc = "A token for AVX-512 intrinsics on `x86` and `x86_64`, representing an Ice Lake feature level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Avx512 {

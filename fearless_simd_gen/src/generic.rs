@@ -467,18 +467,6 @@ pub(crate) fn scalar_binary_method(
     }
 }
 
-pub(crate) fn scalar_shift(f: TokenStream, vec_ty: &VecType, simd: impl ToTokens) -> TokenStream {
-    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let len = vec_ty.len;
-    let items = unrolled_array(len, |idx| quote! { #f(a[#idx], shift) });
-
-    quote! {
-        let a: [#scalar; #len] = a.into();
-        let result: [#scalar; #len] = #items;
-        result.simd_into(#simd)
-    }
-}
-
 pub(crate) fn scalar_compare(method: &str, vec_ty: &VecType, simd: impl ToTokens) -> TokenStream {
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let mask_scalar = ScalarType::Mask.rust(vec_ty.scalar_bits);

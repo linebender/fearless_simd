@@ -8,16 +8,8 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     generic_as_array, generic_block_combine, generic_block_split, generic_from_array,
-<<<<<<< HEAD
-    generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array, generic_to_bytes,
-    integer_lane_mask_splat_arg, scalar_binary, scalar_binary_method, scalar_compare, scalar_shift,
-||||||| 45eee37
-    generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array, generic_to_bytes,
-    integer_lane_mask_splat_arg, scalar_binary,
-=======
     generic_from_bytes, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
-    generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg, scalar_binary,
->>>>>>> 36adebbe4afea1b7280e48a5726046698a94fec1
+    generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
@@ -126,6 +118,7 @@ impl Level for X86 {
             use core::arch::x86::*;
             #[cfg(target_arch = "x86_64")]
             use core::arch::x86_64::*;
+            use core::ops::*;
             #float_ext
         }
     }
@@ -1355,16 +1348,6 @@ impl X86 {
             });
         }
 
-<<<<<<< HEAD
-        if vec_ty.scalar_bits == 64
-            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
-            && method != "simd_eq"
-        {
-            return self.kernel_method(op, vec_ty, |token| scalar_compare(method, vec_ty, token));
-        }
-
-||||||| 45eee37
-=======
         if *self == Self::Sse2 && vec_ty.scalar != ScalarType::Float {
             if vec_ty.scalar_bits == 64 && method != "simd_eq" {
                 return fallback_method(op, vec_ty);
@@ -1376,7 +1359,13 @@ impl X86 {
             });
         }
 
->>>>>>> 36adebbe4afea1b7280e48a5726046698a94fec1
+        if vec_ty.scalar_bits == 64
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && method != "simd_eq"
+        {
+            return fallback_method(op, vec_ty);
+        }
+
         let args = [quote! { a.into() }, quote! { b.into() }];
 
         let expr = if vec_ty.scalar != ScalarType::Float {
@@ -1736,26 +1725,6 @@ impl X86 {
             });
         }
 
-<<<<<<< HEAD
-        if *self != Self::Avx512
-            && vec_ty.scalar_bits == 64
-            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
-            && matches!(method, "mul" | "min" | "max")
-        {
-            let body = if method == "mul" {
-                scalar_binary_method("wrapping_mul", vec_ty, quote! { self })
-            } else {
-                scalar_binary_method(method, vec_ty, quote! { self })
-            };
-            return quote! {
-                #method_sig {
-                    #body
-                }
-            };
-        }
-
-||||||| 45eee37
-=======
         if *self == Self::Sse2
             && vec_ty.scalar == ScalarType::Float
             && matches!(method, "min_precise" | "max_precise")
@@ -1786,6 +1755,14 @@ impl X86 {
             });
         }
 
+        if *self != Self::Avx512
+            && vec_ty.scalar_bits == 64
+            && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
+            && matches!(method, "mul" | "min" | "max")
+        {
+            return fallback_method(op, vec_ty);
+        }
+
         if *self == Self::Sse2
             && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)
             && matches!(method, "min" | "max")
@@ -1804,19 +1781,13 @@ impl X86 {
             return fallback_method(op, vec_ty);
         }
 
->>>>>>> 36adebbe4afea1b7280e48a5726046698a94fec1
         match method {
             "shrv"
                 if *self != Self::Avx512
                     && vec_ty.scalar == ScalarType::Int
                     && vec_ty.scalar_bits == 64 =>
             {
-                let body = scalar_binary(quote!(core::ops::Shr::shr), vec_ty, quote! { self });
-                quote! {
-                    #method_sig {
-                        #body
-                    }
-                }
+                fallback_method(op, vec_ty)
             }
             "shlv" | "shrv"
                 if *self == Self::Avx512
@@ -1830,17 +1801,8 @@ impl X86 {
             "shlv" | "shrv"
                 if !(matches!(self, Self::Avx2 | Self::Avx512) && vec_ty.scalar_bits >= 32) =>
             {
-                // SSE2 has shift operations, but they shift every lane by the same amount, so we can't use them here.
-                let body = match method {
-                    "shlv" => scalar_binary(quote!(core::ops::Shl::shl), vec_ty, quote! { self }),
-                    "shrv" => scalar_binary(quote!(core::ops::Shr::shr), vec_ty, quote! { self }),
-                    _ => unreachable!(),
-                };
-                quote! {
-                    #method_sig {
-                        #body
-                    }
-                }
+                // x86 only has lane-wise variable shifts for wider lanes starting at AVX2.
+                fallback_method(op, vec_ty)
             }
             _ => self.kernel_method(op, vec_ty, |token| match method {
                 "mul" if vec_ty.scalar_bits == 8 => {
@@ -1946,18 +1908,12 @@ impl X86 {
     }
 
     pub(crate) fn handle_shift(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {
-        let method_sig = op.simd_trait_method_sig(vec_ty);
         if *self != Self::Avx512
             && method == "shr"
             && vec_ty.scalar == ScalarType::Int
             && vec_ty.scalar_bits == 64
         {
-            let body = scalar_shift(quote!(core::ops::Shr::shr), vec_ty, quote! { self });
-            return quote! {
-                #method_sig {
-                    #body
-                }
-            };
+            return fallback_method(op, vec_ty);
         }
 
         let shift_op = match (method, vec_ty.scalar) {

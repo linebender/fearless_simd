@@ -14,6 +14,7 @@ use crate::{
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
+use core::ops::*;
 #[doc = "A token for SSE4.2 intrinsics on `x86` and `x86_64`, representing the x86-64-v2 level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Sse4_2 {
@@ -957,27 +958,25 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shlv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        let a: [i8; 16usize] = a.into();
-        let b: [i8; 16usize] = b.into();
-        let result: [i8; 16usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-            core::ops::Shl::shl(a[4usize], b[4usize]),
-            core::ops::Shl::shl(a[5usize], b[5usize]),
-            core::ops::Shl::shl(a[6usize], b[6usize]),
-            core::ops::Shl::shl(a[7usize], b[7usize]),
-            core::ops::Shl::shl(a[8usize], b[8usize]),
-            core::ops::Shl::shl(a[9usize], b[9usize]),
-            core::ops::Shl::shl(a[10usize], b[10usize]),
-            core::ops::Shl::shl(a[11usize], b[11usize]),
-            core::ops::Shl::shl(a[12usize], b[12usize]),
-            core::ops::Shl::shl(a[13usize], b[13usize]),
-            core::ops::Shl::shl(a[14usize], b[14usize]),
-            core::ops::Shl::shl(a[15usize], b[15usize]),
-        ];
-        result.simd_into(self)
+        [
+            i8::shl(a[0usize], &b[0usize]),
+            i8::shl(a[1usize], &b[1usize]),
+            i8::shl(a[2usize], &b[2usize]),
+            i8::shl(a[3usize], &b[3usize]),
+            i8::shl(a[4usize], &b[4usize]),
+            i8::shl(a[5usize], &b[5usize]),
+            i8::shl(a[6usize], &b[6usize]),
+            i8::shl(a[7usize], &b[7usize]),
+            i8::shl(a[8usize], &b[8usize]),
+            i8::shl(a[9usize], &b[9usize]),
+            i8::shl(a[10usize], &b[10usize]),
+            i8::shl(a[11usize], &b[11usize]),
+            i8::shl(a[12usize], &b[12usize]),
+            i8::shl(a[13usize], &b[13usize]),
+            i8::shl(a[14usize], &b[14usize]),
+            i8::shl(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
@@ -997,27 +996,25 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        let a: [i8; 16usize] = a.into();
-        let b: [i8; 16usize] = b.into();
-        let result: [i8; 16usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-            core::ops::Shr::shr(a[4usize], b[4usize]),
-            core::ops::Shr::shr(a[5usize], b[5usize]),
-            core::ops::Shr::shr(a[6usize], b[6usize]),
-            core::ops::Shr::shr(a[7usize], b[7usize]),
-            core::ops::Shr::shr(a[8usize], b[8usize]),
-            core::ops::Shr::shr(a[9usize], b[9usize]),
-            core::ops::Shr::shr(a[10usize], b[10usize]),
-            core::ops::Shr::shr(a[11usize], b[11usize]),
-            core::ops::Shr::shr(a[12usize], b[12usize]),
-            core::ops::Shr::shr(a[13usize], b[13usize]),
-            core::ops::Shr::shr(a[14usize], b[14usize]),
-            core::ops::Shr::shr(a[15usize], b[15usize]),
-        ];
-        result.simd_into(self)
+        [
+            i8::shr(a[0usize], &b[0usize]),
+            i8::shr(a[1usize], &b[1usize]),
+            i8::shr(a[2usize], &b[2usize]),
+            i8::shr(a[3usize], &b[3usize]),
+            i8::shr(a[4usize], &b[4usize]),
+            i8::shr(a[5usize], &b[5usize]),
+            i8::shr(a[6usize], &b[6usize]),
+            i8::shr(a[7usize], &b[7usize]),
+            i8::shr(a[8usize], &b[8usize]),
+            i8::shr(a[9usize], &b[9usize]),
+            i8::shr(a[10usize], &b[10usize]),
+            i8::shr(a[11usize], &b[11usize]),
+            i8::shr(a[12usize], &b[12usize]),
+            i8::shr(a[13usize], &b[13usize]),
+            i8::shr(a[14usize], &b[14usize]),
+            i8::shr(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -1476,27 +1473,25 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shlv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        let a: [u8; 16usize] = a.into();
-        let b: [u8; 16usize] = b.into();
-        let result: [u8; 16usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-            core::ops::Shl::shl(a[4usize], b[4usize]),
-            core::ops::Shl::shl(a[5usize], b[5usize]),
-            core::ops::Shl::shl(a[6usize], b[6usize]),
-            core::ops::Shl::shl(a[7usize], b[7usize]),
-            core::ops::Shl::shl(a[8usize], b[8usize]),
-            core::ops::Shl::shl(a[9usize], b[9usize]),
-            core::ops::Shl::shl(a[10usize], b[10usize]),
-            core::ops::Shl::shl(a[11usize], b[11usize]),
-            core::ops::Shl::shl(a[12usize], b[12usize]),
-            core::ops::Shl::shl(a[13usize], b[13usize]),
-            core::ops::Shl::shl(a[14usize], b[14usize]),
-            core::ops::Shl::shl(a[15usize], b[15usize]),
-        ];
-        result.simd_into(self)
+        [
+            u8::shl(a[0usize], &b[0usize]),
+            u8::shl(a[1usize], &b[1usize]),
+            u8::shl(a[2usize], &b[2usize]),
+            u8::shl(a[3usize], &b[3usize]),
+            u8::shl(a[4usize], &b[4usize]),
+            u8::shl(a[5usize], &b[5usize]),
+            u8::shl(a[6usize], &b[6usize]),
+            u8::shl(a[7usize], &b[7usize]),
+            u8::shl(a[8usize], &b[8usize]),
+            u8::shl(a[9usize], &b[9usize]),
+            u8::shl(a[10usize], &b[10usize]),
+            u8::shl(a[11usize], &b[11usize]),
+            u8::shl(a[12usize], &b[12usize]),
+            u8::shl(a[13usize], &b[13usize]),
+            u8::shl(a[14usize], &b[14usize]),
+            u8::shl(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
@@ -1516,27 +1511,25 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        let a: [u8; 16usize] = a.into();
-        let b: [u8; 16usize] = b.into();
-        let result: [u8; 16usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-            core::ops::Shr::shr(a[4usize], b[4usize]),
-            core::ops::Shr::shr(a[5usize], b[5usize]),
-            core::ops::Shr::shr(a[6usize], b[6usize]),
-            core::ops::Shr::shr(a[7usize], b[7usize]),
-            core::ops::Shr::shr(a[8usize], b[8usize]),
-            core::ops::Shr::shr(a[9usize], b[9usize]),
-            core::ops::Shr::shr(a[10usize], b[10usize]),
-            core::ops::Shr::shr(a[11usize], b[11usize]),
-            core::ops::Shr::shr(a[12usize], b[12usize]),
-            core::ops::Shr::shr(a[13usize], b[13usize]),
-            core::ops::Shr::shr(a[14usize], b[14usize]),
-            core::ops::Shr::shr(a[15usize], b[15usize]),
-        ];
-        result.simd_into(self)
+        [
+            u8::shr(a[0usize], &b[0usize]),
+            u8::shr(a[1usize], &b[1usize]),
+            u8::shr(a[2usize], &b[2usize]),
+            u8::shr(a[3usize], &b[3usize]),
+            u8::shr(a[4usize], &b[4usize]),
+            u8::shr(a[5usize], &b[5usize]),
+            u8::shr(a[6usize], &b[6usize]),
+            u8::shr(a[7usize], &b[7usize]),
+            u8::shr(a[8usize], &b[8usize]),
+            u8::shr(a[9usize], &b[9usize]),
+            u8::shr(a[10usize], &b[10usize]),
+            u8::shr(a[11usize], &b[11usize]),
+            u8::shr(a[12usize], &b[12usize]),
+            u8::shr(a[13usize], &b[13usize]),
+            u8::shr(a[14usize], &b[14usize]),
+            u8::shr(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -2129,19 +2122,17 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        let a: [i16; 8usize] = a.into();
-        let b: [i16; 8usize] = b.into();
-        let result: [i16; 8usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-            core::ops::Shl::shl(a[4usize], b[4usize]),
-            core::ops::Shl::shl(a[5usize], b[5usize]),
-            core::ops::Shl::shl(a[6usize], b[6usize]),
-            core::ops::Shl::shl(a[7usize], b[7usize]),
-        ];
-        result.simd_into(self)
+        [
+            i16::shl(a[0usize], &b[0usize]),
+            i16::shl(a[1usize], &b[1usize]),
+            i16::shl(a[2usize], &b[2usize]),
+            i16::shl(a[3usize], &b[3usize]),
+            i16::shl(a[4usize], &b[4usize]),
+            i16::shl(a[5usize], &b[5usize]),
+            i16::shl(a[6usize], &b[6usize]),
+            i16::shl(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
@@ -2155,19 +2146,17 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        let a: [i16; 8usize] = a.into();
-        let b: [i16; 8usize] = b.into();
-        let result: [i16; 8usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-            core::ops::Shr::shr(a[4usize], b[4usize]),
-            core::ops::Shr::shr(a[5usize], b[5usize]),
-            core::ops::Shr::shr(a[6usize], b[6usize]),
-            core::ops::Shr::shr(a[7usize], b[7usize]),
-        ];
-        result.simd_into(self)
+        [
+            i16::shr(a[0usize], &b[0usize]),
+            i16::shr(a[1usize], &b[1usize]),
+            i16::shr(a[2usize], &b[2usize]),
+            i16::shr(a[3usize], &b[3usize]),
+            i16::shr(a[4usize], &b[4usize]),
+            i16::shr(a[5usize], &b[5usize]),
+            i16::shr(a[6usize], &b[6usize]),
+            i16::shr(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -2581,19 +2570,17 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        let a: [u16; 8usize] = a.into();
-        let b: [u16; 8usize] = b.into();
-        let result: [u16; 8usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-            core::ops::Shl::shl(a[4usize], b[4usize]),
-            core::ops::Shl::shl(a[5usize], b[5usize]),
-            core::ops::Shl::shl(a[6usize], b[6usize]),
-            core::ops::Shl::shl(a[7usize], b[7usize]),
-        ];
-        result.simd_into(self)
+        [
+            u16::shl(a[0usize], &b[0usize]),
+            u16::shl(a[1usize], &b[1usize]),
+            u16::shl(a[2usize], &b[2usize]),
+            u16::shl(a[3usize], &b[3usize]),
+            u16::shl(a[4usize], &b[4usize]),
+            u16::shl(a[5usize], &b[5usize]),
+            u16::shl(a[6usize], &b[6usize]),
+            u16::shl(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
@@ -2607,19 +2594,17 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        let a: [u16; 8usize] = a.into();
-        let b: [u16; 8usize] = b.into();
-        let result: [u16; 8usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-            core::ops::Shr::shr(a[4usize], b[4usize]),
-            core::ops::Shr::shr(a[5usize], b[5usize]),
-            core::ops::Shr::shr(a[6usize], b[6usize]),
-            core::ops::Shr::shr(a[7usize], b[7usize]),
-        ];
-        result.simd_into(self)
+        [
+            u16::shr(a[0usize], &b[0usize]),
+            u16::shr(a[1usize], &b[1usize]),
+            u16::shr(a[2usize], &b[2usize]),
+            u16::shr(a[3usize], &b[3usize]),
+            u16::shr(a[4usize], &b[4usize]),
+            u16::shr(a[5usize], &b[5usize]),
+            u16::shr(a[6usize], &b[6usize]),
+            u16::shr(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -3191,15 +3176,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shlv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        let a: [i32; 4usize] = a.into();
-        let b: [i32; 4usize] = b.into();
-        let result: [i32; 4usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-        ];
-        result.simd_into(self)
+        [
+            i32::shl(a[0usize], &b[0usize]),
+            i32::shl(a[1usize], &b[1usize]),
+            i32::shl(a[2usize], &b[2usize]),
+            i32::shl(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self> {
@@ -3213,15 +3196,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
-        let a: [i32; 4usize] = a.into();
-        let b: [i32; 4usize] = b.into();
-        let result: [i32; 4usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-        ];
-        result.simd_into(self)
+        [
+            i32::shr(a[0usize], &b[0usize]),
+            i32::shr(a[1usize], &b[1usize]),
+            i32::shr(a[2usize], &b[2usize]),
+            i32::shr(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self> {
@@ -3627,15 +3608,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shlv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        let a: [u32; 4usize] = a.into();
-        let b: [u32; 4usize] = b.into();
-        let result: [u32; 4usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-            core::ops::Shl::shl(a[2usize], b[2usize]),
-            core::ops::Shl::shl(a[3usize], b[3usize]),
-        ];
-        result.simd_into(self)
+        [
+            u32::shl(a[0usize], &b[0usize]),
+            u32::shl(a[1usize], &b[1usize]),
+            u32::shl(a[2usize], &b[2usize]),
+            u32::shl(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self> {
@@ -3649,15 +3628,13 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
-        let a: [u32; 4usize] = a.into();
-        let b: [u32; 4usize] = b.into();
-        let result: [u32; 4usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-            core::ops::Shr::shr(a[2usize], b[2usize]),
-            core::ops::Shr::shr(a[3usize], b[3usize]),
-        ];
-        result.simd_into(self)
+        [
+            u32::shr(a[0usize], &b[0usize]),
+            u32::shr(a[1usize], &b[1usize]),
+            u32::shr(a[2usize], &b[2usize]),
+            u32::shr(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self> {
@@ -4623,13 +4600,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn mul_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let b: [i64; 2usize] = b.into();
-        let result: [i64; 2usize] = [
-            a[0usize].wrapping_mul(b[0usize]),
-            a[1usize].wrapping_mul(b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            i64::wrapping_mul(a[0usize], b[0usize]),
+            i64::wrapping_mul(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -4677,32 +4652,23 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shlv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let b: [i64; 2usize] = b.into();
-        let result: [i64; 2usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            i64::shl(a[0usize], &b[0usize]),
+            i64::shl(a[1usize], &b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let result: [i64; 2usize] = [
-            core::ops::Shr::shr(a[0usize], shift),
-            core::ops::Shr::shr(a[1usize], shift),
-        ];
-        result.simd_into(self)
+        [i64::shr(a[0usize], shift), i64::shr(a[1usize], shift)].simd_into(self)
     }
     #[inline(always)]
     fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let b: [i64; 2usize] = b.into();
-        let result: [i64; 2usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            i64::shr(a[0usize], &b[0usize]),
+            i64::shr(a[1usize], &b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
@@ -4716,107 +4682,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_lt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> mask64x2<Sse4_2> {
-                let a: [i64; 2usize] = a.into();
-                let b: [i64; 2usize] = b.into();
-                let true_lane: i64 = !0;
-                let false_lane: i64 = 0;
-                let result: [i64; 2usize] = [
-                    if a[0usize] < b[0usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                    if a[1usize] < b[1usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            -(i64::lt(&a[0usize], &b[0usize]) as i64),
+            -(i64::lt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_le_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> mask64x2<Sse4_2> {
-                let a: [i64; 2usize] = a.into();
-                let b: [i64; 2usize] = b.into();
-                let true_lane: i64 = !0;
-                let false_lane: i64 = 0;
-                let result: [i64; 2usize] = [
-                    if a[0usize] <= b[0usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                    if a[1usize] <= b[1usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            -(i64::le(&a[0usize], &b[0usize]) as i64),
+            -(i64::le(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> mask64x2<Sse4_2> {
-                let a: [i64; 2usize] = a.into();
-                let b: [i64; 2usize] = b.into();
-                let true_lane: i64 = !0;
-                let false_lane: i64 = 0;
-                let result: [i64; 2usize] = [
-                    if a[0usize] >= b[0usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                    if a[1usize] >= b[1usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            -(i64::ge(&a[0usize], &b[0usize]) as i64),
+            -(i64::ge(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> mask64x2<Sse4_2> {
-                let a: [i64; 2usize] = a.into();
-                let b: [i64; 2usize] = b.into();
-                let true_lane: i64 = !0;
-                let false_lane: i64 = 0;
-                let result: [i64; 2usize] = [
-                    if a[0usize] > b[0usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                    if a[1usize] > b[1usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            -(i64::gt(&a[0usize], &b[0usize]) as i64),
+            -(i64::gt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -4883,17 +4777,19 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let b: [i64; 2usize] = b.into();
-        let result: [i64; 2usize] = [a[0usize].min(b[0usize]), a[1usize].min(b[1usize])];
-        result.simd_into(self)
+        [
+            i64::min(a[0usize], b[0usize]),
+            i64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        let a: [i64; 2usize] = a.into();
-        let b: [i64; 2usize] = b.into();
-        let result: [i64; 2usize] = [a[0usize].max(b[0usize]), a[1usize].max(b[1usize])];
-        result.simd_into(self)
+        [
+            i64::max(a[0usize], b[0usize]),
+            i64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self> {
@@ -5090,13 +4986,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn mul_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let result: [u64; 2usize] = [
-            a[0usize].wrapping_mul(b[0usize]),
-            a[1usize].wrapping_mul(b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            u64::wrapping_mul(a[0usize], b[0usize]),
+            u64::wrapping_mul(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -5144,13 +5038,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shlv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let result: [u64; 2usize] = [
-            core::ops::Shl::shl(a[0usize], b[0usize]),
-            core::ops::Shl::shl(a[1usize], b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            u64::shl(a[0usize], &b[0usize]),
+            u64::shl(a[1usize], &b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self> {
@@ -5164,13 +5056,11 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn shrv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let result: [u64; 2usize] = [
-            core::ops::Shr::shr(a[0usize], b[0usize]),
-            core::ops::Shr::shr(a[1usize], b[1usize]),
-        ];
-        result.simd_into(self)
+        [
+            u64::shr(a[0usize], &b[0usize]),
+            u64::shr(a[1usize], &b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
@@ -5184,107 +5074,35 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn simd_lt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> mask64x2<Sse4_2> {
-                let a: [u64; 2usize] = a.into();
-                let b: [u64; 2usize] = b.into();
-                let true_lane: i64 = !0;
-                let false_lane: i64 = 0;
-                let result: [i64; 2usize] = [
-                    if a[0usize] < b[0usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                    if a[1usize] < b[1usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            -(u64::lt(&a[0usize], &b[0usize]) as i64),
+            -(u64::lt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_le_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> mask64x2<Sse4_2> {
-                let a: [u64; 2usize] = a.into();
-                let b: [u64; 2usize] = b.into();
-                let true_lane: i64 = !0;
-                let false_lane: i64 = 0;
-                let result: [i64; 2usize] = [
-                    if a[0usize] <= b[0usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                    if a[1usize] <= b[1usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            -(u64::le(&a[0usize], &b[0usize]) as i64),
+            -(u64::le(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> mask64x2<Sse4_2> {
-                let a: [u64; 2usize] = a.into();
-                let b: [u64; 2usize] = b.into();
-                let true_lane: i64 = !0;
-                let false_lane: i64 = 0;
-                let result: [i64; 2usize] = [
-                    if a[0usize] >= b[0usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                    if a[1usize] >= b[1usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            -(u64::ge(&a[0usize], &b[0usize]) as i64),
+            -(u64::ge(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> mask64x2<Sse4_2> {
-                let a: [u64; 2usize] = a.into();
-                let b: [u64; 2usize] = b.into();
-                let true_lane: i64 = !0;
-                let false_lane: i64 = 0;
-                let result: [i64; 2usize] = [
-                    if a[0usize] > b[0usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                    if a[1usize] > b[1usize] {
-                        true_lane
-                    } else {
-                        false_lane
-                    },
-                ];
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            -(u64::gt(&a[0usize], &b[0usize]) as i64),
+            -(u64::gt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn zip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -5351,17 +5169,19 @@ impl Simd for Sse4_2 {
     }
     #[inline(always)]
     fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let result: [u64; 2usize] = [a[0usize].min(b[0usize]), a[1usize].min(b[1usize])];
-        result.simd_into(self)
+        [
+            u64::min(a[0usize], b[0usize]),
+            u64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
-        let a: [u64; 2usize] = a.into();
-        let b: [u64; 2usize] = b.into();
-        let result: [u64; 2usize] = [a[0usize].max(b[0usize]), a[1usize].max(b[1usize])];
-        result.simd_into(self)
+        [
+            u64::max(a[0usize], b[0usize]),
+            u64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self> {
@@ -15247,392 +15067,6 @@ impl Simd for Sse4_2 {
         )
     }
 }
-<<<<<<< HEAD
-impl<S: Simd> SimdFrom<__m128, S> for f32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<f32x4<S>> for __m128 {
-    #[inline(always)]
-    fn from(value: f32x4<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i8x16<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i8x16<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i8x16<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u8x16<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u8x16<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u8x16<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask8x16<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i8; 16usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask8x16<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask8x16<S>) -> Self {
-        let lanes: [i8; 16usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i16x8<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i16x8<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i16x8<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u16x8<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u16x8<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u16x8<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask16x8<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask16x8<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask16x8<S>) -> Self {
-        let lanes: [i16; 8usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i32x4<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i32x4<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u32x4<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u32x4<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i32; 4usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask32x4<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask32x4<S>) -> Self {
-        let lanes: [i32; 4usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-impl<S: Simd> SimdFrom<__m128d, S> for f64x2<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128d) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<f64x2<S>> for __m128d {
-    #[inline(always)]
-    fn from(value: f64x2<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i64x2<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i64x2<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i64x2<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u64x2<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u64x2<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u64x2<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask64x2<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i64; 2usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask64x2<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask64x2<S>) -> Self {
-        let lanes: [i64; 2usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-||||||| 45eee37
-impl<S: Simd> SimdFrom<__m128, S> for f32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<f32x4<S>> for __m128 {
-    #[inline(always)]
-    fn from(value: f32x4<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i8x16<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i8x16<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i8x16<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u8x16<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u8x16<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u8x16<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask8x16<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i8; 16usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask8x16<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask8x16<S>) -> Self {
-        let lanes: [i8; 16usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i16x8<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i16x8<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i16x8<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u16x8<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u16x8<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u16x8<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask16x8<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i16; 8usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask16x8<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask16x8<S>) -> Self {
-        let lanes: [i16; 8usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for i32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<i32x4<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: i32x4<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for u32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<u32x4<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: u32x4<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask32x4<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i32; 4usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask32x4<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask32x4<S>) -> Self {
-        let lanes: [i32; 4usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-impl<S: Simd> SimdFrom<__m128d, S> for f64x2<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128d) -> Self {
-        Self {
-            val: crate::transmute::checked_transmute_copy(&arch),
-            simd,
-        }
-    }
-}
-impl<S: Simd> From<f64x2<S>> for __m128d {
-    #[inline(always)]
-    fn from(value: f64x2<S>) -> Self {
-        crate::transmute::checked_transmute_copy(&value.val)
-    }
-}
-impl<S: Simd> SimdFrom<__m128i, S> for mask64x2<S> {
-    #[inline(always)]
-    fn simd_from(simd: S, arch: __m128i) -> Self {
-        let lanes: [i64; 2usize] = crate::transmute::checked_transmute_copy(&arch);
-        lanes.simd_into(simd)
-    }
-}
-impl<S: Simd> From<mask64x2<S>> for __m128i {
-    #[inline(always)]
-    fn from(value: mask64x2<S>) -> Self {
-        let lanes: [i64; 2usize] = value.into();
-        crate::transmute::checked_transmute_copy(&lanes)
-    }
-}
-=======
->>>>>>> 36adebbe4afea1b7280e48a5726046698a94fec1
 crate::kernel!(
     #[doc = r" This is a version of the `alignr` intrinsic that takes a non-const shift argument. The shift is still"]
     #[doc = r" expected to be constant in practice, so the match statement will be optimized out. This exists because"]
