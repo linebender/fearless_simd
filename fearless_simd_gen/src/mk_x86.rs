@@ -306,6 +306,7 @@ impl Level for X86 {
             OpSig::Zip { select_low } => self.handle_zip(op, vec_ty, select_low),
             OpSig::Unzip { select_even } => self.handle_unzip(op, vec_ty, select_even),
             OpSig::Slide { granularity } => self.handle_slide(method_sig, vec_ty, granularity),
+            OpSig::SwizzleDynWithinBlocks => self.handle_swizzle_dyn_within_blocks(op, vec_ty),
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -2519,6 +2520,43 @@ impl X86 {
                 self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
             }
         }
+    }
+
+    pub(crate) fn handle_swizzle_dyn_within_blocks(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let bytes_ty = vec_ty.bytes_ty();
+        let bytes = bytes_ty.rust();
+        let wrapper = bytes_ty.aligned_wrapper();
+        let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+        let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+        self.kernel_method(op, vec_ty, |token| {
+            let body = if *self == Self::Avx512 {
+                match vec_ty.n_bits() {
+                    128 => quote! {
+                        let bytes = #token.#to_bytes(a).val.0;
+                        let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
+                    },
+                    256 => quote! {
+                        let bytes = #token.#to_bytes(a).val.0;
+                        let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
+                    },
+                    512 => quote! {
+                        let result = _mm512_shuffle_epi8(#token.#to_bytes(a).val.0, indices.into());
+                    },
+                    _ => unreachable!(),
+                }
+            } else {
+                let shuffle = simple_sign_unaware_intrinsic("shuffle", &bytes_ty);
+                quote! {
+                    let result = #shuffle(#token.#to_bytes(a).val.0, indices.into());
+                }
+            };
+
+            quote! {
+                #body
+                #token.#from_bytes(#bytes { val: #wrapper(result), simd: #token })
+            }
+        })
     }
 
     pub(crate) fn handle_cvt(
