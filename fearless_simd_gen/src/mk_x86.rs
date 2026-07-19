@@ -2804,7 +2804,7 @@ impl X86 {
                         .select(lo_shuf, result_bytes);
                 },
                 (Self::Avx2, 512) => {
-                    // llvm-mca measurements (troughput):
+                    // llvm-mca measurements (throughput):
                     //
                     // On Haswell this is 24 cycles, as opposed to 20 cycles for split-combine that SSE4.2 uses.
                     // Skylake doesn't care (12 cycles either way).
