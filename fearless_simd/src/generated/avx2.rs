@@ -12549,28 +12549,18 @@ impl Simd for Avx2 {
                 let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
                 let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
                 let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(0x70);
-                let offset_q1 = _mm256_set1_epi8(16);
-                let offset_q2 = _mm256_set1_epi8(32);
-                let offset_q3 = _mm256_set1_epi8(48);
+                let oob_bias = _mm256_set1_epi8(64);
                 let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let from_q0 = _mm256_shuffle_epi8(q0, _mm256_adds_epu8(idxs, oob_bias));
-                    let from_q1 = _mm256_shuffle_epi8(
-                        q1,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q1), oob_bias),
-                    );
-                    let from_q2 = _mm256_shuffle_epi8(
-                        q2,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q2), oob_bias),
-                    );
-                    let from_q3 = _mm256_shuffle_epi8(
-                        q3,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q3), oob_bias),
-                    );
-                    _mm256_or_si256(
-                        _mm256_or_si256(from_q0, from_q1),
-                        _mm256_or_si256(from_q2, from_q3),
-                    )
+                    let control = _mm256_adds_epu8(idxs, oob_bias);
+                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
+                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
+                    let from_q0 = _mm256_shuffle_epi8(q0, control);
+                    let from_q1 = _mm256_shuffle_epi8(q1, control);
+                    let from_q2 = _mm256_shuffle_epi8(q2, control);
+                    let from_q3 = _mm256_shuffle_epi8(q3, control);
+                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
+                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
+                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
                 };
                 let result = [
                     swizzle_half(indices.val.0[0]),
@@ -13337,28 +13327,18 @@ impl Simd for Avx2 {
                 let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
                 let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
                 let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(0x70);
-                let offset_q1 = _mm256_set1_epi8(16);
-                let offset_q2 = _mm256_set1_epi8(32);
-                let offset_q3 = _mm256_set1_epi8(48);
+                let oob_bias = _mm256_set1_epi8(64);
                 let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let from_q0 = _mm256_shuffle_epi8(q0, _mm256_adds_epu8(idxs, oob_bias));
-                    let from_q1 = _mm256_shuffle_epi8(
-                        q1,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q1), oob_bias),
-                    );
-                    let from_q2 = _mm256_shuffle_epi8(
-                        q2,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q2), oob_bias),
-                    );
-                    let from_q3 = _mm256_shuffle_epi8(
-                        q3,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q3), oob_bias),
-                    );
-                    _mm256_or_si256(
-                        _mm256_or_si256(from_q0, from_q1),
-                        _mm256_or_si256(from_q2, from_q3),
-                    )
+                    let control = _mm256_adds_epu8(idxs, oob_bias);
+                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
+                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
+                    let from_q0 = _mm256_shuffle_epi8(q0, control);
+                    let from_q1 = _mm256_shuffle_epi8(q1, control);
+                    let from_q2 = _mm256_shuffle_epi8(q2, control);
+                    let from_q3 = _mm256_shuffle_epi8(q3, control);
+                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
+                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
+                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
                 };
                 let result = [
                     swizzle_half(indices.val.0[0]),
@@ -13957,28 +13937,18 @@ impl Simd for Avx2 {
                 let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
                 let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
                 let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(0x70);
-                let offset_q1 = _mm256_set1_epi8(16);
-                let offset_q2 = _mm256_set1_epi8(32);
-                let offset_q3 = _mm256_set1_epi8(48);
+                let oob_bias = _mm256_set1_epi8(64);
                 let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let from_q0 = _mm256_shuffle_epi8(q0, _mm256_adds_epu8(idxs, oob_bias));
-                    let from_q1 = _mm256_shuffle_epi8(
-                        q1,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q1), oob_bias),
-                    );
-                    let from_q2 = _mm256_shuffle_epi8(
-                        q2,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q2), oob_bias),
-                    );
-                    let from_q3 = _mm256_shuffle_epi8(
-                        q3,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q3), oob_bias),
-                    );
-                    _mm256_or_si256(
-                        _mm256_or_si256(from_q0, from_q1),
-                        _mm256_or_si256(from_q2, from_q3),
-                    )
+                    let control = _mm256_adds_epu8(idxs, oob_bias);
+                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
+                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
+                    let from_q0 = _mm256_shuffle_epi8(q0, control);
+                    let from_q1 = _mm256_shuffle_epi8(q1, control);
+                    let from_q2 = _mm256_shuffle_epi8(q2, control);
+                    let from_q3 = _mm256_shuffle_epi8(q3, control);
+                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
+                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
+                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
                 };
                 let result = [
                     swizzle_half(indices.val.0[0]),
@@ -14680,28 +14650,18 @@ impl Simd for Avx2 {
                 let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
                 let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
                 let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(0x70);
-                let offset_q1 = _mm256_set1_epi8(16);
-                let offset_q2 = _mm256_set1_epi8(32);
-                let offset_q3 = _mm256_set1_epi8(48);
+                let oob_bias = _mm256_set1_epi8(64);
                 let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let from_q0 = _mm256_shuffle_epi8(q0, _mm256_adds_epu8(idxs, oob_bias));
-                    let from_q1 = _mm256_shuffle_epi8(
-                        q1,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q1), oob_bias),
-                    );
-                    let from_q2 = _mm256_shuffle_epi8(
-                        q2,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q2), oob_bias),
-                    );
-                    let from_q3 = _mm256_shuffle_epi8(
-                        q3,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q3), oob_bias),
-                    );
-                    _mm256_or_si256(
-                        _mm256_or_si256(from_q0, from_q1),
-                        _mm256_or_si256(from_q2, from_q3),
-                    )
+                    let control = _mm256_adds_epu8(idxs, oob_bias);
+                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
+                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
+                    let from_q0 = _mm256_shuffle_epi8(q0, control);
+                    let from_q1 = _mm256_shuffle_epi8(q1, control);
+                    let from_q2 = _mm256_shuffle_epi8(q2, control);
+                    let from_q3 = _mm256_shuffle_epi8(q3, control);
+                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
+                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
+                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
                 };
                 let result = [
                     swizzle_half(indices.val.0[0]),
@@ -15185,28 +15145,18 @@ impl Simd for Avx2 {
                 let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
                 let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
                 let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(0x70);
-                let offset_q1 = _mm256_set1_epi8(16);
-                let offset_q2 = _mm256_set1_epi8(32);
-                let offset_q3 = _mm256_set1_epi8(48);
+                let oob_bias = _mm256_set1_epi8(64);
                 let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let from_q0 = _mm256_shuffle_epi8(q0, _mm256_adds_epu8(idxs, oob_bias));
-                    let from_q1 = _mm256_shuffle_epi8(
-                        q1,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q1), oob_bias),
-                    );
-                    let from_q2 = _mm256_shuffle_epi8(
-                        q2,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q2), oob_bias),
-                    );
-                    let from_q3 = _mm256_shuffle_epi8(
-                        q3,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q3), oob_bias),
-                    );
-                    _mm256_or_si256(
-                        _mm256_or_si256(from_q0, from_q1),
-                        _mm256_or_si256(from_q2, from_q3),
-                    )
+                    let control = _mm256_adds_epu8(idxs, oob_bias);
+                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
+                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
+                    let from_q0 = _mm256_shuffle_epi8(q0, control);
+                    let from_q1 = _mm256_shuffle_epi8(q1, control);
+                    let from_q2 = _mm256_shuffle_epi8(q2, control);
+                    let from_q3 = _mm256_shuffle_epi8(q3, control);
+                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
+                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
+                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
                 };
                 let result = [
                     swizzle_half(indices.val.0[0]),
@@ -15852,28 +15802,18 @@ impl Simd for Avx2 {
                 let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
                 let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
                 let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(0x70);
-                let offset_q1 = _mm256_set1_epi8(16);
-                let offset_q2 = _mm256_set1_epi8(32);
-                let offset_q3 = _mm256_set1_epi8(48);
+                let oob_bias = _mm256_set1_epi8(64);
                 let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let from_q0 = _mm256_shuffle_epi8(q0, _mm256_adds_epu8(idxs, oob_bias));
-                    let from_q1 = _mm256_shuffle_epi8(
-                        q1,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q1), oob_bias),
-                    );
-                    let from_q2 = _mm256_shuffle_epi8(
-                        q2,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q2), oob_bias),
-                    );
-                    let from_q3 = _mm256_shuffle_epi8(
-                        q3,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q3), oob_bias),
-                    );
-                    _mm256_or_si256(
-                        _mm256_or_si256(from_q0, from_q1),
-                        _mm256_or_si256(from_q2, from_q3),
-                    )
+                    let control = _mm256_adds_epu8(idxs, oob_bias);
+                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
+                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
+                    let from_q0 = _mm256_shuffle_epi8(q0, control);
+                    let from_q1 = _mm256_shuffle_epi8(q1, control);
+                    let from_q2 = _mm256_shuffle_epi8(q2, control);
+                    let from_q3 = _mm256_shuffle_epi8(q3, control);
+                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
+                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
+                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
                 };
                 let result = [
                     swizzle_half(indices.val.0[0]),
@@ -16289,28 +16229,18 @@ impl Simd for Avx2 {
                 let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
                 let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
                 let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(0x70);
-                let offset_q1 = _mm256_set1_epi8(16);
-                let offset_q2 = _mm256_set1_epi8(32);
-                let offset_q3 = _mm256_set1_epi8(48);
+                let oob_bias = _mm256_set1_epi8(64);
                 let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let from_q0 = _mm256_shuffle_epi8(q0, _mm256_adds_epu8(idxs, oob_bias));
-                    let from_q1 = _mm256_shuffle_epi8(
-                        q1,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q1), oob_bias),
-                    );
-                    let from_q2 = _mm256_shuffle_epi8(
-                        q2,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q2), oob_bias),
-                    );
-                    let from_q3 = _mm256_shuffle_epi8(
-                        q3,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q3), oob_bias),
-                    );
-                    _mm256_or_si256(
-                        _mm256_or_si256(from_q0, from_q1),
-                        _mm256_or_si256(from_q2, from_q3),
-                    )
+                    let control = _mm256_adds_epu8(idxs, oob_bias);
+                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
+                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
+                    let from_q0 = _mm256_shuffle_epi8(q0, control);
+                    let from_q1 = _mm256_shuffle_epi8(q1, control);
+                    let from_q2 = _mm256_shuffle_epi8(q2, control);
+                    let from_q3 = _mm256_shuffle_epi8(q3, control);
+                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
+                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
+                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
                 };
                 let result = [
                     swizzle_half(indices.val.0[0]),
@@ -16890,28 +16820,18 @@ impl Simd for Avx2 {
                 let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
                 let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
                 let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(0x70);
-                let offset_q1 = _mm256_set1_epi8(16);
-                let offset_q2 = _mm256_set1_epi8(32);
-                let offset_q3 = _mm256_set1_epi8(48);
+                let oob_bias = _mm256_set1_epi8(64);
                 let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let from_q0 = _mm256_shuffle_epi8(q0, _mm256_adds_epu8(idxs, oob_bias));
-                    let from_q1 = _mm256_shuffle_epi8(
-                        q1,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q1), oob_bias),
-                    );
-                    let from_q2 = _mm256_shuffle_epi8(
-                        q2,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q2), oob_bias),
-                    );
-                    let from_q3 = _mm256_shuffle_epi8(
-                        q3,
-                        _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q3), oob_bias),
-                    );
-                    _mm256_or_si256(
-                        _mm256_or_si256(from_q0, from_q1),
-                        _mm256_or_si256(from_q2, from_q3),
-                    )
+                    let control = _mm256_adds_epu8(idxs, oob_bias);
+                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
+                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
+                    let from_q0 = _mm256_shuffle_epi8(q0, control);
+                    let from_q1 = _mm256_shuffle_epi8(q1, control);
+                    let from_q2 = _mm256_shuffle_epi8(q2, control);
+                    let from_q3 = _mm256_shuffle_epi8(q3, control);
+                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
+                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
+                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
                 };
                 let result = [
                     swizzle_half(indices.val.0[0]),
