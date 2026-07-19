@@ -22,3 +22,4 @@ workspace = true
 [dependencies]
 fearless_simd = { workspace = true, features = ["std"] }
 fearless_simd_dev_macros = { workspace = true }
+fastrand = "2.4.1"
