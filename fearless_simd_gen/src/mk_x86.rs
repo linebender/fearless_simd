@@ -2803,11 +2803,24 @@ impl X86 {
                         .select(lo_shuf, result_bytes);
                 },
                 (Self::Avx2, 512) => {
-                    // llvm-mca measurements:
-                    // On Haswell this is ~20% slower than the generic splt-combine fallback SSE4.2 uses,
-                    // due to a higher shuffle port pressure. On Skylake this is a tie (no difference vs generic).
-                    // On recent client Intel (Tiger Lake, Rocket Lake) this is ~35% faster.
-                    // On Zen 1-3 this is ~50% faster.
+                    // llvm-mca measurements (troughput):
+                    //
+                    // On Haswell this is 24 cycles, as opposed to 20 cycles for split-combine that SSE4.2 uses.
+                    // Skylake doesn't care (12 cycles either way).
+                    // Recent Intel (Icelake-client, Tigerlake, Rocketlake) take 6.5 cycles vs 8.8 for generic
+                    // AMD Zen 1-2 takes 7.3 vs 11.8 for generic, Zen 3 takes 6.5 vs 8.5 for generic.
+                    // Uses 11 registers instead of 14 registers in generic split-combine.
+                    //
+                    // It's also possible to apply the bitwise or trick from the generic impl.
+                    // This can be seen in commit history, just before this comment was written.
+                    // That helps haswell a lot (12 cycles) by reducing shuffle port pressure,
+                    // but regresses everything else by using an extra register and by putting
+                    // more pressure on the register file (llvm-mca --register-file-stats).
+                    // Zen1 also drops all the way back to 11.8 cycles and nearly hits the register file limit
+                    // from this one operation alone.
+                    //
+                    // Since registers are the most scarce resource on AVX2,
+                    // we're not going to hamstring all CPUs from the past decade to make Haswell faster.
                     let bytes_ty = vec_ty.bytes_ty();
                     let bytes = bytes_ty.rust();
                     let wrapper = bytes_ty.aligned_wrapper();
