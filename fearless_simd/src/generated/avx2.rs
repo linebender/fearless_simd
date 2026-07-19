@@ -12543,33 +12543,22 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f32x16<Avx2>, indices: u8x64<Avx2>) -> f32x16<Avx2> {
                 let bytes = token.cvt_to_bytes_f32x16(a);
-                let bytes01 = bytes.val.0[0];
-                let bytes23 = bytes.val.0[1];
-                let q0 = _mm256_permute2x128_si256::<0x00>(bytes01, bytes01);
-                let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
-                let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
-                let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(64);
-                let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let control = _mm256_adds_epu8(idxs, oob_bias);
-                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
-                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
-                    let from_q0 = _mm256_shuffle_epi8(q0, control);
-                    let from_q1 = _mm256_shuffle_epi8(q1, control);
-                    let from_q2 = _mm256_shuffle_epi8(q2, control);
-                    let from_q3 = _mm256_shuffle_epi8(q3, control);
-                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
-                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
-                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
-                };
-                let result = [
-                    swizzle_half(indices.val.0[0]),
-                    swizzle_half(indices.val.0[1]),
-                ];
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
+                let (table_low, table_high) = token.split_u8x64(bytes);
+                let (indices_low, indices_high) = token.split_u8x64(indices);
+                let high_table_offset = token.splat_u8x32(32);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x32(output_low, output_high);
                 token.cvt_from_bytes_f32x16(result_bytes)
             }
         );
@@ -13321,33 +13310,22 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x64<Avx2>, indices: u8x64<Avx2>) -> i8x64<Avx2> {
                 let bytes = token.cvt_to_bytes_i8x64(a);
-                let bytes01 = bytes.val.0[0];
-                let bytes23 = bytes.val.0[1];
-                let q0 = _mm256_permute2x128_si256::<0x00>(bytes01, bytes01);
-                let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
-                let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
-                let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(64);
-                let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let control = _mm256_adds_epu8(idxs, oob_bias);
-                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
-                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
-                    let from_q0 = _mm256_shuffle_epi8(q0, control);
-                    let from_q1 = _mm256_shuffle_epi8(q1, control);
-                    let from_q2 = _mm256_shuffle_epi8(q2, control);
-                    let from_q3 = _mm256_shuffle_epi8(q3, control);
-                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
-                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
-                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
-                };
-                let result = [
-                    swizzle_half(indices.val.0[0]),
-                    swizzle_half(indices.val.0[1]),
-                ];
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
+                let (table_low, table_high) = token.split_u8x64(bytes);
+                let (indices_low, indices_high) = token.split_u8x64(indices);
+                let high_table_offset = token.splat_u8x32(32);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x32(output_low, output_high);
                 token.cvt_from_bytes_i8x64(result_bytes)
             }
         );
@@ -13931,33 +13909,22 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x64<Avx2>, indices: u8x64<Avx2>) -> u8x64<Avx2> {
                 let bytes = token.cvt_to_bytes_u8x64(a);
-                let bytes01 = bytes.val.0[0];
-                let bytes23 = bytes.val.0[1];
-                let q0 = _mm256_permute2x128_si256::<0x00>(bytes01, bytes01);
-                let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
-                let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
-                let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(64);
-                let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let control = _mm256_adds_epu8(idxs, oob_bias);
-                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
-                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
-                    let from_q0 = _mm256_shuffle_epi8(q0, control);
-                    let from_q1 = _mm256_shuffle_epi8(q1, control);
-                    let from_q2 = _mm256_shuffle_epi8(q2, control);
-                    let from_q3 = _mm256_shuffle_epi8(q3, control);
-                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
-                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
-                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
-                };
-                let result = [
-                    swizzle_half(indices.val.0[0]),
-                    swizzle_half(indices.val.0[1]),
-                ];
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
+                let (table_low, table_high) = token.split_u8x64(bytes);
+                let (indices_low, indices_high) = token.split_u8x64(indices);
+                let high_table_offset = token.splat_u8x32(32);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x32(output_low, output_high);
                 token.cvt_from_bytes_u8x64(result_bytes)
             }
         );
@@ -14644,33 +14611,22 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: i16x32<Avx2>, indices: u8x64<Avx2>) -> i16x32<Avx2> {
                 let bytes = token.cvt_to_bytes_i16x32(a);
-                let bytes01 = bytes.val.0[0];
-                let bytes23 = bytes.val.0[1];
-                let q0 = _mm256_permute2x128_si256::<0x00>(bytes01, bytes01);
-                let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
-                let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
-                let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(64);
-                let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let control = _mm256_adds_epu8(idxs, oob_bias);
-                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
-                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
-                    let from_q0 = _mm256_shuffle_epi8(q0, control);
-                    let from_q1 = _mm256_shuffle_epi8(q1, control);
-                    let from_q2 = _mm256_shuffle_epi8(q2, control);
-                    let from_q3 = _mm256_shuffle_epi8(q3, control);
-                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
-                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
-                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
-                };
-                let result = [
-                    swizzle_half(indices.val.0[0]),
-                    swizzle_half(indices.val.0[1]),
-                ];
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
+                let (table_low, table_high) = token.split_u8x64(bytes);
+                let (indices_low, indices_high) = token.split_u8x64(indices);
+                let high_table_offset = token.splat_u8x32(32);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x32(output_low, output_high);
                 token.cvt_from_bytes_i16x32(result_bytes)
             }
         );
@@ -15139,33 +15095,22 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x32<Avx2>, indices: u8x64<Avx2>) -> u16x32<Avx2> {
                 let bytes = token.cvt_to_bytes_u16x32(a);
-                let bytes01 = bytes.val.0[0];
-                let bytes23 = bytes.val.0[1];
-                let q0 = _mm256_permute2x128_si256::<0x00>(bytes01, bytes01);
-                let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
-                let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
-                let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(64);
-                let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let control = _mm256_adds_epu8(idxs, oob_bias);
-                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
-                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
-                    let from_q0 = _mm256_shuffle_epi8(q0, control);
-                    let from_q1 = _mm256_shuffle_epi8(q1, control);
-                    let from_q2 = _mm256_shuffle_epi8(q2, control);
-                    let from_q3 = _mm256_shuffle_epi8(q3, control);
-                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
-                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
-                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
-                };
-                let result = [
-                    swizzle_half(indices.val.0[0]),
-                    swizzle_half(indices.val.0[1]),
-                ];
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
+                let (table_low, table_high) = token.split_u8x64(bytes);
+                let (indices_low, indices_high) = token.split_u8x64(indices);
+                let high_table_offset = token.splat_u8x32(32);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x32(output_low, output_high);
                 token.cvt_from_bytes_u16x32(result_bytes)
             }
         );
@@ -15796,33 +15741,22 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: i32x16<Avx2>, indices: u8x64<Avx2>) -> i32x16<Avx2> {
                 let bytes = token.cvt_to_bytes_i32x16(a);
-                let bytes01 = bytes.val.0[0];
-                let bytes23 = bytes.val.0[1];
-                let q0 = _mm256_permute2x128_si256::<0x00>(bytes01, bytes01);
-                let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
-                let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
-                let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(64);
-                let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let control = _mm256_adds_epu8(idxs, oob_bias);
-                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
-                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
-                    let from_q0 = _mm256_shuffle_epi8(q0, control);
-                    let from_q1 = _mm256_shuffle_epi8(q1, control);
-                    let from_q2 = _mm256_shuffle_epi8(q2, control);
-                    let from_q3 = _mm256_shuffle_epi8(q3, control);
-                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
-                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
-                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
-                };
-                let result = [
-                    swizzle_half(indices.val.0[0]),
-                    swizzle_half(indices.val.0[1]),
-                ];
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
+                let (table_low, table_high) = token.split_u8x64(bytes);
+                let (indices_low, indices_high) = token.split_u8x64(indices);
+                let high_table_offset = token.splat_u8x32(32);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x32(output_low, output_high);
                 token.cvt_from_bytes_i32x16(result_bytes)
             }
         );
@@ -16223,33 +16157,22 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x16<Avx2>, indices: u8x64<Avx2>) -> u32x16<Avx2> {
                 let bytes = token.cvt_to_bytes_u32x16(a);
-                let bytes01 = bytes.val.0[0];
-                let bytes23 = bytes.val.0[1];
-                let q0 = _mm256_permute2x128_si256::<0x00>(bytes01, bytes01);
-                let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
-                let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
-                let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(64);
-                let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let control = _mm256_adds_epu8(idxs, oob_bias);
-                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
-                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
-                    let from_q0 = _mm256_shuffle_epi8(q0, control);
-                    let from_q1 = _mm256_shuffle_epi8(q1, control);
-                    let from_q2 = _mm256_shuffle_epi8(q2, control);
-                    let from_q3 = _mm256_shuffle_epi8(q3, control);
-                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
-                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
-                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
-                };
-                let result = [
-                    swizzle_half(indices.val.0[0]),
-                    swizzle_half(indices.val.0[1]),
-                ];
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
+                let (table_low, table_high) = token.split_u8x64(bytes);
+                let (indices_low, indices_high) = token.split_u8x64(indices);
+                let high_table_offset = token.splat_u8x32(32);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x32(output_low, output_high);
                 token.cvt_from_bytes_u32x16(result_bytes)
             }
         );
@@ -16814,33 +16737,22 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f64x8<Avx2>, indices: u8x64<Avx2>) -> f64x8<Avx2> {
                 let bytes = token.cvt_to_bytes_f64x8(a);
-                let bytes01 = bytes.val.0[0];
-                let bytes23 = bytes.val.0[1];
-                let q0 = _mm256_permute2x128_si256::<0x00>(bytes01, bytes01);
-                let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
-                let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
-                let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
-                let oob_bias = _mm256_set1_epi8(64);
-                let swizzle_half = |idxs: __m256i| -> __m256i {
-                    let control = _mm256_adds_epu8(idxs, oob_bias);
-                    let select_q1_q3 = _mm256_slli_epi16::<3>(control);
-                    let select_q2_q3 = _mm256_slli_epi16::<2>(control);
-                    let from_q0 = _mm256_shuffle_epi8(q0, control);
-                    let from_q1 = _mm256_shuffle_epi8(q1, control);
-                    let from_q2 = _mm256_shuffle_epi8(q2, control);
-                    let from_q3 = _mm256_shuffle_epi8(q3, control);
-                    let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
-                    let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
-                    _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
-                };
-                let result = [
-                    swizzle_half(indices.val.0[0]),
-                    swizzle_half(indices.val.0[1]),
-                ];
-                let result_bytes = u8x64 {
-                    val: crate::support::Aligned512(result),
-                    simd: token,
-                };
+                let (table_low, table_high) = token.split_u8x64(bytes);
+                let (indices_low, indices_high) = token.split_u8x64(indices);
+                let high_table_offset = token.splat_u8x32(32);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x32(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x32(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x32(
+                    table_high,
+                    token.sub_u8x32(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x32(output_low, output_high);
                 token.cvt_from_bytes_f64x8(result_bytes)
             }
         );
