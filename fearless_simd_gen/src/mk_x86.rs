@@ -2767,7 +2767,7 @@ impl X86 {
         let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
         if *self == Self::Sse2
-            || (*self == Self::Sse4_2 && vec_ty.n_bits() != 128)
+            || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512)
             || (*self == Self::Avx2 && vec_ty.n_bits() == 512)
         {
             return fallback_method(op, vec_ty);
@@ -2782,6 +2782,52 @@ impl X86 {
                     let result = _mm_shuffle_epi8(#token.#to_bytes(a).val.0, zeroing_indices);
                     let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                 },
+                (Self::Sse4_2, 256) => {
+                    // We can take advantage of the "precise" property (out-of-range is 0)
+                    // to assemble a double-vector-width arbitrary shuffle.
+                    // The trick is to split the input into two, then run for each half of output indices J:
+                    // ```
+                    // from_low  = swizzle_H(low_table,  J);
+                    // from_high = swizzle_H(high_table, J.wrapping_sub(H));
+                    // result    = from_low | from_high;
+                    // ```
+                    // Since each element is out-of-range for at least one half,
+                    // the final combine is very cheap, it's just a bitwise or.
+                    // So all we need is 4 half-size shuffles and a little bit of math!
+                    let half_bytes_ty = VecType::new(ScalarType::Unsigned, 8, bytes_ty.len / 2);
+                    let split_bytes = generic_op_name("split", &bytes_ty);
+                    let combine_half_bytes = generic_op_name("combine", &half_bytes_ty);
+                    let swizzle_half = generic_op_name("swizzle_dyn_precise", &half_bytes_ty);
+                    let splat_half = generic_op_name("splat", &half_bytes_ty);
+                    let sub_half = generic_op_name("sub", &half_bytes_ty);
+                    let or_half = generic_op_name("or", &half_bytes_ty);
+                    let half_len = Literal::u8_unsuffixed((bytes_ty.len / 2) as u8);
+
+                    quote! {
+                        let bytes = #token.#to_bytes(a);
+                        let (table_low, table_high) = #token.#split_bytes(bytes);
+                        let (indices_low, indices_high) = #token.#split_bytes(indices);
+                        let high_table_offset = #token.#splat_half(#half_len);
+
+                        let output_low_from_low =
+                            #token.#swizzle_half(table_low, indices_low);
+                        let output_low_from_high = #token.#swizzle_half(
+                            table_high,
+                            #token.#sub_half(indices_low, high_table_offset),
+                        );
+                        let output_low = #token.#or_half(output_low_from_low, output_low_from_high);
+
+                        let output_high_from_low =
+                            #token.#swizzle_half(table_low, indices_high);
+                        let output_high_from_high = #token.#swizzle_half(
+                            table_high,
+                            #token.#sub_half(indices_high, high_table_offset),
+                        );
+                        let output_high = #token.#or_half(output_high_from_low, output_high_from_high);
+
+                        let result_bytes = #token.#combine_half_bytes(output_low, output_high);
+                    }
+                }
                 (Self::Avx2, 256) => quote! {
                     // carefully tuned implementation reused from std::simd:
                     // https://github.com/rust-lang/portable-simd/blob/7d497cca160ae6062acc1a2db838667f83c0b58e/crates/core_simd/src/swizzle_dyn.rs#L205-L224
