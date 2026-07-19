@@ -105,12 +105,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
-name = "fastrand"
-version = "2.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f1f227452a390804cdb637b74a86990f2a7d7ba4b7d5693aac9b4dd6defd8d6"
-
-[[package]]
 name = "fearless_simd"
 version = "0.6.0"
 dependencies = [
@@ -140,7 +134,6 @@ dependencies = [
 name = "fearless_simd_tests"
 version = "0.0.0"
 dependencies = [
- "fastrand",
  "fearless_simd",
  "fearless_simd_dev_macros",
 ]
