@@ -41,7 +41,7 @@ pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
     let splat_half = generic_op_name("splat", &half_bytes_ty);
     let sub_half = generic_op_name("sub", &half_bytes_ty);
     let or_half = generic_op_name("or", &half_bytes_ty);
-    let half_len = Literal::u8_unsuffixed((bytes_ty.len / 2) as u8);
+    let half_len = Literal::u8_unsuffixed(u8::try_from(bytes_ty.len / 2).unwrap());
 
     quote! {
         let bytes = #token.#to_bytes(a);
