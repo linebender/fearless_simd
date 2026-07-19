@@ -313,6 +313,7 @@ impl Level for X86 {
                 unreachable!("element moves use generic lowering")
             }
             OpSig::SwizzleDynWithinBlocks => self.handle_swizzle_dyn_within_blocks(op, vec_ty),
+            OpSig::SwizzleDynPrecise => self.handle_swizzle_dyn_precise(op, vec_ty),
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -2754,6 +2755,75 @@ impl X86 {
             quote! {
                 #body
                 #token.#from_bytes(#bytes { val: #wrapper(result), simd: #token })
+            }
+        })
+    }
+
+    pub(crate) fn handle_swizzle_dyn_precise(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let bytes_ty = vec_ty.bytes_ty();
+        let bytes = bytes_ty.rust();
+        let wrapper = bytes_ty.aligned_wrapper();
+        let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+        let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+        if *self == Self::Sse2
+            || (*self == Self::Sse4_2 && vec_ty.n_bits() != 128)
+            || (*self == Self::Avx2 && vec_ty.n_bits() == 512)
+        {
+            return fallback_method(op, vec_ty);
+        }
+
+        self.kernel_method(op, vec_ty, |token| {
+            let body = match (*self, vec_ty.n_bits()) {
+                (Self::Sse4_2 | Self::Avx2, 128) => quote! {
+                    let indices = indices.into();
+                    let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                    let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                    let result = _mm_shuffle_epi8(#token.#to_bytes(a).val.0, zeroing_indices);
+                    let result_bytes = #bytes { val: #wrapper(result), simd: #token };
+                },
+                (Self::Avx2, 256) => quote! {
+                    // carefully tuned implementation reused from std::simd:
+                    // https://github.com/rust-lang/portable-simd/blob/7d497cca160ae6062acc1a2db838667f83c0b58e/crates/core_simd/src/swizzle_dyn.rs#L205-L224
+                    let bytes = #token.#to_bytes(a);
+                    let idxs = indices;
+                    let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
+                    let hi_shuf = #bytes {
+                        val: #wrapper(_mm256_shuffle_epi8(hihi, idxs.into())),
+                        simd: #token,
+                    };
+                    let result_bytes = idxs
+                        .simd_lt(#bytes::splat(#token, 32))
+                        .select(hi_shuf, #bytes::splat(#token, 0));
+                    let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
+                    let lo_shuf = #bytes {
+                        val: #wrapper(_mm256_shuffle_epi8(lolo, idxs.into())),
+                        simd: #token,
+                    };
+                    let result_bytes = idxs
+                        .simd_lt(#bytes::splat(#token, 16))
+                        .select(lo_shuf, result_bytes);
+                },
+                (Self::Avx512, 128 | 256 | 512) => {
+                    let cmp = intrinsic_ident("cmp", "epu8_mask", vec_ty.n_bits());
+                    let maskz_permute =
+                        intrinsic_ident("maskz_permutexvar", "epi8", vec_ty.n_bits());
+                    let set1 = set1_intrinsic(&bytes_ty);
+                    let byte_count = signed_literal(bytes_ty.len as u64, 8);
+                    quote! {
+                        let bytes = #token.#to_bytes(a).val.0;
+                        let indices = indices.into();
+                        let in_range = #cmp::<{ _MM_CMPINT_LT }>(indices, #set1(#byte_count));
+                        let result = #maskz_permute(in_range, indices, bytes);
+                        let result_bytes = #bytes { val: #wrapper(result), simd: #token };
+                    }
+                }
+                _ => unreachable!(),
+            };
+
+            quote! {
+                #body
+                #token.#from_bytes(result_bytes)
             }
         })
     }

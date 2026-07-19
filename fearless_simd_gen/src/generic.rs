@@ -88,6 +88,9 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
+        OpSig::SwizzleDynPrecise => {
+            panic!("whole-vector swizzles cannot be done via split/combine");
+        }
         OpSig::Ternary => {
             quote! {
                 #method_sig {

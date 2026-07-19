@@ -8,3 +8,4 @@ mod mask_roundtrip;
 mod mask_roundtrip_x86;
 mod mod_256;
 mod mod_512;
+mod swizzle_dyn_precise;
