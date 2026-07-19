@@ -2779,9 +2779,7 @@ impl X86 {
                     let result = _mm_shuffle_epi8(#token.#to_bytes(a).val.0, zeroing_indices);
                     let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                 },
-                (Self::Sse4_2, 256) | (Self::Avx2, 512) => {
-                    Self::recursive_swizzle_dyn_precise_body(vec_ty, token)
-                }
+                (Self::Sse4_2, 256) => Self::recursive_swizzle_dyn_precise_body(vec_ty, token),
                 (Self::Avx2, 256) => quote! {
                     // carefully tuned implementation reused from std::simd:
                     // https://github.com/rust-lang/portable-simd/blob/7d497cca160ae6062acc1a2db838667f83c0b58e/crates/core_simd/src/swizzle_dyn.rs#L205-L224
@@ -2804,6 +2802,60 @@ impl X86 {
                         .simd_lt(#bytes::splat(#token, 16))
                         .select(lo_shuf, result_bytes);
                 },
+                (Self::Avx2, 512) => {
+                    // llvm-mca measurements:
+                    // On Haswell this is ~20% slower than the generic splt-combine fallback SSE4.2 uses,
+                    // due to a higher shuffle port pressure. On Skylake this is a tie (no difference vs generic).
+                    // On recent client Intel (Tiger Lake, Rocket Lake) this is ~35% faster.
+                    // On Zen 1-3 this is ~50% faster.
+                    let bytes_ty = vec_ty.bytes_ty();
+                    let bytes = bytes_ty.rust();
+                    let wrapper = bytes_ty.aligned_wrapper();
+                    let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+                    quote! {
+                        let bytes = #token.#to_bytes(a);
+                        let bytes01 = bytes.val.0[0];
+                        let bytes23 = bytes.val.0[1];
+
+                        // Broadcast each 16-byte source quarter once, then reuse the tables for
+                        // both 32-byte output halves.
+                        let q0 = _mm256_permute2x128_si256::<0x00>(bytes01, bytes01);
+                        let q1 = _mm256_permute2x128_si256::<0x11>(bytes01, bytes01);
+                        let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
+                        let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
+
+                        let oob_bias = _mm256_set1_epi8(64);
+                        let swizzle_half = |idxs: __m256i| -> __m256i {
+                            // For in-range indices, adding 64 preserves bits 0..=5 and keeps
+                            // the sign bit clear. Out-of-range indices get a set sign bit, so
+                            // VPSHUFB supplies the required zeroing.
+                            let control = _mm256_adds_epu8(idxs, oob_bias);
+
+                            // Shift bit 4 or 5 of each byte into that byte's sign bit for
+                            // VPBLENDVB selection. These bits do not cross byte boundaries.
+                            let select_q1_q3 = _mm256_slli_epi16::<3>(control);
+                            let select_q2_q3 = _mm256_slli_epi16::<2>(control);
+
+                            let from_q0 = _mm256_shuffle_epi8(q0, control);
+                            let from_q1 = _mm256_shuffle_epi8(q1, control);
+                            let from_q2 = _mm256_shuffle_epi8(q2, control);
+                            let from_q3 = _mm256_shuffle_epi8(q3, control);
+
+                            let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
+                            let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
+                            _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
+                        };
+
+                        let result = [
+                            swizzle_half(indices.val.0[0]),
+                            swizzle_half(indices.val.0[1]),
+                        ];
+                        let result_bytes = #bytes {
+                            val: #wrapper(result),
+                            simd: #token,
+                        };
+                    }
+                }
                 (Self::Avx512, 128 | 256 | 512) => {
                     let cmp = intrinsic_ident("cmp", "epu8_mask", vec_ty.n_bits());
                     let maskz_permute =
