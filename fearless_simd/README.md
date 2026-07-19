@@ -42,7 +42,7 @@ See https://linebender.org/blog/doc-include/ for related discussion. -->
 No matter what level of abstraction you're after, be it autovectorization and multiversioning, or portable SIMD, or safe access to raw
 intrinsics and nothing more, `fearless_simd` has you covered!
 
-Zero dependencies, from-scratch build time under 1 second, safe public APIs, and [very little](https://gist.github.com/Shnatsel/61fc294987a1e051ce3835c97dc0fc19) `unsafe` under the hood.
+Zero dependencies, from-scratch build time under 1 second, safe public APIs, and [very little](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/) `unsafe` under the hood.
 
 ## Automatic vectorization
 
@@ -142,7 +142,7 @@ As a rule of thumb:
 - Use [`dispatch`] when calling SIMD code from non-SIMD code.
 - Use [`vectorize()`][Simd::vectorize] when calling SIMD from SIMD if you don't want to force inlining.
 
-[The article describing the design](https://gist.github.com/Shnatsel/61fc294987a1e051ce3835c97dc0fc19#the-abi-would-like-a-word) covers why this is the
+[The article describing the design](https://shnatsel.github.io/safe-simd-in-rust-even-on-the-inside/#the-abi-would-like-a-word) covers why this is the
 case. There's also Q&A on [Zulip](https://xi.zulipchat.com/#narrow/channel/514230-simd/topic/inlining/with/546913433).
 
 ## Instruction set support
