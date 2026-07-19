@@ -2803,11 +2803,6 @@ impl X86 {
                         .select(lo_shuf, result_bytes);
                 },
                 (Self::Avx2, 512) => {
-                    // llvm-mca measurements:
-                    // On Haswell this is ~20% slower than the generic splt-combine fallback SSE4.2 uses,
-                    // due to a higher shuffle port pressure. On Skylake this is a tie (no difference vs generic).
-                    // On recent client Intel (Tiger Lake, Rocket Lake) this is ~35% faster.
-                    // On Zen 1-3 this is ~50% faster.
                     let bytes_ty = vec_ty.bytes_ty();
                     let bytes = bytes_ty.rust();
                     let wrapper = bytes_ty.aligned_wrapper();
@@ -2824,26 +2819,36 @@ impl X86 {
                         let q2 = _mm256_permute2x128_si256::<0x00>(bytes23, bytes23);
                         let q3 = _mm256_permute2x128_si256::<0x11>(bytes23, bytes23);
 
-                        let oob_bias = _mm256_set1_epi8(64);
+                        let oob_bias = _mm256_set1_epi8(0x70);
+                        let offset_q1 = _mm256_set1_epi8(16);
+                        let offset_q2 = _mm256_set1_epi8(32);
+                        let offset_q3 = _mm256_set1_epi8(48);
                         let swizzle_half = |idxs: __m256i| -> __m256i {
-                            // For in-range indices, adding 64 preserves bits 0..=5 and keeps
-                            // the sign bit clear. Out-of-range indices get a set sign bit, so
-                            // VPSHUFB supplies the required zeroing.
-                            let control = _mm256_adds_epu8(idxs, oob_bias);
+                            // Make each quarter lookup self-zeroing. For the matching 16-byte
+                            // quarter, `idx - base` is 0..15, so adding 0x70 gives 0x70..0x7f:
+                            // the high bit is clear and VPSHUFB uses the low nibble as the index.
+                            // For every other quarter, wrapping subtraction or an index above the
+                            // quarter range leaves a value >= 16; saturating +0x70 sets the high
+                            // bit, so VPSHUFB returns zero. Exactly one shuffled value can be
+                            // nonzero, which makes bitwise OR a valid combine.
+                            let from_q0 = _mm256_shuffle_epi8(q0, _mm256_adds_epu8(idxs, oob_bias));
+                            let from_q1 = _mm256_shuffle_epi8(
+                                q1,
+                                _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q1), oob_bias),
+                            );
+                            let from_q2 = _mm256_shuffle_epi8(
+                                q2,
+                                _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q2), oob_bias),
+                            );
+                            let from_q3 = _mm256_shuffle_epi8(
+                                q3,
+                                _mm256_adds_epu8(_mm256_sub_epi8(idxs, offset_q3), oob_bias),
+                            );
 
-                            // Shift bit 4 or 5 of each byte into that byte's sign bit for
-                            // VPBLENDVB selection. These bits do not cross byte boundaries.
-                            let select_q1_q3 = _mm256_slli_epi16::<3>(control);
-                            let select_q2_q3 = _mm256_slli_epi16::<2>(control);
-
-                            let from_q0 = _mm256_shuffle_epi8(q0, control);
-                            let from_q1 = _mm256_shuffle_epi8(q1, control);
-                            let from_q2 = _mm256_shuffle_epi8(q2, control);
-                            let from_q3 = _mm256_shuffle_epi8(q3, control);
-
-                            let from_q01 = _mm256_blendv_epi8(from_q0, from_q1, select_q1_q3);
-                            let from_q23 = _mm256_blendv_epi8(from_q2, from_q3, select_q1_q3);
-                            _mm256_blendv_epi8(from_q01, from_q23, select_q2_q3)
+                            _mm256_or_si256(
+                                _mm256_or_si256(from_q0, from_q1),
+                                _mm256_or_si256(from_q2, from_q3),
+                            )
                         };
 
                         let result = [
