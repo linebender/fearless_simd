@@ -1161,6 +1161,8 @@ pub trait Simd:
     ) -> i64x2<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero bytes."]
+    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -1263,6 +1265,8 @@ pub trait Simd:
     ) -> u64x2<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero bytes."]
+    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -2413,6 +2417,8 @@ pub trait Simd:
     ) -> i64x4<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero bytes."]
+    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -2517,6 +2523,8 @@ pub trait Simd:
     ) -> u64x4<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero bytes."]
+    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -3675,6 +3683,8 @@ pub trait Simd:
     ) -> i64x8<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero bytes."]
+    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
@@ -3777,6 +3787,8 @@ pub trait Simd:
     ) -> u64x8<Self>;
     #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
     fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes across the whole vector.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero bytes."]
+    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self>;
     #[doc = "Add two vectors element-wise, wrapping on overflow."]
     fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
     #[doc = "Subtract two vectors element-wise, wrapping on overflow."]

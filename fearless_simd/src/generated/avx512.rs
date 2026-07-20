@@ -4853,6 +4853,24 @@ impl Simd for Avx512 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x2<Avx512>, indices: u8x16<Avx512>) -> i64x2<Avx512> {
+                let bytes = token.cvt_to_bytes_i64x2(a).val.0;
+                let indices = indices.into();
+                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
+                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_i64x2(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5292,6 +5310,24 @@ impl Simd for Avx512 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x2<Avx512>, indices: u8x16<Avx512>) -> u64x2<Avx512> {
+                let bytes = token.cvt_to_bytes_u64x2(a).val.0;
+                let indices = indices.into();
+                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
+                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_u64x2(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -11558,6 +11594,25 @@ impl Simd for Avx512 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x4<Avx512>, indices: u8x32<Avx512>) -> i64x4<Avx512> {
+                let bytes = token.cvt_to_bytes_i64x4(a).val.0;
+                let indices = indices.into();
+                let in_range =
+                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
+                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let result_bytes = u8x32 {
+                    val: crate::support::Aligned256(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_i64x4(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12070,6 +12125,25 @@ impl Simd for Avx512 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x4<Avx512>, indices: u8x32<Avx512>) -> u64x4<Avx512> {
+                let bytes = token.cvt_to_bytes_u64x4(a).val.0;
+                let indices = indices.into();
+                let in_range =
+                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
+                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let result_bytes = u8x32 {
+                    val: crate::support::Aligned256(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_u64x4(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -19107,6 +19181,25 @@ impl Simd for Avx512 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: i64x8<Avx512>, indices: u8x64<Avx512>) -> i64x8<Avx512> {
+                let bytes = token.cvt_to_bytes_i64x8(a).val.0;
+                let indices = indices.into();
+                let in_range =
+                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
+                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let result_bytes = u8x64 {
+                    val: crate::support::Aligned512(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_i64x8(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19642,6 +19735,25 @@ impl Simd for Avx512 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: u64x8<Avx512>, indices: u8x64<Avx512>) -> u64x8<Avx512> {
+                let bytes = token.cvt_to_bytes_u64x8(a).val.0;
+                let indices = indices.into();
+                let in_range =
+                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
+                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let result_bytes = u8x64 {
+                    val: crate::support::Aligned512(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_u64x8(result_bytes)
             }
         );
         kernel(self, a, indices)

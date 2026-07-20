@@ -41,6 +41,22 @@ fn swizzle_dyn_precise_u8x32_crosses_blocks<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn swizzle_dyn_precise_u8x32_all_indices<S: Simd>(simd: S) {
+    let bytes: [u8; 32] = core::array::from_fn(|i| u8::try_from(i + 1).unwrap());
+
+    for start in (0..=224).step_by(32) {
+        let indices = core::array::from_fn(|i| u8::try_from(start + i).unwrap());
+        let expected = expected_swizzle_precise(bytes, indices);
+
+        let value = u8x32::simd_from(simd, bytes);
+        let index_vec = u8x32::simd_from(simd, indices);
+        let result = value.swizzle_dyn_precise(index_vec);
+
+        assert_eq!(*result, expected);
+    }
+}
+
+#[simd_test]
 fn swizzle_dyn_precise_u8x64_crosses_blocks<S: Simd>(simd: S) {
     let bytes: [u8; 64] = core::array::from_fn(|i| u8::try_from(i + 1).unwrap());
     let indices = [

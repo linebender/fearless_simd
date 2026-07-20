@@ -2319,6 +2319,11 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
         self.simd
             .swizzle_dyn_within_blocks_i64x2(self, indices.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
+        self.simd
+            .swizzle_dyn_precise_i64x2(self, indices.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdInt<S> for i64x2<S> {
     #[inline(always)]
@@ -2525,6 +2530,11 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u64x2(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
+        self.simd
+            .swizzle_dyn_precise_u64x2(self, indices.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<S> for u64x2<S> {
@@ -5136,6 +5146,11 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
         self.simd
             .swizzle_dyn_within_blocks_i64x4(self, indices.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
+        self.simd
+            .swizzle_dyn_precise_i64x4(self, indices.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdInt<S> for i64x4<S> {
     #[inline(always)]
@@ -5349,6 +5364,11 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u64x4(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
+        self.simd
+            .swizzle_dyn_precise_u64x4(self, indices.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<S> for u64x4<S> {
@@ -8079,6 +8099,11 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
         self.simd
             .swizzle_dyn_within_blocks_i64x8(self, indices.simd_into(self.simd))
     }
+    #[inline(always)]
+    fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
+        self.simd
+            .swizzle_dyn_precise_i64x8(self, indices.simd_into(self.simd))
+    }
 }
 impl<S: Simd> crate::SimdInt<S> for i64x8<S> {
     #[inline(always)]
@@ -8295,6 +8320,11 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     fn swizzle_dyn_within_blocks(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
         self.simd
             .swizzle_dyn_within_blocks_u64x8(self, indices.simd_into(self.simd))
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise(self, indices: impl SimdInto<Self::Bytes, S>) -> Self {
+        self.simd
+            .swizzle_dyn_precise_u64x8(self, indices.simd_into(self.simd))
     }
 }
 impl<S: Simd> crate::SimdInt<S> for u64x8<S> {
