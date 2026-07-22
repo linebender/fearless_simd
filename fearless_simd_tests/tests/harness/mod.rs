@@ -2677,8 +2677,8 @@ fn sub_i16x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn neg_i16x8<S: Simd>(simd: S) {
-    let a = i16x8::from_slice(simd, &[1, -2, 3, -4, 5, -6, 7, -8]);
-    assert_eq!(*(-a), [-1, 2, -3, 4, -5, 6, -7, 8]);
+    let a = i16x8::from_slice(simd, &[i16::MIN, 1, -2, 3, -4, 5, -6, i16::MAX]);
+    assert_eq!(*(-a), [i16::MIN, -1, 2, -3, 4, -5, 6, -i16::MAX]);
 }
 
 #[simd_test]

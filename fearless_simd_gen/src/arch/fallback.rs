@@ -9,7 +9,13 @@ pub(crate) fn translate_op(op: &str, is_float: bool) -> Option<&'static str> {
     Some(match op {
         "abs" => "abs",
         "copysign" => "copysign",
-        "neg" => "neg",
+        "neg" => {
+            if is_float {
+                "neg"
+            } else {
+                "wrapping_neg"
+            }
+        }
         "floor" => "floor",
         "ceil" => "ceil",
         "round_ties_even" => "round_ties_even",

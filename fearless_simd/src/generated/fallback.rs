@@ -1465,22 +1465,22 @@ impl Simd for Fallback {
     #[inline(always)]
     fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self> {
         [
-            i8::neg(a[0usize]),
-            i8::neg(a[1usize]),
-            i8::neg(a[2usize]),
-            i8::neg(a[3usize]),
-            i8::neg(a[4usize]),
-            i8::neg(a[5usize]),
-            i8::neg(a[6usize]),
-            i8::neg(a[7usize]),
-            i8::neg(a[8usize]),
-            i8::neg(a[9usize]),
-            i8::neg(a[10usize]),
-            i8::neg(a[11usize]),
-            i8::neg(a[12usize]),
-            i8::neg(a[13usize]),
-            i8::neg(a[14usize]),
-            i8::neg(a[15usize]),
+            i8::wrapping_neg(a[0usize]),
+            i8::wrapping_neg(a[1usize]),
+            i8::wrapping_neg(a[2usize]),
+            i8::wrapping_neg(a[3usize]),
+            i8::wrapping_neg(a[4usize]),
+            i8::wrapping_neg(a[5usize]),
+            i8::wrapping_neg(a[6usize]),
+            i8::wrapping_neg(a[7usize]),
+            i8::wrapping_neg(a[8usize]),
+            i8::wrapping_neg(a[9usize]),
+            i8::wrapping_neg(a[10usize]),
+            i8::wrapping_neg(a[11usize]),
+            i8::wrapping_neg(a[12usize]),
+            i8::wrapping_neg(a[13usize]),
+            i8::wrapping_neg(a[14usize]),
+            i8::wrapping_neg(a[15usize]),
         ]
         .simd_into(self)
     }
@@ -3178,14 +3178,14 @@ impl Simd for Fallback {
     #[inline(always)]
     fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self> {
         [
-            i16::neg(a[0usize]),
-            i16::neg(a[1usize]),
-            i16::neg(a[2usize]),
-            i16::neg(a[3usize]),
-            i16::neg(a[4usize]),
-            i16::neg(a[5usize]),
-            i16::neg(a[6usize]),
-            i16::neg(a[7usize]),
+            i16::wrapping_neg(a[0usize]),
+            i16::wrapping_neg(a[1usize]),
+            i16::wrapping_neg(a[2usize]),
+            i16::wrapping_neg(a[3usize]),
+            i16::wrapping_neg(a[4usize]),
+            i16::wrapping_neg(a[5usize]),
+            i16::wrapping_neg(a[6usize]),
+            i16::wrapping_neg(a[7usize]),
         ]
         .simd_into(self)
     }
@@ -4402,10 +4402,10 @@ impl Simd for Fallback {
     #[inline(always)]
     fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self> {
         [
-            i32::neg(a[0usize]),
-            i32::neg(a[1usize]),
-            i32::neg(a[2usize]),
-            i32::neg(a[3usize]),
+            i32::wrapping_neg(a[0usize]),
+            i32::wrapping_neg(a[1usize]),
+            i32::wrapping_neg(a[2usize]),
+            i32::wrapping_neg(a[3usize]),
         ]
         .simd_into(self)
     }
@@ -5769,7 +5769,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
-        [i64::neg(a[0usize]), i64::neg(a[1usize])].simd_into(self)
+        [i64::wrapping_neg(a[0usize]), i64::wrapping_neg(a[1usize])].simd_into(self)
     }
     #[inline(always)]
     fn reinterpret_u8_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
