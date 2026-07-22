@@ -9,9 +9,9 @@ use crate::{
 };
 use crate::{
     f32x4, f32x8, f32x16, f64x2, f64x4, f64x8, i8x16, i8x32, i8x64, i16x8, i16x16, i16x32, i32x4,
-    i32x8, i32x16, mask8x16, mask8x32, mask8x64, mask16x8, mask16x16, mask16x32, mask32x4,
-    mask32x8, mask32x16, mask64x2, mask64x4, mask64x8, u8x16, u8x32, u8x64, u16x8, u16x16, u16x32,
-    u32x4, u32x8, u32x16,
+    i32x8, i32x16, i64x2, i64x4, i64x8, mask8x16, mask8x32, mask8x64, mask16x8, mask16x16,
+    mask16x32, mask32x4, mask32x8, mask32x16, mask64x2, mask64x4, mask64x8, u8x16, u8x32, u8x64,
+    u16x8, u16x16, u16x32, u32x4, u32x8, u32x16, u64x2, u64x4, u64x8,
 };
 #[doc = r" The main SIMD trait, implemented by all SIMD token types."]
 #[doc = r""]
@@ -61,7 +61,13 @@ pub trait Simd:
         > + SimdCvtFloat<Self::u32s>
         + SimdCvtFloat<Self::i32s>;
     #[doc = r" A native-width SIMD vector of [`f64`]s."]
-    type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s>;
+    type f64s: SimdFloat<
+            Self,
+            Element = f64,
+            Block = f64x2<Self>,
+            Mask = Self::mask64s,
+            Bytes = <Self::u64s as Bytes>::Bytes,
+        >;
     #[doc = r" A native-width SIMD vector of [`u8`]s."]
     type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s>;
     #[doc = r" A native-width SIMD vector of [`i8`]s."]
@@ -94,6 +100,16 @@ pub trait Simd:
             Bytes = <Self::u32s as Bytes>::Bytes,
         > + SimdCvtTruncate<Self::f32s>
         + core::ops::Neg<Output = Self::i32s>;
+    #[doc = r" A native-width SIMD vector of [`u64`]s."]
+    type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s>;
+    #[doc = r" A native-width SIMD vector of [`i64`]s."]
+    type i64s: SimdInt<
+            Self,
+            Element = i64,
+            Block = i64x2<Self>,
+            Mask = Self::mask64s,
+            Bytes = <Self::u64s as Bytes>::Bytes,
+        > + core::ops::Neg<Output = Self::i64s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
     type mask8s: SimdMask<Self, Element = i8>
         + Select<Self::u8s>
@@ -111,7 +127,11 @@ pub trait Simd:
         + Select<Self::i32s>
         + Select<Self::mask32s>;
     #[doc = r" A native-width SIMD mask with 64-bit lanes."]
-    type mask64s: SimdMask<Self, Element = i64> + Select<Self::f64s> + Select<Self::mask64s>;
+    type mask64s: SimdMask<Self, Element = i64>
+        + Select<Self::f64s>
+        + Select<Self::u64s>
+        + Select<Self::i64s>
+        + Select<Self::mask64s>;
     #[doc = r" This SIMD token's feature level."]
     fn level(self) -> Level;
     #[doc = r" Call function with CPU features enabled."]
@@ -1081,6 +1101,208 @@ pub trait Simd:
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
+    fn splat_i64x2(self, val: i64) -> i64x2<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i64x2(self, val: [i64; 2usize]) -> i64x2<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i64x2(self, val: &[i64; 2usize]) -> i64x2<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i64x2(self, a: i64x2<Self>) -> [i64; 2usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i64x2(self, a: &i64x2<Self>) -> &[i64; 2usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i64x2(self, a: &mut i64x2<Self>) -> &mut [i64; 2usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i64x2(self, a: i64x2<Self>, dest: &mut [i64; 2usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i64x2(self, a: u8x16<Self>) -> i64x2<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i64x2(self, a: i64x2<Self>) -> u8x16<Self>;
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    fn slide_within_blocks_i64x2<const SHIFT: usize>(
+        self,
+        a: i64x2<Self>,
+        b: i64x2<Self>,
+    ) -> i64x2<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_i64x2<const OFFSET: usize>(
+        self,
+        a: i64x2<Self>,
+        padding: i64,
+    ) -> i64x2<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_i64x2<const OFFSET: usize>(
+        self,
+        a: i64x2<Self>,
+        padding: i64,
+    ) -> i64x2<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
+    fn sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
+    fn mul_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
+    fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
+    fn or_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
+    fn xor_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
+    fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    fn shl_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
+    fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
+    fn simd_lt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
+    fn simd_le_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
+    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
+    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_high_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_high_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>);
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    fn select_i64x2(self, a: mask64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
+    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
+    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
+    fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self>;
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
+    fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u8_i64x2(self, a: i64x2<Self>) -> u8x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u32_i64x2(self, a: i64x2<Self>) -> u32x4<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
+    fn splat_u64x2(self, val: u64) -> u64x2<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u64x2(self, val: [u64; 2usize]) -> u64x2<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u64x2(self, val: &[u64; 2usize]) -> u64x2<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u64x2(self, a: u64x2<Self>) -> [u64; 2usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u64x2(self, a: &u64x2<Self>) -> &[u64; 2usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u64x2(self, a: &mut u64x2<Self>) -> &mut [u64; 2usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u64x2(self, a: u64x2<Self>, dest: &mut [u64; 2usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u64x2(self, a: u8x16<Self>) -> u64x2<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u64x2(self, a: u64x2<Self>) -> u8x16<Self>;
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    fn slide_within_blocks_u64x2<const SHIFT: usize>(
+        self,
+        a: u64x2<Self>,
+        b: u64x2<Self>,
+    ) -> u64x2<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_u64x2<const OFFSET: usize>(
+        self,
+        a: u64x2<Self>,
+        padding: u64,
+    ) -> u64x2<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_u64x2<const OFFSET: usize>(
+        self,
+        a: u64x2<Self>,
+        padding: u64,
+    ) -> u64x2<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
+    fn sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
+    fn mul_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
+    fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
+    fn or_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
+    fn xor_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
+    fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    fn shl_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    fn shr_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shrv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
+    fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
+    fn simd_lt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
+    fn simd_le_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
+    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
+    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_high_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_high_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    fn select_u64x2(self, a: mask64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
+    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
+    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
+    fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u8_u64x2(self, a: u64x2<Self>) -> u8x16<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u32_u64x2(self, a: u64x2<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -2115,6 +2337,212 @@ pub trait Simd:
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>);
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
+    fn splat_i64x4(self, val: i64) -> i64x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i64x4(self, val: [i64; 4usize]) -> i64x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i64x4(self, val: &[i64; 4usize]) -> i64x4<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i64x4(self, a: i64x4<Self>) -> [i64; 4usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i64x4(self, a: &i64x4<Self>) -> &[i64; 4usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i64x4(self, a: &mut i64x4<Self>) -> &mut [i64; 4usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i64x4(self, a: i64x4<Self>, dest: &mut [i64; 4usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i64x4(self, a: u8x32<Self>) -> i64x4<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i64x4(self, a: i64x4<Self>) -> u8x32<Self>;
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    fn slide_within_blocks_i64x4<const SHIFT: usize>(
+        self,
+        a: i64x4<Self>,
+        b: i64x4<Self>,
+    ) -> i64x4<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_i64x4<const OFFSET: usize>(
+        self,
+        a: i64x4<Self>,
+        padding: i64,
+    ) -> i64x4<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_i64x4<const OFFSET: usize>(
+        self,
+        a: i64x4<Self>,
+        padding: i64,
+    ) -> i64x4<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
+    fn sub_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
+    fn mul_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
+    fn and_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
+    fn or_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
+    fn xor_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
+    fn not_i64x4(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    fn shl_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    fn shr_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shrv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
+    fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
+    fn simd_lt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
+    fn simd_le_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
+    fn simd_ge_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
+    fn simd_gt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_high_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_high_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> (i64x4<Self>, i64x4<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> (i64x4<Self>, i64x4<Self>);
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    fn select_i64x4(self, a: mask64x4<Self>, b: i64x4<Self>, c: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
+    fn min_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
+    fn max_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
+    fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
+    fn split_i64x4(self, a: i64x4<Self>) -> (i64x2<Self>, i64x2<Self>);
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
+    fn neg_i64x4(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u8_i64x4(self, a: i64x4<Self>) -> u8x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u32_i64x4(self, a: i64x4<Self>) -> u32x8<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
+    fn splat_u64x4(self, val: u64) -> u64x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u64x4(self, val: [u64; 4usize]) -> u64x4<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u64x4(self, val: &[u64; 4usize]) -> u64x4<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u64x4(self, a: u64x4<Self>) -> [u64; 4usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u64x4(self, a: &u64x4<Self>) -> &[u64; 4usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u64x4(self, a: &mut u64x4<Self>) -> &mut [u64; 4usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u64x4(self, a: u64x4<Self>, dest: &mut [u64; 4usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u64x4(self, a: u8x32<Self>) -> u64x4<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u64x4(self, a: u64x4<Self>) -> u8x32<Self>;
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    fn slide_within_blocks_u64x4<const SHIFT: usize>(
+        self,
+        a: u64x4<Self>,
+        b: u64x4<Self>,
+    ) -> u64x4<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_u64x4<const OFFSET: usize>(
+        self,
+        a: u64x4<Self>,
+        padding: u64,
+    ) -> u64x4<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_u64x4<const OFFSET: usize>(
+        self,
+        a: u64x4<Self>,
+        padding: u64,
+    ) -> u64x4<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
+    fn sub_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
+    fn mul_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
+    fn and_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
+    fn or_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
+    fn xor_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
+    fn not_u64x4(self, a: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    fn shl_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    fn shr_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shrv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
+    fn simd_eq_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
+    fn simd_lt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
+    fn simd_le_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
+    fn simd_ge_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
+    fn simd_gt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_low_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_high_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_low_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_high_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> (u64x4<Self>, u64x4<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> (u64x4<Self>, u64x4<Self>);
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    fn select_u64x4(self, a: mask64x4<Self>, b: u64x4<Self>, c: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
+    fn min_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
+    fn max_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
+    #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
+    fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
+    fn split_u64x4(self, a: u64x4<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u8_u64x4(self, a: u64x4<Self>) -> u8x32<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u32_u64x4(self, a: u64x4<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -2274,9 +2702,9 @@ pub trait Simd:
     fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self>;
     #[doc = "Reinterpret the bits of this vector as a vector of `i32` elements.\n\nThis is a bitwise reinterpretation only, and does not perform any conversions."]
     fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
@@ -2488,9 +2916,9 @@ pub trait Simd:
     fn max_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>);
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self>;
@@ -2739,9 +3167,9 @@ pub trait Simd:
     fn max_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>);
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
     #[doc = "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input."]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self>;
@@ -2996,9 +3424,9 @@ pub trait Simd:
     fn max_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>);
-    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four consecutive 128-bit blocks and transposes those blocks into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` loads as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self>;
-    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation transposes one vector into four consecutive 128-bit blocks in memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` stores as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> ();
     #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
     fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
@@ -3155,6 +3583,212 @@ pub trait Simd:
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
     #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
     fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
+    fn splat_i64x8(self, val: i64) -> i64x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_i64x8(self, val: [i64; 8usize]) -> i64x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_i64x8(self, val: &[i64; 8usize]) -> i64x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_i64x8(self, a: i64x8<Self>) -> [i64; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_i64x8(self, a: &i64x8<Self>) -> &[i64; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_i64x8(self, a: &mut i64x8<Self>) -> &mut [i64; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_i64x8(self, a: u8x64<Self>) -> i64x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_i64x8(self, a: i64x8<Self>) -> u8x64<Self>;
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    fn slide_within_blocks_i64x8<const SHIFT: usize>(
+        self,
+        a: i64x8<Self>,
+        b: i64x8<Self>,
+    ) -> i64x8<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_i64x8<const OFFSET: usize>(
+        self,
+        a: i64x8<Self>,
+        padding: i64,
+    ) -> i64x8<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_i64x8<const OFFSET: usize>(
+        self,
+        a: i64x8<Self>,
+        padding: i64,
+    ) -> i64x8<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
+    fn sub_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
+    fn mul_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
+    fn and_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
+    fn or_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
+    fn xor_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
+    fn not_i64x8(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    fn shl_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    fn shr_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shrv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
+    fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
+    fn simd_lt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
+    fn simd_le_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
+    fn simd_ge_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
+    fn simd_gt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>);
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    fn select_i64x8(self, a: mask64x8<Self>, b: i64x8<Self>, c: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
+    fn min_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
+    fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
+    fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>);
+    #[doc = "Negate each element of the vector, wrapping on overflow."]
+    fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u8_i64x8(self, a: i64x8<Self>) -> u8x64<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u32_i64x8(self, a: i64x8<Self>) -> u32x16<Self>;
+    #[doc = "Create a SIMD vector with all elements set to the given value."]
+    fn splat_u64x8(self, val: u64) -> u64x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_u64x8(self, val: [u64; 8usize]) -> u64x8<Self>;
+    #[doc = "Create a SIMD vector from an array of the same length."]
+    fn load_array_ref_u64x8(self, val: &[u64; 8usize]) -> u64x8<Self>;
+    #[doc = "Convert a SIMD vector to an array."]
+    fn as_array_u64x8(self, a: u64x8<Self>) -> [u64; 8usize];
+    #[doc = "Project a reference to a SIMD vector to a reference to the equivalent array."]
+    fn as_array_ref_u64x8(self, a: &u64x8<Self>) -> &[u64; 8usize];
+    #[doc = "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array."]
+    fn as_array_mut_u64x8(self, a: &mut u64x8<Self>) -> &mut [u64; 8usize];
+    #[doc = "Store a SIMD vector into an array of the same length."]
+    fn store_array_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> ();
+    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
+    fn cvt_from_bytes_u64x8(self, a: u8x64<Self>) -> u64x8<Self>;
+    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
+    fn cvt_to_bytes_u64x8(self, a: u64x8<Self>) -> u8x64<Self>;
+    #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
+    fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Like `slide`, but operates independently on each 128-bit block."]
+    fn slide_within_blocks_u64x8<const SHIFT: usize>(
+        self,
+        a: u64x8<Self>,
+        b: u64x8<Self>,
+    ) -> u64x8<Self>;
+    #[doc = "Rotate the vector elements to the left by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_left_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Rotate the vector elements to the right by `OFFSET`.\n\nIf `OFFSET` is greater than or equal to `Self::N`, it wraps modulo `Self::N`."]
+    fn rotate_elements_right_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Shift the vector elements to the left by `OFFSET`, filling in with `padding` from the right.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_left_u64x8<const OFFSET: usize>(
+        self,
+        a: u64x8<Self>,
+        padding: u64,
+    ) -> u64x8<Self>;
+    #[doc = "Shift the vector elements to the right by `OFFSET`, filling in with `padding` from the left.\n\nIf `OFFSET` is greater than or equal to `Self::N`, all lanes are filled with `padding`."]
+    fn shift_elements_right_u64x8<const OFFSET: usize>(
+        self,
+        a: u64x8<Self>,
+        padding: u64,
+    ) -> u64x8<Self>;
+    #[doc = "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\nThe `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\nOut-of-range index behavior varies by platform."]
+    fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self>;
+    #[doc = "Add two vectors element-wise, wrapping on overflow."]
+    fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Subtract two vectors element-wise, wrapping on overflow."]
+    fn sub_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Multiply two vectors element-wise, wrapping on overflow."]
+    fn mul_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Compute the bitwise AND of two vectors."]
+    fn and_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Compute the bitwise OR of two vectors."]
+    fn or_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Compute the bitwise XOR of two vectors."]
+    fn xor_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Compute the bitwise NOT of the vector."]
+    fn not_u64x8(self, a: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    fn shl_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self>;
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shlv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    fn shr_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self>;
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    fn shrv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
+    fn simd_eq_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than.\n\nReturns a mask where each logical lane is true if `a` is less than `b`, and false if not."]
+    fn simd_lt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for less than or equal.\n\nReturns a mask where each logical lane is true if `a` is less than or equal to `b`, and false if not."]
+    fn simd_le_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than or equal.\n\nReturns a mask where each logical lane is true if `a` is greater than or equal to `b`, and false if not."]
+    fn simd_ge_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Compare two vectors element-wise for greater than.\n\nReturns a mask where each logical lane is true if `a` is greater than `b`, and false if not."]
+    fn simd_gt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
+    #[doc = "Interleave the lower half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, b0, a1, b1]`.\n\n**Note:** This operation is only useful if you need to discard elements `a2, a3, b2, b3`.\n        For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Interleave the upper half elements of two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a2, b2, a3, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a1, b0, b1`.For fully interleaving two vectors prefer `interleave`,\n        which is faster than `zip_low` followed by `zip_high` on some platforms."]
+    fn zip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Extract even-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a0, a2, b0, b2]`.\n\n**Note:** This operation is only useful if you need to discard elements `a1, a3, b1, b3`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Extract odd-indexed elements from two vectors.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `[a1, a3, b1, b3]`.\n\n**Note:** This operation is only useful if you need to discard elements `a0, a2, b0, b2`.For fully deinterleaving two vectors prefer `deinterleave`,\n        which is faster than `unzip_low` followed by `unzip_high` on some platforms."]
+    fn unzip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Interleave two vectors.\n\nThe resulting vectors contain elements taken alternately from `a` and `b`, first filling the first result, and then the second.\n\nThe reverse of this operation is `deinterleave`.\n\nFor vectors `[a0, a1, a2, a3]` and `[b0, b1, b2, b3]`, returns `([a0, b0, a1, b1], [a2, b2, a3, b3])`."]
+    fn interleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>);
+    #[doc = "Deinterleave two vectors.\n\nThe first result contains all even-indexed elements from `a` followed by all even-indexed elements from `b`. The second result contains all odd-indexed elements from `a` followed by all odd-indexed elements from `b`.\n\nThe reverse of this operation is `interleave`.\n\nFor vectors `[a0, b0, a1, b1]` and `[a2, b2, a3, b3]`, returns `([a0, a1, a2, a3], [b0, b1, b2, b3])`."]
+    fn deinterleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>);
+    #[doc = "Select elements from b and c based on the mask operand a.\n\nThis operation's behavior is unspecified if a was constructed from signed integer lanes that are neither all-zeroes (integer value 0) nor all-ones (integer value -1). See the [`Select`] trait's documentation for more information."]
+    fn select_u64x8(self, a: mask64x8<Self>, b: u64x8<Self>, c: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Return the element-wise minimum of two vectors."]
+    fn min_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Return the element-wise maximum of two vectors."]
+    fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
+    #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
+    fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>);
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
+    fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self>;
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
+    fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> ();
+    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u8_u64x8(self, a: u64x8<Self>) -> u8x64<Self>;
+    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
+    fn reinterpret_u32_u64x8(self, a: u64x8<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -3213,6 +3847,8 @@ pub(crate) mod arch_types {
         type u32x4: Copy + Send + Sync + SimdPod;
         type mask32x4: Copy + Send + Sync + SimdPod;
         type f64x2: Copy + Send + Sync + SimdPod;
+        type i64x2: Copy + Send + Sync + SimdPod;
+        type u64x2: Copy + Send + Sync + SimdPod;
         type mask64x2: Copy + Send + Sync + SimdPod;
         type f32x8: Copy + Send + Sync + SimdPod;
         type i8x32: Copy + Send + Sync + SimdPod;
@@ -3225,6 +3861,8 @@ pub(crate) mod arch_types {
         type u32x8: Copy + Send + Sync + SimdPod;
         type mask32x8: Copy + Send + Sync + SimdPod;
         type f64x4: Copy + Send + Sync + SimdPod;
+        type i64x4: Copy + Send + Sync + SimdPod;
+        type u64x4: Copy + Send + Sync + SimdPod;
         type mask64x4: Copy + Send + Sync + SimdPod;
         type f32x16: Copy + Send + Sync + SimdPod;
         type i8x64: Copy + Send + Sync + SimdPod;
@@ -3237,6 +3875,8 @@ pub(crate) mod arch_types {
         type u32x16: Copy + Send + Sync + SimdPod;
         type mask32x16: Copy + Send + Sync + SimdPod;
         type f64x8: Copy + Send + Sync + SimdPod;
+        type i64x8: Copy + Send + Sync + SimdPod;
+        type u64x8: Copy + Send + Sync + SimdPod;
         type mask64x8: Copy + Send + Sync + SimdPod;
     }
 }

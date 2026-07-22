@@ -5,12 +5,17 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens, quote};
 
 use crate::{
+    level::Level,
     ops::{ElementDirection, Op, OpSig, RefKind, SlideGranularity},
     types::{ScalarType, VecType},
 };
 
 pub(crate) fn generic_op_name(op: &str, ty: &VecType) -> Ident {
     Ident::new(&format!("{op}_{}", ty.rust_name()), Span::call_site())
+}
+
+pub(crate) fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
+    crate::mk_fallback::Fallback.make_method(op, vec_ty)
 }
 
 /// For backends that store masks as all-zero/all-one integer lanes, convert the public
@@ -431,8 +436,9 @@ fn right_offset_arms(
         .collect()
 }
 
-pub(crate) fn scalar_binary(f: TokenStream) -> TokenStream {
-    quote! { core::array::from_fn(|i| #f(a[i], b[i])).simd_into(self) }
+pub(crate) fn unrolled_array(len: usize, item: impl FnMut(usize) -> TokenStream) -> TokenStream {
+    let items = (0..len).map(item).collect::<Vec<_>>();
+    quote! { [#(#items),*] }
 }
 
 pub(crate) fn generic_block_split(
@@ -573,11 +579,18 @@ pub(crate) fn generic_from_bytes(method_sig: TokenStream, vec_ty: &VecType) -> T
 pub(crate) fn generic_mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = vec_ty.len;
+    let lanes = unrolled_array(len, |idx| {
+        let bit = if idx == 0 {
+            quote! { bits & 1 }
+        } else {
+            quote! { (bits >> #idx) & 1 }
+        };
+        quote! { if #bit != 0 { !0 } else { 0 } }
+    });
 
     quote! {
         #method_sig {
-            let lanes: [#scalar; #len] =
-                core::array::from_fn(|i| if ((bits >> i) & 1) != 0 { !0 } else { 0 });
+            let lanes: [#scalar; #len] = #lanes;
             lanes.simd_into(self)
         }
     }

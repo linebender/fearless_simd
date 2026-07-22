@@ -44,8 +44,19 @@ fn translate_op(op: &str) -> Option<&'static str> {
 // expects args and return value in arch dialect
 pub(crate) fn expr(op: &str, ty: &VecType, args: &[TokenStream]) -> TokenStream {
     // There is no logical NOT for 64-bit, so we need this workaround.
-    if op == "not" && ty.scalar_bits == 64 && ty.scalar == ScalarType::Mask {
-        return quote! { vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a.into()))) };
+    if op == "not" && ty.scalar_bits == 64 {
+        let a = &args[0];
+        return match ty.scalar {
+            ScalarType::Int | ScalarType::Mask => {
+                quote! { vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(#a))) }
+            }
+            ScalarType::Unsigned => {
+                quote! { vreinterpretq_u64_u32(vmvnq_u32(vreinterpretq_u32_u64(#a))) }
+            }
+            ScalarType::Float => {
+                unreachable!("64-bit floating point vectors do not support logical NOT")
+            }
+        };
     }
 
     if let Some(xlat) = translate_op(op) {

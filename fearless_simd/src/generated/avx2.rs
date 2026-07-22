@@ -6,14 +6,15 @@
 use crate::{Level, arch_types::ArchTypes, prelude::*, seal::Seal};
 use crate::{
     f32x4, f32x8, f32x16, f64x2, f64x4, f64x8, i8x16, i8x32, i8x64, i16x8, i16x16, i16x32, i32x4,
-    i32x8, i32x16, mask8x16, mask8x32, mask8x64, mask16x8, mask16x16, mask16x32, mask32x4,
-    mask32x8, mask32x16, mask64x2, mask64x4, mask64x8, u8x16, u8x32, u8x64, u16x8, u16x16, u16x32,
-    u32x4, u32x8, u32x16,
+    i32x8, i32x16, i64x2, i64x4, i64x8, mask8x16, mask8x32, mask8x64, mask16x8, mask16x16,
+    mask16x32, mask32x4, mask32x8, mask32x16, mask64x2, mask64x4, mask64x8, u8x16, u8x32, u8x64,
+    u16x8, u16x16, u16x32, u32x4, u32x8, u32x16, u64x2, u64x4, u64x8,
 };
 #[cfg(target_arch = "x86")]
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
+use core::ops::*;
 #[doc = "A token for AVX2 intrinsics on `x86` and `x86_64`, representing the x86-64-v3 level."]
 #[derive(Clone, Copy, Debug)]
 pub struct Avx2 {
@@ -45,6 +46,8 @@ impl ArchTypes for Avx2 {
     type u32x4 = crate::support::Aligned128<__m128i>;
     type mask32x4 = crate::support::Aligned128<__m128i>;
     type f64x2 = crate::support::Aligned128<__m128d>;
+    type i64x2 = crate::support::Aligned128<__m128i>;
+    type u64x2 = crate::support::Aligned128<__m128i>;
     type mask64x2 = crate::support::Aligned128<__m128i>;
     type f32x8 = crate::support::Aligned256<__m256>;
     type i8x32 = crate::support::Aligned256<__m256i>;
@@ -57,6 +60,8 @@ impl ArchTypes for Avx2 {
     type u32x8 = crate::support::Aligned256<__m256i>;
     type mask32x8 = crate::support::Aligned256<__m256i>;
     type f64x4 = crate::support::Aligned256<__m256d>;
+    type i64x4 = crate::support::Aligned256<__m256i>;
+    type u64x4 = crate::support::Aligned256<__m256i>;
     type mask64x4 = crate::support::Aligned256<__m256i>;
     type f32x16 = crate::support::Aligned512<[__m256; 2usize]>;
     type i8x64 = crate::support::Aligned512<[__m256i; 2usize]>;
@@ -69,6 +74,8 @@ impl ArchTypes for Avx2 {
     type u32x16 = crate::support::Aligned512<[__m256i; 2usize]>;
     type mask32x16 = crate::support::Aligned512<[__m256i; 2usize]>;
     type f64x8 = crate::support::Aligned512<[__m256d; 2usize]>;
+    type i64x8 = crate::support::Aligned512<[__m256i; 2usize]>;
+    type u64x8 = crate::support::Aligned512<[__m256i; 2usize]>;
     type mask64x8 = crate::support::Aligned512<[__m256i; 2usize]>;
 }
 impl Simd for Avx2 {
@@ -80,6 +87,8 @@ impl Simd for Avx2 {
     type i16s = i16x16<Self>;
     type u32s = u32x8<Self>;
     type i32s = i32x8<Self>;
+    type u64s = u64x4<Self>;
+    type i64s = i64x4<Self>;
     type mask8s = mask8x32<Self>;
     type mask16s = mask16x16<Self>;
     type mask32s = mask32x8<Self>;
@@ -967,7 +976,25 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shlv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        [
+            i8::shl(a[0usize], &b[0usize]),
+            i8::shl(a[1usize], &b[1usize]),
+            i8::shl(a[2usize], &b[2usize]),
+            i8::shl(a[3usize], &b[3usize]),
+            i8::shl(a[4usize], &b[4usize]),
+            i8::shl(a[5usize], &b[5usize]),
+            i8::shl(a[6usize], &b[6usize]),
+            i8::shl(a[7usize], &b[7usize]),
+            i8::shl(a[8usize], &b[8usize]),
+            i8::shl(a[9usize], &b[9usize]),
+            i8::shl(a[10usize], &b[10usize]),
+            i8::shl(a[11usize], &b[11usize]),
+            i8::shl(a[12usize], &b[12usize]),
+            i8::shl(a[13usize], &b[13usize]),
+            i8::shl(a[14usize], &b[14usize]),
+            i8::shl(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self> {
@@ -987,7 +1014,25 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        [
+            i8::shr(a[0usize], &b[0usize]),
+            i8::shr(a[1usize], &b[1usize]),
+            i8::shr(a[2usize], &b[2usize]),
+            i8::shr(a[3usize], &b[3usize]),
+            i8::shr(a[4usize], &b[4usize]),
+            i8::shr(a[5usize], &b[5usize]),
+            i8::shr(a[6usize], &b[6usize]),
+            i8::shr(a[7usize], &b[7usize]),
+            i8::shr(a[8usize], &b[8usize]),
+            i8::shr(a[9usize], &b[9usize]),
+            i8::shr(a[10usize], &b[10usize]),
+            i8::shr(a[11usize], &b[11usize]),
+            i8::shr(a[12usize], &b[12usize]),
+            i8::shr(a[13usize], &b[13usize]),
+            i8::shr(a[14usize], &b[14usize]),
+            i8::shr(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self> {
@@ -1449,7 +1494,25 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shlv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        [
+            u8::shl(a[0usize], &b[0usize]),
+            u8::shl(a[1usize], &b[1usize]),
+            u8::shl(a[2usize], &b[2usize]),
+            u8::shl(a[3usize], &b[3usize]),
+            u8::shl(a[4usize], &b[4usize]),
+            u8::shl(a[5usize], &b[5usize]),
+            u8::shl(a[6usize], &b[6usize]),
+            u8::shl(a[7usize], &b[7usize]),
+            u8::shl(a[8usize], &b[8usize]),
+            u8::shl(a[9usize], &b[9usize]),
+            u8::shl(a[10usize], &b[10usize]),
+            u8::shl(a[11usize], &b[11usize]),
+            u8::shl(a[12usize], &b[12usize]),
+            u8::shl(a[13usize], &b[13usize]),
+            u8::shl(a[14usize], &b[14usize]),
+            u8::shl(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self> {
@@ -1469,7 +1532,25 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        [
+            u8::shr(a[0usize], &b[0usize]),
+            u8::shr(a[1usize], &b[1usize]),
+            u8::shr(a[2usize], &b[2usize]),
+            u8::shr(a[3usize], &b[3usize]),
+            u8::shr(a[4usize], &b[4usize]),
+            u8::shr(a[5usize], &b[5usize]),
+            u8::shr(a[6usize], &b[6usize]),
+            u8::shr(a[7usize], &b[7usize]),
+            u8::shr(a[8usize], &b[8usize]),
+            u8::shr(a[9usize], &b[9usize]),
+            u8::shr(a[10usize], &b[10usize]),
+            u8::shr(a[11usize], &b[11usize]),
+            u8::shr(a[12usize], &b[12usize]),
+            u8::shr(a[13usize], &b[13usize]),
+            u8::shr(a[14usize], &b[14usize]),
+            u8::shr(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self> {
@@ -2065,7 +2146,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        [
+            i16::shl(a[0usize], &b[0usize]),
+            i16::shl(a[1usize], &b[1usize]),
+            i16::shl(a[2usize], &b[2usize]),
+            i16::shl(a[3usize], &b[3usize]),
+            i16::shl(a[4usize], &b[4usize]),
+            i16::shl(a[5usize], &b[5usize]),
+            i16::shl(a[6usize], &b[6usize]),
+            i16::shl(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self> {
@@ -2079,7 +2170,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        [
+            i16::shr(a[0usize], &b[0usize]),
+            i16::shr(a[1usize], &b[1usize]),
+            i16::shr(a[2usize], &b[2usize]),
+            i16::shr(a[3usize], &b[3usize]),
+            i16::shr(a[4usize], &b[4usize]),
+            i16::shr(a[5usize], &b[5usize]),
+            i16::shr(a[6usize], &b[6usize]),
+            i16::shr(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self> {
@@ -2496,7 +2597,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        [
+            u16::shl(a[0usize], &b[0usize]),
+            u16::shl(a[1usize], &b[1usize]),
+            u16::shl(a[2usize], &b[2usize]),
+            u16::shl(a[3usize], &b[3usize]),
+            u16::shl(a[4usize], &b[4usize]),
+            u16::shl(a[5usize], &b[5usize]),
+            u16::shl(a[6usize], &b[6usize]),
+            u16::shl(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self> {
@@ -2510,7 +2621,17 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        [
+            u16::shr(a[0usize], &b[0usize]),
+            u16::shr(a[1usize], &b[1usize]),
+            u16::shr(a[2usize], &b[2usize]),
+            u16::shr(a[3usize], &b[3usize]),
+            u16::shr(a[4usize], &b[4usize]),
+            u16::shr(a[5usize], &b[5usize]),
+            u16::shr(a[6usize], &b[6usize]),
+            u16::shr(a[7usize], &b[7usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self> {
@@ -4379,6 +4500,786 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn splat_i64x2(self, val: i64) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, val: i64) -> i64x2<Avx2> {
+                _mm_set1_epi64x(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn load_array_i64x2(self, val: [i64; 2usize]) -> i64x2<Self> {
+        i64x2 {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn load_array_ref_i64x2(self, val: &[i64; 2usize]) -> i64x2<Self> {
+        i64x2 {
+            val: crate::transmute::checked_transmute_copy(val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn as_array_i64x2(self, a: i64x2<Self>) -> [i64; 2usize] {
+        crate::transmute::checked_transmute_copy::<__m128i, [i64; 2usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_ref_i64x2(self, a: &i64x2<Self>) -> &[i64; 2usize] {
+        crate::transmute::checked_cast_ref::<__m128i, [i64; 2usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_mut_i64x2(self, a: &mut i64x2<Self>) -> &mut [i64; 2usize] {
+        crate::transmute::checked_cast_mut::<__m128i, [i64; 2usize]>(&mut a.val.0)
+    }
+    #[inline(always)]
+    fn store_array_i64x2(self, a: i64x2<Self>, dest: &mut [i64; 2usize]) -> () {
+        crate::transmute::checked_transmute_store(a.val.0, dest);
+    }
+    #[inline(always)]
+    fn cvt_from_bytes_i64x2(self, a: u8x16<Self>) -> i64x2<Self> {
+        i64x2 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn cvt_to_bytes_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        if SHIFT >= 2usize {
+            return b;
+        }
+        let result = dyn_alignr_128(
+            self,
+            self.cvt_to_bytes_i64x2(b).val.0,
+            self.cvt_to_bytes_i64x2(a).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_i64x2(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i64x2<const SHIFT: usize>(
+        self,
+        a: i64x2<Self>,
+        b: i64x2<Self>,
+    ) -> i64x2<Self> {
+        self.slide_i64x2::<SHIFT>(a, b)
+    }
+    #[inline(always)]
+    fn rotate_elements_left_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self> {
+        match OFFSET % 2 {
+            0 => self.slide_i64x2::<0>(a, a),
+            1 => self.slide_i64x2::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_i64x2<const OFFSET: usize>(self, a: i64x2<Self>) -> i64x2<Self> {
+        match OFFSET % 2 {
+            0 => self.slide_i64x2::<2>(a, a),
+            1 => self.slide_i64x2::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_i64x2<const OFFSET: usize>(
+        self,
+        a: i64x2<Self>,
+        padding: i64,
+    ) -> i64x2<Self> {
+        let padding = self.splat_i64x2(padding);
+        match OFFSET {
+            0 => self.slide_i64x2::<0>(a, padding),
+            1 => self.slide_i64x2::<1>(a, padding),
+            2 => self.slide_i64x2::<2>(a, padding),
+            _ => self.slide_i64x2::<2>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_i64x2<const OFFSET: usize>(
+        self,
+        a: i64x2<Self>,
+        padding: i64,
+    ) -> i64x2<Self> {
+        let padding = self.splat_i64x2(padding);
+        match OFFSET {
+            0 => self.slide_i64x2::<2>(padding, a),
+            1 => self.slide_i64x2::<1>(padding, a),
+            2 => self.slide_i64x2::<0>(padding, a),
+            _ => self.slide_i64x2::<0>(padding, a),
+        }
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, indices: u8x16<Avx2>) -> i64x2<Avx2> {
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i64x2(a).val.0, indices.into());
+                token.cvt_from_bytes_i64x2(u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_add_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn sub_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::wrapping_mul(a[0usize], b[0usize]),
+            i64::wrapping_mul(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn and_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_and_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn or_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_or_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn xor_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_xor_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        a ^ !0
+    }
+    #[inline(always)]
+    fn shl_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, shift: u32) -> i64x2<Avx2> {
+                _mm_sll_epi64(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
+    }
+    #[inline(always)]
+    fn shlv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_sllv_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self> {
+        [i64::shr(a[0usize], shift), i64::shr(a[1usize], shift)].simd_into(self)
+    }
+    #[inline(always)]
+    fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::shr(a[0usize], &b[0usize]),
+            i64::shr(a[1usize], &b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> mask64x2<Avx2> {
+                _mm_cmpeq_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_lt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        [
+            -(i64::lt(&a[0usize], &b[0usize]) as i64),
+            -(i64::lt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_le_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        [
+            -(i64::le(&a[0usize], &b[0usize]) as i64),
+            -(i64::le(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_ge_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        [
+            -(i64::ge(&a[0usize], &b[0usize]) as i64),
+            -(i64::ge(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_gt_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
+        [
+            -(i64::gt(&a[0usize], &b[0usize]) as i64),
+            -(i64::gt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn zip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_unpacklo_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn zip_high_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_unpackhi_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn unzip_low_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_unpacklo_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn unzip_high_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_unpackhi_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn interleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        (self.zip_low_i64x2(a, b), self.zip_high_i64x2(a, b))
+    }
+    #[inline(always)]
+    fn deinterleave_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        (self.unzip_low_i64x2(a, b), self.unzip_high_i64x2(a, b))
+    }
+    #[inline(always)]
+    fn select_i64x2(self, a: mask64x2<Self>, b: i64x2<Self>, c: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                a: mask64x2<Avx2>,
+                b: i64x2<Avx2>,
+                c: i64x2<Avx2>,
+            ) -> i64x2<Avx2> {
+                _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
+    }
+    #[inline(always)]
+    fn min_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::min(a[0usize], b[0usize]),
+            i64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn max_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
+        [
+            i64::max(a[0usize], b[0usize]),
+            i64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x4<Avx2> {
+                _mm256_setr_m128i(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>) -> i64x2<Avx2> {
+                _mm_sub_epi64(_mm_setzero_si128(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reinterpret_u8_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>) -> u8x16<Avx2> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reinterpret_u32_i64x2(self, a: i64x2<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>) -> u32x4<Avx2> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn splat_u64x2(self, val: u64) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, val: u64) -> u64x2<Avx2> {
+                _mm_set1_epi64x(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn load_array_u64x2(self, val: [u64; 2usize]) -> u64x2<Self> {
+        u64x2 {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn load_array_ref_u64x2(self, val: &[u64; 2usize]) -> u64x2<Self> {
+        u64x2 {
+            val: crate::transmute::checked_transmute_copy(val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn as_array_u64x2(self, a: u64x2<Self>) -> [u64; 2usize] {
+        crate::transmute::checked_transmute_copy::<__m128i, [u64; 2usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_ref_u64x2(self, a: &u64x2<Self>) -> &[u64; 2usize] {
+        crate::transmute::checked_cast_ref::<__m128i, [u64; 2usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_mut_u64x2(self, a: &mut u64x2<Self>) -> &mut [u64; 2usize] {
+        crate::transmute::checked_cast_mut::<__m128i, [u64; 2usize]>(&mut a.val.0)
+    }
+    #[inline(always)]
+    fn store_array_u64x2(self, a: u64x2<Self>, dest: &mut [u64; 2usize]) -> () {
+        crate::transmute::checked_transmute_store(a.val.0, dest);
+    }
+    #[inline(always)]
+    fn cvt_from_bytes_u64x2(self, a: u8x16<Self>) -> u64x2<Self> {
+        u64x2 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn cvt_to_bytes_u64x2(self, a: u64x2<Self>) -> u8x16<Self> {
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        if SHIFT >= 2usize {
+            return b;
+        }
+        let result = dyn_alignr_128(
+            self,
+            self.cvt_to_bytes_u64x2(b).val.0,
+            self.cvt_to_bytes_u64x2(a).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_u64x2(u8x16 {
+            val: crate::support::Aligned128(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u64x2<const SHIFT: usize>(
+        self,
+        a: u64x2<Self>,
+        b: u64x2<Self>,
+    ) -> u64x2<Self> {
+        self.slide_u64x2::<SHIFT>(a, b)
+    }
+    #[inline(always)]
+    fn rotate_elements_left_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self> {
+        match OFFSET % 2 {
+            0 => self.slide_u64x2::<0>(a, a),
+            1 => self.slide_u64x2::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_u64x2<const OFFSET: usize>(self, a: u64x2<Self>) -> u64x2<Self> {
+        match OFFSET % 2 {
+            0 => self.slide_u64x2::<2>(a, a),
+            1 => self.slide_u64x2::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_u64x2<const OFFSET: usize>(
+        self,
+        a: u64x2<Self>,
+        padding: u64,
+    ) -> u64x2<Self> {
+        let padding = self.splat_u64x2(padding);
+        match OFFSET {
+            0 => self.slide_u64x2::<0>(a, padding),
+            1 => self.slide_u64x2::<1>(a, padding),
+            2 => self.slide_u64x2::<2>(a, padding),
+            _ => self.slide_u64x2::<2>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_u64x2<const OFFSET: usize>(
+        self,
+        a: u64x2<Self>,
+        padding: u64,
+    ) -> u64x2<Self> {
+        let padding = self.splat_u64x2(padding);
+        match OFFSET {
+            0 => self.slide_u64x2::<2>(padding, a),
+            1 => self.slide_u64x2::<1>(padding, a),
+            2 => self.slide_u64x2::<0>(padding, a),
+            _ => self.slide_u64x2::<0>(padding, a),
+        }
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, indices: u8x16<Avx2>) -> u64x2<Avx2> {
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u64x2(a).val.0, indices.into());
+                token.cvt_from_bytes_u64x2(u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_add_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn sub_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::wrapping_mul(a[0usize], b[0usize]),
+            u64::wrapping_mul(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn and_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_and_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn or_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_or_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn xor_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_xor_si128(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self> {
+        a ^ !0
+    }
+    #[inline(always)]
+    fn shl_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, shift: u32) -> u64x2<Avx2> {
+                _mm_sll_epi64(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
+    }
+    #[inline(always)]
+    fn shlv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_sllv_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn shr_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, shift: u32) -> u64x2<Avx2> {
+                _mm_srl_epi64(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
+    }
+    #[inline(always)]
+    fn shrv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_srlv_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> mask64x2<Avx2> {
+                _mm_cmpeq_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_lt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        [
+            -(u64::lt(&a[0usize], &b[0usize]) as i64),
+            -(u64::lt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_le_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        [
+            -(u64::le(&a[0usize], &b[0usize]) as i64),
+            -(u64::le(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_ge_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        [
+            -(u64::ge(&a[0usize], &b[0usize]) as i64),
+            -(u64::ge(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_gt_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self> {
+        [
+            -(u64::gt(&a[0usize], &b[0usize]) as i64),
+            -(u64::gt(&a[1usize], &b[1usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn zip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_unpacklo_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn zip_high_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_unpackhi_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn unzip_low_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_unpacklo_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn unzip_high_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x2<Avx2> {
+                _mm_unpackhi_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn interleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        (self.zip_low_u64x2(a, b), self.zip_high_u64x2(a, b))
+    }
+    #[inline(always)]
+    fn deinterleave_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        (self.unzip_low_u64x2(a, b), self.unzip_high_u64x2(a, b))
+    }
+    #[inline(always)]
+    fn select_u64x2(self, a: mask64x2<Self>, b: u64x2<Self>, c: u64x2<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                a: mask64x2<Avx2>,
+                b: u64x2<Avx2>,
+                c: u64x2<Avx2>,
+            ) -> u64x2<Avx2> {
+                _mm_blendv_epi8(c.into(), b.into(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
+    }
+    #[inline(always)]
+    fn min_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::min(a[0usize], b[0usize]),
+            u64::min(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
+        [
+            u64::max(a[0usize], b[0usize]),
+            u64::max(a[1usize], b[1usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u64x4<Avx2> {
+                _mm256_setr_m128i(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn reinterpret_u8_u64x2(self, a: u64x2<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>) -> u8x16<Avx2> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reinterpret_u32_u64x2(self, a: u64x2<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>) -> u32x4<Avx2> {
+                __m128i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5578,7 +6479,41 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shlv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        [
+            i8::shl(a[0usize], &b[0usize]),
+            i8::shl(a[1usize], &b[1usize]),
+            i8::shl(a[2usize], &b[2usize]),
+            i8::shl(a[3usize], &b[3usize]),
+            i8::shl(a[4usize], &b[4usize]),
+            i8::shl(a[5usize], &b[5usize]),
+            i8::shl(a[6usize], &b[6usize]),
+            i8::shl(a[7usize], &b[7usize]),
+            i8::shl(a[8usize], &b[8usize]),
+            i8::shl(a[9usize], &b[9usize]),
+            i8::shl(a[10usize], &b[10usize]),
+            i8::shl(a[11usize], &b[11usize]),
+            i8::shl(a[12usize], &b[12usize]),
+            i8::shl(a[13usize], &b[13usize]),
+            i8::shl(a[14usize], &b[14usize]),
+            i8::shl(a[15usize], &b[15usize]),
+            i8::shl(a[16usize], &b[16usize]),
+            i8::shl(a[17usize], &b[17usize]),
+            i8::shl(a[18usize], &b[18usize]),
+            i8::shl(a[19usize], &b[19usize]),
+            i8::shl(a[20usize], &b[20usize]),
+            i8::shl(a[21usize], &b[21usize]),
+            i8::shl(a[22usize], &b[22usize]),
+            i8::shl(a[23usize], &b[23usize]),
+            i8::shl(a[24usize], &b[24usize]),
+            i8::shl(a[25usize], &b[25usize]),
+            i8::shl(a[26usize], &b[26usize]),
+            i8::shl(a[27usize], &b[27usize]),
+            i8::shl(a[28usize], &b[28usize]),
+            i8::shl(a[29usize], &b[29usize]),
+            i8::shl(a[30usize], &b[30usize]),
+            i8::shl(a[31usize], &b[31usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self> {
@@ -5600,7 +6535,41 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        [
+            i8::shr(a[0usize], &b[0usize]),
+            i8::shr(a[1usize], &b[1usize]),
+            i8::shr(a[2usize], &b[2usize]),
+            i8::shr(a[3usize], &b[3usize]),
+            i8::shr(a[4usize], &b[4usize]),
+            i8::shr(a[5usize], &b[5usize]),
+            i8::shr(a[6usize], &b[6usize]),
+            i8::shr(a[7usize], &b[7usize]),
+            i8::shr(a[8usize], &b[8usize]),
+            i8::shr(a[9usize], &b[9usize]),
+            i8::shr(a[10usize], &b[10usize]),
+            i8::shr(a[11usize], &b[11usize]),
+            i8::shr(a[12usize], &b[12usize]),
+            i8::shr(a[13usize], &b[13usize]),
+            i8::shr(a[14usize], &b[14usize]),
+            i8::shr(a[15usize], &b[15usize]),
+            i8::shr(a[16usize], &b[16usize]),
+            i8::shr(a[17usize], &b[17usize]),
+            i8::shr(a[18usize], &b[18usize]),
+            i8::shr(a[19usize], &b[19usize]),
+            i8::shr(a[20usize], &b[20usize]),
+            i8::shr(a[21usize], &b[21usize]),
+            i8::shr(a[22usize], &b[22usize]),
+            i8::shr(a[23usize], &b[23usize]),
+            i8::shr(a[24usize], &b[24usize]),
+            i8::shr(a[25usize], &b[25usize]),
+            i8::shr(a[26usize], &b[26usize]),
+            i8::shr(a[27usize], &b[27usize]),
+            i8::shr(a[28usize], &b[28usize]),
+            i8::shr(a[29usize], &b[29usize]),
+            i8::shr(a[30usize], &b[30usize]),
+            i8::shr(a[31usize], &b[31usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self> {
@@ -6210,7 +7179,41 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shlv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        [
+            u8::shl(a[0usize], &b[0usize]),
+            u8::shl(a[1usize], &b[1usize]),
+            u8::shl(a[2usize], &b[2usize]),
+            u8::shl(a[3usize], &b[3usize]),
+            u8::shl(a[4usize], &b[4usize]),
+            u8::shl(a[5usize], &b[5usize]),
+            u8::shl(a[6usize], &b[6usize]),
+            u8::shl(a[7usize], &b[7usize]),
+            u8::shl(a[8usize], &b[8usize]),
+            u8::shl(a[9usize], &b[9usize]),
+            u8::shl(a[10usize], &b[10usize]),
+            u8::shl(a[11usize], &b[11usize]),
+            u8::shl(a[12usize], &b[12usize]),
+            u8::shl(a[13usize], &b[13usize]),
+            u8::shl(a[14usize], &b[14usize]),
+            u8::shl(a[15usize], &b[15usize]),
+            u8::shl(a[16usize], &b[16usize]),
+            u8::shl(a[17usize], &b[17usize]),
+            u8::shl(a[18usize], &b[18usize]),
+            u8::shl(a[19usize], &b[19usize]),
+            u8::shl(a[20usize], &b[20usize]),
+            u8::shl(a[21usize], &b[21usize]),
+            u8::shl(a[22usize], &b[22usize]),
+            u8::shl(a[23usize], &b[23usize]),
+            u8::shl(a[24usize], &b[24usize]),
+            u8::shl(a[25usize], &b[25usize]),
+            u8::shl(a[26usize], &b[26usize]),
+            u8::shl(a[27usize], &b[27usize]),
+            u8::shl(a[28usize], &b[28usize]),
+            u8::shl(a[29usize], &b[29usize]),
+            u8::shl(a[30usize], &b[30usize]),
+            u8::shl(a[31usize], &b[31usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self> {
@@ -6230,7 +7233,41 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        [
+            u8::shr(a[0usize], &b[0usize]),
+            u8::shr(a[1usize], &b[1usize]),
+            u8::shr(a[2usize], &b[2usize]),
+            u8::shr(a[3usize], &b[3usize]),
+            u8::shr(a[4usize], &b[4usize]),
+            u8::shr(a[5usize], &b[5usize]),
+            u8::shr(a[6usize], &b[6usize]),
+            u8::shr(a[7usize], &b[7usize]),
+            u8::shr(a[8usize], &b[8usize]),
+            u8::shr(a[9usize], &b[9usize]),
+            u8::shr(a[10usize], &b[10usize]),
+            u8::shr(a[11usize], &b[11usize]),
+            u8::shr(a[12usize], &b[12usize]),
+            u8::shr(a[13usize], &b[13usize]),
+            u8::shr(a[14usize], &b[14usize]),
+            u8::shr(a[15usize], &b[15usize]),
+            u8::shr(a[16usize], &b[16usize]),
+            u8::shr(a[17usize], &b[17usize]),
+            u8::shr(a[18usize], &b[18usize]),
+            u8::shr(a[19usize], &b[19usize]),
+            u8::shr(a[20usize], &b[20usize]),
+            u8::shr(a[21usize], &b[21usize]),
+            u8::shr(a[22usize], &b[22usize]),
+            u8::shr(a[23usize], &b[23usize]),
+            u8::shr(a[24usize], &b[24usize]),
+            u8::shr(a[25usize], &b[25usize]),
+            u8::shr(a[26usize], &b[26usize]),
+            u8::shr(a[27usize], &b[27usize]),
+            u8::shr(a[28usize], &b[28usize]),
+            u8::shr(a[29usize], &b[29usize]),
+            u8::shr(a[30usize], &b[30usize]),
+            u8::shr(a[31usize], &b[31usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self> {
@@ -6963,7 +8000,25 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shlv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        [
+            i16::shl(a[0usize], &b[0usize]),
+            i16::shl(a[1usize], &b[1usize]),
+            i16::shl(a[2usize], &b[2usize]),
+            i16::shl(a[3usize], &b[3usize]),
+            i16::shl(a[4usize], &b[4usize]),
+            i16::shl(a[5usize], &b[5usize]),
+            i16::shl(a[6usize], &b[6usize]),
+            i16::shl(a[7usize], &b[7usize]),
+            i16::shl(a[8usize], &b[8usize]),
+            i16::shl(a[9usize], &b[9usize]),
+            i16::shl(a[10usize], &b[10usize]),
+            i16::shl(a[11usize], &b[11usize]),
+            i16::shl(a[12usize], &b[12usize]),
+            i16::shl(a[13usize], &b[13usize]),
+            i16::shl(a[14usize], &b[14usize]),
+            i16::shl(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self> {
@@ -6977,7 +8032,25 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        [
+            i16::shr(a[0usize], &b[0usize]),
+            i16::shr(a[1usize], &b[1usize]),
+            i16::shr(a[2usize], &b[2usize]),
+            i16::shr(a[3usize], &b[3usize]),
+            i16::shr(a[4usize], &b[4usize]),
+            i16::shr(a[5usize], &b[5usize]),
+            i16::shr(a[6usize], &b[6usize]),
+            i16::shr(a[7usize], &b[7usize]),
+            i16::shr(a[8usize], &b[8usize]),
+            i16::shr(a[9usize], &b[9usize]),
+            i16::shr(a[10usize], &b[10usize]),
+            i16::shr(a[11usize], &b[11usize]),
+            i16::shr(a[12usize], &b[12usize]),
+            i16::shr(a[13usize], &b[13usize]),
+            i16::shr(a[14usize], &b[14usize]),
+            i16::shr(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self> {
@@ -7521,7 +8594,25 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shlv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        core::array::from_fn(|i| core::ops::Shl::shl(a[i], b[i])).simd_into(self)
+        [
+            u16::shl(a[0usize], &b[0usize]),
+            u16::shl(a[1usize], &b[1usize]),
+            u16::shl(a[2usize], &b[2usize]),
+            u16::shl(a[3usize], &b[3usize]),
+            u16::shl(a[4usize], &b[4usize]),
+            u16::shl(a[5usize], &b[5usize]),
+            u16::shl(a[6usize], &b[6usize]),
+            u16::shl(a[7usize], &b[7usize]),
+            u16::shl(a[8usize], &b[8usize]),
+            u16::shl(a[9usize], &b[9usize]),
+            u16::shl(a[10usize], &b[10usize]),
+            u16::shl(a[11usize], &b[11usize]),
+            u16::shl(a[12usize], &b[12usize]),
+            u16::shl(a[13usize], &b[13usize]),
+            u16::shl(a[14usize], &b[14usize]),
+            u16::shl(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self> {
@@ -7535,7 +8626,25 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
-        core::array::from_fn(|i| core::ops::Shr::shr(a[i], b[i])).simd_into(self)
+        [
+            u16::shr(a[0usize], &b[0usize]),
+            u16::shr(a[1usize], &b[1usize]),
+            u16::shr(a[2usize], &b[2usize]),
+            u16::shr(a[3usize], &b[3usize]),
+            u16::shr(a[4usize], &b[4usize]),
+            u16::shr(a[5usize], &b[5usize]),
+            u16::shr(a[6usize], &b[6usize]),
+            u16::shr(a[7usize], &b[7usize]),
+            u16::shr(a[8usize], &b[8usize]),
+            u16::shr(a[9usize], &b[9usize]),
+            u16::shr(a[10usize], &b[10usize]),
+            u16::shr(a[11usize], &b[11usize]),
+            u16::shr(a[12usize], &b[12usize]),
+            u16::shr(a[13usize], &b[13usize]),
+            u16::shr(a[14usize], &b[14usize]),
+            u16::shr(a[15usize], &b[15usize]),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self> {
@@ -9747,6 +10856,942 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: f64x4<Avx2>) -> f32x8<Avx2> {
                 _mm256_castpd_ps(a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn splat_i64x4(self, val: i64) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, val: i64) -> i64x4<Avx2> {
+                _mm256_set1_epi64x(val).simd_into(token)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn load_array_i64x4(self, val: [i64; 4usize]) -> i64x4<Self> {
+        i64x4 {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn load_array_ref_i64x4(self, val: &[i64; 4usize]) -> i64x4<Self> {
+        i64x4 {
+            val: crate::transmute::checked_transmute_copy(val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn as_array_i64x4(self, a: i64x4<Self>) -> [i64; 4usize] {
+        crate::transmute::checked_transmute_copy::<__m256i, [i64; 4usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_ref_i64x4(self, a: &i64x4<Self>) -> &[i64; 4usize] {
+        crate::transmute::checked_cast_ref::<__m256i, [i64; 4usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_mut_i64x4(self, a: &mut i64x4<Self>) -> &mut [i64; 4usize] {
+        crate::transmute::checked_cast_mut::<__m256i, [i64; 4usize]>(&mut a.val.0)
+    }
+    #[inline(always)]
+    fn store_array_i64x4(self, a: i64x4<Self>, dest: &mut [i64; 4usize]) -> () {
+        crate::transmute::checked_transmute_store(a.val.0, dest);
+    }
+    #[inline(always)]
+    fn cvt_from_bytes_i64x4(self, a: u8x32<Self>) -> i64x4<Self> {
+        i64x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn cvt_to_bytes_i64x4(self, a: i64x4<Self>) -> u8x32<Self> {
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        let result = cross_block_alignr_256x1(
+            self,
+            self.cvt_to_bytes_i64x4(b).val.0,
+            self.cvt_to_bytes_i64x4(a).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_i64x4(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i64x4<const SHIFT: usize>(
+        self,
+        a: i64x4<Self>,
+        b: i64x4<Self>,
+    ) -> i64x4<Self> {
+        if SHIFT >= 2usize {
+            return b;
+        }
+        let result = dyn_alignr_256(
+            self,
+            self.cvt_to_bytes_i64x4(b).val.0,
+            self.cvt_to_bytes_i64x4(a).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_i64x4(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn rotate_elements_left_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self> {
+        match OFFSET % 4 {
+            0 => self.slide_i64x4::<0>(a, a),
+            1 => self.slide_i64x4::<1>(a, a),
+            2 => self.slide_i64x4::<2>(a, a),
+            3 => self.slide_i64x4::<3>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_i64x4<const OFFSET: usize>(self, a: i64x4<Self>) -> i64x4<Self> {
+        match OFFSET % 4 {
+            0 => self.slide_i64x4::<4>(a, a),
+            1 => self.slide_i64x4::<3>(a, a),
+            2 => self.slide_i64x4::<2>(a, a),
+            3 => self.slide_i64x4::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_i64x4<const OFFSET: usize>(
+        self,
+        a: i64x4<Self>,
+        padding: i64,
+    ) -> i64x4<Self> {
+        let padding = self.splat_i64x4(padding);
+        match OFFSET {
+            0 => self.slide_i64x4::<0>(a, padding),
+            1 => self.slide_i64x4::<1>(a, padding),
+            2 => self.slide_i64x4::<2>(a, padding),
+            3 => self.slide_i64x4::<3>(a, padding),
+            4 => self.slide_i64x4::<4>(a, padding),
+            _ => self.slide_i64x4::<4>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_i64x4<const OFFSET: usize>(
+        self,
+        a: i64x4<Self>,
+        padding: i64,
+    ) -> i64x4<Self> {
+        let padding = self.splat_i64x4(padding);
+        match OFFSET {
+            0 => self.slide_i64x4::<4>(padding, a),
+            1 => self.slide_i64x4::<3>(padding, a),
+            2 => self.slide_i64x4::<2>(padding, a),
+            3 => self.slide_i64x4::<1>(padding, a),
+            4 => self.slide_i64x4::<0>(padding, a),
+            _ => self.slide_i64x4::<0>(padding, a),
+        }
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, indices: u8x32<Avx2>) -> i64x4<Avx2> {
+                let result = _mm256_shuffle_epi8(token.cvt_to_bytes_i64x4(a).val.0, indices.into());
+                token.cvt_from_bytes_i64x4(u8x32 {
+                    val: crate::support::Aligned256(result),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                _mm256_add_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn sub_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                _mm256_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        [
+            i64::wrapping_mul(a[0usize], b[0usize]),
+            i64::wrapping_mul(a[1usize], b[1usize]),
+            i64::wrapping_mul(a[2usize], b[2usize]),
+            i64::wrapping_mul(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn and_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                _mm256_and_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn or_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                _mm256_or_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn xor_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn not_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        a ^ !0
+    }
+    #[inline(always)]
+    fn shl_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, shift: u32) -> i64x4<Avx2> {
+                _mm256_sll_epi64(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
+    }
+    #[inline(always)]
+    fn shlv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                _mm256_sllv_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn shr_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self> {
+        [
+            i64::shr(a[0usize], shift),
+            i64::shr(a[1usize], shift),
+            i64::shr(a[2usize], shift),
+            i64::shr(a[3usize], shift),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn shrv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        [
+            i64::shr(a[0usize], &b[0usize]),
+            i64::shr(a[1usize], &b[1usize]),
+            i64::shr(a[2usize], &b[2usize]),
+            i64::shr(a[3usize], &b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> mask64x4<Avx2> {
+                _mm256_cmpeq_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_lt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        [
+            -(i64::lt(&a[0usize], &b[0usize]) as i64),
+            -(i64::lt(&a[1usize], &b[1usize]) as i64),
+            -(i64::lt(&a[2usize], &b[2usize]) as i64),
+            -(i64::lt(&a[3usize], &b[3usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_le_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        [
+            -(i64::le(&a[0usize], &b[0usize]) as i64),
+            -(i64::le(&a[1usize], &b[1usize]) as i64),
+            -(i64::le(&a[2usize], &b[2usize]) as i64),
+            -(i64::le(&a[3usize], &b[3usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_ge_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        [
+            -(i64::ge(&a[0usize], &b[0usize]) as i64),
+            -(i64::ge(&a[1usize], &b[1usize]) as i64),
+            -(i64::ge(&a[2usize], &b[2usize]) as i64),
+            -(i64::ge(&a[3usize], &b[3usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_gt_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
+        [
+            -(i64::gt(&a[0usize], &b[0usize]) as i64),
+            -(i64::gt(&a[1usize], &b[1usize]) as i64),
+            -(i64::gt(&a[2usize], &b[2usize]) as i64),
+            -(i64::gt(&a[3usize], &b[3usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn zip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                let lo = _mm256_unpacklo_epi64(a.into(), b.into());
+                let hi = _mm256_unpackhi_epi64(a.into(), b.into());
+                _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn zip_high_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                let lo = _mm256_unpacklo_epi64(a.into(), b.into());
+                let hi = _mm256_unpackhi_epi64(a.into(), b.into());
+                _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn unzip_low_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(a.into());
+                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(b.into());
+                _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn unzip_high_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(a.into());
+                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(b.into());
+                _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn interleave_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> (i64x4<Avx2>, i64x4<Avx2>) {
+                let lo = _mm256_unpacklo_epi64(a.into(), b.into());
+                let hi = _mm256_unpackhi_epi64(a.into(), b.into());
+                (
+                    _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(token),
+                    _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn deinterleave_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> (i64x4<Avx2>, i64x4<Avx2>) {
+                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(a.into());
+                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(b.into());
+                (
+                    _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(token),
+                    _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn select_i64x4(self, a: mask64x4<Self>, b: i64x4<Self>, c: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                a: mask64x4<Avx2>,
+                b: i64x4<Avx2>,
+                c: i64x4<Avx2>,
+            ) -> i64x4<Avx2> {
+                _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
+    }
+    #[inline(always)]
+    fn min_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        [
+            i64::min(a[0usize], b[0usize]),
+            i64::min(a[1usize], b[1usize]),
+            i64::min(a[2usize], b[2usize]),
+            i64::min(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn max_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
+        [
+            i64::max(a[0usize], b[0usize]),
+            i64::max(a[1usize], b[1usize]),
+            i64::max(a[2usize], b[2usize]),
+            i64::max(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn combine_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x8<Self> {
+        i64x8 {
+            val: crate::support::Aligned512([a.val.0, b.val.0]),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn split_i64x4(self, a: i64x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>) -> (i64x2<Avx2>, i64x2<Avx2>) {
+                (
+                    _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
+                    _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn neg_i64x4(self, a: i64x4<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>) -> i64x4<Avx2> {
+                _mm256_sub_epi64(_mm256_setzero_si256(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reinterpret_u8_i64x4(self, a: i64x4<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>) -> u8x32<Avx2> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reinterpret_u32_i64x4(self, a: i64x4<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>) -> u32x8<Avx2> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn splat_u64x4(self, val: u64) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, val: u64) -> u64x4<Avx2> {
+                _mm256_set1_epi64x(val.cast_signed()).simd_into(token)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn load_array_u64x4(self, val: [u64; 4usize]) -> u64x4<Self> {
+        u64x4 {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn load_array_ref_u64x4(self, val: &[u64; 4usize]) -> u64x4<Self> {
+        u64x4 {
+            val: crate::transmute::checked_transmute_copy(val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn as_array_u64x4(self, a: u64x4<Self>) -> [u64; 4usize] {
+        crate::transmute::checked_transmute_copy::<__m256i, [u64; 4usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_ref_u64x4(self, a: &u64x4<Self>) -> &[u64; 4usize] {
+        crate::transmute::checked_cast_ref::<__m256i, [u64; 4usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_mut_u64x4(self, a: &mut u64x4<Self>) -> &mut [u64; 4usize] {
+        crate::transmute::checked_cast_mut::<__m256i, [u64; 4usize]>(&mut a.val.0)
+    }
+    #[inline(always)]
+    fn store_array_u64x4(self, a: u64x4<Self>, dest: &mut [u64; 4usize]) -> () {
+        crate::transmute::checked_transmute_store(a.val.0, dest);
+    }
+    #[inline(always)]
+    fn cvt_from_bytes_u64x4(self, a: u8x32<Self>) -> u64x4<Self> {
+        u64x4 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn cvt_to_bytes_u64x4(self, a: u64x4<Self>) -> u8x32<Self> {
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        if SHIFT >= 4usize {
+            return b;
+        }
+        let result = cross_block_alignr_256x1(
+            self,
+            self.cvt_to_bytes_u64x4(b).val.0,
+            self.cvt_to_bytes_u64x4(a).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_u64x4(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u64x4<const SHIFT: usize>(
+        self,
+        a: u64x4<Self>,
+        b: u64x4<Self>,
+    ) -> u64x4<Self> {
+        if SHIFT >= 2usize {
+            return b;
+        }
+        let result = dyn_alignr_256(
+            self,
+            self.cvt_to_bytes_u64x4(b).val.0,
+            self.cvt_to_bytes_u64x4(a).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_u64x4(u8x32 {
+            val: crate::support::Aligned256(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn rotate_elements_left_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self> {
+        match OFFSET % 4 {
+            0 => self.slide_u64x4::<0>(a, a),
+            1 => self.slide_u64x4::<1>(a, a),
+            2 => self.slide_u64x4::<2>(a, a),
+            3 => self.slide_u64x4::<3>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_u64x4<const OFFSET: usize>(self, a: u64x4<Self>) -> u64x4<Self> {
+        match OFFSET % 4 {
+            0 => self.slide_u64x4::<4>(a, a),
+            1 => self.slide_u64x4::<3>(a, a),
+            2 => self.slide_u64x4::<2>(a, a),
+            3 => self.slide_u64x4::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_u64x4<const OFFSET: usize>(
+        self,
+        a: u64x4<Self>,
+        padding: u64,
+    ) -> u64x4<Self> {
+        let padding = self.splat_u64x4(padding);
+        match OFFSET {
+            0 => self.slide_u64x4::<0>(a, padding),
+            1 => self.slide_u64x4::<1>(a, padding),
+            2 => self.slide_u64x4::<2>(a, padding),
+            3 => self.slide_u64x4::<3>(a, padding),
+            4 => self.slide_u64x4::<4>(a, padding),
+            _ => self.slide_u64x4::<4>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_u64x4<const OFFSET: usize>(
+        self,
+        a: u64x4<Self>,
+        padding: u64,
+    ) -> u64x4<Self> {
+        let padding = self.splat_u64x4(padding);
+        match OFFSET {
+            0 => self.slide_u64x4::<4>(padding, a),
+            1 => self.slide_u64x4::<3>(padding, a),
+            2 => self.slide_u64x4::<2>(padding, a),
+            3 => self.slide_u64x4::<1>(padding, a),
+            4 => self.slide_u64x4::<0>(padding, a),
+            _ => self.slide_u64x4::<0>(padding, a),
+        }
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, indices: u8x32<Avx2>) -> u64x4<Avx2> {
+                let result = _mm256_shuffle_epi8(token.cvt_to_bytes_u64x4(a).val.0, indices.into());
+                token.cvt_from_bytes_u64x4(u8x32 {
+                    val: crate::support::Aligned256(result),
+                    simd: token,
+                })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                _mm256_add_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn sub_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                _mm256_sub_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn mul_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        [
+            u64::wrapping_mul(a[0usize], b[0usize]),
+            u64::wrapping_mul(a[1usize], b[1usize]),
+            u64::wrapping_mul(a[2usize], b[2usize]),
+            u64::wrapping_mul(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn and_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                _mm256_and_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn or_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                _mm256_or_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn xor_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                _mm256_xor_si256(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn not_u64x4(self, a: u64x4<Self>) -> u64x4<Self> {
+        a ^ !0
+    }
+    #[inline(always)]
+    fn shl_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, shift: u32) -> u64x4<Avx2> {
+                _mm256_sll_epi64(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
+    }
+    #[inline(always)]
+    fn shlv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                _mm256_sllv_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn shr_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, shift: u32) -> u64x4<Avx2> {
+                _mm256_srl_epi64(a.into(), _mm_cvtsi32_si128(shift.cast_signed())).simd_into(token)
+            }
+        );
+        kernel(self, a, shift)
+    }
+    #[inline(always)]
+    fn shrv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                _mm256_srlv_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_eq_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> mask64x4<Avx2> {
+                _mm256_cmpeq_epi64(a.into(), b.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn simd_lt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        [
+            -(u64::lt(&a[0usize], &b[0usize]) as i64),
+            -(u64::lt(&a[1usize], &b[1usize]) as i64),
+            -(u64::lt(&a[2usize], &b[2usize]) as i64),
+            -(u64::lt(&a[3usize], &b[3usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_le_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        [
+            -(u64::le(&a[0usize], &b[0usize]) as i64),
+            -(u64::le(&a[1usize], &b[1usize]) as i64),
+            -(u64::le(&a[2usize], &b[2usize]) as i64),
+            -(u64::le(&a[3usize], &b[3usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_ge_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        [
+            -(u64::ge(&a[0usize], &b[0usize]) as i64),
+            -(u64::ge(&a[1usize], &b[1usize]) as i64),
+            -(u64::ge(&a[2usize], &b[2usize]) as i64),
+            -(u64::ge(&a[3usize], &b[3usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn simd_gt_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self> {
+        [
+            -(u64::gt(&a[0usize], &b[0usize]) as i64),
+            -(u64::gt(&a[1usize], &b[1usize]) as i64),
+            -(u64::gt(&a[2usize], &b[2usize]) as i64),
+            -(u64::gt(&a[3usize], &b[3usize]) as i64),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn zip_low_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                let lo = _mm256_unpacklo_epi64(a.into(), b.into());
+                let hi = _mm256_unpackhi_epi64(a.into(), b.into());
+                _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn zip_high_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                let lo = _mm256_unpacklo_epi64(a.into(), b.into());
+                let hi = _mm256_unpackhi_epi64(a.into(), b.into());
+                _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn unzip_low_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(a.into());
+                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(b.into());
+                _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn unzip_high_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u64x4<Avx2> {
+                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(a.into());
+                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(b.into());
+                _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn interleave_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> (u64x4<Avx2>, u64x4<Avx2>) {
+                let lo = _mm256_unpacklo_epi64(a.into(), b.into());
+                let hi = _mm256_unpackhi_epi64(a.into(), b.into());
+                (
+                    _mm256_permute2x128_si256::<0b0010_0000>(lo, hi).simd_into(token),
+                    _mm256_permute2x128_si256::<0b0011_0001>(lo, hi).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn deinterleave_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> (u64x4<Avx2>, u64x4<Avx2>) {
+                let t1 = _mm256_permute4x64_epi64::<0b11_01_10_00>(a.into());
+                let t2 = _mm256_permute4x64_epi64::<0b11_01_10_00>(b.into());
+                (
+                    _mm256_permute2x128_si256::<0b0010_0000>(t1, t2).simd_into(token),
+                    _mm256_permute2x128_si256::<0b0011_0001>(t1, t2).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn select_u64x4(self, a: mask64x4<Self>, b: u64x4<Self>, c: u64x4<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                a: mask64x4<Avx2>,
+                b: u64x4<Avx2>,
+                c: u64x4<Avx2>,
+            ) -> u64x4<Avx2> {
+                _mm256_blendv_epi8(c.into(), b.into(), a.into()).simd_into(token)
+            }
+        );
+        kernel(self, a, b, c)
+    }
+    #[inline(always)]
+    fn min_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        [
+            u64::min(a[0usize], b[0usize]),
+            u64::min(a[1usize], b[1usize]),
+            u64::min(a[2usize], b[2usize]),
+            u64::min(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn max_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
+        [
+            u64::max(a[0usize], b[0usize]),
+            u64::max(a[1usize], b[1usize]),
+            u64::max(a[2usize], b[2usize]),
+            u64::max(a[3usize], b[3usize]),
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self> {
+        u64x8 {
+            val: crate::support::Aligned512([a.val.0, b.val.0]),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn split_u64x4(self, a: u64x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>) -> (u64x2<Avx2>, u64x2<Avx2>) {
+                (
+                    _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
+                    _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reinterpret_u8_u64x4(self, a: u64x4<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>) -> u8x32<Avx2> {
+                __m256i::from(a).simd_into(token)
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn reinterpret_u32_u64x4(self, a: u64x4<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>) -> u32x8<Avx2> {
+                __m256i::from(a).simd_into(token)
             }
         );
         kernel(self, a)
@@ -14369,6 +16414,745 @@ impl Simd for Avx2 {
         )
     }
     #[inline(always)]
+    fn splat_i64x8(self, val: i64) -> i64x8<Self> {
+        let half = self.splat_i64x4(val);
+        self.combine_i64x4(half, half)
+    }
+    #[inline(always)]
+    fn load_array_i64x8(self, val: [i64; 8usize]) -> i64x8<Self> {
+        i64x8 {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn load_array_ref_i64x8(self, val: &[i64; 8usize]) -> i64x8<Self> {
+        i64x8 {
+            val: crate::transmute::checked_transmute_copy(val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn as_array_i64x8(self, a: i64x8<Self>) -> [i64; 8usize] {
+        crate::transmute::checked_transmute_copy::<[__m256i; 2usize], [i64; 8usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_ref_i64x8(self, a: &i64x8<Self>) -> &[i64; 8usize] {
+        crate::transmute::checked_cast_ref::<[__m256i; 2usize], [i64; 8usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_mut_i64x8(self, a: &mut i64x8<Self>) -> &mut [i64; 8usize] {
+        crate::transmute::checked_cast_mut::<[__m256i; 2usize], [i64; 8usize]>(&mut a.val.0)
+    }
+    #[inline(always)]
+    fn store_array_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
+        crate::transmute::checked_transmute_store(a.val.0, dest);
+    }
+    #[inline(always)]
+    fn cvt_from_bytes_i64x8(self, a: u8x64<Self>) -> i64x8<Self> {
+        i64x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn cvt_to_bytes_i64x8(self, a: i64x8<Self>) -> u8x64<Self> {
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = cross_block_alignr_256x2(
+            self,
+            self.cvt_to_bytes_i64x8(b).val.0,
+            self.cvt_to_bytes_i64x8(a).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_i64x8(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_i64x8<const SHIFT: usize>(
+        self,
+        a: i64x8<Self>,
+        b: i64x8<Self>,
+    ) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(
+            self.slide_within_blocks_i64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_i64x4::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
+    fn rotate_elements_left_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self> {
+        match OFFSET % 8 {
+            0 => self.slide_i64x8::<0>(a, a),
+            1 => self.slide_i64x8::<1>(a, a),
+            2 => self.slide_i64x8::<2>(a, a),
+            3 => self.slide_i64x8::<3>(a, a),
+            4 => self.slide_i64x8::<4>(a, a),
+            5 => self.slide_i64x8::<5>(a, a),
+            6 => self.slide_i64x8::<6>(a, a),
+            7 => self.slide_i64x8::<7>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_i64x8<const OFFSET: usize>(self, a: i64x8<Self>) -> i64x8<Self> {
+        match OFFSET % 8 {
+            0 => self.slide_i64x8::<8>(a, a),
+            1 => self.slide_i64x8::<7>(a, a),
+            2 => self.slide_i64x8::<6>(a, a),
+            3 => self.slide_i64x8::<5>(a, a),
+            4 => self.slide_i64x8::<4>(a, a),
+            5 => self.slide_i64x8::<3>(a, a),
+            6 => self.slide_i64x8::<2>(a, a),
+            7 => self.slide_i64x8::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_i64x8<const OFFSET: usize>(
+        self,
+        a: i64x8<Self>,
+        padding: i64,
+    ) -> i64x8<Self> {
+        let padding = self.splat_i64x8(padding);
+        match OFFSET {
+            0 => self.slide_i64x8::<0>(a, padding),
+            1 => self.slide_i64x8::<1>(a, padding),
+            2 => self.slide_i64x8::<2>(a, padding),
+            3 => self.slide_i64x8::<3>(a, padding),
+            4 => self.slide_i64x8::<4>(a, padding),
+            5 => self.slide_i64x8::<5>(a, padding),
+            6 => self.slide_i64x8::<6>(a, padding),
+            7 => self.slide_i64x8::<7>(a, padding),
+            8 => self.slide_i64x8::<8>(a, padding),
+            _ => self.slide_i64x8::<8>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_i64x8<const OFFSET: usize>(
+        self,
+        a: i64x8<Self>,
+        padding: i64,
+    ) -> i64x8<Self> {
+        let padding = self.splat_i64x8(padding);
+        match OFFSET {
+            0 => self.slide_i64x8::<8>(padding, a),
+            1 => self.slide_i64x8::<7>(padding, a),
+            2 => self.slide_i64x8::<6>(padding, a),
+            3 => self.slide_i64x8::<5>(padding, a),
+            4 => self.slide_i64x8::<4>(padding, a),
+            5 => self.slide_i64x8::<3>(padding, a),
+            6 => self.slide_i64x8::<2>(padding, a),
+            7 => self.slide_i64x8::<1>(padding, a),
+            8 => self.slide_i64x8::<0>(padding, a),
+            _ => self.slide_i64x8::<0>(padding, a),
+        }
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (indices0, indices1) = self.split_u8x64(indices);
+        self.combine_i64x4(
+            self.swizzle_dyn_within_blocks_i64x4(a0, indices0),
+            self.swizzle_dyn_within_blocks_i64x4(a1, indices1),
+        )
+    }
+    #[inline(always)]
+    fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.add_i64x4(a0, b0), self.add_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn sub_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.sub_i64x4(a0, b0), self.sub_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn mul_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.mul_i64x4(a0, b0), self.mul_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn and_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.and_i64x4(a0, b0), self.and_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn or_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.or_i64x4(a0, b0), self.or_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn xor_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.xor_i64x4(a0, b0), self.xor_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn not_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.not_i64x4(a0), self.not_i64x4(a1))
+    }
+    #[inline(always)]
+    fn shl_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.shl_i64x4(a0, shift), self.shl_i64x4(a1, shift))
+    }
+    #[inline(always)]
+    fn shlv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.shlv_i64x4(a0, b0), self.shlv_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn shr_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.shr_i64x4(a0, shift), self.shr_i64x4(a1, shift))
+    }
+    #[inline(always)]
+    fn shrv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.shrv_i64x4(a0, b0), self.shrv_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_mask64x4(self.simd_eq_i64x4(a0, b0), self.simd_eq_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_lt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_mask64x4(self.simd_lt_i64x4(a0, b0), self.simd_lt_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_le_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_mask64x4(self.simd_le_i64x4(a0, b0), self.simd_le_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_ge_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_mask64x4(self.simd_ge_i64x4(a0, b0), self.simd_ge_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_gt_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_mask64x4(self.simd_gt_i64x4(a0, b0), self.simd_gt_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn zip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, _) = self.split_i64x8(a);
+        let (b0, _) = self.split_i64x8(b);
+        self.combine_i64x4(self.zip_low_i64x4(a0, b0), self.zip_high_i64x4(a0, b0))
+    }
+    #[inline(always)]
+    fn zip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (_, a1) = self.split_i64x8(a);
+        let (_, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.zip_low_i64x4(a1, b1), self.zip_high_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn unzip_low_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.unzip_low_i64x4(a0, a1), self.unzip_low_i64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn unzip_high_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.unzip_high_i64x4(a0, a1), self.unzip_high_i64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn interleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>) {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        let lo_lo = self.zip_low_i64x4(a0, b0);
+        let lo_hi = self.zip_high_i64x4(a0, b0);
+        let hi_lo = self.zip_low_i64x4(a1, b1);
+        let hi_hi = self.zip_high_i64x4(a1, b1);
+        (
+            self.combine_i64x4(lo_lo, lo_hi),
+            self.combine_i64x4(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
+    fn deinterleave_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> (i64x8<Self>, i64x8<Self>) {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        let lo_even = self.unzip_low_i64x4(a0, a1);
+        let lo_odd = self.unzip_high_i64x4(a0, a1);
+        let hi_even = self.unzip_low_i64x4(b0, b1);
+        let hi_odd = self.unzip_high_i64x4(b0, b1);
+        (
+            self.combine_i64x4(lo_even, hi_even),
+            self.combine_i64x4(lo_odd, hi_odd),
+        )
+    }
+    #[inline(always)]
+    fn select_i64x8(self, a: mask64x8<Self>, b: i64x8<Self>, c: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        let (c0, c1) = self.split_i64x8(c);
+        self.combine_i64x4(self.select_i64x4(a0, b0, c0), self.select_i64x4(a1, b1, c1))
+    }
+    #[inline(always)]
+    fn min_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.min_i64x4(a0, b0), self.min_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn max_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        let (b0, b1) = self.split_i64x8(b);
+        self.combine_i64x4(self.max_i64x4(a0, b0), self.max_i64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>) {
+        (
+            i64x4 {
+                val: crate::support::Aligned256(a.val.0[0]),
+                simd: self,
+            },
+            i64x4 {
+                val: crate::support::Aligned256(a.val.0[1]),
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
+    fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
+    }
+    #[inline(always)]
+    fn reinterpret_u8_i64x8(self, a: i64x8<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_u8x32(self.reinterpret_u8_i64x4(a0), self.reinterpret_u8_i64x4(a1))
+    }
+    #[inline(always)]
+    fn reinterpret_u32_i64x8(self, a: i64x8<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_i64x8(a);
+        self.combine_u32x8(
+            self.reinterpret_u32_i64x4(a0),
+            self.reinterpret_u32_i64x4(a1),
+        )
+    }
+    #[inline(always)]
+    fn splat_u64x8(self, val: u64) -> u64x8<Self> {
+        let half = self.splat_u64x4(val);
+        self.combine_u64x4(half, half)
+    }
+    #[inline(always)]
+    fn load_array_u64x8(self, val: [u64; 8usize]) -> u64x8<Self> {
+        u64x8 {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn load_array_ref_u64x8(self, val: &[u64; 8usize]) -> u64x8<Self> {
+        u64x8 {
+            val: crate::transmute::checked_transmute_copy(val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn as_array_u64x8(self, a: u64x8<Self>) -> [u64; 8usize] {
+        crate::transmute::checked_transmute_copy::<[__m256i; 2usize], [u64; 8usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_ref_u64x8(self, a: &u64x8<Self>) -> &[u64; 8usize] {
+        crate::transmute::checked_cast_ref::<[__m256i; 2usize], [u64; 8usize]>(&a.val.0)
+    }
+    #[inline(always)]
+    fn as_array_mut_u64x8(self, a: &mut u64x8<Self>) -> &mut [u64; 8usize] {
+        crate::transmute::checked_cast_mut::<[__m256i; 2usize], [u64; 8usize]>(&mut a.val.0)
+    }
+    #[inline(always)]
+    fn store_array_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
+        crate::transmute::checked_transmute_store(a.val.0, dest);
+    }
+    #[inline(always)]
+    fn cvt_from_bytes_u64x8(self, a: u8x64<Self>) -> u64x8<Self> {
+        u64x8 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn cvt_to_bytes_u64x8(self, a: u64x8<Self>) -> u8x64<Self> {
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&a.val),
+            simd: self,
+        }
+    }
+    #[inline(always)]
+    fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        if SHIFT >= 8usize {
+            return b;
+        }
+        let result = cross_block_alignr_256x2(
+            self,
+            self.cvt_to_bytes_u64x8(b).val.0,
+            self.cvt_to_bytes_u64x8(a).val.0,
+            SHIFT * 8usize,
+        );
+        self.cvt_from_bytes_u64x8(u8x64 {
+            val: crate::support::Aligned512(result),
+            simd: self,
+        })
+    }
+    #[inline(always)]
+    fn slide_within_blocks_u64x8<const SHIFT: usize>(
+        self,
+        a: u64x8<Self>,
+        b: u64x8<Self>,
+    ) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(
+            self.slide_within_blocks_u64x4::<SHIFT>(a0, b0),
+            self.slide_within_blocks_u64x4::<SHIFT>(a1, b1),
+        )
+    }
+    #[inline(always)]
+    fn rotate_elements_left_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self> {
+        match OFFSET % 8 {
+            0 => self.slide_u64x8::<0>(a, a),
+            1 => self.slide_u64x8::<1>(a, a),
+            2 => self.slide_u64x8::<2>(a, a),
+            3 => self.slide_u64x8::<3>(a, a),
+            4 => self.slide_u64x8::<4>(a, a),
+            5 => self.slide_u64x8::<5>(a, a),
+            6 => self.slide_u64x8::<6>(a, a),
+            7 => self.slide_u64x8::<7>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn rotate_elements_right_u64x8<const OFFSET: usize>(self, a: u64x8<Self>) -> u64x8<Self> {
+        match OFFSET % 8 {
+            0 => self.slide_u64x8::<8>(a, a),
+            1 => self.slide_u64x8::<7>(a, a),
+            2 => self.slide_u64x8::<6>(a, a),
+            3 => self.slide_u64x8::<5>(a, a),
+            4 => self.slide_u64x8::<4>(a, a),
+            5 => self.slide_u64x8::<3>(a, a),
+            6 => self.slide_u64x8::<2>(a, a),
+            7 => self.slide_u64x8::<1>(a, a),
+            _ => unreachable!(),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_left_u64x8<const OFFSET: usize>(
+        self,
+        a: u64x8<Self>,
+        padding: u64,
+    ) -> u64x8<Self> {
+        let padding = self.splat_u64x8(padding);
+        match OFFSET {
+            0 => self.slide_u64x8::<0>(a, padding),
+            1 => self.slide_u64x8::<1>(a, padding),
+            2 => self.slide_u64x8::<2>(a, padding),
+            3 => self.slide_u64x8::<3>(a, padding),
+            4 => self.slide_u64x8::<4>(a, padding),
+            5 => self.slide_u64x8::<5>(a, padding),
+            6 => self.slide_u64x8::<6>(a, padding),
+            7 => self.slide_u64x8::<7>(a, padding),
+            8 => self.slide_u64x8::<8>(a, padding),
+            _ => self.slide_u64x8::<8>(a, padding),
+        }
+    }
+    #[inline(always)]
+    fn shift_elements_right_u64x8<const OFFSET: usize>(
+        self,
+        a: u64x8<Self>,
+        padding: u64,
+    ) -> u64x8<Self> {
+        let padding = self.splat_u64x8(padding);
+        match OFFSET {
+            0 => self.slide_u64x8::<8>(padding, a),
+            1 => self.slide_u64x8::<7>(padding, a),
+            2 => self.slide_u64x8::<6>(padding, a),
+            3 => self.slide_u64x8::<5>(padding, a),
+            4 => self.slide_u64x8::<4>(padding, a),
+            5 => self.slide_u64x8::<3>(padding, a),
+            6 => self.slide_u64x8::<2>(padding, a),
+            7 => self.slide_u64x8::<1>(padding, a),
+            8 => self.slide_u64x8::<0>(padding, a),
+            _ => self.slide_u64x8::<0>(padding, a),
+        }
+    }
+    #[inline(always)]
+    fn swizzle_dyn_within_blocks_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (indices0, indices1) = self.split_u8x64(indices);
+        self.combine_u64x4(
+            self.swizzle_dyn_within_blocks_u64x4(a0, indices0),
+            self.swizzle_dyn_within_blocks_u64x4(a1, indices1),
+        )
+    }
+    #[inline(always)]
+    fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.add_u64x4(a0, b0), self.add_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn sub_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.sub_u64x4(a0, b0), self.sub_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn mul_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.mul_u64x4(a0, b0), self.mul_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn and_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.and_u64x4(a0, b0), self.and_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn or_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.or_u64x4(a0, b0), self.or_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn xor_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.xor_u64x4(a0, b0), self.xor_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn not_u64x8(self, a: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u64x4(self.not_u64x4(a0), self.not_u64x4(a1))
+    }
+    #[inline(always)]
+    fn shl_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u64x4(self.shl_u64x4(a0, shift), self.shl_u64x4(a1, shift))
+    }
+    #[inline(always)]
+    fn shlv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.shlv_u64x4(a0, b0), self.shlv_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn shr_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u64x4(self.shr_u64x4(a0, shift), self.shr_u64x4(a1, shift))
+    }
+    #[inline(always)]
+    fn shrv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.shrv_u64x4(a0, b0), self.shrv_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_eq_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_mask64x4(self.simd_eq_u64x4(a0, b0), self.simd_eq_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_lt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_mask64x4(self.simd_lt_u64x4(a0, b0), self.simd_lt_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_le_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_mask64x4(self.simd_le_u64x4(a0, b0), self.simd_le_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_ge_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_mask64x4(self.simd_ge_u64x4(a0, b0), self.simd_ge_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn simd_gt_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_mask64x4(self.simd_gt_u64x4(a0, b0), self.simd_gt_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn zip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, _) = self.split_u64x8(a);
+        let (b0, _) = self.split_u64x8(b);
+        self.combine_u64x4(self.zip_low_u64x4(a0, b0), self.zip_high_u64x4(a0, b0))
+    }
+    #[inline(always)]
+    fn zip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (_, a1) = self.split_u64x8(a);
+        let (_, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.zip_low_u64x4(a1, b1), self.zip_high_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn unzip_low_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.unzip_low_u64x4(a0, a1), self.unzip_low_u64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn unzip_high_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.unzip_high_u64x4(a0, a1), self.unzip_high_u64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn interleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>) {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        let lo_lo = self.zip_low_u64x4(a0, b0);
+        let lo_hi = self.zip_high_u64x4(a0, b0);
+        let hi_lo = self.zip_low_u64x4(a1, b1);
+        let hi_hi = self.zip_high_u64x4(a1, b1);
+        (
+            self.combine_u64x4(lo_lo, lo_hi),
+            self.combine_u64x4(hi_lo, hi_hi),
+        )
+    }
+    #[inline(always)]
+    fn deinterleave_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> (u64x8<Self>, u64x8<Self>) {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        let lo_even = self.unzip_low_u64x4(a0, a1);
+        let lo_odd = self.unzip_high_u64x4(a0, a1);
+        let hi_even = self.unzip_low_u64x4(b0, b1);
+        let hi_odd = self.unzip_high_u64x4(b0, b1);
+        (
+            self.combine_u64x4(lo_even, hi_even),
+            self.combine_u64x4(lo_odd, hi_odd),
+        )
+    }
+    #[inline(always)]
+    fn select_u64x8(self, a: mask64x8<Self>, b: u64x8<Self>, c: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_mask64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        let (c0, c1) = self.split_u64x8(c);
+        self.combine_u64x4(self.select_u64x4(a0, b0, c0), self.select_u64x4(a1, b1, c1))
+    }
+    #[inline(always)]
+    fn min_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.min_u64x4(a0, b0), self.min_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn max_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        let (b0, b1) = self.split_u64x8(b);
+        self.combine_u64x4(self.max_u64x4(a0, b0), self.max_u64x4(a1, b1))
+    }
+    #[inline(always)]
+    fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>) {
+        (
+            u64x4 {
+                val: crate::support::Aligned256(a.val.0[0]),
+                simd: self,
+            },
+            u64x4 {
+                val: crate::support::Aligned256(a.val.0[1]),
+                simd: self,
+            },
+        )
+    }
+    #[inline(always)]
+    fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[u64; 8usize]) -> u64x8<Avx2> {
+                let (chunks, []) = src.as_chunks::<4>() else {
+                    unreachable!()
+                };
+                let v0: __m256i =
+                    crate::transmute::checked_transmute_copy::<[u64; 4], __m256i>(&chunks[0]);
+                let v1: __m256i =
+                    crate::transmute::checked_transmute_copy::<[u64; 4], __m256i>(&chunks[1]);
+                let lo = _mm256_unpacklo_epi64(v0, v1);
+                let hi = _mm256_unpackhi_epi64(v0, v1);
+                let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi);
+                let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi);
+                token.combine_u64x4(out0.simd_into(token), out1.simd_into(token))
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x8<Avx2>, dest: &mut [u64; 8usize]) -> () {
+                let (v0, v1) = token.split_u64x8(a);
+                let v0: __m256i = v0.into();
+                let v1: __m256i = v1.into();
+                let lo = _mm256_permute2x128_si256::<0x20>(v0, v1);
+                let hi = _mm256_permute2x128_si256::<0x31>(v0, v1);
+                let out0 = _mm256_unpacklo_epi64(lo, hi);
+                let out1 = _mm256_unpackhi_epi64(lo, hi);
+                let (chunks, []) = dest.as_chunks_mut::<4>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m256i, [u64; 4]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m256i, [u64; 4]>(
+                    out1,
+                    &mut chunks[1],
+                );
+            }
+        );
+        kernel(self, a, dest);
+    }
+    #[inline(always)]
+    fn reinterpret_u8_u64x8(self, a: u64x8<Self>) -> u8x64<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u8x32(self.reinterpret_u8_u64x4(a0), self.reinterpret_u8_u64x4(a1))
+    }
+    #[inline(always)]
+    fn reinterpret_u32_u64x8(self, a: u64x8<Self>) -> u32x16<Self> {
+        let (a0, a1) = self.split_u64x8(a);
+        self.combine_u32x8(
+            self.reinterpret_u32_u64x4(a0),
+            self.reinterpret_u32_u64x4(a1),
+        )
+    }
+    #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
         let half = self.splat_mask64x4(val);
         self.combine_mask64x4(half, half)
@@ -14664,6 +17448,36 @@ impl<S: Simd> SimdFrom<__m256d, S> for f64x4<S> {
 impl<S: Simd> From<f64x4<S>> for __m256d {
     #[inline(always)]
     fn from(value: f64x4<S>) -> Self {
+        crate::transmute::checked_transmute_copy(&value.val)
+    }
+}
+impl<S: Simd> SimdFrom<__m256i, S> for i64x4<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m256i) -> Self {
+        Self {
+            val: crate::transmute::checked_transmute_copy(&arch),
+            simd,
+        }
+    }
+}
+impl<S: Simd> From<i64x4<S>> for __m256i {
+    #[inline(always)]
+    fn from(value: i64x4<S>) -> Self {
+        crate::transmute::checked_transmute_copy(&value.val)
+    }
+}
+impl<S: Simd> SimdFrom<__m256i, S> for u64x4<S> {
+    #[inline(always)]
+    fn simd_from(simd: S, arch: __m256i) -> Self {
+        Self {
+            val: crate::transmute::checked_transmute_copy(&arch),
+            simd,
+        }
+    }
+}
+impl<S: Simd> From<u64x4<S>> for __m256i {
+    #[inline(always)]
+    fn from(value: u64x4<S>) -> Self {
         crate::transmute::checked_transmute_copy(&value.val)
     }
 }

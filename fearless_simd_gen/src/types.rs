@@ -285,6 +285,8 @@ pub(crate) const SIMD_TYPES: &[VecType] = &[
     VecType::new(ScalarType::Unsigned, 32, 4),
     VecType::new(ScalarType::Mask, 32, 4),
     VecType::new(ScalarType::Float, 64, 2),
+    VecType::new(ScalarType::Int, 64, 2),
+    VecType::new(ScalarType::Unsigned, 64, 2),
     VecType::new(ScalarType::Mask, 64, 2),
     // 256 bit types
     VecType::new(ScalarType::Float, 32, 8),
@@ -298,6 +300,8 @@ pub(crate) const SIMD_TYPES: &[VecType] = &[
     VecType::new(ScalarType::Unsigned, 32, 8),
     VecType::new(ScalarType::Mask, 32, 8),
     VecType::new(ScalarType::Float, 64, 4),
+    VecType::new(ScalarType::Int, 64, 4),
+    VecType::new(ScalarType::Unsigned, 64, 4),
     VecType::new(ScalarType::Mask, 64, 4),
     // 512 bit types
     VecType::new(ScalarType::Float, 32, 16),
@@ -311,6 +315,8 @@ pub(crate) const SIMD_TYPES: &[VecType] = &[
     VecType::new(ScalarType::Unsigned, 32, 16),
     VecType::new(ScalarType::Mask, 32, 16),
     VecType::new(ScalarType::Float, 64, 8),
+    VecType::new(ScalarType::Int, 64, 8),
+    VecType::new(ScalarType::Unsigned, 64, 8),
     VecType::new(ScalarType::Mask, 64, 8),
 ];
 

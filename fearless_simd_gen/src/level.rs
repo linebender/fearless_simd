@@ -176,6 +176,8 @@ pub(crate) trait Level {
             (ScalarType::Int, 16),
             (ScalarType::Unsigned, 32),
             (ScalarType::Int, 32),
+            (ScalarType::Unsigned, 64),
+            (ScalarType::Int, 64),
             (ScalarType::Mask, 8),
             (ScalarType::Mask, 16),
             (ScalarType::Mask, 32),
