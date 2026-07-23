@@ -28,7 +28,7 @@
 //! }
 //!
 //! let mut values = [1, 2, 3, 4, 5];
-//! let level = Level::new(); // Get the best SIMD level available on this target.
+//! let level = Level::new();
 //! dispatch!(level, simd => double_u32s(simd, &mut values));
 //! assert_eq!(values, [2, 4, 6, 8, 10]);
 //! ```
@@ -53,7 +53,7 @@
 //! }
 //!
 //! let mut values = [1, 2, 3, 4, 5];
-//! let level = Level::new(); // Get the best SIMD level available on this target.
+//! let level = Level::new();
 //! dispatch!(level, simd => double_u32s(simd, &mut values));
 //! assert_eq!(values, [2, 4, 6, 8, 10]);
 //! ```
@@ -86,7 +86,7 @@
 //!
 //! #[cfg(target_arch = "aarch64")]
 //! {
-//!     let level = Level::new(); // Get the best SIMD level available on this target.
+//!     let level = Level::new();
 //!     if let Some(neon) = level.as_neon() {
 //!         let mut values = [1, 2, 3, 4, 5];
 //!         double_u32s_neon(neon, &mut values);
