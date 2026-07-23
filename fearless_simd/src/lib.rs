@@ -610,6 +610,7 @@ impl Level {
     ///
     /// Note that this is unaffected by the `force-support-fallback` feature.
     /// Instead, you should use [`Level::fallback`] if you require the fallback level.
+    #[inline]
     pub const fn baseline() -> Self {
         // TODO: How do we possibly test that this method works in all cases?
         // Note that you can use the `check_targets.sh` script to at least ensure that it compiles in all reasonable cases.
