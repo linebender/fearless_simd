@@ -423,7 +423,8 @@ impl Level {
             *X86_LEVEL.0
         }
 
-        #[cfg(not(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64"))))]
+        // targets other than x86 do not perform any runtime detection
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
         {
             Self::baseline()
         }
