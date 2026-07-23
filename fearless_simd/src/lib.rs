@@ -392,13 +392,14 @@ pub enum Level {
 }
 
 impl Level {
-    /// Return the best SIMD level available on the current target.
-    ///
-    /// On x86 and x86-64 targets, this detects the available CPU features on the first call and
-    /// caches the result. Other targets return their strongest statically supported level.
+    /// Return the best SIMD level available on the CPU. This value should be passed to [`dispatch`].
     ///
     /// This function requires the standard library on targets other than wasm32. On wasm32, the
     /// available level is known statically, so the standard library isn't required.
+    ///
+    /// On x86 and x86-64 targets, this detects the available CPU features on the first call and
+    /// caches the result. Other targets return their strongest statically supported level.
+    /// This may change in the future if runtime-detected levels for other platforms are added.
     ///
     /// Note that in most cases, this function should only be called by end-user applications.
     /// Libraries should instead accept a `Level` argument, probably as they are
@@ -409,8 +410,6 @@ impl Level {
     /// handling the `None` case as they deem fit (probably panicking).
     /// This strategy avoids users of the library inadvertently using the fallback level,
     /// even if the requisite target features are available.
-    ///
-    /// This value should be passed to [`dispatch`].
     #[cfg(any(feature = "std", target_arch = "wasm32"))]
     #[must_use]
     #[expect(
