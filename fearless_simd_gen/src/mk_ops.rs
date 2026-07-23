@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use crate::{
     generic::generic_op_name,
     ops::{CoreOpTrait, OpKind, OpSig, TyFlavor, overloaded_ops_for},
-    types::{SIMD_TYPES, ScalarType, type_imports},
+    types::{SIMD_TYPES, ScalarType, VecType, type_imports},
 };
 
 pub(crate) fn mk_ops() -> TokenStream {
@@ -30,13 +30,20 @@ pub(crate) fn mk_ops() -> TokenStream {
             let simd_fn = generic_op_name(simd_name, ty);
             let opfn = Ident::new(opfn, Span::call_site());
             let doc = op.format_docstring(TyFlavor::VecImpl);
+            let method_doc = if core_op == CoreOpTrait::Add {
+                format!("{doc}\n\n{}", add_doctest(ty))
+            } else {
+                doc.clone()
+            };
+            let doc_attrs = make_doc_attrs(&doc);
+            let method_doc_attrs = make_doc_attrs(&method_doc);
 
             match core_op {
                 CoreOpTrait::ShlVectored | CoreOpTrait::ShrVectored => {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
-                            #[doc = #doc]
+                            #method_doc_attrs
                             #[inline(always)]
                             fn #opfn(self, rhs: Self) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs)
@@ -44,7 +51,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                         }
 
                         impl<S: Simd> core::ops::#trait_assign_id for #simd<S> {
-                            #[doc = #doc]
+                            #doc_attrs
                             #[inline(always)]
                             fn #op_assign_fn(&mut self, rhs: Self) {
                                 *self = self.simd.#simd_fn(*self, rhs);
@@ -56,7 +63,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id<u32> for #simd<S> {
                             type Output = Self;
-                            #[doc = #doc]
+                            #method_doc_attrs
                             #[inline(always)]
                             fn #opfn(self, rhs: u32) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs)
@@ -75,7 +82,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
-                            #[doc = #doc]
+                            #method_doc_attrs
                             #[inline(always)]
                             fn #opfn(self) -> Self::Output {
                                 self.simd.#simd_fn(self)
@@ -114,7 +121,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                     impls.push(quote! {
                         impl<S: Simd> core::ops::#trait_id for #simd<S> {
                             type Output = Self;
-                            #[doc = #doc]
+                            #method_doc_attrs
                             #[inline(always)]
                             fn #opfn(self, rhs: Self) -> Self::Output {
                                 self.simd.#simd_fn(self, rhs)
@@ -122,7 +129,7 @@ pub(crate) fn mk_ops() -> TokenStream {
                         }
 
                         impl<S: Simd> core::ops::#trait_assign_id for #simd<S> {
-                            #[doc = #doc]
+                            #doc_attrs
                             #[inline(always)]
                             fn #op_assign_fn(&mut self, rhs: Self) {
                                 *self = self.simd.#simd_fn(*self, rhs);
@@ -141,4 +148,101 @@ pub(crate) fn mk_ops() -> TokenStream {
         #imports
         #( #impls )*
     }
+}
+
+fn make_doc_attrs(doc: &str) -> TokenStream {
+    let lines = doc.lines();
+    quote! {
+        #(#[doc = #lines])*
+    }
+}
+
+fn add_doctest(ty: &VecType) -> String {
+    let rust_name = ty.rust_name();
+    let fn_name = format!("add_{rust_name}");
+    let scalar_name = ty.scalar.rust_name(ty.scalar_bits);
+    let (lhs, rhs, expected) = add_doctest_values(ty);
+    let lhs = format_array(&lhs);
+    let rhs = format_array(&rhs);
+    let expected = format_array(&expected);
+    let len = ty.len;
+
+    format!(
+        r#"```rust
+# use fearless_simd::{{prelude::*, {rust_name}}};
+# fearless_simd::__simd_doctest! {{ {fn_name},
+#[inline(always)]
+fn {fn_name}<S: Simd>(simd: S) {{
+    let a = {rust_name}::simd_from(
+        simd,
+        {lhs},
+    );
+    let b = {rust_name}::simd_from(
+        simd,
+        {rhs},
+    );
+
+    assert_eq!(
+        <[{scalar_name}; {len}]>::from(a + b),
+        {expected},
+    );
+}}
+# }}
+```"#
+    )
+}
+
+fn add_doctest_values(ty: &VecType) -> (Vec<String>, Vec<String>, Vec<String>) {
+    match ty.scalar {
+        ScalarType::Float | ScalarType::Unsigned => {
+            let lhs = (0..ty.len).map(|i| format_literal(2 * i, ty.scalar));
+            let rhs = (0..ty.len).map(|i| format_literal(2 * i + 1, ty.scalar));
+            let expected = (0..ty.len).map(|i| format_literal(4 * i + 1, ty.scalar));
+            (lhs.collect(), rhs.collect(), expected.collect())
+        }
+        ScalarType::Int => {
+            let value = |lane: usize, offset: usize| {
+                let magnitude = if lane % 2 == 0 {
+                    lane + offset
+                } else {
+                    lane + offset - 1
+                };
+                if lane % 2 == 0 {
+                    magnitude.to_string()
+                } else {
+                    format!("-{magnitude}")
+                }
+            };
+            let lhs = (0..ty.len).map(|i| value(i, 1));
+            let rhs = (0..ty.len).map(|i| value(i, 2));
+            let expected = (0..ty.len).map(|i| {
+                if i % 2 == 0 {
+                    (2 * i + 3).to_string()
+                } else {
+                    format!("-{}", 2 * i + 1)
+                }
+            });
+            (lhs.collect(), rhs.collect(), expected.collect())
+        }
+        ScalarType::Mask => unreachable!("masks do not implement Add"),
+    }
+}
+
+fn format_literal(value: usize, scalar: ScalarType) -> String {
+    if scalar == ScalarType::Float {
+        format!("{value}.0")
+    } else {
+        value.to_string()
+    }
+}
+
+fn format_array(values: &[String]) -> String {
+    let mut array = String::from("[\n");
+    for chunk in values.chunks(8) {
+        array.push_str("            ");
+        array.push_str(&chunk.join(", "));
+        array.push_str(",\n");
+    }
+    array.push_str("        ]");
+    array
 }
