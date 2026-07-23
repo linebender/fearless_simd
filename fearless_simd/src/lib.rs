@@ -259,7 +259,8 @@ pub mod x86 {
 use std::sync::LazyLock;
 
 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
-static X86_LEVEL: LazyLock<Level> = LazyLock::new(detect_x86_level);
+static X86_LEVEL: support::Aligned128<LazyLock<Level>> =
+    support::Aligned128(LazyLock::new(detect_x86_level));
 
 // Sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=icelake-server`
 // and pruned against the features implied by `avx512f` which can be viewed via
@@ -420,7 +421,7 @@ impl Level {
     pub fn new() -> Self {
         #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
         {
-            *X86_LEVEL
+            *X86_LEVEL.0
         }
 
         #[cfg(not(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64"))))]
