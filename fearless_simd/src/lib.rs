@@ -255,108 +255,16 @@ pub mod x86 {
     pub use crate::generated::Sse4_2;
 }
 
-#[cfg(all(
-    feature = "std",
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_has_atomic = "8"
-))]
-use core::{
-    num::NonZeroU8,
-    sync::atomic::{AtomicU8, Ordering},
-};
+#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+use std::sync::LazyLock;
 
-#[cfg(all(
-    feature = "std",
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_has_atomic = "8"
-))]
-static X86_LEVEL_CACHE: AtomicU8 = AtomicU8::new(0);
-
-/// A nonzero encoding of an x86 [`Level`] that has already been proven available.
-#[cfg(all(
-    feature = "std",
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_has_atomic = "8"
-))]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct CachedLevel(NonZeroU8);
-
-#[cfg(all(
-    feature = "std",
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_has_atomic = "8"
-))]
-impl CachedLevel {
-    const FALLBACK: u8 = 1;
-    const SSE2: u8 = 2;
-    const SSE4_2: u8 = 3;
-    const AVX2: u8 = 4;
-    const AVX512: u8 = 5;
-
-    fn into_byte(self) -> u8 {
-        self.0.get()
-    }
-
-    /// Reconstruct an encoded level loaded from [`X86_LEVEL_CACHE`].
-    ///
-    /// # Safety
-    ///
-    /// `byte` must have been produced by [`CachedLevel::into_byte`]. This proves both that it is
-    /// a recognized tag and that the represented target features were proven available.
-    unsafe fn from_cache_byte_unchecked(byte: u8) -> Self {
-        Self(NonZeroU8::new(byte).expect("the cached Level encoding is nonzero"))
-    }
-}
-
-#[cfg(all(
-    feature = "std",
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_has_atomic = "8"
-))]
-impl From<Level> for CachedLevel {
-    fn from(level: Level) -> Self {
-        let byte = match level {
-            Level::Fallback(_) => Self::FALLBACK,
-            Level::Sse2(_) => Self::SSE2,
-            Level::Sse4_2(_) => Self::SSE4_2,
-            Level::Avx2(_) => Self::AVX2,
-            Level::Avx512(_) => Self::AVX512,
-        };
-        Self(NonZeroU8::new(byte).expect("all Level encodings are nonzero"))
-    }
-}
-
-#[cfg(all(
-    feature = "std",
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_has_atomic = "8"
-))]
-impl From<CachedLevel> for Level {
-    fn from(cached: CachedLevel) -> Self {
-        // Safety: CachedLevel can only be safely constructed from a Level that already proves the
-        // corresponding target features are available. Its unchecked constructor requires the
-        // same provenance from the private atomic cache.
-        unsafe {
-            match cached.into_byte() {
-                CachedLevel::FALLBACK => Self::Fallback(Fallback::new()),
-                CachedLevel::SSE2 => Self::Sse2(Sse2::new_unchecked()),
-                CachedLevel::SSE4_2 => Self::Sse4_2(Sse4_2::new_unchecked()),
-                CachedLevel::AVX2 => Self::Avx2(Avx2::new_unchecked()),
-                CachedLevel::AVX512 => Self::Avx512(Avx512::new_unchecked()),
-                _ => unreachable!("invalid cached Level encoding"),
-            }
-        }
-    }
-}
+#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+static X86_LEVEL: LazyLock<Level> = LazyLock::new(detect_x86_level);
 
 // Sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=icelake-server`
 // and pruned against the features implied by `avx512f` which can be viewed via
 // `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'`
-#[cfg(all(
-    feature = "std",
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_has_atomic = "8"
-))]
+#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
 #[inline]
 fn x86_detects_icelake_avx512() -> bool {
     std::arch::is_x86_feature_detected!("adx")
@@ -393,14 +301,10 @@ fn x86_detects_icelake_avx512() -> bool {
         && std::arch::is_x86_feature_detected!("xsaves")
 }
 
-#[cfg(all(
-    feature = "std",
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_has_atomic = "8"
-))]
+#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
 #[cold]
-fn detect_and_cache_x86_level() -> Level {
-    let detected = if x86_detects_icelake_avx512() {
+fn detect_x86_level() -> Level {
+    if x86_detects_icelake_avx512() {
         // Safety: All features required by Avx512 were detected above.
         unsafe { Level::Avx512(Avx512::new_unchecked()) }
     // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
@@ -445,11 +349,7 @@ fn detect_and_cache_x86_level() -> Level {
         unsafe { Level::Sse2(Sse2::new_unchecked()) }
     } else {
         Level::Fallback(Fallback::new())
-    };
-
-    let cached = CachedLevel::from(detected).into_byte();
-    let _ = X86_LEVEL_CACHE.compare_exchange(0, cached, Ordering::Relaxed, Ordering::Relaxed);
-    detected
+    }
 }
 
 /// The level enum with the specific SIMD capabilities available.
@@ -493,9 +393,8 @@ pub enum Level {
 impl Level {
     /// Return the best SIMD level available on the current target.
     ///
-    /// On x86 and x86-64 targets with 8-bit atomics, this detects the available CPU features on
-    /// the first call and caches the result. Other targets return their strongest statically
-    /// supported level.
+    /// On x86 and x86-64 targets, this detects the available CPU features on the first call and
+    /// caches the result. Other targets return their strongest statically supported level.
     ///
     /// This function requires the standard library on targets other than wasm32. On wasm32, the
     /// available level is known statically, so the standard library isn't required.
@@ -519,26 +418,12 @@ impl Level {
     )]
     #[inline]
     pub fn new() -> Self {
-        #[cfg(all(
-            feature = "std",
-            any(target_arch = "x86", target_arch = "x86_64"),
-            target_has_atomic = "8"
-        ))]
+        #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
         {
-            let cached = X86_LEVEL_CACHE.load(Ordering::Relaxed);
-            if cached == 0 {
-                return detect_and_cache_x86_level();
-            }
-
-            // Safety: The private cache only stores values created by CachedLevel::into_byte.
-            unsafe { CachedLevel::from_cache_byte_unchecked(cached) }.into()
+            *X86_LEVEL
         }
 
-        #[cfg(not(all(
-            feature = "std",
-            any(target_arch = "x86", target_arch = "x86_64"),
-            target_has_atomic = "8"
-        )))]
+        #[cfg(not(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64"))))]
         {
             Self::baseline()
         }
@@ -987,71 +872,27 @@ mod tests {
         assert_is_send_sync::<Level>();
     }
 
-    #[cfg(all(
-        feature = "std",
-        any(target_arch = "x86", target_arch = "x86_64"),
-        target_has_atomic = "8"
-    ))]
-    fn assert_cached_level_round_trip(level: Level) {
-        use crate::CachedLevel;
-
-        let cached = CachedLevel::from(level);
-        let restored = Level::from(cached);
-        assert_eq!(CachedLevel::from(restored), cached);
-    }
-
-    #[cfg(all(
-        feature = "std",
-        any(target_arch = "x86", target_arch = "x86_64"),
-        target_has_atomic = "8"
-    ))]
-    #[test]
-    fn cached_level_round_trips() {
-        assert_cached_level_round_trip(Level::Fallback(crate::Fallback::new()));
-
-        let detected = Level::new();
-        if let Some(sse2) = detected.as_sse2() {
-            assert_cached_level_round_trip(Level::Sse2(sse2));
-        }
-        if let Some(sse4_2) = detected.as_sse4_2() {
-            assert_cached_level_round_trip(Level::Sse4_2(sse4_2));
-        }
-        if let Some(avx2) = detected.as_avx2() {
-            assert_cached_level_round_trip(Level::Avx2(avx2));
-        }
-        if let Some(avx512) = detected.as_avx512() {
-            assert_cached_level_round_trip(Level::Avx512(avx512));
-        }
-    }
-
-    #[cfg(all(
-        feature = "std",
-        any(target_arch = "x86", target_arch = "x86_64"),
-        target_has_atomic = "8"
-    ))]
+    #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
     #[test]
     fn level_new_is_consistent_across_threads() {
-        use crate::CachedLevel;
         use std::thread;
 
         let levels: std::vec::Vec<_> = (0..8)
-            .map(|_| thread::spawn(|| CachedLevel::from(Level::new())))
+            .map(|_| thread::spawn(Level::new))
             .map(|thread| thread.join().expect("feature detection thread panicked"))
             .collect();
 
-        assert!(levels.windows(2).all(|levels| levels[0] == levels[1]));
+        assert!(levels.windows(2).all(|levels| {
+            core::mem::discriminant(&levels[0]) == core::mem::discriminant(&levels[1])
+        }));
     }
 
     #[cfg(all(
         any(feature = "std", target_arch = "wasm32"),
-        not(all(
-            feature = "std",
-            any(target_arch = "x86", target_arch = "x86_64"),
-            target_has_atomic = "8"
-        ))
+        not(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))
     ))]
     #[test]
-    fn level_new_uses_baseline_without_x86_atomics() {
+    fn level_new_uses_baseline_outside_x86() {
         assert_eq!(
             core::mem::discriminant(&Level::new()),
             core::mem::discriminant(&Level::baseline())
