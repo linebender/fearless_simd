@@ -259,6 +259,9 @@ pub mod x86 {
 use std::sync::LazyLock;
 
 #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+/// Caches the CPU level detection on x86.
+// Aligned128 is used to avoid the data crossing cache line boundary,
+// which would incur two cache misses instead of one.
 static X86_LEVEL: support::Aligned128<LazyLock<Level>> =
     support::Aligned128(LazyLock::new(detect_x86_level));
 
