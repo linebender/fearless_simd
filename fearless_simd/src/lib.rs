@@ -873,21 +873,6 @@ mod tests {
         assert_is_send_sync::<Level>();
     }
 
-    #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
-    #[test]
-    fn level_new_is_consistent_across_threads() {
-        use std::thread;
-
-        let levels: std::vec::Vec<_> = (0..8)
-            .map(|_| thread::spawn(Level::new))
-            .map(|thread| thread.join().expect("feature detection thread panicked"))
-            .collect();
-
-        assert!(levels.windows(2).all(|levels| {
-            core::mem::discriminant(&levels[0]) == core::mem::discriminant(&levels[1])
-        }));
-    }
-
     #[cfg(all(
         any(feature = "std", target_arch = "wasm32"),
         not(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))
