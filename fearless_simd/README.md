@@ -61,7 +61,7 @@ fn double_u32s<S: Simd>(_: S, values: &mut [u32]) {
 }
 
 let mut values = [1, 2, 3, 4, 5];
-let level = Level::new(); // Detect SIMD available on the CPU. Expensive, so do it once.
+let level = Level::new(); // Get the best SIMD level available on this target.
 dispatch!(level, simd => double_u32s(simd, &mut values));
 assert_eq!(values, [2, 4, 6, 8, 10]);
 ```
@@ -86,7 +86,7 @@ fn double_u32s<S: Simd>(simd: S, values: &mut [u32]) {
 }
 
 let mut values = [1, 2, 3, 4, 5];
-let level = Level::new(); // Detect SIMD available on the CPU. Expensive, so do it once.
+let level = Level::new(); // Get the best SIMD level available on this target.
 dispatch!(level, simd => double_u32s(simd, &mut values));
 assert_eq!(values, [2, 4, 6, 8, 10]);
 ```
@@ -119,7 +119,7 @@ fearless_simd::kernel!(
 
 #[cfg(target_arch = "aarch64")]
 {
-    let level = Level::new(); // Detect SIMD available on the CPU. Expensive, so do it once.
+    let level = Level::new(); // Get the best SIMD level available on this target.
     if let Some(neon) = level.as_neon() {
         let mut values = [1, 2, 3, 4, 5];
         double_u32s_neon(neon, &mut values);
