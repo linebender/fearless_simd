@@ -4723,11 +4723,18 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
-        [
-            i64::shr(a[0usize], &b[0usize]),
-            i64::shr(a[1usize], &b[1usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i64x2<Avx2> {
+                let value = a.into();
+                let counts = b.into();
+                let bias = _mm_set1_epi64x(i64::MIN);
+                let shifted_bias = _mm_srlv_epi64(bias, counts);
+                let shifted = _mm_srlv_epi64(value, counts);
+                _mm_sub_epi64(_mm_xor_si128(shifted, shifted_bias), shifted_bias).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self> {
@@ -11112,13 +11119,19 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn shrv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
-        [
-            i64::shr(a[0usize], &b[0usize]),
-            i64::shr(a[1usize], &b[1usize]),
-            i64::shr(a[2usize], &b[2usize]),
-            i64::shr(a[3usize], &b[3usize]),
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i64x4<Avx2> {
+                let value = a.into();
+                let counts = b.into();
+                let bias = _mm256_set1_epi64x(i64::MIN);
+                let shifted_bias = _mm256_srlv_epi64(bias, counts);
+                let shifted = _mm256_srlv_epi64(value, counts);
+                _mm256_sub_epi64(_mm256_xor_si256(shifted, shifted_bias), shifted_bias)
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self> {
