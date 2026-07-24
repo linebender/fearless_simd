@@ -141,8 +141,8 @@ fn simd_le_u64x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_i8x16<S: Simd>(simd: S) {
-    let a_values: [i8; 16] = core::array::from_fn(|i| (i % 23) as i8 + 10_i8);
-    let b_values: [i8; 16] = core::array::from_fn(|i| (i % 7) as i8 + 1_i8);
+    let a_values: [i8; 16] = core::array::from_fn(|i| (i % 17) as i8 + 1_i8);
+    let b_values: [i8; 16] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as i8);
     let a = i8x16::from_slice(simd, &a_values);
     let b = i8x16::from_slice(simd, &b_values);
     let expected: [i8; 16] = core::array::from_fn(|i| {
@@ -158,8 +158,8 @@ fn simd_le_i8x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_i8x32<S: Simd>(simd: S) {
-    let a_values: [i8; 32] = core::array::from_fn(|i| (i % 23) as i8 + 10_i8);
-    let b_values: [i8; 32] = core::array::from_fn(|i| (i % 7) as i8 + 1_i8);
+    let a_values: [i8; 32] = core::array::from_fn(|i| (i % 17) as i8 + 1_i8);
+    let b_values: [i8; 32] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as i8);
     let a = i8x32::from_slice(simd, &a_values);
     let b = i8x32::from_slice(simd, &b_values);
     let expected: [i8; 32] = core::array::from_fn(|i| {
@@ -175,8 +175,8 @@ fn simd_le_i8x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_u8x32<S: Simd>(simd: S) {
-    let a_values: [u8; 32] = core::array::from_fn(|i| (i % 23) as u8 + 10_u8);
-    let b_values: [u8; 32] = core::array::from_fn(|i| (i % 7) as u8 + 1_u8);
+    let a_values: [u8; 32] = core::array::from_fn(|i| (i % 17) as u8 + 1_u8);
+    let b_values: [u8; 32] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as u8);
     let a = u8x32::from_slice(simd, &a_values);
     let b = u8x32::from_slice(simd, &b_values);
     let expected: [i8; 32] = core::array::from_fn(|i| {
@@ -192,8 +192,8 @@ fn simd_le_u8x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_i8x64<S: Simd>(simd: S) {
-    let a_values: [i8; 64] = core::array::from_fn(|i| (i % 23) as i8 + 10_i8);
-    let b_values: [i8; 64] = core::array::from_fn(|i| (i % 7) as i8 + 1_i8);
+    let a_values: [i8; 64] = core::array::from_fn(|i| (i % 17) as i8 + 1_i8);
+    let b_values: [i8; 64] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as i8);
     let a = i8x64::from_slice(simd, &a_values);
     let b = i8x64::from_slice(simd, &b_values);
     let expected: [i8; 64] = core::array::from_fn(|i| {
@@ -209,8 +209,8 @@ fn simd_le_i8x64<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_u8x64<S: Simd>(simd: S) {
-    let a_values: [u8; 64] = core::array::from_fn(|i| (i % 23) as u8 + 10_u8);
-    let b_values: [u8; 64] = core::array::from_fn(|i| (i % 7) as u8 + 1_u8);
+    let a_values: [u8; 64] = core::array::from_fn(|i| (i % 17) as u8 + 1_u8);
+    let b_values: [u8; 64] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as u8);
     let a = u8x64::from_slice(simd, &a_values);
     let b = u8x64::from_slice(simd, &b_values);
     let expected: [i8; 64] = core::array::from_fn(|i| {
@@ -226,8 +226,8 @@ fn simd_le_u8x64<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_i16x8<S: Simd>(simd: S) {
-    let a_values: [i16; 8] = core::array::from_fn(|i| (i % 23) as i16 + 10_i16);
-    let b_values: [i16; 8] = core::array::from_fn(|i| (i % 7) as i16 + 1_i16);
+    let a_values: [i16; 8] = core::array::from_fn(|i| (i % 17) as i16 + 1_i16);
+    let b_values: [i16; 8] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as i16);
     let a = i16x8::from_slice(simd, &a_values);
     let b = i16x8::from_slice(simd, &b_values);
     let expected: [i16; 8] = core::array::from_fn(|i| {
@@ -243,8 +243,8 @@ fn simd_le_i16x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_u16x8<S: Simd>(simd: S) {
-    let a_values: [u16; 8] = core::array::from_fn(|i| (i % 23) as u16 + 10_u16);
-    let b_values: [u16; 8] = core::array::from_fn(|i| (i % 7) as u16 + 1_u16);
+    let a_values: [u16; 8] = core::array::from_fn(|i| (i % 17) as u16 + 1_u16);
+    let b_values: [u16; 8] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as u16);
     let a = u16x8::from_slice(simd, &a_values);
     let b = u16x8::from_slice(simd, &b_values);
     let expected: [i16; 8] = core::array::from_fn(|i| {
@@ -260,8 +260,8 @@ fn simd_le_u16x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_i16x16<S: Simd>(simd: S) {
-    let a_values: [i16; 16] = core::array::from_fn(|i| (i % 23) as i16 + 10_i16);
-    let b_values: [i16; 16] = core::array::from_fn(|i| (i % 7) as i16 + 1_i16);
+    let a_values: [i16; 16] = core::array::from_fn(|i| (i % 17) as i16 + 1_i16);
+    let b_values: [i16; 16] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as i16);
     let a = i16x16::from_slice(simd, &a_values);
     let b = i16x16::from_slice(simd, &b_values);
     let expected: [i16; 16] = core::array::from_fn(|i| {
@@ -277,8 +277,8 @@ fn simd_le_i16x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_u16x16<S: Simd>(simd: S) {
-    let a_values: [u16; 16] = core::array::from_fn(|i| (i % 23) as u16 + 10_u16);
-    let b_values: [u16; 16] = core::array::from_fn(|i| (i % 7) as u16 + 1_u16);
+    let a_values: [u16; 16] = core::array::from_fn(|i| (i % 17) as u16 + 1_u16);
+    let b_values: [u16; 16] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as u16);
     let a = u16x16::from_slice(simd, &a_values);
     let b = u16x16::from_slice(simd, &b_values);
     let expected: [i16; 16] = core::array::from_fn(|i| {
@@ -294,8 +294,8 @@ fn simd_le_u16x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_i16x32<S: Simd>(simd: S) {
-    let a_values: [i16; 32] = core::array::from_fn(|i| (i % 23) as i16 + 10_i16);
-    let b_values: [i16; 32] = core::array::from_fn(|i| (i % 7) as i16 + 1_i16);
+    let a_values: [i16; 32] = core::array::from_fn(|i| (i % 17) as i16 + 1_i16);
+    let b_values: [i16; 32] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as i16);
     let a = i16x32::from_slice(simd, &a_values);
     let b = i16x32::from_slice(simd, &b_values);
     let expected: [i16; 32] = core::array::from_fn(|i| {
@@ -311,8 +311,8 @@ fn simd_le_i16x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_u16x32<S: Simd>(simd: S) {
-    let a_values: [u16; 32] = core::array::from_fn(|i| (i % 23) as u16 + 10_u16);
-    let b_values: [u16; 32] = core::array::from_fn(|i| (i % 7) as u16 + 1_u16);
+    let a_values: [u16; 32] = core::array::from_fn(|i| (i % 17) as u16 + 1_u16);
+    let b_values: [u16; 32] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as u16);
     let a = u16x32::from_slice(simd, &a_values);
     let b = u16x32::from_slice(simd, &b_values);
     let expected: [i16; 32] = core::array::from_fn(|i| {
@@ -328,8 +328,8 @@ fn simd_le_u16x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_i32x4<S: Simd>(simd: S) {
-    let a_values: [i32; 4] = core::array::from_fn(|i| (i % 23) as i32 + 10_i32);
-    let b_values: [i32; 4] = core::array::from_fn(|i| (i % 7) as i32 + 1_i32);
+    let a_values: [i32; 4] = core::array::from_fn(|i| (i % 17) as i32 + 1_i32);
+    let b_values: [i32; 4] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as i32);
     let a = i32x4::from_slice(simd, &a_values);
     let b = i32x4::from_slice(simd, &b_values);
     let expected: [i32; 4] = core::array::from_fn(|i| {
@@ -345,8 +345,8 @@ fn simd_le_i32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_u32x4<S: Simd>(simd: S) {
-    let a_values: [u32; 4] = core::array::from_fn(|i| (i % 23) as u32 + 10_u32);
-    let b_values: [u32; 4] = core::array::from_fn(|i| (i % 7) as u32 + 1_u32);
+    let a_values: [u32; 4] = core::array::from_fn(|i| (i % 17) as u32 + 1_u32);
+    let b_values: [u32; 4] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as u32);
     let a = u32x4::from_slice(simd, &a_values);
     let b = u32x4::from_slice(simd, &b_values);
     let expected: [i32; 4] = core::array::from_fn(|i| {
@@ -362,8 +362,8 @@ fn simd_le_u32x4<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_i32x8<S: Simd>(simd: S) {
-    let a_values: [i32; 8] = core::array::from_fn(|i| (i % 23) as i32 + 10_i32);
-    let b_values: [i32; 8] = core::array::from_fn(|i| (i % 7) as i32 + 1_i32);
+    let a_values: [i32; 8] = core::array::from_fn(|i| (i % 17) as i32 + 1_i32);
+    let b_values: [i32; 8] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as i32);
     let a = i32x8::from_slice(simd, &a_values);
     let b = i32x8::from_slice(simd, &b_values);
     let expected: [i32; 8] = core::array::from_fn(|i| {
@@ -379,8 +379,8 @@ fn simd_le_i32x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_u32x8<S: Simd>(simd: S) {
-    let a_values: [u32; 8] = core::array::from_fn(|i| (i % 23) as u32 + 10_u32);
-    let b_values: [u32; 8] = core::array::from_fn(|i| (i % 7) as u32 + 1_u32);
+    let a_values: [u32; 8] = core::array::from_fn(|i| (i % 17) as u32 + 1_u32);
+    let b_values: [u32; 8] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as u32);
     let a = u32x8::from_slice(simd, &a_values);
     let b = u32x8::from_slice(simd, &b_values);
     let expected: [i32; 8] = core::array::from_fn(|i| {
@@ -396,8 +396,8 @@ fn simd_le_u32x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_i32x16<S: Simd>(simd: S) {
-    let a_values: [i32; 16] = core::array::from_fn(|i| (i % 23) as i32 + 10_i32);
-    let b_values: [i32; 16] = core::array::from_fn(|i| (i % 7) as i32 + 1_i32);
+    let a_values: [i32; 16] = core::array::from_fn(|i| (i % 17) as i32 + 1_i32);
+    let b_values: [i32; 16] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as i32);
     let a = i32x16::from_slice(simd, &a_values);
     let b = i32x16::from_slice(simd, &b_values);
     let expected: [i32; 16] = core::array::from_fn(|i| {
@@ -413,8 +413,8 @@ fn simd_le_i32x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn simd_le_u32x16<S: Simd>(simd: S) {
-    let a_values: [u32; 16] = core::array::from_fn(|i| (i % 23) as u32 + 10_u32);
-    let b_values: [u32; 16] = core::array::from_fn(|i| (i % 7) as u32 + 1_u32);
+    let a_values: [u32; 16] = core::array::from_fn(|i| (i % 17) as u32 + 1_u32);
+    let b_values: [u32; 16] = core::array::from_fn(|i| ((i % 17) + 2 - 2 * (i % 2)) as u32);
     let a = u32x16::from_slice(simd, &a_values);
     let b = u32x16::from_slice(simd, &b_values);
     let expected: [i32; 16] = core::array::from_fn(|i| {
@@ -431,7 +431,8 @@ fn simd_le_u32x16<S: Simd>(simd: S) {
 #[simd_test]
 fn simd_le_f64x2<S: Simd>(simd: S) {
     let a_values: [f64; 2] = core::array::from_fn(|i| i as f64 + 1.25_f64);
-    let b_values: [f64; 2] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let b_values: [f64; 2] =
+        core::array::from_fn(|i| i as f64 + if i % 2 == 0 { 2.5_f64 } else { 0.5_f64 });
     let a = f64x2::from_slice(simd, &a_values);
     let b = f64x2::from_slice(simd, &b_values);
     let expected: [i64; 2] = core::array::from_fn(|i| {
@@ -448,7 +449,8 @@ fn simd_le_f64x2<S: Simd>(simd: S) {
 #[simd_test]
 fn simd_le_f64x4<S: Simd>(simd: S) {
     let a_values: [f64; 4] = core::array::from_fn(|i| i as f64 + 1.25_f64);
-    let b_values: [f64; 4] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let b_values: [f64; 4] =
+        core::array::from_fn(|i| i as f64 + if i % 2 == 0 { 2.5_f64 } else { 0.5_f64 });
     let a = f64x4::from_slice(simd, &a_values);
     let b = f64x4::from_slice(simd, &b_values);
     let expected: [i64; 4] = core::array::from_fn(|i| {

@@ -449,7 +449,8 @@ fn max_u64x8<S: Simd>(simd: S) {
 #[simd_test]
 fn max_f64x2<S: Simd>(simd: S) {
     let a_values: [f64; 2] = core::array::from_fn(|i| i as f64 + 1.25_f64);
-    let b_values: [f64; 2] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let b_values: [f64; 2] =
+        core::array::from_fn(|i| i as f64 + if i % 2 == 0 { 2.5_f64 } else { 0.5_f64 });
     let a = f64x2::from_slice(simd, &a_values);
     let b = f64x2::from_slice(simd, &b_values);
     let expected: [f64; 2] = core::array::from_fn(|i| a_values[i].max(b_values[i]));
@@ -460,7 +461,8 @@ fn max_f64x2<S: Simd>(simd: S) {
 #[simd_test]
 fn max_f64x4<S: Simd>(simd: S) {
     let a_values: [f64; 4] = core::array::from_fn(|i| i as f64 + 1.25_f64);
-    let b_values: [f64; 4] = core::array::from_fn(|i| (i % 5) as f64 + 2.5_f64);
+    let b_values: [f64; 4] =
+        core::array::from_fn(|i| i as f64 + if i % 2 == 0 { 2.5_f64 } else { 0.5_f64 });
     let a = f64x4::from_slice(simd, &a_values);
     let b = f64x4::from_slice(simd, &b_values);
     let expected: [f64; 4] = core::array::from_fn(|i| a_values[i].max(b_values[i]));

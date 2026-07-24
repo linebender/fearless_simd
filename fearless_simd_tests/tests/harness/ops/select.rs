@@ -612,8 +612,8 @@ fn select_f64x4<S: Simd>(simd: S) {
 #[simd_test]
 fn select_mask8x32<S: Simd>(simd: S) {
     let mask_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
-    let true_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
-    let false_values: [i8; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let true_values: [i8; 32] = core::array::from_fn(|i| if i % 3 == 0 { -1_i8 } else { 0_i8 });
+    let false_values: [i8; 32] = core::array::from_fn(|i| if i % 3 == 0 { 0_i8 } else { -1_i8 });
     let mask = mask8x32::from_slice(simd, &mask_values);
     let if_true = mask8x32::from_slice(simd, &true_values);
     let if_false = mask8x32::from_slice(simd, &false_values);
@@ -631,8 +631,8 @@ fn select_mask8x32<S: Simd>(simd: S) {
 #[simd_test]
 fn select_mask8x64<S: Simd>(simd: S) {
     let mask_values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
-    let true_values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
-    let false_values: [i8; 64] = core::array::from_fn(|i| if i % 2 == 0 { -1_i8 } else { 0_i8 });
+    let true_values: [i8; 64] = core::array::from_fn(|i| if i % 3 == 0 { -1_i8 } else { 0_i8 });
+    let false_values: [i8; 64] = core::array::from_fn(|i| if i % 3 == 0 { 0_i8 } else { -1_i8 });
     let mask = mask8x64::from_slice(simd, &mask_values);
     let if_true = mask8x64::from_slice(simd, &true_values);
     let if_false = mask8x64::from_slice(simd, &false_values);
@@ -650,8 +650,8 @@ fn select_mask8x64<S: Simd>(simd: S) {
 #[simd_test]
 fn select_mask16x16<S: Simd>(simd: S) {
     let mask_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
-    let true_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
-    let false_values: [i16; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let true_values: [i16; 16] = core::array::from_fn(|i| if i % 3 == 0 { -1_i16 } else { 0_i16 });
+    let false_values: [i16; 16] = core::array::from_fn(|i| if i % 3 == 0 { 0_i16 } else { -1_i16 });
     let mask = mask16x16::from_slice(simd, &mask_values);
     let if_true = mask16x16::from_slice(simd, &true_values);
     let if_false = mask16x16::from_slice(simd, &false_values);
@@ -669,8 +669,8 @@ fn select_mask16x16<S: Simd>(simd: S) {
 #[simd_test]
 fn select_mask16x32<S: Simd>(simd: S) {
     let mask_values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
-    let true_values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
-    let false_values: [i16; 32] = core::array::from_fn(|i| if i % 2 == 0 { -1_i16 } else { 0_i16 });
+    let true_values: [i16; 32] = core::array::from_fn(|i| if i % 3 == 0 { -1_i16 } else { 0_i16 });
+    let false_values: [i16; 32] = core::array::from_fn(|i| if i % 3 == 0 { 0_i16 } else { -1_i16 });
     let mask = mask16x32::from_slice(simd, &mask_values);
     let if_true = mask16x32::from_slice(simd, &true_values);
     let if_false = mask16x32::from_slice(simd, &false_values);
@@ -688,8 +688,8 @@ fn select_mask16x32<S: Simd>(simd: S) {
 #[simd_test]
 fn select_mask32x8<S: Simd>(simd: S) {
     let mask_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
-    let true_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
-    let false_values: [i32; 8] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let true_values: [i32; 8] = core::array::from_fn(|i| if i % 3 == 0 { -1_i32 } else { 0_i32 });
+    let false_values: [i32; 8] = core::array::from_fn(|i| if i % 3 == 0 { 0_i32 } else { -1_i32 });
     let mask = mask32x8::from_slice(simd, &mask_values);
     let if_true = mask32x8::from_slice(simd, &true_values);
     let if_false = mask32x8::from_slice(simd, &false_values);
@@ -707,8 +707,8 @@ fn select_mask32x8<S: Simd>(simd: S) {
 #[simd_test]
 fn select_mask32x16<S: Simd>(simd: S) {
     let mask_values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
-    let true_values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
-    let false_values: [i32; 16] = core::array::from_fn(|i| if i % 2 == 0 { -1_i32 } else { 0_i32 });
+    let true_values: [i32; 16] = core::array::from_fn(|i| if i % 3 == 0 { -1_i32 } else { 0_i32 });
+    let false_values: [i32; 16] = core::array::from_fn(|i| if i % 3 == 0 { 0_i32 } else { -1_i32 });
     let mask = mask32x16::from_slice(simd, &mask_values);
     let if_true = mask32x16::from_slice(simd, &true_values);
     let if_false = mask32x16::from_slice(simd, &false_values);
