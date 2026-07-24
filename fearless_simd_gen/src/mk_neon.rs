@@ -456,6 +456,45 @@ impl Level for Neon {
                     }
                 })
             }
+            OpSig::SwizzleDynPrecise => {
+                let bytes_ty = vec_ty.bytes_ty();
+                let bytes = bytes_ty.rust();
+                let wrapper = bytes_ty.aligned_wrapper();
+                let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+                let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+                self.kernel_method(op, vec_ty, |token| {
+                    let body = match vec_ty.n_bits() {
+                        128 => quote! {
+                            let result = vqtbl1q_u8(#token.#to_bytes(a).val.0, indices.into());
+                        },
+                        256 => quote! {
+                            let table = #token.#to_bytes(a).val.0;
+                            let indices: uint8x16x2_t = indices.into();
+                            let result = uint8x16x2_t(
+                                vqtbl2q_u8(table, indices.0),
+                                vqtbl2q_u8(table, indices.1),
+                            );
+                        },
+                        512 => quote! {
+                            let table = #token.#to_bytes(a).val.0;
+                            let indices: uint8x16x4_t = indices.into();
+                            let result = uint8x16x4_t(
+                                vqtbl4q_u8(table, indices.0),
+                                vqtbl4q_u8(table, indices.1),
+                                vqtbl4q_u8(table, indices.2),
+                                vqtbl4q_u8(table, indices.3),
+                            );
+                        },
+                        _ => unreachable!(),
+                    };
+
+                    quote! {
+                        #body
+                        #token.#from_bytes(#bytes { val: #wrapper(result), simd: #token })
+                    }
+                })
+            }
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,

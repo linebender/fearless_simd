@@ -80,6 +80,7 @@ mod store_array;
 mod store_interleaved_128;
 mod store_slice;
 mod sub;
+mod swizzle_dyn_precise;
 mod swizzle_dyn_within_blocks;
 mod to_bitmask;
 mod to_bytes;

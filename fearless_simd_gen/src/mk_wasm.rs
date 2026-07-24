@@ -8,7 +8,7 @@ use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     fallback_method, generic_as_array, generic_block_combine, generic_block_split,
     generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array,
-    generic_to_bytes, integer_lane_mask_splat_arg,
+    generic_to_bytes, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
 use crate::ops::{Op, Quantifier, SlideGranularity, valid_reinterpret};
@@ -517,6 +517,38 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
+            OpSig::SwizzleDynPrecise => match vec_ty.n_bits() {
+                128 => {
+                    let bytes_ty = vec_ty.bytes_ty();
+                    let bytes = bytes_ty.rust();
+                    let wrapper = bytes_ty.aligned_wrapper();
+                    let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+                    let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+
+                    quote! {
+                        #method_sig {
+                            let result = u8x16_swizzle(self.#to_bytes(a).val.0, indices.into());
+                            self.#from_bytes(#bytes { val: #wrapper(result), simd: self })
+                        }
+                    }
+                }
+                256 => {
+                    let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
+                    let body = recursive_swizzle_dyn_precise_body(vec_ty, &quote! { self });
+
+                    quote! {
+                        #method_sig {
+                            #body
+                            self.#from_bytes(result_bytes)
+                        }
+                    }
+                }
+                // We don't use the recursive decomposition for the 512-bit case
+                // because register spills get way too bad.
+                // We can only hope that the compiler will recognize the shuffle operation
+                // and express it in terms of 256-bit or 512-bit vectors.
+                _ => crate::mk_fallback::Fallback.make_method(op, vec_ty),
+            },
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,

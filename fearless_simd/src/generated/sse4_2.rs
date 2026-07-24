@@ -249,6 +249,24 @@ impl Simd for Sse4_2 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> f32x4<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_f32x4(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_f32x4(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -870,6 +888,24 @@ impl Simd for Sse4_2 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, indices: u8x16<Sse4_2>) -> i8x16<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i8x16(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_i8x16(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1380,6 +1416,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, indices: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u8x16(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_u8x16(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -2047,6 +2101,24 @@ impl Simd for Sse4_2 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, indices: u8x16<Sse4_2>) -> i16x8<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i16x8(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_i16x8(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2490,6 +2562,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, indices: u8x16<Sse4_2>) -> u16x8<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u16x8(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_u16x8(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -3101,6 +3191,24 @@ impl Simd for Sse4_2 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> i32x4<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i32x4(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_i32x4(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3528,6 +3636,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> u32x4<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u32x4(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_u32x4(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -4127,6 +4253,24 @@ impl Simd for Sse4_2 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> f64x2<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_f64x2(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_f64x2(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4579,6 +4723,24 @@ impl Simd for Sse4_2 {
         kernel(self, a, indices)
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> i64x2<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i64x2(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_i64x2(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4960,6 +5122,24 @@ impl Simd for Sse4_2 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> u64x2<Sse4_2> {
+                let indices = indices.into();
+                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u64x2(a).val.0, zeroing_indices);
+                let result_bytes = u8x16 {
+                    val: crate::support::Aligned128(result),
+                    simd: token,
+                };
+                token.cvt_from_bytes_u64x2(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -5535,6 +5715,33 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_f32x8(self, a: f32x8<Self>, indices: u8x32<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f32x8<Sse4_2>, indices: u8x32<Sse4_2>) -> f32x8<Sse4_2> {
+                let bytes = token.cvt_to_bytes_f32x8(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_f32x8(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn abs_f32x8(self, a: f32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_f32x4(self.abs_f32x4(a0), self.abs_f32x4(a1))
@@ -6079,6 +6286,33 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i8x32(self, a: i8x32<Self>, indices: u8x32<Self>) -> i8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i8x32<Sse4_2>, indices: u8x32<Sse4_2>) -> i8x32<Sse4_2> {
+                let bytes = token.cvt_to_bytes_i8x32(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_i8x32(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         let (a0, a1) = self.split_i8x32(a);
         let (b0, b1) = self.split_i8x32(b);
@@ -6528,6 +6762,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u8x16(a0, indices0),
             self.swizzle_dyn_within_blocks_u8x16(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u8x32(self, a: u8x32<Self>, indices: u8x32<Self>) -> u8x32<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u8x32<Sse4_2>, indices: u8x32<Sse4_2>) -> u8x32<Sse4_2> {
+                let bytes = token.cvt_to_bytes_u8x32(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_u8x32(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -7040,6 +7301,33 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i16x16(self, a: i16x16<Self>, indices: u8x32<Self>) -> i16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i16x16<Sse4_2>, indices: u8x32<Sse4_2>) -> i16x16<Sse4_2> {
+                let bytes = token.cvt_to_bytes_i16x16(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_i16x16(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         let (a0, a1) = self.split_i16x16(a);
         let (b0, b1) = self.split_i16x16(b);
@@ -7429,6 +7717,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u16x8(a0, indices0),
             self.swizzle_dyn_within_blocks_u16x8(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u16x16(self, a: u16x16<Self>, indices: u8x32<Self>) -> u16x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u16x16<Sse4_2>, indices: u8x32<Sse4_2>) -> u16x16<Sse4_2> {
+                let bytes = token.cvt_to_bytes_u16x16(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_u16x16(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -7926,6 +8241,33 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i32x8(self, a: i32x8<Self>, indices: u8x32<Self>) -> i32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i32x8<Sse4_2>, indices: u8x32<Sse4_2>) -> i32x8<Sse4_2> {
+                let bytes = token.cvt_to_bytes_i32x8(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_i32x8(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         let (b0, b1) = self.split_i32x8(b);
@@ -8284,6 +8626,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u32x4(a0, indices0),
             self.swizzle_dyn_within_blocks_u32x4(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u32x8(self, a: u32x8<Self>, indices: u8x32<Self>) -> u32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u32x8<Sse4_2>, indices: u8x32<Sse4_2>) -> u32x8<Sse4_2> {
+                let bytes = token.cvt_to_bytes_u32x8(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_u32x8(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -8741,6 +9110,33 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_f64x4(self, a: f64x4<Self>, indices: u8x32<Self>) -> f64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: f64x4<Sse4_2>, indices: u8x32<Sse4_2>) -> f64x4<Sse4_2> {
+                let bytes = token.cvt_to_bytes_f64x4(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_f64x4(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn abs_f64x4(self, a: f64x4<Self>) -> f64x4<Self> {
         let (a0, a1) = self.split_f64x4(a);
         self.combine_f64x2(self.abs_f64x2(a0), self.abs_f64x2(a1))
@@ -9126,6 +9522,33 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i64x4(self, a: i64x4<Self>, indices: u8x32<Self>) -> i64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: i64x4<Sse4_2>, indices: u8x32<Sse4_2>) -> i64x4<Sse4_2> {
+                let bytes = token.cvt_to_bytes_i64x4(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_i64x4(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
+    }
+    #[inline(always)]
     fn add_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         let (a0, a1) = self.split_i64x4(a);
         let (b0, b1) = self.split_i64x4(b);
@@ -9463,6 +9886,33 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u64x2(a0, indices0),
             self.swizzle_dyn_within_blocks_u64x2(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x4(self, a: u64x4<Self>, indices: u8x32<Self>) -> u64x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse4_2, a: u64x4<Sse4_2>, indices: u8x32<Sse4_2>) -> u64x4<Sse4_2> {
+                let bytes = token.cvt_to_bytes_u64x4(a);
+                let (table_low, table_high) = token.split_u8x32(bytes);
+                let (indices_low, indices_high) = token.split_u8x32(indices);
+                let high_table_offset = token.splat_u8x16(16);
+                let output_low_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_low);
+                let output_low_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_low, high_table_offset),
+                );
+                let output_low = token.or_u8x16(output_low_from_low, output_low_from_high);
+                let output_high_from_low = token.swizzle_dyn_precise_u8x16(table_low, indices_high);
+                let output_high_from_high = token.swizzle_dyn_precise_u8x16(
+                    table_high,
+                    token.sub_u8x16(indices_high, high_table_offset),
+                );
+                let output_high = token.or_u8x16(output_high_from_low, output_high_from_high);
+                let result_bytes = token.combine_u8x16(output_low, output_high);
+                token.cvt_from_bytes_u64x4(result_bytes)
+            }
+        );
+        kernel(self, a, indices)
     }
     #[inline(always)]
     fn add_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
@@ -9973,6 +10423,270 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_f32x8(a0, indices0),
             self.swizzle_dyn_within_blocks_f32x8(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_f32x16(self, a: f32x16<Self>, indices: u8x64<Self>) -> f32x16<Self> {
+        let bytes = self.cvt_to_bytes_f32x16(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_f32x16(result)
     }
     #[inline(always)]
     fn abs_f32x16(self, a: f32x16<Self>) -> f32x16<Self> {
@@ -10715,6 +11429,270 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i8x64(self, a: i8x64<Self>, indices: u8x64<Self>) -> i8x64<Self> {
+        let bytes = self.cvt_to_bytes_i8x64(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_i8x64(result)
+    }
+    #[inline(always)]
     fn add_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         let (b0, b1) = self.split_i8x64(b);
@@ -11285,6 +12263,270 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u8x32(a0, indices0),
             self.swizzle_dyn_within_blocks_u8x32(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u8x64(self, a: u8x64<Self>, indices: u8x64<Self>) -> u8x64<Self> {
+        let bytes = self.cvt_to_bytes_u8x64(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_u8x64(result)
     }
     #[inline(always)]
     fn add_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -11968,6 +13210,270 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i16x32(self, a: i16x32<Self>, indices: u8x64<Self>) -> i16x32<Self> {
+        let bytes = self.cvt_to_bytes_i16x32(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_i16x32(result)
+    }
+    #[inline(always)]
     fn add_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         let (a0, a1) = self.split_i16x32(a);
         let (b0, b1) = self.split_i16x32(b);
@@ -12423,6 +13929,270 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u16x16(a0, indices0),
             self.swizzle_dyn_within_blocks_u16x16(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u16x32(self, a: u16x32<Self>, indices: u8x64<Self>) -> u16x32<Self> {
+        let bytes = self.cvt_to_bytes_u16x32(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_u16x32(result)
     }
     #[inline(always)]
     fn add_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -13032,6 +14802,270 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i32x16(self, a: i32x16<Self>, indices: u8x64<Self>) -> i32x16<Self> {
+        let bytes = self.cvt_to_bytes_i32x16(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_i32x16(result)
+    }
+    #[inline(always)]
     fn add_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         let (b0, b1) = self.split_i32x16(b);
@@ -13419,6 +15453,270 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u32x8(a0, indices0),
             self.swizzle_dyn_within_blocks_u32x8(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u32x16(self, a: u32x16<Self>, indices: u8x64<Self>) -> u32x16<Self> {
+        let bytes = self.cvt_to_bytes_u32x16(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_u32x16(result)
     }
     #[inline(always)]
     fn add_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -13953,6 +16251,270 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_f64x8(self, a: f64x8<Self>, indices: u8x64<Self>) -> f64x8<Self> {
+        let bytes = self.cvt_to_bytes_f64x8(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_f64x8(result)
+    }
+    #[inline(always)]
     fn abs_f64x8(self, a: f64x8<Self>) -> f64x8<Self> {
         let (a0, a1) = self.split_f64x8(a);
         self.combine_f64x4(self.abs_f64x4(a0), self.abs_f64x4(a1))
@@ -14347,6 +16909,270 @@ impl Simd for Sse4_2 {
         )
     }
     #[inline(always)]
+    fn swizzle_dyn_precise_i64x8(self, a: i64x8<Self>, indices: u8x64<Self>) -> i64x8<Self> {
+        let bytes = self.cvt_to_bytes_i64x8(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_i64x8(result)
+    }
+    #[inline(always)]
     fn add_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         let (b0, b1) = self.split_i64x8(b);
@@ -14693,6 +17519,270 @@ impl Simd for Sse4_2 {
             self.swizzle_dyn_within_blocks_u64x4(a0, indices0),
             self.swizzle_dyn_within_blocks_u64x4(a1, indices1),
         )
+    }
+    #[inline(always)]
+    fn swizzle_dyn_precise_u64x8(self, a: u64x8<Self>, indices: u8x64<Self>) -> u64x8<Self> {
+        let bytes = self.cvt_to_bytes_u64x8(a);
+        let result: u8x64<Self> = [
+            {
+                let index = indices[0usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[1usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[2usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[3usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[4usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[5usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[6usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[7usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[8usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[9usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[10usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[11usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[12usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[13usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[14usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[15usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[16usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[17usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[18usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[19usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[20usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[21usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[22usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[23usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[24usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[25usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[26usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[27usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[28usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[29usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[30usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[31usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[32usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[33usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[34usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[35usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[36usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[37usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[38usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[39usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[40usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[41usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[42usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[43usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[44usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[45usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[46usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[47usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[48usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[49usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[50usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[51usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[52usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[53usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[54usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[55usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[56usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[57usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[58usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[59usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[60usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[61usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[62usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+            {
+                let index = indices[63usize] as usize;
+                bytes.get(index).copied().unwrap_or(0)
+            },
+        ]
+        .simd_into(self);
+        self.cvt_from_bytes_u64x8(result)
     }
     #[inline(always)]
     fn add_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {

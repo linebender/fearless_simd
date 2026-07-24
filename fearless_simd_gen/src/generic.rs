@@ -18,6 +18,55 @@ pub(crate) fn fallback_method(op: Op, vec_ty: &VecType) -> TokenStream {
     crate::mk_fallback::Fallback.make_method(op, vec_ty)
 }
 
+pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
+    vec_ty: &VecType,
+    token: &T,
+) -> TokenStream {
+    // We can take advantage of the "precise" property (out-of-range is 0)
+    // to assemble a double-vector-width arbitrary shuffle.
+    // The trick is to split the input into two, then run for each half of output indices J:
+    // ```
+    // from_low  = swizzle_H(low_table,  J);
+    // from_high = swizzle_H(high_table, J.wrapping_sub(H));
+    // result    = from_low | from_high;
+    // ```
+    // Since each element is out-of-range for at least one half,
+    // the final combine is very cheap: a bitwise or.
+    let bytes_ty = vec_ty.bytes_ty();
+    let half_bytes_ty = VecType::new(ScalarType::Unsigned, 8, bytes_ty.len / 2);
+    let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
+    let split_bytes = generic_op_name("split", &bytes_ty);
+    let combine_half_bytes = generic_op_name("combine", &half_bytes_ty);
+    let swizzle_half = generic_op_name("swizzle_dyn_precise", &half_bytes_ty);
+    let splat_half = generic_op_name("splat", &half_bytes_ty);
+    let sub_half = generic_op_name("sub", &half_bytes_ty);
+    let or_half = generic_op_name("or", &half_bytes_ty);
+    let half_len = Literal::u8_unsuffixed(u8::try_from(bytes_ty.len / 2).unwrap());
+
+    quote! {
+        let bytes = #token.#to_bytes(a);
+        let (table_low, table_high) = #token.#split_bytes(bytes);
+        let (indices_low, indices_high) = #token.#split_bytes(indices);
+        let high_table_offset = #token.#splat_half(#half_len);
+
+        let output_low_from_low = #token.#swizzle_half(table_low, indices_low);
+        let output_low_from_high = #token.#swizzle_half(
+            table_high,
+            #token.#sub_half(indices_low, high_table_offset),
+        );
+        let output_low = #token.#or_half(output_low_from_low, output_low_from_high);
+
+        let output_high_from_low = #token.#swizzle_half(table_low, indices_high);
+        let output_high_from_high = #token.#swizzle_half(
+            table_high,
+            #token.#sub_half(indices_high, high_table_offset),
+        );
+        let output_high = #token.#or_half(output_high_from_low, output_high_from_high);
+
+        let result_bytes = #token.#combine_half_bytes(output_low, output_high);
+    }
+}
+
 /// For backends that store masks as all-zero/all-one integer lanes, convert the public
 /// `bool` mask splat argument into the backend's lane representation.
 pub(crate) fn integer_lane_mask_splat_arg(vec_ty: &VecType) -> TokenStream {
@@ -87,6 +136,9 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                     )
                 }
             }
+        }
+        OpSig::SwizzleDynPrecise => {
+            panic!("whole-vector swizzles cannot be done via split/combine");
         }
         OpSig::Ternary => {
             quote! {
