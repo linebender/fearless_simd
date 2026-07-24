@@ -270,13 +270,27 @@ fn shrv_u64x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn shrv_i8x32<S: Simd>(simd: S) {
-    let values: [i8; 32] = core::array::from_fn(|i| (i % 31) as i8 + 1_i8);
-    let shift_values: [i8; 32] = core::array::from_fn(|i| (i % 3) as i8);
-    let a = i8x32::from_slice(simd, &values);
-    let shifts = i8x32::from_slice(simd, &shift_values);
-    let expected: [i8; 32] = core::array::from_fn(|i| values[i] >> shift_values[i]);
-    let result = simd.shrv_i8x32(a, shifts);
-    assert_eq!(result.as_slice(), expected.as_slice());
+    let a = i8x32::from_slice(
+        simd,
+        &[
+            -128, -64, -33, -1, 127, 64, 33, 1, -2, -4, -8, -16, 0, 2, 4, 8, -128, -64, -33, -1,
+            127, 64, 33, 1, -2, -4, -8, -16, 0, 2, 4, 8,
+        ],
+    );
+    let shifts = i8x32::from_slice(
+        simd,
+        &[
+            0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4,
+            5, 6, 7,
+        ],
+    );
+    assert_eq!(
+        *simd.shrv_i8x32(a, shifts),
+        [
+            -128, -32, -9, -1, 7, 2, 0, 0, -2, -2, -2, -2, 0, 0, 0, 0, -128, -32, -9, -1, 7, 2, 0,
+            0, -2, -2, -2, -2, 0, 0, 0, 0,
+        ]
+    );
 }
 
 #[simd_test]
@@ -292,13 +306,20 @@ fn shrv_u8x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn shrv_i16x16<S: Simd>(simd: S) {
-    let values: [i16; 16] = core::array::from_fn(|i| (i % 31) as i16 + 1_i16);
-    let shift_values: [i16; 16] = core::array::from_fn(|i| (i % 3) as i16);
-    let a = i16x16::from_slice(simd, &values);
-    let shifts = i16x16::from_slice(simd, &shift_values);
-    let expected: [i16; 16] = core::array::from_fn(|i| values[i] >> shift_values[i]);
-    let result = simd.shrv_i16x16(a, shifts);
-    assert_eq!(result.as_slice(), expected.as_slice());
+    let a = i16x16::from_slice(
+        simd,
+        &[
+            -32768, -16384, -1025, -1, 32767, 16384, 1025, 1, -32768, -16384, -1025, -1, 32767,
+            16384, 1025, 1,
+        ],
+    );
+    let shifts = i16x16::from_slice(simd, &[0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(
+        *simd.shrv_i16x16(a, shifts),
+        [
+            -32768, -8192, -257, -1, 2047, 512, 16, 0, -32768, -8192, -257, -1, 2047, 512, 16, 0,
+        ]
+    );
 }
 
 #[simd_test]
@@ -314,13 +335,17 @@ fn shrv_u16x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn shrv_i32x8<S: Simd>(simd: S) {
-    let values: [i32; 8] = core::array::from_fn(|i| (i % 31) as i32 + 1_i32);
-    let shift_values: [i32; 8] = core::array::from_fn(|i| (i % 3) as i32);
-    let a = i32x8::from_slice(simd, &values);
-    let shifts = i32x8::from_slice(simd, &shift_values);
-    let expected: [i32; 8] = core::array::from_fn(|i| values[i] >> shift_values[i]);
-    let result = simd.shrv_i32x8(a, shifts);
-    assert_eq!(result.as_slice(), expected.as_slice());
+    const MIN: i32 = i32::MIN;
+    const MAX: i32 = i32::MAX;
+    let a = i32x8::from_slice(
+        simd,
+        &[MIN, -1073741824, -65537, -1, MAX, 1073741824, 65537, 1],
+    );
+    let shifts = i32x8::from_slice(simd, &[0, 1, 2, 31, 4, 5, 16, 31]);
+    assert_eq!(
+        *simd.shrv_i32x8(a, shifts),
+        [MIN, -536870912, -16385, -1, 134217727, 33554432, 1, 0,]
+    );
 }
 
 #[simd_test]
