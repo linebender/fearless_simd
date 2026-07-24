@@ -28,7 +28,7 @@
 //! }
 //!
 //! let mut values = [1, 2, 3, 4, 5];
-//! let level = Level::new(); // Detect SIMD available on the CPU. Expensive, so do it once.
+//! let level = Level::new();
 //! dispatch!(level, simd => double_u32s(simd, &mut values));
 //! assert_eq!(values, [2, 4, 6, 8, 10]);
 //! ```
@@ -53,7 +53,7 @@
 //! }
 //!
 //! let mut values = [1, 2, 3, 4, 5];
-//! let level = Level::new(); // Detect SIMD available on the CPU. Expensive, so do it once.
+//! let level = Level::new();
 //! dispatch!(level, simd => double_u32s(simd, &mut values));
 //! assert_eq!(values, [2, 4, 6, 8, 10]);
 //! ```
@@ -86,7 +86,7 @@
 //!
 //! #[cfg(target_arch = "aarch64")]
 //! {
-//!     let level = Level::new(); // Detect SIMD available on the CPU. Expensive, so do it once.
+//!     let level = Level::new();
 //!     if let Some(neon) = level.as_neon() {
 //!         let mut values = [1, 2, 3, 4, 5];
 //!         double_u32s_neon(neon, &mut values);
@@ -255,6 +255,16 @@ pub mod x86 {
     pub use crate::generated::Sse4_2;
 }
 
+#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+use std::sync::LazyLock;
+
+#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+/// Caches the CPU level detection on x86.
+// Aligned128 is used to avoid the data crossing cache line boundary,
+// which would incur two cache misses instead of one.
+static X86_LEVEL: support::Aligned128<LazyLock<Level>> =
+    support::Aligned128(LazyLock::new(detect_x86_level));
+
 // Sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=icelake-server`
 // and pruned against the features implied by `avx512f` which can be viewed via
 // `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-feature='+avx2'`
@@ -293,6 +303,57 @@ fn x86_detects_icelake_avx512() -> bool {
         && std::arch::is_x86_feature_detected!("xsavec")
         && std::arch::is_x86_feature_detected!("xsaveopt")
         && std::arch::is_x86_feature_detected!("xsaves")
+}
+
+#[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
+#[cold]
+fn detect_x86_level() -> Level {
+    if x86_detects_icelake_avx512() {
+        // Safety: All features required by Avx512 were detected above.
+        unsafe { Level::Avx512(Avx512::new_unchecked()) }
+    // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
+    // However, the following features are implied by avx2 and do not need to be spelled out:
+    // avx,sse,sse2,sse3,sse4.1,sse4.2,ssse3
+    // This can be verified by running:
+    // rustc --print=cfg --target=i586-unknown-linux-gnu -C target-feature=+avx2
+    } else if std::arch::is_x86_feature_detected!("avx2")
+        && std::arch::is_x86_feature_detected!("bmi1")
+        && std::arch::is_x86_feature_detected!("bmi2")
+        && std::arch::is_x86_feature_detected!("cmpxchg16b")
+        && std::arch::is_x86_feature_detected!("f16c")
+        && std::arch::is_x86_feature_detected!("fma")
+        && std::arch::is_x86_feature_detected!("fxsr")
+        && std::arch::is_x86_feature_detected!("lzcnt")
+        && std::arch::is_x86_feature_detected!("movbe")
+        && std::arch::is_x86_feature_detected!("popcnt")
+        && std::arch::is_x86_feature_detected!("xsave")
+    {
+        // Safety: All features required by Avx2 were detected above.
+        unsafe { Level::Avx2(Avx2::new_unchecked()) }
+    // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
+    // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
+    // and have these extensions already.
+    //
+    // This set of instructions maps to the x86-64-v2 level:
+    // rustc --print=cfg --target=x86_64-unknown-linux-gnu -C target-cpu=x86-64-v2
+    //
+    // All SSE levels are implied by SSE4.2, which can be verified by running:
+    // rustc --print=cfg --target=i586-unknown-linux-gnu -C target-feature=+sse4.2
+    } else if std::arch::is_x86_feature_detected!("fxsr")
+        && std::arch::is_x86_feature_detected!("sse4.2")
+        && std::arch::is_x86_feature_detected!("cmpxchg16b")
+        && std::arch::is_x86_feature_detected!("popcnt")
+    {
+        // Safety: All features required by Sse4_2 were detected above.
+        unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) }
+    } else if std::arch::is_x86_feature_detected!("sse2")
+        && std::arch::is_x86_feature_detected!("fxsr")
+    {
+        // Safety: All features required by Sse2 were detected above.
+        unsafe { Level::Sse2(Sse2::new_unchecked()) }
+    } else {
+        Level::Fallback(Fallback::new())
+    }
 }
 
 /// The level enum with the specific SIMD capabilities available.
@@ -334,14 +395,14 @@ pub enum Level {
 }
 
 impl Level {
-    /// Detect the available features on the current CPU, and returns the best level.
+    /// Return the best SIMD level available on the CPU. This value should be passed to [`dispatch`].
     ///
-    /// If no SIMD instruction set is available, a scalar fallback will be used instead.
+    /// This function requires the standard library on targets other than wasm32. On wasm32, the
+    /// available level is known statically, so the standard library isn't required.
     ///
-    /// This function requires the standard library, to use the
-    /// [`is_x86_feature_detected`](std::arch::is_x86_feature_detected)
-    /// or [`is_aarch64_feature_detected`](std::arch::is_aarch64_feature_detected).
-    /// On wasm32, this requirement does not apply, so the standard library isn't required.
+    /// On x86 and x86-64 targets, this detects the available CPU features on the first call and
+    /// caches the result. Other targets return their strongest statically supported level.
+    /// This may change in the future if runtime-detected levels for other platforms are added.
     ///
     /// Note that in most cases, this function should only be called by end-user applications.
     /// Libraries should instead accept a `Level` argument, probably as they are
@@ -352,97 +413,23 @@ impl Level {
     /// handling the `None` case as they deem fit (probably panicking).
     /// This strategy avoids users of the library inadvertently using the fallback level,
     /// even if the requisite target features are available.
-    ///
-    /// If you are on an embedded device where these macros are not supported,
-    /// you should construct the relevant variants yourself, using whatever
-    /// way your specific chip supports accessing the current level.
-    ///
-    /// This value should be passed to [`dispatch`].
     #[cfg(any(feature = "std", target_arch = "wasm32"))]
     #[must_use]
     #[expect(
         clippy::new_without_default,
         reason = "The `Level::new()` function is not always available, and we also want to be explicit about when runtime feature detection happens"
     )]
+    #[inline]
     pub fn new() -> Self {
-        #[cfg(target_arch = "aarch64")]
-        if std::arch::is_aarch64_feature_detected!("neon") {
-            return unsafe { Self::Neon(Neon::new_unchecked()) };
-        }
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))]
         {
-            // WASM always either has the SIMD feature compiled in or not.
-            #[cfg(target_feature = "simd128")]
-            return Self::WasmSimd128(WasmSimd128::new_unchecked());
+            *X86_LEVEL.0
         }
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        {
-            if x86_detects_icelake_avx512() {
-                return unsafe { Self::Avx512(Avx512::new_unchecked()) };
-            }
 
-            // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
-            // However, the following features are implied by avx2 and do not need to be spelled out:
-            // avx,sse,sse2,sse3,sse4.1,sse4.2,ssse3
-            // This can be verified by running:
-            // rustc --print=cfg --target=i586-unknown-linux-gnu -C target-feature=+avx2
-            if std::arch::is_x86_feature_detected!("avx2")
-                && std::arch::is_x86_feature_detected!("bmi1")
-                && std::arch::is_x86_feature_detected!("bmi2")
-                && std::arch::is_x86_feature_detected!("cmpxchg16b")
-                && std::arch::is_x86_feature_detected!("f16c")
-                && std::arch::is_x86_feature_detected!("fma")
-                && std::arch::is_x86_feature_detected!("fxsr")
-                && std::arch::is_x86_feature_detected!("lzcnt")
-                && std::arch::is_x86_feature_detected!("movbe")
-                && std::arch::is_x86_feature_detected!("popcnt")
-                && std::arch::is_x86_feature_detected!("xsave")
-            {
-                return unsafe { Self::Avx2(Avx2::new_unchecked()) };
-            // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
-            // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
-            // and have these extensions already.
-            //
-            // This set of instructions maps to the x86-64-v2 level:
-            // rustc --print=cfg --target=x86_64-unknown-linux-gnu -C target-cpu=x86-64-v2
-            //
-            // All SSE levels are implied by SSE4.2, which can be verified by running:
-            // rustc --print=cfg --target=i586-unknown-linux-gnu -C target-feature=+sse4.2
-            } else if std::arch::is_x86_feature_detected!("fxsr")
-                && std::arch::is_x86_feature_detected!("sse4.2")
-                && std::arch::is_x86_feature_detected!("cmpxchg16b")
-                && std::arch::is_x86_feature_detected!("popcnt")
-            {
-                return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
-            } else if std::arch::is_x86_feature_detected!("sse2")
-                && std::arch::is_x86_feature_detected!("fxsr")
-            {
-                return unsafe { Self::Sse2(Sse2::new_unchecked()) };
-            }
-        }
-        #[cfg(any(
-            all(target_arch = "aarch64", not(target_feature = "neon")),
-            all(
-                any(target_arch = "x86", target_arch = "x86_64"),
-                not(all(target_feature = "sse2", target_feature = "fxsr"))
-            ),
-            all(target_arch = "wasm32", not(target_feature = "simd128")),
-            not(any(
-                target_arch = "x86",
-                target_arch = "x86_64",
-                target_arch = "aarch64",
-                target_arch = "wasm32"
-            )),
-        ))]
+        // targets other than x86 do not perform any runtime detection
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
         {
-            return Self::Fallback(Fallback::new());
-        }
-        #[allow(
-            unreachable_code,
-            reason = "`is_x86_feature_detected` or equivalents will have returned `true`, or Fallback was used."
-        )]
-        {
-            unreachable!()
+            Self::baseline()
         }
     }
 
@@ -626,6 +613,7 @@ impl Level {
     ///
     /// Note that this is unaffected by the `force-support-fallback` feature.
     /// Instead, you should use [`Level::fallback`] if you require the fallback level.
+    #[inline]
     pub const fn baseline() -> Self {
         // TODO: How do we possibly test that this method works in all cases?
         // Note that you can use the `check_targets.sh` script to at least ensure that it compiles in all reasonable cases.
@@ -887,5 +875,17 @@ mod tests {
     #[test]
     fn level_is_send_sync() {
         assert_is_send_sync::<Level>();
+    }
+
+    #[cfg(all(
+        any(feature = "std", target_arch = "wasm32"),
+        not(all(feature = "std", any(target_arch = "x86", target_arch = "x86_64")))
+    ))]
+    #[test]
+    fn level_new_uses_baseline_outside_x86() {
+        assert_eq!(
+            core::mem::discriminant(&Level::new()),
+            core::mem::discriminant(&Level::baseline())
+        );
     }
 }
