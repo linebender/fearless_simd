@@ -1779,6 +1779,29 @@ impl X86 {
 
         match method {
             "shrv"
+                if *self == Self::Avx2
+                    && vec_ty.scalar == ScalarType::Int
+                    && vec_ty.scalar_bits == 64 =>
+            {
+                // AVX2 has no packed arithmetic right shift for 64-bit lanes. For shift counts in
+                // 0..=63, biasing the logical result reconstructs the sign extension:
+                //     arithmetic = ((value >> count) ^ (MIN >> count)) - (MIN >> count)
+                let set1 = set1_intrinsic(vec_ty);
+                let srlv = intrinsic_ident("srlv", "epi64", vec_ty.n_bits());
+                let xor = intrinsic_ident("xor", coarse_type(vec_ty), vec_ty.n_bits());
+                let sub = intrinsic_ident("sub", "epi64", vec_ty.n_bits());
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        let value = a.into();
+                        let counts = b.into();
+                        let bias = #set1(i64::MIN);
+                        let shifted_bias = #srlv(bias, counts);
+                        let shifted = #srlv(value, counts);
+                        #sub(#xor(shifted, shifted_bias), shifted_bias).simd_into(#token)
+                    }
+                })
+            }
+            "shrv"
                 if *self != Self::Avx512
                     && vec_ty.scalar == ScalarType::Int
                     && vec_ty.scalar_bits == 64 =>
