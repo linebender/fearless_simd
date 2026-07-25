@@ -2643,6 +2643,11 @@ impl X86 {
             let level = self.token();
             let ty = vec_ty.rust();
             let vec = quote! { #ty<#level> };
+            // This deliberately expresses slides of every lane width as byte permutations.
+            // LLVM folds the constant indices to the same instructions as the equivalent
+            // element-width formulation, and the byte form avoids the poor constant-index
+            // codegen of the floating-point permutex2var intrinsics:
+            // https://github.com/rust-lang/rust/issues/159842
             let byte_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8);
             let base_idx = avx512_index_vector(&byte_ty, 0..byte_ty.len);
             let set_shift = set1_intrinsic(&byte_ty);
