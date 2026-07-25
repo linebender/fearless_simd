@@ -377,6 +377,82 @@ macro_rules! __fearless_simd_dispatch_dispatch_sse2 {
     ($sse2:expr, $simd:pat => $op:expr) => {{ $crate::__fearless_simd_dispatch_pruned!($sse2) }};
 }
 
+/// Implementation detail used by generated documentation tests; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __simd_doctest {
+    ($check:ident, $item:item $(,)?) => {{
+        $item
+
+        #[inline(always)]
+        fn __fearless_simd_doctest_run_one<S: $crate::Simd>(
+            name: &'static str,
+            simd: S,
+            check: fn(S),
+        ) {
+            let result = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(|| {
+                $crate::Simd::vectorize(simd, #[inline(always)] || check(simd));
+            }));
+
+            if let Err(payload) = result {
+                ::std::eprintln!("SIMD doctest failed on {name}");
+                ::std::panic::resume_unwind(payload);
+            }
+        }
+
+        __fearless_simd_doctest_run_one(
+            "fallback",
+            $crate::Fallback::new(),
+            $check::<$crate::Fallback>,
+        );
+        $crate::__fearless_simd_doctest_detected_levels!(
+            __fearless_simd_doctest_run_one,
+            $check
+        );
+    }};
+}
+
+/// Implementation detail used by [`__simd_doctest`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(any(feature = "std", target_arch = "wasm32"))]
+macro_rules! __fearless_simd_doctest_detected_levels {
+    ($run_one:ident, $check:ident) => {{
+        let __fearless_simd_level = $crate::Level::new();
+
+        #[cfg(target_arch = "aarch64")]
+        if let Some(neon) = __fearless_simd_level.as_neon() {
+            $run_one("neon", neon, $check::<$crate::aarch64::Neon>);
+        }
+
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        if let Some(wasm) = __fearless_simd_level.as_wasm_simd128() {
+            $run_one("wasm_simd128", wasm, $check::<$crate::wasm32::WasmSimd128>);
+        }
+
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            if let Some(sse4_2) = __fearless_simd_level.as_sse4_2() {
+                $run_one("sse4.2", sse4_2, $check::<$crate::x86::Sse4_2>);
+            }
+            if let Some(avx2) = __fearless_simd_level.as_avx2() {
+                $run_one("avx2", avx2, $check::<$crate::x86::Avx2>);
+            }
+            if let Some(avx512) = __fearless_simd_level.as_avx512() {
+                $run_one("avx512", avx512, $check::<$crate::x86::Avx512>);
+            }
+        }
+    }};
+}
+
+/// Implementation detail used by [`__simd_doctest`]; this is not public API.
+#[macro_export]
+#[doc(hidden)]
+#[cfg(not(any(feature = "std", target_arch = "wasm32")))]
+macro_rules! __fearless_simd_doctest_detected_levels {
+    ($run_one:ident, $check:ident) => {{}};
+}
+
 #[cfg(test)]
 // This expect also validates that we haven't missed any levels!
 #[expect(
