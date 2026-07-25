@@ -254,7 +254,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> f32x4<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_f32x4(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
@@ -893,7 +893,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, indices: u8x16<Sse4_2>) -> i8x16<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_i8x16(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
@@ -1426,7 +1426,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, indices: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_u8x16(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
@@ -2106,7 +2106,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, indices: u8x16<Sse4_2>) -> i16x8<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_i16x8(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
@@ -2572,7 +2572,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, indices: u8x16<Sse4_2>) -> u16x8<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_u16x8(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
@@ -3196,7 +3196,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> i32x4<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_i32x4(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
@@ -3646,7 +3646,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> u32x4<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_u32x4(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
@@ -4258,7 +4258,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> f64x2<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_f64x2(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
@@ -4728,7 +4728,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> i64x2<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_i64x2(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
@@ -5132,7 +5132,7 @@ impl Simd for Sse4_2 {
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> u64x2<Sse4_2> {
                 let indices = indices.into();
-                let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                 let result = _mm_shuffle_epi8(token.cvt_to_bytes_u64x2(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {

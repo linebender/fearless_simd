@@ -2775,7 +2775,9 @@ impl X86 {
             let body = match (*self, vec_ty.n_bits()) {
                 (Self::Sse4_2 | Self::Avx2, 128) => quote! {
                     let indices = indices.into();
-                    let index_out_of_range = _mm_cmpgt_epi8(indices, _mm_set1_epi8(15));
+                    // Preserve the original high bit, and set it for indices 16..=127.
+                    // The added value only changes bits that PSHUFB ignores for valid indices.
+                    let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                     let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
                     let result = _mm_shuffle_epi8(#token.#to_bytes(a).val.0, zeroing_indices);
                     let result_bytes = #bytes { val: #wrapper(result), simd: #token };
