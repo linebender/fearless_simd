@@ -1006,7 +1006,8 @@ const INT_OPS: &[Op] = &[
         OpKind::Overloaded(CoreOpTrait::Shl),
         OpSig::Shift,
         "Shift each element left by the given number of bits.\n\n\
-        Bits shifted out of the left side are discarded, and zeros are shifted in on the right.",
+        Bits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\n\
+        When shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.",
     ),
     Op::new(
         "shlv",
@@ -1014,6 +1015,7 @@ const INT_OPS: &[Op] = &[
         OpSig::Binary,
         "Shift each element left by the given number of bits.\n\n\
         Bits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\n\
+        When shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n\
         This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation.",
     ),
     Op::new(
@@ -1021,7 +1023,8 @@ const INT_OPS: &[Op] = &[
         OpKind::Overloaded(CoreOpTrait::Shr),
         OpSig::Shift,
         "Shift each element right by the given number of bits.\n\n\
-        For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.",
+        For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\n\
+        When shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.",
     ),
     Op::new(
         "shrv",
@@ -1029,6 +1032,7 @@ const INT_OPS: &[Op] = &[
         OpSig::Binary,
         "Shift each element right by the corresponding element in another vector.\n\n\
         For unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\n\
+        When shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\n\
         This operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation.",
     ),
     Op::new(
