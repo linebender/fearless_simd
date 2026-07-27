@@ -959,22 +959,22 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shlv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         [
-            i8::shl(a[0usize], &b[0usize]),
-            i8::shl(a[1usize], &b[1usize]),
-            i8::shl(a[2usize], &b[2usize]),
-            i8::shl(a[3usize], &b[3usize]),
-            i8::shl(a[4usize], &b[4usize]),
-            i8::shl(a[5usize], &b[5usize]),
-            i8::shl(a[6usize], &b[6usize]),
-            i8::shl(a[7usize], &b[7usize]),
-            i8::shl(a[8usize], &b[8usize]),
-            i8::shl(a[9usize], &b[9usize]),
-            i8::shl(a[10usize], &b[10usize]),
-            i8::shl(a[11usize], &b[11usize]),
-            i8::shl(a[12usize], &b[12usize]),
-            i8::shl(a[13usize], &b[13usize]),
-            i8::shl(a[14usize], &b[14usize]),
-            i8::shl(a[15usize], &b[15usize]),
+            i8::wrapping_shl(a[0usize], b[0usize] as u32),
+            i8::wrapping_shl(a[1usize], b[1usize] as u32),
+            i8::wrapping_shl(a[2usize], b[2usize] as u32),
+            i8::wrapping_shl(a[3usize], b[3usize] as u32),
+            i8::wrapping_shl(a[4usize], b[4usize] as u32),
+            i8::wrapping_shl(a[5usize], b[5usize] as u32),
+            i8::wrapping_shl(a[6usize], b[6usize] as u32),
+            i8::wrapping_shl(a[7usize], b[7usize] as u32),
+            i8::wrapping_shl(a[8usize], b[8usize] as u32),
+            i8::wrapping_shl(a[9usize], b[9usize] as u32),
+            i8::wrapping_shl(a[10usize], b[10usize] as u32),
+            i8::wrapping_shl(a[11usize], b[11usize] as u32),
+            i8::wrapping_shl(a[12usize], b[12usize] as u32),
+            i8::wrapping_shl(a[13usize], b[13usize] as u32),
+            i8::wrapping_shl(a[14usize], b[14usize] as u32),
+            i8::wrapping_shl(a[15usize], b[15usize] as u32),
         ]
         .simd_into(self)
     }
@@ -997,22 +997,22 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         [
-            i8::shr(a[0usize], &b[0usize]),
-            i8::shr(a[1usize], &b[1usize]),
-            i8::shr(a[2usize], &b[2usize]),
-            i8::shr(a[3usize], &b[3usize]),
-            i8::shr(a[4usize], &b[4usize]),
-            i8::shr(a[5usize], &b[5usize]),
-            i8::shr(a[6usize], &b[6usize]),
-            i8::shr(a[7usize], &b[7usize]),
-            i8::shr(a[8usize], &b[8usize]),
-            i8::shr(a[9usize], &b[9usize]),
-            i8::shr(a[10usize], &b[10usize]),
-            i8::shr(a[11usize], &b[11usize]),
-            i8::shr(a[12usize], &b[12usize]),
-            i8::shr(a[13usize], &b[13usize]),
-            i8::shr(a[14usize], &b[14usize]),
-            i8::shr(a[15usize], &b[15usize]),
+            i8::wrapping_shr(a[0usize], b[0usize] as u32),
+            i8::wrapping_shr(a[1usize], b[1usize] as u32),
+            i8::wrapping_shr(a[2usize], b[2usize] as u32),
+            i8::wrapping_shr(a[3usize], b[3usize] as u32),
+            i8::wrapping_shr(a[4usize], b[4usize] as u32),
+            i8::wrapping_shr(a[5usize], b[5usize] as u32),
+            i8::wrapping_shr(a[6usize], b[6usize] as u32),
+            i8::wrapping_shr(a[7usize], b[7usize] as u32),
+            i8::wrapping_shr(a[8usize], b[8usize] as u32),
+            i8::wrapping_shr(a[9usize], b[9usize] as u32),
+            i8::wrapping_shr(a[10usize], b[10usize] as u32),
+            i8::wrapping_shr(a[11usize], b[11usize] as u32),
+            i8::wrapping_shr(a[12usize], b[12usize] as u32),
+            i8::wrapping_shr(a[13usize], b[13usize] as u32),
+            i8::wrapping_shr(a[14usize], b[14usize] as u32),
+            i8::wrapping_shr(a[15usize], b[15usize] as u32),
         ]
         .simd_into(self)
     }
@@ -1474,22 +1474,22 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shlv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         [
-            u8::shl(a[0usize], &b[0usize]),
-            u8::shl(a[1usize], &b[1usize]),
-            u8::shl(a[2usize], &b[2usize]),
-            u8::shl(a[3usize], &b[3usize]),
-            u8::shl(a[4usize], &b[4usize]),
-            u8::shl(a[5usize], &b[5usize]),
-            u8::shl(a[6usize], &b[6usize]),
-            u8::shl(a[7usize], &b[7usize]),
-            u8::shl(a[8usize], &b[8usize]),
-            u8::shl(a[9usize], &b[9usize]),
-            u8::shl(a[10usize], &b[10usize]),
-            u8::shl(a[11usize], &b[11usize]),
-            u8::shl(a[12usize], &b[12usize]),
-            u8::shl(a[13usize], &b[13usize]),
-            u8::shl(a[14usize], &b[14usize]),
-            u8::shl(a[15usize], &b[15usize]),
+            u8::wrapping_shl(a[0usize], b[0usize] as u32),
+            u8::wrapping_shl(a[1usize], b[1usize] as u32),
+            u8::wrapping_shl(a[2usize], b[2usize] as u32),
+            u8::wrapping_shl(a[3usize], b[3usize] as u32),
+            u8::wrapping_shl(a[4usize], b[4usize] as u32),
+            u8::wrapping_shl(a[5usize], b[5usize] as u32),
+            u8::wrapping_shl(a[6usize], b[6usize] as u32),
+            u8::wrapping_shl(a[7usize], b[7usize] as u32),
+            u8::wrapping_shl(a[8usize], b[8usize] as u32),
+            u8::wrapping_shl(a[9usize], b[9usize] as u32),
+            u8::wrapping_shl(a[10usize], b[10usize] as u32),
+            u8::wrapping_shl(a[11usize], b[11usize] as u32),
+            u8::wrapping_shl(a[12usize], b[12usize] as u32),
+            u8::wrapping_shl(a[13usize], b[13usize] as u32),
+            u8::wrapping_shl(a[14usize], b[14usize] as u32),
+            u8::wrapping_shl(a[15usize], b[15usize] as u32),
         ]
         .simd_into(self)
     }
@@ -1512,22 +1512,22 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         [
-            u8::shr(a[0usize], &b[0usize]),
-            u8::shr(a[1usize], &b[1usize]),
-            u8::shr(a[2usize], &b[2usize]),
-            u8::shr(a[3usize], &b[3usize]),
-            u8::shr(a[4usize], &b[4usize]),
-            u8::shr(a[5usize], &b[5usize]),
-            u8::shr(a[6usize], &b[6usize]),
-            u8::shr(a[7usize], &b[7usize]),
-            u8::shr(a[8usize], &b[8usize]),
-            u8::shr(a[9usize], &b[9usize]),
-            u8::shr(a[10usize], &b[10usize]),
-            u8::shr(a[11usize], &b[11usize]),
-            u8::shr(a[12usize], &b[12usize]),
-            u8::shr(a[13usize], &b[13usize]),
-            u8::shr(a[14usize], &b[14usize]),
-            u8::shr(a[15usize], &b[15usize]),
+            u8::wrapping_shr(a[0usize], b[0usize] as u32),
+            u8::wrapping_shr(a[1usize], b[1usize] as u32),
+            u8::wrapping_shr(a[2usize], b[2usize] as u32),
+            u8::wrapping_shr(a[3usize], b[3usize] as u32),
+            u8::wrapping_shr(a[4usize], b[4usize] as u32),
+            u8::wrapping_shr(a[5usize], b[5usize] as u32),
+            u8::wrapping_shr(a[6usize], b[6usize] as u32),
+            u8::wrapping_shr(a[7usize], b[7usize] as u32),
+            u8::wrapping_shr(a[8usize], b[8usize] as u32),
+            u8::wrapping_shr(a[9usize], b[9usize] as u32),
+            u8::wrapping_shr(a[10usize], b[10usize] as u32),
+            u8::wrapping_shr(a[11usize], b[11usize] as u32),
+            u8::wrapping_shr(a[12usize], b[12usize] as u32),
+            u8::wrapping_shr(a[13usize], b[13usize] as u32),
+            u8::wrapping_shr(a[14usize], b[14usize] as u32),
+            u8::wrapping_shr(a[15usize], b[15usize] as u32),
         ]
         .simd_into(self)
     }
@@ -2123,14 +2123,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         [
-            i16::shl(a[0usize], &b[0usize]),
-            i16::shl(a[1usize], &b[1usize]),
-            i16::shl(a[2usize], &b[2usize]),
-            i16::shl(a[3usize], &b[3usize]),
-            i16::shl(a[4usize], &b[4usize]),
-            i16::shl(a[5usize], &b[5usize]),
-            i16::shl(a[6usize], &b[6usize]),
-            i16::shl(a[7usize], &b[7usize]),
+            i16::wrapping_shl(a[0usize], b[0usize] as u32),
+            i16::wrapping_shl(a[1usize], b[1usize] as u32),
+            i16::wrapping_shl(a[2usize], b[2usize] as u32),
+            i16::wrapping_shl(a[3usize], b[3usize] as u32),
+            i16::wrapping_shl(a[4usize], b[4usize] as u32),
+            i16::wrapping_shl(a[5usize], b[5usize] as u32),
+            i16::wrapping_shl(a[6usize], b[6usize] as u32),
+            i16::wrapping_shl(a[7usize], b[7usize] as u32),
         ]
         .simd_into(self)
     }
@@ -2147,14 +2147,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         [
-            i16::shr(a[0usize], &b[0usize]),
-            i16::shr(a[1usize], &b[1usize]),
-            i16::shr(a[2usize], &b[2usize]),
-            i16::shr(a[3usize], &b[3usize]),
-            i16::shr(a[4usize], &b[4usize]),
-            i16::shr(a[5usize], &b[5usize]),
-            i16::shr(a[6usize], &b[6usize]),
-            i16::shr(a[7usize], &b[7usize]),
+            i16::wrapping_shr(a[0usize], b[0usize] as u32),
+            i16::wrapping_shr(a[1usize], b[1usize] as u32),
+            i16::wrapping_shr(a[2usize], b[2usize] as u32),
+            i16::wrapping_shr(a[3usize], b[3usize] as u32),
+            i16::wrapping_shr(a[4usize], b[4usize] as u32),
+            i16::wrapping_shr(a[5usize], b[5usize] as u32),
+            i16::wrapping_shr(a[6usize], b[6usize] as u32),
+            i16::wrapping_shr(a[7usize], b[7usize] as u32),
         ]
         .simd_into(self)
     }
@@ -2571,14 +2571,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         [
-            u16::shl(a[0usize], &b[0usize]),
-            u16::shl(a[1usize], &b[1usize]),
-            u16::shl(a[2usize], &b[2usize]),
-            u16::shl(a[3usize], &b[3usize]),
-            u16::shl(a[4usize], &b[4usize]),
-            u16::shl(a[5usize], &b[5usize]),
-            u16::shl(a[6usize], &b[6usize]),
-            u16::shl(a[7usize], &b[7usize]),
+            u16::wrapping_shl(a[0usize], b[0usize] as u32),
+            u16::wrapping_shl(a[1usize], b[1usize] as u32),
+            u16::wrapping_shl(a[2usize], b[2usize] as u32),
+            u16::wrapping_shl(a[3usize], b[3usize] as u32),
+            u16::wrapping_shl(a[4usize], b[4usize] as u32),
+            u16::wrapping_shl(a[5usize], b[5usize] as u32),
+            u16::wrapping_shl(a[6usize], b[6usize] as u32),
+            u16::wrapping_shl(a[7usize], b[7usize] as u32),
         ]
         .simd_into(self)
     }
@@ -2595,14 +2595,14 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         [
-            u16::shr(a[0usize], &b[0usize]),
-            u16::shr(a[1usize], &b[1usize]),
-            u16::shr(a[2usize], &b[2usize]),
-            u16::shr(a[3usize], &b[3usize]),
-            u16::shr(a[4usize], &b[4usize]),
-            u16::shr(a[5usize], &b[5usize]),
-            u16::shr(a[6usize], &b[6usize]),
-            u16::shr(a[7usize], &b[7usize]),
+            u16::wrapping_shr(a[0usize], b[0usize] as u32),
+            u16::wrapping_shr(a[1usize], b[1usize] as u32),
+            u16::wrapping_shr(a[2usize], b[2usize] as u32),
+            u16::wrapping_shr(a[3usize], b[3usize] as u32),
+            u16::wrapping_shr(a[4usize], b[4usize] as u32),
+            u16::wrapping_shr(a[5usize], b[5usize] as u32),
+            u16::wrapping_shr(a[6usize], b[6usize] as u32),
+            u16::wrapping_shr(a[7usize], b[7usize] as u32),
         ]
         .simd_into(self)
     }
@@ -3177,10 +3177,10 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shlv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         [
-            i32::shl(a[0usize], &b[0usize]),
-            i32::shl(a[1usize], &b[1usize]),
-            i32::shl(a[2usize], &b[2usize]),
-            i32::shl(a[3usize], &b[3usize]),
+            i32::wrapping_shl(a[0usize], b[0usize] as u32),
+            i32::wrapping_shl(a[1usize], b[1usize] as u32),
+            i32::wrapping_shl(a[2usize], b[2usize] as u32),
+            i32::wrapping_shl(a[3usize], b[3usize] as u32),
         ]
         .simd_into(self)
     }
@@ -3197,10 +3197,10 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         [
-            i32::shr(a[0usize], &b[0usize]),
-            i32::shr(a[1usize], &b[1usize]),
-            i32::shr(a[2usize], &b[2usize]),
-            i32::shr(a[3usize], &b[3usize]),
+            i32::wrapping_shr(a[0usize], b[0usize] as u32),
+            i32::wrapping_shr(a[1usize], b[1usize] as u32),
+            i32::wrapping_shr(a[2usize], b[2usize] as u32),
+            i32::wrapping_shr(a[3usize], b[3usize] as u32),
         ]
         .simd_into(self)
     }
@@ -3609,10 +3609,10 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shlv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         [
-            u32::shl(a[0usize], &b[0usize]),
-            u32::shl(a[1usize], &b[1usize]),
-            u32::shl(a[2usize], &b[2usize]),
-            u32::shl(a[3usize], &b[3usize]),
+            u32::wrapping_shl(a[0usize], b[0usize] as u32),
+            u32::wrapping_shl(a[1usize], b[1usize] as u32),
+            u32::wrapping_shl(a[2usize], b[2usize] as u32),
+            u32::wrapping_shl(a[3usize], b[3usize] as u32),
         ]
         .simd_into(self)
     }
@@ -3629,10 +3629,10 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         [
-            u32::shr(a[0usize], &b[0usize]),
-            u32::shr(a[1usize], &b[1usize]),
-            u32::shr(a[2usize], &b[2usize]),
-            u32::shr(a[3usize], &b[3usize]),
+            u32::wrapping_shr(a[0usize], b[0usize] as u32),
+            u32::wrapping_shr(a[1usize], b[1usize] as u32),
+            u32::wrapping_shr(a[2usize], b[2usize] as u32),
+            u32::wrapping_shr(a[3usize], b[3usize] as u32),
         ]
         .simd_into(self)
     }
@@ -4653,20 +4653,24 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shlv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
-            i64::shl(a[0usize], &b[0usize]),
-            i64::shl(a[1usize], &b[1usize]),
+            i64::wrapping_shl(a[0usize], b[0usize] as u32),
+            i64::wrapping_shl(a[1usize], b[1usize] as u32),
         ]
         .simd_into(self)
     }
     #[inline(always)]
     fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self> {
-        [i64::shr(a[0usize], shift), i64::shr(a[1usize], shift)].simd_into(self)
+        [
+            i64::wrapping_shr(a[0usize], shift),
+            i64::wrapping_shr(a[1usize], shift),
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         [
-            i64::shr(a[0usize], &b[0usize]),
-            i64::shr(a[1usize], &b[1usize]),
+            i64::wrapping_shr(a[0usize], b[0usize] as u32),
+            i64::wrapping_shr(a[1usize], b[1usize] as u32),
         ]
         .simd_into(self)
     }
@@ -5039,8 +5043,8 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shlv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         [
-            u64::shl(a[0usize], &b[0usize]),
-            u64::shl(a[1usize], &b[1usize]),
+            u64::wrapping_shl(a[0usize], b[0usize] as u32),
+            u64::wrapping_shl(a[1usize], b[1usize] as u32),
         ]
         .simd_into(self)
     }
@@ -5057,8 +5061,8 @@ impl Simd for Sse4_2 {
     #[inline(always)]
     fn shrv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         [
-            u64::shr(a[0usize], &b[0usize]),
-            u64::shr(a[1usize], &b[1usize]),
+            u64::wrapping_shr(a[0usize], b[0usize] as u32),
+            u64::wrapping_shr(a[1usize], b[1usize] as u32),
         ]
         .simd_into(self)
     }

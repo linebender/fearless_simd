@@ -3,6 +3,7 @@
 
 #![expect(
     missing_docs,
+    trivial_numeric_casts,
     clippy::cast_possible_truncation,
     clippy::unseparated_literal_suffix,
     clippy::use_self,
