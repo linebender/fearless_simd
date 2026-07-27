@@ -4,11 +4,12 @@
 #![expect(
     missing_docs,
     trivial_numeric_casts,
+    clippy::unnecessary_cast,
     clippy::cast_possible_truncation,
     clippy::unseparated_literal_suffix,
     clippy::use_self,
     clippy::wrong_self_convention,
-    reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
+    reason = "Simplifies the generator and has no effect on the machine code"
 )]
 #![cfg_attr(
     target_arch = "x86_64",
