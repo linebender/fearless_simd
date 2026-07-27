@@ -32,9 +32,48 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         /// Conversion between a SIMD vector and its corresponding lane array.
         ///
         /// This trait is sealed and implemented by all SIMD vector and mask types.
+        ///
+        /// ```
+        /// # use fearless_simd::{Fallback, Simd, SimdArray, mask32x4, u32x4};
+        /// fn round_trip<S: Simd, V: SimdArray<S>>(
+        ///     simd: S,
+        ///     source: &[V::Element],
+        ///     destination: &mut [V::Element],
+        /// ) {
+        ///     V::from_slice(simd, source).store_slice(destination);
+        /// }
+        ///
+        /// let simd = Fallback::new();
+        /// let mut vector_lanes = [0; 4];
+        /// round_trip::<_, u32x4<_>>(simd, &[1, 2, 3, 4], &mut vector_lanes);
+        /// assert_eq!(vector_lanes, [1, 2, 3, 4]);
+        ///
+        /// let mut mask_lanes = [0; 4];
+        /// round_trip::<_, mask32x4<_>>(simd, &[-1, 0, -1, 0], &mut mask_lanes);
+        /// assert_eq!(mask_lanes, [-1, 0, -1, 0]);
+        /// ```
         pub trait SimdArray<S: Simd>: Copy + Seal {
+            /// The type of this SIMD vector's lanes.
+            ///
+            /// For masks, this is the signed integer lane representation: false lanes are all
+            /// zeroes and true lanes are all ones.
+            type Element: SimdElement;
+
             /// The array type corresponding to this SIMD vector.
             type Array: Copy;
+
+            /// This SIMD vector's lane count.
+            const N: usize;
+
+            /// Create a SIMD vector from a slice.
+            ///
+            /// The slice must be exactly the size of the SIMD vector.
+            fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+
+            /// Store a SIMD vector into a slice.
+            ///
+            /// The slice must be exactly the size of the SIMD vector.
+            fn store_slice(&self, slice: &mut [Self::Element]);
 
             #[doc(hidden)]
             fn load_array(simd: S, val: Self::Array) -> Self;
@@ -261,12 +300,6 @@ fn mk_simd_base() -> TokenStream {
             + SimdArrayRef<S>
             + core::ops::Deref<Target = Self::Array>+ core::ops::DerefMut<Target = Self::Array>
         {
-            /// The type of this vector's elements.
-            type Element: SimdElement;
-            /// This vector type's lane count. This is useful when you're
-            /// working with a native-width vector (e.g. [`Simd::f32s`]) and
-            /// want to process data in native-width chunks.
-            const N: usize;
             /// A SIMD vector mask with the same number of logical lanes.
             ///
             /// Masks intentionally do not implement [`SimdBase`]. SSE, NEON, WASM, and the
@@ -279,20 +312,12 @@ fn mk_simd_base() -> TokenStream {
             fn witness(&self) -> S;
             fn as_slice(&self) -> &[Self::Element];
             fn as_mut_slice(&mut self) -> &mut [Self::Element];
-            /// Create a SIMD vector from a slice.
-            ///
-            /// The slice must be exactly the size of the SIMD vector.
-            fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
-            /// Store a SIMD vector into a slice.
-            ///
-            /// The slice must be exactly the size of the SIMD vector.
-            fn store_slice(&self, slice: &mut [Self::Element]);
             /// Create a SIMD vector from a 128-bit vector of the same scalar
             /// type, repeated.
             fn block_splat(block: Self::Block) -> Self;
             /// Create a SIMD vector where each element is produced by
             /// calling `f` with that element's lane index (from 0 to
-            /// [`SimdBase::N`] - 1).
+            /// [`SimdArray::N`] - 1).
             fn from_fn(simd: S, f: impl FnMut(usize) -> Self::Element) -> Self;
 
             #( #methods )*
@@ -395,18 +420,10 @@ fn mk_simd_mask() -> TokenStream {
         pub trait SimdMask<S: Simd>:
             Copy + Sync + Send + 'static
             + Seal
+            + SimdArray<S>
             + Select<Self>
             #(+ #op_traits)*
         {
-            /// The signed integer type used when converting this mask to and from lane values.
-            ///
-            /// False lanes are encoded as all zeroes (integer value 0), and true lanes are encoded as all ones
-            /// (integer value -1).
-            type Element: SimdElement;
-
-            /// This mask type's lane count.
-            const N: usize;
-
             /// Get the [`Simd`] implementation associated with this type.
             fn witness(&self) -> S;
 
@@ -442,16 +459,6 @@ fn mk_simd_mask() -> TokenStream {
             ///
             /// Panics if `index` is greater than or equal to the number of lanes in the mask.
             fn set(&mut self, index: usize, value: bool);
-
-            /// Create a SIMD mask from signed integer mask lanes.
-            ///
-            /// The slice must be exactly the size of the SIMD mask.
-            fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
-
-            /// Store this SIMD mask as signed integer mask lanes.
-            ///
-            /// The slice must be exactly the size of the SIMD mask.
-            fn store_slice(&self, slice: &mut [Self::Element]);
 
             #( #methods )*
         }

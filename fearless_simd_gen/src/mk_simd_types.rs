@@ -47,7 +47,21 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 impl<S: Simd> Seal for #name<S> {}
 
                 impl<S: Simd> SimdArray<S> for #name<S> {
+                    type Element = #rust_scalar;
                     type Array = [#rust_scalar; #len];
+                    const N: usize = #len;
+
+                    #[inline(always)]
+                    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+                        let slice: &Self::Array = slice.try_into().unwrap();
+                        Self::load_array_ref(simd, slice)
+                    }
+
+                    #[inline(always)]
+                    fn store_slice(&self, slice: &mut [Self::Element]) {
+                        let slice: &mut Self::Array = slice.try_into().unwrap();
+                        (*self).store_array(slice);
+                    }
 
                     #[inline(always)]
                     fn load_array(simd: S, val: Self::Array) -> Self {
@@ -251,7 +265,21 @@ pub(crate) fn mk_simd_types() -> TokenStream {
             impl<S: Simd> Seal for #name<S> {}
 
             impl<S: Simd> SimdArray<S> for #name<S> {
+                type Element = #rust_scalar;
                 type Array = [#rust_scalar; #len];
+                const N: usize = #len;
+
+                #[inline(always)]
+                fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+                    let slice: &Self::Array = slice.try_into().unwrap();
+                    Self::load_array_ref(simd, slice)
+                }
+
+                #[inline(always)]
+                fn store_slice(&self, slice: &mut [Self::Element]) {
+                    let slice: &mut Self::Array = slice.try_into().unwrap();
+                    (*self).store_array(slice);
+                }
 
                 #[inline(always)]
                 fn load_array(simd: S, val: Self::Array) -> Self {
@@ -360,8 +388,6 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
 fn simd_mask_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
-    let scalar = ty.scalar.rust(ty.scalar_bits);
-    let len = Literal::usize_unsuffixed(ty.len);
     let splat = generic_op_name("splat", ty);
     let from_bitmask_op = generic_op_name("from_bitmask", ty);
     let to_bitmask_op = generic_op_name("to_bitmask", ty);
@@ -390,9 +416,6 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
 
     quote! {
         impl<S: Simd> SimdMask<S> for #name<S> {
-            type Element = #scalar;
-            const N: usize = #len;
-
             #[inline(always)]
             fn witness(&self) -> S {
                 self.simd
@@ -418,18 +441,6 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
                 self.simd.#set_op(self, index, value);
             }
 
-            #[inline(always)]
-            fn from_slice(simd: S, slice: &[#scalar]) -> Self {
-                let slice: &[#scalar; #len] = slice.try_into().unwrap();
-                Self::load_array_ref(simd, slice)
-            }
-
-            #[inline(always)]
-            fn store_slice(&self, slice: &mut [#scalar]) {
-                let slice: &mut [#scalar; #len] = slice.try_into().unwrap();
-                (*self).store_array(slice);
-            }
-
             #( #methods )*
         }
     }
@@ -438,7 +449,6 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
 fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
     let scalar = ty.scalar.rust(ty.scalar_bits);
-    let len = Literal::usize_unsuffixed(ty.len);
     let from_fn_items = unrolled_array(ty.len, |idx| quote! { f(#idx) });
     let vec_trait = match ty.scalar {
         ScalarType::Float => "SimdFloat",
@@ -497,8 +507,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let swizzle_dyn_within_blocks_op = generic_op_name("swizzle_dyn_within_blocks", ty);
     quote! {
         impl<S: Simd> SimdBase<S> for #name<S> {
-            type Element = #scalar;
-            const N: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
 
@@ -515,16 +523,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn as_mut_slice(&mut self) -> &mut [#scalar] {
                 self.as_array_mut().as_mut_slice()
-            }
-
-            #[inline(always)]
-            fn from_slice(simd: S, slice: &[#scalar]) -> Self {
-                Self::load_array_ref(simd, slice.try_into().unwrap())
-            }
-
-            #[inline(always)]
-            fn store_slice(&self, slice: &mut [#scalar]) {
-                (*self).store_array(slice.try_into().unwrap());
             }
 
             #[inline(always)]

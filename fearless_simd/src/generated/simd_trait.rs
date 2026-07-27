@@ -16,9 +16,44 @@ use crate::{
 #[doc = r" Conversion between a SIMD vector and its corresponding lane array."]
 #[doc = r""]
 #[doc = r" This trait is sealed and implemented by all SIMD vector and mask types."]
+#[doc = r""]
+#[doc = r" ```"]
+#[doc = r" # use fearless_simd::{Fallback, Simd, SimdArray, mask32x4, u32x4};"]
+#[doc = r" fn round_trip<S: Simd, V: SimdArray<S>>("]
+#[doc = r"     simd: S,"]
+#[doc = r"     source: &[V::Element],"]
+#[doc = r"     destination: &mut [V::Element],"]
+#[doc = r" ) {"]
+#[doc = r"     V::from_slice(simd, source).store_slice(destination);"]
+#[doc = r" }"]
+#[doc = r""]
+#[doc = r" let simd = Fallback::new();"]
+#[doc = r" let mut vector_lanes = [0; 4];"]
+#[doc = r" round_trip::<_, u32x4<_>>(simd, &[1, 2, 3, 4], &mut vector_lanes);"]
+#[doc = r" assert_eq!(vector_lanes, [1, 2, 3, 4]);"]
+#[doc = r""]
+#[doc = r" let mut mask_lanes = [0; 4];"]
+#[doc = r" round_trip::<_, mask32x4<_>>(simd, &[-1, 0, -1, 0], &mut mask_lanes);"]
+#[doc = r" assert_eq!(mask_lanes, [-1, 0, -1, 0]);"]
+#[doc = r" ```"]
 pub trait SimdArray<S: Simd>: Copy + Seal {
+    #[doc = r" The type of this SIMD vector's lanes."]
+    #[doc = r""]
+    #[doc = r" For masks, this is the signed integer lane representation: false lanes are all"]
+    #[doc = r" zeroes and true lanes are all ones."]
+    type Element: SimdElement;
     #[doc = r" The array type corresponding to this SIMD vector."]
     type Array: Copy;
+    #[doc = r" This SIMD vector's lane count."]
+    const N: usize;
+    #[doc = r" Create a SIMD vector from a slice."]
+    #[doc = r""]
+    #[doc = r" The slice must be exactly the size of the SIMD vector."]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
+    #[doc = r" Store a SIMD vector into a slice."]
+    #[doc = r""]
+    #[doc = r" The slice must be exactly the size of the SIMD vector."]
+    fn store_slice(&self, slice: &mut [Self::Element]);
     #[doc(hidden)]
     fn load_array(simd: S, val: Self::Array) -> Self;
     #[doc(hidden)]
@@ -3652,12 +3687,6 @@ pub trait SimdBase<S: Simd>:
     + core::ops::Deref<Target = Self::Array>
     + core::ops::DerefMut<Target = Self::Array>
 {
-    #[doc = r" The type of this vector's elements."]
-    type Element: SimdElement;
-    #[doc = r" This vector type's lane count. This is useful when you're"]
-    #[doc = r" working with a native-width vector (e.g. [`Simd::f32s`]) and"]
-    #[doc = r" want to process data in native-width chunks."]
-    const N: usize;
     #[doc = r" A SIMD vector mask with the same number of logical lanes."]
     #[doc = r""]
     #[doc = r" Masks intentionally do not implement [`SimdBase`]. SSE, NEON, WASM, and the"]
@@ -3670,20 +3699,12 @@ pub trait SimdBase<S: Simd>:
     fn witness(&self) -> S;
     fn as_slice(&self) -> &[Self::Element];
     fn as_mut_slice(&mut self) -> &mut [Self::Element];
-    #[doc = r" Create a SIMD vector from a slice."]
-    #[doc = r""]
-    #[doc = r" The slice must be exactly the size of the SIMD vector."]
-    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
-    #[doc = r" Store a SIMD vector into a slice."]
-    #[doc = r""]
-    #[doc = r" The slice must be exactly the size of the SIMD vector."]
-    fn store_slice(&self, slice: &mut [Self::Element]);
     #[doc = r" Create a SIMD vector from a 128-bit vector of the same scalar"]
     #[doc = r" type, repeated."]
     fn block_splat(block: Self::Block) -> Self;
     #[doc = r" Create a SIMD vector where each element is produced by"]
     #[doc = r" calling `f` with that element's lane index (from 0 to"]
-    #[doc = r" [`SimdBase::N`] - 1)."]
+    #[doc = r" [`SimdArray::N`] - 1)."]
     fn from_fn(simd: S, f: impl FnMut(usize) -> Self::Element) -> Self;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat(simd: S, val: Self::Element) -> Self;
@@ -3882,6 +3903,7 @@ pub trait SimdMask<S: Simd>:
     + Send
     + 'static
     + Seal
+    + SimdArray<S>
     + Select<Self>
     + core::ops::BitAnd<Output = Self>
     + core::ops::BitAndAssign
@@ -3891,13 +3913,6 @@ pub trait SimdMask<S: Simd>:
     + core::ops::BitXorAssign
     + core::ops::Not<Output = Self>
 {
-    #[doc = r" The signed integer type used when converting this mask to and from lane values."]
-    #[doc = r""]
-    #[doc = r" False lanes are encoded as all zeroes (integer value 0), and true lanes are encoded as all ones"]
-    #[doc = r" (integer value -1)."]
-    type Element: SimdElement;
-    #[doc = r" This mask type's lane count."]
-    const N: usize;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
     #[doc = r" Create a SIMD mask with all lanes set to the given boolean value."]
@@ -3928,14 +3943,6 @@ pub trait SimdMask<S: Simd>:
     #[doc = r""]
     #[doc = r" Panics if `index` is greater than or equal to the number of lanes in the mask."]
     fn set(&mut self, index: usize, value: bool);
-    #[doc = r" Create a SIMD mask from signed integer mask lanes."]
-    #[doc = r""]
-    #[doc = r" The slice must be exactly the size of the SIMD mask."]
-    fn from_slice(simd: S, slice: &[Self::Element]) -> Self;
-    #[doc = r" Store this SIMD mask as signed integer mask lanes."]
-    #[doc = r""]
-    #[doc = r" The slice must be exactly the size of the SIMD mask."]
-    fn store_slice(&self, slice: &mut [Self::Element]);
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self;
     #[doc = "Returns true if any logical lanes in this mask are true.\n\nMasks may be converted to and from signed integer lane arrays for compatibility with older APIs. For those conversions, false is encoded as all zeroes (integer value 0) and true is encoded as all ones (integer value -1).\n\nBehavior on masks constructed from any other integer bit pattern is unspecified. It may vary depending on architecture, feature level, the mask elements' width, the mask vector's width, or library version.\n\nThe behavior is also not guaranteed to be logically consistent for such non-canonical masks. `any_true` may not return the same result as `!all_false`, and `all_true` may not return the same result as `!any_false`.\n\nThe [`select`](crate::Select::select) operation also has unspecified behavior for non-canonical masks. That behavior may not match the behavior of this operation."]

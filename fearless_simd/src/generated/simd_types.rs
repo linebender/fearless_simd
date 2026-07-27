@@ -16,7 +16,19 @@ pub struct f32x4<S: Simd> {
 }
 impl<S: Simd> Seal for f32x4<S> {}
 impl<S: Simd> SimdArray<S> for f32x4<S> {
+    type Element = f32;
     type Array = [f32; 4];
+    const N: usize = 4;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -117,8 +129,6 @@ impl<S: Simd> Bytes for f32x4<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for f32x4<S> {
-    type Element = f32;
-    const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = f32x4<S>;
     #[inline(always)]
@@ -132,14 +142,6 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f32] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f32]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f32) -> Self {
@@ -324,7 +326,19 @@ pub struct i8x16<S: Simd> {
 }
 impl<S: Simd> Seal for i8x16<S> {}
 impl<S: Simd> SimdArray<S> for i8x16<S> {
+    type Element = i8;
     type Array = [i8; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -425,8 +439,6 @@ impl<S: Simd> Bytes for i8x16<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i8x16<S> {
-    type Element = i8;
-    const N: usize = 16;
     type Mask = mask8x16<S>;
     type Block = i8x16<S>;
     #[inline(always)]
@@ -440,14 +452,6 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i8] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
@@ -584,7 +588,19 @@ pub struct u8x16<S: Simd> {
 }
 impl<S: Simd> Seal for u8x16<S> {}
 impl<S: Simd> SimdArray<S> for u8x16<S> {
+    type Element = u8;
     type Array = [u8; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -685,8 +701,6 @@ impl<S: Simd> Bytes for u8x16<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u8x16<S> {
-    type Element = u8;
-    const N: usize = 16;
     type Mask = mask8x16<S>;
     type Block = u8x16<S>;
     #[inline(always)]
@@ -700,14 +714,6 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u8] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u8]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u8) -> Self {
@@ -843,7 +849,19 @@ pub struct mask8x16<S: Simd> {
 }
 impl<S: Simd> Seal for mask8x16<S> {}
 impl<S: Simd> SimdArray<S> for mask8x16<S> {
+    type Element = i8;
     type Array = [i8; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -895,8 +913,6 @@ impl<S: Simd> Select<mask8x16<S>> for mask8x16<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask8x16<S> {
-    type Element = i8;
-    const N: usize = 16;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -916,16 +932,6 @@ impl<S: Simd> SimdMask<S> for mask8x16<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask8x16(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        let slice: &[i8; 16] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        let slice: &mut [i8; 16] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -957,7 +963,19 @@ pub struct i16x8<S: Simd> {
 }
 impl<S: Simd> Seal for i16x8<S> {}
 impl<S: Simd> SimdArray<S> for i16x8<S> {
+    type Element = i16;
     type Array = [i16; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -1058,8 +1076,6 @@ impl<S: Simd> Bytes for i16x8<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i16x8<S> {
-    type Element = i16;
-    const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = i16x8<S>;
     #[inline(always)]
@@ -1073,14 +1089,6 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i16] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
@@ -1209,7 +1217,19 @@ pub struct u16x8<S: Simd> {
 }
 impl<S: Simd> Seal for u16x8<S> {}
 impl<S: Simd> SimdArray<S> for u16x8<S> {
+    type Element = u16;
     type Array = [u16; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -1310,8 +1330,6 @@ impl<S: Simd> Bytes for u16x8<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u16x8<S> {
-    type Element = u16;
-    const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = u16x8<S>;
     #[inline(always)]
@@ -1325,14 +1343,6 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u16] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u16]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u16) -> Self {
@@ -1460,7 +1470,19 @@ pub struct mask16x8<S: Simd> {
 }
 impl<S: Simd> Seal for mask16x8<S> {}
 impl<S: Simd> SimdArray<S> for mask16x8<S> {
+    type Element = i16;
     type Array = [i16; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -1512,8 +1534,6 @@ impl<S: Simd> Select<mask16x8<S>> for mask16x8<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask16x8<S> {
-    type Element = i16;
-    const N: usize = 8;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -1533,16 +1553,6 @@ impl<S: Simd> SimdMask<S> for mask16x8<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask16x8(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        let slice: &[i16; 8] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        let slice: &mut [i16; 8] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1574,7 +1584,19 @@ pub struct i32x4<S: Simd> {
 }
 impl<S: Simd> Seal for i32x4<S> {}
 impl<S: Simd> SimdArray<S> for i32x4<S> {
+    type Element = i32;
     type Array = [i32; 4];
+    const N: usize = 4;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -1675,8 +1697,6 @@ impl<S: Simd> Bytes for i32x4<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i32x4<S> {
-    type Element = i32;
-    const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = i32x4<S>;
     #[inline(always)]
@@ -1690,14 +1710,6 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i32] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
@@ -1826,7 +1838,19 @@ pub struct u32x4<S: Simd> {
 }
 impl<S: Simd> Seal for u32x4<S> {}
 impl<S: Simd> SimdArray<S> for u32x4<S> {
+    type Element = u32;
     type Array = [u32; 4];
+    const N: usize = 4;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -1927,8 +1951,6 @@ impl<S: Simd> Bytes for u32x4<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u32x4<S> {
-    type Element = u32;
-    const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = u32x4<S>;
     #[inline(always)]
@@ -1942,14 +1964,6 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u32] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u32]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u32) -> Self {
@@ -2077,7 +2091,19 @@ pub struct mask32x4<S: Simd> {
 }
 impl<S: Simd> Seal for mask32x4<S> {}
 impl<S: Simd> SimdArray<S> for mask32x4<S> {
+    type Element = i32;
     type Array = [i32; 4];
+    const N: usize = 4;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -2129,8 +2155,6 @@ impl<S: Simd> Select<mask32x4<S>> for mask32x4<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask32x4<S> {
-    type Element = i32;
-    const N: usize = 4;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -2150,16 +2174,6 @@ impl<S: Simd> SimdMask<S> for mask32x4<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask32x4(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        let slice: &[i32; 4] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        let slice: &mut [i32; 4] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -2191,7 +2205,19 @@ pub struct f64x2<S: Simd> {
 }
 impl<S: Simd> Seal for f64x2<S> {}
 impl<S: Simd> SimdArray<S> for f64x2<S> {
+    type Element = f64;
     type Array = [f64; 2];
+    const N: usize = 2;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -2292,8 +2318,6 @@ impl<S: Simd> Bytes for f64x2<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for f64x2<S> {
-    type Element = f64;
-    const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = f64x2<S>;
     #[inline(always)]
@@ -2307,14 +2331,6 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f64] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f64]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f64) -> Self {
@@ -2485,7 +2501,19 @@ pub struct i64x2<S: Simd> {
 }
 impl<S: Simd> Seal for i64x2<S> {}
 impl<S: Simd> SimdArray<S> for i64x2<S> {
+    type Element = i64;
     type Array = [i64; 2];
+    const N: usize = 2;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -2586,8 +2614,6 @@ impl<S: Simd> Bytes for i64x2<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i64x2<S> {
-    type Element = i64;
-    const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = i64x2<S>;
     #[inline(always)]
@@ -2601,14 +2627,6 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i64] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i64) -> Self {
@@ -2725,7 +2743,19 @@ pub struct u64x2<S: Simd> {
 }
 impl<S: Simd> Seal for u64x2<S> {}
 impl<S: Simd> SimdArray<S> for u64x2<S> {
+    type Element = u64;
     type Array = [u64; 2];
+    const N: usize = 2;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -2826,8 +2856,6 @@ impl<S: Simd> Bytes for u64x2<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u64x2<S> {
-    type Element = u64;
-    const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = u64x2<S>;
     #[inline(always)]
@@ -2841,14 +2869,6 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u64] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u64]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u64) -> Self {
@@ -2964,7 +2984,19 @@ pub struct mask64x2<S: Simd> {
 }
 impl<S: Simd> Seal for mask64x2<S> {}
 impl<S: Simd> SimdArray<S> for mask64x2<S> {
+    type Element = i64;
     type Array = [i64; 2];
+    const N: usize = 2;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -3016,8 +3048,6 @@ impl<S: Simd> Select<mask64x2<S>> for mask64x2<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask64x2<S> {
-    type Element = i64;
-    const N: usize = 2;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -3037,16 +3067,6 @@ impl<S: Simd> SimdMask<S> for mask64x2<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask64x2(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        let slice: &[i64; 2] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        let slice: &mut [i64; 2] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -3078,7 +3098,19 @@ pub struct f32x8<S: Simd> {
 }
 impl<S: Simd> Seal for f32x8<S> {}
 impl<S: Simd> SimdArray<S> for f32x8<S> {
+    type Element = f32;
     type Array = [f32; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -3179,8 +3211,6 @@ impl<S: Simd> Bytes for f32x8<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for f32x8<S> {
-    type Element = f32;
-    const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = f32x4<S>;
     #[inline(always)]
@@ -3194,14 +3224,6 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f32] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f32]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f32) -> Self {
@@ -3405,7 +3427,19 @@ pub struct i8x32<S: Simd> {
 }
 impl<S: Simd> Seal for i8x32<S> {}
 impl<S: Simd> SimdArray<S> for i8x32<S> {
+    type Element = i8;
     type Array = [i8; 32];
+    const N: usize = 32;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -3506,8 +3540,6 @@ impl<S: Simd> Bytes for i8x32<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i8x32<S> {
-    type Element = i8;
-    const N: usize = 32;
     type Mask = mask8x32<S>;
     type Block = i8x16<S>;
     #[inline(always)]
@@ -3521,14 +3553,6 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i8] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
@@ -3688,7 +3712,19 @@ pub struct u8x32<S: Simd> {
 }
 impl<S: Simd> Seal for u8x32<S> {}
 impl<S: Simd> SimdArray<S> for u8x32<S> {
+    type Element = u8;
     type Array = [u8; 32];
+    const N: usize = 32;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -3789,8 +3825,6 @@ impl<S: Simd> Bytes for u8x32<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u8x32<S> {
-    type Element = u8;
-    const N: usize = 32;
     type Mask = mask8x32<S>;
     type Block = u8x16<S>;
     #[inline(always)]
@@ -3804,14 +3838,6 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u8] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u8]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u8) -> Self {
@@ -3970,7 +3996,19 @@ pub struct mask8x32<S: Simd> {
 }
 impl<S: Simd> Seal for mask8x32<S> {}
 impl<S: Simd> SimdArray<S> for mask8x32<S> {
+    type Element = i8;
     type Array = [i8; 32];
+    const N: usize = 32;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -4022,8 +4060,6 @@ impl<S: Simd> Select<mask8x32<S>> for mask8x32<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask8x32<S> {
-    type Element = i8;
-    const N: usize = 32;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -4043,16 +4079,6 @@ impl<S: Simd> SimdMask<S> for mask8x32<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask8x32(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        let slice: &[i8; 32] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        let slice: &mut [i8; 32] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4084,7 +4110,19 @@ pub struct i16x16<S: Simd> {
 }
 impl<S: Simd> Seal for i16x16<S> {}
 impl<S: Simd> SimdArray<S> for i16x16<S> {
+    type Element = i16;
     type Array = [i16; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -4185,8 +4223,6 @@ impl<S: Simd> Bytes for i16x16<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i16x16<S> {
-    type Element = i16;
-    const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = i16x8<S>;
     #[inline(always)]
@@ -4200,14 +4236,6 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i16] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
@@ -4353,7 +4381,19 @@ pub struct u16x16<S: Simd> {
 }
 impl<S: Simd> Seal for u16x16<S> {}
 impl<S: Simd> SimdArray<S> for u16x16<S> {
+    type Element = u16;
     type Array = [u16; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -4454,8 +4494,6 @@ impl<S: Simd> Bytes for u16x16<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u16x16<S> {
-    type Element = u16;
-    const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = u16x8<S>;
     #[inline(always)]
@@ -4469,14 +4507,6 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u16] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u16]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u16) -> Self {
@@ -4621,7 +4651,19 @@ pub struct mask16x16<S: Simd> {
 }
 impl<S: Simd> Seal for mask16x16<S> {}
 impl<S: Simd> SimdArray<S> for mask16x16<S> {
+    type Element = i16;
     type Array = [i16; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -4673,8 +4715,6 @@ impl<S: Simd> Select<mask16x16<S>> for mask16x16<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask16x16<S> {
-    type Element = i16;
-    const N: usize = 16;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -4694,16 +4734,6 @@ impl<S: Simd> SimdMask<S> for mask16x16<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask16x16(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        let slice: &[i16; 16] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        let slice: &mut [i16; 16] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4735,7 +4765,19 @@ pub struct i32x8<S: Simd> {
 }
 impl<S: Simd> Seal for i32x8<S> {}
 impl<S: Simd> SimdArray<S> for i32x8<S> {
+    type Element = i32;
     type Array = [i32; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -4836,8 +4878,6 @@ impl<S: Simd> Bytes for i32x8<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i32x8<S> {
-    type Element = i32;
-    const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = i32x4<S>;
     #[inline(always)]
@@ -4851,14 +4891,6 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i32] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
@@ -5006,7 +5038,19 @@ pub struct u32x8<S: Simd> {
 }
 impl<S: Simd> Seal for u32x8<S> {}
 impl<S: Simd> SimdArray<S> for u32x8<S> {
+    type Element = u32;
     type Array = [u32; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -5107,8 +5151,6 @@ impl<S: Simd> Bytes for u32x8<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u32x8<S> {
-    type Element = u32;
-    const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = u32x4<S>;
     #[inline(always)]
@@ -5122,14 +5164,6 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u32] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u32]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u32) -> Self {
@@ -5276,7 +5310,19 @@ pub struct mask32x8<S: Simd> {
 }
 impl<S: Simd> Seal for mask32x8<S> {}
 impl<S: Simd> SimdArray<S> for mask32x8<S> {
+    type Element = i32;
     type Array = [i32; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -5328,8 +5374,6 @@ impl<S: Simd> Select<mask32x8<S>> for mask32x8<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask32x8<S> {
-    type Element = i32;
-    const N: usize = 8;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -5349,16 +5393,6 @@ impl<S: Simd> SimdMask<S> for mask32x8<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask32x8(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        let slice: &[i32; 8] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        let slice: &mut [i32; 8] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -5390,7 +5424,19 @@ pub struct f64x4<S: Simd> {
 }
 impl<S: Simd> Seal for f64x4<S> {}
 impl<S: Simd> SimdArray<S> for f64x4<S> {
+    type Element = f64;
     type Array = [f64; 4];
+    const N: usize = 4;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -5491,8 +5537,6 @@ impl<S: Simd> Bytes for f64x4<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for f64x4<S> {
-    type Element = f64;
-    const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = f64x2<S>;
     #[inline(always)]
@@ -5506,14 +5550,6 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f64] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f64]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f64) -> Self {
@@ -5691,7 +5727,19 @@ pub struct i64x4<S: Simd> {
 }
 impl<S: Simd> Seal for i64x4<S> {}
 impl<S: Simd> SimdArray<S> for i64x4<S> {
+    type Element = i64;
     type Array = [i64; 4];
+    const N: usize = 4;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -5792,8 +5840,6 @@ impl<S: Simd> Bytes for i64x4<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i64x4<S> {
-    type Element = i64;
-    const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = i64x2<S>;
     #[inline(always)]
@@ -5807,14 +5853,6 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i64] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i64) -> Self {
@@ -5938,7 +5976,19 @@ pub struct u64x4<S: Simd> {
 }
 impl<S: Simd> Seal for u64x4<S> {}
 impl<S: Simd> SimdArray<S> for u64x4<S> {
+    type Element = u64;
     type Array = [u64; 4];
+    const N: usize = 4;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -6039,8 +6089,6 @@ impl<S: Simd> Bytes for u64x4<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u64x4<S> {
-    type Element = u64;
-    const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = u64x2<S>;
     #[inline(always)]
@@ -6054,14 +6102,6 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u64] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u64]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u64) -> Self {
@@ -6184,7 +6224,19 @@ pub struct mask64x4<S: Simd> {
 }
 impl<S: Simd> Seal for mask64x4<S> {}
 impl<S: Simd> SimdArray<S> for mask64x4<S> {
+    type Element = i64;
     type Array = [i64; 4];
+    const N: usize = 4;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -6236,8 +6288,6 @@ impl<S: Simd> Select<mask64x4<S>> for mask64x4<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask64x4<S> {
-    type Element = i64;
-    const N: usize = 4;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -6257,16 +6307,6 @@ impl<S: Simd> SimdMask<S> for mask64x4<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask64x4(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        let slice: &[i64; 4] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        let slice: &mut [i64; 4] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -6298,7 +6338,19 @@ pub struct f32x16<S: Simd> {
 }
 impl<S: Simd> Seal for f32x16<S> {}
 impl<S: Simd> SimdArray<S> for f32x16<S> {
+    type Element = f32;
     type Array = [f32; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -6399,8 +6451,6 @@ impl<S: Simd> Bytes for f32x16<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for f32x16<S> {
-    type Element = f32;
-    const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = f32x4<S>;
     #[inline(always)]
@@ -6414,14 +6464,6 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f32] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f32]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f32) -> Self {
@@ -6629,7 +6671,19 @@ pub struct i8x64<S: Simd> {
 }
 impl<S: Simd> Seal for i8x64<S> {}
 impl<S: Simd> SimdArray<S> for i8x64<S> {
+    type Element = i8;
     type Array = [i8; 64];
+    const N: usize = 64;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -6730,8 +6784,6 @@ impl<S: Simd> Bytes for i8x64<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i8x64<S> {
-    type Element = i8;
-    const N: usize = 64;
     type Mask = mask8x64<S>;
     type Block = i8x16<S>;
     #[inline(always)]
@@ -6745,14 +6797,6 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i8] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
@@ -6938,7 +6982,19 @@ pub struct u8x64<S: Simd> {
 }
 impl<S: Simd> Seal for u8x64<S> {}
 impl<S: Simd> SimdArray<S> for u8x64<S> {
+    type Element = u8;
     type Array = [u8; 64];
+    const N: usize = 64;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -7039,8 +7095,6 @@ impl<S: Simd> Bytes for u8x64<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u8x64<S> {
-    type Element = u8;
-    const N: usize = 64;
     type Mask = mask8x64<S>;
     type Block = u8x16<S>;
     #[inline(always)]
@@ -7054,14 +7108,6 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u8] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u8]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u8]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u8) -> Self {
@@ -7246,7 +7292,19 @@ pub struct mask8x64<S: Simd> {
 }
 impl<S: Simd> Seal for mask8x64<S> {}
 impl<S: Simd> SimdArray<S> for mask8x64<S> {
+    type Element = i8;
     type Array = [i8; 64];
+    const N: usize = 64;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -7298,8 +7356,6 @@ impl<S: Simd> Select<mask8x64<S>> for mask8x64<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask8x64<S> {
-    type Element = i8;
-    const N: usize = 64;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -7319,16 +7375,6 @@ impl<S: Simd> SimdMask<S> for mask8x64<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask8x64(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i8]) -> Self {
-        let slice: &[i8; 64] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i8]) {
-        let slice: &mut [i8; 64] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -7360,7 +7406,19 @@ pub struct i16x32<S: Simd> {
 }
 impl<S: Simd> Seal for i16x32<S> {}
 impl<S: Simd> SimdArray<S> for i16x32<S> {
+    type Element = i16;
     type Array = [i16; 32];
+    const N: usize = 32;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -7461,8 +7519,6 @@ impl<S: Simd> Bytes for i16x32<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i16x32<S> {
-    type Element = i16;
-    const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = i16x8<S>;
     #[inline(always)]
@@ -7476,14 +7532,6 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i16] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
@@ -7639,7 +7687,19 @@ pub struct u16x32<S: Simd> {
 }
 impl<S: Simd> Seal for u16x32<S> {}
 impl<S: Simd> SimdArray<S> for u16x32<S> {
+    type Element = u16;
     type Array = [u16; 32];
+    const N: usize = 32;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -7740,8 +7800,6 @@ impl<S: Simd> Bytes for u16x32<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u16x32<S> {
-    type Element = u16;
-    const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = u16x8<S>;
     #[inline(always)]
@@ -7755,14 +7813,6 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u16] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u16]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u16]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u16) -> Self {
@@ -7917,7 +7967,19 @@ pub struct mask16x32<S: Simd> {
 }
 impl<S: Simd> Seal for mask16x32<S> {}
 impl<S: Simd> SimdArray<S> for mask16x32<S> {
+    type Element = i16;
     type Array = [i16; 32];
+    const N: usize = 32;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -7969,8 +8031,6 @@ impl<S: Simd> Select<mask16x32<S>> for mask16x32<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask16x32<S> {
-    type Element = i16;
-    const N: usize = 32;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -7990,16 +8050,6 @@ impl<S: Simd> SimdMask<S> for mask16x32<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask16x32(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i16]) -> Self {
-        let slice: &[i16; 32] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i16]) {
-        let slice: &mut [i16; 32] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8031,7 +8081,19 @@ pub struct i32x16<S: Simd> {
 }
 impl<S: Simd> Seal for i32x16<S> {}
 impl<S: Simd> SimdArray<S> for i32x16<S> {
+    type Element = i32;
     type Array = [i32; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -8132,8 +8194,6 @@ impl<S: Simd> Bytes for i32x16<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i32x16<S> {
-    type Element = i32;
-    const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = i32x4<S>;
     #[inline(always)]
@@ -8147,14 +8207,6 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i32] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
@@ -8306,7 +8358,19 @@ pub struct u32x16<S: Simd> {
 }
 impl<S: Simd> Seal for u32x16<S> {}
 impl<S: Simd> SimdArray<S> for u32x16<S> {
+    type Element = u32;
     type Array = [u32; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -8407,8 +8471,6 @@ impl<S: Simd> Bytes for u32x16<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u32x16<S> {
-    type Element = u32;
-    const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = u32x4<S>;
     #[inline(always)]
@@ -8422,14 +8484,6 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u32] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u32]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u32]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u32) -> Self {
@@ -8580,7 +8634,19 @@ pub struct mask32x16<S: Simd> {
 }
 impl<S: Simd> Seal for mask32x16<S> {}
 impl<S: Simd> SimdArray<S> for mask32x16<S> {
+    type Element = i32;
     type Array = [i32; 16];
+    const N: usize = 16;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -8632,8 +8698,6 @@ impl<S: Simd> Select<mask32x16<S>> for mask32x16<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask32x16<S> {
-    type Element = i32;
-    const N: usize = 16;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -8653,16 +8717,6 @@ impl<S: Simd> SimdMask<S> for mask32x16<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask32x16(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i32]) -> Self {
-        let slice: &[i32; 16] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i32]) {
-        let slice: &mut [i32; 16] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8694,7 +8748,19 @@ pub struct f64x8<S: Simd> {
 }
 impl<S: Simd> Seal for f64x8<S> {}
 impl<S: Simd> SimdArray<S> for f64x8<S> {
+    type Element = f64;
     type Array = [f64; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -8795,8 +8861,6 @@ impl<S: Simd> Bytes for f64x8<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for f64x8<S> {
-    type Element = f64;
-    const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = f64x2<S>;
     #[inline(always)]
@@ -8810,14 +8874,6 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f64] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[f64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [f64]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f64) -> Self {
@@ -9001,7 +9057,19 @@ pub struct i64x8<S: Simd> {
 }
 impl<S: Simd> Seal for i64x8<S> {}
 impl<S: Simd> SimdArray<S> for i64x8<S> {
+    type Element = i64;
     type Array = [i64; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -9102,8 +9170,6 @@ impl<S: Simd> Bytes for i64x8<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for i64x8<S> {
-    type Element = i64;
-    const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = i64x2<S>;
     #[inline(always)]
@@ -9117,14 +9183,6 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i64] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i64) -> Self {
@@ -9254,7 +9312,19 @@ pub struct u64x8<S: Simd> {
 }
 impl<S: Simd> Seal for u64x8<S> {}
 impl<S: Simd> SimdArray<S> for u64x8<S> {
+    type Element = u64;
     type Array = [u64; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -9355,8 +9425,6 @@ impl<S: Simd> Bytes for u64x8<S> {
     }
 }
 impl<S: Simd> SimdBase<S> for u64x8<S> {
-    type Element = u64;
-    const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = u64x2<S>;
     #[inline(always)]
@@ -9370,14 +9438,6 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u64] {
         self.as_array_mut().as_mut_slice()
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[u64]) -> Self {
-        Self::load_array_ref(simd, slice.try_into().unwrap())
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [u64]) {
-        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u64) -> Self {
@@ -9506,7 +9566,19 @@ pub struct mask64x8<S: Simd> {
 }
 impl<S: Simd> Seal for mask64x8<S> {}
 impl<S: Simd> SimdArray<S> for mask64x8<S> {
+    type Element = i64;
     type Array = [i64; 8];
+    const N: usize = 8;
+    #[inline(always)]
+    fn from_slice(simd: S, slice: &[Self::Element]) -> Self {
+        let slice: &Self::Array = slice.try_into().unwrap();
+        Self::load_array_ref(simd, slice)
+    }
+    #[inline(always)]
+    fn store_slice(&self, slice: &mut [Self::Element]) {
+        let slice: &mut Self::Array = slice.try_into().unwrap();
+        (*self).store_array(slice);
+    }
     #[inline(always)]
     fn load_array(simd: S, val: Self::Array) -> Self {
         Self {
@@ -9558,8 +9630,6 @@ impl<S: Simd> Select<mask64x8<S>> for mask64x8<S> {
     }
 }
 impl<S: Simd> SimdMask<S> for mask64x8<S> {
-    type Element = i64;
-    const N: usize = 8;
     #[inline(always)]
     fn witness(&self) -> S {
         self.simd
@@ -9579,16 +9649,6 @@ impl<S: Simd> SimdMask<S> for mask64x8<S> {
     #[inline(always)]
     fn set(&mut self, index: usize, value: bool) {
         self.simd.set_mask64x8(self, index, value);
-    }
-    #[inline(always)]
-    fn from_slice(simd: S, slice: &[i64]) -> Self {
-        let slice: &[i64; 8] = slice.try_into().unwrap();
-        Self::load_array_ref(simd, slice)
-    }
-    #[inline(always)]
-    fn store_slice(&self, slice: &mut [i64]) {
-        let slice: &mut [i64; 8] = slice.try_into().unwrap();
-        (*self).store_array(slice);
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
