@@ -54,7 +54,7 @@ pub trait Bytes: Sized + Seal {
     /// Bitcast directly to another SIMD vector with the same byte representation.
     /// This is effectively a safe [transmute](core::mem::transmute) for SIMD types.
     ///
-    /// This works in code generic over a [`Simd`](crate::Simd) implementation,
+    /// This works in code generic over a [`Simd`] implementation,
     /// including between native-width vectors with different lane types:
     ///
     /// ```
