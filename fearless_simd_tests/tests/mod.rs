@@ -13,15 +13,10 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
+mod generics;
 mod harness;
 #[cfg(not(miri))] // too slow
 mod soundness;
-
-// Ensure that we can cast between generic native-width vectors
-#[expect(dead_code, reason = "Compile only test")]
-fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
-    x.to_int()
-}
 
 #[allow(clippy::allow_attributes, reason = "Only needed in some cfgs.")]
 #[allow(

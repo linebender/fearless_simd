@@ -170,7 +170,7 @@ fn mk_simd_base() -> TokenStream {
             /// Masks intentionally do not implement [`SimdBase`]. SSE, NEON, WASM, and the
             /// fallback backend currently store masks as all-zero/all-one integer vectors, but
             /// AVX-512/RVV/SVE-style targets use compact predicate registers instead.
-            type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
+            type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask> + Select<Self>;
             /// A 128-bit SIMD vector of the same scalar type.
             type Block: SimdBase<S, Element = Self::Element>;
             /// The array type that this vector type corresponds to, which will
