@@ -3920,12 +3920,12 @@ pub trait SimdMask<S: Simd>:
     #[doc = r" Create a mask from a compact bitmask."]
     #[doc = r""]
     #[doc = r" Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above"]
-    #[doc = r" [`Self::N`] are ignored."]
+    #[doc = r" [`SimdArray::N`] are ignored."]
     fn from_bitmask(simd: S, bits: u64) -> Self;
     #[doc = r" Convert this mask to a compact bitmask."]
     #[doc = r""]
     #[doc = r" Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above"]
-    #[doc = r" [`Self::N`] are cleared."]
+    #[doc = r" [`SimdArray::N`] are cleared."]
     fn to_bitmask(self) -> u64;
     #[doc = r" Test whether one logical lane is set."]
     #[doc = r""]

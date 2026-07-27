@@ -433,13 +433,13 @@ fn mk_simd_mask() -> TokenStream {
             /// Create a mask from a compact bitmask.
             ///
             /// Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above
-            /// [`Self::N`] are ignored.
+            /// [`SimdArray::N`] are ignored.
             fn from_bitmask(simd: S, bits: u64) -> Self;
 
             /// Convert this mask to a compact bitmask.
             ///
             /// Bit `i` maps to lane `i`, with lane 0 in the least significant bit. Bits above
-            /// [`Self::N`] are cleared.
+            /// [`SimdArray::N`] are cleared.
             fn to_bitmask(self) -> u64;
 
             /// Test whether one logical lane is set.
