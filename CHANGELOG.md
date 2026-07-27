@@ -22,6 +22,7 @@ You can find its changes [documented below](#060-2026-07-10).
 - `SimdBase::Mask` now guarantees support for selecting vectors of its associated `SimdBase` type, enabling mask selection in generic code without additional bounds.
 - `SimdElement` now requires `Copy`, enabling elements to be read by value from vectors in generic code without additional bounds.
 - `SimdCombine` and `SimdSplit` now declare their associated vector types as inverse operations, enabling generic code to recover the original vector type without additional equality bounds.
+- `SimdBase::Array` now guarantees `Copy` (and therefore `Clone`), `Debug`, by-value `IntoIterator`, `AsRef`, `AsMut`, and conversion from its vector type, while `SimdBase` guarantees construction from its associated array through `SimdFrom`.
 
 ## [0.6.0][] (2026-07-10)
 

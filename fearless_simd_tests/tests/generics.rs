@@ -32,3 +32,18 @@ fn generic_split_combine<S: Simd, V: SimdSplit<S>>(vector: V) -> V {
     let (left, right) = vector.split();
     left.combine(right)
 }
+
+// Ensure that a generic vector can round-trip through its associated array type
+fn generic_array_roundtrip<S: Simd, V: SimdBase<S>>(vector: V) -> V {
+    fn require_debug<T: core::fmt::Debug>(_: &T) {}
+
+    let simd = vector.witness();
+    let mut array: V::Array = vector.into();
+    let array_copy = array;
+    let array_clone = array.clone();
+    require_debug(&array_clone);
+    let _: Option<V::Element> = array_clone.into_iter().next();
+    let _: &[V::Element] = array.as_ref();
+    let _: &mut [V::Element] = array.as_mut();
+    V::simd_from(simd, array_copy)
+}

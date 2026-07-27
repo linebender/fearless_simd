@@ -3889,6 +3889,7 @@ pub trait SimdBase<S: Simd>:
     + Seal
     + Bytes
     + SimdFrom<Self::Element, S>
+    + SimdFrom<Self::Array, S>
     + core::ops::Index<usize, Output = Self::Element>
     + core::ops::IndexMut<usize, Output = Self::Element>
     + core::ops::Deref<Target = Self::Array>
@@ -3911,7 +3912,12 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" The array type that this vector type corresponds to, which will"]
     #[doc = r" always be `[Self::Element; Self::N]`. It has the same layout as"]
     #[doc = r" this vector type, but likely has a lower alignment."]
-    type Array;
+    type Array: Copy
+        + core::fmt::Debug
+        + IntoIterator<Item = Self::Element>
+        + AsRef<[Self::Element]>
+        + AsMut<[Self::Element]>
+        + From<Self>;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
     fn as_slice(&self) -> &[Self::Element];
