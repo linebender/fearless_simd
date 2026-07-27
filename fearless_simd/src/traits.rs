@@ -65,6 +65,7 @@ pub trait Bytes: Sized + Seal {
     ///     value.bitcast()
     /// }
     /// ```
+    #[inline(always)]
     fn bitcast<U: Bytes<Bytes = Self::Bytes>>(self) -> U {
         U::from_bytes(self.to_bytes())
     }
