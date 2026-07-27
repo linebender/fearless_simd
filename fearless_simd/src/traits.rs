@@ -41,7 +41,9 @@ impl<R, F: FnOnce(Level) -> R> WithSimd for F {
 /// bitwise reinterpretation: it does not perform numeric conversion.
 pub trait Bytes: Sized + Seal {
     /// The same-width SIMD vector of `u8` lanes used as the byte representation.
-    type Bytes;
+    ///
+    /// This type is its own byte representation.
+    type Bytes: Bytes<Bytes = Self::Bytes>;
 
     /// Reinterpret this vector as a same-width vector of `u8` lanes.
     fn to_bytes(self) -> Self::Bytes;

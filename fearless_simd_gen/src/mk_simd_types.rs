@@ -373,6 +373,7 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
 fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
     let scalar = ty.scalar.rust(ty.scalar_bits);
+    let byte_vector = ty.bytes_ty().rust();
     let len = Literal::usize_unsuffixed(ty.len);
     let from_fn_items = unrolled_array(ty.len, |idx| quote! { f(#idx) });
     let vec_trait = match ty.scalar {
@@ -438,6 +439,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     quote! {
         impl<S: Simd> SimdBase<S> for #name<S> {
             type Element = #scalar;
+            type ByteVector = #byte_vector<S>;
             const N: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
