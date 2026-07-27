@@ -19,6 +19,11 @@ You can find its changes [documented below](#060-2026-07-10).
 
 - On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
 - The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
+- All native-width non-mask vector types now share `u8s` as their byte representation, enabling `Bytes::bitcast` between arbitrary lane types in code generic over `Simd`.
+
+### Removed
+
+- Breaking change: removed the low-level `reinterpret_f32_*`, `reinterpret_f64_*`, `reinterpret_i32_*`, `reinterpret_u32_*`, and `reinterpret_u8_*` methods. Use `Bytes::bitcast` for arbitrary same-width bit reinterpretation, or `cvt_to_bytes_*` and `cvt_from_bytes_*` for direct byte-vector conversions.
 
 ## [0.6.0][] (2026-07-10)
 

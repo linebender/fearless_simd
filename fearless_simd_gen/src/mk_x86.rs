@@ -12,7 +12,7 @@ use crate::generic::{
     generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
+use crate::ops::{Op, OpSig, Quantifier, SlideGranularity};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
@@ -318,10 +318,6 @@ impl Level for X86 {
                 scalar_bits,
                 precise,
             } => self.handle_cvt(op, vec_ty, target_ty, scalar_bits, precise),
-            OpSig::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => self.handle_reinterpret(self, op, vec_ty, target_ty, scalar_bits),
             OpSig::MaskReduce {
                 quantifier,
                 condition,
@@ -3069,43 +3065,6 @@ impl X86 {
             }
             _ => unimplemented!(),
         })
-    }
-
-    pub(crate) fn handle_reinterpret(
-        &self,
-        level: &impl Level,
-        op: Op,
-        vec_ty: &VecType,
-        target_ty: ScalarType,
-        scalar_bits: usize,
-    ) -> TokenStream {
-        let dst_ty = vec_ty.reinterpret(target_ty, scalar_bits);
-        assert!(
-            valid_reinterpret(vec_ty, target_ty, scalar_bits),
-            "{vec_ty:?} must be reinterpretable as {dst_ty:?}"
-        );
-
-        if coarse_type(vec_ty) == coarse_type(&dst_ty) {
-            let arch_ty = level.arch_ty(vec_ty);
-            self.kernel_method(
-                op,
-                vec_ty,
-                |token| quote! { #arch_ty::from(a).simd_into(#token) },
-            )
-        } else {
-            let ident = cast_ident(
-                vec_ty.scalar,
-                target_ty,
-                vec_ty.scalar_bits,
-                scalar_bits,
-                vec_ty.n_bits(),
-            );
-            self.kernel_method(
-                op,
-                vec_ty,
-                |token| quote! { #ident(a.into()).simd_into(#token) },
-            )
-        }
     }
 
     pub(crate) fn handle_mask_reduce(

@@ -172,10 +172,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
             target_ty,
             scalar_bits,
             ..
-        }
-        | OpSig::Reinterpret {
-            target_ty,
-            scalar_bits,
         } => {
             let mut half = ty.reinterpret(target_ty, scalar_bits);
             half.len /= 2;

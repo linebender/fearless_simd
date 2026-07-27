@@ -4,60 +4,76 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
-// Additional concrete rows for this operation.
-
 #[simd_test]
 fn from_bytes_i64x2<S: Simd>(simd: S) {
-    let a = i64x2::from_slice(simd, &[1_i64, -2_i64]);
-    let bytes = a.to_bytes();
-    let roundtrip = i64x2::from_bytes(bytes);
-    assert_eq!(roundtrip.as_slice(), a.as_slice());
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i64x2(bytes);
+    let expected: Vec<i64> = byte_values
+        .chunks_exact(size_of::<i64>())
+        .map(|bytes| i64::from_ne_bytes(bytes.try_into().unwrap()))
+        .collect();
+    assert_eq!(result.as_slice(), expected.as_slice());
 }
 
 #[simd_test]
 fn from_bytes_i64x4<S: Simd>(simd: S) {
-    let a = i64x4::from_slice(simd, &[1_i64, -2_i64, 3_i64, -4_i64]);
-    let bytes = a.to_bytes();
-    let roundtrip = i64x4::from_bytes(bytes);
-    assert_eq!(roundtrip.as_slice(), a.as_slice());
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i64x4(bytes);
+    let expected: Vec<i64> = byte_values
+        .chunks_exact(size_of::<i64>())
+        .map(|bytes| i64::from_ne_bytes(bytes.try_into().unwrap()))
+        .collect();
+    assert_eq!(result.as_slice(), expected.as_slice());
 }
 
 #[simd_test]
 fn from_bytes_i64x8<S: Simd>(simd: S) {
-    let a = i64x8::from_slice(
-        simd,
-        &[1_i64, -2_i64, 3_i64, -4_i64, 5_i64, -6_i64, 7_i64, -8_i64],
-    );
-    let bytes = a.to_bytes();
-    let roundtrip = i64x8::from_bytes(bytes);
-    assert_eq!(roundtrip.as_slice(), a.as_slice());
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_i64x8(bytes);
+    let expected: Vec<i64> = byte_values
+        .chunks_exact(size_of::<i64>())
+        .map(|bytes| i64::from_ne_bytes(bytes.try_into().unwrap()))
+        .collect();
+    assert_eq!(result.as_slice(), expected.as_slice());
 }
 
 #[simd_test]
 fn from_bytes_u64x2<S: Simd>(simd: S) {
-    let a = u64x2::from_slice(simd, &[1_u64, 2_u64]);
-    let bytes = a.to_bytes();
-    let roundtrip = u64x2::from_bytes(bytes);
-    assert_eq!(roundtrip.as_slice(), a.as_slice());
+    let byte_values: [u8; 16] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x16::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u64x2(bytes);
+    let expected: Vec<u64> = byte_values
+        .chunks_exact(size_of::<u64>())
+        .map(|bytes| u64::from_ne_bytes(bytes.try_into().unwrap()))
+        .collect();
+    assert_eq!(result.as_slice(), expected.as_slice());
 }
 
 #[simd_test]
 fn from_bytes_u64x4<S: Simd>(simd: S) {
-    let a = u64x4::from_slice(simd, &[1_u64, 2_u64, 3_u64, 4_u64]);
-    let bytes = a.to_bytes();
-    let roundtrip = u64x4::from_bytes(bytes);
-    assert_eq!(roundtrip.as_slice(), a.as_slice());
+    let byte_values: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x32::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u64x4(bytes);
+    let expected: Vec<u64> = byte_values
+        .chunks_exact(size_of::<u64>())
+        .map(|bytes| u64::from_ne_bytes(bytes.try_into().unwrap()))
+        .collect();
+    assert_eq!(result.as_slice(), expected.as_slice());
 }
 
 #[simd_test]
 fn from_bytes_u64x8<S: Simd>(simd: S) {
-    let a = u64x8::from_slice(
-        simd,
-        &[1_u64, 2_u64, 3_u64, 4_u64, 5_u64, 6_u64, 7_u64, 8_u64],
-    );
-    let bytes = a.to_bytes();
-    let roundtrip = u64x8::from_bytes(bytes);
-    assert_eq!(roundtrip.as_slice(), a.as_slice());
+    let byte_values: [u8; 64] = core::array::from_fn(|i| i as u8);
+    let bytes = u8x64::from_slice(simd, &byte_values);
+    let result = simd.cvt_from_bytes_u64x8(bytes);
+    let expected: Vec<u64> = byte_values
+        .chunks_exact(size_of::<u64>())
+        .map(|bytes| u64::from_ne_bytes(bytes.try_into().unwrap()))
+        .collect();
+    assert_eq!(result.as_slice(), expected.as_slice());
 }
 
 // Generated gap-fill coverage rows.

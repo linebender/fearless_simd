@@ -104,12 +104,6 @@ pub(crate) enum OpSig {
         precise: bool,
     },
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
-    /// same bit width.
-    Reinterpret {
-        target_ty: ScalarType,
-        scalar_bits: usize,
-    },
-    /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     WidenNarrow { target_ty: VecType },
     /// Takes an argument of a vector type and another u32 argument (the shift amount), and returns that same vector
@@ -330,10 +324,6 @@ impl Op {
                 target_ty,
                 scalar_bits,
                 ..
-            }
-            | OpSig::Reinterpret {
-                target_ty,
-                scalar_bits,
             } => {
                 let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
                 (vec![vec], quote! { #result<#simd_ty> })
@@ -417,10 +407,7 @@ impl Op {
                 return None;
             }
             OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
-            OpSig::Unary
-            | OpSig::Cvt { .. }
-            | OpSig::Reinterpret { .. }
-            | OpSig::WidenNarrow { .. } => {
+            OpSig::Unary | OpSig::Cvt { .. } | OpSig::WidenNarrow { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { (#arg0) -> Self }
             }
@@ -1398,43 +1385,8 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ops.push(NEGATE_INT);
     }
 
-    if ty.scalar == ScalarType::Float {
-        if ty.scalar_bits == 64 {
-            ops.push(Op::new(
-                "reinterpret_f32",
-                OpKind::AssociatedOnly,
-                OpSig::Reinterpret {
-                    target_ty: ScalarType::Float,
-                    scalar_bits: 32,
-                },
-                "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input.",
-            ));
-        } else {
-            ops.push(Op::new(
-                "reinterpret_f64",
-                OpKind::AssociatedOnly,
-                OpSig::Reinterpret {
-                    target_ty: ScalarType::Float,
-                    scalar_bits: 64,
-                },
-                "Reinterpret the bits of this vector as a vector of `f64` elements.\n\nThe number of elements in the result is half that of the input.",
-            ));
-
-            ops.push(Op::new(
-                "reinterpret_i32",
-                OpKind::AssociatedOnly,
-                OpSig::Reinterpret {
-                    target_ty: ScalarType::Int,
-                    scalar_bits: 32,
-                },
-                "Reinterpret the bits of this vector as a vector of `i32` elements.\n\n\
-                This is a bitwise reinterpretation only, and does not perform any conversions.",
-            ));
-        }
-
-        if ty.scalar_bits == 64 {
-            return ops;
-        }
+    if ty.scalar == ScalarType::Float && ty.scalar_bits == 64 {
+        return ops;
     }
 
     if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
@@ -1491,30 +1443,6 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
                 "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input.",
             ));
         }
-    }
-
-    if valid_reinterpret(ty, ScalarType::Unsigned, 8) {
-        ops.push(Op::new(
-            "reinterpret_u8",
-            OpKind::AssociatedOnly,
-            OpSig::Reinterpret {
-                target_ty: ScalarType::Unsigned,
-                scalar_bits: 8,
-            },
-            "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly.",
-        ));
-    }
-
-    if valid_reinterpret(ty, ScalarType::Unsigned, 32) {
-        ops.push(Op::new(
-            "reinterpret_u32",
-            OpKind::AssociatedOnly,
-            OpSig::Reinterpret {
-                target_ty: ScalarType::Unsigned,
-                scalar_bits: 32,
-            },
-            "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly.",
-        ));
     }
 
     match (ty.scalar, ty.scalar_bits) {
@@ -1688,7 +1616,6 @@ impl OpSig {
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
-            | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask
@@ -1725,7 +1652,6 @@ impl OpSig {
             | Self::StoreArray => &[],
             Self::Unary
             | Self::Cvt { .. }
-            | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
             | Self::AsArray { .. }
@@ -1781,7 +1707,6 @@ impl OpSig {
             Self::Select
             | Self::Split { .. }
             | Self::Cvt { .. }
-            | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
             | Self::Shift
             | Self::ElementRotate { .. }
@@ -1821,16 +1746,4 @@ fn store_interleaved_arg_ty(block_size: u16, block_count: u16, vec_ty: &VecType)
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
     quote! { &mut [#scalar; #len] }
-}
-
-pub(crate) fn valid_reinterpret(src: &VecType, dst_scalar: ScalarType, dst_bits: usize) -> bool {
-    if src.scalar == dst_scalar && src.scalar_bits == dst_bits {
-        return false;
-    }
-
-    if matches!(src.scalar, ScalarType::Mask) {
-        return false;
-    }
-
-    true
 }

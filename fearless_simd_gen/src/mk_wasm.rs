@@ -11,7 +11,7 @@ use crate::generic::{
     generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, Quantifier, SlideGranularity, valid_reinterpret};
+use crate::ops::{Op, Quantifier, SlideGranularity};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     ops::OpSig,
@@ -436,21 +436,6 @@ impl Level for WasmSimd128 {
                 quote! {
                     #method_sig {
                         #shift_fn(a.into(), shift).simd_into(self)
-                    }
-                }
-            }
-            OpSig::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => {
-                assert!(
-                    valid_reinterpret(vec_ty, target_ty, scalar_bits),
-                    "The underlying data for WASM SIMD is a v128, so a reinterpret is just that, a reinterpretation of the v128."
-                );
-
-                quote! {
-                    #method_sig {
-                        <v128>::from(a).simd_into(self)
                     }
                 }
             }

@@ -9,7 +9,7 @@ use crate::generic::{
     generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, SlideGranularity, valid_reinterpret};
+use crate::ops::{Op, SlideGranularity};
 use crate::{
     arch::neon::{self, cvt_intrinsic, simple_intrinsic, split_intrinsic},
     ops::OpSig,
@@ -477,23 +477,6 @@ impl Level for Neon {
                         vec_ty,
                         |token| quote! { #neon(a.into()).simd_into(#token) },
                     )
-                }
-            }
-            OpSig::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => {
-                if valid_reinterpret(vec_ty, target_ty, scalar_bits) {
-                    let to_ty = vec_ty.reinterpret(target_ty, scalar_bits);
-                    let neon = cvt_intrinsic("vreinterpret", &to_ty, vec_ty);
-
-                    self.kernel_method(
-                        op,
-                        vec_ty,
-                        |token| quote! { #neon(a.into()).simd_into(#token) },
-                    )
-                } else {
-                    quote! {}
                 }
             }
             OpSig::MaskReduce {

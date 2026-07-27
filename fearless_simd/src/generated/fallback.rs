@@ -640,22 +640,6 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         [
             a[0usize] as u32,
@@ -1485,14 +1469,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         [val; 16usize].simd_into(self)
     }
@@ -2280,10 +2256,6 @@ impl Simd for Fallback {
             a[15usize] as u16,
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self> {
-        a.bitcast()
     }
     #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
@@ -3190,14 +3162,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         [val; 8usize].simd_into(self)
     }
@@ -3740,14 +3704,6 @@ impl Simd for Fallback {
         result[0..8usize].copy_from_slice(&a.val.0);
         result[8usize..16usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
-        a.bitcast()
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -4410,14 +4366,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         [
             a[0usize] as f32,
@@ -4850,10 +4798,6 @@ impl Simd for Fallback {
         result[0..4usize].copy_from_slice(&a.val.0);
         result[4usize..8usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        a.bitcast()
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -5406,10 +5350,6 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         [val; 2usize].simd_into(self)
     }
@@ -5772,14 +5712,6 @@ impl Simd for Fallback {
         [i64::wrapping_neg(a[0usize]), i64::wrapping_neg(a[1usize])].simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x2(self, a: i64x2<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         [val; 2usize].simd_into(self)
     }
@@ -6136,14 +6068,6 @@ impl Simd for Fallback {
         result[0..2usize].copy_from_slice(&a.val.0);
         result[2usize..4usize].copy_from_slice(&b.val.0);
         result.simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u64x2(self, a: u64x2<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x2(self, a: u64x2<Self>) -> u32x4<Self> {
-        a.bitcast()
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -6653,35 +6577,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f64x2(
-            self.reinterpret_f64_f32x4(a0),
-            self.reinterpret_f64_f32x4(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_i32x4(
-            self.reinterpret_i32_f32x4(a0),
-            self.reinterpret_i32_f32x4(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_f32x4(a0), self.reinterpret_u8_f32x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_f32x4(a0),
-            self.reinterpret_u32_f32x4(a1),
-        )
-    }
-    #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_u32x4(self.cvt_u32_f32x4(a0), self.cvt_u32_f32x4(a1))
@@ -7132,19 +7027,6 @@ impl Simd for Fallback {
         self.combine_i8x16(self.neg_i8x16(a0), self.neg_i8x16(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_u8x16(self.reinterpret_u8_i8x16(a0), self.reinterpret_u8_i8x16(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i8x16(a0),
-            self.reinterpret_u32_i8x16(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
         let half = self.splat_u8x16(val);
         self.combine_u8x16(half, half)
@@ -7567,14 +7449,6 @@ impl Simd for Fallback {
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         self.combine_u16x16(self.widen_u8x16(a0), self.widen_u8x16(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u8x16(a0),
-            self.reinterpret_u32_u8x16(a1),
-        )
     }
     #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
@@ -8060,19 +7934,6 @@ impl Simd for Fallback {
         self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_u8x16(self.reinterpret_u8_i16x8(a0), self.reinterpret_u8_i16x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i16x8(a0),
-            self.reinterpret_u32_i16x8(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
         let half = self.splat_u16x8(val);
         self.combine_u16x8(half, half)
@@ -8452,19 +8313,6 @@ impl Simd for Fallback {
             a[15usize] as u8,
         ]
         .simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u8x16(self.reinterpret_u8_u16x8(a0), self.reinterpret_u8_u16x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u16x8(a0),
-            self.reinterpret_u32_u16x8(a1),
-        )
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -8914,19 +8762,6 @@ impl Simd for Fallback {
         self.combine_i32x4(self.neg_i32x4(a0), self.neg_i32x4(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_i32x4(a0), self.reinterpret_u8_i32x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x8(self, a: i32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i32x4(a0),
-            self.reinterpret_u32_i32x4(a1),
-        )
-    }
-    #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         self.combine_f32x4(self.cvt_f32_i32x4(a0), self.cvt_f32_i32x4(a1))
@@ -9253,11 +9088,6 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val.0[0..4usize]);
         b1.copy_from_slice(&a.val.0[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_u32x4(a0), self.reinterpret_u8_u32x4(a1))
     }
     #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
@@ -9747,14 +9577,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f32x4(
-            self.reinterpret_f32_f64x2(a0),
-            self.reinterpret_f32_f64x2(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         let half = self.splat_i64x2(val);
         self.combine_i64x2(half, half)
@@ -10067,19 +9889,6 @@ impl Simd for Fallback {
         self.combine_i64x2(self.neg_i64x2(a0), self.neg_i64x2(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i64x4(self, a: i64x4<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        self.combine_u8x16(self.reinterpret_u8_i64x2(a0), self.reinterpret_u8_i64x2(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x4(self, a: i64x4<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i64x2(a0),
-            self.reinterpret_u32_i64x2(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
         let half = self.splat_u64x2(val);
         self.combine_u64x2(half, half)
@@ -10385,19 +10194,6 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val.0[0..2usize]);
         b1.copy_from_slice(&a.val.0[2usize..4usize]);
         (b0.simd_into(self), b1.simd_into(self))
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u64x4(self, a: u64x4<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        self.combine_u8x16(self.reinterpret_u8_u64x2(a0), self.reinterpret_u8_u64x2(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x4(self, a: u64x4<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u64x2(a0),
-            self.reinterpret_u32_u64x2(a1),
-        )
     }
     #[inline(always)]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
@@ -10927,22 +10723,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f64x4(
-            self.reinterpret_f64_f32x8(a0),
-            self.reinterpret_f64_f32x8(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(
-            self.reinterpret_i32_f32x8(a0),
-            self.reinterpret_i32_f32x8(a1),
-        )
-    }
-    #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
         [
             src[0usize],
@@ -10971,19 +10751,6 @@ impl Simd for Fallback {
             a[13usize], a[2usize], a[6usize], a[10usize], a[14usize], a[3usize], a[7usize],
             a[11usize], a[15usize],
         ];
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_f32x8(a0), self.reinterpret_u8_f32x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_f32x8(a0),
-            self.reinterpret_u32_f32x8(a1),
-        )
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
@@ -11555,19 +11322,6 @@ impl Simd for Fallback {
     fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u8x32(self.reinterpret_u8_i8x32(a0), self.reinterpret_u8_i8x32(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i8x32(a0),
-            self.reinterpret_u32_i8x32(a1),
-        )
     }
     #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
@@ -12195,14 +11949,6 @@ impl Simd for Fallback {
         ];
     }
     #[inline(always)]
-    fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u8x32(a0),
-            self.reinterpret_u32_u8x32(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
@@ -12742,22 +12488,6 @@ impl Simd for Fallback {
         self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_i16x16(a0),
-            self.reinterpret_u8_i16x16(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i16x16(a0),
-            self.reinterpret_u32_i16x16(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
@@ -13233,22 +12963,6 @@ impl Simd for Fallback {
         self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_u16x16(a0),
-            self.reinterpret_u8_u16x16(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u16x16(a0),
-            self.reinterpret_u32_u16x16(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
         let half = self.splat_mask16x16(val);
         self.combine_mask16x16(half, half)
@@ -13721,19 +13435,6 @@ impl Simd for Fallback {
         self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_i32x8(a0), self.reinterpret_u8_i32x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i32x8(a0),
-            self.reinterpret_u32_i32x8(a1),
-        )
-    }
-    #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
@@ -14119,11 +13820,6 @@ impl Simd for Fallback {
             a[13usize], a[2usize], a[6usize], a[10usize], a[14usize], a[3usize], a[7usize],
             a[11usize], a[15usize],
         ];
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_u32x8(a0), self.reinterpret_u8_u32x8(a1))
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
@@ -14615,14 +14311,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f32x8(
-            self.reinterpret_f32_f64x4(a0),
-            self.reinterpret_f32_f64x4(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)
@@ -14942,19 +14630,6 @@ impl Simd for Fallback {
     fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u8_i64x8(self, a: i64x8<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_u8x32(self.reinterpret_u8_i64x4(a0), self.reinterpret_u8_i64x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x8(self, a: i64x8<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i64x4(a0),
-            self.reinterpret_u32_i64x4(a1),
-        )
     }
     #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {
@@ -15291,19 +14966,6 @@ impl Simd for Fallback {
         *dest = [
             a[0usize], a[2usize], a[4usize], a[6usize], a[1usize], a[3usize], a[5usize], a[7usize],
         ];
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u64x8(self, a: u64x8<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u8x32(self.reinterpret_u8_u64x4(a0), self.reinterpret_u8_u64x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x8(self, a: u64x8<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u64x4(a0),
-            self.reinterpret_u32_u64x4(a1),
-        )
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {

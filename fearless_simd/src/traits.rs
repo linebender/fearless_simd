@@ -34,17 +34,35 @@ impl<R, F: FnOnce(Level) -> R> WithSimd for F {
     }
 }
 
-/// Conversion of SIMD types to and from raw bytes.
+/// Conversion of SIMD vectors to and from same-width vectors of `u8` lanes.
+///
+/// [`Bytes::bitcast`] uses this byte representation to reinterpret any two
+/// non-mask SIMD vectors with the same total width and SIMD token. This is a
+/// bitwise reinterpretation: it does not perform numeric conversion.
 pub trait Bytes: Sized + Seal {
+    /// The same-width SIMD vector of `u8` lanes used as the byte representation.
     type Bytes;
 
-    /// Convert this type to an array of bytes.
+    /// Reinterpret this vector as a same-width vector of `u8` lanes.
     fn to_bytes(self) -> Self::Bytes;
 
-    /// Create an instance of this type from an array of bytes.
+    /// Reinterpret a same-width vector of `u8` lanes as this vector type.
     fn from_bytes(value: Self::Bytes) -> Self;
 
-    /// Bitcast directly from this type to another one of the same size.
+    #[doc(alias = "reinterpret")]
+    #[doc(alias = "transmute")]
+    /// Bitcast directly to another SIMD vector with the same byte representation.
+    /// This is effectively a safe [transmute](core::mem::transmute) for SIMD types.
+    ///
+    /// This works in code generic over a [`Simd`](crate::Simd) implementation,
+    /// including between native-width vectors with different lane types:
+    ///
+    /// ```
+    /// # use fearless_simd::prelude::*;
+    /// fn i8s_as_f64s<S: Simd>(value: S::i8s) -> S::f64s {
+    ///     value.bitcast()
+    /// }
+    /// ```
     fn bitcast<U: Bytes<Bytes = Self::Bytes>>(self) -> U {
         U::from_bytes(self.to_bytes())
     }

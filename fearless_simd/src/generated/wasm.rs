@@ -403,22 +403,6 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         #[cfg(target_feature = "relaxed-simd")]
         {
@@ -798,14 +782,6 @@ impl Simd for WasmSimd128 {
         i8x16_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         u8x16_splat(val).simd_into(self)
     }
@@ -1155,10 +1131,6 @@ impl Simd for WasmSimd128 {
         let low = u16x8_extend_low_u8x16(a.into());
         let high = u16x8_extend_high_u8x16(a.into());
         self.combine_u16x8(low.simd_into(self), high.simd_into(self))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self> {
-        <v128>::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
@@ -1545,14 +1517,6 @@ impl Simd for WasmSimd128 {
         i16x8_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         u16x8_splat(val).simd_into(self)
     }
@@ -1832,14 +1796,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
-        <v128>::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -2200,14 +2156,6 @@ impl Simd for WasmSimd128 {
         i32x4_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         f32x4_convert_i32x4(a.into()).simd_into(self)
     }
@@ -2467,10 +2415,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        <v128>::from(a).simd_into(self)
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -2874,10 +2818,6 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         i64x2_splat(val).simd_into(self)
     }
@@ -3133,14 +3073,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self> {
         i64x2_neg(a.into()).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u8_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x2(self, a: i64x2<Self>) -> u32x4<Self> {
-        <v128>::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
@@ -3414,14 +3346,6 @@ impl Simd for WasmSimd128 {
             val: crate::support::Aligned256([a.val.0, b.val.0]),
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u64x2(self, a: u64x2<Self>) -> u8x16<Self> {
-        <v128>::from(a).simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x2(self, a: u64x2<Self>) -> u32x4<Self> {
-        <v128>::from(a).simd_into(self)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -3913,35 +3837,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f64x2(
-            self.reinterpret_f64_f32x4(a0),
-            self.reinterpret_f64_f32x4(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_i32x4(
-            self.reinterpret_i32_f32x4(a0),
-            self.reinterpret_i32_f32x4(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_f32x4(a0), self.reinterpret_u8_f32x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_f32x4(a0),
-            self.reinterpret_u32_f32x4(a1),
-        )
-    }
-    #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_u32x4(self.cvt_u32_f32x4(a0), self.cvt_u32_f32x4(a1))
@@ -4405,19 +4300,6 @@ impl Simd for WasmSimd128 {
         self.combine_i8x16(self.neg_i8x16(a0), self.neg_i8x16(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_u8x16(self.reinterpret_u8_i8x16(a0), self.reinterpret_u8_i8x16(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i8x16(a0),
-            self.reinterpret_u32_i8x16(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
         let half = self.splat_u8x16(val);
         self.combine_u8x16(half, half)
@@ -4853,14 +4735,6 @@ impl Simd for WasmSimd128 {
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
         let (a0, a1) = self.split_u8x32(a);
         self.combine_u16x16(self.widen_u8x16(a0), self.widen_u8x16(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u8x16(a0),
-            self.reinterpret_u32_u8x16(a1),
-        )
     }
     #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
@@ -5364,19 +5238,6 @@ impl Simd for WasmSimd128 {
         self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_u8x16(self.reinterpret_u8_i16x8(a0), self.reinterpret_u8_i16x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i16x8(a0),
-            self.reinterpret_u32_i16x8(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
         let half = self.splat_u16x8(val);
         self.combine_u16x8(half, half)
@@ -5756,19 +5617,6 @@ impl Simd for WasmSimd128 {
         let high_masked = v128_and(high.into(), mask);
         let result = u8x16_narrow_i16x8(low_masked, high_masked);
         result.simd_into(self)
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u8x16(self.reinterpret_u8_u16x8(a0), self.reinterpret_u8_u16x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u16x8(a0),
-            self.reinterpret_u32_u16x8(a1),
-        )
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -6236,19 +6084,6 @@ impl Simd for WasmSimd128 {
         self.combine_i32x4(self.neg_i32x4(a0), self.neg_i32x4(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_i32x4(a0), self.reinterpret_u8_i32x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x8(self, a: i32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i32x4(a0),
-            self.reinterpret_u32_i32x4(a1),
-        )
-    }
-    #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         self.combine_f32x4(self.cvt_f32_i32x4(a0), self.cvt_f32_i32x4(a1))
@@ -6588,11 +6423,6 @@ impl Simd for WasmSimd128 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_u32x4(a0), self.reinterpret_u8_u32x4(a1))
     }
     #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
@@ -7100,14 +6930,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f32x4(
-            self.reinterpret_f32_f64x2(a0),
-            self.reinterpret_f32_f64x2(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         let half = self.splat_i64x2(val);
         self.combine_i64x2(half, half)
@@ -7433,19 +7255,6 @@ impl Simd for WasmSimd128 {
         self.combine_i64x2(self.neg_i64x2(a0), self.neg_i64x2(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i64x4(self, a: i64x4<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        self.combine_u8x16(self.reinterpret_u8_i64x2(a0), self.reinterpret_u8_i64x2(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x4(self, a: i64x4<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i64x2(a0),
-            self.reinterpret_u32_i64x2(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
         let half = self.splat_u64x2(val);
         self.combine_u64x2(half, half)
@@ -7763,19 +7572,6 @@ impl Simd for WasmSimd128 {
                 val: crate::support::Aligned128(a.val.0[1]),
                 simd: self,
             },
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u64x4(self, a: u64x4<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        self.combine_u8x16(self.reinterpret_u8_u64x2(a0), self.reinterpret_u8_u64x2(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x4(self, a: u64x4<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u64x2(a0),
-            self.reinterpret_u32_u64x2(a1),
         )
     }
     #[inline(always)]
@@ -8324,22 +8120,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f64x4(
-            self.reinterpret_f64_f32x8(a0),
-            self.reinterpret_f64_f32x8(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(
-            self.reinterpret_i32_f32x8(a0),
-            self.reinterpret_i32_f32x8(a1),
-        )
-    }
-    #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
         let (chunks, []) = src.as_chunks::<4usize>() else {
             unreachable!()
@@ -8384,19 +8164,6 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out1, &mut chunks[1]);
         crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out2, &mut chunks[2]);
         crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_f32x8(a0), self.reinterpret_u8_f32x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_f32x8(a0),
-            self.reinterpret_u32_f32x8(a1),
-        )
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
@@ -8981,19 +8748,6 @@ impl Simd for WasmSimd128 {
     fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self> {
         let (a0, a1) = self.split_i8x64(a);
         self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u8x32(self.reinterpret_u8_i8x32(a0), self.reinterpret_u8_i8x32(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i8x32(a0),
-            self.reinterpret_u32_i8x32(a1),
-        )
     }
     #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
@@ -9619,14 +9373,6 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
-    fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u8x32(a0),
-            self.reinterpret_u32_u8x32(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
@@ -10184,22 +9930,6 @@ impl Simd for WasmSimd128 {
         self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_i16x16(a0),
-            self.reinterpret_u8_i16x16(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i16x16(a0),
-            self.reinterpret_u32_i16x16(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
@@ -10684,22 +10414,6 @@ impl Simd for WasmSimd128 {
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_u16x16(a0),
-            self.reinterpret_u8_u16x16(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u16x16(a0),
-            self.reinterpret_u32_u16x16(a1),
-        )
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
@@ -11192,19 +10906,6 @@ impl Simd for WasmSimd128 {
         self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_i32x8(a0), self.reinterpret_u8_i32x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i32x8(a0),
-            self.reinterpret_u32_i32x8(a1),
-        )
-    }
-    #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
@@ -11619,11 +11320,6 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out1, &mut chunks[1]);
         crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out2, &mut chunks[2]);
         crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_u32x8(a0), self.reinterpret_u8_u32x8(a1))
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
@@ -12133,14 +11829,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f32x8(
-            self.reinterpret_f32_f64x4(a0),
-            self.reinterpret_f32_f64x4(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)
@@ -12473,19 +12161,6 @@ impl Simd for WasmSimd128 {
     fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u8_i64x8(self, a: i64x8<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_u8x32(self.reinterpret_u8_i64x4(a0), self.reinterpret_u8_i64x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x8(self, a: i64x8<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i64x4(a0),
-            self.reinterpret_u32_i64x4(a1),
-        )
     }
     #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {
@@ -12853,19 +12528,6 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out1, &mut chunks[1]);
         crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out2, &mut chunks[2]);
         crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u64x8(self, a: u64x8<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u8x32(self.reinterpret_u8_u64x4(a0), self.reinterpret_u8_u64x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x8(self, a: u64x8<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u64x4(a0),
-            self.reinterpret_u32_u64x4(a1),
-        )
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {

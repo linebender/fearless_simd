@@ -7,7 +7,7 @@ use crate::generic::{
     generic_op_name, generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig, RefKind, valid_reinterpret};
+use crate::ops::{Op, OpSig, RefKind};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -455,20 +455,6 @@ impl Level for Fallback {
                     #method_sig {
                         #items.simd_into(self)
                     }
-                }
-            }
-            OpSig::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => {
-                if valid_reinterpret(vec_ty, target_ty, scalar_bits) {
-                    quote! {
-                        #method_sig {
-                            a.bitcast()
-                        }
-                    }
-                } else {
-                    quote! {}
                 }
             }
             OpSig::MaskReduce {
