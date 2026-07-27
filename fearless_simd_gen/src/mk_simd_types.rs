@@ -15,7 +15,7 @@ use crate::{
 
 pub(crate) fn mk_simd_types() -> TokenStream {
     let mut result = quote! {
-        use crate::{Bytes, Select, Simd, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, seal::Seal};
+        use crate::{Bytes, Select, Simd, SimdArray, SimdArrayRef, SimdBase, SimdFrom, SimdInto, SimdMask, SimdCvtFloat, SimdCvtTruncate, seal::Seal};
     };
     for ty in SIMD_TYPES {
         let name = ty.rust();
@@ -26,10 +26,6 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         let len = Literal::usize_unsuffixed(ty.len);
         let rust_scalar = ty.scalar.rust(ty.scalar_bits);
         let select = generic_op_name("select", ty);
-        let from_array_op = generic_op_name("load_array", ty);
-        let as_array_op = generic_op_name("as_array", ty);
-        let as_array_ref_op = generic_op_name("as_array_ref", ty);
-        let as_array_mut_op = generic_op_name("as_array_mut", ty);
         let from_bytes_op = generic_op_name("cvt_from_bytes", ty);
         let to_bytes_op = generic_op_name("cvt_to_bytes", ty);
         let bytes = ty.bytes_ty().rust();
@@ -38,6 +34,8 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         if ty.scalar == ScalarType::Mask {
             let splat = Ident::new(&format!("splat_{}", ty.rust_name()), Span::call_site());
             let impl_block = simd_mask_impl(ty);
+            let mask_from_array = format_ident!("{}_from_array", ty.rust_name());
+            let mask_to_array = format_ident!("{}_to_array", ty.rust_name());
             result.extend(quote! {
                 #[doc = #doc]
                 #[derive(Clone, Copy)]
@@ -48,23 +46,50 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
                 impl<S: Simd> Seal for #name<S> {}
 
+                impl<S: Simd> SimdArray<S> for #name<S> {
+                    type Array = [#rust_scalar; #len];
+
+                    #[inline(always)]
+                    fn load_array(simd: S, val: Self::Array) -> Self {
+                        Self {
+                            val: <S as crate::arch_types::ArchTypes>::#mask_from_array(simd, val),
+                            simd,
+                        }
+                    }
+
+                    #[inline(always)]
+                    fn load_array_ref(simd: S, val: &Self::Array) -> Self {
+                        Self::load_array(simd, *val)
+                    }
+
+                    #[inline(always)]
+                    fn as_array(self) -> Self::Array {
+                        <S as crate::arch_types::ArchTypes>::#mask_to_array(self.simd, self.val)
+                    }
+
+                    #[inline(always)]
+                    fn store_array(self, dest: &mut Self::Array) {
+                        *dest = self.as_array();
+                    }
+                }
+
                 impl<S: Simd> SimdFrom<[#rust_scalar; #len], S> for #name<S> {
                     #[inline(always)]
                     fn simd_from(simd: S, val: [#rust_scalar; #len]) -> Self {
-                        simd.#from_array_op(val)
+                        Self::load_array(simd, val)
                     }
                 }
 
                 impl<S: Simd> From<#name<S>> for [#rust_scalar; #len] {
                     #[inline(always)]
                     fn from(value: #name<S>) -> Self {
-                        value.simd.#as_array_op(value)
+                        value.as_array()
                     }
                 }
 
                 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for #name<S> {
                     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                        let lanes = self.simd.#as_array_op(*self);
+                        let lanes = self.as_array();
                         crate::support::simd_debug_impl(f, #name_str, &self.simd, &lanes)
                     }
                 }
@@ -102,14 +127,14 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                     type Output = #rust_scalar;
                     #[inline(always)]
                     fn index(&self, i: usize) -> &Self::Output {
-                        &self.simd.#as_array_ref_op(self)[i]
+                        &self.as_array_ref()[i]
                     }
                 }
 
                 impl<S: Simd> core::ops::IndexMut<usize> for #name<S> {
                     #[inline(always)]
                     fn index_mut (&mut self, i: usize) -> &mut Self::Output {
-                        &mut self.simd.#as_array_mut_op(self)[i]
+                        &mut self.as_array_mut()[i]
                     }
                 }
             }
@@ -225,17 +250,59 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
             impl<S: Simd> Seal for #name<S> {}
 
+            impl<S: Simd> SimdArray<S> for #name<S> {
+                type Array = [#rust_scalar; #len];
+
+                #[inline(always)]
+                fn load_array(simd: S, val: Self::Array) -> Self {
+                    Self {
+                        val: crate::transmute::checked_transmute_copy(&val),
+                        simd,
+                    }
+                }
+
+                #[inline(always)]
+                fn load_array_ref(simd: S, val: &Self::Array) -> Self {
+                    Self {
+                        val: crate::transmute::checked_transmute_copy(val),
+                        simd,
+                    }
+                }
+
+                #[inline(always)]
+                fn as_array(self) -> Self::Array {
+                    crate::transmute::checked_transmute_copy(&self.val)
+                }
+
+                #[inline(always)]
+                fn store_array(self, dest: &mut Self::Array) {
+                    crate::transmute::checked_transmute_store(self.val, dest);
+                }
+            }
+
+            impl<S: Simd> SimdArrayRef<S> for #name<S> {
+                #[inline(always)]
+                fn as_array_ref(&self) -> &Self::Array {
+                    crate::transmute::checked_cast_ref(&self.val)
+                }
+
+                #[inline(always)]
+                fn as_array_mut(&mut self) -> &mut Self::Array {
+                    crate::transmute::checked_cast_mut(&mut self.val)
+                }
+            }
+
             impl<S: Simd> SimdFrom<[#rust_scalar; #len], S> for #name<S> {
                 #[inline(always)]
                 fn simd_from(simd: S, val: [#rust_scalar; #len]) -> Self {
-                    simd.#from_array_op(val)
+                    Self::load_array(simd, val)
                 }
             }
 
             impl<S: Simd> From<#name<S>> for [#rust_scalar; #len] {
                 #[inline(always)]
                 fn from(value: #name<S>) -> Self {
-                    value.simd.#as_array_op(value)
+                    value.as_array()
                 }
             }
 
@@ -243,20 +310,20 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 type Target = [#rust_scalar; #len];
                 #[inline(always)]
                 fn deref(&self) -> &Self::Target {
-                    self.simd.#as_array_ref_op(self)
+                    self.as_array_ref()
                 }
             }
 
             impl<S: Simd> core::ops::DerefMut for #name<S> {
                 #[inline(always)]
                 fn deref_mut(&mut self) -> &mut Self::Target {
-                    self.simd.#as_array_mut_op(self)
+                    self.as_array_mut()
                 }
             }
 
             impl<S: Simd + core::fmt::Debug> core::fmt::Debug for #name<S> {
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                    crate::support::simd_debug_impl(f, #name_str, &self.simd, self.simd.#as_array_ref_op(self))
+                    crate::support::simd_debug_impl(f, #name_str, &self.simd, self.as_array_ref())
                 }
             }
 
@@ -299,8 +366,6 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
     let from_bitmask_op = generic_op_name("from_bitmask", ty);
     let to_bitmask_op = generic_op_name("to_bitmask", ty);
     let set_op = generic_op_name("set", ty);
-    let from_array_op = generic_op_name("load_array", ty);
-    let as_array_op = generic_op_name("as_array", ty);
     let mut methods = vec![];
     for op in vec_trait_ops_for(ty.scalar) {
         let Op { sig, method, .. } = op;
@@ -356,13 +421,13 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
             #[inline(always)]
             fn from_slice(simd: S, slice: &[#scalar]) -> Self {
                 let slice: &[#scalar; #len] = slice.try_into().unwrap();
-                simd.#from_array_op(*slice)
+                Self::load_array_ref(simd, slice)
             }
 
             #[inline(always)]
             fn store_slice(&self, slice: &mut [#scalar]) {
                 let slice: &mut [#scalar; #len] = slice.try_into().unwrap();
-                *slice = self.simd.#as_array_op(*self);
+                (*self).store_array(slice);
             }
 
             #( #methods )*
@@ -423,11 +488,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
         }
         _ => unreachable!(),
     };
-    let from_array_op = generic_op_name("load_array", ty);
-    let from_array_ref_op = generic_op_name("load_array_ref", ty);
-    let store_array_op = generic_op_name("store_array", ty);
-    let as_array_ref_op = generic_op_name("as_array_ref", ty);
-    let as_array_mut_op = generic_op_name("as_array_mut", ty);
     let slide_op = generic_op_name("slide", ty);
     let slide_blockwise_op = generic_op_name("slide_within_blocks", ty);
     let rotate_elements_left_op = generic_op_name("rotate_elements_left", ty);
@@ -441,7 +501,6 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
             const N: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;
-            type Array = [#scalar; #len];
 
             #[inline(always)]
             fn witness(&self) -> S {
@@ -450,22 +509,22 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
 
             #[inline(always)]
             fn as_slice(&self) -> &[#scalar] {
-                self.simd.#as_array_ref_op(self).as_slice()
+                self.as_array_ref().as_slice()
             }
 
             #[inline(always)]
             fn as_mut_slice(&mut self) -> &mut [#scalar] {
-                self.simd.#as_array_mut_op(self).as_mut_slice()
+                self.as_array_mut().as_mut_slice()
             }
 
             #[inline(always)]
             fn from_slice(simd: S, slice: &[#scalar]) -> Self {
-                simd.#from_array_ref_op(slice.try_into().unwrap())
+                Self::load_array_ref(simd, slice.try_into().unwrap())
             }
 
             #[inline(always)]
             fn store_slice(&self, slice: &mut [#scalar]) {
-                self.simd.#store_array_op(*self, slice.try_into().unwrap());
+                (*self).store_array(slice.try_into().unwrap());
             }
 
             #[inline(always)]
@@ -480,7 +539,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
 
             #[inline(always)]
             fn from_fn(simd: S, mut f: impl FnMut(usize) -> #scalar) -> Self {
-                simd.#from_array_op(#from_fn_items)
+                Self::load_array(simd, #from_fn_items)
             }
 
             #[inline(always)]

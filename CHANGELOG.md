@@ -19,6 +19,7 @@ You can find its changes [documented below](#060-2026-07-10).
 
 - On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
 - The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
+- Breaking change: the 204 vector-specific `Simd` array conversion methods have been replaced by the generic `load_array`, `load_array_ref`, `as_array`, `as_array_ref`, `as_array_mut`, and `store_array` methods.
 
 ## [0.6.0][] (2026-07-10)
 

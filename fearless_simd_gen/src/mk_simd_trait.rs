@@ -29,6 +29,42 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
     let mut code = quote! {
         use crate::{seal::Seal, Level, SimdElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select, Bytes};
         #imports
+        /// Conversion between a SIMD vector and its corresponding lane array.
+        ///
+        /// This trait is sealed and implemented by all SIMD vector and mask types.
+        pub trait SimdArray<S: Simd>: Copy + Seal {
+            /// The array type corresponding to this SIMD vector.
+            type Array: Copy;
+
+            #[doc(hidden)]
+            fn load_array(simd: S, val: Self::Array) -> Self;
+            #[doc(hidden)]
+            fn load_array_ref(simd: S, val: &Self::Array) -> Self;
+            #[doc(hidden)]
+            fn as_array(self) -> Self::Array;
+            #[doc(hidden)]
+            fn store_array(self, dest: &mut Self::Array);
+        }
+
+        /// Reference projections between a SIMD vector and its corresponding lane array.
+        ///
+        /// This is implemented by ordinary SIMD vectors, whose storage has the same in-memory
+        /// representation as their lane arrays. It is intentionally not implemented by masks,
+        /// because backends such as AVX-512 use compact mask storage.
+        ///
+        /// ```compile_fail
+        /// # use fearless_simd::{Fallback, Simd, mask32x4};
+        /// let simd = Fallback::new();
+        /// let mask = simd.load_array::<mask32x4<_>>([-1, 0, -1, 0]);
+        /// let _ = simd.as_array_ref(&mask);
+        /// ```
+        pub trait SimdArrayRef<S: Simd>: SimdArray<S> {
+            #[doc(hidden)]
+            fn as_array_ref(&self) -> &Self::Array;
+            #[doc(hidden)]
+            fn as_array_mut(&mut self) -> &mut Self::Array;
+        }
+
         /// The main SIMD trait, implemented by all SIMD token types.
         ///
         /// Each implementor of this trait (e.g. `Avx2`, `Sse4_2`, `Sse2`, `Neon`, `Fallback`) is a zero-sized "token" type
@@ -103,6 +139,52 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             ///
             /// For performance, the provided function should be `#[inline(always)]`.
             fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R;
+
+            /// Create a SIMD vector from its corresponding lane array.
+            ///
+            /// The vector type generally needs to be specified through a result type annotation
+            /// or a turbofish, for example `simd.load_array::<f32x4<_>>(values)`.
+            #[inline(always)]
+            fn load_array<V: SimdArray<Self>>(self, val: V::Array) -> V {
+                V::load_array(self, val)
+            }
+
+            /// Create a SIMD vector from a reference to its corresponding lane array.
+            ///
+            /// The vector type generally needs to be specified through a result type annotation
+            /// or a turbofish.
+            #[inline(always)]
+            fn load_array_ref<V: SimdArray<Self>>(self, val: &V::Array) -> V {
+                V::load_array_ref(self, val)
+            }
+
+            /// Convert a SIMD vector to its corresponding lane array.
+            #[inline(always)]
+            fn as_array<V: SimdArray<Self>>(self, val: V) -> V::Array {
+                val.as_array()
+            }
+
+            /// Project a SIMD vector reference to its corresponding lane array reference.
+            #[inline(always)]
+            fn as_array_ref<V: SimdArrayRef<Self>>(self, val: &V) -> &V::Array {
+                val.as_array_ref()
+            }
+
+            /// Project a mutable SIMD vector reference to its corresponding mutable lane array reference.
+            #[inline(always)]
+            fn as_array_mut<V: SimdArrayRef<Self>>(
+                self,
+                val: &mut V,
+            ) -> &mut V::Array {
+                val.as_array_mut()
+            }
+
+            /// Store a SIMD vector into its corresponding lane array.
+            #[inline(always)]
+            fn store_array<V: SimdArray<Self>>(self, val: V, dest: &mut V::Array) {
+                val.store_array(dest);
+            }
+
             #( #methods )*
         }
     };
@@ -116,11 +198,29 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
 
 pub(crate) fn mk_arch_types() -> TokenStream {
     let mut types = vec![];
+    let mut mask_array_methods = vec![];
     for vec_ty in SIMD_TYPES {
         let ty_name = vec_ty.rust();
         types.push(quote! {
             type #ty_name: Copy + Send + Sync + SimdPod;
         });
+        if vec_ty.scalar == ScalarType::Mask {
+            let from_array = format_ident!("{}_from_array", vec_ty.rust_name());
+            let to_array = format_ident!("{}_to_array", vec_ty.rust_name());
+            let scalar = ScalarType::Int.rust(vec_ty.scalar_bits);
+            let len = vec_ty.len;
+            mask_array_methods.push(quote! {
+                #[inline(always)]
+                fn #from_array(self, val: [#scalar; #len]) -> Self::#ty_name {
+                    crate::transmute::checked_transmute_copy(&val)
+                }
+
+                #[inline(always)]
+                fn #to_array(self, val: Self::#ty_name) -> [#scalar; #len] {
+                    crate::transmute::checked_transmute_copy(&val)
+                }
+            });
+        }
     }
 
     quote! {
@@ -131,8 +231,9 @@ pub(crate) fn mk_arch_types() -> TokenStream {
                 unnameable_types,
                 reason = "The native vector types that back a `Simd` implementation are an internal implementation detail, and intentionally kept private"
             )]
-            pub trait ArchTypes {
+            pub trait ArchTypes: Sized {
                 #( #types )*
+                #( #mask_array_methods )*
             }
         }
     }
@@ -157,6 +258,7 @@ fn mk_simd_base() -> TokenStream {
             + Seal
             + Bytes + SimdFrom<Self::Element, S>
             + core::ops::Index<usize, Output = Self::Element> + core::ops::IndexMut<usize, Output = Self::Element>
+            + SimdArrayRef<S>
             + core::ops::Deref<Target = Self::Array>+ core::ops::DerefMut<Target = Self::Array>
         {
             /// The type of this vector's elements.
@@ -173,10 +275,6 @@ fn mk_simd_base() -> TokenStream {
             type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
             /// A 128-bit SIMD vector of the same scalar type.
             type Block: SimdBase<S, Element = Self::Element>;
-            /// The array type that this vector type corresponds to, which will
-            /// always be `[Self::Element; Self::N]`. It has the same layout as
-            /// this vector type, but likely has a lower alignment.
-            type Array;
             /// Get the [`Simd`] implementation associated with this type.
             fn witness(&self) -> S;
             fn as_slice(&self) -> &[Self::Element];

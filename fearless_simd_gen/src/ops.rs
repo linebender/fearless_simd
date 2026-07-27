@@ -27,23 +27,6 @@ impl Quantifier {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum RefKind {
-    Value,
-    Ref,
-    Mut,
-}
-
-impl RefKind {
-    pub(crate) fn token(&self) -> Option<TokenStream> {
-        match self {
-            Self::Value => None,
-            Self::Ref => Some(quote! { & }),
-            Self::Mut => Some(quote! { &mut }),
-        }
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum SlideGranularity {
     WithinBlocks,
     AcrossBlocks,
@@ -136,14 +119,6 @@ pub(crate) enum OpSig {
     /// The inverse of [`OpSig::LoadInterleaved`]. Takes a vector argument with the length (`block_size` * `block_count`) /
     /// [scalar type's byte size], and a mutable reference to a scalar array of the same length, and returns nothing.
     StoreInterleaved { block_size: u16, block_count: u16 },
-    /// Takes a single argument of the array type corresponding to the vector type (e.g. `[f32; 4]` for `f32x4<S>`), or
-    /// a reference to it, and returns that vector type.
-    FromArray { kind: RefKind },
-    /// Takes a single argument of the vector type, or a reference to it, and returns the corresponding array type (e.g.
-    /// `[f32; 4]` for `f32x4<S>`) or a reference to it.
-    AsArray { kind: RefKind },
-    /// Takes a vector and a mutable reference to an array, and stores the vector elements into the array.
-    StoreArray,
     /// Takes a single argument of the vector type, and returns a vector type with `u8` elements and the same bit width.
     FromBytes,
     /// Takes a single argument of a vector type with `u8` elements, and returns a vector type with different elements
@@ -243,8 +218,7 @@ impl Op {
         let arg_decls = sig.arg_decls();
         let call_args = &sig.arg_names;
         let ret = &sig.ret;
-        let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. } | OpSig::StoreArray)
-        {
+        let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. }) {
             quote! { kernel(self #(, #call_args)*); }
         } else {
             quote! { kernel(self #(, #call_args)*) }
@@ -358,29 +332,6 @@ impl Op {
                     vec,
                 )
             }
-            OpSig::FromArray { kind } => {
-                let ref_tok = kind.token();
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                (vec![quote! { #ref_tok #array_ty }], vec)
-            }
-            OpSig::AsArray { kind } => {
-                let ref_tok = kind.token();
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                (
-                    vec![quote! { #ref_tok #vec }],
-                    quote! { #ref_tok #array_ty },
-                )
-            }
-            OpSig::StoreArray => {
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                (vec![vec, quote! { &mut #array_ty }], quote! { () })
-            }
             OpSig::FromBytes => {
                 let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
                 (vec![quote! { #bytes_ty<#simd_ty> }], vec)
@@ -413,7 +364,7 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (#arg0: S, #arg1: Self::Element) -> Self }
             }
-            OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } | OpSig::StoreArray => {
+            OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
                 return None;
             }
             OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
@@ -477,12 +428,9 @@ impl Op {
             // masks.
             OpSig::Select => return None,
             // These signatures involve types not in the Simd trait
-            OpSig::Split { .. }
-            | OpSig::Combine { .. }
-            | OpSig::FromArray { .. }
-            | OpSig::AsArray { .. }
-            | OpSig::FromBytes
-            | OpSig::ToBytes => return None,
+            OpSig::Split { .. } | OpSig::Combine { .. } | OpSig::FromBytes | OpSig::ToBytes => {
+                return None;
+            }
         };
         Some(quote! { fn #method_ident #sig_inner })
     }
@@ -548,46 +496,6 @@ const BASE_OPS: &[Op] = &[
         OpKind::BaseTraitMethod,
         OpSig::Splat,
         "Create a SIMD vector with all elements set to the given value.",
-    ),
-    Op::new(
-        "load_array",
-        OpKind::AssociatedOnly,
-        OpSig::FromArray {
-            kind: RefKind::Value,
-        },
-        "Create a SIMD vector from an array of the same length.",
-    ),
-    Op::new(
-        "load_array_ref",
-        OpKind::AssociatedOnly,
-        OpSig::FromArray { kind: RefKind::Ref },
-        "Create a SIMD vector from an array of the same length.",
-    ),
-    Op::new(
-        "as_array",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray {
-            kind: RefKind::Value,
-        },
-        "Convert a SIMD vector to an array.",
-    ),
-    Op::new(
-        "as_array_ref",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray { kind: RefKind::Ref },
-        "Project a reference to a SIMD vector to a reference to the equivalent array.",
-    ),
-    Op::new(
-        "as_array_mut",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray { kind: RefKind::Mut },
-        "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array.",
-    ),
-    Op::new(
-        "store_array",
-        OpKind::AssociatedOnly,
-        OpSig::StoreArray,
-        "Store a SIMD vector into an array of the same length.",
     ),
     Op::new(
         "cvt_from_bytes",
@@ -675,22 +583,6 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
         OpKind::BaseTraitMethod,
         OpSig::Splat,
         "Create a SIMD mask with all lanes set from the given boolean value.",
-    ),
-    Op::new(
-        "load_array",
-        OpKind::AssociatedOnly,
-        OpSig::FromArray {
-            kind: RefKind::Value,
-        },
-        "Create a SIMD mask from signed integer mask lanes.",
-    ),
-    Op::new(
-        "as_array",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray {
-            kind: RefKind::Value,
-        },
-        "Convert a SIMD mask to signed integer mask lanes.",
     ),
     Op::new(
         "from_bitmask",
@@ -1651,9 +1543,6 @@ impl OpSig {
                 | Self::Combine { .. }
                 | Self::LoadInterleaved { .. }
                 | Self::StoreInterleaved { .. }
-                | Self::FromArray { .. }
-                | Self::AsArray { .. }
-                | Self::StoreArray
                 | Self::MaskSet
                 | Self::Slide {
                     granularity: SlideGranularity::AcrossBlocks,
@@ -1682,7 +1571,7 @@ impl OpSig {
 
     fn simd_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
-            Self::Splat | Self::FromArray { .. } => &["val"],
+            Self::Splat => &["val"],
             Self::MaskFromBitmask => &["bits"],
             Self::MaskSet => &["a", "index", "value"],
             Self::Unary
@@ -1692,7 +1581,6 @@ impl OpSig {
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask
-            | Self::AsArray { .. }
             | Self::FromBytes
             | Self::ToBytes => &["a"],
             Self::SwizzleDynWithinBlocks => &["a", "indices"],
@@ -1709,7 +1597,7 @@ impl OpSig {
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
-            Self::StoreInterleaved { .. } | Self::StoreArray => &["a", "dest"],
+            Self::StoreInterleaved { .. } => &["a", "dest"],
         }
     }
     fn vec_trait_arg_names(&self) -> &'static [&'static str] {
@@ -1717,18 +1605,15 @@ impl OpSig {
             Self::Splat => &["simd", "val"],
             Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
-            | Self::FromArray { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
             | Self::MaskSet
-            | Self::FromBytes { .. }
-            | Self::StoreArray => &[],
+            | Self::FromBytes { .. } => &[],
             Self::Unary
             | Self::Cvt { .. }
             | Self::Reinterpret { .. }
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
-            | Self::AsArray { .. }
             | Self::ToBytes => &["self"],
             Self::SwizzleDynWithinBlocks => &["self", "indices"],
             Self::Binary
@@ -1791,9 +1676,6 @@ impl OpSig {
             | Self::MaskSet
             | Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
-            | Self::FromArray { .. }
-            | Self::AsArray { .. }
-            | Self::StoreArray
             | Self::FromBytes
             | Self::ToBytes
             | Self::SwizzleDynWithinBlocks

@@ -6,9 +6,8 @@ use quote::{format_ident, quote};
 
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
-    fallback_method, generic_as_array, generic_block_combine, generic_block_split,
-    generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array,
-    generic_to_bytes, integer_lane_mask_splat_arg,
+    fallback_method, generic_block_combine, generic_block_split, generic_from_bytes,
+    generic_mask_set, generic_op_name, generic_to_bytes, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, Quantifier, SlideGranularity, valid_reinterpret};
@@ -821,13 +820,6 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
-            OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
-            OpSig::AsArray { kind } => {
-                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |_| {
-                    Ident::new("v128", Span::call_site())
-                })
-            }
-            OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
             OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             OpSig::Interleave => {
