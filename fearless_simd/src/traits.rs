@@ -126,9 +126,9 @@ impl<T, S: Simd> SimdFrom<T, S> for T {
 }
 
 /// Types that can be used as elements in SIMD vectors.
-pub trait SimdElement: Seal {
+pub trait SimdElement: Copy + Seal {
     /// The associated mask lane type. This will be a signed integer of the same size as this type.
-    type Mask: SimdElement;
+    type Mask: SimdElement<Mask = Self::Mask>;
 }
 
 impl SimdElement for f32 {
@@ -186,7 +186,8 @@ pub trait SimdCvtFloat<T: Seal>: Seal {
 ///
 /// This is implemented on all vectors 256 bits and lower, producing vectors of up to 512 bits.
 pub trait SimdCombine<S: Simd>: SimdBase<S> + Seal {
-    type Combined: SimdBase<S, Element = Self::Element, Block = Self::Block>;
+    type Combined: SimdBase<S, Element = Self::Element, Block = Self::Block>
+        + SimdSplit<S, Split = Self>;
 
     /// Concatenate two vectors into a new one that's twice as long.
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined;
@@ -196,7 +197,8 @@ pub trait SimdCombine<S: Simd>: SimdBase<S> + Seal {
 ///
 /// This is implemented on all vectors 256 bits and higher, producing vectors of down to 128 bits.
 pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
-    type Split: SimdBase<S, Element = Self::Element, Block = Self::Block>;
+    type Split: SimdBase<S, Element = Self::Element, Block = Self::Block>
+        + SimdCombine<S, Combined = Self>;
 
     /// Split this vector into left and right halves.
     fn split(self) -> (Self::Split, Self::Split);

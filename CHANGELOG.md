@@ -20,6 +20,12 @@ You can find its changes [documented below](#060-2026-07-10).
 - On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
 - The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
 - All native-width non-mask vector types now share `u8s` as their byte representation, enabling `Bytes::bitcast` between arbitrary lane types in code generic over `Simd`. The byte representation of any `SimdBase` type is now also guaranteed to be an idempotent, same-token `u8` SIMD vector, so it can be manipulated directly in generic code.
+- `SimdBase::Mask` now guarantees support for selecting vectors of its associated `SimdBase` type, enabling mask selection in generic code without additional bounds.
+- `SimdElement` now requires `Copy`, enabling elements to be read by value from vectors in generic code without additional bounds.
+- `SimdBase::Block` now declares that a 128-bit block is its own block, enabling recursive use in generic code without additional equality bounds.
+- `SimdElement::Mask` now declares that a mask lane type is its own mask lane type, exposing this invariant to generic code.
+- `SimdCombine` and `SimdSplit` now declare their associated vector types as inverse operations, enabling generic code to recover the original vector type without additional equality bounds.
+- `SimdBase::Array` now guarantees `Copy` (and therefore `Clone`), `Debug`, by-value `IntoIterator`, `AsRef`, `AsMut`, and conversion from its vector type, while `SimdBase` guarantees construction from its associated array through `SimdFrom`.
 
 ### Removed
 

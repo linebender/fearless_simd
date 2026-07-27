@@ -3678,6 +3678,7 @@ pub trait SimdBase<S: Simd>:
     + Seal
     + Bytes<Bytes = Self::ByteVector>
     + SimdFrom<Self::Element, S>
+    + SimdFrom<Self::Array, S>
     + core::ops::Index<usize, Output = Self::Element>
     + core::ops::IndexMut<usize, Output = Self::Element>
     + core::ops::Deref<Target = Self::Array>
@@ -3703,13 +3704,18 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" Masks intentionally do not implement [`SimdBase`]. SSE, NEON, WASM, and the"]
     #[doc = r" fallback backend currently store masks as all-zero/all-one integer vectors, but"]
     #[doc = r" AVX-512/RVV/SVE-style targets use compact predicate registers instead."]
-    type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
+    type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask> + Select<Self>;
     #[doc = r" A 128-bit SIMD vector of the same scalar type."]
-    type Block: SimdBase<S, Element = Self::Element>;
+    type Block: SimdBase<S, Element = Self::Element, Block = Self::Block>;
     #[doc = r" The array type that this vector type corresponds to, which will"]
     #[doc = r" always be `[Self::Element; Self::N]`. It has the same layout as"]
     #[doc = r" this vector type, but likely has a lower alignment."]
-    type Array;
+    type Array: Copy
+        + core::fmt::Debug
+        + IntoIterator<Item = Self::Element>
+        + AsRef<[Self::Element]>
+        + AsMut<[Self::Element]>
+        + From<Self>;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
     fn as_slice(&self) -> &[Self::Element];
