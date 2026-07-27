@@ -145,31 +145,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self> {
-        f32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         if SHIFT >= 4usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_f32x4(b).val.0,
-            self.cvt_to_bytes_f32x4(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_f32x4(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -239,8 +225,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: f32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> f32x4<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_f32x4(a).val.0, indices.into());
-                token.cvt_from_bytes_f32x4(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -678,31 +664,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self> {
-        i8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         if SHIFT >= 16usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_i8x16(b).val.0,
-            self.cvt_to_bytes_i8x16(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT,
         );
-        self.cvt_from_bytes_i8x16(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -820,8 +792,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, indices: u8x16<Sse4_2>) -> i8x16<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i8x16(a).val.0, indices.into());
-                token.cvt_from_bytes_i8x16(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -1173,31 +1145,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         if SHIFT >= 16usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_u8x16(b).val.0,
-            self.cvt_to_bytes_u8x16(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT,
         );
-        self.cvt_from_bytes_u8x16(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -1315,8 +1273,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, indices: u8x16<Sse4_2>) -> u8x16<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u8x16(a).val.0, indices.into());
-                token.cvt_from_bytes_u8x16(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -1857,31 +1815,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self> {
-        i16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_i16x8(b).val.0,
-            self.cvt_to_bytes_i16x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 2usize,
         );
-        self.cvt_from_bytes_i16x8(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -1967,8 +1911,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i16x8<Sse4_2>, indices: u8x16<Sse4_2>) -> i16x8<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i16x8(a).val.0, indices.into());
-                token.cvt_from_bytes_i16x8(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -2285,31 +2229,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self> {
-        u16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_u16x8(b).val.0,
-            self.cvt_to_bytes_u16x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 2usize,
         );
-        self.cvt_from_bytes_u16x8(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -2395,8 +2325,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u16x8<Sse4_2>, indices: u8x16<Sse4_2>) -> u16x8<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u16x8(a).val.0, indices.into());
-                token.cvt_from_bytes_u16x8(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -2887,31 +2817,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self> {
-        i32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         if SHIFT >= 4usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_i32x4(b).val.0,
-            self.cvt_to_bytes_i32x4(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_i32x4(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -2981,8 +2897,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> i32x4<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i32x4(a).val.0, indices.into());
-                token.cvt_from_bytes_i32x4(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -3299,31 +3215,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self> {
-        u32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         if SHIFT >= 4usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_u32x4(b).val.0,
-            self.cvt_to_bytes_u32x4(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_u32x4(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -3393,8 +3295,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u32x4<Sse4_2>, indices: u8x16<Sse4_2>) -> u32x4<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u32x4(a).val.0, indices.into());
-                token.cvt_from_bytes_u32x4(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -3891,31 +3793,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self> {
-        f64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f64x2(self, a: f64x2<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         if SHIFT >= 2usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_f64x2(b).val.0,
-            self.cvt_to_bytes_f64x2(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_f64x2(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -3977,8 +3865,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: f64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> f64x2<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_f64x2(a).val.0, indices.into());
-                token.cvt_from_bytes_f64x2(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -4333,31 +4221,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i64x2(self, a: u8x16<Self>) -> i64x2<Self> {
-        i64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         if SHIFT >= 2usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_i64x2(b).val.0,
-            self.cvt_to_bytes_i64x2(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_i64x2(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -4419,8 +4293,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> i64x2<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i64x2(a).val.0, indices.into());
-                token.cvt_from_bytes_i64x2(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -4699,31 +4573,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u64x2(self, a: u8x16<Self>) -> u64x2<Self> {
-        u64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u64x2(self, a: u64x2<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         if SHIFT >= 2usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_u64x2(b).val.0,
-            self.cvt_to_bytes_u64x2(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_u64x2(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -4785,8 +4645,8 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, indices: u8x16<Sse4_2>) -> u64x2<Sse4_2> {
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u64x2(a).val.0, indices.into());
-                token.cvt_from_bytes_u64x2(u8x16 {
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -5225,31 +5085,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self> {
-        f32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_f32x8(b).val.0,
-            self.cvt_to_bytes_f32x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_f32x8(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -5644,31 +5490,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self> {
-        i8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         if SHIFT >= 32usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_i8x32(b).val.0,
-            self.cvt_to_bytes_i8x32(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT,
         );
-        self.cvt_from_bytes_i8x32(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -6082,31 +5914,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         if SHIFT >= 32usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_u8x32(b).val.0,
-            self.cvt_to_bytes_u8x32(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT,
         );
-        self.cvt_from_bytes_u8x32(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -6644,31 +6462,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self> {
-        i16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         if SHIFT >= 16usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_i16x16(b).val.0,
-            self.cvt_to_bytes_i16x16(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 2usize,
         );
-        self.cvt_from_bytes_i16x16(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -7022,31 +6826,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self> {
-        u16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         if SHIFT >= 16usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_u16x16(b).val.0,
-            self.cvt_to_bytes_u16x16(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 2usize,
         );
-        self.cvt_from_bytes_u16x16(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -7540,31 +7330,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self> {
-        i32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_i32x8(b).val.0,
-            self.cvt_to_bytes_i32x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_i32x8(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -7887,31 +7663,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self> {
-        u32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_u32x8(b).val.0,
-            self.cvt_to_bytes_u32x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_u32x8(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -8353,31 +8115,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self> {
-        f64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f64x4(self, a: f64x4<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
         if SHIFT >= 4usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_f64x4(b).val.0,
-            self.cvt_to_bytes_f64x4(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_f64x4(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -8730,31 +8478,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i64x4(self, a: u8x32<Self>) -> i64x4<Self> {
-        i64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i64x4(self, a: i64x4<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         if SHIFT >= 4usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_i64x4(b).val.0,
-            self.cvt_to_bytes_i64x4(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_i64x4(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -9056,31 +8790,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u64x4(self, a: u8x32<Self>) -> u64x4<Self> {
-        u64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u64x4(self, a: u64x4<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         if SHIFT >= 4usize {
             return b;
         }
         let result = cross_block_alignr_128x2(
             self,
-            self.cvt_to_bytes_u64x4(b).val.0,
-            self.cvt_to_bytes_u64x4(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_u64x4(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -9501,31 +9221,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self> {
-        f32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         if SHIFT >= 16usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_f32x16(b).val.0,
-            self.cvt_to_bytes_f32x16(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_f32x16(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -10024,31 +9730,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self> {
-        i8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         if SHIFT >= 64usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_i8x64(b).val.0,
-            self.cvt_to_bytes_i8x64(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT,
         );
-        self.cvt_from_bytes_i8x64(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -10583,31 +10275,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         if SHIFT >= 64usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_u8x64(b).val.0,
-            self.cvt_to_bytes_u8x64(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT,
         );
-        self.cvt_from_bytes_u8x64(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -11380,31 +11058,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self> {
-        i16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         if SHIFT >= 32usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_i16x32(b).val.0,
-            self.cvt_to_bytes_i16x32(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 2usize,
         );
-        self.cvt_from_bytes_i16x32(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -11821,31 +11485,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self> {
-        u16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         if SHIFT >= 32usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_u16x32(b).val.0,
-            self.cvt_to_bytes_u16x32(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 2usize,
         );
-        self.cvt_from_bytes_u16x32(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -12476,31 +12126,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self> {
-        i32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         if SHIFT >= 16usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_i32x16(b).val.0,
-            self.cvt_to_bytes_i32x16(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_i32x16(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -12852,31 +12488,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self> {
-        u32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         if SHIFT >= 16usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_u32x16(b).val.0,
-            self.cvt_to_bytes_u32x16(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_u32x16(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -13415,31 +13037,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self> {
-        f64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f64x8(self, a: f64x8<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_f64x8(b).val.0,
-            self.cvt_to_bytes_f64x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_f64x8(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -13801,31 +13409,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i64x8(self, a: u8x64<Self>) -> i64x8<Self> {
-        i64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i64x8(self, a: i64x8<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_i64x8(b).val.0,
-            self.cvt_to_bytes_i64x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_i64x8(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -14136,31 +13730,17 @@ impl Simd for Sse4_2 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u64x8(self, a: u8x64<Self>) -> u64x8<Self> {
-        u64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u64x8(self, a: u64x8<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = cross_block_alignr_128x4(
             self,
-            self.cvt_to_bytes_u64x8(b).val.0,
-            self.cvt_to_bytes_u64x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_u64x8(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })

@@ -5,8 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    fallback_method, generic_as_array, generic_from_array, generic_from_bytes, generic_mask_set,
-    generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
+    fallback_method, generic_as_array, generic_from_array, generic_mask_set, generic_op_name,
+    generic_store_array, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity};
@@ -377,8 +377,6 @@ impl Level for Neon {
                 let combined_bytes = bytes_ty.rust();
                 let scalar_bytes = vec_ty.scalar_bits / 8;
                 let num_items = vec_ty.len;
-                let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-                let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
                 let byte_shift = if scalar_bytes == 1 {
                     quote! { SHIFT }
@@ -392,7 +390,12 @@ impl Level for Neon {
                     }
                     (WithinBlocks, _) | (_, 128) => {
                         quote! {
-                            dyn_vext_128(self, self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift)
+                            dyn_vext_128(
+                                self,
+                                Bytes::to_bytes(a).val.0,
+                                Bytes::to_bytes(b).val.0,
+                                #byte_shift,
+                            )
                         }
                     }
                     (AcrossBlocks, 256 | 512) => {
@@ -406,8 +409,8 @@ impl Level for Neon {
 
                         quote! {
                             {
-                                let a_bytes = self.#to_bytes(a).val.0;
-                                let b_bytes = self.#to_bytes(b).val.0;
+                                let a_bytes = Bytes::to_bytes(a).val.0;
+                                let b_bytes = Bytes::to_bytes(b).val.0;
                                 let a_blocks = [#( a_bytes.#blocks ),*];
                                 let b_blocks = [#( b_bytes.#blocks2 ),*];
 
@@ -429,7 +432,10 @@ impl Level for Neon {
                         }
 
                         let result = #bytes_expr;
-                        self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                        Bytes::from_bytes(#combined_bytes {
+                            val: #block_wrapper(result),
+                            simd: self,
+                        })
                     }
                 }
             }
@@ -446,13 +452,15 @@ impl Level for Neon {
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes = bytes_ty.rust();
                 let wrapper = bytes_ty.aligned_wrapper();
-                let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-                let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
                 self.kernel_method(op, vec_ty, |token| {
                     quote! {
-                        let result = vqtbl1q_u8(#token.#to_bytes(a).val.0, indices.into());
-                        #token.#from_bytes(#bytes { val: #wrapper(result), simd: #token })
+                        let result =
+                            vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                        Bytes::from_bytes(#bytes {
+                            val: #wrapper(result),
+                            simd: #token,
+                        })
                     }
                 })
             }
@@ -509,8 +517,6 @@ impl Level for Neon {
                 })
             }
             OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
-            OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
-            OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);

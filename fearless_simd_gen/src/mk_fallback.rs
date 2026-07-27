@@ -3,8 +3,8 @@
 
 use crate::arch::fallback;
 use crate::generic::{
-    generic_from_bytes, generic_mask_from_bitmask, generic_mask_set, generic_mask_to_bitmask,
-    generic_op_name, generic_to_bytes, integer_lane_mask_splat_arg,
+    generic_mask_from_bitmask, generic_mask_set, generic_mask_to_bitmask, generic_op_name,
+    integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, RefKind};
@@ -412,8 +412,6 @@ impl Level for Fallback {
                 );
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes_rust = bytes_ty.rust();
-                let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-                let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
                 let byte_count = bytes_ty.len;
                 let items = make_list(
                     (0..byte_count)
@@ -430,9 +428,9 @@ impl Level for Fallback {
 
                 quote! {
                     #method_sig {
-                        let bytes = self.#to_bytes(a);
+                        let bytes = Bytes::to_bytes(a);
                         let result: #bytes_rust<Self> = #items.simd_into(self);
-                        self.#from_bytes(result)
+                        Bytes::from_bytes(result)
                     }
                 }
             }
@@ -543,8 +541,6 @@ impl Level for Fallback {
                     }
                 }
             }
-            OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
-            OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);

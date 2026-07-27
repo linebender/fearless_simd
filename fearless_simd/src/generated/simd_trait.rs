@@ -175,10 +175,6 @@ pub trait Simd:
     fn as_array_mut_f32x4(self, a: &mut f32x4<Self>) -> &mut [f32; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f32x4(self, a: f32x4<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -293,10 +289,6 @@ pub trait Simd:
     fn as_array_mut_i8x16(self, a: &mut i8x16<Self>) -> &mut [i8; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i8x16(self, a: i8x16<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -391,10 +383,6 @@ pub trait Simd:
     fn as_array_mut_u8x16(self, a: &mut u8x16<Self>) -> &mut [u8; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -528,10 +516,6 @@ pub trait Simd:
     fn as_array_mut_i16x8(self, a: &mut i16x8<Self>) -> &mut [i16; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i16x8(self, a: i16x8<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -626,10 +610,6 @@ pub trait Simd:
     fn as_array_mut_u16x8(self, a: &mut u16x8<Self>) -> &mut [u16; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u16x8(self, a: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -761,10 +741,6 @@ pub trait Simd:
     fn as_array_mut_i32x4(self, a: &mut i32x4<Self>) -> &mut [i32; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i32x4(self, a: i32x4<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -861,10 +837,6 @@ pub trait Simd:
     fn as_array_mut_u32x4(self, a: &mut u32x4<Self>) -> &mut [u32; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u32x4(self, a: u32x4<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -998,10 +970,6 @@ pub trait Simd:
     fn as_array_mut_f64x2(self, a: &mut f64x2<Self>) -> &mut [f64; 2usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f64x2(self, a: f64x2<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1108,10 +1076,6 @@ pub trait Simd:
     fn as_array_mut_i64x2(self, a: &mut i64x2<Self>) -> &mut [i64; 2usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i64x2(self, a: i64x2<Self>, dest: &mut [i64; 2usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i64x2(self, a: u8x16<Self>) -> i64x2<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i64x2(self, a: i64x2<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1206,10 +1170,6 @@ pub trait Simd:
     fn as_array_mut_u64x2(self, a: &mut u64x2<Self>) -> &mut [u64; 2usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u64x2(self, a: u64x2<Self>, dest: &mut [u64; 2usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u64x2(self, a: u8x16<Self>) -> u64x2<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u64x2(self, a: u64x2<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1341,10 +1301,6 @@ pub trait Simd:
     fn as_array_mut_f32x8(self, a: &mut f32x8<Self>) -> &mut [f32; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f32x8(self, a: f32x8<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1461,10 +1417,6 @@ pub trait Simd:
     fn as_array_mut_i8x32(self, a: &mut i8x32<Self>) -> &mut [i8; 32usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i8x32(self, a: i8x32<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1561,10 +1513,6 @@ pub trait Simd:
     fn as_array_mut_u8x32(self, a: &mut u8x32<Self>) -> &mut [u8; 32usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1702,10 +1650,6 @@ pub trait Simd:
     fn as_array_mut_i16x16(self, a: &mut i16x16<Self>) -> &mut [i16; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i16x16(self, a: i16x16<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1806,10 +1750,6 @@ pub trait Simd:
     fn as_array_mut_u16x16(self, a: &mut u16x16<Self>) -> &mut [u16; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u16x16(self, a: u16x16<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1951,10 +1891,6 @@ pub trait Simd:
     fn as_array_mut_i32x8(self, a: &mut i32x8<Self>) -> &mut [i32; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i32x8(self, a: i32x8<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2053,10 +1989,6 @@ pub trait Simd:
     fn as_array_mut_u32x8(self, a: &mut u32x8<Self>) -> &mut [u32; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u32x8(self, a: u32x8<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2194,10 +2126,6 @@ pub trait Simd:
     fn as_array_mut_f64x4(self, a: &mut f64x4<Self>) -> &mut [f64; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f64x4(self, a: f64x4<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2306,10 +2234,6 @@ pub trait Simd:
     fn as_array_mut_i64x4(self, a: &mut i64x4<Self>) -> &mut [i64; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i64x4(self, a: i64x4<Self>, dest: &mut [i64; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i64x4(self, a: u8x32<Self>) -> i64x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i64x4(self, a: i64x4<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2406,10 +2330,6 @@ pub trait Simd:
     fn as_array_mut_u64x4(self, a: &mut u64x4<Self>) -> &mut [u64; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u64x4(self, a: u64x4<Self>, dest: &mut [u64; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u64x4(self, a: u8x32<Self>) -> u64x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u64x4(self, a: u64x4<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2545,10 +2465,6 @@ pub trait Simd:
     fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2671,10 +2587,6 @@ pub trait Simd:
     fn as_array_mut_i8x64(self, a: &mut i8x64<Self>) -> &mut [i8; 64usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i8x64(self, a: i8x64<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2769,10 +2681,6 @@ pub trait Simd:
     fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2908,10 +2816,6 @@ pub trait Simd:
     fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i16x32(self, a: i16x32<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3010,10 +2914,6 @@ pub trait Simd:
     fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u16x32(self, a: u16x32<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3155,10 +3055,6 @@ pub trait Simd:
     fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i32x16(self, a: i32x16<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3259,10 +3155,6 @@ pub trait Simd:
     fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3404,10 +3296,6 @@ pub trait Simd:
     fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f64x8(self, a: f64x8<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3514,10 +3402,6 @@ pub trait Simd:
     fn as_array_mut_i64x8(self, a: &mut i64x8<Self>) -> &mut [i64; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i64x8(self, a: u8x64<Self>) -> i64x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i64x8(self, a: i64x8<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3612,10 +3496,6 @@ pub trait Simd:
     fn as_array_mut_u64x8(self, a: &mut u64x8<Self>) -> &mut [u64; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u64x8(self, a: u8x64<Self>) -> u64x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u64x8(self, a: u64x8<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]

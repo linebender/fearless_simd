@@ -138,11 +138,6 @@ pub(crate) enum OpSig {
     AsArray { kind: RefKind },
     /// Takes a vector and a mutable reference to an array, and stores the vector elements into the array.
     StoreArray,
-    /// Takes a single argument of the vector type, and returns a vector type with `u8` elements and the same bit width.
-    FromBytes,
-    /// Takes a single argument of a vector type with `u8` elements, and returns a vector type with different elements
-    /// and the same bit width.
-    ToBytes,
 }
 
 /// Where this operation is defined, and how it is called.
@@ -371,14 +366,6 @@ impl Op {
                 let array_ty = quote! { [#rust_scalar; #len] };
                 (vec![vec, quote! { &mut #array_ty }], quote! { () })
             }
-            OpSig::FromBytes => {
-                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-                (vec![quote! { #bytes_ty<#simd_ty> }], vec)
-            }
-            OpSig::ToBytes => {
-                let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-                (vec![vec], quote! { #bytes_ty<#simd_ty> })
-            }
         };
 
         SimdTraitSigParts {
@@ -467,9 +454,7 @@ impl Op {
             OpSig::Split { .. }
             | OpSig::Combine { .. }
             | OpSig::FromArray { .. }
-            | OpSig::AsArray { .. }
-            | OpSig::FromBytes
-            | OpSig::ToBytes => return None,
+            | OpSig::AsArray { .. } => return None,
         };
         Some(quote! { fn #method_ident #sig_inner })
     }
@@ -575,18 +560,6 @@ const BASE_OPS: &[Op] = &[
         OpKind::AssociatedOnly,
         OpSig::StoreArray,
         "Store a SIMD vector into an array of the same length.",
-    ),
-    Op::new(
-        "cvt_from_bytes",
-        OpKind::OwnTrait,
-        OpSig::FromBytes,
-        "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length.",
-    ),
-    Op::new(
-        "cvt_to_bytes",
-        OpKind::OwnTrait,
-        OpSig::ToBytes,
-        "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length.",
     ),
     Op::new(
         "slide",
@@ -1619,9 +1592,7 @@ impl OpSig {
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask
-            | Self::AsArray { .. }
-            | Self::FromBytes
-            | Self::ToBytes => &["a"],
+            | Self::AsArray { .. } => &["a"],
             Self::SwizzleDynWithinBlocks => &["a", "indices"],
             Self::Binary
             | Self::Compare
@@ -1648,14 +1619,12 @@ impl OpSig {
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
             | Self::MaskSet
-            | Self::FromBytes { .. }
             | Self::StoreArray => &[],
             Self::Unary
             | Self::Cvt { .. }
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
-            | Self::AsArray { .. }
-            | Self::ToBytes => &["self"],
+            | Self::AsArray { .. } => &["self"],
             Self::SwizzleDynWithinBlocks => &["self", "indices"],
             Self::Binary
             | Self::Compare
@@ -1719,8 +1688,6 @@ impl OpSig {
             | Self::FromArray { .. }
             | Self::AsArray { .. }
             | Self::StoreArray
-            | Self::FromBytes
-            | Self::ToBytes
             | Self::SwizzleDynWithinBlocks
             | Self::Slide { .. } => return None,
         };

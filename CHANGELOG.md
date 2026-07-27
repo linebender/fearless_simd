@@ -23,7 +23,7 @@ You can find its changes [documented below](#060-2026-07-10).
 
 ### Removed
 
-- Breaking change: removed the low-level `reinterpret_f32_*`, `reinterpret_f64_*`, `reinterpret_i32_*`, `reinterpret_u32_*`, and `reinterpret_u8_*` methods. Use `Bytes::bitcast` for arbitrary same-width bit reinterpretation, or `cvt_to_bytes_*` and `cvt_from_bytes_*` for direct byte-vector conversions.
+- Breaking change: removed the low-level `reinterpret_f32_*`, `reinterpret_f64_*`, `reinterpret_i32_*`, `reinterpret_u32_*`, `reinterpret_u8_*`, `cvt_to_bytes_*`, and `cvt_from_bytes_*` methods. Use `Bytes::bitcast` for arbitrary same-width bit reinterpretation, or `Bytes::to_bytes` and `Bytes::from_bytes` for direct byte-vector conversions.
 
 ## [0.6.0][] (2026-07-10)
 

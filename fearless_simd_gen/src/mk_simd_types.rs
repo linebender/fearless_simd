@@ -30,8 +30,6 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         let as_array_op = generic_op_name("as_array", ty);
         let as_array_ref_op = generic_op_name("as_array_ref", ty);
         let as_array_mut_op = generic_op_name("as_array_mut", ty);
-        let from_bytes_op = generic_op_name("cvt_from_bytes", ty);
-        let to_bytes_op = generic_op_name("cvt_to_bytes", ty);
         let bytes = ty.bytes_ty().rust();
         let mask = ty.mask_ty().rust();
 
@@ -274,12 +272,18 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
                 #[inline(always)]
                 fn to_bytes(self) -> Self::Bytes {
-                    self.simd.#to_bytes_op(self)
+                    #bytes {
+                        val: crate::transmute::checked_transmute_copy(&self.val),
+                        simd: self.simd,
+                    }
                 }
 
                 #[inline(always)]
                 fn from_bytes(value: Self::Bytes) -> Self {
-                    value.simd.#from_bytes_op(value)
+                    Self {
+                        val: crate::transmute::checked_transmute_copy(&value.val),
+                        simd: value.simd,
+                    }
                 }
             }
 
