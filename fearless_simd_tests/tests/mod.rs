@@ -13,34 +13,10 @@
 use fearless_simd::*;
 use fearless_simd_dev_macros::simd_test;
 
+mod generics;
 mod harness;
 #[cfg(not(miri))] // too slow
 mod soundness;
-
-// Ensure that we can cast between generic native-width vectors
-#[expect(dead_code, reason = "Compile only test")]
-fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
-    x.to_int()
-}
-
-// Ensure that a generic vector's byte representation is itself a same-token
-// byte vector whose byte representation is idempotent.
-#[expect(dead_code, reason = "Compile only test")]
-fn generic_bytes<S: Simd, V: SimdBase<S>>(value: V) -> V {
-    let simd = value.witness();
-    let bytes = value.to_bytes();
-    let bytes =
-        <V::Bytes as SimdBase<S>>::from_slice(simd, <V::Bytes as SimdBase<S>>::as_slice(&bytes));
-    let _: u8 = bytes[0];
-    let bytes: V::Bytes = bytes.to_bytes();
-    let bytes: V::Bytes = bytes.bitcast();
-    V::from_bytes(bytes)
-}
-
-#[expect(dead_code, reason = "Compile only test")]
-fn generic_bytes_idempotent<T: Bytes>(bytes: T::Bytes) -> T::Bytes {
-    bytes.to_bytes()
-}
 
 #[allow(clippy::allow_attributes, reason = "Only needed in some cfgs.")]
 #[allow(
