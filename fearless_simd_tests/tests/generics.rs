@@ -1,5 +1,8 @@
 //! Tests enforcing that generic code still compiles
 
+// Copyright 2026 the Fearless_SIMD Authors
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 #![expect(dead_code, reason = "Compile only tests")]
 
 use fearless_simd::prelude::*;
