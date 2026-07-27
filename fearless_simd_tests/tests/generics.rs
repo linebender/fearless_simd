@@ -16,3 +16,8 @@ fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
 fn generic_select<S: Simd, V: SimdBase<S>>(mask: V::Mask, if_true: V, if_false: V) -> V {
     mask.select(if_true, if_false)
 }
+
+// Ensure that elements can be copied out of a generic vector
+fn generic_first<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
+    vector[0]
+}

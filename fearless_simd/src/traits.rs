@@ -105,7 +105,7 @@ impl<T, S: Simd> SimdFrom<T, S> for T {
 }
 
 /// Types that can be used as elements in SIMD vectors.
-pub trait SimdElement: Seal {
+pub trait SimdElement: Copy + Seal {
     /// The associated mask lane type. This will be a signed integer of the same size as this type.
     type Mask: SimdElement;
 }

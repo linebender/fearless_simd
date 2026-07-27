@@ -20,6 +20,7 @@ You can find its changes [documented below](#060-2026-07-10).
 - On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
 - The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
 - `SimdBase::Mask` now guarantees support for selecting vectors of its associated `SimdBase` type, enabling mask selection in generic code without additional bounds.
+- `SimdElement` now requires `Copy`, enabling elements to be read by value from vectors in generic code without additional bounds.
 
 ## [0.6.0][] (2026-07-10)
 
