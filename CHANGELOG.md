@@ -21,6 +21,7 @@ You can find its changes [documented below](#060-2026-07-10).
 - The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
 - `SimdBase::Mask` now guarantees support for selecting vectors of its associated `SimdBase` type, enabling mask selection in generic code without additional bounds.
 - `SimdElement` now requires `Copy`, enabling elements to be read by value from vectors in generic code without additional bounds.
+- `SimdCombine` and `SimdSplit` now declare their associated vector types as inverse operations, enabling generic code to recover the original vector type without additional equality bounds.
 
 ## [0.6.0][] (2026-07-10)
 

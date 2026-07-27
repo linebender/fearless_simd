@@ -21,3 +21,14 @@ fn generic_select<S: Simd, V: SimdBase<S>>(mask: V::Mask, if_true: V, if_false: 
 fn generic_first<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
     vector[0]
 }
+
+// Ensure that combining and then splitting generic vectors returns the original type
+fn generic_combine_split<S: Simd, V: SimdCombine<S>>(left: V, right: V) -> (V, V) {
+    left.combine(right).split()
+}
+
+// Ensure that splitting and then combining a generic vector returns the original type
+fn generic_split_combine<S: Simd, V: SimdSplit<S>>(vector: V) -> V {
+    let (left, right) = vector.split();
+    left.combine(right)
+}

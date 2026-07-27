@@ -165,7 +165,8 @@ pub trait SimdCvtFloat<T: Seal>: Seal {
 ///
 /// This is implemented on all vectors 256 bits and lower, producing vectors of up to 512 bits.
 pub trait SimdCombine<S: Simd>: SimdBase<S> + Seal {
-    type Combined: SimdBase<S, Element = Self::Element, Block = Self::Block>;
+    type Combined: SimdBase<S, Element = Self::Element, Block = Self::Block>
+        + SimdSplit<S, Split = Self>;
 
     /// Concatenate two vectors into a new one that's twice as long.
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined;
@@ -175,7 +176,8 @@ pub trait SimdCombine<S: Simd>: SimdBase<S> + Seal {
 ///
 /// This is implemented on all vectors 256 bits and higher, producing vectors of down to 128 bits.
 pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
-    type Split: SimdBase<S, Element = Self::Element, Block = Self::Block>;
+    type Split: SimdBase<S, Element = Self::Element, Block = Self::Block>
+        + SimdCombine<S, Combined = Self>;
 
     /// Split this vector into left and right halves.
     fn split(self) -> (Self::Split, Self::Split);
