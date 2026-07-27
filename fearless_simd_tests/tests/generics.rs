@@ -22,6 +22,18 @@ fn generic_first<S: Simd, V: SimdBase<S>>(vector: V) -> V::Element {
     vector[0]
 }
 
+// Ensure that a generic vector's 128-bit block is its own block
+fn generic_block_splat<S: Simd, V: SimdBase<S>>(block: V::Block) -> V::Block {
+    V::Block::block_splat(block)
+}
+
+// Ensure that a mask lane's signed integer encoding type is its own mask lane encoding type
+fn generic_mask_lane_encoding_idempotent<E: SimdElement>(
+    lane_encoding: E::Mask,
+) -> <E::Mask as SimdElement>::Mask {
+    lane_encoding
+}
+
 // Ensure that combining and then splitting generic vectors returns the original type
 fn generic_combine_split<S: Simd, V: SimdCombine<S>>(left: V, right: V) -> (V, V) {
     left.combine(right).split()

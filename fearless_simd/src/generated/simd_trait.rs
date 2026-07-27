@@ -3908,7 +3908,7 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" AVX-512/RVV/SVE-style targets use compact predicate registers instead."]
     type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask> + Select<Self>;
     #[doc = r" A 128-bit SIMD vector of the same scalar type."]
-    type Block: SimdBase<S, Element = Self::Element>;
+    type Block: SimdBase<S, Element = Self::Element, Block = Self::Block>;
     #[doc = r" The array type that this vector type corresponds to, which will"]
     #[doc = r" always be `[Self::Element; Self::N]`. It has the same layout as"]
     #[doc = r" this vector type, but likely has a lower alignment."]

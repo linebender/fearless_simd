@@ -172,7 +172,7 @@ fn mk_simd_base() -> TokenStream {
             /// AVX-512/RVV/SVE-style targets use compact predicate registers instead.
             type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask> + Select<Self>;
             /// A 128-bit SIMD vector of the same scalar type.
-            type Block: SimdBase<S, Element = Self::Element>;
+            type Block: SimdBase<S, Element = Self::Element, Block = Self::Block>;
             /// The array type that this vector type corresponds to, which will
             /// always be `[Self::Element; Self::N]`. It has the same layout as
             /// this vector type, but likely has a lower alignment.
