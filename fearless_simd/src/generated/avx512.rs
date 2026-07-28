@@ -155,31 +155,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self> {
-        f32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         if SHIFT >= 4usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_f32x4(b).val.0,
-            self.cvt_to_bytes_f32x4(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_f32x4(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -249,9 +235,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x4<Avx512>, indices: u8x16<Avx512>) -> f32x4<Avx512> {
-                let bytes = token.cvt_to_bytes_f32x4(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_f32x4(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -626,46 +612,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>) -> f64x2<Avx512> {
-                _mm_castps_pd(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>) -> i32x4<Avx512> {
-                _mm_castps_si128(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>) -> u8x16<Avx512> {
-                _mm_castps_si128(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x4<Avx512>) -> u32x4<Avx512> {
-                _mm_castps_si128(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -759,31 +705,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self> {
-        i8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
         if SHIFT >= 16usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_i8x16(b).val.0,
-            self.cvt_to_bytes_i8x16(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT,
         );
-        self.cvt_from_bytes_i8x16(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -901,9 +833,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i8x16<Avx512>, indices: u8x16<Avx512>) -> i8x16<Avx512> {
-                let bytes = token.cvt_to_bytes_i8x16(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_i8x16(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -1007,11 +939,12 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x16<Avx512>, shift: u32) -> i8x16<Avx512> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
-                let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
-                let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
-                let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
-                _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let mask = _mm_set1_epi16(0x00ff);
+                let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
+                let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
+                let lo_shifted = _mm_and_si128(_mm_sll_epi16(lo_16, shift_count), mask);
+                let hi_shifted = _mm_and_si128(_mm_sll_epi16(hi_16, shift_count), mask);
+                _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
         kernel(self, a, shift)
@@ -1278,26 +1211,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>) -> u8x16<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x16<Avx512>) -> u32x4<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1338,31 +1251,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
         if SHIFT >= 16usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_u8x16(b).val.0,
-            self.cvt_to_bytes_u8x16(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT,
         );
-        self.cvt_from_bytes_u8x16(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -1480,9 +1379,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u8x16<Avx512>, indices: u8x16<Avx512>) -> u8x16<Avx512> {
-                let bytes = token.cvt_to_bytes_u8x16(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_u8x16(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -1586,10 +1485,11 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x16<Avx512>, shift: u32) -> u8x16<Avx512> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let mask = _mm_set1_epi16(0x00ff);
                 let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
                 let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
-                let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
-                let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
+                let lo_shifted = _mm_and_si128(_mm_sll_epi16(lo_16, shift_count), mask);
+                let hi_shifted = _mm_and_si128(_mm_sll_epi16(hi_16, shift_count), mask);
                 _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
@@ -1857,16 +1757,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x16<Avx512>) -> u32x4<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
         mask8x16 {
             val: (if val { 65535u64 } else { 0 }) as _,
@@ -2042,31 +1932,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self> {
-        i16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_i16x8(b).val.0,
-            self.cvt_to_bytes_i16x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 2usize,
         );
-        self.cvt_from_bytes_i16x8(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -2152,9 +2028,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i16x8<Avx512>, indices: u8x16<Avx512>) -> i16x8<Avx512> {
-                let bytes = token.cvt_to_bytes_i16x8(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_i16x8(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -2480,26 +2356,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>) -> u8x16<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x8<Avx512>) -> u32x4<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2540,31 +2396,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self> {
-        u16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
         if SHIFT >= 8usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_u16x8(b).val.0,
-            self.cvt_to_bytes_u16x8(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 2usize,
         );
-        self.cvt_from_bytes_u16x8(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -2650,9 +2492,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u16x8<Avx512>, indices: u8x16<Avx512>) -> u16x8<Avx512> {
-                let bytes = token.cvt_to_bytes_u16x8(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_u16x8(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -2968,26 +2810,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>) -> u8x16<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x8<Avx512>) -> u32x4<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
         mask16x8 {
             val: (if val { 255u64 } else { 0 }) as _,
@@ -3163,31 +2985,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self> {
-        i32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         if SHIFT >= 4usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_i32x4(b).val.0,
-            self.cvt_to_bytes_i32x4(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_i32x4(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -3257,9 +3065,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i32x4<Avx512>, indices: u8x16<Avx512>) -> i32x4<Avx512> {
-                let bytes = token.cvt_to_bytes_i32x4(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_i32x4(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -3575,26 +3383,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>) -> u8x16<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x4<Avx512>) -> u32x4<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3645,31 +3433,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self> {
-        u32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
         if SHIFT >= 4usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_u32x4(b).val.0,
-            self.cvt_to_bytes_u32x4(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 4usize,
         );
-        self.cvt_from_bytes_u32x4(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -3739,9 +3513,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u32x4<Avx512>, indices: u8x16<Avx512>) -> u32x4<Avx512> {
-                let bytes = token.cvt_to_bytes_u32x4(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_u32x4(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -4047,16 +3821,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x4<Avx512>) -> u8x16<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4243,31 +4007,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self> {
-        f64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f64x2(self, a: f64x2<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         if SHIFT >= 2usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_f64x2(b).val.0,
-            self.cvt_to_bytes_f64x2(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_f64x2(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -4329,9 +4079,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f64x2<Avx512>, indices: u8x16<Avx512>) -> f64x2<Avx512> {
-                let bytes = token.cvt_to_bytes_f64x2(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_f64x2(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -4706,16 +4456,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x2<Avx512>) -> f32x4<Avx512> {
-                _mm_castpd_ps(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4756,31 +4496,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i64x2(self, a: u8x16<Self>) -> i64x2<Self> {
-        i64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
         if SHIFT >= 2usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_i64x2(b).val.0,
-            self.cvt_to_bytes_i64x2(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_i64x2(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -4842,9 +4568,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i64x2<Avx512>, indices: u8x16<Avx512>) -> i64x2<Avx512> {
-                let bytes = token.cvt_to_bytes_i64x2(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_i64x2(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -5158,26 +4884,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>) -> u8x16<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x2(self, a: i64x2<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x2<Avx512>) -> u32x4<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5218,31 +4924,17 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u64x2(self, a: u8x16<Self>) -> u64x2<Self> {
-        u64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u64x2(self, a: u64x2<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
         if SHIFT >= 2usize {
             return b;
         }
         let result = dyn_alignr_128(
             self,
-            self.cvt_to_bytes_u64x2(b).val.0,
-            self.cvt_to_bytes_u64x2(a).val.0,
+            Bytes::to_bytes(b).val.0,
+            Bytes::to_bytes(a).val.0,
             SHIFT * 8usize,
         );
-        self.cvt_from_bytes_u64x2(u8x16 {
+        Bytes::from_bytes(u8x16 {
             val: crate::support::Aligned128(result),
             simd: self,
         })
@@ -5304,9 +4996,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u64x2<Avx512>, indices: u8x16<Avx512>) -> u64x2<Avx512> {
-                let bytes = token.cvt_to_bytes_u64x2(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
-                token.cvt_from_bytes_u64x2(u8x16 {
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -5610,26 +5302,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn reinterpret_u8_u64x2(self, a: u64x2<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>) -> u8x16<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x2(self, a: u64x2<Self>) -> u32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x2<Avx512>) -> u32x4<Avx512> {
-                __m128i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
         mask64x2 {
             val: (if val { 3u64 } else { 0 }) as _,
@@ -5805,20 +5477,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self> {
-        f32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5839,11 +5497,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift * 4usize) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_f32x8(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_f32x8(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_f32x8(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -5863,10 +5521,10 @@ impl Simd for Avx512 {
         if SHIFT >= 4usize {
             return b;
         }
-        let a = self.cvt_to_bytes_f32x8(a).val.0;
-        let b = self.cvt_to_bytes_f32x8(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT * 4usize);
-        self.cvt_from_bytes_f32x8(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -5944,9 +5602,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x8<Avx512>, indices: u8x32<Avx512>) -> f32x8<Avx512> {
-                let bytes = token.cvt_to_bytes_f32x8(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_f32x8(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -6392,46 +6050,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>) -> f64x4<Avx512> {
-                _mm256_castps_pd(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>) -> i32x8<Avx512> {
-                _mm256_castps_si256(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>) -> u8x32<Avx512> {
-                _mm256_castps_si256(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x8<Avx512>) -> u32x8<Avx512> {
-                _mm256_castps_si256(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6527,20 +6145,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self> {
-        i8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6561,11 +6165,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_i8x32(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_i8x32(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_i8x32(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -6585,10 +6189,10 @@ impl Simd for Avx512 {
         if SHIFT >= 16usize {
             return b;
         }
-        let a = self.cvt_to_bytes_i8x32(a).val.0;
-        let b = self.cvt_to_bytes_i8x32(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT);
-        self.cvt_from_bytes_i8x32(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -6762,9 +6366,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i8x32<Avx512>, indices: u8x32<Avx512>) -> i8x32<Avx512> {
-                let bytes = token.cvt_to_bytes_i8x32(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_i8x32(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -6871,13 +6475,12 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x32<Avx512>, shift: u32) -> i8x32<Avx512> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let lo_16 =
-                    _mm256_unpacklo_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
-                let hi_16 =
-                    _mm256_unpackhi_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
-                let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
-                let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
-                _mm256_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let mask = _mm256_set1_epi16(0x00ff);
+                let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
+                let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
+                let lo_shifted = _mm256_and_si256(_mm256_sll_epi16(lo_16, shift_count), mask);
+                let hi_shifted = _mm256_and_si256(_mm256_sll_epi16(hi_16, shift_count), mask);
+                _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
         kernel(self, a, shift)
@@ -7222,26 +6825,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>) -> u8x32<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x32<Avx512>) -> u32x8<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7282,20 +6865,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7316,11 +6885,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_u8x32(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_u8x32(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_u8x32(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -7340,10 +6909,10 @@ impl Simd for Avx512 {
         if SHIFT >= 16usize {
             return b;
         }
-        let a = self.cvt_to_bytes_u8x32(a).val.0;
-        let b = self.cvt_to_bytes_u8x32(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT);
-        self.cvt_from_bytes_u8x32(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -7517,9 +7086,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u8x32<Avx512>, indices: u8x32<Avx512>) -> u8x32<Avx512> {
-                let bytes = token.cvt_to_bytes_u8x32(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_u8x32(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -7626,10 +7195,11 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x32<Avx512>, shift: u32) -> u8x32<Avx512> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let mask = _mm256_set1_epi16(0x00ff);
                 let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
                 let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
-                let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
-                let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
+                let lo_shifted = _mm256_and_si256(_mm256_sll_epi16(lo_16, shift_count), mask);
+                let hi_shifted = _mm256_and_si256(_mm256_sll_epi16(hi_16, shift_count), mask);
                 _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
@@ -7973,16 +7543,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x32<Avx512>) -> u32x8<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
         mask8x32 {
             val: (if val { 4294967295u64 } else { 0 }) as _,
@@ -8172,20 +7732,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self> {
-        i16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8206,11 +7752,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift * 2usize) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_i16x16(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_i16x16(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_i16x16(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -8230,10 +7776,10 @@ impl Simd for Avx512 {
         if SHIFT >= 8usize {
             return b;
         }
-        let a = self.cvt_to_bytes_i16x16(a).val.0;
-        let b = self.cvt_to_bytes_i16x16(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT * 2usize);
-        self.cvt_from_bytes_i16x16(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -8347,9 +7893,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i16x16<Avx512>, indices: u8x32<Avx512>) -> i16x16<Avx512> {
-                let bytes = token.cvt_to_bytes_i16x16(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_i16x16(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -8738,26 +8284,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>) -> u8x32<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x16<Avx512>) -> u32x8<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8798,20 +8324,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self> {
-        u16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8832,11 +8344,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift * 2usize) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_u16x16(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_u16x16(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_u16x16(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -8856,10 +8368,10 @@ impl Simd for Avx512 {
         if SHIFT >= 8usize {
             return b;
         }
-        let a = self.cvt_to_bytes_u16x16(a).val.0;
-        let b = self.cvt_to_bytes_u16x16(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT * 2usize);
-        self.cvt_from_bytes_u16x16(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -8973,9 +8485,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u16x16<Avx512>, indices: u8x32<Avx512>) -> u16x16<Avx512> {
-                let bytes = token.cvt_to_bytes_u16x16(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_u16x16(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -9364,26 +8876,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u8x32<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u32x8<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
         mask16x16 {
             val: (if val { 65535u64 } else { 0 }) as _,
@@ -9573,20 +9065,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self> {
-        i32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9607,11 +9085,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift * 4usize) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_i32x8(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_i32x8(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_i32x8(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -9631,10 +9109,10 @@ impl Simd for Avx512 {
         if SHIFT >= 4usize {
             return b;
         }
-        let a = self.cvt_to_bytes_i32x8(a).val.0;
-        let b = self.cvt_to_bytes_i32x8(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT * 4usize);
-        self.cvt_from_bytes_i32x8(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -9712,9 +9190,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i32x8<Avx512>, indices: u8x32<Avx512>) -> i32x8<Avx512> {
-                let bytes = token.cvt_to_bytes_i32x8(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_i32x8(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -10081,26 +9559,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>) -> u8x32<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x8(self, a: i32x8<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x8<Avx512>) -> u32x8<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10151,20 +9609,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self> {
-        u32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10185,11 +9629,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift * 4usize) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_u32x8(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_u32x8(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_u32x8(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -10209,10 +9653,10 @@ impl Simd for Avx512 {
         if SHIFT >= 4usize {
             return b;
         }
-        let a = self.cvt_to_bytes_u32x8(a).val.0;
-        let b = self.cvt_to_bytes_u32x8(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT * 4usize);
-        self.cvt_from_bytes_u32x8(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -10290,9 +9734,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u32x8<Avx512>, indices: u8x32<Avx512>) -> u32x8<Avx512> {
-                let bytes = token.cvt_to_bytes_u32x8(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_u32x8(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -10649,16 +10093,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x8<Avx512>) -> u8x32<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10859,20 +10293,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self> {
-        f64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f64x4(self, a: f64x4<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10893,11 +10313,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift * 8usize) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_f64x4(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_f64x4(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_f64x4(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -10917,10 +10337,10 @@ impl Simd for Avx512 {
         if SHIFT >= 2usize {
             return b;
         }
-        let a = self.cvt_to_bytes_f64x4(a).val.0;
-        let b = self.cvt_to_bytes_f64x4(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT * 8usize);
-        self.cvt_from_bytes_f64x4(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -10982,9 +10402,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f64x4<Avx512>, indices: u8x32<Avx512>) -> f64x4<Avx512> {
-                let bytes = token.cvt_to_bytes_f64x4(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_f64x4(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -11410,16 +10830,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x4<Avx512>) -> f32x8<Avx512> {
-                _mm256_castpd_ps(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11460,20 +10870,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i64x4(self, a: u8x32<Self>) -> i64x4<Self> {
-        i64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i64x4(self, a: i64x4<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11494,11 +10890,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift * 8usize) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_i64x4(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_i64x4(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_i64x4(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -11518,10 +10914,10 @@ impl Simd for Avx512 {
         if SHIFT >= 2usize {
             return b;
         }
-        let a = self.cvt_to_bytes_i64x4(a).val.0;
-        let b = self.cvt_to_bytes_i64x4(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT * 8usize);
-        self.cvt_from_bytes_i64x4(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -11583,9 +10979,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i64x4<Avx512>, indices: u8x32<Avx512>) -> i64x4<Avx512> {
-                let bytes = token.cvt_to_bytes_i64x4(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_i64x4(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -11936,26 +11332,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i64x4(self, a: i64x4<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>) -> u8x32<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x4(self, a: i64x4<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x4<Avx512>) -> u32x8<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11996,20 +11372,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u64x4(self, a: u8x32<Self>) -> u64x4<Self> {
-        u64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u64x4(self, a: u64x4<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12030,11 +11392,11 @@ impl Simd for Avx512 {
                     _mm256_set1_epi8((shift * 8usize) as i8),
                 );
                 let result = _mm256_permutex2var_epi8(
-                    token.cvt_to_bytes_u64x4(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_u64x4(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_u64x4(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -12054,10 +11416,10 @@ impl Simd for Avx512 {
         if SHIFT >= 2usize {
             return b;
         }
-        let a = self.cvt_to_bytes_u64x4(a).val.0;
-        let b = self.cvt_to_bytes_u64x4(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_256(self, b, a, SHIFT * 8usize);
-        self.cvt_from_bytes_u64x4(u8x32 {
+        Bytes::from_bytes(u8x32 {
             val: crate::support::Aligned256(result),
             simd: self,
         })
@@ -12119,9 +11481,9 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u64x4<Avx512>, indices: u8x32<Avx512>) -> u64x4<Avx512> {
-                let bytes = token.cvt_to_bytes_u64x4(a).val.0;
+                let bytes = Bytes::to_bytes(a).val.0;
                 let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
-                token.cvt_from_bytes_u64x4(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -12462,26 +11824,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_u64x4(self, a: u64x4<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>) -> u8x32<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x4(self, a: u64x4<Self>) -> u32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x4<Avx512>) -> u32x8<Avx512> {
-                __m256i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
         mask64x4 {
             val: (if val { 15u64 } else { 0 }) as _,
@@ -12671,20 +12013,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self> {
-        f32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12707,11 +12035,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift * 4usize) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_f32x16(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_f32x16(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_f32x16(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -12731,10 +12059,10 @@ impl Simd for Avx512 {
         if SHIFT >= 4usize {
             return b;
         }
-        let a = self.cvt_to_bytes_f32x16(a).val.0;
-        let b = self.cvt_to_bytes_f32x16(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT * 4usize);
-        self.cvt_from_bytes_f32x16(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -12848,9 +12176,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f32x16<Avx512>, indices: u8x64<Avx512>) -> f32x16<Avx512> {
-                let result =
-                    _mm512_shuffle_epi8(token.cvt_to_bytes_f32x16(a).val.0, indices.into());
-                token.cvt_from_bytes_f32x16(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -13308,26 +12635,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>) -> f64x8<Avx512> {
-                _mm512_castps_pd(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>) -> i32x16<Avx512> {
-                _mm512_castps_si512(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -13356,26 +12663,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, dest);
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>) -> u8x64<Avx512> {
-                _mm512_castps_si512(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>) -> u32x16<Avx512> {
-                _mm512_castps_si512(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
@@ -13473,20 +12760,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self> {
-        i8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -13509,11 +12782,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_i8x64(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_i8x64(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_i8x64(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -13533,10 +12806,10 @@ impl Simd for Avx512 {
         if SHIFT >= 16usize {
             return b;
         }
-        let a = self.cvt_to_bytes_i8x64(a).val.0;
-        let b = self.cvt_to_bytes_i8x64(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT);
-        self.cvt_from_bytes_i8x64(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -13838,8 +13111,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i8x64<Avx512>, indices: u8x64<Avx512>) -> i8x64<Avx512> {
-                let result = _mm512_shuffle_epi8(token.cvt_to_bytes_i8x64(a).val.0, indices.into());
-                token.cvt_from_bytes_i8x64(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -13946,17 +13219,12 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x64<Avx512>, shift: u32) -> i8x64<Avx512> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let lo_16 = _mm512_unpacklo_epi8(
-                    val,
-                    _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
-                );
-                let hi_16 = _mm512_unpackhi_epi8(
-                    val,
-                    _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(_mm512_setzero_si512(), val)),
-                );
-                let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
-                let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
-                _mm512_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let mask = _mm512_set1_epi16(0x00ff);
+                let lo_16 = _mm512_unpacklo_epi8(val, _mm512_setzero_si512());
+                let hi_16 = _mm512_unpackhi_epi8(val, _mm512_setzero_si512());
+                let lo_shifted = _mm512_and_si512(_mm512_sll_epi16(lo_16, shift_count), mask);
+                let hi_shifted = _mm512_and_si512(_mm512_sll_epi16(hi_16, shift_count), mask);
+                _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
         kernel(self, a, shift)
@@ -14311,26 +13579,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>) -> u8x64<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i8x64<Avx512>) -> u32x16<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14371,20 +13619,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14407,11 +13641,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_u8x64(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_u8x64(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_u8x64(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -14431,10 +13665,10 @@ impl Simd for Avx512 {
         if SHIFT >= 16usize {
             return b;
         }
-        let a = self.cvt_to_bytes_u8x64(a).val.0;
-        let b = self.cvt_to_bytes_u8x64(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT);
-        self.cvt_from_bytes_u8x64(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -14736,8 +13970,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u8x64<Avx512>, indices: u8x64<Avx512>) -> u8x64<Avx512> {
-                let result = _mm512_shuffle_epi8(token.cvt_to_bytes_u8x64(a).val.0, indices.into());
-                token.cvt_from_bytes_u8x64(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -14844,10 +14078,11 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x64<Avx512>, shift: u32) -> u8x64<Avx512> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let mask = _mm512_set1_epi16(0x00ff);
                 let lo_16 = _mm512_unpacklo_epi8(val, _mm512_setzero_si512());
                 let hi_16 = _mm512_unpackhi_epi8(val, _mm512_setzero_si512());
-                let lo_shifted = _mm512_sll_epi16(lo_16, shift_count);
-                let hi_shifted = _mm512_sll_epi16(hi_16, shift_count);
+                let lo_shifted = _mm512_and_si512(_mm512_sll_epi16(lo_16, shift_count), mask);
+                let hi_shifted = _mm512_and_si512(_mm512_sll_epi16(hi_16, shift_count), mask);
                 _mm512_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
@@ -15227,16 +14462,6 @@ impl Simd for Avx512 {
         kernel(self, a, dest);
     }
     #[inline(always)]
-    fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x64<Avx512>) -> u32x16<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         mask8x64 {
             val: if val { u64::MAX } else { 0 },
@@ -15418,20 +14643,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self> {
-        i16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -15454,11 +14665,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift * 2usize) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_i16x32(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_i16x32(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_i16x32(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -15478,10 +14689,10 @@ impl Simd for Avx512 {
         if SHIFT >= 8usize {
             return b;
         }
-        let a = self.cvt_to_bytes_i16x32(a).val.0;
-        let b = self.cvt_to_bytes_i16x32(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT * 2usize);
-        self.cvt_from_bytes_i16x32(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -15659,9 +14870,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i16x32<Avx512>, indices: u8x64<Avx512>) -> i16x32<Avx512> {
-                let result =
-                    _mm512_shuffle_epi8(token.cvt_to_bytes_i16x32(a).val.0, indices.into());
-                token.cvt_from_bytes_i16x32(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -16058,26 +15268,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>) -> u8x64<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i16x32<Avx512>) -> u32x16<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16118,20 +15308,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self> {
-        u16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16154,11 +15330,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift * 2usize) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_u16x32(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_u16x32(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_u16x32(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -16178,10 +15354,10 @@ impl Simd for Avx512 {
         if SHIFT >= 8usize {
             return b;
         }
-        let a = self.cvt_to_bytes_u16x32(a).val.0;
-        let b = self.cvt_to_bytes_u16x32(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT * 2usize);
-        self.cvt_from_bytes_u16x32(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -16359,9 +15535,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u16x32<Avx512>, indices: u8x64<Avx512>) -> u16x32<Avx512> {
-                let result =
-                    _mm512_shuffle_epi8(token.cvt_to_bytes_u16x32(a).val.0, indices.into());
-                token.cvt_from_bytes_u16x32(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -16794,26 +15969,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u8x64<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u32x16<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
         mask16x32 {
             val: (if val { 4294967295u64 } else { 0 }) as _,
@@ -16995,20 +16150,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self> {
-        i32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17031,11 +16172,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift * 4usize) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_i32x16(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_i32x16(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_i32x16(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -17055,10 +16196,10 @@ impl Simd for Avx512 {
         if SHIFT >= 4usize {
             return b;
         }
-        let a = self.cvt_to_bytes_i32x16(a).val.0;
-        let b = self.cvt_to_bytes_i32x16(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT * 4usize);
-        self.cvt_from_bytes_i32x16(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -17172,9 +16313,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i32x16<Avx512>, indices: u8x64<Avx512>) -> i32x16<Avx512> {
-                let result =
-                    _mm512_shuffle_epi8(token.cvt_to_bytes_i32x16(a).val.0, indices.into());
-                token.cvt_from_bytes_i32x16(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -17553,26 +16693,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>) -> u8x64<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i32x16<Avx512>) -> u32x16<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17623,20 +16743,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self> {
-        u32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17659,11 +16765,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift * 4usize) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_u32x16(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_u32x16(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_u32x16(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -17683,10 +16789,10 @@ impl Simd for Avx512 {
         if SHIFT >= 4usize {
             return b;
         }
-        let a = self.cvt_to_bytes_u32x16(a).val.0;
-        let b = self.cvt_to_bytes_u32x16(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT * 4usize);
-        self.cvt_from_bytes_u32x16(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -17800,9 +16906,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u32x16<Avx512>, indices: u8x64<Avx512>) -> u32x16<Avx512> {
-                let result =
-                    _mm512_shuffle_epi8(token.cvt_to_bytes_u32x16(a).val.0, indices.into());
-                token.cvt_from_bytes_u32x16(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -18201,16 +17306,6 @@ impl Simd for Avx512 {
         kernel(self, a, dest);
     }
     #[inline(always)]
-    fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>) -> u8x64<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18402,20 +17497,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self> {
-        f64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f64x8(self, a: f64x8<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -18438,11 +17519,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift * 8usize) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_f64x8(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_f64x8(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_f64x8(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -18462,10 +17543,10 @@ impl Simd for Avx512 {
         if SHIFT >= 2usize {
             return b;
         }
-        let a = self.cvt_to_bytes_f64x8(a).val.0;
-        let b = self.cvt_to_bytes_f64x8(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT * 8usize);
-        self.cvt_from_bytes_f64x8(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -18543,8 +17624,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: f64x8<Avx512>, indices: u8x64<Avx512>) -> f64x8<Avx512> {
-                let result = _mm512_shuffle_epi8(token.cvt_to_bytes_f64x8(a).val.0, indices.into());
-                token.cvt_from_bytes_f64x8(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -18980,16 +18061,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f64x8<Avx512>) -> f32x16<Avx512> {
-                _mm512_castpd_ps(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19030,20 +18101,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_i64x8(self, a: u8x64<Self>) -> i64x8<Self> {
-        i64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i64x8(self, a: i64x8<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19066,11 +18123,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift * 8usize) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_i64x8(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_i64x8(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_i64x8(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -19090,10 +18147,10 @@ impl Simd for Avx512 {
         if SHIFT >= 2usize {
             return b;
         }
-        let a = self.cvt_to_bytes_i64x8(a).val.0;
-        let b = self.cvt_to_bytes_i64x8(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT * 8usize);
-        self.cvt_from_bytes_i64x8(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -19171,8 +18228,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: i64x8<Avx512>, indices: u8x64<Avx512>) -> i64x8<Avx512> {
-                let result = _mm512_shuffle_epi8(token.cvt_to_bytes_i64x8(a).val.0, indices.into());
-                token.cvt_from_bytes_i64x8(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -19529,26 +18586,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn reinterpret_u8_i64x8(self, a: i64x8<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>) -> u8x64<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x8(self, a: i64x8<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: i64x8<Avx512>) -> u32x16<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19589,20 +18626,6 @@ impl Simd for Avx512 {
         crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
-    fn cvt_from_bytes_u64x8(self, a: u8x64<Self>) -> u64x8<Self> {
-        u64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u64x8(self, a: u64x8<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19625,11 +18648,11 @@ impl Simd for Avx512 {
                     _mm512_set1_epi8((shift * 8usize) as i8),
                 );
                 let result = _mm512_permutex2var_epi8(
-                    token.cvt_to_bytes_u64x8(a).val.0,
+                    Bytes::to_bytes(a).val.0,
                     idx,
-                    token.cvt_to_bytes_u64x8(b).val.0,
+                    Bytes::to_bytes(b).val.0,
                 );
-                token.cvt_from_bytes_u64x8(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -19649,10 +18672,10 @@ impl Simd for Avx512 {
         if SHIFT >= 2usize {
             return b;
         }
-        let a = self.cvt_to_bytes_u64x8(a).val.0;
-        let b = self.cvt_to_bytes_u64x8(b).val.0;
+        let a = Bytes::to_bytes(a).val.0;
+        let b = Bytes::to_bytes(b).val.0;
         let result = dyn_alignr_512(self, b, a, SHIFT * 8usize);
-        self.cvt_from_bytes_u64x8(u8x64 {
+        Bytes::from_bytes(u8x64 {
             val: crate::support::Aligned512(result),
             simd: self,
         })
@@ -19730,8 +18753,8 @@ impl Simd for Avx512 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx512, a: u64x8<Avx512>, indices: u8x64<Avx512>) -> u64x8<Avx512> {
-                let result = _mm512_shuffle_epi8(token.cvt_to_bytes_u64x8(a).val.0, indices.into());
-                token.cvt_from_bytes_u64x8(u8x64 {
+                let result = _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -20101,26 +19124,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, dest);
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u64x8(self, a: u64x8<Self>) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>) -> u8x64<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x8(self, a: u64x8<Self>) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>) -> u32x16<Avx512> {
-                __m512i::from(a).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {

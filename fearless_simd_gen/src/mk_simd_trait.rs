@@ -66,26 +66,26 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         /// ```
         pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + arch_types::ArchTypes + 'static {
             /// A native-width SIMD vector of [`f32`]s.
-            type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>;
+            type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>;
             /// A native-width SIMD vector of [`f64`]s.
-            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, Bytes = <Self::u64s as Bytes>::Bytes>;
+            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>;
             /// A native-width SIMD vector of [`u8`]s.
-            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s>;
+            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>;
             /// A native-width SIMD vector of [`i8`]s.
-            type i8s: SimdInt<Self, Element = i8, Block = i8x16<Self>, Mask = Self::mask8s, Bytes = <Self::u8s as Bytes>::Bytes> + core::ops::Neg<Output = Self::i8s>;
+            type i8s: SimdInt<Self, Element = i8, Block = i8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s> + core::ops::Neg<Output = Self::i8s>;
             /// A native-width SIMD vector of [`u16`]s.
-            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s>;
+            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s>;
             /// A native-width SIMD vector of [`i16`]s.
-            type i16s: SimdInt<Self, Element = i16, Block = i16x8<Self>, Mask = Self::mask16s, Bytes = <Self::u16s as Bytes>::Bytes> + core::ops::Neg<Output = Self::i16s>;
+            type i16s: SimdInt<Self, Element = i16, Block = i16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s> + core::ops::Neg<Output = Self::i16s>;
             /// A native-width SIMD vector of [`u32`]s.
-            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s> + SimdCvtTruncate<Self::f32s>;
+            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f32s>;
             /// A native-width SIMD vector of [`i32`]s.
-            type i32s: SimdInt<Self, Element = i32, Block = i32x4<Self>, Mask = Self::mask32s, Bytes = <Self::u32s as Bytes>::Bytes> + SimdCvtTruncate<Self::f32s>
+            type i32s: SimdInt<Self, Element = i32, Block = i32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f32s>
                 + core::ops::Neg<Output = Self::i32s>;
             /// A native-width SIMD vector of [`u64`]s.
-            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s>;
+            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>;
             /// A native-width SIMD vector of [`i64`]s.
-            type i64s: SimdInt<Self, Element = i64, Block = i64x2<Self>, Mask = Self::mask64s, Bytes = <Self::u64s as Bytes>::Bytes>
+            type i64s: SimdInt<Self, Element = i64, Block = i64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
                 + core::ops::Neg<Output = Self::i64s>;
             /// A native-width SIMD mask with 8-bit lanes.
             type mask8s: SimdMask<Self, Element = i8> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;
@@ -155,12 +155,21 @@ fn mk_simd_base() -> TokenStream {
         pub trait SimdBase<S: Simd>:
             Copy + Sync + Send + 'static
             + Seal
-            + Bytes + SimdFrom<Self::Element, S>
+            + Bytes<Bytes = Self::ByteVector> + SimdFrom<Self::Element, S> + SimdFrom<Self::Array, S>
             + core::ops::Index<usize, Output = Self::Element> + core::ops::IndexMut<usize, Output = Self::Element>
             + core::ops::Deref<Target = Self::Array>+ core::ops::DerefMut<Target = Self::Array>
         {
             /// The type of this vector's elements.
             type Element: SimdElement;
+            /// The same-width SIMD vector of `u8` lanes used as the byte representation.
+            ///
+            /// This is the same type as [`Bytes::Bytes`].
+            ///
+            /// This associated type exists because expressing the `SimdBase` bound directly on
+            /// [`Bytes::Bytes`] creates a trait-solver cycle. The `Bytes<Bytes =
+            /// Self::ByteVector>` supertrait bound ensures that the two types are identical.
+            /// Generic callers should normally use [`Bytes::Bytes`], not this associated type.
+            type ByteVector: SimdBase<S, Element = u8, ByteVector = Self::ByteVector>;
             /// This vector type's lane count. This is useful when you're
             /// working with a native-width vector (e.g. [`Simd::f32s`]) and
             /// want to process data in native-width chunks.
@@ -170,13 +179,18 @@ fn mk_simd_base() -> TokenStream {
             /// Masks intentionally do not implement [`SimdBase`]. SSE, NEON, WASM, and the
             /// fallback backend currently store masks as all-zero/all-one integer vectors, but
             /// AVX-512/RVV/SVE-style targets use compact predicate registers instead.
-            type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
+            type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask> + Select<Self>;
             /// A 128-bit SIMD vector of the same scalar type.
-            type Block: SimdBase<S, Element = Self::Element>;
+            type Block: SimdBase<S, Element = Self::Element, Block = Self::Block>;
             /// The array type that this vector type corresponds to, which will
             /// always be `[Self::Element; Self::N]`. It has the same layout as
             /// this vector type, but likely has a lower alignment.
-            type Array;
+            type Array: Copy
+                + core::fmt::Debug
+                + IntoIterator<Item = Self::Element>
+                + AsRef<[Self::Element]>
+                + AsMut<[Self::Element]>
+                + From<Self>;
             /// Get the [`Simd`] implementation associated with this type.
             fn witness(&self) -> S;
             fn as_slice(&self) -> &[Self::Element];

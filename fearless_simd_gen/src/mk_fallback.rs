@@ -3,11 +3,11 @@
 
 use crate::arch::fallback;
 use crate::generic::{
-    generic_from_bytes, generic_mask_from_bitmask, generic_mask_set, generic_mask_to_bitmask,
-    generic_op_name, generic_to_bytes, integer_lane_mask_splat_arg,
+    generic_mask_from_bitmask, generic_mask_set, generic_mask_to_bitmask, generic_op_name,
+    integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig, RefKind, valid_reinterpret};
+use crate::ops::{Op, OpSig, RefKind};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -203,6 +203,11 @@ impl Level for Fallback {
                     (0..vec_ty.len)
                         .map(|idx| {
                             let b_lane = lane(quote! { b }, vec_ty, idx);
+                            let b_lane = if matches!(method, "shlv" | "shrv") {
+                                quote! { #b_lane as u32 }
+                            } else {
+                                b_lane
+                            };
                             let b = if fallback::translate_op(
                                 method,
                                 vec_ty.scalar == ScalarType::Float,
@@ -412,8 +417,6 @@ impl Level for Fallback {
                 );
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes_rust = bytes_ty.rust();
-                let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-                let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
                 let byte_count = bytes_ty.len;
                 let items = make_list(
                     (0..byte_count)
@@ -430,9 +433,9 @@ impl Level for Fallback {
 
                 quote! {
                     #method_sig {
-                        let bytes = self.#to_bytes(a);
+                        let bytes = Bytes::to_bytes(a);
                         let result: #bytes_rust<Self> = #items.simd_into(self);
-                        self.#from_bytes(result)
+                        Bytes::from_bytes(result)
                     }
                 }
             }
@@ -482,20 +485,6 @@ impl Level for Fallback {
                     #method_sig {
                         #items.simd_into(self)
                     }
-                }
-            }
-            OpSig::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => {
-                if valid_reinterpret(vec_ty, target_ty, scalar_bits) {
-                    quote! {
-                        #method_sig {
-                            a.bitcast()
-                        }
-                    }
-                } else {
-                    quote! {}
                 }
             }
             OpSig::MaskReduce {
@@ -584,8 +573,6 @@ impl Level for Fallback {
                     }
                 }
             }
-            OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
-            OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);
@@ -637,7 +624,14 @@ fn lane(value: TokenStream, vec_ty: &VecType, idx: usize) -> TokenStream {
 fn rhs_reference(method: &str) -> bool {
     !matches!(
         method,
-        "copysign" | "min" | "max" | "wrapping_sub" | "wrapping_mul" | "wrapping_add"
+        "copysign"
+            | "min"
+            | "max"
+            | "wrapping_sub"
+            | "wrapping_mul"
+            | "wrapping_add"
+            | "wrapping_shl"
+            | "wrapping_shr"
     )
 }
 

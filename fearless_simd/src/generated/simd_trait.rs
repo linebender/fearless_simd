@@ -57,7 +57,7 @@ pub trait Simd:
             Element = f32,
             Block = f32x4<Self>,
             Mask = Self::mask32s,
-            Bytes = <Self::u32s as Bytes>::Bytes,
+            ByteVector = Self::u8s,
         > + SimdCvtFloat<Self::u32s>
         + SimdCvtFloat<Self::i32s>;
     #[doc = r" A native-width SIMD vector of [`f64`]s."]
@@ -66,49 +66,72 @@ pub trait Simd:
             Element = f64,
             Block = f64x2<Self>,
             Mask = Self::mask64s,
-            Bytes = <Self::u64s as Bytes>::Bytes,
+            ByteVector = Self::u8s,
         >;
     #[doc = r" A native-width SIMD vector of [`u8`]s."]
-    type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s>;
+    type u8s: SimdInt<
+            Self,
+            Element = u8,
+            Block = u8x16<Self>,
+            Mask = Self::mask8s,
+            ByteVector = Self::u8s,
+        >;
     #[doc = r" A native-width SIMD vector of [`i8`]s."]
     type i8s: SimdInt<
             Self,
             Element = i8,
             Block = i8x16<Self>,
             Mask = Self::mask8s,
-            Bytes = <Self::u8s as Bytes>::Bytes,
+            ByteVector = Self::u8s,
         > + core::ops::Neg<Output = Self::i8s>;
     #[doc = r" A native-width SIMD vector of [`u16`]s."]
-    type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s>;
+    type u16s: SimdInt<
+            Self,
+            Element = u16,
+            Block = u16x8<Self>,
+            Mask = Self::mask16s,
+            ByteVector = Self::u8s,
+        >;
     #[doc = r" A native-width SIMD vector of [`i16`]s."]
     type i16s: SimdInt<
             Self,
             Element = i16,
             Block = i16x8<Self>,
             Mask = Self::mask16s,
-            Bytes = <Self::u16s as Bytes>::Bytes,
+            ByteVector = Self::u8s,
         > + core::ops::Neg<Output = Self::i16s>;
     #[doc = r" A native-width SIMD vector of [`u32`]s."]
-    type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s>
-        + SimdCvtTruncate<Self::f32s>;
+    type u32s: SimdInt<
+            Self,
+            Element = u32,
+            Block = u32x4<Self>,
+            Mask = Self::mask32s,
+            ByteVector = Self::u8s,
+        > + SimdCvtTruncate<Self::f32s>;
     #[doc = r" A native-width SIMD vector of [`i32`]s."]
     type i32s: SimdInt<
             Self,
             Element = i32,
             Block = i32x4<Self>,
             Mask = Self::mask32s,
-            Bytes = <Self::u32s as Bytes>::Bytes,
+            ByteVector = Self::u8s,
         > + SimdCvtTruncate<Self::f32s>
         + core::ops::Neg<Output = Self::i32s>;
     #[doc = r" A native-width SIMD vector of [`u64`]s."]
-    type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s>;
+    type u64s: SimdInt<
+            Self,
+            Element = u64,
+            Block = u64x2<Self>,
+            Mask = Self::mask64s,
+            ByteVector = Self::u8s,
+        >;
     #[doc = r" A native-width SIMD vector of [`i64`]s."]
     type i64s: SimdInt<
             Self,
             Element = i64,
             Block = i64x2<Self>,
             Mask = Self::mask64s,
-            Bytes = <Self::u64s as Bytes>::Bytes,
+            ByteVector = Self::u8s,
         > + core::ops::Neg<Output = Self::i64s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
     type mask8s: SimdMask<Self, Element = i8>
@@ -152,10 +175,6 @@ pub trait Simd:
     fn as_array_mut_f32x4(self, a: &mut f32x4<Self>) -> &mut [f32; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f32x4(self, a: f32x4<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -250,14 +269,6 @@ pub trait Simd:
     fn select_f32x4(self, a: mask32x4<Self>, b: f32x4<Self>, c: f32x4<Self>) -> f32x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x8<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `f64` elements.\n\nThe number of elements in the result is half that of the input."]
-    fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `i32` elements.\n\nThis is a bitwise reinterpretation only, and does not perform any conversions."]
-    fn reinterpret_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self>;
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
@@ -280,10 +291,6 @@ pub trait Simd:
     fn as_array_mut_i8x16(self, a: &mut i8x16<Self>) -> &mut [i8; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i8x16(self, a: i8x16<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -326,13 +333,13 @@ pub trait Simd:
     fn xor_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i8x16(self, a: i8x16<Self>, shift: u32) -> i8x16<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> mask8x16<Self>;
@@ -366,10 +373,6 @@ pub trait Simd:
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x16(self, val: u8) -> u8x16<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -384,10 +387,6 @@ pub trait Simd:
     fn as_array_mut_u8x16(self, a: &mut u8x16<Self>) -> &mut [u8; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -430,13 +429,13 @@ pub trait Simd:
     fn xor_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u8x16(self, a: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u8x16(self, a: u8x16<Self>, shift: u32) -> u8x16<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> mask8x16<Self>;
@@ -470,8 +469,6 @@ pub trait Simd:
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self>;
     #[doc = "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input."]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -525,10 +522,6 @@ pub trait Simd:
     fn as_array_mut_i16x8(self, a: &mut i16x8<Self>) -> &mut [i16; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i16x8(self, a: i16x8<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -571,13 +564,13 @@ pub trait Simd:
     fn xor_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i16x8(self, a: i16x8<Self>, shift: u32) -> i16x8<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> mask16x8<Self>;
@@ -611,10 +604,6 @@ pub trait Simd:
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x8(self, val: u16) -> u16x8<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -629,10 +618,6 @@ pub trait Simd:
     fn as_array_mut_u16x8(self, a: &mut u16x8<Self>) -> &mut [u16; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u16x8(self, a: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -675,13 +660,13 @@ pub trait Simd:
     fn xor_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u16x8(self, a: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u16x8(self, a: u16x8<Self>, shift: u32) -> u16x8<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> mask16x8<Self>;
@@ -713,10 +698,6 @@ pub trait Simd:
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -770,10 +751,6 @@ pub trait Simd:
     fn as_array_mut_i32x4(self, a: &mut i32x4<Self>) -> &mut [i32; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i32x4(self, a: i32x4<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -816,13 +793,13 @@ pub trait Simd:
     fn xor_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i32x4(self, a: i32x4<Self>, shift: u32) -> i32x4<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> mask32x4<Self>;
@@ -856,10 +833,6 @@ pub trait Simd:
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -876,10 +849,6 @@ pub trait Simd:
     fn as_array_mut_u32x4(self, a: &mut u32x4<Self>) -> &mut [u32; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u32x4(self, a: u32x4<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -922,13 +891,13 @@ pub trait Simd:
     fn xor_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u32x4(self, a: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u32x4(self, a: u32x4<Self>, shift: u32) -> u32x4<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> mask32x4<Self>;
@@ -960,8 +929,6 @@ pub trait Simd:
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -1017,10 +984,6 @@ pub trait Simd:
     fn as_array_mut_f64x2(self, a: &mut f64x2<Self>) -> &mut [f64; 2usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f64x2(self, a: f64x2<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1115,8 +1078,6 @@ pub trait Simd:
     fn select_f64x2(self, a: mask64x2<Self>, b: f64x2<Self>, c: f64x2<Self>) -> f64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x4<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
-    fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x2(self, val: i64) -> i64x2<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -1131,10 +1092,6 @@ pub trait Simd:
     fn as_array_mut_i64x2(self, a: &mut i64x2<Self>) -> &mut [i64; 2usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i64x2(self, a: i64x2<Self>, dest: &mut [i64; 2usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i64x2(self, a: u8x16<Self>) -> i64x2<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i64x2(self, a: i64x2<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1177,13 +1134,13 @@ pub trait Simd:
     fn xor_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i64x2(self, a: i64x2<Self>, shift: u32) -> i64x2<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> mask64x2<Self>;
@@ -1217,10 +1174,6 @@ pub trait Simd:
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i64x2(self, a: i64x2<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i64x2(self, a: i64x2<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x2(self, val: u64) -> u64x2<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -1235,10 +1188,6 @@ pub trait Simd:
     fn as_array_mut_u64x2(self, a: &mut u64x2<Self>) -> &mut [u64; 2usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u64x2(self, a: u64x2<Self>, dest: &mut [u64; 2usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u64x2(self, a: u8x16<Self>) -> u64x2<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u64x2(self, a: u64x2<Self>) -> u8x16<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1281,13 +1230,13 @@ pub trait Simd:
     fn xor_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u64x2(self, a: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u64x2(self, a: u64x2<Self>, shift: u32) -> u64x2<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> mask64x2<Self>;
@@ -1319,10 +1268,6 @@ pub trait Simd:
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_u64x2(self, a: u64x2<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_u64x2(self, a: u64x2<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -1376,10 +1321,6 @@ pub trait Simd:
     fn as_array_mut_f32x8(self, a: &mut f32x8<Self>) -> &mut [f32; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f32x8(self, a: f32x8<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1476,14 +1417,6 @@ pub trait Simd:
     fn combine_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f32x8(self, a: f32x8<Self>) -> (f32x4<Self>, f32x4<Self>);
-    #[doc = "Reinterpret the bits of this vector as a vector of `f64` elements.\n\nThe number of elements in the result is half that of the input."]
-    fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `i32` elements.\n\nThis is a bitwise reinterpretation only, and does not perform any conversions."]
-    fn reinterpret_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self>;
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
@@ -1506,10 +1439,6 @@ pub trait Simd:
     fn as_array_mut_i8x32(self, a: &mut i8x32<Self>) -> &mut [i8; 32usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i8x32(self, a: i8x32<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1552,13 +1481,13 @@ pub trait Simd:
     fn xor_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i8x32(self, a: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i8x32(self, a: i8x32<Self>, shift: u32) -> i8x32<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x32(self, a: i8x32<Self>, b: i8x32<Self>) -> mask8x32<Self>;
@@ -1594,10 +1523,6 @@ pub trait Simd:
     fn split_i8x32(self, a: i8x32<Self>) -> (i8x16<Self>, i8x16<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x32(self, val: u8) -> u8x32<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -1612,10 +1537,6 @@ pub trait Simd:
     fn as_array_mut_u8x32(self, a: &mut u8x32<Self>) -> &mut [u8; 32usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1658,13 +1579,13 @@ pub trait Simd:
     fn xor_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u8x32(self, a: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u8x32(self, a: u8x32<Self>, shift: u32) -> u8x32<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> mask8x32<Self>;
@@ -1700,8 +1621,6 @@ pub trait Simd:
     fn split_u8x32(self, a: u8x32<Self>) -> (u8x16<Self>, u8x16<Self>);
     #[doc = "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input."]
     fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -1757,10 +1676,6 @@ pub trait Simd:
     fn as_array_mut_i16x16(self, a: &mut i16x16<Self>) -> &mut [i16; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i16x16(self, a: i16x16<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1807,13 +1722,13 @@ pub trait Simd:
     fn xor_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i16x16(self, a: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i16x16(self, a: i16x16<Self>, shift: u32) -> i16x16<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> mask16x16<Self>;
@@ -1849,10 +1764,6 @@ pub trait Simd:
     fn split_i16x16(self, a: i16x16<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x16(self, val: u16) -> u16x16<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -1867,10 +1778,6 @@ pub trait Simd:
     fn as_array_mut_u16x16(self, a: &mut u16x16<Self>) -> &mut [u16; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u16x16(self, a: u16x16<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -1917,13 +1824,13 @@ pub trait Simd:
     fn xor_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u16x16(self, a: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u16x16(self, a: u16x16<Self>, shift: u32) -> u16x16<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> mask16x16<Self>;
@@ -1959,10 +1866,6 @@ pub trait Simd:
     fn split_u16x16(self, a: u16x16<Self>) -> (u16x8<Self>, u16x8<Self>);
     #[doc = "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input."]
     fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -2018,10 +1921,6 @@ pub trait Simd:
     fn as_array_mut_i32x8(self, a: &mut i32x8<Self>) -> &mut [i32; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i32x8(self, a: i32x8<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2064,13 +1963,13 @@ pub trait Simd:
     fn xor_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i32x8(self, a: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i32x8(self, a: i32x8<Self>, shift: u32) -> i32x8<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> mask32x8<Self>;
@@ -2106,10 +2005,6 @@ pub trait Simd:
     fn split_i32x8(self, a: i32x8<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i32x8(self, a: i32x8<Self>) -> u32x8<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -2126,10 +2021,6 @@ pub trait Simd:
     fn as_array_mut_u32x8(self, a: &mut u32x8<Self>) -> &mut [u32; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u32x8(self, a: u32x8<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2172,13 +2063,13 @@ pub trait Simd:
     fn xor_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u32x8(self, a: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u32x8(self, a: u32x8<Self>, shift: u32) -> u32x8<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> mask32x8<Self>;
@@ -2212,8 +2103,6 @@ pub trait Simd:
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x8(self, a: u32x8<Self>) -> (u32x4<Self>, u32x4<Self>);
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -2271,10 +2160,6 @@ pub trait Simd:
     fn as_array_mut_f64x4(self, a: &mut f64x4<Self>) -> &mut [f64; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f64x4(self, a: f64x4<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2371,8 +2256,6 @@ pub trait Simd:
     fn combine_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x4(self, a: f64x4<Self>) -> (f64x2<Self>, f64x2<Self>);
-    #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
-    fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x4(self, val: i64) -> i64x4<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -2387,10 +2270,6 @@ pub trait Simd:
     fn as_array_mut_i64x4(self, a: &mut i64x4<Self>) -> &mut [i64; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i64x4(self, a: i64x4<Self>, dest: &mut [i64; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i64x4(self, a: u8x32<Self>) -> i64x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i64x4(self, a: i64x4<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2433,13 +2312,13 @@ pub trait Simd:
     fn xor_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i64x4(self, a: i64x4<Self>) -> i64x4<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i64x4(self, a: i64x4<Self>, shift: u32) -> i64x4<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> mask64x4<Self>;
@@ -2475,10 +2354,6 @@ pub trait Simd:
     fn split_i64x4(self, a: i64x4<Self>) -> (i64x2<Self>, i64x2<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i64x4(self, a: i64x4<Self>) -> i64x4<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i64x4(self, a: i64x4<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i64x4(self, a: i64x4<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x4(self, val: u64) -> u64x4<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -2493,10 +2368,6 @@ pub trait Simd:
     fn as_array_mut_u64x4(self, a: &mut u64x4<Self>) -> &mut [u64; 4usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u64x4(self, a: u64x4<Self>, dest: &mut [u64; 4usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u64x4(self, a: u8x32<Self>) -> u64x4<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u64x4(self, a: u64x4<Self>) -> u8x32<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2539,13 +2410,13 @@ pub trait Simd:
     fn xor_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u64x4(self, a: u64x4<Self>) -> u64x4<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u64x4(self, a: u64x4<Self>, shift: u32) -> u64x4<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> mask64x4<Self>;
@@ -2579,10 +2450,6 @@ pub trait Simd:
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u64x4(self, a: u64x4<Self>) -> (u64x2<Self>, u64x2<Self>);
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_u64x4(self, a: u64x4<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_u64x4(self, a: u64x4<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -2638,10 +2505,6 @@ pub trait Simd:
     fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2740,18 +2603,10 @@ pub trait Simd:
     fn select_f32x16(self, a: mask32x16<Self>, b: f32x16<Self>, c: f32x16<Self>) -> f32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f32x16(self, a: f32x16<Self>) -> (f32x8<Self>, f32x8<Self>);
-    #[doc = "Reinterpret the bits of this vector as a vector of `f64` elements.\n\nThe number of elements in the result is half that of the input."]
-    fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `i32` elements.\n\nThis is a bitwise reinterpretation only, and does not perform any conversions."]
-    fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self>;
     #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self>;
     #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> ();
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values or NaN will produce implementation-defined results.\n\nOn x86 platforms below AVX-512, this operation will still be slower than converting to `i32`, because there is no native instruction for converting to `u32`.\nIf you know your values fit within range of an `i32`, you should convert to an `i32` and cast to your desired datatype afterwards."]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self>;
     #[doc = "Convert each floating-point element to an unsigned 32-bit integer, truncating towards zero.\n\nOut-of-range values are saturated to the closest in-range value. NaN becomes 0."]
@@ -2774,10 +2629,6 @@ pub trait Simd:
     fn as_array_mut_i8x64(self, a: &mut i8x64<Self>) -> &mut [i8; 64usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i8x64(self, a: i8x64<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2820,13 +2671,13 @@ pub trait Simd:
     fn xor_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i8x64(self, a: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i8x64(self, a: i8x64<Self>, shift: u32) -> i8x64<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i8x64(self, a: i8x64<Self>, b: i8x64<Self>) -> mask8x64<Self>;
@@ -2860,10 +2711,6 @@ pub trait Simd:
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x64(self, val: u8) -> u8x64<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -2878,10 +2725,6 @@ pub trait Simd:
     fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -2924,13 +2767,13 @@ pub trait Simd:
     fn xor_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u8x64(self, a: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u8x64(self, a: u8x64<Self>, shift: u32) -> u8x64<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u8x64(self, a: u8x64<Self>, b: u8x64<Self>) -> mask8x64<Self>;
@@ -2966,8 +2809,6 @@ pub trait Simd:
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self>;
     #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -3021,10 +2862,6 @@ pub trait Simd:
     fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i16x32(self, a: i16x32<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3071,13 +2908,13 @@ pub trait Simd:
     fn xor_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i16x32(self, a: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i16x32(self, a: i16x32<Self>, shift: u32) -> i16x32<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> mask16x32<Self>;
@@ -3111,10 +2948,6 @@ pub trait Simd:
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x32(self, val: u16) -> u16x32<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -3129,10 +2962,6 @@ pub trait Simd:
     fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u16x32(self, a: u16x32<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3179,13 +3008,13 @@ pub trait Simd:
     fn xor_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u16x32(self, a: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u16x32(self, a: u16x32<Self>, shift: u32) -> u16x32<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> mask16x32<Self>;
@@ -3223,10 +3052,6 @@ pub trait Simd:
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
     #[doc = "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input."]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -3280,10 +3105,6 @@ pub trait Simd:
     fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i32x16(self, a: i32x16<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3330,13 +3151,13 @@ pub trait Simd:
     fn xor_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i32x16(self, a: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i32x16(self, a: i32x16<Self>, shift: u32) -> i32x16<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> mask32x16<Self>;
@@ -3370,10 +3191,6 @@ pub trait Simd:
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -3390,10 +3207,6 @@ pub trait Simd:
     fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3440,13 +3253,13 @@ pub trait Simd:
     fn xor_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u32x16(self, a: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u32x16(self, a: u32x16<Self>, shift: u32) -> u32x16<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> mask32x16<Self>;
@@ -3482,8 +3295,6 @@ pub trait Simd:
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self>;
     #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> ();
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -3539,10 +3350,6 @@ pub trait Simd:
     fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_f64x8(self, a: f64x8<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3637,8 +3444,6 @@ pub trait Simd:
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
-    #[doc = "Reinterpret the bits of this vector as a vector of `f32` elements.\n\nThe number of elements in the result is twice that of the input."]
-    fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x8(self, val: i64) -> i64x8<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -3653,10 +3458,6 @@ pub trait Simd:
     fn as_array_mut_i64x8(self, a: &mut i64x8<Self>) -> &mut [i64; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_i64x8(self, a: u8x64<Self>) -> i64x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_i64x8(self, a: i64x8<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3699,13 +3500,13 @@ pub trait Simd:
     fn xor_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_i64x8(self, a: i64x8<Self>) -> i64x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_i64x8(self, a: i64x8<Self>, shift: u32) -> i64x8<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> mask64x8<Self>;
@@ -3739,10 +3540,6 @@ pub trait Simd:
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_i64x8(self, a: i64x8<Self>) -> u8x64<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_i64x8(self, a: i64x8<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x8(self, val: u64) -> u64x8<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -3757,10 +3554,6 @@ pub trait Simd:
     fn as_array_mut_u64x8(self, a: &mut u64x8<Self>) -> &mut [u64; 8usize];
     #[doc = "Store a SIMD vector into an array of the same length."]
     fn store_array_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> ();
-    #[doc = "Reinterpret a vector of bytes as a SIMD vector of a given type, with the equivalent byte length."]
-    fn cvt_from_bytes_u64x8(self, a: u8x64<Self>) -> u64x8<Self>;
-    #[doc = "Reinterpret a SIMD vector as a vector of bytes, with the equivalent byte length."]
-    fn cvt_to_bytes_u64x8(self, a: u64x8<Self>) -> u8x64<Self>;
     #[doc = "Concatenate `[self, rhs]` and extract `Self::N` elements starting at index `SHIFT`.\n\n`SHIFT` must be within [0, `Self::N`].\n\nThis can be used to implement a \"shift items\" operation by providing all zeroes as one operand. For a left shift, the right-hand side should be all zeroes. For a right shift by `M` items, the left-hand side should be all zeroes, and the shift amount will be `Self::N - M`.\n\nThis can also be used to rotate items within a vector by providing the same vector as both operands.\n\n```text\n\nslide::<1>([a b c d], [e f g h]) == [b c d e]\n\n```"]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
     #[doc = "Like `slide`, but operates independently on each 128-bit block."]
@@ -3803,13 +3596,13 @@ pub trait Simd:
     fn xor_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
     #[doc = "Compute the bitwise NOT of the vector."]
     fn not_u64x8(self, a: u64x8<Self>) -> u64x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shl_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self>;
-    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element left by the given number of bits.\n\nBits shifted out of the left side are discarded, and zeros are shifted in on the right.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shlv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
-    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated."]
+    #[doc = "Shift each element right by the given number of bits.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform."]
     fn shr_u64x8(self, a: u64x8<Self>, shift: u32) -> u64x8<Self>;
-    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
+    #[doc = "Shift each element right by the corresponding element in another vector.\n\nFor unsigned integers, zeros are shifted in on the left. For signed integers, the sign bit is replicated.\n\nWhen shifting out of bounds (e.g. shifting a 32-bit value by 32 or more), the result is implementation-defined and may vary by platform.\n\nThis operation is not implemented in hardware on all platforms. On WebAssembly, and on x86 platforms without AVX2, this will use a fallback scalar implementation."]
     fn shrv_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self>;
     #[doc = "Compare two vectors element-wise for equality.\n\nReturns a mask where each logical lane is true if the corresponding elements are equal, and false if not."]
     fn simd_eq_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> mask64x8<Self>;
@@ -3845,10 +3638,6 @@ pub trait Simd:
     fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self>;
     #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> ();
-    #[doc = "Reinterpret the bits of this vector as a vector of `u8` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u8_u64x8(self, a: u64x8<Self>) -> u8x64<Self>;
-    #[doc = "Reinterpret the bits of this vector as a vector of `u32` elements.\n\nThe total bit width is preserved; the number of elements changes accordingly."]
-    fn reinterpret_u32_u64x8(self, a: u64x8<Self>) -> u32x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -3947,8 +3736,9 @@ pub trait SimdBase<S: Simd>:
     + Send
     + 'static
     + Seal
-    + Bytes
+    + Bytes<Bytes = Self::ByteVector>
     + SimdFrom<Self::Element, S>
+    + SimdFrom<Self::Array, S>
     + core::ops::Index<usize, Output = Self::Element>
     + core::ops::IndexMut<usize, Output = Self::Element>
     + core::ops::Deref<Target = Self::Array>
@@ -3956,6 +3746,15 @@ pub trait SimdBase<S: Simd>:
 {
     #[doc = r" The type of this vector's elements."]
     type Element: SimdElement;
+    #[doc = r" The same-width SIMD vector of `u8` lanes used as the byte representation."]
+    #[doc = r""]
+    #[doc = r" This is the same type as [`Bytes::Bytes`]."]
+    #[doc = r""]
+    #[doc = r" This associated type exists because expressing the `SimdBase` bound directly on"]
+    #[doc = r" [`Bytes::Bytes`] creates a trait-solver cycle. The `Bytes<Bytes ="]
+    #[doc = r" Self::ByteVector>` supertrait bound ensures that the two types are identical."]
+    #[doc = r" Generic callers should normally use [`Bytes::Bytes`], not this associated type."]
+    type ByteVector: SimdBase<S, Element = u8, ByteVector = Self::ByteVector>;
     #[doc = r" This vector type's lane count. This is useful when you're"]
     #[doc = r" working with a native-width vector (e.g. [`Simd::f32s`]) and"]
     #[doc = r" want to process data in native-width chunks."]
@@ -3965,13 +3764,18 @@ pub trait SimdBase<S: Simd>:
     #[doc = r" Masks intentionally do not implement [`SimdBase`]. SSE, NEON, WASM, and the"]
     #[doc = r" fallback backend currently store masks as all-zero/all-one integer vectors, but"]
     #[doc = r" AVX-512/RVV/SVE-style targets use compact predicate registers instead."]
-    type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask>;
+    type Mask: SimdMask<S, Element = <Self::Element as SimdElement>::Mask> + Select<Self>;
     #[doc = r" A 128-bit SIMD vector of the same scalar type."]
-    type Block: SimdBase<S, Element = Self::Element>;
+    type Block: SimdBase<S, Element = Self::Element, Block = Self::Block>;
     #[doc = r" The array type that this vector type corresponds to, which will"]
     #[doc = r" always be `[Self::Element; Self::N]`. It has the same layout as"]
     #[doc = r" this vector type, but likely has a lower alignment."]
-    type Array;
+    type Array: Copy
+        + core::fmt::Debug
+        + IntoIterator<Item = Self::Element>
+        + AsRef<[Self::Element]>
+        + AsMut<[Self::Element]>
+        + From<Self>;
     #[doc = r" Get the [`Simd`] implementation associated with this type."]
     fn witness(&self) -> S;
     fn as_slice(&self) -> &[Self::Element];

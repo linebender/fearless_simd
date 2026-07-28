@@ -7,11 +7,19 @@ use quote::{format_ident, quote};
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     fallback_method, generic_as_array, generic_block_combine, generic_block_split,
+<<<<<<< HEAD
     generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array,
     generic_to_bytes, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
+||||||| bd94894
+    generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array,
+    generic_to_bytes, integer_lane_mask_splat_arg,
+=======
+    generic_from_array, generic_mask_set, generic_op_name, generic_store_array,
+    integer_lane_mask_splat_arg,
+>>>>>>> main
 };
 use crate::level::Level;
-use crate::ops::{Op, Quantifier, SlideGranularity, valid_reinterpret};
+use crate::ops::{Op, Quantifier, SlideGranularity};
 use crate::{
     arch::wasm::{self, simple_intrinsic},
     ops::OpSig,
@@ -439,21 +447,6 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
-            OpSig::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => {
-                assert!(
-                    valid_reinterpret(vec_ty, target_ty, scalar_bits),
-                    "The underlying data for WASM SIMD is a v128, so a reinterpret is just that, a reinterpretation of the v128."
-                );
-
-                quote! {
-                    #method_sig {
-                        <v128>::from(a).simd_into(self)
-                    }
-                }
-            }
             OpSig::Slide { granularity } => {
                 use SlideGranularity::*;
 
@@ -461,8 +454,6 @@ impl Level for WasmSimd128 {
                 let combined_bytes = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
                 let scalar_bytes = vec_ty.scalar_bits / 8;
                 let num_items = vec_ty.len;
-                let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-                let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
                 let slide_op = match (granularity, vec_ty.n_bits()) {
                     (WithinBlocks, 128) => {
@@ -489,8 +480,15 @@ impl Level for WasmSimd128 {
                             return b;
                         }
 
-                        let result = #slide_op(self.#to_bytes(a).val.0, self.#to_bytes(b).val.0, #byte_shift);
-                        self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                        let result = #slide_op(
+                            Bytes::to_bytes(a).val.0,
+                            Bytes::to_bytes(b).val.0,
+                            #byte_shift,
+                        );
+                        Bytes::from_bytes(#combined_bytes {
+                            val: #block_wrapper(result),
+                            simd: self,
+                        })
                     }
                 }
             }
@@ -507,13 +505,15 @@ impl Level for WasmSimd128 {
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes = bytes_ty.rust();
                 let wrapper = bytes_ty.aligned_wrapper();
-                let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-                let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
                 quote! {
                     #method_sig {
-                        let result = u8x16_swizzle(self.#to_bytes(a).val.0, indices.into());
-                        self.#from_bytes(#bytes { val: #wrapper(result), simd: self })
+                        let result =
+                            u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
+                        Bytes::from_bytes(#bytes {
+                            val: #wrapper(result),
+                            simd: self,
+                        })
                     }
                 }
             }
@@ -860,8 +860,6 @@ impl Level for WasmSimd128 {
                 })
             }
             OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
-            OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
-            OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);

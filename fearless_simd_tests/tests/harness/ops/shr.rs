@@ -253,11 +253,20 @@ fn shr_u64x8<S: Simd>(simd: S) {
 
 #[simd_test]
 fn shr_i8x32<S: Simd>(simd: S) {
-    let values: [i8; 32] = core::array::from_fn(|i| (i % 31) as i8 + 1_i8);
-    let a = i8x32::from_slice(simd, &values);
-    let expected: [i8; 32] = core::array::from_fn(|i| values[i] >> 1);
-    let result = simd.shr_i8x32(a, 1);
-    assert_eq!(result.as_slice(), expected.as_slice());
+    let a = i8x32::from_slice(
+        simd,
+        &[
+            -128, -64, -33, -1, 127, 64, 33, 1, -2, -4, -8, -16, 0, 2, 4, 8, -128, -64, -33, -1,
+            127, 64, 33, 1, -2, -4, -8, -16, 0, 2, 4, 8,
+        ],
+    );
+    assert_eq!(
+        *simd.shr_i8x32(a, 2),
+        [
+            -32, -16, -9, -1, 31, 16, 8, 0, -1, -1, -2, -4, 0, 0, 1, 2, -32, -16, -9, -1, 31, 16,
+            8, 0, -1, -1, -2, -4, 0, 0, 1, 2,
+        ]
+    );
 }
 
 #[simd_test]
@@ -271,11 +280,19 @@ fn shr_u8x32<S: Simd>(simd: S) {
 
 #[simd_test]
 fn shr_i16x16<S: Simd>(simd: S) {
-    let values: [i16; 16] = core::array::from_fn(|i| (i % 31) as i16 + 1_i16);
-    let a = i16x16::from_slice(simd, &values);
-    let expected: [i16; 16] = core::array::from_fn(|i| values[i] >> 1);
-    let result = simd.shr_i16x16(a, 1);
-    assert_eq!(result.as_slice(), expected.as_slice());
+    let a = i16x16::from_slice(
+        simd,
+        &[
+            -32768, -16384, -1025, -1, 32767, 16384, 1025, 1, -32768, -16384, -1025, -1, 32767,
+            16384, 1025, 1,
+        ],
+    );
+    assert_eq!(
+        *simd.shr_i16x16(a, 3),
+        [
+            -4096, -2048, -129, -1, 4095, 2048, 128, 0, -4096, -2048, -129, -1, 4095, 2048, 128, 0,
+        ]
+    );
 }
 
 #[simd_test]
@@ -289,11 +306,18 @@ fn shr_u16x16<S: Simd>(simd: S) {
 
 #[simd_test]
 fn shr_i32x8<S: Simd>(simd: S) {
-    let values: [i32; 8] = core::array::from_fn(|i| (i % 31) as i32 + 1_i32);
-    let a = i32x8::from_slice(simd, &values);
-    let expected: [i32; 8] = core::array::from_fn(|i| values[i] >> 1);
-    let result = simd.shr_i32x8(a, 1);
-    assert_eq!(result.as_slice(), expected.as_slice());
+    const MIN: i32 = i32::MIN;
+    const MAX: i32 = i32::MAX;
+    let a = i32x8::from_slice(
+        simd,
+        &[MIN, -1073741824, -65537, -1, MAX, 1073741824, 65537, 1],
+    );
+    assert_eq!(
+        *simd.shr_i32x8(a, 4),
+        [
+            -134217728, -67108864, -4097, -1, 134217727, 67108864, 4096, 0,
+        ]
+    );
 }
 
 #[simd_test]

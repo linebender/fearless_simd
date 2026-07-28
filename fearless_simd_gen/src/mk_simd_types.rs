@@ -30,8 +30,6 @@ pub(crate) fn mk_simd_types() -> TokenStream {
         let as_array_op = generic_op_name("as_array", ty);
         let as_array_ref_op = generic_op_name("as_array_ref", ty);
         let as_array_mut_op = generic_op_name("as_array_mut", ty);
-        let from_bytes_op = generic_op_name("cvt_from_bytes", ty);
-        let to_bytes_op = generic_op_name("cvt_to_bytes", ty);
         let bytes = ty.bytes_ty().rust();
         let mask = ty.mask_ty().rust();
 
@@ -274,12 +272,18 @@ pub(crate) fn mk_simd_types() -> TokenStream {
 
                 #[inline(always)]
                 fn to_bytes(self) -> Self::Bytes {
-                    self.simd.#to_bytes_op(self)
+                    #bytes {
+                        val: crate::transmute::checked_transmute_copy(&self.val),
+                        simd: self.simd,
+                    }
                 }
 
                 #[inline(always)]
                 fn from_bytes(value: Self::Bytes) -> Self {
-                    value.simd.#from_bytes_op(value)
+                    Self {
+                        val: crate::transmute::checked_transmute_copy(&value.val),
+                        simd: value.simd,
+                    }
                 }
             }
 
@@ -373,6 +377,7 @@ fn simd_mask_impl(ty: &VecType) -> TokenStream {
 fn simd_vec_impl(ty: &VecType) -> TokenStream {
     let name = ty.rust();
     let scalar = ty.scalar.rust(ty.scalar_bits);
+    let byte_vector = ty.bytes_ty().rust();
     let len = Literal::usize_unsuffixed(ty.len);
     let from_fn_items = unrolled_array(ty.len, |idx| quote! { f(#idx) });
     let vec_trait = match ty.scalar {
@@ -439,6 +444,7 @@ fn simd_vec_impl(ty: &VecType) -> TokenStream {
     quote! {
         impl<S: Simd> SimdBase<S> for #name<S> {
             type Element = #scalar;
+            type ByteVector = #byte_vector<S>;
             const N: usize = #len;
             type Mask = #mask_ty<S>;
             type Block = #block_ty<S>;

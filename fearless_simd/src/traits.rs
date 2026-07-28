@@ -34,17 +34,38 @@ impl<R, F: FnOnce(Level) -> R> WithSimd for F {
     }
 }
 
-/// Conversion of SIMD types to and from raw bytes.
+/// Conversion of SIMD vectors to and from same-width vectors of `u8` lanes.
+///
+/// [`Bytes::bitcast`] uses this byte representation to reinterpret any two
+/// non-mask SIMD vectors with the same total width and SIMD token. This is a
+/// bitwise reinterpretation: it does not perform numeric conversion.
 pub trait Bytes: Sized + Seal {
-    type Bytes;
+    /// The same-width SIMD vector of `u8` lanes used as the byte representation.
+    ///
+    /// This type is its own byte representation.
+    type Bytes: Bytes<Bytes = Self::Bytes>;
 
-    /// Convert this type to an array of bytes.
+    /// Reinterpret this vector as a same-width vector of `u8` lanes.
     fn to_bytes(self) -> Self::Bytes;
 
-    /// Create an instance of this type from an array of bytes.
+    /// Reinterpret a same-width vector of `u8` lanes as this vector type.
     fn from_bytes(value: Self::Bytes) -> Self;
 
-    /// Bitcast directly from this type to another one of the same size.
+    #[doc(alias = "reinterpret")]
+    #[doc(alias = "transmute")]
+    /// Bitcast directly to another SIMD vector with the same byte representation.
+    /// This is effectively a safe [transmute](core::mem::transmute) for SIMD types.
+    ///
+    /// This works in code generic over a [`Simd`] implementation,
+    /// including between native-width vectors with different lane types:
+    ///
+    /// ```
+    /// # use fearless_simd::prelude::*;
+    /// fn i8s_as_f64s<S: Simd>(value: S::i8s) -> S::f64s {
+    ///     value.bitcast()
+    /// }
+    /// ```
+    #[inline(always)]
     fn bitcast<U: Bytes<Bytes = Self::Bytes>>(self) -> U {
         U::from_bytes(self.to_bytes())
     }
@@ -105,9 +126,9 @@ impl<T, S: Simd> SimdFrom<T, S> for T {
 }
 
 /// Types that can be used as elements in SIMD vectors.
-pub trait SimdElement: Seal {
+pub trait SimdElement: Copy + Seal {
     /// The associated mask lane type. This will be a signed integer of the same size as this type.
-    type Mask: SimdElement;
+    type Mask: SimdElement<Mask = Self::Mask>;
 }
 
 impl SimdElement for f32 {
@@ -165,7 +186,8 @@ pub trait SimdCvtFloat<T: Seal>: Seal {
 ///
 /// This is implemented on all vectors 256 bits and lower, producing vectors of up to 512 bits.
 pub trait SimdCombine<S: Simd>: SimdBase<S> + Seal {
-    type Combined: SimdBase<S, Element = Self::Element, Block = Self::Block>;
+    type Combined: SimdBase<S, Element = Self::Element, Block = Self::Block>
+        + SimdSplit<S, Split = Self>;
 
     /// Concatenate two vectors into a new one that's twice as long.
     fn combine(self, rhs: impl SimdInto<Self, S>) -> Self::Combined;
@@ -175,7 +197,8 @@ pub trait SimdCombine<S: Simd>: SimdBase<S> + Seal {
 ///
 /// This is implemented on all vectors 256 bits and higher, producing vectors of down to 128 bits.
 pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
-    type Split: SimdBase<S, Element = Self::Element, Block = Self::Block>;
+    type Split: SimdBase<S, Element = Self::Element, Block = Self::Block>
+        + SimdCombine<S, Combined = Self>;
 
     /// Split this vector into left and right halves.
     fn split(self) -> (Self::Split, Self::Split);

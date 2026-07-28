@@ -8,11 +8,19 @@ use fearless_simd_dev_macros::simd_test;
 
 #[simd_test]
 fn bitcast_native<S: Simd>(simd: S) {
-    let a_i32 = S::i32s::from_slice(simd, &vec![-1; S::i32s::N]);
-    assert_eq!(
-        a_i32.bitcast::<S::u32s>().as_slice(),
-        &vec![u32::MAX; S::i32s::N]
-    );
+    let expected: Vec<u8> = (0..S::u8s::N).map(|i| i as u8).collect();
+    let u8s = S::u8s::from_slice(simd, &expected);
+    let i8s: S::i8s = u8s.bitcast();
+    let u16s: S::u16s = i8s.bitcast();
+    let i16s: S::i16s = u16s.bitcast();
+    let u32s: S::u32s = i16s.bitcast();
+    let i32s: S::i32s = u32s.bitcast();
+    let u64s: S::u64s = i32s.bitcast();
+    let i64s: S::i64s = u64s.bitcast();
+    let f32s: S::f32s = i64s.bitcast();
+    let f64s: S::f64s = f32s.bitcast();
+    let roundtrip: S::u8s = f64s.bitcast();
+    assert_eq!(roundtrip.as_slice(), expected.as_slice());
 }
 
 // Generated gap-fill coverage rows.

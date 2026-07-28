@@ -74,15 +74,22 @@ impl<S: Simd> Bytes for f32x4<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_f32x4(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_f32x4(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for f32x4<S> {
     type Element = f32;
+    type ByteVector = u8x16<S>;
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = f32x4<S>;
@@ -354,15 +361,22 @@ impl<S: Simd> Bytes for i8x16<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i8x16(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i8x16(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i8x16<S> {
     type Element = i8;
+    type ByteVector = u8x16<S>;
     const N: usize = 16;
     type Mask = mask8x16<S>;
     type Block = i8x16<S>;
@@ -583,15 +597,22 @@ impl<S: Simd> Bytes for u8x16<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u8x16(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u8x16(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u8x16<S> {
     type Element = u8;
+    type ByteVector = u8x16<S>;
     const N: usize = 16;
     type Mask = mask8x16<S>;
     type Block = u8x16<S>;
@@ -903,15 +924,22 @@ impl<S: Simd> Bytes for i16x8<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i16x8(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i16x8(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i16x8<S> {
     type Element = i16;
+    type ByteVector = u8x16<S>;
     const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = i16x8<S>;
@@ -1124,15 +1152,22 @@ impl<S: Simd> Bytes for u16x8<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u16x8(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u16x8(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u16x8<S> {
     type Element = u16;
+    type ByteVector = u8x16<S>;
     const N: usize = 8;
     type Mask = mask16x8<S>;
     type Block = u16x8<S>;
@@ -1436,15 +1471,22 @@ impl<S: Simd> Bytes for i32x4<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i32x4(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i32x4(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i32x4<S> {
     type Element = i32;
+    type ByteVector = u8x16<S>;
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = i32x4<S>;
@@ -1660,15 +1702,22 @@ impl<S: Simd> Bytes for u32x4<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u32x4(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u32x4(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u32x4<S> {
     type Element = u32;
+    type ByteVector = u8x16<S>;
     const N: usize = 4;
     type Mask = mask32x4<S>;
     type Block = u32x4<S>;
@@ -1975,15 +2024,22 @@ impl<S: Simd> Bytes for f64x2<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_f64x2(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_f64x2(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for f64x2<S> {
     type Element = f64;
+    type ByteVector = u8x16<S>;
     const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = f64x2<S>;
@@ -2241,15 +2297,22 @@ impl<S: Simd> Bytes for i64x2<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i64x2(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i64x2(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i64x2<S> {
     type Element = i64;
+    type ByteVector = u8x16<S>;
     const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = i64x2<S>;
@@ -2453,15 +2516,22 @@ impl<S: Simd> Bytes for u64x2<S> {
     type Bytes = u8x16<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u64x2(self)
+        u8x16 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u64x2(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u64x2<S> {
     type Element = u64;
+    type ByteVector = u8x16<S>;
     const N: usize = 2;
     type Mask = mask64x2<S>;
     type Block = u64x2<S>;
@@ -2756,15 +2826,22 @@ impl<S: Simd> Bytes for f32x8<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_f32x8(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_f32x8(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for f32x8<S> {
     type Element = f32;
+    type ByteVector = u8x32<S>;
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = f32x4<S>;
@@ -3052,15 +3129,22 @@ impl<S: Simd> Bytes for i8x32<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i8x32(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i8x32(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i8x32<S> {
     type Element = i8;
+    type ByteVector = u8x32<S>;
     const N: usize = 32;
     type Mask = mask8x32<S>;
     type Block = i8x16<S>;
@@ -3304,15 +3388,22 @@ impl<S: Simd> Bytes for u8x32<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u8x32(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u8x32(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u8x32<S> {
     type Element = u8;
+    type ByteVector = u8x32<S>;
     const N: usize = 32;
     type Mask = mask8x32<S>;
     type Block = u8x16<S>;
@@ -3652,15 +3743,22 @@ impl<S: Simd> Bytes for i16x16<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i16x16(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i16x16(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i16x16<S> {
     type Element = i16;
+    type ByteVector = u8x32<S>;
     const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = i16x8<S>;
@@ -3895,15 +3993,22 @@ impl<S: Simd> Bytes for u16x16<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u16x16(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u16x16(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u16x16<S> {
     type Element = u16;
+    type ByteVector = u8x32<S>;
     const N: usize = 16;
     type Mask = mask16x16<S>;
     type Block = u16x8<S>;
@@ -4224,15 +4329,22 @@ impl<S: Simd> Bytes for i32x8<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i32x8(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i32x8(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i32x8<S> {
     type Element = i32;
+    type ByteVector = u8x32<S>;
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = i32x4<S>;
@@ -4464,15 +4576,22 @@ impl<S: Simd> Bytes for u32x8<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u32x8(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u32x8(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u32x8<S> {
     type Element = u32;
+    type ByteVector = u8x32<S>;
     const N: usize = 8;
     type Mask = mask32x8<S>;
     type Block = u32x4<S>;
@@ -4795,15 +4914,22 @@ impl<S: Simd> Bytes for f64x4<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_f64x4(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_f64x4(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for f64x4<S> {
     type Element = f64;
+    type ByteVector = u8x32<S>;
     const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = f64x2<S>;
@@ -5068,15 +5194,22 @@ impl<S: Simd> Bytes for i64x4<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i64x4(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i64x4(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i64x4<S> {
     type Element = i64;
+    type ByteVector = u8x32<S>;
     const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = i64x2<S>;
@@ -5287,15 +5420,22 @@ impl<S: Simd> Bytes for u64x4<S> {
     type Bytes = u8x32<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u64x4(self)
+        u8x32 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u64x4(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u64x4<S> {
     type Element = u64;
+    type ByteVector = u8x32<S>;
     const N: usize = 4;
     type Mask = mask64x4<S>;
     type Block = u64x2<S>;
@@ -5602,15 +5742,22 @@ impl<S: Simd> Bytes for f32x16<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_f32x16(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_f32x16(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for f32x16<S> {
     type Element = f32;
+    type ByteVector = u8x64<S>;
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = f32x4<S>;
@@ -5902,15 +6049,22 @@ impl<S: Simd> Bytes for i8x64<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i8x64(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i8x64(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i8x64<S> {
     type Element = i8;
+    type ByteVector = u8x64<S>;
     const N: usize = 64;
     type Mask = mask8x64<S>;
     type Block = i8x16<S>;
@@ -6180,15 +6334,22 @@ impl<S: Simd> Bytes for u8x64<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u8x64(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u8x64(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u8x64<S> {
     type Element = u8;
+    type ByteVector = u8x64<S>;
     const N: usize = 64;
     type Mask = mask8x64<S>;
     type Block = u8x16<S>;
@@ -6554,15 +6715,22 @@ impl<S: Simd> Bytes for i16x32<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i16x32(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i16x32(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i16x32<S> {
     type Element = i16;
+    type ByteVector = u8x64<S>;
     const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = i16x8<S>;
@@ -6807,15 +6975,22 @@ impl<S: Simd> Bytes for u16x32<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u16x32(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u16x32(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u16x32<S> {
     type Element = u16;
+    type ByteVector = u8x64<S>;
     const N: usize = 32;
     type Mask = mask16x32<S>;
     type Block = u16x8<S>;
@@ -7151,15 +7326,22 @@ impl<S: Simd> Bytes for i32x16<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i32x16(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i32x16(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i32x16<S> {
     type Element = i32;
+    type ByteVector = u8x64<S>;
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = i32x4<S>;
@@ -7400,15 +7582,22 @@ impl<S: Simd> Bytes for u32x16<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u32x16(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u32x16(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u32x16<S> {
     type Element = u32;
+    type ByteVector = u8x64<S>;
     const N: usize = 16;
     type Mask = mask32x16<S>;
     type Block = u32x4<S>;
@@ -7735,15 +7924,22 @@ impl<S: Simd> Bytes for f64x8<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_f64x8(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_f64x8(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for f64x8<S> {
     type Element = f64;
+    type ByteVector = u8x64<S>;
     const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = f64x2<S>;
@@ -8011,15 +8207,22 @@ impl<S: Simd> Bytes for i64x8<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_i64x8(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_i64x8(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for i64x8<S> {
     type Element = i64;
+    type ByteVector = u8x64<S>;
     const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = i64x2<S>;
@@ -8233,15 +8436,22 @@ impl<S: Simd> Bytes for u64x8<S> {
     type Bytes = u8x64<S>;
     #[inline(always)]
     fn to_bytes(self) -> Self::Bytes {
-        self.simd.cvt_to_bytes_u64x8(self)
+        u8x64 {
+            val: crate::transmute::checked_transmute_copy(&self.val),
+            simd: self.simd,
+        }
     }
     #[inline(always)]
     fn from_bytes(value: Self::Bytes) -> Self {
-        value.simd.cvt_from_bytes_u64x8(value)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&value.val),
+            simd: value.simd,
+        }
     }
 }
 impl<S: Simd> SimdBase<S> for u64x8<S> {
     type Element = u64;
+    type ByteVector = u8x64<S>;
     const N: usize = 8;
     type Mask = mask64x8<S>;
     type Block = u64x2<S>;

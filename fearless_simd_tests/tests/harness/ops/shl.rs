@@ -30,6 +30,10 @@ fn shl_i8x64<S: Simd>(simd: S) {
             56, 60, 64, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64
         ]
     );
+
+    // Shift that overflows i8, regression test for https://github.com/linebender/fearless_simd/issues/289
+    let a = i8x64::splat(simd, 1);
+    assert_eq!(*(a << 7), *i8x64::splat(simd, -128));
 }
 
 #[simd_test]
@@ -50,6 +54,10 @@ fn shl_u8x64<S: Simd>(simd: S) {
             56, 60, 64, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64
         ]
     );
+
+    // Shift that overflows u8, regression test for https://github.com/linebender/fearless_simd/issues/287
+    let a = u8x64::splat(simd, 3);
+    assert_eq!(*(a << 7), *u8x64::splat(simd, 128));
 }
 
 #[simd_test]
