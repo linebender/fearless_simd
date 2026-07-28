@@ -186,6 +186,10 @@ fn shl_i8x16<S: Simd>(simd: S) {
     let expected: [i8; 16] = core::array::from_fn(|i| values[i] << 1);
     let result = simd.shl_i8x16(a, 1);
     assert_eq!(result.as_slice(), expected.as_slice());
+
+    // Shift that overflows i8, regression test for https://github.com/linebender/fearless_simd/issues/289
+    let a = i8x16::splat(simd, 1);
+    assert_eq!(*(a << 7), *i8x16::splat(simd, -128));
 }
 
 #[simd_test]
@@ -195,6 +199,10 @@ fn shl_u8x16<S: Simd>(simd: S) {
     let expected: [u8; 16] = core::array::from_fn(|i| values[i] << 1);
     let result = simd.shl_u8x16(a, 1);
     assert_eq!(result.as_slice(), expected.as_slice());
+
+    // Shift that overflows u8, regression test for https://github.com/linebender/fearless_simd/issues/287
+    let a = u8x16::splat(simd, 3);
+    assert_eq!(*(a << 7), *u8x16::splat(simd, 128));
 }
 
 #[simd_test]
@@ -204,6 +212,10 @@ fn shl_i8x32<S: Simd>(simd: S) {
     let expected: [i8; 32] = core::array::from_fn(|i| values[i] << 1);
     let result = simd.shl_i8x32(a, 1);
     assert_eq!(result.as_slice(), expected.as_slice());
+
+    // Shift that overflows i8, regression test for https://github.com/linebender/fearless_simd/issues/289
+    let a = i8x32::splat(simd, 1);
+    assert_eq!(*(a << 7), *i8x32::splat(simd, -128));
 }
 
 #[simd_test]
@@ -213,6 +225,10 @@ fn shl_u8x32<S: Simd>(simd: S) {
     let expected: [u8; 32] = core::array::from_fn(|i| values[i] << 1);
     let result = simd.shl_u8x32(a, 1);
     assert_eq!(result.as_slice(), expected.as_slice());
+
+    // Shift that overflows u8, regression test for https://github.com/linebender/fearless_simd/issues/287
+    let a = u8x32::splat(simd, 3);
+    assert_eq!(*(a << 7), *u8x32::splat(simd, 128));
 }
 
 #[simd_test]
