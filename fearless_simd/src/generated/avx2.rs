@@ -969,6 +969,9 @@ impl Simd for Avx2 {
                 let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
                 let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
                 let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
+                let byte_mask = _mm_set1_epi16(0x00ff);
+                let lo_shifted = _mm_and_si128(lo_shifted, byte_mask);
+                let hi_shifted = _mm_and_si128(hi_shifted, byte_mask);
                 _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
@@ -1487,6 +1490,9 @@ impl Simd for Avx2 {
                 let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
                 let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
                 let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
+                let byte_mask = _mm_set1_epi16(0x00ff);
+                let lo_shifted = _mm_and_si128(lo_shifted, byte_mask);
+                let hi_shifted = _mm_and_si128(hi_shifted, byte_mask);
                 _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
@@ -6483,6 +6489,9 @@ impl Simd for Avx2 {
                     _mm256_unpackhi_epi8(val, _mm256_cmpgt_epi8(_mm256_setzero_si256(), val));
                 let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
                 let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
+                let byte_mask = _mm256_set1_epi16(0x00ff);
+                let lo_shifted = _mm256_and_si256(lo_shifted, byte_mask);
+                let hi_shifted = _mm256_and_si256(hi_shifted, byte_mask);
                 _mm256_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
@@ -7183,6 +7192,9 @@ impl Simd for Avx2 {
                 let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
                 let lo_shifted = _mm256_sll_epi16(lo_16, shift_count);
                 let hi_shifted = _mm256_sll_epi16(hi_16, shift_count);
+                let byte_mask = _mm256_set1_epi16(0x00ff);
+                let lo_shifted = _mm256_and_si256(lo_shifted, byte_mask);
+                let hi_shifted = _mm256_and_si256(hi_shifted, byte_mask);
                 _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
