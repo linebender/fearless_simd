@@ -328,3 +328,58 @@ fn shr_u32x8<S: Simd>(simd: S) {
     let result = simd.shr_u32x8(a, 1);
     assert_eq!(result.as_slice(), expected.as_slice());
 }
+
+#[simd_test]
+#[ignore] // Stress test: run with `cargo test --release shr_8bit_random -- --ignored`.
+fn shr_8bit_random<S: Simd>(simd: S) {
+    let mut rng = fastrand::Rng::with_seed(1337);
+
+    for iteration in 0..100_000 {
+        let mut unsigned = [0_u8; 64];
+        rng.fill(&mut unsigned);
+        let signed = unsigned.map(|value| value as i8);
+
+        let unsigned_16 = u8x16::from_slice(simd, &unsigned[..16]);
+        let unsigned_32 = u8x32::from_slice(simd, &unsigned[..32]);
+        let unsigned_64 = u8x64::from_slice(simd, &unsigned);
+        let signed_16 = i8x16::from_slice(simd, &signed[..16]);
+        let signed_32 = i8x32::from_slice(simd, &signed[..32]);
+        let signed_64 = i8x64::from_slice(simd, &signed);
+
+        for shift in 0..8 {
+            let expected_unsigned = unsigned.map(|value| value >> shift);
+            let expected_signed = signed.map(|value| value >> shift);
+
+            assert_eq!(
+                simd.shr_u8x16(unsigned_16, shift).as_slice(),
+                &expected_unsigned[..16],
+                "u8x16 iteration {iteration}, shift {shift}",
+            );
+            assert_eq!(
+                simd.shr_u8x32(unsigned_32, shift).as_slice(),
+                &expected_unsigned[..32],
+                "u8x32 iteration {iteration}, shift {shift}",
+            );
+            assert_eq!(
+                simd.shr_u8x64(unsigned_64, shift).as_slice(),
+                expected_unsigned.as_slice(),
+                "u8x64 iteration {iteration}, shift {shift}",
+            );
+            assert_eq!(
+                simd.shr_i8x16(signed_16, shift).as_slice(),
+                &expected_signed[..16],
+                "i8x16 iteration {iteration}, shift {shift}",
+            );
+            assert_eq!(
+                simd.shr_i8x32(signed_32, shift).as_slice(),
+                &expected_signed[..32],
+                "i8x32 iteration {iteration}, shift {shift}",
+            );
+            assert_eq!(
+                simd.shr_i8x64(signed_64, shift).as_slice(),
+                expected_signed.as_slice(),
+                "i8x64 iteration {iteration}, shift {shift}",
+            );
+        }
+    }
+}
