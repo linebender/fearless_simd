@@ -118,8 +118,8 @@ fn swizzle_dyn_precise_random_u8_all_widths<S: Simd>(simd: S) {
     let mut rng = fastrand::Rng::with_seed(0x5eed_5eed_cafe_f00d);
 
     for iteration in 0..100_000 {
-        let mut bytes = [0u8; 64];
-        let mut indices = [0u8; 64];
+        let mut bytes: [u8; 64] = [0; 64];
+        let mut indices: [u8; 64] = [0; 64];
         rng.fill(&mut bytes);
         rng.fill(&mut indices);
 
