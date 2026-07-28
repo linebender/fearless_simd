@@ -1930,27 +1930,17 @@ impl X86 {
         let ty_bits = vec_ty.n_bits();
         let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits.max(16), false);
 
-        let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
-        let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
-        let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
         let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
-        let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
+        let set1_epi8 = intrinsic_ident("set1", "epi8", ty_bits);
         let shift_intrinsic = intrinsic_ident("sll", suffix, ty_bits);
-        let pack_intrinsic = pack_intrinsic(16, false, ty_bits);
 
         self.kernel_method(op, vec_ty, |token| {
             quote! {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let mask = #set1_epi16(0x00ff);
-
-                let lo_16 = #unpack_lo(val, #set0());
-                let hi_16 = #unpack_hi(val, #set0());
-
-                let lo_shifted = #and(#shift_intrinsic(lo_16, shift_count), mask);
-                let hi_shifted = #and(#shift_intrinsic(hi_16, shift_count), mask);
-
-                #pack_intrinsic(lo_shifted, hi_shifted).simd_into(#token)
+                let mask_byte = 0xff_u32.wrapping_shr(shift) as i8;
+                let byte_mask = #set1_epi8(mask_byte);
+                #shift_intrinsic(#and(val, byte_mask), shift_count).simd_into(#token)
             }
         })
     }

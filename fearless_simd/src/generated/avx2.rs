@@ -965,12 +965,9 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: i8x16<Avx2>, shift: u32) -> i8x16<Avx2> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let mask = _mm_set1_epi16(0x00ff);
-                let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
-                let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
-                let lo_shifted = _mm_and_si128(_mm_sll_epi16(lo_16, shift_count), mask);
-                let hi_shifted = _mm_and_si128(_mm_sll_epi16(hi_16, shift_count), mask);
-                _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let mask_byte = 0xff_u32.wrapping_shr(shift) as i8;
+                let byte_mask = _mm_set1_epi8(mask_byte);
+                _mm_sll_epi16(_mm_and_si128(val, byte_mask), shift_count).simd_into(token)
             }
         );
         kernel(self, a, shift)
@@ -1484,12 +1481,9 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: u8x16<Avx2>, shift: u32) -> u8x16<Avx2> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let mask = _mm_set1_epi16(0x00ff);
-                let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
-                let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
-                let lo_shifted = _mm_and_si128(_mm_sll_epi16(lo_16, shift_count), mask);
-                let hi_shifted = _mm_and_si128(_mm_sll_epi16(hi_16, shift_count), mask);
-                _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let mask_byte = 0xff_u32.wrapping_shr(shift) as i8;
+                let byte_mask = _mm_set1_epi8(mask_byte);
+                _mm_sll_epi16(_mm_and_si128(val, byte_mask), shift_count).simd_into(token)
             }
         );
         kernel(self, a, shift)
@@ -6479,12 +6473,9 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: i8x32<Avx2>, shift: u32) -> i8x32<Avx2> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let mask = _mm256_set1_epi16(0x00ff);
-                let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
-                let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
-                let lo_shifted = _mm256_and_si256(_mm256_sll_epi16(lo_16, shift_count), mask);
-                let hi_shifted = _mm256_and_si256(_mm256_sll_epi16(hi_16, shift_count), mask);
-                _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let mask_byte = 0xff_u32.wrapping_shr(shift) as i8;
+                let byte_mask = _mm256_set1_epi8(mask_byte);
+                _mm256_sll_epi16(_mm256_and_si256(val, byte_mask), shift_count).simd_into(token)
             }
         );
         kernel(self, a, shift)
@@ -7180,12 +7171,9 @@ impl Simd for Avx2 {
             fn kernel(token: Avx2, a: u8x32<Avx2>, shift: u32) -> u8x32<Avx2> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let mask = _mm256_set1_epi16(0x00ff);
-                let lo_16 = _mm256_unpacklo_epi8(val, _mm256_setzero_si256());
-                let hi_16 = _mm256_unpackhi_epi8(val, _mm256_setzero_si256());
-                let lo_shifted = _mm256_and_si256(_mm256_sll_epi16(lo_16, shift_count), mask);
-                let hi_shifted = _mm256_and_si256(_mm256_sll_epi16(hi_16, shift_count), mask);
-                _mm256_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let mask_byte = 0xff_u32.wrapping_shr(shift) as i8;
+                let byte_mask = _mm256_set1_epi8(mask_byte);
+                _mm256_sll_epi16(_mm256_and_si256(val, byte_mask), shift_count).simd_into(token)
             }
         );
         kernel(self, a, shift)
