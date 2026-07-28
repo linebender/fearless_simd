@@ -1607,20 +1607,8 @@ impl OpSig {
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask
-<<<<<<< HEAD
-            | Self::AsArray { .. }
-            | Self::FromBytes
-            | Self::ToBytes => &["a"],
-            Self::SwizzleDynWithinBlocks | Self::SwizzleDynPrecise => &["a", "indices"],
-||||||| bd94894
-            | Self::AsArray { .. }
-            | Self::FromBytes
-            | Self::ToBytes => &["a"],
-            Self::SwizzleDynWithinBlocks => &["a", "indices"],
-=======
             | Self::AsArray { .. } => &["a"],
-            Self::SwizzleDynWithinBlocks => &["a", "indices"],
->>>>>>> main
+            Self::SwizzleDynWithinBlocks | Self::SwizzleDynPrecise => &["a", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -1651,18 +1639,8 @@ impl OpSig {
             | Self::Cvt { .. }
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
-<<<<<<< HEAD
-            | Self::AsArray { .. }
-            | Self::ToBytes => &["self"],
-            Self::SwizzleDynWithinBlocks | Self::SwizzleDynPrecise => &["self", "indices"],
-||||||| bd94894
-            | Self::AsArray { .. }
-            | Self::ToBytes => &["self"],
-            Self::SwizzleDynWithinBlocks => &["self", "indices"],
-=======
             | Self::AsArray { .. } => &["self"],
-            Self::SwizzleDynWithinBlocks => &["self", "indices"],
->>>>>>> main
+            Self::SwizzleDynWithinBlocks | Self::SwizzleDynPrecise => &["self", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Zip { .. }

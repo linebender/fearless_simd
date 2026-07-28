@@ -8,17 +8,8 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     fallback_method, generic_as_array, generic_block_combine, generic_block_split,
-<<<<<<< HEAD
-    generic_from_array, generic_from_bytes, generic_mask_from_bitmask, generic_mask_set,
-    generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
-    recursive_swizzle_dyn_precise_body,
-||||||| bd94894
-    generic_from_array, generic_from_bytes, generic_mask_from_bitmask, generic_mask_set,
-    generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
-=======
     generic_from_array, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
-    generic_store_array, integer_lane_mask_splat_arg,
->>>>>>> main
+    generic_store_array, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity};
@@ -2842,8 +2833,6 @@ impl X86 {
         let bytes_ty = vec_ty.bytes_ty();
         let bytes = bytes_ty.rust();
         let wrapper = bytes_ty.aligned_wrapper();
-        let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-        let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
         if *self == Self::Sse2 || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512) {
             return fallback_method(op, vec_ty);
@@ -2857,14 +2846,14 @@ impl X86 {
                     // The added value only changes bits that PSHUFB ignores for valid indices.
                     let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                     let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                    let result = _mm_shuffle_epi8(#token.#to_bytes(a).val.0, zeroing_indices);
+                    let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                     let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                 },
                 (Self::Sse4_2, 256) | (Self::Avx2, 512) => {
                     recursive_swizzle_dyn_precise_body(vec_ty, token)
                 }
                 (Self::Avx2, 256) => quote! {
-                    let bytes = #token.#to_bytes(a);
+                    let bytes = Bytes::to_bytes(a);
                     let idxs = indices;
                     let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                     let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -2888,7 +2877,7 @@ impl X86 {
                     let set1 = set1_intrinsic(&bytes_ty);
                     let byte_count = signed_literal(bytes_ty.len as u64, 8);
                     quote! {
-                        let bytes = #token.#to_bytes(a).val.0;
+                        let bytes = Bytes::to_bytes(a).val.0;
                         let indices = indices.into();
                         let in_range = #cmp::<{ _MM_CMPINT_LT }>(indices, #set1(#byte_count));
                         let result = #maskz_permute(in_range, indices, bytes);
@@ -2900,7 +2889,7 @@ impl X86 {
 
             quote! {
                 #body
-                #token.#from_bytes(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         })
     }

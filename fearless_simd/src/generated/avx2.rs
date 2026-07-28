@@ -245,12 +245,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_f32x4(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_f32x4(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -845,12 +845,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i8x16(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_i8x16(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -1348,12 +1348,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u8x16(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_u8x16(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -2008,12 +2008,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i16x8(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_i16x8(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -2443,12 +2443,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u16x8(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_u16x8(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -3039,12 +3039,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i32x4(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_i32x4(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -3458,12 +3458,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u32x4(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_u32x4(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -4052,12 +4052,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_f64x2(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_f64x2(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -4513,12 +4513,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_i64x2(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_i64x2(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -4899,12 +4899,12 @@ impl Simd for Avx2 {
                 let indices = indices.into();
                 let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
                 let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
-                let result = _mm_shuffle_epi8(token.cvt_to_bytes_u64x2(a).val.0, zeroing_indices);
+                let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_u64x2(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -5477,7 +5477,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: f32x8<Avx2>, indices: u8x32<Avx2>) -> f32x8<Avx2> {
-                let bytes = token.cvt_to_bytes_f32x8(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -5490,7 +5490,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_f32x8(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -6209,7 +6209,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x32<Avx2>, indices: u8x32<Avx2>) -> i8x32<Avx2> {
-                let bytes = token.cvt_to_bytes_i8x32(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -6222,7 +6222,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_i8x32(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -6899,7 +6899,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x32<Avx2>, indices: u8x32<Avx2>) -> u8x32<Avx2> {
-                let bytes = token.cvt_to_bytes_u8x32(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -6912,7 +6912,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_u8x32(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -7734,7 +7734,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i16x16<Avx2>, indices: u8x32<Avx2>) -> i16x16<Avx2> {
-                let bytes = token.cvt_to_bytes_i16x16(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -7747,7 +7747,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_i16x16(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -8316,7 +8316,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x16<Avx2>, indices: u8x32<Avx2>) -> u16x16<Avx2> {
-                let bytes = token.cvt_to_bytes_u16x16(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -8329,7 +8329,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_u16x16(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -9070,7 +9070,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i32x8<Avx2>, indices: u8x32<Avx2>) -> i32x8<Avx2> {
-                let bytes = token.cvt_to_bytes_i32x8(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -9083,7 +9083,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_i32x8(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -9576,7 +9576,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x8<Avx2>, indices: u8x32<Avx2>) -> u32x8<Avx2> {
-                let bytes = token.cvt_to_bytes_u32x8(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -9589,7 +9589,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_u32x8(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -10261,7 +10261,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: f64x4<Avx2>, indices: u8x32<Avx2>) -> f64x4<Avx2> {
-                let bytes = token.cvt_to_bytes_f64x4(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -10274,7 +10274,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_f64x4(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -10790,7 +10790,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i64x4<Avx2>, indices: u8x32<Avx2>) -> i64x4<Avx2> {
-                let bytes = token.cvt_to_bytes_i64x4(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -10803,7 +10803,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_i64x4(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -11258,7 +11258,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u64x4<Avx2>, indices: u8x32<Avx2>) -> u64x4<Avx2> {
-                let bytes = token.cvt_to_bytes_u64x4(a);
+                let bytes = Bytes::to_bytes(a);
                 let idxs = indices;
                 let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
                 let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
@@ -11271,7 +11271,7 @@ impl Simd for Avx2 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 };
-                token.cvt_from_bytes_u64x4(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -11927,7 +11927,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: f32x16<Avx2>, indices: u8x64<Avx2>) -> f32x16<Avx2> {
-                let bytes = token.cvt_to_bytes_f32x16(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -11944,7 +11944,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_f32x16(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -12651,7 +12651,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i8x64<Avx2>, indices: u8x64<Avx2>) -> i8x64<Avx2> {
-                let bytes = token.cvt_to_bytes_i8x64(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -12668,7 +12668,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_i8x64(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -13223,7 +13223,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u8x64<Avx2>, indices: u8x64<Avx2>) -> u8x64<Avx2> {
-                let bytes = token.cvt_to_bytes_u8x64(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -13240,7 +13240,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_u8x64(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -13903,7 +13903,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i16x32<Avx2>, indices: u8x64<Avx2>) -> i16x32<Avx2> {
-                let bytes = token.cvt_to_bytes_i16x32(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -13920,7 +13920,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_i16x32(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -14357,7 +14357,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x32<Avx2>, indices: u8x64<Avx2>) -> u16x32<Avx2> {
-                let bytes = token.cvt_to_bytes_u16x32(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -14374,7 +14374,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_u16x32(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -14973,7 +14973,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i32x16<Avx2>, indices: u8x64<Avx2>) -> i32x16<Avx2> {
-                let bytes = token.cvt_to_bytes_i32x16(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -14990,7 +14990,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_i32x16(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -15362,7 +15362,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x16<Avx2>, indices: u8x64<Avx2>) -> u32x16<Avx2> {
-                let bytes = token.cvt_to_bytes_u32x16(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -15379,7 +15379,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_u32x16(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -15923,7 +15923,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: f64x8<Avx2>, indices: u8x64<Avx2>) -> f64x8<Avx2> {
-                let bytes = token.cvt_to_bytes_f64x8(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -15940,7 +15940,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_f64x8(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -16322,7 +16322,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: i64x8<Avx2>, indices: u8x64<Avx2>) -> i64x8<Avx2> {
-                let bytes = token.cvt_to_bytes_i64x8(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -16339,7 +16339,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_i64x8(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)
@@ -16670,7 +16670,7 @@ impl Simd for Avx2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Avx2, a: u64x8<Avx2>, indices: u8x64<Avx2>) -> u64x8<Avx2> {
-                let bytes = token.cvt_to_bytes_u64x8(a);
+                let bytes = Bytes::to_bytes(a);
                 let (table_low, table_high) = token.split_u8x64(bytes);
                 let (indices_low, indices_high) = token.split_u8x64(indices);
                 let high_table_offset = token.splat_u8x32(32);
@@ -16687,7 +16687,7 @@ impl Simd for Avx2 {
                 );
                 let output_high = token.or_u8x32(output_high_from_low, output_high_from_high);
                 let result_bytes = token.combine_u8x32(output_low, output_high);
-                token.cvt_from_bytes_u64x8(result_bytes)
+                Bytes::from_bytes(result_bytes)
             }
         );
         kernel(self, a, indices)

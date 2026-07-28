@@ -7,16 +7,8 @@ use quote::{format_ident, quote};
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
     fallback_method, generic_as_array, generic_block_combine, generic_block_split,
-<<<<<<< HEAD
-    generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array,
-    generic_to_bytes, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
-||||||| bd94894
-    generic_from_array, generic_from_bytes, generic_mask_set, generic_op_name, generic_store_array,
-    generic_to_bytes, integer_lane_mask_splat_arg,
-=======
     generic_from_array, generic_mask_set, generic_op_name, generic_store_array,
-    integer_lane_mask_splat_arg,
->>>>>>> main
+    integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
 use crate::ops::{Op, Quantifier, SlideGranularity};
@@ -522,24 +514,21 @@ impl Level for WasmSimd128 {
                     let bytes_ty = vec_ty.bytes_ty();
                     let bytes = bytes_ty.rust();
                     let wrapper = bytes_ty.aligned_wrapper();
-                    let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-                    let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
                     quote! {
                         #method_sig {
-                            let result = u8x16_swizzle(self.#to_bytes(a).val.0, indices.into());
-                            self.#from_bytes(#bytes { val: #wrapper(result), simd: self })
+                            let result = u8x16_swizzle(Bytes::to_bytes(a).val.0, indices.into());
+                            Bytes::from_bytes(#bytes { val: #wrapper(result), simd: self })
                         }
                     }
                 }
                 256 => {
-                    let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
                     let body = recursive_swizzle_dyn_precise_body(vec_ty, &quote! { self });
 
                     quote! {
                         #method_sig {
                             #body
-                            self.#from_bytes(result_bytes)
+                            Bytes::from_bytes(result_bytes)
                         }
                     }
                 }

@@ -229,8 +229,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x4<Neon>, indices: u8x16<Neon>) -> f32x4<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_f32x4(a).val.0, indices.into());
-                token.cvt_from_bytes_f32x4(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -780,8 +780,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i8x16<Neon>, indices: u8x16<Neon>) -> i8x16<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_i8x16(a).val.0, indices.into());
-                token.cvt_from_bytes_i8x16(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -1240,8 +1240,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u8x16<Neon>, indices: u8x16<Neon>) -> u8x16<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_u8x16(a).val.0, indices.into());
-                token.cvt_from_bytes_u8x16(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -1857,8 +1857,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i16x8<Neon>, indices: u8x16<Neon>) -> i16x8<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_i16x8(a).val.0, indices.into());
-                token.cvt_from_bytes_i16x8(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -2285,8 +2285,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u16x8<Neon>, indices: u8x16<Neon>) -> u16x8<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_u16x8(a).val.0, indices.into());
-                token.cvt_from_bytes_u16x8(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -2866,8 +2866,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i32x4<Neon>, indices: u8x16<Neon>) -> i32x4<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_i32x4(a).val.0, indices.into());
-                token.cvt_from_bytes_i32x4(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -3288,8 +3288,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u32x4<Neon>, indices: u8x16<Neon>) -> u32x4<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_u32x4(a).val.0, indices.into());
-                token.cvt_from_bytes_u32x4(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -3870,8 +3870,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x2<Neon>, indices: u8x16<Neon>) -> f64x2<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_f64x2(a).val.0, indices.into());
-                token.cvt_from_bytes_f64x2(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -4337,8 +4337,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i64x2<Neon>, indices: u8x16<Neon>) -> i64x2<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_i64x2(a).val.0, indices.into());
-                token.cvt_from_bytes_i64x2(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -4735,8 +4735,8 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u64x2<Neon>, indices: u8x16<Neon>) -> u64x2<Neon> {
-                let result = vqtbl1q_u8(token.cvt_to_bytes_u64x2(a).val.0, indices.into());
-                token.cvt_from_bytes_u64x2(u8x16 {
+                let result = vqtbl1q_u8(Bytes::to_bytes(a).val.0, indices.into());
+                Bytes::from_bytes(u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
                 })
@@ -5340,11 +5340,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x8<Neon>, indices: u8x32<Neon>) -> f32x8<Neon> {
-                let table = token.cvt_to_bytes_f32x8(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_f32x8(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -5881,11 +5881,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i8x32<Neon>, indices: u8x32<Neon>) -> i8x32<Neon> {
-                let table = token.cvt_to_bytes_i8x32(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_i8x32(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -6345,11 +6345,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u8x32<Neon>, indices: u8x32<Neon>) -> u8x32<Neon> {
-                let table = token.cvt_to_bytes_u8x32(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_u8x32(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -6875,11 +6875,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i16x16<Neon>, indices: u8x32<Neon>) -> i16x16<Neon> {
-                let table = token.cvt_to_bytes_i16x16(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_i16x16(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -7279,11 +7279,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u16x16<Neon>, indices: u8x32<Neon>) -> u16x16<Neon> {
-                let table = token.cvt_to_bytes_u16x16(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_u16x16(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -7781,11 +7781,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i32x8<Neon>, indices: u8x32<Neon>) -> i32x8<Neon> {
-                let table = token.cvt_to_bytes_i32x8(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_i32x8(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -8154,11 +8154,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u32x8<Neon>, indices: u8x32<Neon>) -> u32x8<Neon> {
-                let table = token.cvt_to_bytes_u32x8(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_u32x8(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -8632,11 +8632,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x4<Neon>, indices: u8x32<Neon>) -> f64x4<Neon> {
-                let table = token.cvt_to_bytes_f64x4(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_f64x4(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -9035,11 +9035,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i64x4<Neon>, indices: u8x32<Neon>) -> i64x4<Neon> {
-                let table = token.cvt_to_bytes_i64x4(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_i64x4(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -9387,11 +9387,11 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u64x4<Neon>, indices: u8x32<Neon>) -> u64x4<Neon> {
-                let table = token.cvt_to_bytes_u64x4(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x2_t = indices.into();
                 let result =
                     uint8x16x2_t(vqtbl2q_u8(table, indices.0), vqtbl2q_u8(table, indices.1));
-                token.cvt_from_bytes_u64x4(u8x32 {
+                Bytes::from_bytes(u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
                 })
@@ -9930,7 +9930,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f32x16<Neon>, indices: u8x64<Neon>) -> f32x16<Neon> {
-                let table = token.cvt_to_bytes_f32x16(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -9938,7 +9938,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_f32x16(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -10620,7 +10620,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i8x64<Neon>, indices: u8x64<Neon>) -> i8x64<Neon> {
-                let table = token.cvt_to_bytes_i8x64(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -10628,7 +10628,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_i8x64(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -11225,7 +11225,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u8x64<Neon>, indices: u8x64<Neon>) -> u8x64<Neon> {
-                let table = token.cvt_to_bytes_u8x64(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -11233,7 +11233,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_u8x64(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -11826,7 +11826,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i16x32<Neon>, indices: u8x64<Neon>) -> i16x32<Neon> {
-                let table = token.cvt_to_bytes_i16x32(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -11834,7 +11834,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_i16x32(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -12313,7 +12313,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u16x32<Neon>, indices: u8x64<Neon>) -> u16x32<Neon> {
-                let table = token.cvt_to_bytes_u16x32(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -12321,7 +12321,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_u16x32(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -12864,7 +12864,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i32x16<Neon>, indices: u8x64<Neon>) -> i32x16<Neon> {
-                let table = token.cvt_to_bytes_i32x16(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -12872,7 +12872,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_i32x16(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -13286,7 +13286,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u32x16<Neon>, indices: u8x64<Neon>) -> u32x16<Neon> {
-                let table = token.cvt_to_bytes_u32x16(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -13294,7 +13294,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_u32x16(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -13792,7 +13792,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: f64x8<Neon>, indices: u8x64<Neon>) -> f64x8<Neon> {
-                let table = token.cvt_to_bytes_f64x8(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -13800,7 +13800,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_f64x8(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -14224,7 +14224,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: i64x8<Neon>, indices: u8x64<Neon>) -> i64x8<Neon> {
-                let table = token.cvt_to_bytes_i64x8(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -14232,7 +14232,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_i64x8(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })
@@ -14605,7 +14605,7 @@ impl Simd for Neon {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Neon, a: u64x8<Neon>, indices: u8x64<Neon>) -> u64x8<Neon> {
-                let table = token.cvt_to_bytes_u64x8(a).val.0;
+                let table = Bytes::to_bytes(a).val.0;
                 let indices: uint8x16x4_t = indices.into();
                 let result = uint8x16x4_t(
                     vqtbl4q_u8(table, indices.0),
@@ -14613,7 +14613,7 @@ impl Simd for Neon {
                     vqtbl4q_u8(table, indices.2),
                     vqtbl4q_u8(table, indices.3),
                 );
-                token.cvt_from_bytes_u64x8(u8x64 {
+                Bytes::from_bytes(u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
                 })

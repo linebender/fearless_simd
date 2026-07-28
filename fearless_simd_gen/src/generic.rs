@@ -34,7 +34,6 @@ pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
     // the final combine is very cheap: a bitwise or.
     let bytes_ty = vec_ty.bytes_ty();
     let half_bytes_ty = VecType::new(ScalarType::Unsigned, 8, bytes_ty.len / 2);
-    let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
     let split_bytes = generic_op_name("split", &bytes_ty);
     let combine_half_bytes = generic_op_name("combine", &half_bytes_ty);
     let swizzle_half = generic_op_name("swizzle_dyn_precise", &half_bytes_ty);
@@ -44,7 +43,7 @@ pub(crate) fn recursive_swizzle_dyn_precise_body<T: ToTokens + ?Sized>(
     let half_len = Literal::u8_unsuffixed(u8::try_from(bytes_ty.len / 2).unwrap());
 
     quote! {
-        let bytes = #token.#to_bytes(a);
+        let bytes = Bytes::to_bytes(a);
         let (table_low, table_high) = #token.#split_bytes(bytes);
         let (indices_low, indices_high) = #token.#split_bytes(indices);
         let high_table_offset = #token.#splat_half(#half_len);
