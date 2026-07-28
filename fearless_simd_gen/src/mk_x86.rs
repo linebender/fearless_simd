@@ -1968,6 +1968,8 @@ impl X86 {
                     quote! { #cmpgt(#set0(), val) }
                 };
                 if *self == Self::Avx512 {
+                    // GFNI formulation was also considered, but it regresses latency:
+                    // https://github.com/linebender/fearless_simd/pull/291#issuecomment-5107747999
                     let ternary = intrinsic_ident("ternarylogic", "epi32", ty_bits);
                     quote! {
                         let sign = #sign;
