@@ -8,11 +8,11 @@ use crate::arch::x86::{
 };
 use crate::generic::{
     fallback_method, generic_as_array, generic_block_combine, generic_block_split,
-    generic_from_array, generic_from_bytes, generic_mask_from_bitmask, generic_mask_set,
-    generic_op_name, generic_store_array, generic_to_bytes, integer_lane_mask_splat_arg,
+    generic_from_array, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
+    generic_store_array, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig, Quantifier, SlideGranularity, valid_reinterpret};
+use crate::ops::{Op, OpSig, Quantifier, SlideGranularity};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
@@ -318,10 +318,6 @@ impl Level for X86 {
                 scalar_bits,
                 precise,
             } => self.handle_cvt(op, vec_ty, target_ty, scalar_bits, precise),
-            OpSig::Reinterpret {
-                target_ty,
-                scalar_bits,
-            } => self.handle_reinterpret(self, op, vec_ty, target_ty, scalar_bits),
             OpSig::MaskReduce {
                 quantifier,
                 condition,
@@ -357,8 +353,6 @@ impl Level for X86 {
                 })
             }
             OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
-            OpSig::FromBytes => generic_from_bytes(method_sig, vec_ty),
-            OpSig::ToBytes => generic_to_bytes(method_sig, vec_ty),
             OpSig::Interleave => self.handle_interleave(op, vec_ty),
             OpSig::Deinterleave => self.handle_deinterleave(op, vec_ty),
         }
@@ -2664,8 +2658,6 @@ impl X86 {
             WithinBlocks => vec_ty.len / (vec_ty.n_bits() / 128),
             AcrossBlocks => vec_ty.len,
         };
-        let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-        let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
         if *self == Self::Avx512
             && granularity == WithinBlocks
@@ -2688,10 +2680,13 @@ impl X86 {
                         return b;
                     }
 
-                    let a = self.#to_bytes(a).val.0;
-                    let b = self.#to_bytes(b).val.0;
+                    let a = Bytes::to_bytes(a).val.0;
+                    let b = Bytes::to_bytes(b).val.0;
                     let result = #alignr(self, b, a, #byte_shift);
-                    self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                    Bytes::from_bytes(#combined_bytes {
+                        val: #block_wrapper(result),
+                        simd: self,
+                    })
                 }
             };
         }
@@ -2727,11 +2722,14 @@ impl X86 {
 
                             let idx = #add(#base_idx, #set_shift((#byte_shift) as i8));
                             let result = #permute(
-                                token.#to_bytes(a).val.0,
+                                Bytes::to_bytes(a).val.0,
                                 idx,
-                                token.#to_bytes(b).val.0,
+                                Bytes::to_bytes(b).val.0,
                             );
-                            token.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: token })
+                            Bytes::from_bytes(#combined_bytes {
+                                val: #block_wrapper(result),
+                                simd: token,
+                            })
                         }
                     );
 
@@ -2773,8 +2771,16 @@ impl X86 {
                 // b and a are swapped here to match ARM's vext semantics. For vext, we can think of `a` as the "left",
                 // and we concatenate `b` to its "right". This makes sense, since `a` is the left-hand side and `b` is
                 // the right-hand side. x86's `alignr` is backwards, and treats `b` as the high/left block.
-                let result = #alignr_op(self, self.#to_bytes(b).val.0, self.#to_bytes(a).val.0, #byte_shift);
-                self.#from_bytes(#combined_bytes { val: #block_wrapper(result), simd: self })
+                let result = #alignr_op(
+                    self,
+                    Bytes::to_bytes(b).val.0,
+                    Bytes::to_bytes(a).val.0,
+                    #byte_shift,
+                );
+                Bytes::from_bytes(#combined_bytes {
+                    val: #block_wrapper(result),
+                    simd: self,
+                })
             }
         }
     }
@@ -2783,8 +2789,6 @@ impl X86 {
         let bytes_ty = vec_ty.bytes_ty();
         let bytes = bytes_ty.rust();
         let wrapper = bytes_ty.aligned_wrapper();
-        let to_bytes = generic_op_name("cvt_to_bytes", vec_ty);
-        let from_bytes = generic_op_name("cvt_from_bytes", vec_ty);
 
         if *self == Self::Sse2 {
             return fallback_method(op, vec_ty);
@@ -2794,28 +2798,32 @@ impl X86 {
             let body = if *self == Self::Avx512 {
                 match vec_ty.n_bits() {
                     128 => quote! {
-                        let bytes = #token.#to_bytes(a).val.0;
+                        let bytes = Bytes::to_bytes(a).val.0;
                         let result = _mm_mask_shuffle_epi8(bytes, u16::MAX, bytes, indices.into());
                     },
                     256 => quote! {
-                        let bytes = #token.#to_bytes(a).val.0;
+                        let bytes = Bytes::to_bytes(a).val.0;
                         let result = _mm256_mask_shuffle_epi8(bytes, u32::MAX, bytes, indices.into());
                     },
                     512 => quote! {
-                        let result = _mm512_shuffle_epi8(#token.#to_bytes(a).val.0, indices.into());
+                        let result =
+                            _mm512_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
                     },
                     _ => unreachable!(),
                 }
             } else {
                 let shuffle = simple_sign_unaware_intrinsic("shuffle", &bytes_ty);
                 quote! {
-                    let result = #shuffle(#token.#to_bytes(a).val.0, indices.into());
+                    let result = #shuffle(Bytes::to_bytes(a).val.0, indices.into());
                 }
             };
 
             quote! {
                 #body
-                #token.#from_bytes(#bytes { val: #wrapper(result), simd: #token })
+                Bytes::from_bytes(#bytes {
+                    val: #wrapper(result),
+                    simd: #token,
+                })
             }
         })
     }
@@ -3103,43 +3111,6 @@ impl X86 {
             }
             _ => unimplemented!(),
         })
-    }
-
-    pub(crate) fn handle_reinterpret(
-        &self,
-        level: &impl Level,
-        op: Op,
-        vec_ty: &VecType,
-        target_ty: ScalarType,
-        scalar_bits: usize,
-    ) -> TokenStream {
-        let dst_ty = vec_ty.reinterpret(target_ty, scalar_bits);
-        assert!(
-            valid_reinterpret(vec_ty, target_ty, scalar_bits),
-            "{vec_ty:?} must be reinterpretable as {dst_ty:?}"
-        );
-
-        if coarse_type(vec_ty) == coarse_type(&dst_ty) {
-            let arch_ty = level.arch_ty(vec_ty);
-            self.kernel_method(
-                op,
-                vec_ty,
-                |token| quote! { #arch_ty::from(a).simd_into(#token) },
-            )
-        } else {
-            let ident = cast_ident(
-                vec_ty.scalar,
-                target_ty,
-                vec_ty.scalar_bits,
-                scalar_bits,
-                vec_ty.n_bits(),
-            );
-            self.kernel_method(
-                op,
-                vec_ty,
-                |token| quote! { #ident(a.into()).simd_into(#token) },
-            )
-        }
     }
 
     pub(crate) fn handle_mask_reduce(

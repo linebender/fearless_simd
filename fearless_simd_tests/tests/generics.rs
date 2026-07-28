@@ -12,6 +12,23 @@ fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
     x.to_int()
 }
 
+// Ensure that a generic vector's byte representation is itself a same-token
+// byte vector whose byte representation is idempotent.
+fn generic_bytes<S: Simd, V: SimdBase<S>>(value: V) -> V {
+    let simd = value.witness();
+    let bytes = value.to_bytes();
+    let bytes =
+        <V::Bytes as SimdBase<S>>::from_slice(simd, <V::Bytes as SimdBase<S>>::as_slice(&bytes));
+    let _: u8 = bytes[0];
+    let bytes: V::Bytes = bytes.to_bytes();
+    let bytes: V::Bytes = bytes.bitcast();
+    V::from_bytes(bytes)
+}
+
+fn generic_bytes_idempotent<T: Bytes>(bytes: T::Bytes) -> T::Bytes {
+    bytes.to_bytes()
+}
+
 // Ensure that a generic vector's mask can select between vectors of that type
 fn generic_select<S: Simd, V: SimdBase<S>>(mask: V::Mask, if_true: V, if_false: V) -> V {
     mask.select(if_true, if_false)

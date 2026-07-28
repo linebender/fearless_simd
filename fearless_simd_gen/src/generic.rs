@@ -172,10 +172,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
             target_ty,
             scalar_bits,
             ..
-        }
-        | OpSig::Reinterpret {
-            target_ty,
-            scalar_bits,
         } => {
             let mut half = ty.reinterpret(target_ty, scalar_bits);
             half.len /= 2;
@@ -258,8 +254,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         | OpSig::StoreArray => {
             panic!("These operations require more information about the target platform");
         }
-        OpSig::FromBytes => generic_from_bytes(method_sig, ty),
-        OpSig::ToBytes => generic_to_bytes(method_sig, ty),
         OpSig::Interleave => {
             // interleave(a, b) = (zip_low(a, b), zip_high(a, b))
             // For wider vectors, we split each input, interleave the halves separately,
@@ -554,24 +548,6 @@ pub(crate) fn generic_store_array(method_sig: TokenStream, _vec_ty: &VecType) ->
     quote! {
         #method_sig {
             crate::transmute::checked_transmute_store(a.val.0, dest);
-        }
-    }
-}
-
-pub(crate) fn generic_to_bytes(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let bytes_ty = vec_ty.reinterpret(ScalarType::Unsigned, 8).rust();
-    quote! {
-        #method_sig {
-            #bytes_ty { val: crate::transmute::checked_transmute_copy(&a.val), simd: self }
-        }
-    }
-}
-
-pub(crate) fn generic_from_bytes(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let ty = vec_ty.rust();
-    quote! {
-        #method_sig {
-            #ty { val: crate::transmute::checked_transmute_copy(&a.val), simd: self }
         }
     }
 }

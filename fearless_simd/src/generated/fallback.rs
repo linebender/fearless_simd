@@ -198,20 +198,6 @@ impl Simd for Fallback {
         *dest = a.val.0;
     }
     #[inline(always)]
-    fn cvt_from_bytes_f32x4(self, a: u8x16<Self>) -> f32x4<Self> {
-        f32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         let mut dest = [Default::default(); 4usize];
         dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -280,7 +266,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_f32x4(self, a: f32x4<Self>, indices: u8x16<Self>) -> f32x4<Self> {
-        let bytes = self.cvt_to_bytes_f32x4(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -348,7 +334,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_f32x4(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn abs_f32x4(self, a: f32x4<Self>) -> f32x4<Self> {
@@ -640,22 +626,6 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x4(self, a: f32x4<Self>) -> f64x2<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x4(self, a: f32x4<Self>) -> i32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x4(self, a: f32x4<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         [
             a[0usize] as u32,
@@ -728,20 +698,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i8x16(self, a: u8x16<Self>) -> i8x16<Self> {
-        i8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -860,7 +816,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_i8x16(self, a: i8x16<Self>, indices: u8x16<Self>) -> i8x16<Self> {
-        let bytes = self.cvt_to_bytes_i8x16(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -928,7 +884,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_i8x16(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1485,14 +1441,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x16(self, a: i8x16<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x16(self, a: i8x16<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         [val; 16usize].simd_into(self)
     }
@@ -1525,20 +1473,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u8x16(self, a: u8x16<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1657,7 +1591,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u8x16(self, a: u8x16<Self>, indices: u8x16<Self>) -> u8x16<Self> {
-        let bytes = self.cvt_to_bytes_u8x16(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -1725,7 +1659,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_u8x16(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2282,10 +2216,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u32_u8x16(self, a: u8x16<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
         let val: i8 = if val { !0 } else { 0 };
         [val; 16usize].simd_into(self)
@@ -2666,20 +2596,6 @@ impl Simd for Fallback {
         *dest = a.val.0;
     }
     #[inline(always)]
-    fn cvt_from_bytes_i16x8(self, a: u8x16<Self>) -> i16x8<Self> {
-        i16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
         let mut dest = [Default::default(); 8usize];
         dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -2764,7 +2680,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_i16x8(self, a: i16x8<Self>, indices: u8x16<Self>) -> i16x8<Self> {
-        let bytes = self.cvt_to_bytes_i16x8(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -2832,7 +2748,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_i16x8(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -3190,14 +3106,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x8(self, a: i16x8<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x8(self, a: i16x8<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         [val; 8usize].simd_into(self)
     }
@@ -3230,20 +3138,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u16x8(self, a: u8x16<Self>) -> u16x8<Self> {
-        u16x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -3330,7 +3224,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u16x8(self, a: u16x8<Self>, indices: u8x16<Self>) -> u16x8<Self> {
-        let bytes = self.cvt_to_bytes_u16x8(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -3398,7 +3292,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_u16x8(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -3742,14 +3636,6 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_u16x8(self, a: u16x8<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x8(self, a: u16x8<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
         let val: i16 = if val { !0 } else { 0 };
         [val; 8usize].simd_into(self)
@@ -4010,20 +3896,6 @@ impl Simd for Fallback {
         *dest = a.val.0;
     }
     #[inline(always)]
-    fn cvt_from_bytes_i32x4(self, a: u8x16<Self>) -> i32x4<Self> {
-        i32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
         let mut dest = [Default::default(); 4usize];
         dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -4092,7 +3964,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_i32x4(self, a: i32x4<Self>, indices: u8x16<Self>) -> i32x4<Self> {
-        let bytes = self.cvt_to_bytes_i32x4(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -4160,7 +4032,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_i32x4(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -4410,14 +4282,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x4(self, a: i32x4<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x4(self, a: i32x4<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         [
             a[0usize] as f32,
@@ -4460,20 +4324,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u32x4(self, a: u8x16<Self>) -> u32x4<Self> {
-        u32x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4544,7 +4394,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u32x4(self, a: u32x4<Self>, indices: u8x16<Self>) -> u32x4<Self> {
-        let bytes = self.cvt_to_bytes_u32x4(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -4612,7 +4462,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_u32x4(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4852,10 +4702,6 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_u32x4(self, a: u32x4<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
         [
             a[0usize] as f32,
@@ -5054,20 +4900,6 @@ impl Simd for Fallback {
         *dest = a.val.0;
     }
     #[inline(always)]
-    fn cvt_from_bytes_f64x2(self, a: u8x16<Self>) -> f64x2<Self> {
-        f64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f64x2(self, a: f64x2<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
         let mut dest = [Default::default(); 2usize];
         dest[..2usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -5128,7 +4960,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_f64x2(self, a: f64x2<Self>, indices: u8x16<Self>) -> f64x2<Self> {
-        let bytes = self.cvt_to_bytes_f64x2(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -5196,7 +5028,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_f64x2(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn abs_f64x2(self, a: f64x2<Self>) -> f64x2<Self> {
@@ -5406,10 +5238,6 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x2(self, a: f64x2<Self>) -> f32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         [val; 2usize].simd_into(self)
     }
@@ -5442,20 +5270,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i64x2(self, a: i64x2<Self>, dest: &mut [i64; 2usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i64x2(self, a: u8x16<Self>) -> i64x2<Self> {
-        i64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -5518,7 +5332,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_i64x2(self, a: i64x2<Self>, indices: u8x16<Self>) -> i64x2<Self> {
-        let bytes = self.cvt_to_bytes_i64x2(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -5586,7 +5400,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_i64x2(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -5780,14 +5594,6 @@ impl Simd for Fallback {
         [i64::wrapping_neg(a[0usize]), i64::wrapping_neg(a[1usize])].simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_i64x2(self, a: i64x2<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x2(self, a: i64x2<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         [val; 2usize].simd_into(self)
     }
@@ -5820,20 +5626,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u64x2(self, a: u64x2<Self>, dest: &mut [u64; 2usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u64x2(self, a: u8x16<Self>) -> u64x2<Self> {
-        u64x2 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u64x2(self, a: u64x2<Self>) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -5896,7 +5688,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn swizzle_dyn_within_blocks_u64x2(self, a: u64x2<Self>, indices: u8x16<Self>) -> u64x2<Self> {
-        let bytes = self.cvt_to_bytes_u64x2(a);
+        let bytes = Bytes::to_bytes(a);
         let result: u8x16<Self> = [
             {
                 let index = indices[0usize] as usize;
@@ -5964,7 +5756,7 @@ impl Simd for Fallback {
             },
         ]
         .simd_into(self);
-        self.cvt_from_bytes_u64x2(result)
+        Bytes::from_bytes(result)
     }
     #[inline(always)]
     fn add_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -6154,14 +5946,6 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_u64x2(self, a: u64x2<Self>) -> u8x16<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x2(self, a: u64x2<Self>) -> u32x4<Self> {
-        a.bitcast()
-    }
-    #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
         let val: i64 = if val { !0 } else { 0 };
         [val; 2usize].simd_into(self)
@@ -6323,20 +6107,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_f32x8(self, a: u8x32<Self>) -> f32x8<Self> {
-        f32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -6669,35 +6439,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x8(self, a: f32x8<Self>) -> f64x4<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_f64x2(
-            self.reinterpret_f64_f32x4(a0),
-            self.reinterpret_f64_f32x4(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x8(self, a: f32x8<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_i32x4(
-            self.reinterpret_i32_f32x4(a0),
-            self.reinterpret_i32_f32x4(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x8(self, a: f32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_f32x4(a0), self.reinterpret_u8_f32x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_f32x8(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_f32x4(a0),
-            self.reinterpret_u32_f32x4(a1),
-        )
-    }
-    #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
         let (a0, a1) = self.split_f32x8(a);
         self.combine_u32x4(self.cvt_u32_f32x4(a0), self.cvt_u32_f32x4(a1))
@@ -6757,20 +6498,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i8x32(self, a: u8x32<Self>) -> i8x32<Self> {
-        i8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -7148,19 +6875,6 @@ impl Simd for Fallback {
         self.combine_i8x16(self.neg_i8x16(a0), self.neg_i8x16(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x32(self, a: i8x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_u8x16(self.reinterpret_u8_i8x16(a0), self.reinterpret_u8_i8x16(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x32(self, a: i8x32<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i8x32(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i8x16(a0),
-            self.reinterpret_u32_i8x16(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u8x32(self, val: u8) -> u8x32<Self> {
         let half = self.splat_u8x16(val);
         self.combine_u8x16(half, half)
@@ -7194,20 +6908,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u8x32(self, a: u8x32<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
@@ -7585,14 +7285,6 @@ impl Simd for Fallback {
         self.combine_u16x16(self.widen_u8x16(a0), self.widen_u8x16(a1))
     }
     #[inline(always)]
-    fn reinterpret_u32_u8x32(self, a: u8x32<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u8x16(a0),
-            self.reinterpret_u32_u8x16(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
         let half = self.splat_mask8x16(val);
         self.combine_mask8x16(half, half)
@@ -7745,20 +7437,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i16x16(self, a: u8x32<Self>) -> i16x16<Self> {
-        i16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -8076,19 +7754,6 @@ impl Simd for Fallback {
         self.combine_i16x8(self.neg_i16x8(a0), self.neg_i16x8(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x16(self, a: i16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_u8x16(self.reinterpret_u8_i16x8(a0), self.reinterpret_u8_i16x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x16(self, a: i16x16<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i16x8(a0),
-            self.reinterpret_u32_i16x8(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
         let half = self.splat_u16x8(val);
         self.combine_u16x8(half, half)
@@ -8122,20 +7787,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u16x16(self, a: u8x32<Self>) -> u16x16<Self> {
-        u16x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -8470,19 +8121,6 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
-    fn reinterpret_u8_u16x16(self, a: u16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u8x16(self.reinterpret_u8_u16x8(a0), self.reinterpret_u8_u16x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x16(self, a: u16x16<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u16x8(a0),
-            self.reinterpret_u32_u16x8(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
         let half = self.splat_mask16x8(val);
         self.combine_mask16x8(half, half)
@@ -8635,20 +8273,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i32x8(self, a: u8x32<Self>) -> i32x8<Self> {
-        i32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -8930,19 +8554,6 @@ impl Simd for Fallback {
         self.combine_i32x4(self.neg_i32x4(a0), self.neg_i32x4(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x8(self, a: i32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_i32x4(a0), self.reinterpret_u8_i32x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x8(self, a: i32x8<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i32x4(a0),
-            self.reinterpret_u32_i32x4(a1),
-        )
-    }
-    #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_i32x8(a);
         self.combine_f32x4(self.cvt_f32_i32x4(a0), self.cvt_f32_i32x4(a1))
@@ -8981,20 +8592,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u32x8(self, a: u8x32<Self>) -> u32x8<Self> {
-        u32x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
@@ -9271,11 +8868,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_u8_u32x8(self, a: u32x8<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        self.combine_u8x16(self.reinterpret_u8_u32x4(a0), self.reinterpret_u8_u32x4(a1))
-    }
-    #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
         let (a0, a1) = self.split_u32x8(a);
         self.combine_f32x4(self.cvt_f32_u32x4(a0), self.cvt_f32_u32x4(a1))
@@ -9433,20 +9025,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_f64x4(self, a: u8x32<Self>) -> f64x4<Self> {
-        f64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f64x4(self, a: f64x4<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -9763,14 +9341,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x4(self, a: f64x4<Self>) -> f32x8<Self> {
-        let (a0, a1) = self.split_f64x4(a);
-        self.combine_f32x4(
-            self.reinterpret_f32_f64x2(a0),
-            self.reinterpret_f32_f64x2(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         let half = self.splat_i64x2(val);
         self.combine_i64x2(half, half)
@@ -9804,20 +9374,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i64x4(self, a: i64x4<Self>, dest: &mut [i64; 4usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i64x4(self, a: u8x32<Self>) -> i64x4<Self> {
-        i64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i64x4(self, a: i64x4<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
@@ -10083,19 +9639,6 @@ impl Simd for Fallback {
         self.combine_i64x2(self.neg_i64x2(a0), self.neg_i64x2(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i64x4(self, a: i64x4<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        self.combine_u8x16(self.reinterpret_u8_i64x2(a0), self.reinterpret_u8_i64x2(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x4(self, a: i64x4<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_i64x2(a0),
-            self.reinterpret_u32_i64x2(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
         let half = self.splat_u64x2(val);
         self.combine_u64x2(half, half)
@@ -10129,20 +9672,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u64x4(self, a: u64x4<Self>, dest: &mut [u64; 4usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u64x4(self, a: u8x32<Self>) -> u64x4<Self> {
-        u64x4 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u64x4(self, a: u64x4<Self>) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
@@ -10403,19 +9932,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_u8_u64x4(self, a: u64x4<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        self.combine_u8x16(self.reinterpret_u8_u64x2(a0), self.reinterpret_u8_u64x2(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x4(self, a: u64x4<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        self.combine_u32x4(
-            self.reinterpret_u32_u64x2(a0),
-            self.reinterpret_u32_u64x2(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
         let half = self.splat_mask64x2(val);
         self.combine_mask64x2(half, half)
@@ -10568,20 +10084,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_f32x16(self, a: u8x64<Self>) -> f32x16<Self> {
-        f32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -10943,22 +10445,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f64_f32x16(self, a: f32x16<Self>) -> f64x8<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_f64x4(
-            self.reinterpret_f64_f32x8(a0),
-            self.reinterpret_f64_f32x8(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_i32_f32x16(self, a: f32x16<Self>) -> i32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_i32x8(
-            self.reinterpret_i32_f32x8(a0),
-            self.reinterpret_i32_f32x8(a1),
-        )
-    }
-    #[inline(always)]
     fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
         [
             src[0usize],
@@ -10987,19 +10473,6 @@ impl Simd for Fallback {
             a[13usize], a[2usize], a[6usize], a[10usize], a[14usize], a[3usize], a[7usize],
             a[11usize], a[15usize],
         ];
-    }
-    #[inline(always)]
-    fn reinterpret_u8_f32x16(self, a: f32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_f32x8(a0), self.reinterpret_u8_f32x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_f32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_f32x8(a0),
-            self.reinterpret_u32_f32x8(a1),
-        )
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
@@ -11061,20 +10534,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i8x64(self, a: u8x64<Self>) -> i8x64<Self> {
-        i8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -11573,19 +11032,6 @@ impl Simd for Fallback {
         self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i8x64(self, a: i8x64<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u8x32(self.reinterpret_u8_i8x32(a0), self.reinterpret_u8_i8x32(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i8x64(self, a: i8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i8x32(a0),
-            self.reinterpret_u32_i8x32(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         let half = self.splat_u8x32(val);
         self.combine_u8x32(half, half)
@@ -11619,20 +11065,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u8x64(self, a: u8x64<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
@@ -12211,14 +11643,6 @@ impl Simd for Fallback {
         ];
     }
     #[inline(always)]
-    fn reinterpret_u32_u8x64(self, a: u8x64<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u8x64(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u8x32(a0),
-            self.reinterpret_u32_u8x32(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
@@ -12364,20 +11788,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i16x32(self, a: u8x64<Self>) -> i16x32<Self> {
-        i16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -12758,22 +12168,6 @@ impl Simd for Fallback {
         self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i16x32(self, a: i16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_i16x16(a0),
-            self.reinterpret_u8_i16x16(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i16x32(self, a: i16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i16x16(a0),
-            self.reinterpret_u32_i16x16(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
@@ -12807,20 +12201,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u16x32(self, a: u8x64<Self>) -> u16x32<Self> {
-        u16x32 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
@@ -13249,22 +12629,6 @@ impl Simd for Fallback {
         self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_u16x32(self, a: u16x32<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x32(
-            self.reinterpret_u8_u16x16(a0),
-            self.reinterpret_u8_u16x16(a1),
-        )
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u16x32(self, a: u16x32<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u16x16(a0),
-            self.reinterpret_u32_u16x16(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
         let half = self.splat_mask16x16(val);
         self.combine_mask16x16(half, half)
@@ -13413,20 +12777,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i32x16(self, a: u8x64<Self>) -> i32x16<Self> {
-        i32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -13737,19 +13087,6 @@ impl Simd for Fallback {
         self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i32x16(self, a: i32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_i32x8(a0), self.reinterpret_u8_i32x8(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i32x16(self, a: i32x16<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i32x16(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i32x8(a0),
-            self.reinterpret_u32_i32x8(a1),
-        )
-    }
-    #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
@@ -13788,20 +13125,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u32x16(self, a: u8x64<Self>) -> u32x16<Self> {
-        u32x16 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
@@ -14137,11 +13460,6 @@ impl Simd for Fallback {
         ];
     }
     #[inline(always)]
-    fn reinterpret_u8_u32x16(self, a: u32x16<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u32x16(a);
-        self.combine_u8x32(self.reinterpret_u8_u32x8(a0), self.reinterpret_u8_u32x8(a1))
-    }
-    #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
         self.combine_f32x8(self.cvt_f32_u32x8(a0), self.cvt_f32_u32x8(a1))
@@ -14292,20 +13610,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_f64x8(self, a: u8x64<Self>) -> f64x8<Self> {
-        f64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_f64x8(self, a: f64x8<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -14631,14 +13935,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn reinterpret_f32_f64x8(self, a: f64x8<Self>) -> f32x16<Self> {
-        let (a0, a1) = self.split_f64x8(a);
-        self.combine_f32x8(
-            self.reinterpret_f32_f64x4(a0),
-            self.reinterpret_f32_f64x4(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)
@@ -14672,20 +13968,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_i64x8(self, a: u8x64<Self>) -> i64x8<Self> {
-        i64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_i64x8(self, a: i64x8<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
@@ -14960,19 +14242,6 @@ impl Simd for Fallback {
         self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
     }
     #[inline(always)]
-    fn reinterpret_u8_i64x8(self, a: i64x8<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_u8x32(self.reinterpret_u8_i64x4(a0), self.reinterpret_u8_i64x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_i64x8(self, a: i64x8<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_i64x8(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_i64x4(a0),
-            self.reinterpret_u32_i64x4(a1),
-        )
-    }
-    #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {
         let half = self.splat_u64x4(val);
         self.combine_u64x4(half, half)
@@ -15006,20 +14275,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn store_array_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
         *dest = a.val.0;
-    }
-    #[inline(always)]
-    fn cvt_from_bytes_u64x8(self, a: u8x64<Self>) -> u64x8<Self> {
-        u64x8 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn cvt_to_bytes_u64x8(self, a: u64x8<Self>) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&a.val),
-            simd: self,
-        }
     }
     #[inline(always)]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
@@ -15307,19 +14562,6 @@ impl Simd for Fallback {
         *dest = [
             a[0usize], a[2usize], a[4usize], a[6usize], a[1usize], a[3usize], a[5usize], a[7usize],
         ];
-    }
-    #[inline(always)]
-    fn reinterpret_u8_u64x8(self, a: u64x8<Self>) -> u8x64<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u8x32(self.reinterpret_u8_u64x4(a0), self.reinterpret_u8_u64x4(a1))
-    }
-    #[inline(always)]
-    fn reinterpret_u32_u64x8(self, a: u64x8<Self>) -> u32x16<Self> {
-        let (a0, a1) = self.split_u64x8(a);
-        self.combine_u32x8(
-            self.reinterpret_u32_u64x4(a0),
-            self.reinterpret_u32_u64x4(a1),
-        )
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
