@@ -203,6 +203,11 @@ impl Level for Fallback {
                     (0..vec_ty.len)
                         .map(|idx| {
                             let b_lane = lane(quote! { b }, vec_ty, idx);
+                            let b_lane = if matches!(method, "shlv" | "shrv") {
+                                quote! { #b_lane as u32 }
+                            } else {
+                                b_lane
+                            };
                             let b = if fallback::translate_op(
                                 method,
                                 vec_ty.scalar == ScalarType::Float,
@@ -592,7 +597,14 @@ fn lane(value: TokenStream, vec_ty: &VecType, idx: usize) -> TokenStream {
 fn rhs_reference(method: &str) -> bool {
     !matches!(
         method,
-        "copysign" | "min" | "max" | "wrapping_sub" | "wrapping_mul" | "wrapping_add"
+        "copysign"
+            | "min"
+            | "max"
+            | "wrapping_sub"
+            | "wrapping_mul"
+            | "wrapping_add"
+            | "wrapping_shl"
+            | "wrapping_shr"
     )
 }
 

@@ -1966,6 +1966,20 @@ impl X86 {
                 _ => unimplemented!(),
             };
 
+            // The conversion from 16-bit back to 8-bit uses saturating arithmetic. We have to
+            // explicitly mask to get the desired truncation semantics.
+            let mask_result = if method == "shl" {
+                let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
+                let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
+                quote! {
+                    let byte_mask = #set1_epi16(0x00ff);
+                    let lo_shifted = #and(lo_shifted, byte_mask);
+                    let hi_shifted = #and(hi_shifted, byte_mask);
+                }
+            } else {
+                TokenStream::new()
+            };
+
             let extend_intrinsic_lo = extend_expr(unpack_lo);
             let extend_intrinsic_hi = extend_expr(unpack_hi);
             let pack_intrinsic = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int, ty_bits);
@@ -1980,6 +1994,8 @@ impl X86 {
 
                     let lo_shifted = #shift_intrinsic(lo_16, shift_count);
                     let hi_shifted = #shift_intrinsic(hi_16, shift_count);
+
+                    #mask_result
 
                     #pack_intrinsic(lo_shifted, hi_shifted).simd_into(#token)
                 }
