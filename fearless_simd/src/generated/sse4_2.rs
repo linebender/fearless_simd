@@ -947,14 +947,12 @@ impl Simd for Sse4_2 {
             fn kernel(token: Sse4_2, a: i8x16<Sse4_2>, shift: u32) -> i8x16<Sse4_2> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let lo_16 = _mm_unpacklo_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
-                let hi_16 = _mm_unpackhi_epi8(val, _mm_cmpgt_epi8(_mm_setzero_si128(), val));
-                let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
-                let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
-                let byte_mask = _mm_set1_epi16(0x00ff);
-                let lo_shifted = _mm_and_si128(lo_shifted, byte_mask);
-                let hi_shifted = _mm_and_si128(hi_shifted, byte_mask);
-                _mm_packs_epi16(lo_shifted, hi_shifted).simd_into(token)
+                let mask = _mm_set1_epi16(0x00ff);
+                let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
+                let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
+                let lo_shifted = _mm_and_si128(_mm_sll_epi16(lo_16, shift_count), mask);
+                let hi_shifted = _mm_and_si128(_mm_sll_epi16(hi_16, shift_count), mask);
+                _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );
         kernel(self, a, shift)
@@ -1465,13 +1463,11 @@ impl Simd for Sse4_2 {
             fn kernel(token: Sse4_2, a: u8x16<Sse4_2>, shift: u32) -> u8x16<Sse4_2> {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let mask = _mm_set1_epi16(0x00ff);
                 let lo_16 = _mm_unpacklo_epi8(val, _mm_setzero_si128());
                 let hi_16 = _mm_unpackhi_epi8(val, _mm_setzero_si128());
-                let lo_shifted = _mm_sll_epi16(lo_16, shift_count);
-                let hi_shifted = _mm_sll_epi16(hi_16, shift_count);
-                let byte_mask = _mm_set1_epi16(0x00ff);
-                let lo_shifted = _mm_and_si128(lo_shifted, byte_mask);
-                let hi_shifted = _mm_and_si128(hi_shifted, byte_mask);
+                let lo_shifted = _mm_and_si128(_mm_sll_epi16(lo_16, shift_count), mask);
+                let hi_shifted = _mm_and_si128(_mm_sll_epi16(hi_16, shift_count), mask);
                 _mm_packus_epi16(lo_shifted, hi_shifted).simd_into(token)
             }
         );

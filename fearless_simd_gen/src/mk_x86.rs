@@ -1926,6 +1926,79 @@ impl X86 {
         }
     }
 
+    fn shl_8bit(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let ty_bits = vec_ty.n_bits();
+        let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits.max(16), false);
+
+        let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
+        let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
+        let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
+        let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
+        let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
+        let shift_intrinsic = intrinsic_ident("sll", suffix, ty_bits);
+        let pack_intrinsic = pack_intrinsic(16, false, ty_bits);
+
+        self.kernel_method(op, vec_ty, |token| {
+            quote! {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+                let mask = #set1_epi16(0x00ff);
+
+                let lo_16 = #unpack_lo(val, #set0());
+                let hi_16 = #unpack_hi(val, #set0());
+
+                let lo_shifted = #and(#shift_intrinsic(lo_16, shift_count), mask);
+                let hi_shifted = #and(#shift_intrinsic(hi_16, shift_count), mask);
+
+                #pack_intrinsic(lo_shifted, hi_shifted).simd_into(#token)
+            }
+        })
+    }
+
+    fn shr_8bit(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let op_name = match vec_ty.scalar {
+            ScalarType::Unsigned => "srl",
+            ScalarType::Int => "sra",
+            _ => unreachable!(),
+        };
+        let ty_bits = vec_ty.n_bits();
+        let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits.max(16), false);
+
+        let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
+        let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
+        let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
+        let shift_intrinsic = intrinsic_ident(op_name, suffix, ty_bits);
+        let pack_intrinsic = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int, ty_bits);
+
+        let sign_extend_bits = match vec_ty.scalar {
+            ScalarType::Unsigned => quote!(#set0()),
+            ScalarType::Int => {
+                if *self == Self::Avx512 && ty_bits == 512 {
+                    quote!(_mm512_movm_epi8(_mm512_cmpgt_epi8_mask(#set0(), val)))
+                } else {
+                    let cmp_intrinsic = intrinsic_ident("cmpgt", "epi8", ty_bits);
+                    quote!(#cmp_intrinsic(#set0(), val))
+                }
+            }
+            _ => unreachable!(),
+        };
+
+        self.kernel_method(op, vec_ty, |token| {
+            quote! {
+                let val = a.into();
+                let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
+
+                let lo_16 = #unpack_lo(val, #sign_extend_bits);
+                let hi_16 = #unpack_hi(val, #sign_extend_bits);
+
+                let lo_shifted = #shift_intrinsic(lo_16, shift_count);
+                let hi_shifted = #shift_intrinsic(hi_16, shift_count);
+
+                #pack_intrinsic(lo_shifted, hi_shifted).simd_into(#token)
+            }
+        })
+    }
+
     pub(crate) fn handle_shift(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {
         if *self != Self::Avx512
             && method == "shr"
@@ -1935,78 +2008,23 @@ impl X86 {
             return fallback_method(op, vec_ty);
         }
 
-        let shift_op = match (method, vec_ty.scalar) {
-            ("shr", ScalarType::Unsigned) => "srl",
-            ("shr", ScalarType::Int) => "sra",
-            ("shl", _) => "sll",
-            _ => unreachable!(),
-        };
-        let ty_bits = vec_ty.n_bits();
-        let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits.max(16), false);
-        let shift_intrinsic = intrinsic_ident(shift_op, suffix, ty_bits);
-
         if vec_ty.scalar_bits == 8 {
-            // x86 doesn't have shifting for 8-bit, so we first convert into 16-bit, shift, and then back to 8-bit.
-
-            let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
-            let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
-
-            let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
-            let extend_expr = |expr| match vec_ty.scalar {
-                ScalarType::Unsigned => quote! {
-                    #expr(val, #set0())
-                },
-                ScalarType::Int => {
-                    let sign_bits = if *self == Self::Avx512 && ty_bits == 512 {
-                        quote! {
-                            _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(#set0(), val))
-                        }
-                    } else {
-                        let cmp_intrinsic = intrinsic_ident("cmpgt", "epi8", ty_bits);
-                        quote! { #cmp_intrinsic(#set0(), val) }
-                    };
-                    quote! {
-                        #expr(val, #sign_bits)
-                    }
-                }
-                _ => unimplemented!(),
-            };
-
-            // The conversion from 16-bit back to 8-bit uses saturating arithmetic. We have to
-            // explicitly mask to get the desired truncation semantics.
-            let mask_result = if method == "shl" {
-                let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
-                let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
-                quote! {
-                    let byte_mask = #set1_epi16(0x00ff);
-                    let lo_shifted = #and(lo_shifted, byte_mask);
-                    let hi_shifted = #and(hi_shifted, byte_mask);
-                }
+            if method == "shl" {
+                self.shl_8bit(op, vec_ty)
             } else {
-                TokenStream::new()
-            };
-
-            let extend_intrinsic_lo = extend_expr(unpack_lo);
-            let extend_intrinsic_hi = extend_expr(unpack_hi);
-            let pack_intrinsic = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int, ty_bits);
-
-            self.kernel_method(op, vec_ty, |token| {
-                quote! {
-                    let val = a.into();
-                    let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-
-                    let lo_16 = #extend_intrinsic_lo;
-                    let hi_16 = #extend_intrinsic_hi;
-
-                    let lo_shifted = #shift_intrinsic(lo_16, shift_count);
-                    let hi_shifted = #shift_intrinsic(hi_16, shift_count);
-
-                    #mask_result
-
-                    #pack_intrinsic(lo_shifted, hi_shifted).simd_into(#token)
-                }
-            })
+                self.shr_8bit(op, vec_ty)
+            }
         } else {
+            let shift_op = match (method, vec_ty.scalar) {
+                ("shr", ScalarType::Unsigned) => "srl",
+                ("shr", ScalarType::Int) => "sra",
+                ("shl", _) => "sll",
+                _ => unreachable!(),
+            };
+            let ty_bits = vec_ty.n_bits();
+            let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits.max(16), false);
+            let shift_intrinsic = intrinsic_ident(shift_op, suffix, ty_bits);
+
             self.kernel_method(
                 op,
                 vec_ty,
