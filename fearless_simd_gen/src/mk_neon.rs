@@ -5,8 +5,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    fallback_method, generic_as_array, generic_from_array, generic_mask_set, generic_op_name,
-    generic_store_array, integer_lane_mask_splat_arg,
+    fallback_method, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity};
@@ -561,13 +560,6 @@ impl Level for Neon {
             OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(op, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(op, vec_ty),
             OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
-            OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
-            OpSig::AsArray { kind } => {
-                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
-                    self.arch_ty(vec_ty)
-                })
-            }
-            OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);

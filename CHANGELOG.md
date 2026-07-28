@@ -27,6 +27,7 @@ You can find its changes [documented below](#060-2026-07-10).
 - `SimdElement::Mask` now declares that a mask lane type is its own mask lane type, exposing this invariant to generic code.
 - `SimdCombine` and `SimdSplit` now declare their associated vector types as inverse operations, enabling generic code to recover the original vector type without additional equality bounds.
 - `SimdBase::Array` now guarantees `Copy` (and therefore `Clone`), `Debug`, by-value `IntoIterator`, `AsRef`, `AsMut`, and conversion from its vector type, while `SimdBase` guarantees construction from its associated array through `SimdFrom`.
+- Breaking change: the 204 vector-specific `Simd` array conversion methods have been replaced by the `SimdBase::load_array`, `load_array_ref`, `as_array`, `as_array_ref`, `as_array_mut`, and `store_array` methods. Masks continue to use `SimdMask::from_slice` and `store_slice`.
 
 ### Removed
 
