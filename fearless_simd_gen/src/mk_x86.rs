@@ -1924,54 +1924,59 @@ impl X86 {
         let ty_bits = vec_ty.n_bits();
         let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits.max(16), false);
 
-        let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
-        let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
-        let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
         let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
-        let set1_epi16 = intrinsic_ident("set1", "epi16", ty_bits);
+        let set1_epi8 = intrinsic_ident("set1", "epi8", ty_bits);
         let shift_intrinsic = intrinsic_ident("sll", suffix, ty_bits);
-        let pack_intrinsic = pack_intrinsic(16, false, ty_bits);
 
         self.kernel_method(op, vec_ty, |token| {
             quote! {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-                let mask = #set1_epi16(0x00ff);
-
-                let lo_16 = #unpack_lo(val, #set0());
-                let hi_16 = #unpack_hi(val, #set0());
-
-                let lo_shifted = #and(#shift_intrinsic(lo_16, shift_count), mask);
-                let hi_shifted = #and(#shift_intrinsic(hi_16, shift_count), mask);
-
-                #pack_intrinsic(lo_shifted, hi_shifted).simd_into(#token)
+                let mask_byte = 0xff_u32.wrapping_shr(shift) as i8;
+                let byte_mask = #set1_epi8(mask_byte);
+                #shift_intrinsic(#and(val, byte_mask), shift_count).simd_into(#token)
             }
         })
     }
 
     fn shr_8bit(&self, op: Op, vec_ty: &VecType) -> TokenStream {
-        let op_name = match vec_ty.scalar {
-            ScalarType::Unsigned => "srl",
-            ScalarType::Int => "sra",
-            _ => unreachable!(),
-        };
         let ty_bits = vec_ty.n_bits();
-        let suffix = op_suffix(vec_ty.scalar, vec_ty.scalar_bits.max(16), false);
-
-        let unpack_hi = unpack_intrinsic(ScalarType::Int, 8, false, ty_bits);
-        let unpack_lo = unpack_intrinsic(ScalarType::Int, 8, true, ty_bits);
-        let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
-        let shift_intrinsic = intrinsic_ident(op_name, suffix, ty_bits);
-        let pack_intrinsic = pack_intrinsic(16, vec_ty.scalar == ScalarType::Int, ty_bits);
-
-        let sign_extend_bits = match vec_ty.scalar {
-            ScalarType::Unsigned => quote!(#set0()),
+        let and = intrinsic_ident("and", coarse_type(vec_ty), ty_bits);
+        let set1_epi8 = intrinsic_ident("set1", "epi8", ty_bits);
+        let shift_intrinsic = intrinsic_ident("srl", "epi16", ty_bits);
+        let shift_fixup = match vec_ty.scalar {
+            ScalarType::Unsigned => quote! {
+                #and(shifted, byte_mask)
+            },
+            // Signed integers require special handling to implement sign extension
             ScalarType::Int => {
-                if *self == Self::Avx512 && ty_bits == 512 {
-                    quote!(_mm512_movm_epi8(_mm512_cmpgt_epi8_mask(#set0(), val)))
+                let set0 = intrinsic_ident("setzero", coarse_type(vec_ty), ty_bits);
+                let sign = if *self == Self::Avx512 && ty_bits == 512 {
+                    quote! {
+                        // there is no _mm512_cmpgt_epi8, so we need to use _mask variant
+                        // and expand it back into a vector so that ternarylogic can use it
+                        _mm512_movm_epi8(_mm512_cmpgt_epi8_mask(#set0(), val))
+                    }
                 } else {
-                    let cmp_intrinsic = intrinsic_ident("cmpgt", "epi8", ty_bits);
-                    quote!(#cmp_intrinsic(#set0(), val))
+                    let cmpgt = intrinsic_ident("cmpgt", "epi8", ty_bits);
+                    quote! { #cmpgt(#set0(), val) }
+                };
+                if *self == Self::Avx512 {
+                    // GFNI formulation was also considered, but it regresses latency:
+                    // https://github.com/linebender/fearless_simd/pull/291#issuecomment-5107747999
+                    let ternary = intrinsic_ident("ternarylogic", "epi32", ty_bits);
+                    quote! {
+                        let sign = #sign;
+                        // Select shifted bits where the byte mask is set and sign bits elsewhere.
+                        #ternary::<0xca>(byte_mask, shifted, sign)
+                    }
+                } else {
+                    let andnot = intrinsic_ident("andnot", coarse_type(vec_ty), ty_bits);
+                    let or = intrinsic_ident("or", coarse_type(vec_ty), ty_bits);
+                    quote! {
+                        let sign = #sign;
+                        #or(#and(shifted, byte_mask), #andnot(byte_mask, sign))
+                    }
                 }
             }
             _ => unreachable!(),
@@ -1981,14 +1986,11 @@ impl X86 {
             quote! {
                 let val = a.into();
                 let shift_count = _mm_cvtsi32_si128(shift.cast_signed());
-
-                let lo_16 = #unpack_lo(val, #sign_extend_bits);
-                let hi_16 = #unpack_hi(val, #sign_extend_bits);
-
-                let lo_shifted = #shift_intrinsic(lo_16, shift_count);
-                let hi_shifted = #shift_intrinsic(hi_16, shift_count);
-
-                #pack_intrinsic(lo_shifted, hi_shifted).simd_into(#token)
+                let mask_byte = 0xff_u32.wrapping_shr(shift) as i8;
+                let byte_mask = #set1_epi8(mask_byte);
+                let shifted = #shift_intrinsic(val, shift_count);
+                let result = { #shift_fixup };
+                result.simd_into(#token)
             }
         })
     }

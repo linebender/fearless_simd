@@ -20,5 +20,6 @@ path = "tests/mod.rs"
 workspace = true
 
 [dependencies]
+fastrand = "2.5.0"
 fearless_simd = { workspace = true, features = ["std"] }
 fearless_simd_dev_macros = { workspace = true }
