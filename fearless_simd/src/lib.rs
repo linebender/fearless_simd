@@ -397,22 +397,22 @@ pub enum Level {
 impl Level {
     /// Return the best SIMD level available on the CPU. This value should be passed to [`dispatch`].
     ///
-    /// This function requires the standard library on targets other than wasm32. On wasm32, the
-    /// available level is known statically, so the standard library isn't required.
-    ///
     /// On x86 and x86-64 targets, this detects the available CPU features on the first call and
     /// caches the result. Other targets return their strongest statically supported level.
     /// This may change in the future if runtime-detected levels for other platforms are added.
     ///
-    /// Note that in most cases, this function should only be called by end-user applications.
-    /// Libraries should instead accept a `Level` argument, probably as they are
-    /// creating their data structures, then storing the level for any computations.
-    /// Libraries which wish to abstract away SIMD usage for their common-case clients,
-    /// should make their non-`Level` entrypoint match this function's `cfg`; to instead
-    /// handle this at runtime, they can use [`try_detect`](Self::try_detect),
-    /// handling the `None` case as they deem fit (probably panicking).
-    /// This strategy avoids users of the library inadvertently using the fallback level,
-    /// even if the requisite target features are available.
+    /// This function requires the standard library on targets other than wasm32. On wasm32, the
+    /// available level is known statically, so the standard library isn't required.
+    ///
+    /// On x86_64, it is sometimes possible to detect the available features on `#[no_std]`
+    /// by parsing the output of `cpuid` instruction, but this function
+    /// [does not do that](https://github.com/linebender/fearless_simd/issues/157).
+    /// If you do this, you can create the SIMD token via [`new_unchecked`](Avx2::new_unchecked)
+    /// and then get the [level](Simd::level) from it.
+    ///
+    /// Libraries that use SIMD on `#[no_std]` should let the user pass the appropriate SIMD level
+    /// the user detected through other means (e.g. `cpuid`), to avoid using the fallback level
+    /// when a better SIMD level is available in hardware.
     #[cfg(any(feature = "std", target_arch = "wasm32"))]
     #[must_use]
     #[expect(
