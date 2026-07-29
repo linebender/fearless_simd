@@ -213,27 +213,19 @@ impl Level for X86 {
         let features = self
             .enabled_target_features()
             .expect("x86 SIMD levels always enable target features");
-        let (summary_doc, details_doc): (&str, Option<&str>) = match self {
-            Self::Sse2 => (
-                "Create a SIMD token proving that SSE2 is available.",
-                Some(
-                    "This is the baseline on x86-64 and i686 targets. On i586 it needs runtime detection.",
-                ),
-            ),
-            Self::Sse4_2 => (
-                "Create a SIMD token proving that the x86-64-v2 features are available.",
-                None,
-            ),
-            Self::Avx2 => (
-                "Create a SIMD token proving that the x86-64-v3 features are available.",
-                None,
-            ),
-            Self::Avx512 => (
-                "Create a SIMD token proving that the Ice Lake AVX-512 features are available.",
-                None,
-            ),
+        let description_doc = match self {
+            Self::Sse2 => {
+                "Create a SIMD token proving that SSE2 is available.\n\n\
+                 This is the baseline on x86-64 and i686 targets. On i586 it needs runtime detection."
+            }
+            Self::Sse4_2 => {
+                "Create a SIMD token proving that the x86-64-v2 features are available."
+            }
+            Self::Avx2 => "Create a SIMD token proving that the x86-64-v3 features are available.",
+            Self::Avx512 => {
+                "Create a SIMD token proving that the Ice Lake AVX-512 features are available."
+            }
         };
-        let details_doc = details_doc.map(|doc| quote! { #[doc = #doc] });
         let required_features = features.replace(',', "`, `");
         let safety_doc = format!(
             "When invoking this function through an `unsafe` block, the caller must ensure \
@@ -241,8 +233,7 @@ impl Level for X86 {
         );
 
         quote! {
-            #[doc = #summary_doc]
-            #[doc = #details_doc]
+            #[doc = #description_doc]
             ///
             /// This function can be called without an `unsafe` block from a function
             /// with all the required target features enabled via the `#[target_feature]` annotation.
