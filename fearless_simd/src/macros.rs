@@ -11,7 +11,8 @@
 /// The first parameter to the macro is the [`Level`].
 /// You should prefer to construct a [`Level`] once and pass it around, rather than
 /// frequently calling [`Level::new()`].
-/// This is because `Level::new` has to detect which target features are available, which can be slow.
+/// On x86, the first call to `Level::new` detects which target features are available and caches
+/// the result. Passing the resulting value around avoids even the cached atomic load.
 ///
 /// The code of the operation will be repeated literally several times in the output, so you should prefer
 /// to keep this code small (as it will be type-checked, etc. for each supported SIMD level on your target).
