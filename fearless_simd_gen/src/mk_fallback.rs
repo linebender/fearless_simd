@@ -134,6 +134,7 @@ impl Level for Fallback {
 
     fn make_impl_body(&self) -> TokenStream {
         quote! {
+            /// Create a scalar fallback token.
             #[inline]
             pub const fn new() -> Self {
                 Self { _private: () }

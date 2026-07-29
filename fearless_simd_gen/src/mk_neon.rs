@@ -67,9 +67,23 @@ impl Level for Neon {
     }
 
     fn make_impl_body(&self) -> TokenStream {
+        let features = self
+            .enabled_target_features()
+            .expect("Neon always enables target features");
+
         quote! {
+            /// Create a SIMD token proving that Neon is available.
+            ///
+            /// This function can be called safely from a function with the `neon` target feature
+            /// enabled.
+            ///
+            /// # Safety
+            ///
+            /// When invoking this function through an `unsafe` block, the caller must ensure that
+            /// the current CPU supports `neon`.
             #[inline]
-            pub const unsafe fn new_unchecked() -> Self {
+            #[target_feature(enable = #features)]
+            pub const fn new_unchecked() -> Self {
                 Neon { _private: () }
             }
         }

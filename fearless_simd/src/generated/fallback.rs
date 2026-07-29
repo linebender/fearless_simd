@@ -84,6 +84,7 @@ pub struct Fallback {
     _private: (),
 }
 impl Fallback {
+    #[doc = r" Create a scalar fallback token."]
     #[inline]
     pub const fn new() -> Self {
         Self { _private: () }

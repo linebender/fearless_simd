@@ -21,15 +21,18 @@ pub struct Sse4_2 {
     _private: (),
 }
 impl Sse4_2 {
-    #[doc = r" Create a SIMD token."]
+    #[doc = "Create a SIMD token proving that the x86-64-v2 features are available."]
+    #[doc = r""]
+    #[doc = r" This function can be called without an `unsafe` block from a function"]
+    #[doc = r" with all the required target features enabled via the `#[target_feature]` annotation."]
     #[doc = r""]
     #[doc = r" # Safety"]
     #[doc = r""]
-    #[doc = r" The `fxsr`, `sse4.2`, `cmpxchg16b`, and `popcnt` CPU"]
-    #[doc = r" features must be available."]
+    #[doc = "When invoking this function through an `unsafe` block, the caller must ensure that the current CPU supports `fxsr`, `sse4.2`, `cmpxchg16b`, `popcnt`."]
     #[inline]
-    pub const unsafe fn new_unchecked() -> Self {
-        Sse4_2 { _private: () }
+    #[target_feature(enable = "fxsr,sse4.2,cmpxchg16b,popcnt")]
+    pub const fn new_unchecked() -> Self {
+        Self { _private: () }
     }
 }
 impl Seal for Sse4_2 {}

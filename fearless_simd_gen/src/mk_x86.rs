@@ -28,8 +28,8 @@ pub(crate) enum X86 {
 pub(crate) const SSE2_FEATURES: &str = "fxsr,sse,sse2";
 pub(crate) const SSE4_2_FEATURES: &str = "fxsr,sse4.2,cmpxchg16b,popcnt";
 pub(crate) const AVX2_FEATURES: &str =
-    "fxsr,avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave";
-pub(crate) const AVX512_FEATURES: &str = "fxsr,adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves";
+    "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,xsave";
+pub(crate) const AVX512_FEATURES: &str = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,fxsr,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves";
 
 impl Level for X86 {
     fn name(&self) -> &'static str {
@@ -210,55 +210,51 @@ impl Level for X86 {
     }
 
     fn make_impl_body(&self) -> TokenStream {
-        match self {
-            Self::Sse2 => quote! {
-                /// Create a SIMD token.
-                ///
-                /// # Safety
-                ///
-                /// The `fxsr`, `sse`, and `sse2` CPU features must be available.
-                #[inline]
-                pub const unsafe fn new_unchecked() -> Self {
-                    Self { _private: () }
-                }
-            },
-            Self::Sse4_2 => quote! {
-                /// Create a SIMD token.
-                ///
-                /// # Safety
-                ///
-                /// The `fxsr`, `sse4.2`, `cmpxchg16b`, and `popcnt` CPU
-                /// features must be available.
-                #[inline]
-                pub const unsafe fn new_unchecked() -> Self {
-                    Sse4_2 { _private: () }
-                }
-            },
-            Self::Avx2 => quote! {
-                /// Create a SIMD token.
-                ///
-                /// # Safety
-                ///
-                /// The `fxsr`, `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`,
-                /// `fma`, `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features
-                /// must be available.
-                #[inline]
-                pub const unsafe fn new_unchecked() -> Self {
-                    Self { _private: () }
-                }
-            },
-            Self::Avx512 => quote! {
-                /// Create a SIMD token.
-                ///
-                /// # Safety
-                ///
-                /// The Ice Lake AVX-512 CPU feature set and `fxsr` must be
-                /// available.
-                #[inline]
-                pub const unsafe fn new_unchecked() -> Self {
-                    Self { _private: () }
-                }
-            },
+        let features = self
+            .enabled_target_features()
+            .expect("x86 SIMD levels always enable target features");
+        let (summary_doc, details_doc): (&str, Option<&str>) = match self {
+            Self::Sse2 => (
+                "Create a SIMD token proving that SSE2 is available.",
+                Some(
+                    "This is the baseline on x86-64 and i686 targets. On i586 it needs runtime detection.",
+                ),
+            ),
+            Self::Sse4_2 => (
+                "Create a SIMD token proving that the x86-64-v2 features are available.",
+                None,
+            ),
+            Self::Avx2 => (
+                "Create a SIMD token proving that the x86-64-v3 features are available.",
+                None,
+            ),
+            Self::Avx512 => (
+                "Create a SIMD token proving that the Ice Lake AVX-512 features are available.",
+                None,
+            ),
+        };
+        let details_doc = details_doc.map(|doc| quote! { #[doc = #doc] });
+        let required_features = features.replace(',', "`, `");
+        let safety_doc = format!(
+            "When invoking this function through an `unsafe` block, the caller must ensure \
+             that the current CPU supports `{required_features}`."
+        );
+
+        quote! {
+            #[doc = #summary_doc]
+            #[doc = #details_doc]
+            ///
+            /// This function can be called without an `unsafe` block from a function
+            /// with all the required target features enabled via the `#[target_feature]` annotation.
+            ///
+            /// # Safety
+            ///
+            #[doc = #safety_doc]
+            #[inline]
+            #[target_feature(enable = #features)]
+            pub const fn new_unchecked() -> Self {
+                Self { _private: () }
+            }
         }
     }
 

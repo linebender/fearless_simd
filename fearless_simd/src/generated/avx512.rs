@@ -29,14 +29,19 @@ pub struct Avx512 {
     _private: (),
 }
 impl Avx512 {
-    #[doc = r" Create a SIMD token."]
+    #[doc = "Create a SIMD token proving that the Ice Lake AVX-512 features are available."]
+    #[doc = r""]
+    #[doc = r" This function can be called without an `unsafe` block from a function"]
+    #[doc = r" with all the required target features enabled via the `#[target_feature]` annotation."]
     #[doc = r""]
     #[doc = r" # Safety"]
     #[doc = r""]
-    #[doc = r" The Ice Lake AVX-512 CPU feature set and `fxsr` must be"]
-    #[doc = r" available."]
+    #[doc = "When invoking this function through an `unsafe` block, the caller must ensure that the current CPU supports `fxsr`, `adx`, `aes`, `avx512bitalg`, `avx512bw`, `avx512cd`, `avx512dq`, `avx512f`, `avx512ifma`, `avx512vbmi`, `avx512vbmi2`, `avx512vl`, `avx512vnni`, `avx512vpopcntdq`, `bmi1`, `bmi2`, `cmpxchg16b`, `fma`, `gfni`, `lzcnt`, `movbe`, `pclmulqdq`, `popcnt`, `rdrand`, `rdseed`, `sha`, `vaes`, `vpclmulqdq`, `xsave`, `xsavec`, `xsaveopt`, `xsaves`."]
     #[inline]
-    pub const unsafe fn new_unchecked() -> Self {
+    #[target_feature(
+        enable = "fxsr,adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
+    )]
+    pub const fn new_unchecked() -> Self {
         Self { _private: () }
     }
 }
