@@ -469,3 +469,106 @@ fn min_f64x4<S: Simd>(simd: S) {
     let result = simd.min_f64x4(a, b);
     assert_eq!(result.as_slice(), expected.as_slice());
 }
+
+#[simd_test]
+fn min_integer_sign_boundaries<S: Simd>(simd: S) {
+    let i8_a = [
+        i8::MIN,
+        i8::MAX,
+        -1,
+        0,
+        1,
+        -64,
+        64,
+        -127,
+        127,
+        -2,
+        2,
+        -65,
+        65,
+        -126,
+        126,
+        42,
+    ];
+    let i8_b = [
+        i8::MAX,
+        i8::MIN,
+        0,
+        -1,
+        -1,
+        64,
+        -64,
+        127,
+        -127,
+        2,
+        -2,
+        65,
+        -65,
+        126,
+        -126,
+        42,
+    ];
+    let expected_i8: [i8; 16] = core::array::from_fn(|i| i8_a[i].min(i8_b[i]));
+    assert_eq!(
+        simd.min_i8x16(
+            i8x16::from_slice(simd, &i8_a),
+            i8x16::from_slice(simd, &i8_b),
+        )
+        .as_slice(),
+        expected_i8.as_slice(),
+    );
+
+    let u16_a = [0, 1, 0x7fff, 0x8000, 0x8001, 0xfffe, u16::MAX, 42];
+    let u16_b = [u16::MAX, 0x8000, 0x8000, 0x7fff, 1, 0xffff, 0, 42];
+    let expected_u16: [u16; 8] = core::array::from_fn(|i| u16_a[i].min(u16_b[i]));
+    assert_eq!(
+        simd.min_u16x8(
+            u16x8::from_slice(simd, &u16_a),
+            u16x8::from_slice(simd, &u16_b),
+        )
+        .as_slice(),
+        expected_u16.as_slice(),
+    );
+
+    let i32_a = [i32::MIN, i32::MAX, -1, 0, 1, -0x4000_0000, 0x4000_0000, 42];
+    let i32_b = [i32::MAX, i32::MIN, 0, -1, -1, 0x4000_0000, -0x4000_0000, 42];
+    let expected_i32: [i32; 8] = core::array::from_fn(|i| i32_a[i].min(i32_b[i]));
+    assert_eq!(
+        simd.min_i32x8(
+            i32x8::from_slice(simd, &i32_a),
+            i32x8::from_slice(simd, &i32_b),
+        )
+        .as_slice(),
+        expected_i32.as_slice(),
+    );
+
+    let u32_a = [
+        0,
+        1,
+        0x7fff_ffff,
+        0x8000_0000,
+        0x8000_0001,
+        0xffff_fffe,
+        u32::MAX,
+        42,
+    ];
+    let u32_b = [
+        u32::MAX,
+        0x8000_0000,
+        0x8000_0000,
+        0x7fff_ffff,
+        1,
+        u32::MAX,
+        0,
+        42,
+    ];
+    let expected_u32: [u32; 8] = core::array::from_fn(|i| u32_a[i].min(u32_b[i]));
+    assert_eq!(
+        simd.min_u32x8(
+            u32x8::from_slice(simd, &u32_a),
+            u32x8::from_slice(simd, &u32_b),
+        )
+        .as_slice(),
+        expected_u32.as_slice(),
+    );
+}

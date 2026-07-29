@@ -57,3 +57,49 @@ fn abs_f64x4<S: Simd>(simd: S) {
     let result = simd.abs_f64x4(a);
     assert_eq!(result.as_slice(), expected.as_slice());
 }
+
+#[simd_test]
+fn abs_f32x16_special_bit_patterns<S: Simd>(simd: S) {
+    let values = [
+        -0.0,
+        0.0,
+        f32::NEG_INFINITY,
+        f32::INFINITY,
+        f32::from_bits(0xffc0_0001),
+        f32::from_bits(0x7fc0_1234),
+        f32::from_bits(0x8000_0001),
+        f32::from_bits(0x0000_0001),
+        -f32::MIN_POSITIVE,
+        f32::MIN_POSITIVE,
+        -f32::MAX,
+        f32::MAX,
+        -1.0,
+        1.0,
+        -42.5,
+        42.5,
+    ];
+    let expected = values.map(|value| value.abs().to_bits());
+    let result = simd.abs_f32x16(f32x16::from_slice(simd, &values));
+    let result_bits = (*result).map(|value| value.to_bits());
+
+    assert_eq!(result_bits, expected);
+}
+
+#[simd_test]
+fn abs_f64x8_special_bit_patterns<S: Simd>(simd: S) {
+    let values = [
+        -0.0,
+        0.0,
+        f64::NEG_INFINITY,
+        f64::INFINITY,
+        f64::from_bits(0xfff8_0000_0000_0001),
+        f64::from_bits(0x7ff8_0000_0000_1234),
+        f64::from_bits(0x8000_0000_0000_0001),
+        f64::from_bits(0x0000_0000_0000_0001),
+    ];
+    let expected = values.map(|value| value.abs().to_bits());
+    let result = simd.abs_f64x8(f64x8::from_slice(simd, &values));
+    let result_bits = (*result).map(|value| value.to_bits());
+
+    assert_eq!(result_bits, expected);
+}

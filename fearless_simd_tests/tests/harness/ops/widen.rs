@@ -35,3 +35,25 @@ fn widen_u8x32<S: Simd>(simd: S) {
         ]
     );
 }
+
+#[simd_test]
+fn widen_u8x16_all_values<S: Simd>(simd: S) {
+    for base in (0_u16..=240).step_by(16) {
+        let values: [u8; 16] = core::array::from_fn(|i| (base + i as u16) as u8);
+        let expected = values.map(u16::from);
+        let result = simd.widen_u8x16(u8x16::from_slice(simd, &values));
+
+        assert_eq!(result.as_slice(), expected.as_slice(), "input base {base}",);
+    }
+}
+
+#[simd_test]
+fn widen_u8x32_all_values<S: Simd>(simd: S) {
+    for base in (0_u16..=224).step_by(32) {
+        let values: [u8; 32] = core::array::from_fn(|i| (base + i as u16) as u8);
+        let expected = values.map(u16::from);
+        let result = simd.widen_u8x32(u8x32::from_slice(simd, &values));
+
+        assert_eq!(result.as_slice(), expected.as_slice(), "input base {base}",);
+    }
+}
