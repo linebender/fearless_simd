@@ -260,23 +260,24 @@ jobs:
       - name: build tests
         run: cargo test --no-run $CARGO_TEST_ARGS
 
-      - name: run tests on CPU with only SSE2
-        # -p4p stands for Pentium 4 Prescott, the first Intel 64-bit CPU
-        run: ${SDE_PKG}-lin/sde64 -p4p -- cargo test $CARGO_TEST_ARGS
+      - parallel:
+          - name: run tests on CPU with only SSE2
+            # -p4p stands for Pentium 4 Prescott, the first Intel 64-bit CPU
+            run: ${SDE_PKG}-lin/sde64 -p4p -- cargo test $CARGO_TEST_ARGS
 
-      - name: run tests on CPU with SSE4.2
-        # -nhm stands for Nehalem
-        run: ${SDE_PKG}-lin/sde64 -nhm -- cargo test $CARGO_TEST_ARGS
+          - name: run tests on CPU with SSE4.2
+            # -nhm stands for Nehalem
+            run: ${SDE_PKG}-lin/sde64 -nhm -- cargo test $CARGO_TEST_ARGS
 
-      - name: run tests on CPU with AVX2
-        # -hsw stands for Haswell
-        run: ${SDE_PKG}-lin/sde64 -hsw -- cargo test $CARGO_TEST_ARGS
+          - name: run tests on CPU with AVX2
+            # -hsw stands for Haswell
+            run: ${SDE_PKG}-lin/sde64 -hsw -- cargo test $CARGO_TEST_ARGS
 
-      - name: run tests on CPU with AVX-512
-        # Github Actions doesn't give us AVX-512 so this is the only way to exercise AVX-512 codepaths on CI.
-        # -icl stands for Ice Lake. Technically Skylake added AVX-512 first, but it's mostly useless there due to
-        # downclocking, so our explicit AVX-512 level targets Ice Lake.
-        run: ${SDE_PKG}-lin/sde64 -icl -- cargo test $CARGO_TEST_ARGS
+          - name: run tests on CPU with AVX-512
+            # Github Actions doesn't give us AVX-512 so this is the only way to exercise AVX-512 codepaths on CI.
+            # -icl stands for Ice Lake. Technically Skylake added AVX-512 first, but it's mostly useless there due to
+            # downclocking, so our explicit AVX-512 level targets Ice Lake.
+            run: ${SDE_PKG}-lin/sde64 -icl -- cargo test $CARGO_TEST_ARGS
 
   test-aarch64-qemu:
     # This job runs tests on an emulated CPU that only implements the baseline Aarch64
