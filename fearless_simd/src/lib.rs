@@ -404,7 +404,7 @@ impl Level {
     /// This function requires the standard library on targets other than wasm32. On wasm32, the
     /// available level is known statically, so the standard library isn't required.
     ///
-    /// On x86_64, it is sometimes possible to detect the available features on `#[no_std]`
+    /// On x86-64, it is sometimes possible to detect the available features on `#[no_std]`
     /// by parsing the output of `cpuid` instruction, but this function
     /// [does not do that](https://github.com/linebender/fearless_simd/issues/157).
     /// If you do this, you can create the SIMD token via [`new_unchecked`](Avx2::new_unchecked)
