@@ -225,7 +225,9 @@ jobs:
     env:
       # doc tests take a long time to run in the emulator and are already tested elsewhere, so exclude them with --lib --bins --tests
       # the rest of the arguments match the native test jobs
-      CARGO_TEST_ARGS: --lib --bins --tests --workspace --locked --all-features
+      CARGO_TEST_ARGS: --release --lib --bins --tests --workspace --locked --all-features
+      # explicitly enable debug assertions because we're building tests in release mode for performance
+      CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS: "true"
       # SDE package name without the platform suffix.
       SDE_PKG: sde-external-10.8.0-2026-03-15
       SDE_SHA256: 50b320cd226acef7a491f5b321fc1be3c3c7984f9e27a456e64894b5b0979dd3
