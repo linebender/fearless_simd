@@ -70,3 +70,47 @@ fn round_ties_even_f64x4<S: Simd>(simd: S) {
     let result = simd.round_ties_even_f64x4(a);
     assert_eq!(result.as_slice(), expected.as_slice());
 }
+
+#[simd_test]
+fn round_ties_even_f32x16_special_bit_patterns<S: Simd>(simd: S) {
+    let values = [
+        -0.0,
+        0.0,
+        -0.5,
+        0.5,
+        -1.5,
+        1.5,
+        -2.5,
+        2.5,
+        f32::from_bits(0x8000_0001),
+        f32::from_bits(0x0000_0001),
+        -((1_u32 << 23) as f32),
+        (1_u32 << 23) as f32,
+        f32::NEG_INFINITY,
+        f32::INFINITY,
+        -42.25,
+        42.75,
+    ];
+    let expected = values.map(|value| value.round_ties_even().to_bits());
+    let result = simd.round_ties_even_f32x16(f32x16::from_slice(simd, &values));
+
+    assert_eq!((*result).map(f32::to_bits), expected);
+}
+
+#[simd_test]
+fn round_ties_even_f64x8_special_bit_patterns<S: Simd>(simd: S) {
+    let values = [
+        -0.0,
+        0.0,
+        -0.5,
+        0.5,
+        -1.5,
+        1.5,
+        f64::NEG_INFINITY,
+        f64::INFINITY,
+    ];
+    let expected = values.map(|value| value.round_ties_even().to_bits());
+    let result = simd.round_ties_even_f64x8(f64x8::from_slice(simd, &values));
+
+    assert_eq!((*result).map(f64::to_bits), expected);
+}

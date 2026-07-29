@@ -344,3 +344,39 @@ fn mul_f64x4<S: Simd>(simd: S) {
     let result = simd.mul_f64x4(a, b);
     assert_eq!(result.as_slice(), expected.as_slice());
 }
+
+#[simd_test]
+fn mul_8bit_boundary_matrix<S: Simd>(simd: S) {
+    const VALUES: [u8; 16] = [
+        0, 1, 2, 3, 7, 15, 16, 31, 63, 64, 127, 128, 129, 200, 254, 255,
+    ];
+
+    for left_index in (0..16).step_by(4) {
+        let unsigned_left: [u8; 64] = core::array::from_fn(|i| VALUES[left_index + i / 16]);
+        let unsigned_right: [u8; 64] = core::array::from_fn(|i| VALUES[i % 16]);
+        let signed_left = unsigned_left.map(|value| value as i8);
+        let signed_right = unsigned_right.map(|value| value as i8);
+        let expected_unsigned: [u8; 64] =
+            core::array::from_fn(|i| unsigned_left[i].wrapping_mul(unsigned_right[i]));
+        let expected_signed: [i8; 64] =
+            core::array::from_fn(|i| signed_left[i].wrapping_mul(signed_right[i]));
+
+        let unsigned_left = u8x64::from_slice(simd, &unsigned_left);
+        let unsigned_right = u8x64::from_slice(simd, &unsigned_right);
+        let signed_left = i8x64::from_slice(simd, &signed_left);
+        let signed_right = i8x64::from_slice(simd, &signed_right);
+
+        assert_eq!(
+            simd.mul_u8x64(unsigned_left, unsigned_right).as_slice(),
+            expected_unsigned.as_slice(),
+            "unsigned left indices {left_index}..{}",
+            left_index + 4,
+        );
+        assert_eq!(
+            simd.mul_i8x64(signed_left, signed_right).as_slice(),
+            expected_signed.as_slice(),
+            "signed left indices {left_index}..{}",
+            left_index + 4,
+        );
+    }
+}
