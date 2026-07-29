@@ -235,6 +235,8 @@ impl Level for X86 {
         quote! {
             #[doc = #description_doc]
             ///
+            /// Most users should safely obtain the token from [`Level::new`] instead of calling this function.
+            ///
             /// This function can be called without an `unsafe` block from a function
             /// with all the required target features enabled via the `#[target_feature]` annotation.
             ///

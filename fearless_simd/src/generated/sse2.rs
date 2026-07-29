@@ -90,6 +90,8 @@ pub struct Sse2 {
 impl Sse2 {
     #[doc = "Create a SIMD token proving that SSE2 is available.\n\nThis is the baseline on x86-64 and i686 targets. On i586 it needs runtime detection."]
     #[doc = r""]
+    #[doc = r" Most users should safely obtain the token from [`Level::new`] instead of calling this function."]
+    #[doc = r""]
     #[doc = r" This function can be called without an `unsafe` block from a function"]
     #[doc = r" with all the required target features enabled via the `#[target_feature]` annotation."]
     #[doc = r""]

@@ -23,6 +23,8 @@ pub struct Sse4_2 {
 impl Sse4_2 {
     #[doc = "Create a SIMD token proving that the x86-64-v2 features are available."]
     #[doc = r""]
+    #[doc = r" Most users should safely obtain the token from [`Level::new`] instead of calling this function."]
+    #[doc = r""]
     #[doc = r" This function can be called without an `unsafe` block from a function"]
     #[doc = r" with all the required target features enabled via the `#[target_feature]` annotation."]
     #[doc = r""]
