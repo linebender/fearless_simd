@@ -252,8 +252,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f32x4<Avx512>, indices: u8x16<Avx512>) -> f32x4<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -850,8 +850,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x16<Avx512>, indices: u8x16<Avx512>) -> i8x16<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -1396,8 +1396,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x16<Avx512>, indices: u8x16<Avx512>) -> u8x16<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -2042,8 +2042,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i16x8<Avx512>, indices: u8x16<Avx512>) -> i16x8<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -2506,8 +2506,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u16x8<Avx512>, indices: u8x16<Avx512>) -> u16x8<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -3079,8 +3079,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i32x4<Avx512>, indices: u8x16<Avx512>) -> i32x4<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -3527,8 +3527,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u32x4<Avx512>, indices: u8x16<Avx512>) -> u32x4<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -4093,8 +4093,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f64x2<Avx512>, indices: u8x16<Avx512>) -> f64x2<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -4582,8 +4582,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i64x2<Avx512>, indices: u8x16<Avx512>) -> i64x2<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -5010,8 +5010,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u64x2<Avx512>, indices: u8x16<Avx512>) -> u64x2<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range = _mm_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm_set1_epi8(16));
-                let result = _mm_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm_min_epu8(indices, _mm_set1_epi8(16));
+                let result = _mm_permutex2var_epi8(bytes, indices, _mm_setzero_si128());
                 let result_bytes = u8x16 {
                     val: crate::support::Aligned128(result),
                     simd: token,
@@ -5616,9 +5616,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f32x8<Avx512>, indices: u8x32<Avx512>) -> f32x8<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -6380,9 +6379,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x32<Avx512>, indices: u8x32<Avx512>) -> i8x32<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -7098,9 +7096,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x32<Avx512>, indices: u8x32<Avx512>) -> u8x32<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -7902,9 +7899,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i16x16<Avx512>, indices: u8x32<Avx512>) -> i16x16<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -8494,9 +8490,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u16x16<Avx512>, indices: u8x32<Avx512>) -> u16x16<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -9199,9 +9194,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i32x8<Avx512>, indices: u8x32<Avx512>) -> i32x8<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -9743,9 +9737,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u32x8<Avx512>, indices: u8x32<Avx512>) -> u32x8<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -10411,9 +10404,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f64x4<Avx512>, indices: u8x32<Avx512>) -> f64x4<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -10988,9 +10980,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i64x4<Avx512>, indices: u8x32<Avx512>) -> i64x4<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -11490,9 +11481,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u64x4<Avx512>, indices: u8x32<Avx512>) -> u64x4<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm256_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm256_set1_epi8(32));
-                let result = _mm256_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm256_min_epu8(indices, _mm256_set1_epi8(32));
+                let result = _mm256_permutex2var_epi8(bytes, indices, _mm256_setzero_si256());
                 let result_bytes = u8x32 {
                     val: crate::support::Aligned256(result),
                     simd: token,
@@ -12184,9 +12174,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f32x16<Avx512>, indices: u8x64<Avx512>) -> f32x16<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
@@ -13119,9 +13108,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i8x64<Avx512>, indices: u8x64<Avx512>) -> i8x64<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
@@ -13973,9 +13961,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u8x64<Avx512>, indices: u8x64<Avx512>) -> u8x64<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
@@ -14870,9 +14857,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i16x32<Avx512>, indices: u8x64<Avx512>) -> i16x32<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
@@ -15535,9 +15521,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u16x32<Avx512>, indices: u8x64<Avx512>) -> u16x32<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
@@ -16313,9 +16298,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i32x16<Avx512>, indices: u8x64<Avx512>) -> i32x16<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
@@ -16906,9 +16890,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u32x16<Avx512>, indices: u8x64<Avx512>) -> u32x16<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
@@ -17624,9 +17607,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: f64x8<Avx512>, indices: u8x64<Avx512>) -> f64x8<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
@@ -18228,9 +18210,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: i64x8<Avx512>, indices: u8x64<Avx512>) -> i64x8<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,
@@ -18753,9 +18734,8 @@ impl Simd for Avx512 {
             fn kernel(token: Avx512, a: u64x8<Avx512>, indices: u8x64<Avx512>) -> u64x8<Avx512> {
                 let bytes = Bytes::to_bytes(a).val.0;
                 let indices = indices.into();
-                let in_range =
-                    _mm512_cmp_epu8_mask::<{ _MM_CMPINT_LT }>(indices, _mm512_set1_epi8(64));
-                let result = _mm512_maskz_permutexvar_epi8(in_range, indices, bytes);
+                let indices = _mm512_min_epu8(indices, _mm512_set1_epi8(64));
+                let result = _mm512_permutex2var_epi8(bytes, indices, _mm512_setzero_si512());
                 let result_bytes = u8x64 {
                     val: crate::support::Aligned512(result),
                     simd: token,

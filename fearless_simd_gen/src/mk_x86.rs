@@ -2873,16 +2873,19 @@ impl X86 {
                     let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                 },
                 (Self::Avx512, 128 | 256 | 512) => {
-                    let cmp = intrinsic_ident("cmp", "epu8_mask", vec_ty.n_bits());
-                    let maskz_permute =
-                        intrinsic_ident("maskz_permutexvar", "epi8", vec_ty.n_bits());
+                    let min = intrinsic_ident("min", "epu8", vec_ty.n_bits());
+                    let permute = intrinsic_ident("permutex2var", "epi8", vec_ty.n_bits());
                     let set1 = set1_intrinsic(&bytes_ty);
+                    let setzero =
+                        intrinsic_ident("setzero", coarse_type(&bytes_ty), vec_ty.n_bits());
                     let byte_count = signed_literal(bytes_ty.len as u64, 8);
                     quote! {
                         let bytes = Bytes::to_bytes(a).val.0;
                         let indices = indices.into();
-                        let in_range = #cmp::<{ _MM_CMPINT_LT }>(indices, #set1(#byte_count));
-                        let result = #maskz_permute(in_range, indices, bytes);
+                        // Clamp out-of-range indices to the first byte of a
+                        // second, all-zero table.
+                        let indices = #min(indices, #set1(#byte_count));
+                        let result = #permute(bytes, indices, #setzero());
                         let result_bytes = #bytes { val: #wrapper(result), simd: #token };
                     }
                 }
