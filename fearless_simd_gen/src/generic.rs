@@ -79,9 +79,10 @@ pub(crate) fn integer_lane_mask_splat_arg(vec_ty: &VecType) -> TokenStream {
     }
 }
 
-/// Implementation based on split/combine
+/// Generic operation implementations.
 ///
-/// Only suitable for lane-wise and block-wise operations
+/// Most operations are implemented using split/combine, while some forward to
+/// another operation with compatible semantics.
 pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
     let split = generic_op_name("split", ty);
     let half = VecType::new(ty.scalar, ty.scalar_bits, ty.len / 2);
@@ -133,6 +134,14 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                         self.#do_half(a0, indices0),
                         self.#do_half(a1, indices1),
                     )
+                }
+            }
+        }
+        OpSig::SwizzleDyn => {
+            let precise = generic_op_name("swizzle_dyn_precise", ty);
+            quote! {
+                #method_sig {
+                    self.#precise(a, indices)
                 }
             }
         }

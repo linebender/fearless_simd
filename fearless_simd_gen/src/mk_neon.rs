@@ -478,6 +478,9 @@ impl Level for Neon {
                     }
                 })
             }
+            OpSig::SwizzleDyn => {
+                unreachable!("relaxed swizzles use the generic precise forwarding implementation")
+            }
             OpSig::SwizzleDynPrecise => {
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes = bytes_ty.rust();

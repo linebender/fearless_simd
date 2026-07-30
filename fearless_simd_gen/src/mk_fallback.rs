@@ -142,6 +142,13 @@ impl Level for Fallback {
         }
     }
 
+    fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
+        if matches!(op.sig, OpSig::SwizzleDyn) {
+            return false;
+        }
+        op.sig.should_use_generic_op(vec_ty, self.native_width())
+    }
+
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
         let method_sig = op.simd_trait_method_sig(vec_ty);
@@ -416,6 +423,31 @@ impl Level for Fallback {
                     self.native_width(),
                     "wide swizzles should use the generic split implementation"
                 );
+                let bytes_ty = vec_ty.bytes_ty();
+                let bytes_rust = bytes_ty.rust();
+                let byte_count = bytes_ty.len;
+                let items = make_list(
+                    (0..byte_count)
+                        .map(|idx| {
+                            quote! {
+                                {
+                                    let index = indices[#idx] as usize;
+                                    bytes[index % #byte_count]
+                                }
+                            }
+                        })
+                        .collect::<Vec<_>>(),
+                );
+
+                quote! {
+                    #method_sig {
+                        let bytes = Bytes::to_bytes(a);
+                        let result: #bytes_rust<Self> = #items.simd_into(self);
+                        Bytes::from_bytes(result)
+                    }
+                }
+            }
+            OpSig::SwizzleDyn => {
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes_rust = bytes_ty.rust();
                 let byte_count = bytes_ty.len;

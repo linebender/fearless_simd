@@ -252,6 +252,10 @@ impl Level for X86 {
     }
 
     fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
+        if matches!(op.sig, OpSig::SwizzleDyn) {
+            return false;
+        }
+
         if *self == Self::Avx512
             && matches!(
                 op.sig,
@@ -302,6 +306,7 @@ impl Level for X86 {
                 unreachable!("element moves use generic lowering")
             }
             OpSig::SwizzleDynWithinBlocks => self.handle_swizzle_dyn_within_blocks(op, vec_ty),
+            OpSig::SwizzleDyn => self.handle_swizzle_dyn(op, vec_ty),
             OpSig::SwizzleDynPrecise => self.handle_swizzle_dyn_precise(op, vec_ty),
             OpSig::Cvt {
                 target_ty,
@@ -2808,6 +2813,70 @@ impl X86 {
                 quote! {
                     let result = #shuffle(Bytes::to_bytes(a).val.0, indices.into());
                 }
+            };
+
+            quote! {
+                #body
+                Bytes::from_bytes(#bytes {
+                    val: #wrapper(result),
+                    simd: #token,
+                })
+            }
+        })
+    }
+
+    pub(crate) fn handle_swizzle_dyn(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let bytes_ty = vec_ty.bytes_ty();
+        let bytes = bytes_ty.rust();
+        let wrapper = bytes_ty.aligned_wrapper();
+
+        if *self == Self::Sse2 || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512) {
+            return fallback_method(op, vec_ty);
+        }
+
+        // Emulated double-native-width variants delegate to swizzle_dyn_precise
+        // because zeroes let us cheaply join the two halves, and on AVX2 zeroing is already very cheap
+        // through a clever trick: https://shnatsel.github.io/improving-std-simd-swizzle-dyn/#optimizing-avx2
+        if matches!(
+            (*self, vec_ty.n_bits()),
+            (Self::Sse4_2, 256) | (Self::Avx2, 512)
+        ) {
+            let method_sig = op.simd_trait_method_sig(vec_ty);
+            let precise = generic_op_name("swizzle_dyn_precise", vec_ty);
+            return quote! {
+                #method_sig {
+                    self.#precise(a, indices)
+                }
+            };
+        }
+
+        // lower into native ops for native-width vectors
+        self.kernel_method(op, vec_ty, |token| {
+            let body = match (*self, vec_ty.n_bits()) {
+                (Self::Sse4_2 | Self::Avx2, 128) => quote! {
+                    let result =
+                        _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, indices.into());
+                },
+                (Self::Avx2, 256) => quote! {
+                    let bytes = Bytes::to_bytes(a).val.0;
+                    let indices = indices.into();
+                    let lolo = _mm256_permute2x128_si256::<0x00>(bytes, bytes);
+                    let hihi = _mm256_permute2x128_si256::<0x11>(bytes, bytes);
+
+                    // Move index bit 4 into each byte's sign bit for VPBLENDVB.
+                    let select_high = _mm256_slli_epi16::<3>(indices);
+                    let from_low = _mm256_shuffle_epi8(lolo, indices);
+                    let from_high = _mm256_shuffle_epi8(hihi, indices);
+                    let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                },
+                (Self::Avx512, 128 | 256 | 512) => {
+                    let permute = intrinsic_ident("permutexvar", "epi8", vec_ty.n_bits());
+                    quote! {
+                        let result =
+                            #permute(indices.into(), Bytes::to_bytes(a).val.0);
+                    }
+                }
+                _ => unreachable!(),
             };
 
             quote! {

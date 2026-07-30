@@ -518,6 +518,9 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
+            OpSig::SwizzleDyn => {
+                unreachable!("relaxed swizzles use the generic precise forwarding implementation")
+            }
             OpSig::SwizzleDynPrecise => match vec_ty.n_bits() {
                 128 => {
                     let bytes_ty = vec_ty.bytes_ty();
