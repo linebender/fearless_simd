@@ -129,6 +129,9 @@ impl<T, S: Simd> SimdFrom<T, S> for T {
 pub trait SimdElement: Copy + Seal {
     /// The associated mask lane type. This will be a signed integer of the same size as this type.
     type Mask: SimdElement<Mask = Self::Mask>;
+
+    /// The size of an element in bits.
+    const BITS: usize = size_of::<Self>() * u8::BITS as usize;
 }
 
 impl SimdElement for f32 {
