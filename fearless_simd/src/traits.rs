@@ -129,46 +129,59 @@ impl<T, S: Simd> SimdFrom<T, S> for T {
 pub trait SimdElement: Copy + Seal {
     /// The associated mask lane type. This will be a signed integer of the same size as this type.
     type Mask: SimdElement<Mask = Self::Mask>;
+
+    /// The size of an element in bits.
+    const BITS: usize;
 }
 
 impl SimdElement for f32 {
     type Mask = i32;
+    const BITS: usize = 32;
 }
 
 impl SimdElement for f64 {
     type Mask = i64;
+    const BITS: usize = 64;
 }
 
 impl SimdElement for u8 {
     type Mask = i8;
+    const BITS: usize = 8;
 }
 
 impl SimdElement for i8 {
     type Mask = Self;
+    const BITS: usize = 8;
 }
 
 impl SimdElement for u16 {
     type Mask = i16;
+    const BITS: usize = 16;
 }
 
 impl SimdElement for i16 {
     type Mask = Self;
+    const BITS: usize = 16;
 }
 
 impl SimdElement for u32 {
     type Mask = i32;
+    const BITS: usize = 32;
 }
 
 impl SimdElement for i32 {
     type Mask = Self;
+    const BITS: usize = 32;
 }
 
 impl SimdElement for u64 {
     type Mask = i64;
+    const BITS: usize = 64;
 }
 
 impl SimdElement for i64 {
     type Mask = Self;
+    const BITS: usize = 64;
 }
 
 /// Construction of integer vectors from floats by truncation
