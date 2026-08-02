@@ -17,6 +17,7 @@ You can find its changes [documented below](#060-2026-07-10).
 
 ### Changed
 
+- The `new_unchecked()` function on SIMD level tokens such as `Avx2` has been renamed to `assume_supported()` and is now safe to call from contexts that already contain the appropriate `#[target_feature]` annotations. Functions without such annotations can still call `assume_supported()` with an `unsafe` block. ([#293][] by [@Shnatsel][])
 - On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
 - The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
 - All native-width non-mask vector types now share `u8s` as their byte representation, enabling `Bytes::bitcast` between arbitrary lane types in code generic over `Simd`. The byte representation of any `SimdBase` type is now also guaranteed to be an idempotent, same-token `u8` SIMD vector, so it can be manipulated directly in generic code.
@@ -285,6 +286,7 @@ No changelog was kept for this release.
 [#264]: https://github.com/linebender/fearless_simd/pull/264
 [#266]: https://github.com/linebender/fearless_simd/pull/266
 [#270]: https://github.com/linebender/fearless_simd/pull/270
+[#270]: https://github.com/linebender/fearless_simd/pull/293
 
 [Unreleased]: https://github.com/linebender/fearless_simd/compare/v0.6.0...HEAD
 [0.6.0]: https://github.com/linebender/fearless_simd/compare/v0.5.0...v0.6.0

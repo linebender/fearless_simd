@@ -130,8 +130,17 @@ impl Level for WasmSimd128 {
 
     fn make_impl_body(&self) -> TokenStream {
         quote! {
+            /// Create a SIMD token proving that the WebAssembly `simd128` feature is enabled.
+            ///
+            /// WebAssembly does not support runtime feature detection, so this function is only
+            /// available when the library is compiled with `simd128` enabled.
+            //
+            // This cfg is redundant with the gate on the containing module.
+            // Keep it here anyway to avoid relying on non-local invariants,
+            // since the surrounding code might change in the future.
+            #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
             #[inline]
-            pub const fn new_unchecked() -> Self {
+            pub const fn assume_supported() -> Self {
                 Self { _private: () }
             }
         }

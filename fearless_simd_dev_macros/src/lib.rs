@@ -71,7 +71,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #ignore_neon
         fn #neon_name() {
             if std::arch::is_aarch64_feature_detected!("neon") {
-                let neon = unsafe { fearless_simd::aarch64::Neon::new_unchecked() };
+                let neon = unsafe { fearless_simd::aarch64::Neon::assume_supported() };
                 #input_fn_name(neon);
             }
         }
@@ -87,7 +87,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
                 && std::arch::is_x86_feature_detected!("cmpxchg16b")
                 && std::arch::is_x86_feature_detected!("popcnt")
             {
-                let sse4 = unsafe { fearless_simd::x86::Sse4_2::new_unchecked() };
+                let sse4 = unsafe { fearless_simd::x86::Sse4_2::assume_supported() };
                 sse4.vectorize(
                     #[inline(always)]
                     || #input_fn_name(sse4)
@@ -105,7 +105,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
                 && std::arch::is_x86_feature_detected!("sse")
                 && std::arch::is_x86_feature_detected!("sse2")
             {
-                let sse2 = unsafe { fearless_simd::x86::Sse2::new_unchecked() };
+                let sse2 = unsafe { fearless_simd::x86::Sse2::assume_supported() };
                 sse2.vectorize(
                     #[inline(always)]
                     || #input_fn_name(sse2)
@@ -131,7 +131,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
                 && std::arch::is_x86_feature_detected!("popcnt")
                 && std::arch::is_x86_feature_detected!("xsave")
             {
-                let avx2 = unsafe { fearless_simd::x86::Avx2::new_unchecked() };
+                let avx2 = unsafe { fearless_simd::x86::Avx2::assume_supported() };
                 avx2.vectorize(
                     #[inline(always)]
                     || #input_fn_name(avx2)
@@ -178,7 +178,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
                 && std::arch::is_x86_feature_detected!("xsaveopt")
                 && std::arch::is_x86_feature_detected!("xsaves")
             {
-                let avx512 = unsafe { fearless_simd::x86::Avx512::new_unchecked() };
+                let avx512 = unsafe { fearless_simd::x86::Avx512::assume_supported() };
                 avx512.vectorize(
                     #[inline(always)]
                     || #input_fn_name(avx512)
@@ -192,7 +192,7 @@ pub fn simd_test(_: TokenStream, item: TokenStream) -> TokenStream {
         #[test]
         #ignore_wasm
         fn #wasm_name() {
-            let wasm = unsafe { fearless_simd::wasm32::WasmSimd128::new_unchecked() };
+            let wasm = unsafe { fearless_simd::wasm32::WasmSimd128::assume_supported() };
             #input_fn_name(wasm);
         }
     };

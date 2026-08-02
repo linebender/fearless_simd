@@ -21,15 +21,19 @@ pub struct Avx2 {
     _private: (),
 }
 impl Avx2 {
-    #[doc = r" Create a SIMD token."]
+    #[doc = "Create a SIMD token proving that the x86-64-v3 features are available."]
+    #[doc = r""]
+    #[doc = r" Most users should safely obtain the token from [`Level::new`] instead of calling this function."]
+    #[doc = r""]
+    #[doc = r" This function can be called without an `unsafe` block from a function"]
+    #[doc = r" with all the required target features enabled via the `#[target_feature]` annotation."]
     #[doc = r""]
     #[doc = r" # Safety"]
     #[doc = r""]
-    #[doc = r" The `fxsr`, `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`,"]
-    #[doc = r" `fma`, `lzcnt`, `movbe`, `popcnt`, and `xsave` CPU features"]
-    #[doc = r" must be available."]
+    #[doc = "When invoking this function through an `unsafe` block, the caller must ensure that the current CPU supports `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`, `fxsr`, `lzcnt`, `movbe`, `popcnt`, `xsave`."]
     #[inline]
-    pub const unsafe fn new_unchecked() -> Self {
+    #[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,xsave")]
+    pub const fn assume_supported() -> Self {
         Self { _private: () }
     }
 }
@@ -100,7 +104,7 @@ impl Simd for Avx2 {
     #[inline]
     fn vectorize<F: FnOnce() -> R, R>(self, f: F) -> R {
         #[target_feature(
-            enable = "fxsr,avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,lzcnt,movbe,popcnt,xsave"
+            enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,xsave"
         )]
         fn vectorize_avx2<F: FnOnce() -> R, R>(f: F) -> R {
             f()

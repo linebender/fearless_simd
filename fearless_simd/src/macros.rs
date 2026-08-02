@@ -434,10 +434,10 @@ mod tests {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[allow(dead_code, reason = "Compile test")]
     fn x86_level_variants_remain_available() {
-        let _ = Level::Sse2(unsafe { crate::Sse2::new_unchecked() });
-        let _ = Level::Sse4_2(unsafe { crate::Sse4_2::new_unchecked() });
-        let _ = Level::Avx2(unsafe { crate::Avx2::new_unchecked() });
-        let _ = Level::Avx512(unsafe { crate::Avx512::new_unchecked() });
+        let _ = Level::Sse2(unsafe { crate::Sse2::assume_supported() });
+        let _ = Level::Sse4_2(unsafe { crate::Sse4_2::assume_supported() });
+        let _ = Level::Avx2(unsafe { crate::Avx2::assume_supported() });
+        let _ = Level::Avx512(unsafe { crate::Avx512::assume_supported() });
     }
 
     #[allow(dead_code, reason = "Compile test")]

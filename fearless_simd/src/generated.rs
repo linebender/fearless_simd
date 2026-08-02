@@ -31,7 +31,6 @@
         all(not(target_arch = "x86_64"), not(target_arch = "wasm32"))
     ),
     expect(
-        clippy::missing_safety_doc,
         clippy::new_without_default,
         reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
     )

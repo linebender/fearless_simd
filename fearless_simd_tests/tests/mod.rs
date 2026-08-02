@@ -17,6 +17,7 @@ mod generics;
 mod harness;
 #[cfg(not(miri))] // too slow
 mod soundness;
+mod token_soundness;
 
 #[allow(clippy::allow_attributes, reason = "Only needed in some cfgs.")]
 #[allow(

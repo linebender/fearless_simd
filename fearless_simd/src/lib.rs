@@ -310,7 +310,7 @@ fn x86_detects_icelake_avx512() -> bool {
 fn detect_x86_level() -> Level {
     if x86_detects_icelake_avx512() {
         // Safety: All features required by Avx512 were detected above.
-        unsafe { Level::Avx512(Avx512::new_unchecked()) }
+        unsafe { Level::Avx512(Avx512::assume_supported()) }
     // Feature list sourced from `rustc --print=cfg --target x86_64-unknown-linux-gnu -C target-cpu=x86-64-v3`
     // However, the following features are implied by avx2 and do not need to be spelled out:
     // avx,sse,sse2,sse3,sse4.1,sse4.2,ssse3
@@ -329,7 +329,7 @@ fn detect_x86_level() -> Level {
         && std::arch::is_x86_feature_detected!("xsave")
     {
         // Safety: All features required by Avx2 were detected above.
-        unsafe { Level::Avx2(Avx2::new_unchecked()) }
+        unsafe { Level::Avx2(Avx2::assume_supported()) }
     // All x86 CPUs that ever shipped with sse4.2 also have cmpxchg16b and popcnt:
     // Intel Nehalem, AMD Bulldozer and VIA Isaiah II were the first with SSE4.2
     // and have these extensions already.
@@ -345,12 +345,12 @@ fn detect_x86_level() -> Level {
         && std::arch::is_x86_feature_detected!("popcnt")
     {
         // Safety: All features required by Sse4_2 were detected above.
-        unsafe { Level::Sse4_2(Sse4_2::new_unchecked()) }
+        unsafe { Level::Sse4_2(Sse4_2::assume_supported()) }
     } else if std::arch::is_x86_feature_detected!("sse2")
         && std::arch::is_x86_feature_detected!("fxsr")
     {
         // Safety: All features required by Sse2 were detected above.
-        unsafe { Level::Sse2(Sse2::new_unchecked()) }
+        unsafe { Level::Sse2(Sse2::assume_supported()) }
     } else {
         Level::Fallback(Fallback::new())
     }
@@ -407,7 +407,7 @@ impl Level {
     /// On x86-64, it is sometimes possible to detect the available features on `#[no_std]`
     /// by parsing the output of `cpuid` instruction, but this function
     /// [does not do that](https://github.com/linebender/fearless_simd/issues/157).
-    /// If you do this, you can create the SIMD token via [`new_unchecked`](Avx2::new_unchecked)
+    /// If you do this, you can create the SIMD token via [`assume_supported`](Avx2::assume_supported)
     /// and then get the [level](Simd::level) from it.
     ///
     /// Libraries that use SIMD on `#[no_std]` should let the user pass the appropriate SIMD level
@@ -498,7 +498,7 @@ impl Level {
 
     /// If this is a proof that SSE2 (or better) is available, access that instruction set.
     ///
-    /// See [`Sse2::new_unchecked`] for the exact list of CPU features this token enables.
+    /// See [`Sse2::assume_supported`] for the exact list of CPU features this token enables.
     ///
     /// This method should be preferred over matching against the `Sse2` variant of self,
     /// because if the CPU supports a superset of SSE2 (e.g. SSE4.2, AVX2, or AVX-512),
@@ -512,9 +512,9 @@ impl Level {
         match self {
             // Safety: Every stronger x86 SIMD level in this crate includes the `fxsr`,
             // `sse`, and `sse2` features required by Sse2.
-            Self::Avx512(_avx512) => unsafe { Some(Sse2::new_unchecked()) },
-            Self::Avx2(_avx2) => unsafe { Some(Sse2::new_unchecked()) },
-            Self::Sse4_2(_sse4_2) => unsafe { Some(Sse2::new_unchecked()) },
+            Self::Avx512(_avx512) => unsafe { Some(Sse2::assume_supported()) },
+            Self::Avx2(_avx2) => unsafe { Some(Sse2::assume_supported()) },
+            Self::Sse4_2(_sse4_2) => unsafe { Some(Sse2::assume_supported()) },
             Self::Sse2(sse2) => Some(sse2),
             #[allow(
                 unreachable_patterns,
@@ -527,7 +527,7 @@ impl Level {
     /// If this is a proof that x86-64-v2 feature set (or better) is available, access that
     /// instruction set.
     ///
-    /// See [`Sse4_2::new_unchecked`] for the exact list of CPU features this token enables.
+    /// See [`Sse4_2::assume_supported`] for the exact list of CPU features this token enables.
     ///
     /// This method should be preferred over matching against the `Sse4_2` variant of self,
     /// because if the CPU supports a superset of SSE4.2 (e.g. AVX2 or AVX-512),
@@ -541,10 +541,10 @@ impl Level {
         match self {
             // Safety: The Avx512 struct represents an Ice Lake feature set, which includes the
             // `sse4.2`, `cmpxchg16b`, and `popcnt` features required by Sse4_2.
-            Self::Avx512(_avx512) => unsafe { Some(Sse4_2::new_unchecked()) },
+            Self::Avx512(_avx512) => unsafe { Some(Sse4_2::assume_supported()) },
             // Safety: The Avx2 struct represents the x86-64-v3 feature set being enabled, which
             // includes the `sse4.2`, `cmpxchg16b`, and `popcnt` features required by Sse4_2.
-            Self::Avx2(_avx) => unsafe { Some(Sse4_2::new_unchecked()) },
+            Self::Avx2(_avx) => unsafe { Some(Sse4_2::assume_supported()) },
             Self::Sse4_2(sse42) => Some(sse42),
             _ => None,
         }
@@ -553,7 +553,7 @@ impl Level {
     /// If this is a proof that the x86-64-v3 feature set (or better) is available, access that
     /// instruction set.
     ///
-    /// See [`Avx2::new_unchecked`] for the exact list of CPU features this token enables.
+    /// See [`Avx2::assume_supported`] for the exact list of CPU features this token enables.
     ///
     /// This method should be preferred over matching against the `Avx2` variant of self,
     /// because if the CPU supports a superset of AVX2 (e.g. AVX-512),
@@ -570,7 +570,7 @@ impl Level {
         )]
         match self {
             // Safety: The Ice Lake AVX-512 feature set includes the x86-64-v3 features required by Avx2.
-            Self::Avx512(_avx512) => unsafe { Some(Avx2::new_unchecked()) },
+            Self::Avx512(_avx512) => unsafe { Some(Avx2::assume_supported()) },
             Self::Avx2(avx2) => Some(avx2),
             _ => None,
         }
@@ -579,7 +579,7 @@ impl Level {
     /// If this is a proof that the Ice Lake AVX-512 feature set is available, access that
     /// instruction set.
     ///
-    /// See [`Avx512::new_unchecked`] for the exact list of CPU features this token enables.
+    /// See [`Avx512::assume_supported`] for the exact list of CPU features this token enables.
     ///
     /// This can be used in combination with the [kernel] macro to safely access level-specific
     /// SIMD intrinsics.
@@ -629,7 +629,7 @@ impl Level {
         #[cfg(target_arch = "aarch64")]
         {
             #[cfg(target_feature = "neon")]
-            return unsafe { Self::Neon(Neon::new_unchecked()) };
+            return unsafe { Self::Neon(Neon::assume_supported()) };
             #[cfg(not(target_feature = "neon"))]
             return Self::Fallback(Fallback::new());
         }
@@ -669,7 +669,7 @@ impl Level {
                 target_feature = "xsaveopt",
                 target_feature = "xsaves"
             ))]
-            return unsafe { Self::Avx512(Avx512::new_unchecked()) };
+            return unsafe { Self::Avx512(Avx512::assume_supported()) };
             #[cfg(all(
                 target_feature = "avx2",
                 target_feature = "bmi1",
@@ -717,7 +717,7 @@ impl Level {
                     target_feature = "xsaves"
                 ))
             ))]
-            return unsafe { Self::Avx2(Avx2::new_unchecked()) };
+            return unsafe { Self::Avx2(Avx2::assume_supported()) };
             #[cfg(all(
                 all(
                     target_feature = "fxsr",
@@ -739,7 +739,7 @@ impl Level {
                     target_feature = "xsave"
                 ))
             ))]
-            return unsafe { Self::Sse4_2(Sse4_2::new_unchecked()) };
+            return unsafe { Self::Sse4_2(Sse4_2::assume_supported()) };
             #[cfg(all(
                 target_feature = "sse2",
                 target_feature = "fxsr",
@@ -750,14 +750,14 @@ impl Level {
                     target_feature = "popcnt"
                 ))
             ))]
-            return unsafe { Self::Sse2(Sse2::new_unchecked()) };
+            return unsafe { Self::Sse2(Sse2::assume_supported()) };
             #[cfg(not(all(target_feature = "sse2", target_feature = "fxsr")))]
             return Self::Fallback(Fallback::new());
         }
         #[cfg(target_arch = "wasm32")]
         {
             #[cfg(target_feature = "simd128")]
-            return Self::WasmSimd128(WasmSimd128::new_unchecked());
+            return Self::WasmSimd128(WasmSimd128::assume_supported());
             #[cfg(not(target_feature = "simd128"))]
             return Self::Fallback(Fallback::new());
         }

@@ -18,8 +18,13 @@ pub struct WasmSimd128 {
     _private: (),
 }
 impl WasmSimd128 {
+    #[doc = r" Create a SIMD token proving that the WebAssembly `simd128` feature is enabled."]
+    #[doc = r""]
+    #[doc = r" WebAssembly does not support runtime feature detection, so this function is only"]
+    #[doc = r" available when the library is compiled with `simd128` enabled."]
+    #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[inline]
-    pub const fn new_unchecked() -> Self {
+    pub const fn assume_supported() -> Self {
         Self { _private: () }
     }
 }
