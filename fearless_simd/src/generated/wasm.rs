@@ -22,6 +22,7 @@ impl WasmSimd128 {
     #[doc = r""]
     #[doc = r" WebAssembly does not support runtime feature detection, so this function is only"]
     #[doc = r" available when the library is compiled with `simd128` enabled."]
+    #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[inline]
     pub const fn new_unchecked() -> Self {
         Self { _private: () }
