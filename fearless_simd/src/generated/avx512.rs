@@ -43,7 +43,7 @@ impl Avx512 {
     #[target_feature(
         enable = "adx,aes,avx512bitalg,avx512bw,avx512cd,avx512dq,avx512f,avx512ifma,avx512vbmi,avx512vbmi2,avx512vl,avx512vnni,avx512vpopcntdq,bmi1,bmi2,cmpxchg16b,fma,fxsr,gfni,lzcnt,movbe,pclmulqdq,popcnt,rdrand,rdseed,sha,vaes,vpclmulqdq,xsave,xsavec,xsaveopt,xsaves"
     )]
-    pub const fn new_unchecked() -> Self {
+    pub const fn assume_supported() -> Self {
         Self { _private: () }
     }
 }

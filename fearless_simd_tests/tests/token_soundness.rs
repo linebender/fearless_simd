@@ -3,37 +3,37 @@
 
 fearless_simd::kernel!(
     fn create_neon_token(_neon: Neon) -> fearless_simd::Neon {
-        fearless_simd::Neon::new_unchecked()
+        fearless_simd::Neon::assume_supported()
     }
 );
 
 fearless_simd::kernel!(
     fn create_wasm_simd128_token(_wasm_simd128: WasmSimd128) -> fearless_simd::WasmSimd128 {
-        fearless_simd::WasmSimd128::new_unchecked()
+        fearless_simd::WasmSimd128::assume_supported()
     }
 );
 
 fearless_simd::kernel!(
     fn create_sse2_token(_sse2: Sse2) -> fearless_simd::Sse2 {
-        fearless_simd::Sse2::new_unchecked()
+        fearless_simd::Sse2::assume_supported()
     }
 );
 
 fearless_simd::kernel!(
     fn create_sse4_2_token(_sse4_2: Sse4_2) -> fearless_simd::Sse4_2 {
-        fearless_simd::Sse4_2::new_unchecked()
+        fearless_simd::Sse4_2::assume_supported()
     }
 );
 
 fearless_simd::kernel!(
     fn create_avx2_token(_avx2: Avx2) -> fearless_simd::Avx2 {
-        fearless_simd::Avx2::new_unchecked()
+        fearless_simd::Avx2::assume_supported()
     }
 );
 
 fearless_simd::kernel!(
     fn create_avx512_token(_avx512: Avx512) -> fearless_simd::Avx512 {
-        fearless_simd::Avx512::new_unchecked()
+        fearless_simd::Avx512::assume_supported()
     }
 );
 

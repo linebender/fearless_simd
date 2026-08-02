@@ -28,7 +28,7 @@ impl Neon {
     #[doc = r" the current CPU supports `neon`."]
     #[inline]
     #[target_feature(enable = "neon")]
-    pub const fn new_unchecked() -> Self {
+    pub const fn assume_supported() -> Self {
         Neon { _private: () }
     }
 }

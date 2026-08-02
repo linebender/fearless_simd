@@ -100,7 +100,7 @@ impl Sse2 {
     #[doc = "When invoking this function through an `unsafe` block, the caller must ensure that the current CPU supports `fxsr`, `sse`, `sse2`."]
     #[inline]
     #[target_feature(enable = "fxsr,sse,sse2")]
-    pub const fn new_unchecked() -> Self {
+    pub const fn assume_supported() -> Self {
         Self { _private: () }
     }
 }

@@ -33,7 +33,7 @@ impl Avx2 {
     #[doc = "When invoking this function through an `unsafe` block, the caller must ensure that the current CPU supports `avx2`, `bmi1`, `bmi2`, `cmpxchg16b`, `f16c`, `fma`, `fxsr`, `lzcnt`, `movbe`, `popcnt`, `xsave`."]
     #[inline]
     #[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,f16c,fma,fxsr,lzcnt,movbe,popcnt,xsave")]
-    pub const fn new_unchecked() -> Self {
+    pub const fn assume_supported() -> Self {
         Self { _private: () }
     }
 }

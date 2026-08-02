@@ -50,7 +50,7 @@ pub(crate) trait Level {
     fn make_module_attrs(&self) -> TokenStream {
         TokenStream::new()
     }
-    /// The body of the SIMD token's inherent `impl` block. By convention, this contains a `new_unchecked`
+    /// The body of the SIMD token's inherent `impl` block. By convention, this contains an `assume_supported`
     /// method for constructing a SIMD token whose required target features are checked by the compiler or upheld by an
     /// unsafe caller, or a safe `new` method for constructing a SIMD token that is always supported.
     fn make_impl_body(&self) -> TokenStream;

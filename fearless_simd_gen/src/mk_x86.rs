@@ -245,7 +245,7 @@ impl Level for X86 {
             #[doc = #safety_doc]
             #[inline]
             #[target_feature(enable = #features)]
-            pub const fn new_unchecked() -> Self {
+            pub const fn assume_supported() -> Self {
                 Self { _private: () }
             }
         }

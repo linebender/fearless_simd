@@ -24,7 +24,7 @@ impl WasmSimd128 {
     #[doc = r" available when the library is compiled with `simd128` enabled."]
     #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
     #[inline]
-    pub const fn new_unchecked() -> Self {
+    pub const fn assume_supported() -> Self {
         Self { _private: () }
     }
 }

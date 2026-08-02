@@ -140,7 +140,7 @@ impl Level for WasmSimd128 {
             // since the surrounding code might change in the future.
             #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
             #[inline]
-            pub const fn new_unchecked() -> Self {
+            pub const fn assume_supported() -> Self {
                 Self { _private: () }
             }
         }

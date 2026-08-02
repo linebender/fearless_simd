@@ -33,7 +33,7 @@ impl Sse4_2 {
     #[doc = "When invoking this function through an `unsafe` block, the caller must ensure that the current CPU supports `fxsr`, `sse4.2`, `cmpxchg16b`, `popcnt`."]
     #[inline]
     #[target_feature(enable = "fxsr,sse4.2,cmpxchg16b,popcnt")]
-    pub const fn new_unchecked() -> Self {
+    pub const fn assume_supported() -> Self {
         Self { _private: () }
     }
 }

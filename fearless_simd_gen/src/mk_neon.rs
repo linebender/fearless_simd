@@ -83,7 +83,7 @@ impl Level for Neon {
             /// the current CPU supports `neon`.
             #[inline]
             #[target_feature(enable = #features)]
-            pub const fn new_unchecked() -> Self {
+            pub const fn assume_supported() -> Self {
                 Neon { _private: () }
             }
         }
