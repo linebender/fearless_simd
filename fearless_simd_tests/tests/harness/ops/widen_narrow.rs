@@ -349,3 +349,245 @@ fn widen_narrow_i32_wide<S: Simd>(simd: S) {
     assert_eq!(*low.narrow(high), *input);
     assert_eq!(*low.saturating_narrow(high), *input);
 }
+
+#[simd_test]
+#[ignore] // slow: run with `cargo test --release widen_narrow_random -- --ignored`.
+fn widen_narrow_random<S: Simd>(simd: S) {
+    let mut rng = fastrand::Rng::with_seed(0x243f_6a88_85a3_08d3);
+
+    for iteration in 0..100_000 {
+        let input_u8: [u8; 32] = core::array::from_fn(|_| rng.u8(..));
+        let input_u8 = u8x32::from_slice(simd, &input_u8);
+        let (low, high) = input_u8.widen();
+        let expected_low: [u16; 16] = core::array::from_fn(|i| input_u8[i] as u16);
+        let expected_high: [u16; 16] = core::array::from_fn(|i| input_u8[i + 16] as u16);
+        assert_eq!(*low, expected_low, "u8 widening iteration {iteration}");
+        assert_eq!(*high, expected_high, "u8 widening iteration {iteration}");
+        assert_eq!(
+            *low.narrow(high),
+            *input_u8,
+            "u8 roundtrip iteration {iteration}",
+        );
+        assert_eq!(
+            *low.saturating_narrow(high),
+            *input_u8,
+            "u8 saturating roundtrip iteration {iteration}",
+        );
+
+        let input_i8: [i8; 32] = core::array::from_fn(|_| rng.i8(..));
+        let input_i8 = i8x32::from_slice(simd, &input_i8);
+        let (low, high) = input_i8.widen();
+        let expected_low: [i16; 16] = core::array::from_fn(|i| input_i8[i] as i16);
+        let expected_high: [i16; 16] = core::array::from_fn(|i| input_i8[i + 16] as i16);
+        assert_eq!(*low, expected_low, "i8 widening iteration {iteration}");
+        assert_eq!(*high, expected_high, "i8 widening iteration {iteration}");
+        assert_eq!(
+            *low.narrow(high),
+            *input_i8,
+            "i8 roundtrip iteration {iteration}",
+        );
+        assert_eq!(
+            *low.saturating_narrow(high),
+            *input_i8,
+            "i8 saturating roundtrip iteration {iteration}",
+        );
+
+        let a_u16: [u16; 16] = core::array::from_fn(|_| rng.u16(..));
+        let b_u16: [u16; 16] = core::array::from_fn(|_| rng.u16(..));
+        let a_u16 = u16x16::from_slice(simd, &a_u16);
+        let b_u16 = u16x16::from_slice(simd, &b_u16);
+        let (low, high) = a_u16.widen();
+        let expected_low: [u32; 8] = core::array::from_fn(|i| a_u16[i] as u32);
+        let expected_high: [u32; 8] = core::array::from_fn(|i| a_u16[i + 8] as u32);
+        assert_eq!(*low, expected_low, "u16 widening iteration {iteration}");
+        assert_eq!(*high, expected_high, "u16 widening iteration {iteration}");
+        assert_eq!(
+            *low.narrow(high),
+            *a_u16,
+            "u16 roundtrip iteration {iteration}",
+        );
+        assert_eq!(
+            *low.saturating_narrow(high),
+            *a_u16,
+            "u16 saturating roundtrip iteration {iteration}",
+        );
+        let truncated = a_u16.narrow(b_u16);
+        let saturated = a_u16.saturating_narrow(b_u16);
+        let expected_truncated: [u8; 32] = core::array::from_fn(|i| {
+            let value = if i < 16 { a_u16[i] } else { b_u16[i - 16] };
+            value as u8
+        });
+        let expected_saturated: [u8; 32] = core::array::from_fn(|i| {
+            let value = if i < 16 { a_u16[i] } else { b_u16[i - 16] };
+            value.min(u8::MAX as u16) as u8
+        });
+        assert_eq!(
+            *truncated, expected_truncated,
+            "u16 truncation iteration {iteration}",
+        );
+        assert_eq!(
+            *saturated, expected_saturated,
+            "u16 saturation iteration {iteration}",
+        );
+
+        let a_i16: [i16; 16] = core::array::from_fn(|_| rng.i16(..));
+        let b_i16: [i16; 16] = core::array::from_fn(|_| rng.i16(..));
+        let a_i16 = i16x16::from_slice(simd, &a_i16);
+        let b_i16 = i16x16::from_slice(simd, &b_i16);
+        let (low, high) = a_i16.widen();
+        let expected_low: [i32; 8] = core::array::from_fn(|i| a_i16[i] as i32);
+        let expected_high: [i32; 8] = core::array::from_fn(|i| a_i16[i + 8] as i32);
+        assert_eq!(*low, expected_low, "i16 widening iteration {iteration}");
+        assert_eq!(*high, expected_high, "i16 widening iteration {iteration}");
+        assert_eq!(
+            *low.narrow(high),
+            *a_i16,
+            "i16 roundtrip iteration {iteration}",
+        );
+        assert_eq!(
+            *low.saturating_narrow(high),
+            *a_i16,
+            "i16 saturating roundtrip iteration {iteration}",
+        );
+        let truncated = a_i16.narrow(b_i16);
+        let saturated = a_i16.saturating_narrow(b_i16);
+        let expected_truncated: [i8; 32] = core::array::from_fn(|i| {
+            let value = if i < 16 { a_i16[i] } else { b_i16[i - 16] };
+            value as i8
+        });
+        let expected_saturated: [i8; 32] = core::array::from_fn(|i| {
+            let value = if i < 16 { a_i16[i] } else { b_i16[i - 16] };
+            value.clamp(i8::MIN as i16, i8::MAX as i16) as i8
+        });
+        assert_eq!(
+            *truncated, expected_truncated,
+            "i16 truncation iteration {iteration}",
+        );
+        assert_eq!(
+            *saturated, expected_saturated,
+            "i16 saturation iteration {iteration}",
+        );
+
+        let a_u32: [u32; 8] = core::array::from_fn(|_| rng.u32(..));
+        let b_u32: [u32; 8] = core::array::from_fn(|_| rng.u32(..));
+        let a_u32 = u32x8::from_slice(simd, &a_u32);
+        let b_u32 = u32x8::from_slice(simd, &b_u32);
+        let (low, high) = a_u32.widen();
+        let expected_low: [u64; 4] = core::array::from_fn(|i| a_u32[i] as u64);
+        let expected_high: [u64; 4] = core::array::from_fn(|i| a_u32[i + 4] as u64);
+        assert_eq!(*low, expected_low, "u32 widening iteration {iteration}");
+        assert_eq!(*high, expected_high, "u32 widening iteration {iteration}");
+        assert_eq!(
+            *low.narrow(high),
+            *a_u32,
+            "u32 roundtrip iteration {iteration}",
+        );
+        assert_eq!(
+            *low.saturating_narrow(high),
+            *a_u32,
+            "u32 saturating roundtrip iteration {iteration}",
+        );
+        let truncated = a_u32.narrow(b_u32);
+        let saturated = a_u32.saturating_narrow(b_u32);
+        let expected_truncated: [u16; 16] = core::array::from_fn(|i| {
+            let value = if i < 8 { a_u32[i] } else { b_u32[i - 8] };
+            value as u16
+        });
+        let expected_saturated: [u16; 16] = core::array::from_fn(|i| {
+            let value = if i < 8 { a_u32[i] } else { b_u32[i - 8] };
+            value.min(u16::MAX as u32) as u16
+        });
+        assert_eq!(
+            *truncated, expected_truncated,
+            "u32 truncation iteration {iteration}",
+        );
+        assert_eq!(
+            *saturated, expected_saturated,
+            "u32 saturation iteration {iteration}",
+        );
+
+        let a_i32: [i32; 8] = core::array::from_fn(|_| rng.i32(..));
+        let b_i32: [i32; 8] = core::array::from_fn(|_| rng.i32(..));
+        let a_i32 = i32x8::from_slice(simd, &a_i32);
+        let b_i32 = i32x8::from_slice(simd, &b_i32);
+        let (low, high) = a_i32.widen();
+        let expected_low: [i64; 4] = core::array::from_fn(|i| a_i32[i] as i64);
+        let expected_high: [i64; 4] = core::array::from_fn(|i| a_i32[i + 4] as i64);
+        assert_eq!(*low, expected_low, "i32 widening iteration {iteration}");
+        assert_eq!(*high, expected_high, "i32 widening iteration {iteration}");
+        assert_eq!(
+            *low.narrow(high),
+            *a_i32,
+            "i32 roundtrip iteration {iteration}",
+        );
+        assert_eq!(
+            *low.saturating_narrow(high),
+            *a_i32,
+            "i32 saturating roundtrip iteration {iteration}",
+        );
+        let truncated = a_i32.narrow(b_i32);
+        let saturated = a_i32.saturating_narrow(b_i32);
+        let expected_truncated: [i16; 16] = core::array::from_fn(|i| {
+            let value = if i < 8 { a_i32[i] } else { b_i32[i - 8] };
+            value as i16
+        });
+        let expected_saturated: [i16; 16] = core::array::from_fn(|i| {
+            let value = if i < 8 { a_i32[i] } else { b_i32[i - 8] };
+            value.clamp(i16::MIN as i32, i16::MAX as i32) as i16
+        });
+        assert_eq!(
+            *truncated, expected_truncated,
+            "i32 truncation iteration {iteration}",
+        );
+        assert_eq!(
+            *saturated, expected_saturated,
+            "i32 saturation iteration {iteration}",
+        );
+
+        let a_u64: [u64; 4] = core::array::from_fn(|_| rng.u64(..));
+        let b_u64: [u64; 4] = core::array::from_fn(|_| rng.u64(..));
+        let a_u64 = u64x4::from_slice(simd, &a_u64);
+        let b_u64 = u64x4::from_slice(simd, &b_u64);
+        let truncated = a_u64.narrow(b_u64);
+        let saturated = a_u64.saturating_narrow(b_u64);
+        let expected_truncated: [u32; 8] = core::array::from_fn(|i| {
+            let value = if i < 4 { a_u64[i] } else { b_u64[i - 4] };
+            value as u32
+        });
+        let expected_saturated: [u32; 8] = core::array::from_fn(|i| {
+            let value = if i < 4 { a_u64[i] } else { b_u64[i - 4] };
+            value.min(u32::MAX as u64) as u32
+        });
+        assert_eq!(
+            *truncated, expected_truncated,
+            "u64 truncation iteration {iteration}",
+        );
+        assert_eq!(
+            *saturated, expected_saturated,
+            "u64 saturation iteration {iteration}",
+        );
+
+        let a_i64: [i64; 4] = core::array::from_fn(|_| rng.i64(..));
+        let b_i64: [i64; 4] = core::array::from_fn(|_| rng.i64(..));
+        let a_i64 = i64x4::from_slice(simd, &a_i64);
+        let b_i64 = i64x4::from_slice(simd, &b_i64);
+        let truncated = a_i64.narrow(b_i64);
+        let saturated = a_i64.saturating_narrow(b_i64);
+        let expected_truncated: [i32; 8] = core::array::from_fn(|i| {
+            let value = if i < 4 { a_i64[i] } else { b_i64[i - 4] };
+            value as i32
+        });
+        let expected_saturated: [i32; 8] = core::array::from_fn(|i| {
+            let value = if i < 4 { a_i64[i] } else { b_i64[i - 4] };
+            value.clamp(i32::MIN as i64, i32::MAX as i64) as i32
+        });
+        assert_eq!(
+            *truncated, expected_truncated,
+            "i64 truncation iteration {iteration}",
+        );
+        assert_eq!(
+            *saturated, expected_saturated,
+            "i64 saturation iteration {iteration}",
+        );
+    }
+}
