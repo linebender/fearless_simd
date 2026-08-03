@@ -274,7 +274,8 @@ pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
 
     /// Narrow every lane.
     ///
-    /// Integers are truncated, same as the `as` operator. Floating-point values are rounded to the
+    /// This conversion behaves identically to the `as` operator:
+    /// Integers are truncated. Floating-point values are rounded to the
     /// nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.
     fn narrow(self, high: Self) -> Self::Narrowed;
 
