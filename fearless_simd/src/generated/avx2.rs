@@ -569,6 +569,89 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn load_four_interleaved_f32x4(self, src: &[f32; 16usize]) -> [f32x4<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[f32; 16usize]) -> [f32x4<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<4usize>() else {
+                    unreachable!()
+                };
+                let v0: __m128 =
+                    crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[0]);
+                let v1: __m128 =
+                    crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[1]);
+                let v2: __m128 =
+                    crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[2]);
+                let v3: __m128 =
+                    crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[3]);
+                let tmp0 = _mm_unpacklo_ps(v0, v1);
+                let tmp1 = _mm_unpackhi_ps(v0, v1);
+                let tmp2 = _mm_unpacklo_ps(v2, v3);
+                let tmp3 = _mm_unpackhi_ps(v2, v3);
+                let out0 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
+                let out1 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
+                let out2 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
+                let out3 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
+                [
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f32x4(
+        self,
+        vectors: [f32x4<Self>; 4usize],
+        dest: &mut [f32; 16usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                vectors: [f32x4<Avx2>; 4usize],
+                dest: &mut [f32; 16usize],
+            ) -> () {
+                let _ = token;
+                let v0: __m128 = vectors[0].into();
+                let v1: __m128 = vectors[1].into();
+                let v2: __m128 = vectors[2].into();
+                let v3: __m128 = vectors[3].into();
+                let tmp0 = _mm_unpacklo_ps(v0, v1);
+                let tmp1 = _mm_unpackhi_ps(v0, v1);
+                let tmp2 = _mm_unpacklo_ps(v2, v3);
+                let tmp3 = _mm_unpackhi_ps(v2, v3);
+                let out0 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
+                let out1 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
+                let out2 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
+                let out3 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
+                let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m128, [f32; 4usize]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m128, [f32; 4usize]>(
+                    out1,
+                    &mut chunks[1],
+                );
+                crate::transmute::checked_transmute_store::<__m128, [f32; 4usize]>(
+                    out2,
+                    &mut chunks[2],
+                );
+                crate::transmute::checked_transmute_store::<__m128, [f32; 4usize]>(
+                    out3,
+                    &mut chunks[3],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1134,6 +1217,95 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn load_four_interleaved_i8x16(self, src: &[i8; 64usize]) -> [i8x16<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[i8; 64usize]) -> [i8x16<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<16usize>() else {
+                    unreachable!()
+                };
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i8; 16usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i8; 16usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i8; 16usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i8; 16usize], __m128i>(&chunks[3]);
+                let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
+                let v0 = _mm_shuffle_epi8(v0, mask);
+                let v1 = _mm_shuffle_epi8(v1, mask);
+                let v2 = _mm_shuffle_epi8(v2, mask);
+                let v3 = _mm_shuffle_epi8(v3, mask);
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                [
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i8x16(
+        self,
+        vectors: [i8x16<Self>; 4usize],
+        dest: &mut [i8; 64usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, vectors: [i8x16<Avx2>; 4usize], dest: &mut [i8; 64usize]) -> () {
+                let _ = token;
+                let v0: __m128i = vectors[0].into();
+                let v1: __m128i = vectors[1].into();
+                let v2: __m128i = vectors[2].into();
+                let v3: __m128i = vectors[3].into();
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
+                let out0 = _mm_shuffle_epi8(out0, mask);
+                let out1 = _mm_shuffle_epi8(out1, mask);
+                let out2 = _mm_shuffle_epi8(out2, mask);
+                let out3 = _mm_shuffle_epi8(out3, mask);
+                let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m128i, [i8; 16usize]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i8; 16usize]>(
+                    out1,
+                    &mut chunks[1],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i8; 16usize]>(
+                    out2,
+                    &mut chunks[2],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i8; 16usize]>(
+                    out3,
+                    &mut chunks[3],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -1616,6 +1788,95 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u8x16(self, src: &[u8; 64usize]) -> [u8x16<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[u8; 64usize]) -> [u8x16<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<16usize>() else {
+                    unreachable!()
+                };
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[3]);
+                let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
+                let v0 = _mm_shuffle_epi8(v0, mask);
+                let v1 = _mm_shuffle_epi8(v1, mask);
+                let v2 = _mm_shuffle_epi8(v2, mask);
+                let v3 = _mm_shuffle_epi8(v3, mask);
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                [
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u8x16(
+        self,
+        vectors: [u8x16<Self>; 4usize],
+        dest: &mut [u8; 64usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, vectors: [u8x16<Avx2>; 4usize], dest: &mut [u8; 64usize]) -> () {
+                let _ = token;
+                let v0: __m128i = vectors[0].into();
+                let v1: __m128i = vectors[1].into();
+                let v2: __m128i = vectors[2].into();
+                let v3: __m128i = vectors[3].into();
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
+                let out0 = _mm_shuffle_epi8(out0, mask);
+                let out1 = _mm_shuffle_epi8(out1, mask);
+                let out2 = _mm_shuffle_epi8(out2, mask);
+                let out3 = _mm_shuffle_epi8(out3, mask);
+                let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m128i, [u8; 16usize]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [u8; 16usize]>(
+                    out1,
+                    &mut chunks[1],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [u8; 16usize]>(
+                    out2,
+                    &mut chunks[2],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [u8; 16usize]>(
+                    out3,
+                    &mut chunks[3],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
     }
     #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
@@ -2222,6 +2483,99 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn load_four_interleaved_i16x8(self, src: &[i16; 32usize]) -> [i16x8<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[i16; 32usize]) -> [i16x8<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<8usize>() else {
+                    unreachable!()
+                };
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i16; 8usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i16; 8usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i16; 8usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i16; 8usize], __m128i>(&chunks[3]);
+                let mask = _mm_setr_epi8(0, 1, 8, 9, 2, 3, 10, 11, 4, 5, 12, 13, 6, 7, 14, 15);
+                let v0 = _mm_shuffle_epi8(v0, mask);
+                let v1 = _mm_shuffle_epi8(v1, mask);
+                let v2 = _mm_shuffle_epi8(v2, mask);
+                let v3 = _mm_shuffle_epi8(v3, mask);
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                [
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i16x8(
+        self,
+        vectors: [i16x8<Self>; 4usize],
+        dest: &mut [i16; 32usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                vectors: [i16x8<Avx2>; 4usize],
+                dest: &mut [i16; 32usize],
+            ) -> () {
+                let _ = token;
+                let v0: __m128i = vectors[0].into();
+                let v1: __m128i = vectors[1].into();
+                let v2: __m128i = vectors[2].into();
+                let v3: __m128i = vectors[3].into();
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+                let out0 = _mm_shuffle_epi8(out0, mask);
+                let out1 = _mm_shuffle_epi8(out1, mask);
+                let out2 = _mm_shuffle_epi8(out2, mask);
+                let out3 = _mm_shuffle_epi8(out3, mask);
+                let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m128i, [i16; 8usize]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i16; 8usize]>(
+                    out1,
+                    &mut chunks[1],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i16; 8usize]>(
+                    out2,
+                    &mut chunks[2],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i16; 8usize]>(
+                    out3,
+                    &mut chunks[3],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -2639,6 +2993,99 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u16x8(self, src: &[u16; 32usize]) -> [u16x8<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[u16; 32usize]) -> [u16x8<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<8usize>() else {
+                    unreachable!()
+                };
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[3]);
+                let mask = _mm_setr_epi8(0, 1, 8, 9, 2, 3, 10, 11, 4, 5, 12, 13, 6, 7, 14, 15);
+                let v0 = _mm_shuffle_epi8(v0, mask);
+                let v1 = _mm_shuffle_epi8(v1, mask);
+                let v2 = _mm_shuffle_epi8(v2, mask);
+                let v3 = _mm_shuffle_epi8(v3, mask);
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                [
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u16x8(
+        self,
+        vectors: [u16x8<Self>; 4usize],
+        dest: &mut [u16; 32usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                vectors: [u16x8<Avx2>; 4usize],
+                dest: &mut [u16; 32usize],
+            ) -> () {
+                let _ = token;
+                let v0: __m128i = vectors[0].into();
+                let v1: __m128i = vectors[1].into();
+                let v2: __m128i = vectors[2].into();
+                let v3: __m128i = vectors[3].into();
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+                let out0 = _mm_shuffle_epi8(out0, mask);
+                let out1 = _mm_shuffle_epi8(out1, mask);
+                let out2 = _mm_shuffle_epi8(out2, mask);
+                let out3 = _mm_shuffle_epi8(out3, mask);
+                let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m128i, [u16; 8usize]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [u16; 8usize]>(
+                    out1,
+                    &mut chunks[1],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [u16; 8usize]>(
+                    out2,
+                    &mut chunks[2],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [u16; 8usize]>(
+                    out3,
+                    &mut chunks[3],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
     }
     #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
@@ -3207,6 +3654,89 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn load_four_interleaved_i32x4(self, src: &[i32; 16usize]) -> [i32x4<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[i32; 16usize]) -> [i32x4<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<4usize>() else {
+                    unreachable!()
+                };
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[3]);
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                [
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i32x4(
+        self,
+        vectors: [i32x4<Self>; 4usize],
+        dest: &mut [i32; 16usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                vectors: [i32x4<Avx2>; 4usize],
+                dest: &mut [i32; 16usize],
+            ) -> () {
+                let _ = token;
+                let v0: __m128i = vectors[0].into();
+                let v1: __m128i = vectors[1].into();
+                let v2: __m128i = vectors[2].into();
+                let v3: __m128i = vectors[3].into();
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
+                    out1,
+                    &mut chunks[1],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
+                    out2,
+                    &mut chunks[2],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
+                    out3,
+                    &mut chunks[3],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -3608,6 +4138,89 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u32x4(self, src: &[u32; 16usize]) -> [u32x4<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[u32; 16usize]) -> [u32x4<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<4usize>() else {
+                    unreachable!()
+                };
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[3]);
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                [
+                    out0.simd_into(token),
+                    out1.simd_into(token),
+                    out2.simd_into(token),
+                    out3.simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u32x4(
+        self,
+        vectors: [u32x4<Self>; 4usize],
+        dest: &mut [u32; 16usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx2,
+                vectors: [u32x4<Avx2>; 4usize],
+                dest: &mut [u32; 16usize],
+            ) -> () {
+                let _ = token;
+                let v0: __m128i = vectors[0].into();
+                let v1: __m128i = vectors[1].into();
+                let v2: __m128i = vectors[2].into();
+                let v3: __m128i = vectors[3].into();
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m128i, [u32; 4usize]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [u32; 4usize]>(
+                    out1,
+                    &mut chunks[1],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [u32; 4usize]>(
+                    out2,
+                    &mut chunks[2],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [u32; 4usize]>(
+                    out3,
+                    &mut chunks[3],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
     }
     #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
@@ -4244,6 +4857,71 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn load_four_interleaved_f64x2(self, src: &[f64; 8usize]) -> [f64x2<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[f64; 8usize]) -> [f64x2<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<4>() else {
+                    unreachable!()
+                };
+                let v0: __m256d =
+                    crate::transmute::checked_transmute_copy::<[f64; 4], __m256d>(&chunks[0]);
+                let v1: __m256d =
+                    crate::transmute::checked_transmute_copy::<[f64; 4], __m256d>(&chunks[1]);
+                let lo = _mm256_unpacklo_pd(v0, v1);
+                let hi = _mm256_unpackhi_pd(v0, v1);
+                let out0 = _mm256_permute2f128_pd::<0x20>(lo, hi);
+                let out1 = _mm256_permute2f128_pd::<0x31>(lo, hi);
+                let outputs: [__m128d; 4] = crate::transmute::checked_transmute_copy(&[out0, out1]);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f64x2(
+        self,
+        vectors: [f64x2<Self>; 4usize],
+        dest: &mut [f64; 8usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, vectors: [f64x2<Avx2>; 4usize], dest: &mut [f64; 8usize]) -> () {
+                let _ = token;
+                let inputs: [__m128d; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let wide_inputs: [__m256d; 2] = crate::transmute::checked_transmute_copy(&inputs);
+                let v0 = wide_inputs[0];
+                let v1 = wide_inputs[1];
+                let lo = _mm256_permute2f128_pd::<0x20>(v0, v1);
+                let hi = _mm256_permute2f128_pd::<0x31>(v0, v1);
+                let out0 = _mm256_unpacklo_pd(lo, hi);
+                let out1 = _mm256_unpackhi_pd(lo, hi);
+                let (chunks, []) = dest.as_chunks_mut::<4>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m256d, [f64; 4]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m256d, [f64; 4]>(
+                    out1,
+                    &mut chunks[1],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4612,6 +5290,71 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn load_four_interleaved_i64x2(self, src: &[i64; 8usize]) -> [i64x2<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[i64; 8usize]) -> [i64x2<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<4>() else {
+                    unreachable!()
+                };
+                let v0: __m256i =
+                    crate::transmute::checked_transmute_copy::<[i64; 4], __m256i>(&chunks[0]);
+                let v1: __m256i =
+                    crate::transmute::checked_transmute_copy::<[i64; 4], __m256i>(&chunks[1]);
+                let lo = _mm256_unpacklo_epi64(v0, v1);
+                let hi = _mm256_unpackhi_epi64(v0, v1);
+                let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi);
+                let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi);
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&[out0, out1]);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i64x2(
+        self,
+        vectors: [i64x2<Self>; 4usize],
+        dest: &mut [i64; 8usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, vectors: [i64x2<Avx2>; 4usize], dest: &mut [i64; 8usize]) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let wide_inputs: [__m256i; 2] = crate::transmute::checked_transmute_copy(&inputs);
+                let v0 = wide_inputs[0];
+                let v1 = wide_inputs[1];
+                let lo = _mm256_permute2x128_si256::<0x20>(v0, v1);
+                let hi = _mm256_permute2x128_si256::<0x31>(v0, v1);
+                let out0 = _mm256_unpacklo_epi64(lo, hi);
+                let out1 = _mm256_unpackhi_epi64(lo, hi);
+                let (chunks, []) = dest.as_chunks_mut::<4>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m256i, [i64; 4]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m256i, [i64; 4]>(
+                    out1,
+                    &mut chunks[1],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4965,6 +5708,71 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn load_four_interleaved_u64x2(self, src: &[u64; 8usize]) -> [u64x2<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[u64; 8usize]) -> [u64x2<Avx2>; 4usize] {
+                let (chunks, []) = src.as_chunks::<4>() else {
+                    unreachable!()
+                };
+                let v0: __m256i =
+                    crate::transmute::checked_transmute_copy::<[u64; 4], __m256i>(&chunks[0]);
+                let v1: __m256i =
+                    crate::transmute::checked_transmute_copy::<[u64; 4], __m256i>(&chunks[1]);
+                let lo = _mm256_unpacklo_epi64(v0, v1);
+                let hi = _mm256_unpackhi_epi64(v0, v1);
+                let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi);
+                let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi);
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&[out0, out1]);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u64x2(
+        self,
+        vectors: [u64x2<Self>; 4usize],
+        dest: &mut [u64; 8usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, vectors: [u64x2<Avx2>; 4usize], dest: &mut [u64; 8usize]) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let wide_inputs: [__m256i; 2] = crate::transmute::checked_transmute_copy(&inputs);
+                let v0 = wide_inputs[0];
+                let v1 = wide_inputs[1];
+                let lo = _mm256_permute2x128_si256::<0x20>(v0, v1);
+                let hi = _mm256_permute2x128_si256::<0x31>(v0, v1);
+                let out0 = _mm256_unpacklo_epi64(lo, hi);
+                let out1 = _mm256_unpackhi_epi64(lo, hi);
+                let (chunks, []) = dest.as_chunks_mut::<4>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m256i, [u64; 4]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m256i, [u64; 4]>(
+                    out1,
+                    &mut chunks[1],
+                );
+            }
+        );
+        kernel(self, vectors, dest);
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
@@ -11746,81 +12554,6 @@ impl Simd for Avx2 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[f32; 16usize]) -> f32x16<Avx2> {
-                let (chunks, []) = src.as_chunks::<4usize>() else {
-                    unreachable!()
-                };
-                let v0: __m128 =
-                    crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[0]);
-                let v1: __m128 =
-                    crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[1]);
-                let v2: __m128 =
-                    crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[2]);
-                let v3: __m128 =
-                    crate::transmute::checked_transmute_copy::<[f32; 4usize], __m128>(&chunks[3]);
-                let tmp0 = _mm_unpacklo_ps(v0, v1);
-                let tmp1 = _mm_unpackhi_ps(v0, v1);
-                let tmp2 = _mm_unpacklo_ps(v2, v3);
-                let tmp3 = _mm_unpackhi_ps(v2, v3);
-                let out0 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
-                let out1 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
-                let out2 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
-                let out3 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
-                token.combine_f32x8(
-                    token.combine_f32x4(out0.simd_into(token), out1.simd_into(token)),
-                    token.combine_f32x4(out2.simd_into(token), out3.simd_into(token)),
-                )
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f32x16<Avx2>, dest: &mut [f32; 16usize]) -> () {
-                let (v01, v23) = token.split_f32x16(a);
-                let (v0, v1) = token.split_f32x8(v01);
-                let (v2, v3) = token.split_f32x8(v23);
-                let v0 = v0.into();
-                let v1 = v1.into();
-                let v2 = v2.into();
-                let v3 = v3.into();
-                let tmp0 = _mm_unpacklo_ps(v0, v1);
-                let tmp1 = _mm_unpackhi_ps(v0, v1);
-                let tmp2 = _mm_unpacklo_ps(v2, v3);
-                let tmp3 = _mm_unpackhi_ps(v2, v3);
-                let out0 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
-                let out1 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp0), _mm_castps_pd(tmp2)));
-                let out2 = _mm_castpd_ps(_mm_unpacklo_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
-                let out3 = _mm_castpd_ps(_mm_unpackhi_pd(_mm_castps_pd(tmp1), _mm_castps_pd(tmp3)));
-                let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m128, [f32; 4usize]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m128, [f32; 4usize]>(
-                    out1,
-                    &mut chunks[1],
-                );
-                crate::transmute::checked_transmute_store::<__m128, [f32; 4usize]>(
-                    out2,
-                    &mut chunks[2],
-                );
-                crate::transmute::checked_transmute_store::<__m128, [f32; 4usize]>(
-                    out3,
-                    &mut chunks[3],
-                );
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_u32x8(self.cvt_u32_f32x8(a0), self.cvt_u32_f32x8(a1))
@@ -12392,91 +13125,6 @@ impl Simd for Avx2 {
         self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
     }
     #[inline(always)]
-    fn load_interleaved_128_i8x64(self, src: &[i8; 64usize]) -> i8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[i8; 64usize]) -> i8x64<Avx2> {
-                let (chunks, []) = src.as_chunks::<16usize>() else {
-                    unreachable!()
-                };
-                let v0: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i8; 16usize], __m128i>(&chunks[0]);
-                let v1: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i8; 16usize], __m128i>(&chunks[1]);
-                let v2: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i8; 16usize], __m128i>(&chunks[2]);
-                let v3: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i8; 16usize], __m128i>(&chunks[3]);
-                let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
-                let v0 = _mm_shuffle_epi8(v0, mask);
-                let v1 = _mm_shuffle_epi8(v1, mask);
-                let v2 = _mm_shuffle_epi8(v2, mask);
-                let v3 = _mm_shuffle_epi8(v3, mask);
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                token.combine_i8x32(
-                    token.combine_i8x16(out0.simd_into(token), out1.simd_into(token)),
-                    token.combine_i8x16(out2.simd_into(token), out3.simd_into(token)),
-                )
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i8x64<Avx2>, dest: &mut [i8; 64usize]) -> () {
-                let (v01, v23) = token.split_i8x64(a);
-                let (v0, v1) = token.split_i8x32(v01);
-                let (v2, v3) = token.split_i8x32(v23);
-                let v0 = v0.into();
-                let v1 = v1.into();
-                let v2 = v2.into();
-                let v3 = v3.into();
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
-                let out0 = _mm_shuffle_epi8(out0, mask);
-                let out1 = _mm_shuffle_epi8(out1, mask);
-                let out2 = _mm_shuffle_epi8(out2, mask);
-                let out3 = _mm_shuffle_epi8(out3, mask);
-                let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m128i, [i8; 16usize]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [i8; 16usize]>(
-                    out1,
-                    &mut chunks[1],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [i8; 16usize]>(
-                    out2,
-                    &mut chunks[2],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [i8; 16usize]>(
-                    out3,
-                    &mut chunks[3],
-                );
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         let half = self.splat_u8x32(val);
         self.combine_u8x32(half, half)
@@ -13015,91 +13663,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[u8; 64usize]) -> u8x64<Avx2> {
-                let (chunks, []) = src.as_chunks::<16usize>() else {
-                    unreachable!()
-                };
-                let v0: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[0]);
-                let v1: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[1]);
-                let v2: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[2]);
-                let v3: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u8; 16usize], __m128i>(&chunks[3]);
-                let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
-                let v0 = _mm_shuffle_epi8(v0, mask);
-                let v1 = _mm_shuffle_epi8(v1, mask);
-                let v2 = _mm_shuffle_epi8(v2, mask);
-                let v3 = _mm_shuffle_epi8(v3, mask);
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                token.combine_u8x32(
-                    token.combine_u8x16(out0.simd_into(token), out1.simd_into(token)),
-                    token.combine_u8x16(out2.simd_into(token), out3.simd_into(token)),
-                )
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x64<Avx2>, dest: &mut [u8; 64usize]) -> () {
-                let (v01, v23) = token.split_u8x64(a);
-                let (v0, v1) = token.split_u8x32(v01);
-                let (v2, v3) = token.split_u8x32(v23);
-                let v0 = v0.into();
-                let v1 = v1.into();
-                let v2 = v2.into();
-                let v3 = v3.into();
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                let mask = _mm_setr_epi8(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15);
-                let out0 = _mm_shuffle_epi8(out0, mask);
-                let out1 = _mm_shuffle_epi8(out1, mask);
-                let out2 = _mm_shuffle_epi8(out2, mask);
-                let out3 = _mm_shuffle_epi8(out3, mask);
-                let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m128i, [u8; 16usize]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [u8; 16usize]>(
-                    out1,
-                    &mut chunks[1],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [u8; 16usize]>(
-                    out2,
-                    &mut chunks[2],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [u8; 16usize]>(
-                    out3,
-                    &mut chunks[3],
-                );
-            }
-        );
-        kernel(self, a, dest);
     }
     #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
@@ -13681,91 +14244,6 @@ impl Simd for Avx2 {
         self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
     }
     #[inline(always)]
-    fn load_interleaved_128_i16x32(self, src: &[i16; 32usize]) -> i16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[i16; 32usize]) -> i16x32<Avx2> {
-                let (chunks, []) = src.as_chunks::<8usize>() else {
-                    unreachable!()
-                };
-                let v0: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i16; 8usize], __m128i>(&chunks[0]);
-                let v1: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i16; 8usize], __m128i>(&chunks[1]);
-                let v2: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i16; 8usize], __m128i>(&chunks[2]);
-                let v3: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i16; 8usize], __m128i>(&chunks[3]);
-                let mask = _mm_setr_epi8(0, 1, 8, 9, 2, 3, 10, 11, 4, 5, 12, 13, 6, 7, 14, 15);
-                let v0 = _mm_shuffle_epi8(v0, mask);
-                let v1 = _mm_shuffle_epi8(v1, mask);
-                let v2 = _mm_shuffle_epi8(v2, mask);
-                let v3 = _mm_shuffle_epi8(v3, mask);
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                token.combine_i16x16(
-                    token.combine_i16x8(out0.simd_into(token), out1.simd_into(token)),
-                    token.combine_i16x8(out2.simd_into(token), out3.simd_into(token)),
-                )
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i16x32<Avx2>, dest: &mut [i16; 32usize]) -> () {
-                let (v01, v23) = token.split_i16x32(a);
-                let (v0, v1) = token.split_i16x16(v01);
-                let (v2, v3) = token.split_i16x16(v23);
-                let v0 = v0.into();
-                let v1 = v1.into();
-                let v2 = v2.into();
-                let v3 = v3.into();
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
-                let out0 = _mm_shuffle_epi8(out0, mask);
-                let out1 = _mm_shuffle_epi8(out1, mask);
-                let out2 = _mm_shuffle_epi8(out2, mask);
-                let out3 = _mm_shuffle_epi8(out3, mask);
-                let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m128i, [i16; 8usize]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [i16; 8usize]>(
-                    out1,
-                    &mut chunks[1],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [i16; 8usize]>(
-                    out2,
-                    &mut chunks[2],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [i16; 8usize]>(
-                    out3,
-                    &mut chunks[3],
-                );
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
@@ -14186,91 +14664,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[u16; 32usize]) -> u16x32<Avx2> {
-                let (chunks, []) = src.as_chunks::<8usize>() else {
-                    unreachable!()
-                };
-                let v0: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[0]);
-                let v1: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[1]);
-                let v2: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[2]);
-                let v3: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u16; 8usize], __m128i>(&chunks[3]);
-                let mask = _mm_setr_epi8(0, 1, 8, 9, 2, 3, 10, 11, 4, 5, 12, 13, 6, 7, 14, 15);
-                let v0 = _mm_shuffle_epi8(v0, mask);
-                let v1 = _mm_shuffle_epi8(v1, mask);
-                let v2 = _mm_shuffle_epi8(v2, mask);
-                let v3 = _mm_shuffle_epi8(v3, mask);
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                token.combine_u16x16(
-                    token.combine_u16x8(out0.simd_into(token), out1.simd_into(token)),
-                    token.combine_u16x8(out2.simd_into(token), out3.simd_into(token)),
-                )
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x32<Avx2>, dest: &mut [u16; 32usize]) -> () {
-                let (v01, v23) = token.split_u16x32(a);
-                let (v0, v1) = token.split_u16x16(v01);
-                let (v2, v3) = token.split_u16x16(v23);
-                let v0 = v0.into();
-                let v1 = v1.into();
-                let v2 = v2.into();
-                let v3 = v3.into();
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                let mask = _mm_setr_epi8(0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
-                let out0 = _mm_shuffle_epi8(out0, mask);
-                let out1 = _mm_shuffle_epi8(out1, mask);
-                let out2 = _mm_shuffle_epi8(out2, mask);
-                let out3 = _mm_shuffle_epi8(out3, mask);
-                let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m128i, [u16; 8usize]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [u16; 8usize]>(
-                    out1,
-                    &mut chunks[1],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [u16; 8usize]>(
-                    out2,
-                    &mut chunks[2],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [u16; 8usize]>(
-                    out3,
-                    &mut chunks[3],
-                );
-            }
-        );
-        kernel(self, a, dest);
     }
     #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
@@ -14776,81 +15169,6 @@ impl Simd for Avx2 {
         self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
     }
     #[inline(always)]
-    fn load_interleaved_128_i32x16(self, src: &[i32; 16usize]) -> i32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[i32; 16usize]) -> i32x16<Avx2> {
-                let (chunks, []) = src.as_chunks::<4usize>() else {
-                    unreachable!()
-                };
-                let v0: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[0]);
-                let v1: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[1]);
-                let v2: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[2]);
-                let v3: __m128i =
-                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[3]);
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                token.combine_i32x8(
-                    token.combine_i32x4(out0.simd_into(token), out1.simd_into(token)),
-                    token.combine_i32x4(out2.simd_into(token), out3.simd_into(token)),
-                )
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i32x16<Avx2>, dest: &mut [i32; 16usize]) -> () {
-                let (v01, v23) = token.split_i32x16(a);
-                let (v0, v1) = token.split_i32x8(v01);
-                let (v2, v3) = token.split_i32x8(v23);
-                let v0 = v0.into();
-                let v1 = v1.into();
-                let v2 = v2.into();
-                let v3 = v3.into();
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
-                    out1,
-                    &mut chunks[1],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
-                    out2,
-                    &mut chunks[2],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
-                    out3,
-                    &mut chunks[3],
-                );
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_f32x8(self.cvt_f32_i32x8(a0), self.cvt_f32_i32x8(a1))
@@ -15206,81 +15524,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[u32; 16usize]) -> u32x16<Avx2> {
-                let (chunks, []) = src.as_chunks::<4usize>() else {
-                    unreachable!()
-                };
-                let v0: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[0]);
-                let v1: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[1]);
-                let v2: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[2]);
-                let v3: __m128i =
-                    crate::transmute::checked_transmute_copy::<[u32; 4usize], __m128i>(&chunks[3]);
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                token.combine_u32x8(
-                    token.combine_u32x4(out0.simd_into(token), out1.simd_into(token)),
-                    token.combine_u32x4(out2.simd_into(token), out3.simd_into(token)),
-                )
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u32x16<Avx2>, dest: &mut [u32; 16usize]) -> () {
-                let (v01, v23) = token.split_u32x16(a);
-                let (v0, v1) = token.split_u32x8(v01);
-                let (v2, v3) = token.split_u32x8(v23);
-                let v0 = v0.into();
-                let v1 = v1.into();
-                let v2 = v2.into();
-                let v3 = v3.into();
-                let tmp0 = _mm_unpacklo_epi32(v0, v1);
-                let tmp1 = _mm_unpackhi_epi32(v0, v1);
-                let tmp2 = _mm_unpacklo_epi32(v2, v3);
-                let tmp3 = _mm_unpackhi_epi32(v2, v3);
-                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
-                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
-                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
-                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
-                let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m128i, [u32; 4usize]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [u32; 4usize]>(
-                    out1,
-                    &mut chunks[1],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [u32; 4usize]>(
-                    out2,
-                    &mut chunks[2],
-                );
-                crate::transmute::checked_transmute_store::<__m128i, [u32; 4usize]>(
-                    out3,
-                    &mut chunks[3],
-                );
-            }
-        );
-        kernel(self, a, dest);
     }
     #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
@@ -15798,54 +16041,6 @@ impl Simd for Avx2 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_f64x8(self, src: &[f64; 8usize]) -> f64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[f64; 8usize]) -> f64x8<Avx2> {
-                let (chunks, []) = src.as_chunks::<4>() else {
-                    unreachable!()
-                };
-                let v0: __m256d =
-                    crate::transmute::checked_transmute_copy::<[f64; 4], __m256d>(&chunks[0]);
-                let v1: __m256d =
-                    crate::transmute::checked_transmute_copy::<[f64; 4], __m256d>(&chunks[1]);
-                let lo = _mm256_unpacklo_pd(v0, v1);
-                let hi = _mm256_unpackhi_pd(v0, v1);
-                let out0 = _mm256_permute2f128_pd::<0x20>(lo, hi);
-                let out1 = _mm256_permute2f128_pd::<0x31>(lo, hi);
-                token.combine_f64x4(out0.simd_into(token), out1.simd_into(token))
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: f64x8<Avx2>, dest: &mut [f64; 8usize]) -> () {
-                let (v0, v1) = token.split_f64x8(a);
-                let v0: __m256d = v0.into();
-                let v1: __m256d = v1.into();
-                let lo = _mm256_permute2f128_pd::<0x20>(v0, v1);
-                let hi = _mm256_permute2f128_pd::<0x31>(v0, v1);
-                let out0 = _mm256_unpacklo_pd(lo, hi);
-                let out1 = _mm256_unpackhi_pd(lo, hi);
-                let (chunks, []) = dest.as_chunks_mut::<4>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m256d, [f64; 4]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m256d, [f64; 4]>(
-                    out1,
-                    &mut chunks[1],
-                );
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)
@@ -16167,54 +16362,6 @@ impl Simd for Avx2 {
         self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
     }
     #[inline(always)]
-    fn load_interleaved_128_i64x8(self, src: &[i64; 8usize]) -> i64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[i64; 8usize]) -> i64x8<Avx2> {
-                let (chunks, []) = src.as_chunks::<4>() else {
-                    unreachable!()
-                };
-                let v0: __m256i =
-                    crate::transmute::checked_transmute_copy::<[i64; 4], __m256i>(&chunks[0]);
-                let v1: __m256i =
-                    crate::transmute::checked_transmute_copy::<[i64; 4], __m256i>(&chunks[1]);
-                let lo = _mm256_unpacklo_epi64(v0, v1);
-                let hi = _mm256_unpackhi_epi64(v0, v1);
-                let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi);
-                let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi);
-                token.combine_i64x4(out0.simd_into(token), out1.simd_into(token))
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: i64x8<Avx2>, dest: &mut [i64; 8usize]) -> () {
-                let (v0, v1) = token.split_i64x8(a);
-                let v0: __m256i = v0.into();
-                let v1: __m256i = v1.into();
-                let lo = _mm256_permute2x128_si256::<0x20>(v0, v1);
-                let hi = _mm256_permute2x128_si256::<0x31>(v0, v1);
-                let out0 = _mm256_unpacklo_epi64(lo, hi);
-                let out1 = _mm256_unpackhi_epi64(lo, hi);
-                let (chunks, []) = dest.as_chunks_mut::<4>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m256i, [i64; 4]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m256i, [i64; 4]>(
-                    out1,
-                    &mut chunks[1],
-                );
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {
         let half = self.splat_u64x4(val);
         self.combine_u64x4(half, half)
@@ -16529,54 +16676,6 @@ impl Simd for Avx2 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, src: &[u64; 8usize]) -> u64x8<Avx2> {
-                let (chunks, []) = src.as_chunks::<4>() else {
-                    unreachable!()
-                };
-                let v0: __m256i =
-                    crate::transmute::checked_transmute_copy::<[u64; 4], __m256i>(&chunks[0]);
-                let v1: __m256i =
-                    crate::transmute::checked_transmute_copy::<[u64; 4], __m256i>(&chunks[1]);
-                let lo = _mm256_unpacklo_epi64(v0, v1);
-                let hi = _mm256_unpackhi_epi64(v0, v1);
-                let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi);
-                let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi);
-                token.combine_u64x4(out0.simd_into(token), out1.simd_into(token))
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u64x8<Avx2>, dest: &mut [u64; 8usize]) -> () {
-                let (v0, v1) = token.split_u64x8(a);
-                let v0: __m256i = v0.into();
-                let v1: __m256i = v1.into();
-                let lo = _mm256_permute2x128_si256::<0x20>(v0, v1);
-                let hi = _mm256_permute2x128_si256::<0x31>(v0, v1);
-                let out0 = _mm256_unpacklo_epi64(lo, hi);
-                let out1 = _mm256_unpackhi_epi64(lo, hi);
-                let (chunks, []) = dest.as_chunks_mut::<4>() else {
-                    unreachable!()
-                };
-                crate::transmute::checked_transmute_store::<__m256i, [u64; 4]>(
-                    out0,
-                    &mut chunks[0],
-                );
-                crate::transmute::checked_transmute_store::<__m256i, [u64; 4]>(
-                    out1,
-                    &mut chunks[1],
-                );
-            }
-        );
-        kernel(self, a, dest);
     }
     #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {

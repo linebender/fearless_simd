@@ -226,26 +226,8 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         OpSig::MaskSet => {
             panic!("Mask set must operate on the full mask vector")
         }
-        OpSig::LoadInterleaved {
-            block_size,
-            block_count,
-        } => {
-            let split_len = (block_size * block_count) as usize / (ty.scalar_bits * 2);
-            let ty_rust = ty.rust();
-            quote! {
-                #method_sig {
-                    let (chunks, _) = src.as_chunks::<#split_len>();
-                    let lo = self.#do_half(&chunks[0]);
-                    let hi = self.#do_half(&chunks[1]);
-                    #ty_rust {
-                        val: crate::transmute::checked_transmute_copy(&[lo.val, hi.val]),
-                        simd: self,
-                    }
-                }
-            }
-        }
-        OpSig::StoreInterleaved { .. } => {
-            panic!("The generic fallback is not implemented for this operation")
+        OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
+            panic!("Interleaved memory operations must operate on full 128-bit vectors")
         }
         OpSig::Split { .. }
         | OpSig::Combine { .. }

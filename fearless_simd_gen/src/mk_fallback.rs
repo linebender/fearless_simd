@@ -495,13 +495,23 @@ impl Level for Fallback {
                 block_size,
                 block_count,
             } => {
-                let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
-                let items =
-                    interleave_indices(len, block_count as usize, |idx| quote! { src[#idx] });
+                let block_count = block_count as usize;
+                let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
+                let vectors = (0..block_count).map(|channel| {
+                    let items = make_list(
+                        (0..elems_per_vec)
+                            .map(|lane| {
+                                let idx = lane * block_count + channel;
+                                quote! { src[#idx] }
+                            })
+                            .collect(),
+                    );
+                    quote! { #items.simd_into(self) }
+                });
 
                 quote! {
                     #method_sig {
-                        #items.simd_into(self)
+                        [#(#vectors),*]
                     }
                 }
             }
@@ -509,9 +519,17 @@ impl Level for Fallback {
                 block_size,
                 block_count,
             } => {
-                let len = (block_size * block_count) as usize / vec_ty.scalar_bits;
-                let items =
-                    interleave_indices(len, len / block_count as usize, |idx| quote! { a[#idx] });
+                let block_count = block_count as usize;
+                let elems_per_vec = block_size as usize / vec_ty.scalar_bits;
+                let items = make_list(
+                    (0..elems_per_vec)
+                        .flat_map(|lane| {
+                            (0..block_count).map(move |channel| {
+                                quote! { vectors[#channel][#lane] }
+                            })
+                        })
+                        .collect(),
+                );
 
                 quote! {
                     #method_sig {
@@ -573,19 +591,6 @@ impl Level for Fallback {
     }
 }
 
-fn interleave_indices(
-    len: usize,
-    stride: usize,
-    func: impl FnMut(usize) -> TokenStream,
-) -> TokenStream {
-    let indices = {
-        let indices = (0..len).collect::<Vec<_>>();
-        interleave(&indices, stride)
-    };
-
-    make_list(indices.into_iter().map(func).collect::<Vec<_>>())
-}
-
 fn lane(value: TokenStream, vec_ty: &VecType, idx: usize) -> TokenStream {
     if vec_ty.scalar == ScalarType::Mask {
         quote! { #value.val.0[#idx] }
@@ -611,16 +616,4 @@ fn rhs_reference(method: &str) -> bool {
 
 fn make_list(items: Vec<TokenStream>) -> TokenStream {
     quote!([#( #items, )*])
-}
-
-fn interleave(input: &[usize], width: usize) -> Vec<usize> {
-    let height = input.len() / width;
-
-    let mut output = Vec::with_capacity(input.len());
-    for col in 0..width {
-        for row in 0..height {
-            output.push(input[row * width + col]);
-        }
-    }
-    output
 }

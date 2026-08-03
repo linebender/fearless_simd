@@ -19,6 +19,19 @@ use crate::{
 #[derive(Clone, Copy)]
 pub(crate) struct Neon;
 
+fn neon_multi_vector_ty(vec_ty: &VecType, count: u16) -> Ident {
+    let scalar = match vec_ty.scalar {
+        ScalarType::Float => "float",
+        ScalarType::Unsigned => "uint",
+        ScalarType::Int => "int",
+        ScalarType::Mask => unreachable!("interleaved operations are not defined for masks"),
+    };
+    Ident::new(
+        &format!("{scalar}{}x{}x{count}_t", vec_ty.scalar_bits, vec_ty.len),
+        Span::call_site(),
+    )
+}
+
 impl Level for Neon {
     fn name(&self) -> &'static str {
         "Neon"
@@ -138,21 +151,19 @@ impl Level for Neon {
                 block_size,
                 block_count,
             } => {
-                assert_eq!(block_count, 4, "only count of 4 is currently supported");
-                let intrinsic = {
-                    // The function expects 64-bit or 128-bit
-                    let ty = VecType::new(
-                        vec_ty.scalar,
-                        vec_ty.scalar_bits,
-                        block_size as usize / vec_ty.scalar_bits,
-                    );
-                    simple_intrinsic("vld4", &ty)
-                };
+                assert_eq!(
+                    vec_ty.n_bits(),
+                    block_size as usize,
+                    "NEON interleaved loads require full block-sized vectors"
+                );
+                let intrinsic = simple_intrinsic(&format!("vld{block_count}"), vec_ty);
+                let fields = (0..block_count).map(Literal::u16_unsuffixed);
 
                 quote! {
                     #method_sig {
                         unsafe {
-                            #intrinsic(src.as_ptr()).simd_into(self)
+                            let native = #intrinsic(src.as_ptr());
+                            [#(native.#fields.simd_into(self)),*]
                         }
                     }
                 }
@@ -161,21 +172,27 @@ impl Level for Neon {
                 block_size,
                 block_count,
             } => {
-                assert_eq!(block_count, 4, "only count of 4 is currently supported");
-                let intrinsic = {
-                    // The function expects 64-bit or 128-bit
-                    let ty = VecType::new(
-                        vec_ty.scalar,
-                        vec_ty.scalar_bits,
-                        block_size as usize / vec_ty.scalar_bits,
-                    );
-                    simple_intrinsic("vst4", &ty)
-                };
+                assert_eq!(
+                    vec_ty.n_bits(),
+                    block_size as usize,
+                    "NEON interleaved stores require full block-sized vectors"
+                );
+                let intrinsic = simple_intrinsic(&format!("vst{block_count}"), vec_ty);
+                let aggregate_ty = neon_multi_vector_ty(vec_ty, block_count);
+                let indices = 0..block_count as usize;
+                let native_ty = self.arch_ty(vec_ty);
+                let native_values = (0..block_count as usize)
+                    .map(|idx| format_ident!("v{idx}"))
+                    .collect::<Vec<_>>();
+                let native_decls = native_values.iter().zip(indices).map(|(value, idx)| {
+                    quote! { let #value: #native_ty = vectors[#idx].into(); }
+                });
 
                 quote! {
                     #method_sig {
                         unsafe {
-                            #intrinsic(dest.as_mut_ptr(), a.into())
+                            #(#native_decls)*
+                            #intrinsic(dest.as_mut_ptr(), #aggregate_ty(#(#native_values),*))
                         }
                     }
                 }

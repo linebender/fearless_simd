@@ -17,6 +17,8 @@ You can find its changes [documented below](#060-2026-07-10).
 
 ### Changed
 
+- Breaking change: the `load_interleaved_128_*` and `store_interleaved_128_*` methods, which exchanged one 512-bit vector, have been replaced by `load_four_interleaved_*` and `store_four_interleaved_*`. The new methods exchange an array of four 128-bit vectors directly and are available for all non-mask scalar types.
+
 - The `new_unchecked()` function on SIMD level tokens such as `Avx2` has been renamed to `assume_supported()` and is now safe to call from contexts that already contain the appropriate `#[target_feature]` annotations. Functions without such annotations can still call `assume_supported()` with an `unsafe` block. ([#293][] by [@Shnatsel][])
 - On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
 - The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
