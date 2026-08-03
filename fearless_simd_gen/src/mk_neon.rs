@@ -180,43 +180,6 @@ impl Level for Neon {
                     }
                 }
             }
-            OpSig::WidenNarrow { target_ty } => {
-                let vec_scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let target_scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
-
-                if method == "narrow" {
-                    let arch = self.arch_ty(vec_ty);
-
-                    let id1 = Ident::new(&format!("vmovn_{}", vec_scalar_ty), Span::call_site());
-                    let id2 =
-                        Ident::new(&format!("vcombine_{}", target_scalar_ty), Span::call_site());
-
-                    self.kernel_method(op, vec_ty, |token| {
-                        quote! {
-                            let converted: #arch = a.into();
-                            let low = #id1(converted.0);
-                            let high = #id1(converted.1);
-
-                            #id2(low, high).simd_into(#token)
-                        }
-                    })
-                } else {
-                    let arch = self.arch_ty(&target_ty);
-                    let id1 = Ident::new(&format!("vmovl_{}", vec_scalar_ty), Span::call_site());
-                    let id2 = Ident::new(&format!("vget_low_{}", vec_scalar_ty), Span::call_site());
-                    let id3 =
-                        Ident::new(&format!("vget_high_{}", vec_scalar_ty), Span::call_site());
-
-                    self.kernel_method(op, vec_ty, |token| {
-                        quote! {
-                            let low = #id1(#id2(a.into()));
-                            let high = #id1(#id3(a.into()));
-
-                            #arch(low, high).simd_into(#token)
-                        }
-                    })
-                }
-            }
             OpSig::Binary => {
                 if vec_ty.scalar_bits == 64
                     && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)

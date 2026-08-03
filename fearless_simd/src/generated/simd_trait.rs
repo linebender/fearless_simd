@@ -461,8 +461,6 @@ pub trait Simd:
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self>;
-    #[doc = "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input."]
-    fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -1593,8 +1591,6 @@ pub trait Simd:
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x32(self, a: u8x32<Self>) -> (u8x16<Self>, u8x16<Self>);
-    #[doc = "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input."]
-    fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -1834,8 +1830,6 @@ pub trait Simd:
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x16(self, a: u16x16<Self>) -> (u16x8<Self>, u16x8<Self>);
-    #[doc = "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input."]
-    fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -3000,8 +2994,6 @@ pub trait Simd:
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self>;
     #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
-    #[doc = "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input."]
-    fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]

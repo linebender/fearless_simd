@@ -1618,16 +1618,6 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x16<Avx2>) -> u16x16<Avx2> {
-                _mm256_cvtepu8_epi16(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7084,19 +7074,6 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u8x32<Avx2>) -> u16x32<Avx2> {
-                let (a0, a1) = token.split_u8x32(a);
-                let high = _mm256_cvtepu8_epi16(a0.into()).simd_into(token);
-                let low = _mm256_cvtepu8_epi16(a1.into()).simd_into(token);
-                token.combine_u16x16(high, low)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -8404,22 +8381,6 @@ impl Simd for Avx2 {
                     _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
                     _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
                 )
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x16<Avx2>) -> u8x16<Avx2> {
-                let mask = _mm256_setr_epi8(
-                    0, 2, 4, 6, 8, 10, 12, 14, -1, -1, -1, -1, -1, -1, -1, -1, 0, 2, 4, 6, 8, 10,
-                    12, 14, -1, -1, -1, -1, -1, -1, -1, -1,
-                );
-                let shuffled = _mm256_shuffle_epi8(a.into(), mask);
-                let packed = _mm256_permute4x64_epi64::<0b11_01_10_00>(shuffled);
-                _mm256_castsi256_si128(packed).simd_into(token)
             }
         );
         kernel(self, a)
@@ -14101,23 +14062,6 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, a, dest);
-    }
-    #[inline(always)]
-    fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx2, a: u16x32<Avx2>) -> u8x32<Avx2> {
-                let (a, b) = token.split_u16x32(a);
-                let mask = _mm256_set1_epi16(0xFF);
-                let lo_masked = _mm256_and_si256(a.into(), mask);
-                let hi_masked = _mm256_and_si256(b.into(), mask);
-                let result = _mm256_permute4x64_epi64::<0b_11_01_10_00>(_mm256_packus_epi16(
-                    lo_masked, hi_masked,
-                ));
-                result.simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {

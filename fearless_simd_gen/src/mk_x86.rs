@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use crate::arch::x86::{
-    self, cast_ident, coarse_type, extend_intrinsic, float_compare_method, intrinsic_ident,
-    op_suffix, pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
+    self, cast_ident, coarse_type, float_compare_method, intrinsic_ident, op_suffix,
+    pack_intrinsic, set1_intrinsic, simple_intrinsic, simple_sign_unaware_intrinsic,
     unpack_intrinsic,
 };
 use crate::generic::{
@@ -286,9 +286,6 @@ impl Level for X86 {
             OpSig::Splat => self.handle_splat(op, vec_ty),
             OpSig::Compare => self.handle_compare(op, method, vec_ty),
             OpSig::Unary => self.handle_unary(op, method_sig, method, vec_ty),
-            OpSig::WidenNarrow { target_ty } => {
-                self.handle_widen_narrow(op, method, vec_ty, target_ty)
-            }
             OpSig::Binary => self.handle_binary(op, method, vec_ty),
             OpSig::Shift => self.handle_shift(op, method, vec_ty),
             OpSig::Ternary => self.handle_ternary(op, method_sig, method, vec_ty),
@@ -1491,178 +1488,6 @@ impl X86 {
                 })
             }
         }
-    }
-
-    pub(crate) fn handle_widen_narrow(
-        &self,
-        op: Op,
-        method: &str,
-        vec_ty: &VecType,
-        target_ty: VecType,
-    ) -> TokenStream {
-        let dst_width = target_ty.n_bits();
-        self.kernel_method(op, vec_ty, |token| match method {
-            "widen" => {
-                match (self, dst_width, vec_ty.n_bits()) {
-                    (Self::Avx2 | Self::Avx512, 256, 128) => {
-                        let extend = extend_intrinsic(
-                            vec_ty.scalar,
-                            vec_ty.scalar_bits,
-                            target_ty.scalar_bits,
-                            dst_width,
-                        );
-                        quote! {
-                            #extend(a.into()).simd_into(#token)
-                        }
-                    }
-                    (Self::Avx512, 512, 256) => {
-                        let extend = extend_intrinsic(
-                            vec_ty.scalar,
-                            vec_ty.scalar_bits,
-                            target_ty.scalar_bits,
-                            dst_width,
-                        );
-                        quote! {
-                            #extend(a.into()).simd_into(#token)
-                        }
-                    }
-                    (Self::Avx2, 512, 256) => {
-                        let extend = extend_intrinsic(
-                            vec_ty.scalar,
-                            vec_ty.scalar_bits,
-                            target_ty.scalar_bits,
-                            vec_ty.n_bits(),
-                        );
-                        let combine = generic_op_name(
-                            "combine",
-                            &vec_ty.reinterpret(vec_ty.scalar, vec_ty.scalar_bits * 2),
-                        );
-                        let split = generic_op_name("split", vec_ty);
-                        quote! {
-                            let (a0, a1) = #token.#split(a);
-                            let high = #extend(a0.into()).simd_into(#token);
-                            let low = #extend(a1.into()).simd_into(#token);
-                            #token.#combine(high, low)
-                        }
-                    }
-                    (Self::Sse2, 256, 128) => {
-                        assert_eq!(
-                            vec_ty.scalar,
-                            ScalarType::Unsigned,
-                            "only unsigned widen operations are currently generated"
-                        );
-                        assert_eq!(
-                            vec_ty.scalar_bits, 8,
-                            "SSE2 widen only handles u8 to u16"
-                        );
-                        let combine = generic_op_name("combine", &target_ty.block_ty());
-                        quote! {
-                            let raw = a.into();
-                            let zero = _mm_setzero_si128();
-                            let lo = _mm_unpacklo_epi8(raw, zero).simd_into(#token);
-                            let hi = _mm_unpackhi_epi8(raw, zero).simd_into(#token);
-                            #token.#combine(lo, hi)
-                        }
-                    }
-                    (Self::Sse4_2, 256, 128) => {
-                        let extend = extend_intrinsic(
-                            vec_ty.scalar,
-                            vec_ty.scalar_bits,
-                            target_ty.scalar_bits,
-                            vec_ty.n_bits(),
-                        );
-                        let combine = generic_op_name(
-                            "combine",
-                            &vec_ty.reinterpret(vec_ty.scalar, vec_ty.scalar_bits * 2),
-                        );
-                        quote! {
-                            let raw = a.into();
-                            let high = #extend(raw).simd_into(#token);
-                            // Shift by 8 since we want to get the higher part into the
-                            // lower position.
-                            let low = #extend(_mm_srli_si128::<8>(raw)).simd_into(#token);
-                            #token.#combine(high, low)
-                        }
-                    }
-                    _ => unimplemented!(),
-                }
-            }
-            "narrow" => {
-                match (self, dst_width, vec_ty.n_bits()) {
-                    (Self::Avx512, 128, 256) | (Self::Avx512, 256, 512) => {
-                        let narrow = intrinsic_ident("cvtepi16", "epi8", vec_ty.n_bits());
-                        quote! {
-                            #narrow(a.into()).simd_into(#token)
-                        }
-                    }
-                    (Self::Avx2, 128, 256) => {
-                        let mask = match target_ty.scalar_bits {
-                            8 => {
-                                quote! { 0, 2, 4, 6, 8, 10, 12, 14, -1, -1, -1, -1, -1, -1, -1, -1 }
-                            }
-                            _ => unimplemented!(),
-                        };
-                        quote! {
-                            let mask = _mm256_setr_epi8(#mask, #mask);
-
-                            let shuffled = _mm256_shuffle_epi8(a.into(), mask);
-                            let packed = _mm256_permute4x64_epi64::<0b11_01_10_00>(shuffled);
-
-                            _mm256_castsi256_si128(packed).simd_into(#token)
-                        }
-                    }
-                    (Self::Avx2, 256, 512) => {
-                        let mask = set1_intrinsic(&VecType::new(
-                            vec_ty.scalar,
-                            vec_ty.scalar_bits,
-                            vec_ty.len / 2,
-                        ));
-                        let pack = pack_intrinsic(
-                            vec_ty.scalar_bits,
-                            matches!(vec_ty.scalar, ScalarType::Int),
-                            target_ty.n_bits(),
-                        );
-                        let split = generic_op_name("split", vec_ty);
-                        quote! {
-                            let (a, b) = #token.#split(a);
-                            // Note that AVX2 only has an intrinsic for saturating cast,
-                            // but not wrapping.
-                            let mask = #mask(0xFF);
-                            let lo_masked = _mm256_and_si256(a.into(), mask);
-                            let hi_masked = _mm256_and_si256(b.into(), mask);
-                            // The 256-bit version of packus_epi16 operates lane-wise, so we need to arrange things
-                            // properly afterwards.
-                            let result = _mm256_permute4x64_epi64::<0b_11_01_10_00>(#pack(lo_masked, hi_masked));
-                            result.simd_into(#token)
-                        }
-                    }
-                    (Self::Sse2 | Self::Sse4_2, 128, 256) => {
-                        let mask = set1_intrinsic(&VecType::new(
-                            vec_ty.scalar,
-                            vec_ty.scalar_bits,
-                            vec_ty.len / 2,
-                        ));
-                        let pack = pack_intrinsic(
-                            vec_ty.scalar_bits,
-                            matches!(vec_ty.scalar, ScalarType::Int),
-                            target_ty.n_bits(),
-                        );
-                        let split = generic_op_name("split", vec_ty);
-                        quote! {
-                            let (a, b) = #token.#split(a);
-                            // Below AVX-512. we only have an intrinsic for saturating cast, but not wrapping.
-                            let mask = #mask(0xFF);
-                            let lo_masked = _mm_and_si128(a.into(), mask);
-                            let hi_masked = _mm_and_si128(b.into(), mask);
-                            let result = #pack(lo_masked, hi_masked);
-                            result.simd_into(#token)
-                        }
-                    }
-                    _ => unimplemented!(),
-                }
-            }
-            _ => unreachable!(),
-        })
     }
 
     pub(crate) fn handle_binary(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {

@@ -558,54 +558,6 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
-            OpSig::WidenNarrow { target_ty } => {
-                match method {
-                    "widen" => {
-                        assert_eq!(
-                            vec_ty.rust_name(),
-                            "u8x16",
-                            "Currently only u8x16 -> u16x16 widening is supported"
-                        );
-                        assert_eq!(
-                            target_ty.rust_name(),
-                            "u16x16",
-                            "Currently only u8x16 -> u16x16 widening is supported"
-                        );
-                        quote! {
-                            #method_sig {
-                                let low = u16x8_extend_low_u8x16(a.into());
-                                let high = u16x8_extend_high_u8x16(a.into());
-                                self.combine_u16x8(low.simd_into(self), high.simd_into(self))
-                            }
-                        }
-                    }
-                    "narrow" => {
-                        assert_eq!(
-                            vec_ty.rust_name(),
-                            "u16x16",
-                            "Currently only u16x16 -> u8x16 narrowing is supported"
-                        );
-                        assert_eq!(
-                            target_ty.rust_name(),
-                            "u8x16",
-                            "Currently only u16x16 -> u8x16 narrowing is supported"
-                        );
-                        // WASM SIMD only has saturating narrowing instructions, so we emulate
-                        // truncated narrowing by masking out the
-                        quote! {
-                            #method_sig {
-                                let mask = u16x8_splat(0xFF);
-                                let (low, high) = self.split_u16x16(a);
-                                let low_masked = v128_and(low.into(), mask);
-                                let high_masked = v128_and(high.into(), mask);
-                                let result = u8x16_narrow_i16x8(low_masked, high_masked);
-                                result.simd_into(self)
-                            }
-                        }
-                    }
-                    _ => unimplemented!(),
-                }
-            }
             OpSig::MaskReduce {
                 quantifier,
                 condition,

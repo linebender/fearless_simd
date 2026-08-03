@@ -1697,16 +1697,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x16<Avx512>) -> u16x16<Avx512> {
-                _mm256_cvtepu8_epi16(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
         mask8x16 {
             val: (if val { 65535u64 } else { 0 }) as _,
@@ -7295,16 +7285,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x32<Avx512>) -> u16x32<Avx512> {
-                _mm512_cvtepu8_epi16(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
         mask8x32 {
             val: (if val { 4294967295u64 } else { 0 }) as _,
@@ -8585,16 +8565,6 @@ impl Simd for Avx512 {
                     _mm256_extracti128_si256::<0>(a.into()).simd_into(token),
                     _mm256_extracti128_si256::<1>(a.into()).simd_into(token),
                 )
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
-    fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x16<Avx512>) -> u8x16<Avx512> {
-                _mm256_cvtepi16_epi8(a.into()).simd_into(token)
             }
         );
         kernel(self, a)
@@ -15483,16 +15453,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a, dest);
-    }
-    #[inline(always)]
-    fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>) -> u8x32<Avx512> {
-                _mm512_cvtepi16_epi8(a.into()).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {

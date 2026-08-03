@@ -103,9 +103,6 @@ pub(crate) enum OpSig {
         scalar_bits: usize,
         precise: bool,
     },
-    /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
-    /// same length.
-    WidenNarrow { target_ty: VecType },
     /// Takes an argument of a vector type and another u32 argument (the shift amount), and returns that same vector
     /// type.
     Shift,
@@ -323,10 +320,6 @@ impl Op {
                 let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
                 (vec![vec], quote! { #result<#simd_ty> })
             }
-            OpSig::WidenNarrow { target_ty } => {
-                let result = target_ty.rust();
-                (vec![vec], quote! { #result<#simd_ty> })
-            }
             OpSig::MaskReduce { .. } => (vec![vec], quote! { bool }),
             OpSig::MaskFromBitmask => (vec![quote! { u64 }], vec),
             OpSig::MaskToBitmask => (vec![vec], quote! { u64 }),
@@ -394,7 +387,7 @@ impl Op {
                 return None;
             }
             OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
-            OpSig::Unary | OpSig::Cvt { .. } | OpSig::WidenNarrow { .. } => {
+            OpSig::Unary | OpSig::Cvt { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { (#arg0) -> Self }
             }
@@ -1402,26 +1395,6 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
-    if matches!(ty.scalar, ScalarType::Unsigned) {
-        if let Some(target_ty) = ty.widened() {
-            ops.push(Op::new(
-                "widen",
-                OpKind::AssociatedOnly,
-                OpSig::WidenNarrow { target_ty },
-                "Zero-extend each element to a wider integer type.\n\nThe number of elements in the result is half that of the input.",
-            ));
-        }
-
-        if let Some(target_ty) = ty.narrowed() {
-            ops.push(Op::new(
-                "narrow",
-                OpKind::AssociatedOnly,
-                OpSig::WidenNarrow { target_ty },
-                "Truncate each element to a narrower integer type.\n\nThe number of elements in the result is twice that of the input.",
-            ));
-        }
-    }
-
     match (ty.scalar, ty.scalar_bits) {
         (ScalarType::Float, 32) => {
             ops.push(F32_TO_U32);
@@ -1538,13 +1511,6 @@ impl OpSig {
     /// Determine whether a given operation should defer to the generic split/combine implementation, for a given vector
     /// type and the maximum native vector width.
     pub(crate) fn should_use_generic_op(&self, vec_ty: &VecType, native_width: usize) -> bool {
-        // For widen/narrow operations, we care about the *target* type's width.
-        if let Self::WidenNarrow { target_ty } = self
-            && target_ty.n_bits() <= native_width
-        {
-            return false;
-        }
-
         if matches!(self, Self::ElementRotate { .. } | Self::ElementShift { .. }) {
             return true;
         }
@@ -1593,7 +1559,6 @@ impl OpSig {
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
-            | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask
             | Self::AsArray { .. } => &["a"],
@@ -1624,11 +1589,9 @@ impl OpSig {
             | Self::MaskToBitmask
             | Self::MaskSet
             | Self::StoreArray => &[],
-            Self::Unary
-            | Self::Cvt { .. }
-            | Self::WidenNarrow { .. }
-            | Self::MaskReduce { .. }
-            | Self::AsArray { .. } => &["self"],
+            Self::Unary | Self::Cvt { .. } | Self::MaskReduce { .. } | Self::AsArray { .. } => {
+                &["self"]
+            }
             Self::SwizzleDynWithinBlocks => &["self", "indices"],
             Self::Binary
             | Self::Compare
@@ -1680,7 +1643,6 @@ impl OpSig {
             Self::Select
             | Self::Split { .. }
             | Self::Cvt { .. }
-            | Self::WidenNarrow { .. }
             | Self::Shift
             | Self::ElementRotate { .. }
             | Self::ElementShift { .. }

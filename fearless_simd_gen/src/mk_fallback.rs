@@ -182,23 +182,6 @@ impl Level for Fallback {
                     }
                 }
             }
-            OpSig::WidenNarrow { target_ty } => {
-                let items = make_list(
-                    (0..vec_ty.len)
-                        .map(|idx| {
-                            let scalar_ty = target_ty.scalar.rust(target_ty.scalar_bits);
-                            let a = lane(quote! { a }, vec_ty, idx);
-                            quote! { #a as #scalar_ty }
-                        })
-                        .collect::<Vec<_>>(),
-                );
-
-                quote! {
-                    #method_sig {
-                        #items.simd_into(self)
-                    }
-                }
-            }
             OpSig::Binary => {
                 let items = make_list(
                     (0..vec_ty.len)

@@ -183,16 +183,6 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::WidenNarrow { mut target_ty } => {
-            target_ty.len /= 2;
-            let combine = generic_op_name("combine", &target_ty);
-            quote! {
-                #method_sig {
-                    let (a0, a1) = self.#split(a);
-                    self.#combine(self.#do_half(a0), self.#do_half(a1))
-                }
-            }
-        }
         OpSig::MaskReduce { quantifier, .. } => {
             let combine_op = quantifier.bool_op();
             quote! {

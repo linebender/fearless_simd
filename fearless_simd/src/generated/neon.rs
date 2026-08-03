@@ -1476,18 +1476,6 @@ impl Simd for Neon {
         }
     }
     #[inline(always)]
-    fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u8x16<Neon>) -> u16x16<Neon> {
-                let low = vmovl_u8(vget_low_u8(a.into()));
-                let high = vmovl_u8(vget_high_u8(a.into()));
-                uint16x8x2_t(low, high).simd_into(token)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6361,11 +6349,6 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
-    fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u16x16(self.widen_u8x16(a0), self.widen_u8x16(a1))
-    }
-    #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
         let half = self.splat_mask8x16(val);
         self.combine_mask8x16(half, half)
@@ -7259,19 +7242,6 @@ impl Simd for Neon {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Neon, a: u16x16<Neon>) -> u8x16<Neon> {
-                let converted: uint16x8x2_t = a.into();
-                let low = vmovn_u16(converted.0);
-                let high = vmovn_u16(converted.1);
-                vcombine_u8(low, high).simd_into(token)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -12112,11 +12082,6 @@ impl Simd for Neon {
     #[inline(always)]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
         unsafe { vst4q_u16(dest.as_mut_ptr(), a.into()) }
-    }
-    #[inline(always)]
-    fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {

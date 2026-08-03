@@ -2195,28 +2195,6 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
-    fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
-        [
-            a[0usize] as u16,
-            a[1usize] as u16,
-            a[2usize] as u16,
-            a[3usize] as u16,
-            a[4usize] as u16,
-            a[5usize] as u16,
-            a[6usize] as u16,
-            a[7usize] as u16,
-            a[8usize] as u16,
-            a[9usize] as u16,
-            a[10usize] as u16,
-            a[11usize] as u16,
-            a[12usize] as u16,
-            a[13usize] as u16,
-            a[14usize] as u16,
-            a[15usize] as u16,
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
         let val: i8 = if val { !0 } else { 0 };
         [val; 16usize].simd_into(self)
@@ -7281,11 +7259,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u16x16(self.widen_u8x16(a0), self.widen_u8x16(a1))
-    }
-    #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
         let half = self.splat_mask8x16(val);
         self.combine_mask8x16(half, half)
@@ -8098,28 +8071,6 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val.0[0..8usize]);
         b1.copy_from_slice(&a.val.0[8usize..16usize]);
         (b0.simd_into(self), b1.simd_into(self))
-    }
-    #[inline(always)]
-    fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
-        [
-            a[0usize] as u8,
-            a[1usize] as u8,
-            a[2usize] as u8,
-            a[3usize] as u8,
-            a[4usize] as u8,
-            a[5usize] as u8,
-            a[6usize] as u8,
-            a[7usize] as u8,
-            a[8usize] as u8,
-            a[9usize] as u8,
-            a[10usize] as u8,
-            a[11usize] as u8,
-            a[12usize] as u8,
-            a[13usize] as u8,
-            a[14usize] as u8,
-            a[15usize] as u8,
-        ]
-        .simd_into(self)
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -12623,11 +12574,6 @@ impl Simd for Fallback {
             a[13usize], a[21usize], a[29usize], a[6usize], a[14usize], a[22usize], a[30usize],
             a[7usize], a[15usize], a[23usize], a[31usize],
         ];
-    }
-    #[inline(always)]
-    fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {

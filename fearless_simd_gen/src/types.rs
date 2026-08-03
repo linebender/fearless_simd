@@ -125,30 +125,6 @@ impl VecType {
         Self::new(dst_scalar, dst_scalar_bits, self.n_bits() / dst_scalar_bits)
     }
 
-    pub(crate) fn widened(&self) -> Option<Self> {
-        if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
-            || self.n_bits() > 256
-            || self.scalar_bits != 8
-        {
-            return None;
-        }
-
-        let scalar_bits = self.scalar_bits * 2;
-        Some(Self::new(self.scalar, scalar_bits, self.len))
-    }
-
-    pub(crate) fn narrowed(&self) -> Option<Self> {
-        if matches!(self.scalar, ScalarType::Mask | ScalarType::Float)
-            || self.n_bits() < 256
-            || self.scalar_bits != 16
-        {
-            return None;
-        }
-
-        let scalar_bits = self.scalar_bits / 2;
-        Some(Self::new(self.scalar, scalar_bits, self.len))
-    }
-
     pub(crate) fn mask_ty(&self) -> Self {
         Self::new(ScalarType::Mask, self.scalar_bits, self.len)
     }

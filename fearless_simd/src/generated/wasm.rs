@@ -1082,12 +1082,6 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
-    fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
-        let low = u16x8_extend_low_u8x16(a.into());
-        let high = u16x8_extend_high_u8x16(a.into());
-        self.combine_u16x8(low.simd_into(self), high.simd_into(self))
-    }
-    #[inline(always)]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
         let val: i8 = if val { !0 } else { 0 };
         i8x16_splat(val).simd_into(self)
@@ -4541,11 +4535,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn widen_u8x32(self, a: u8x32<Self>) -> u16x32<Self> {
-        let (a0, a1) = self.split_u8x32(a);
-        self.combine_u16x16(self.widen_u8x16(a0), self.widen_u8x16(a1))
-    }
-    #[inline(always)]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self> {
         let half = self.splat_mask8x16(val);
         self.combine_mask8x16(half, half)
@@ -5389,15 +5378,6 @@ impl Simd for WasmSimd128 {
                 simd: self,
             },
         )
-    }
-    #[inline(always)]
-    fn narrow_u16x16(self, a: u16x16<Self>) -> u8x16<Self> {
-        let mask = u16x8_splat(0xFF);
-        let (low, high) = self.split_u16x16(a);
-        let low_masked = v128_and(low.into(), mask);
-        let high_masked = v128_and(high.into(), mask);
-        let result = u8x16_narrow_i16x8(low_masked, high_masked);
-        result.simd_into(self)
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -10044,11 +10024,6 @@ impl Simd for WasmSimd128 {
         crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out1, &mut chunks[1]);
         crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out2, &mut chunks[2]);
         crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
-    fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x32(a);
-        self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
     }
     #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
