@@ -1611,33 +1611,27 @@ impl X86 {
 
                 match vec_ty.scalar_bits {
                     16 | 32 => {
+                        // AVX2 has native instructions for narrowing 16 and 32-bit integers
                         let pack = pack_intrinsic(
                             vec_ty.scalar_bits,
                             saturating && vec_ty.scalar == ScalarType::Int,
                             vec_ty.n_bits(),
                         );
                         let packed = if saturating && vec_ty.scalar == ScalarType::Int {
+                            // AVX2 has a native signed interger narrowing instruction
                             quote! { #pack(a.into(), b.into()) }
                         } else {
+                            // Everyting else needs to be emulated on top of signed integer narrowing via masking
                             let set1 = set1_intrinsic(vec_ty);
-                            let (prepare, limit_name, limit) = if saturating {
-                                let max = match vec_ty.scalar_bits {
-                                    16 => quote! { u8::MAX as i16 },
-                                    32 => quote! { u16::MAX as i32 },
-                                    _ => unreachable!(),
-                                };
-                                (simple_intrinsic("min", vec_ty), format_ident!("max"), max)
+                            let limit = match vec_ty.scalar_bits {
+                                16 => quote! { 0xff },
+                                32 => quote! { 0xffff },
+                                _ => unreachable!(),
+                            };
+                            let (prepare, limit_name) = if saturating {
+                                (simple_intrinsic("min", vec_ty), format_ident!("max"))
                             } else {
-                                let mask = match vec_ty.scalar_bits {
-                                    16 => quote! { 0xff },
-                                    32 => quote! { 0xffff },
-                                    _ => unreachable!(),
-                                };
-                                (
-                                    intrinsic_ident("and", "si256", 256),
-                                    format_ident!("mask"),
-                                    mask,
-                                )
+                                (intrinsic_ident("and", "si256", 256), format_ident!("mask"))
                             };
                             quote! {{
                                 let #limit_name = #set1(#limit);
@@ -1651,13 +1645,14 @@ impl X86 {
                     }
                     64 => {
                         if !saturating {
+                            // non-saturating narrowing is just a shuffle
                             let low =
                                 compact_dwords(false, quote! { a.into() }, quote! { b.into() });
                             return quote! {
                                 #low.simd_into(#token)
                             };
                         }
-
+                        // saturating narrowing needs to be emulated for lack of hardware instructions
                         let low = compact_dwords(false, quote! { a }, quote! { b });
                         match vec_ty.scalar {
                             ScalarType::Int => {

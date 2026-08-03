@@ -8746,7 +8746,7 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> u8x32<Avx2> {
                 _mm256_permute4x64_epi64::<0xd8>({
-                    let max = _mm256_set1_epi16(u8::MAX as i16);
+                    let max = _mm256_set1_epi16(0xff);
                     _mm256_packus_epi16(
                         _mm256_min_epu16(a.into(), max),
                         _mm256_min_epu16(b.into(), max),
@@ -9984,7 +9984,7 @@ impl Simd for Avx2 {
             #[inline(always)]
             fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> u16x16<Avx2> {
                 _mm256_permute4x64_epi64::<0xd8>({
-                    let max = _mm256_set1_epi32(u16::MAX as i32);
+                    let max = _mm256_set1_epi32(0xffff);
                     _mm256_packus_epi32(
                         _mm256_min_epu32(a.into(), max),
                         _mm256_min_epu32(b.into(), max),
