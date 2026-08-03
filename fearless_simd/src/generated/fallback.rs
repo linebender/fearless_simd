@@ -11033,6 +11033,91 @@ impl Simd for Fallback {
         self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
     }
     #[inline(always)]
+    fn load_interleaved_128_i8x64(self, src: &[i8; 64usize]) -> i8x64<Self> {
+        [
+            src[0usize],
+            src[4usize],
+            src[8usize],
+            src[12usize],
+            src[16usize],
+            src[20usize],
+            src[24usize],
+            src[28usize],
+            src[32usize],
+            src[36usize],
+            src[40usize],
+            src[44usize],
+            src[48usize],
+            src[52usize],
+            src[56usize],
+            src[60usize],
+            src[1usize],
+            src[5usize],
+            src[9usize],
+            src[13usize],
+            src[17usize],
+            src[21usize],
+            src[25usize],
+            src[29usize],
+            src[33usize],
+            src[37usize],
+            src[41usize],
+            src[45usize],
+            src[49usize],
+            src[53usize],
+            src[57usize],
+            src[61usize],
+            src[2usize],
+            src[6usize],
+            src[10usize],
+            src[14usize],
+            src[18usize],
+            src[22usize],
+            src[26usize],
+            src[30usize],
+            src[34usize],
+            src[38usize],
+            src[42usize],
+            src[46usize],
+            src[50usize],
+            src[54usize],
+            src[58usize],
+            src[62usize],
+            src[3usize],
+            src[7usize],
+            src[11usize],
+            src[15usize],
+            src[19usize],
+            src[23usize],
+            src[27usize],
+            src[31usize],
+            src[35usize],
+            src[39usize],
+            src[43usize],
+            src[47usize],
+            src[51usize],
+            src[55usize],
+            src[59usize],
+            src[63usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
+        *dest = [
+            a[0usize], a[16usize], a[32usize], a[48usize], a[1usize], a[17usize], a[33usize],
+            a[49usize], a[2usize], a[18usize], a[34usize], a[50usize], a[3usize], a[19usize],
+            a[35usize], a[51usize], a[4usize], a[20usize], a[36usize], a[52usize], a[5usize],
+            a[21usize], a[37usize], a[53usize], a[6usize], a[22usize], a[38usize], a[54usize],
+            a[7usize], a[23usize], a[39usize], a[55usize], a[8usize], a[24usize], a[40usize],
+            a[56usize], a[9usize], a[25usize], a[41usize], a[57usize], a[10usize], a[26usize],
+            a[42usize], a[58usize], a[11usize], a[27usize], a[43usize], a[59usize], a[12usize],
+            a[28usize], a[44usize], a[60usize], a[13usize], a[29usize], a[45usize], a[61usize],
+            a[14usize], a[30usize], a[46usize], a[62usize], a[15usize], a[31usize], a[47usize],
+            a[63usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         let half = self.splat_u8x32(val);
         self.combine_u8x32(half, half)
@@ -12169,6 +12254,54 @@ impl Simd for Fallback {
         self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
     }
     #[inline(always)]
+    fn load_interleaved_128_i16x32(self, src: &[i16; 32usize]) -> i16x32<Self> {
+        [
+            src[0usize],
+            src[4usize],
+            src[8usize],
+            src[12usize],
+            src[16usize],
+            src[20usize],
+            src[24usize],
+            src[28usize],
+            src[1usize],
+            src[5usize],
+            src[9usize],
+            src[13usize],
+            src[17usize],
+            src[21usize],
+            src[25usize],
+            src[29usize],
+            src[2usize],
+            src[6usize],
+            src[10usize],
+            src[14usize],
+            src[18usize],
+            src[22usize],
+            src[26usize],
+            src[30usize],
+            src[3usize],
+            src[7usize],
+            src[11usize],
+            src[15usize],
+            src[19usize],
+            src[23usize],
+            src[27usize],
+            src[31usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
+        *dest = [
+            a[0usize], a[8usize], a[16usize], a[24usize], a[1usize], a[9usize], a[17usize],
+            a[25usize], a[2usize], a[10usize], a[18usize], a[26usize], a[3usize], a[11usize],
+            a[19usize], a[27usize], a[4usize], a[12usize], a[20usize], a[28usize], a[5usize],
+            a[13usize], a[21usize], a[29usize], a[6usize], a[14usize], a[22usize], a[30usize],
+            a[7usize], a[15usize], a[23usize], a[31usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
@@ -13086,6 +13219,36 @@ impl Simd for Fallback {
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
+    }
+    #[inline(always)]
+    fn load_interleaved_128_i32x16(self, src: &[i32; 16usize]) -> i32x16<Self> {
+        [
+            src[0usize],
+            src[4usize],
+            src[8usize],
+            src[12usize],
+            src[1usize],
+            src[5usize],
+            src[9usize],
+            src[13usize],
+            src[2usize],
+            src[6usize],
+            src[10usize],
+            src[14usize],
+            src[3usize],
+            src[7usize],
+            src[11usize],
+            src[15usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
+        *dest = [
+            a[0usize], a[4usize], a[8usize], a[12usize], a[1usize], a[5usize], a[9usize],
+            a[13usize], a[2usize], a[6usize], a[10usize], a[14usize], a[3usize], a[7usize],
+            a[11usize], a[15usize],
+        ];
     }
     #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
@@ -14241,6 +14404,26 @@ impl Simd for Fallback {
     fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
+    }
+    #[inline(always)]
+    fn load_interleaved_128_i64x8(self, src: &[i64; 8usize]) -> i64x8<Self> {
+        [
+            src[0usize],
+            src[4usize],
+            src[1usize],
+            src[5usize],
+            src[2usize],
+            src[6usize],
+            src[3usize],
+            src[7usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
+        *dest = [
+            a[0usize], a[2usize], a[4usize], a[6usize], a[1usize], a[3usize], a[5usize], a[7usize],
+        ];
     }
     #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {

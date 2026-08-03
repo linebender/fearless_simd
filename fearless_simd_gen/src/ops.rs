@@ -1366,7 +1366,11 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         return ops;
     }
 
-    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
+    if matches!(
+        ty.scalar,
+        ScalarType::Int | ScalarType::Unsigned | ScalarType::Float
+    ) && ty.n_bits() == 512
+    {
         ops.push(Op::new(
             "load_interleaved_128",
             OpKind::AssociatedOnly,
@@ -1384,7 +1388,11 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
-    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
+    if matches!(
+        ty.scalar,
+        ScalarType::Int | ScalarType::Unsigned | ScalarType::Float
+    ) && ty.n_bits() == 512
+    {
         ops.push(Op::new(
             "store_interleaved_128",
             OpKind::AssociatedOnly,

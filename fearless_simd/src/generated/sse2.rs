@@ -11039,6 +11039,91 @@ impl Simd for Sse2 {
         self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
     }
     #[inline(always)]
+    fn load_interleaved_128_i8x64(self, src: &[i8; 64usize]) -> i8x64<Self> {
+        [
+            src[0usize],
+            src[4usize],
+            src[8usize],
+            src[12usize],
+            src[16usize],
+            src[20usize],
+            src[24usize],
+            src[28usize],
+            src[32usize],
+            src[36usize],
+            src[40usize],
+            src[44usize],
+            src[48usize],
+            src[52usize],
+            src[56usize],
+            src[60usize],
+            src[1usize],
+            src[5usize],
+            src[9usize],
+            src[13usize],
+            src[17usize],
+            src[21usize],
+            src[25usize],
+            src[29usize],
+            src[33usize],
+            src[37usize],
+            src[41usize],
+            src[45usize],
+            src[49usize],
+            src[53usize],
+            src[57usize],
+            src[61usize],
+            src[2usize],
+            src[6usize],
+            src[10usize],
+            src[14usize],
+            src[18usize],
+            src[22usize],
+            src[26usize],
+            src[30usize],
+            src[34usize],
+            src[38usize],
+            src[42usize],
+            src[46usize],
+            src[50usize],
+            src[54usize],
+            src[58usize],
+            src[62usize],
+            src[3usize],
+            src[7usize],
+            src[11usize],
+            src[15usize],
+            src[19usize],
+            src[23usize],
+            src[27usize],
+            src[31usize],
+            src[35usize],
+            src[39usize],
+            src[43usize],
+            src[47usize],
+            src[51usize],
+            src[55usize],
+            src[59usize],
+            src[63usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
+        *dest = [
+            a[0usize], a[16usize], a[32usize], a[48usize], a[1usize], a[17usize], a[33usize],
+            a[49usize], a[2usize], a[18usize], a[34usize], a[50usize], a[3usize], a[19usize],
+            a[35usize], a[51usize], a[4usize], a[20usize], a[36usize], a[52usize], a[5usize],
+            a[21usize], a[37usize], a[53usize], a[6usize], a[22usize], a[38usize], a[54usize],
+            a[7usize], a[23usize], a[39usize], a[55usize], a[8usize], a[24usize], a[40usize],
+            a[56usize], a[9usize], a[25usize], a[41usize], a[57usize], a[10usize], a[26usize],
+            a[42usize], a[58usize], a[11usize], a[27usize], a[43usize], a[59usize], a[12usize],
+            a[28usize], a[44usize], a[60usize], a[13usize], a[29usize], a[45usize], a[61usize],
+            a[14usize], a[30usize], a[46usize], a[62usize], a[15usize], a[31usize], a[47usize],
+            a[63usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         let half = self.splat_u8x32(val);
         self.combine_u8x32(half, half)
@@ -12208,6 +12293,54 @@ impl Simd for Sse2 {
         self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
     }
     #[inline(always)]
+    fn load_interleaved_128_i16x32(self, src: &[i16; 32usize]) -> i16x32<Self> {
+        [
+            src[0usize],
+            src[4usize],
+            src[8usize],
+            src[12usize],
+            src[16usize],
+            src[20usize],
+            src[24usize],
+            src[28usize],
+            src[1usize],
+            src[5usize],
+            src[9usize],
+            src[13usize],
+            src[17usize],
+            src[21usize],
+            src[25usize],
+            src[29usize],
+            src[2usize],
+            src[6usize],
+            src[10usize],
+            src[14usize],
+            src[18usize],
+            src[22usize],
+            src[26usize],
+            src[30usize],
+            src[3usize],
+            src[7usize],
+            src[11usize],
+            src[15usize],
+            src[19usize],
+            src[23usize],
+            src[27usize],
+            src[31usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
+        *dest = [
+            a[0usize], a[8usize], a[16usize], a[24usize], a[1usize], a[9usize], a[17usize],
+            a[25usize], a[2usize], a[10usize], a[18usize], a[26usize], a[3usize], a[11usize],
+            a[19usize], a[27usize], a[4usize], a[12usize], a[20usize], a[28usize], a[5usize],
+            a[13usize], a[21usize], a[29usize], a[6usize], a[14usize], a[22usize], a[30usize],
+            a[7usize], a[15usize], a[23usize], a[31usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
@@ -13167,6 +13300,81 @@ impl Simd for Sse2 {
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
+    }
+    #[inline(always)]
+    fn load_interleaved_128_i32x16(self, src: &[i32; 16usize]) -> i32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, src: &[i32; 16usize]) -> i32x16<Sse2> {
+                let (chunks, []) = src.as_chunks::<4usize>() else {
+                    unreachable!()
+                };
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i32; 4usize], __m128i>(&chunks[3]);
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                token.combine_i32x8(
+                    token.combine_i32x4(out0.simd_into(token), out1.simd_into(token)),
+                    token.combine_i32x4(out2.simd_into(token), out3.simd_into(token)),
+                )
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i32x16<Sse2>, dest: &mut [i32; 16usize]) -> () {
+                let (v01, v23) = token.split_i32x16(a);
+                let (v0, v1) = token.split_i32x8(v01);
+                let (v2, v3) = token.split_i32x8(v23);
+                let v0 = v0.into();
+                let v1 = v1.into();
+                let v2 = v2.into();
+                let v3 = v3.into();
+                let tmp0 = _mm_unpacklo_epi32(v0, v1);
+                let tmp1 = _mm_unpackhi_epi32(v0, v1);
+                let tmp2 = _mm_unpacklo_epi32(v2, v3);
+                let tmp3 = _mm_unpackhi_epi32(v2, v3);
+                let out0 = _mm_unpacklo_epi64(tmp0, tmp2);
+                let out1 = _mm_unpackhi_epi64(tmp0, tmp2);
+                let out2 = _mm_unpacklo_epi64(tmp1, tmp3);
+                let out3 = _mm_unpackhi_epi64(tmp1, tmp3);
+                let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
+                    out1,
+                    &mut chunks[1],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
+                    out2,
+                    &mut chunks[2],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i32; 4usize]>(
+                    out3,
+                    &mut chunks[3],
+                );
+            }
+        );
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
@@ -14414,6 +14622,73 @@ impl Simd for Sse2 {
     fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
+    }
+    #[inline(always)]
+    fn load_interleaved_128_i64x8(self, src: &[i64; 8usize]) -> i64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, src: &[i64; 8usize]) -> i64x8<Sse2> {
+                let (chunks, []) = src.as_chunks::<2usize>() else {
+                    unreachable!()
+                };
+                let v0: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i64; 2usize], __m128i>(&chunks[0]);
+                let v1: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i64; 2usize], __m128i>(&chunks[1]);
+                let v2: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i64; 2usize], __m128i>(&chunks[2]);
+                let v3: __m128i =
+                    crate::transmute::checked_transmute_copy::<[i64; 2usize], __m128i>(&chunks[3]);
+                let out0 = _mm_unpacklo_epi64(v0, v2);
+                let out1 = _mm_unpackhi_epi64(v0, v2);
+                let out2 = _mm_unpacklo_epi64(v1, v3);
+                let out3 = _mm_unpackhi_epi64(v1, v3);
+                token.combine_i64x4(
+                    token.combine_i64x2(out0.simd_into(token), out1.simd_into(token)),
+                    token.combine_i64x2(out2.simd_into(token), out3.simd_into(token)),
+                )
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Sse2, a: i64x8<Sse2>, dest: &mut [i64; 8usize]) -> () {
+                let (v01, v23) = token.split_i64x8(a);
+                let (v0, v1) = token.split_i64x4(v01);
+                let (v2, v3) = token.split_i64x4(v23);
+                let v0 = v0.into();
+                let v1 = v1.into();
+                let v2 = v2.into();
+                let v3 = v3.into();
+                let out0 = _mm_unpacklo_epi64(v0, v1);
+                let out1 = _mm_unpacklo_epi64(v2, v3);
+                let out2 = _mm_unpackhi_epi64(v0, v1);
+                let out3 = _mm_unpackhi_epi64(v2, v3);
+                let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m128i, [i64; 2usize]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i64; 2usize]>(
+                    out1,
+                    &mut chunks[1],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i64; 2usize]>(
+                    out2,
+                    &mut chunks[2],
+                );
+                crate::transmute::checked_transmute_store::<__m128i, [i64; 2usize]>(
+                    out3,
+                    &mut chunks[3],
+                );
+            }
+        );
+        kernel(self, a, dest);
     }
     #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {

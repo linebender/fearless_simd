@@ -10475,6 +10475,14 @@ impl Simd for Neon {
         self.combine_i8x32(self.neg_i8x32(a0), self.neg_i8x32(a1))
     }
     #[inline(always)]
+    fn load_interleaved_128_i8x64(self, src: &[i8; 64usize]) -> i8x64<Self> {
+        unsafe { vld4q_s8(src.as_ptr()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
+        unsafe { vst4q_s8(dest.as_mut_ptr(), a.into()) }
+    }
+    #[inline(always)]
     fn splat_u8x64(self, val: u8) -> u8x64<Self> {
         let half = self.splat_u8x32(val);
         self.combine_u8x32(half, half)
@@ -11645,6 +11653,14 @@ impl Simd for Neon {
         self.combine_i16x16(self.neg_i16x16(a0), self.neg_i16x16(a1))
     }
     #[inline(always)]
+    fn load_interleaved_128_i16x32(self, src: &[i16; 32usize]) -> i16x32<Self> {
+        unsafe { vld4q_s16(src.as_ptr()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
+        unsafe { vst4q_s16(dest.as_mut_ptr(), a.into()) }
+    }
+    #[inline(always)]
     fn splat_u16x32(self, val: u16) -> u16x32<Self> {
         let half = self.splat_u16x16(val);
         self.combine_u16x16(half, half)
@@ -12633,6 +12649,14 @@ impl Simd for Neon {
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self> {
         let (a0, a1) = self.split_i32x16(a);
         self.combine_i32x8(self.neg_i32x8(a0), self.neg_i32x8(a1))
+    }
+    #[inline(always)]
+    fn load_interleaved_128_i32x16(self, src: &[i32; 16usize]) -> i32x16<Self> {
+        unsafe { vld4q_s32(src.as_ptr()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
+        unsafe { vst4q_s32(dest.as_mut_ptr(), a.into()) }
     }
     #[inline(always)]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self> {
@@ -13930,6 +13954,14 @@ impl Simd for Neon {
     fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self> {
         let (a0, a1) = self.split_i64x8(a);
         self.combine_i64x4(self.neg_i64x4(a0), self.neg_i64x4(a1))
+    }
+    #[inline(always)]
+    fn load_interleaved_128_i64x8(self, src: &[i64; 8usize]) -> i64x8<Self> {
+        unsafe { vld4q_s64(src.as_ptr()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn store_interleaved_128_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
+        unsafe { vst4q_s64(dest.as_mut_ptr(), a.into()) }
     }
     #[inline(always)]
     fn splat_u64x8(self, val: u64) -> u64x8<Self> {

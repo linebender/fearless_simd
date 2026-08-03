@@ -51,6 +51,21 @@ fn load_interleaved_128_f32x16<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn load_interleaved_128_i32x16<S: Simd>(simd: S) {
+    #[rustfmt::skip]
+    let data: [i32; 16] = [
+        -8, -7, -6, -5,
+        -4, -3, -2, -1,
+        0, 1, 2, 3,
+        4, 5, 6, 7,
+    ];
+    assert_eq!(
+        *simd.load_interleaved_128_i32x16(&data),
+        [-8, -4, 0, 4, -7, -3, 1, 5, -6, -2, 2, 6, -5, -1, 3, 7]
+    );
+}
+
+#[simd_test]
 fn load_interleaved_128_u32x16<S: Simd>(simd: S) {
     #[rustfmt::skip]
     let data: [u32; 16] = [
@@ -93,6 +108,28 @@ fn load_interleaved_128_u16x32<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn load_interleaved_128_i16x32<S: Simd>(simd: S) {
+    #[rustfmt::skip]
+    let data: [i16; 32] = [
+        -16, -15, -14, -13,
+        -12, -11, -10, -9,
+        -8, -7, -6, -5,
+        -4, -3, -2, -1,
+        0, 1, 2, 3,
+        4, 5, 6, 7,
+        8, 9, 10, 11,
+        12, 13, 14, 15,
+    ];
+    assert_eq!(
+        *simd.load_interleaved_128_i16x32(&data),
+        [
+            -16, -12, -8, -4, 0, 4, 8, 12, -15, -11, -7, -3, 1, 5, 9, 13, -14, -10, -6, -2, 2, 6,
+            10, 14, -13, -9, -5, -1, 3, 7, 11, 15
+        ]
+    );
+}
+
+#[simd_test]
 fn load_interleaved_128_u8x64<S: Simd>(simd: S) {
     #[rustfmt::skip]
     let data: [u8; 64] = [
@@ -126,6 +163,38 @@ fn load_interleaved_128_u8x64<S: Simd>(simd: S) {
     );
 }
 
+#[simd_test]
+fn load_interleaved_128_i8x64<S: Simd>(simd: S) {
+    #[rustfmt::skip]
+    let data: [i8; 64] = [
+        -32, -31, -30, -29,
+        -28, -27, -26, -25,
+        -24, -23, -22, -21,
+        -20, -19, -18, -17,
+        -16, -15, -14, -13,
+        -12, -11, -10, -9,
+        -8, -7, -6, -5,
+        -4, -3, -2, -1,
+        0, 1, 2, 3,
+        4, 5, 6, 7,
+        8, 9, 10, 11,
+        12, 13, 14, 15,
+        16, 17, 18, 19,
+        20, 21, 22, 23,
+        24, 25, 26, 27,
+        28, 29, 30, 31,
+    ];
+    assert_eq!(
+        *simd.load_interleaved_128_i8x64(&data),
+        [
+            -32, -28, -24, -20, -16, -12, -8, -4, 0, 4, 8, 12, 16, 20, 24, 28, -31, -27, -23, -19,
+            -15, -11, -7, -3, 1, 5, 9, 13, 17, 21, 25, 29, -30, -26, -22, -18, -14, -10, -6, -2, 2,
+            6, 10, 14, 18, 22, 26, 30, -29, -25, -21, -17, -13, -9, -5, -1, 3, 7, 11, 15, 19, 23,
+            27, 31
+        ]
+    );
+}
+
 // Additional concrete rows for this operation.
 
 #[simd_test]
@@ -133,4 +202,14 @@ fn load_interleaved_128_u64x8<S: Simd>(simd: S) {
     let data = [1_u64, 3_u64, 5_u64, 7_u64, 2_u64, 4_u64, 6_u64, 8_u64];
     let a = simd.load_interleaved_128_u64x8(&data);
     assert_eq!(*a, [1_u64, 2_u64, 3_u64, 4_u64, 5_u64, 6_u64, 7_u64, 8_u64]);
+}
+
+#[simd_test]
+fn load_interleaved_128_i64x8<S: Simd>(simd: S) {
+    let data = [-4_i64, -3_i64, -2_i64, -1_i64, 0_i64, 1_i64, 2_i64, 3_i64];
+    let a = simd.load_interleaved_128_i64x8(&data);
+    assert_eq!(
+        *a,
+        [-4_i64, 0_i64, -3_i64, 1_i64, -2_i64, 2_i64, -1_i64, 3_i64]
+    );
 }
