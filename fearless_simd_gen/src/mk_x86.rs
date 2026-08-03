@@ -1702,83 +1702,65 @@ impl X86 {
             });
         }
 
-        if saturating
-            && (vec_ty.scalar_bits == 64
-                || (*self == Self::Sse2
-                    && vec_ty.scalar == ScalarType::Unsigned
-                    && vec_ty.scalar_bits == 32))
-        {
-            return fallback_method(op, vec_ty);
-        }
-
-        self.kernel_method(op, vec_ty, |token| {
-            match (saturating, vec_ty.scalar, vec_ty.scalar_bits) {
-                (true, ScalarType::Unsigned, 16) => {
-                    let pack = pack_intrinsic(16, false, vec_ty.n_bits());
-                    quote! {
-                        let max = _mm_set1_epi16(u8::MAX as i16);
-                        let a = a.into();
-                        let b = b.into();
-                        let a = _mm_sub_epi16(a, _mm_subs_epu16(a, max));
-                        let b = _mm_sub_epi16(b, _mm_subs_epu16(b, max));
-                        #pack(a, b).simd_into(#token)
-                    }
+        let token = Ident::new("token", Span::call_site());
+        let body = match (saturating, vec_ty.scalar, vec_ty.scalar_bits) {
+            (true, ScalarType::Unsigned, 16) => {
+                let pack = pack_intrinsic(16, false, vec_ty.n_bits());
+                quote! {
+                    let max = _mm_set1_epi16(u8::MAX as i16);
+                    let a = a.into();
+                    let b = b.into();
+                    let a = _mm_sub_epi16(a, _mm_subs_epu16(a, max));
+                    let b = _mm_sub_epi16(b, _mm_subs_epu16(b, max));
+                    #pack(a, b).simd_into(#token)
                 }
-                (true, ScalarType::Unsigned, 32) => {
-                    let pack = pack_intrinsic(32, false, vec_ty.n_bits());
-                    quote! {
-                        let max = _mm_set1_epi32(u16::MAX as i32);
-                        #pack(
-                            _mm_min_epu32(a.into(), max),
-                            _mm_min_epu32(b.into(), max),
-                        ).simd_into(#token)
-                    }
-                }
-                (true, ScalarType::Int, 16 | 32) => {
-                    let pack = pack_intrinsic(vec_ty.scalar_bits, true, vec_ty.n_bits());
-                    quote! { #pack(a.into(), b.into()).simd_into(#token) }
-                }
-                (false, _, 16) => {
-                    let set1 = set1_intrinsic(vec_ty);
-                    let pack = pack_intrinsic(16, false, vec_ty.n_bits());
-                    quote! {
-                        let mask = #set1(0xff);
-                        #pack(
-                            _mm_and_si128(a.into(), mask),
-                            _mm_and_si128(b.into(), mask),
-                        ).simd_into(#token)
-                    }
-                }
-                (false, _, 32) if *self == Self::Sse2 => {
-                    quote! {
-                        let mask = _mm_set1_epi32(0xffff);
-                        let bias = _mm_set1_epi32(0x8000);
-                        let a = _mm_sub_epi32(_mm_and_si128(a.into(), mask), bias);
-                        let b = _mm_sub_epi32(_mm_and_si128(b.into(), mask), bias);
-                        let packed = _mm_packs_epi32(a, b);
-                        _mm_xor_si128(packed, _mm_set1_epi16(i16::MIN)).simd_into(#token)
-                    }
-                }
-                (false, _, 32) => {
-                    let pack = pack_intrinsic(32, false, vec_ty.n_bits());
-                    quote! {
-                        let mask = _mm_set1_epi32(0xffff);
-                        #pack(
-                            _mm_and_si128(a.into(), mask),
-                            _mm_and_si128(b.into(), mask),
-                        ).simd_into(#token)
-                    }
-                }
-                (false, _, 64) => {
-                    quote! {
-                        let a = _mm_shuffle_epi32::<0b10_00_10_00>(a.into());
-                        let b = _mm_shuffle_epi32::<0b10_00_10_00>(b.into());
-                        _mm_unpacklo_epi64(a, b).simd_into(#token)
-                    }
-                }
-                _ => unreachable!(),
             }
-        })
+            (true, ScalarType::Unsigned, 32) if *self != Self::Sse2 => {
+                let pack = pack_intrinsic(32, false, vec_ty.n_bits());
+                quote! {
+                    let max = _mm_set1_epi32(u16::MAX as i32);
+                    #pack(
+                        _mm_min_epu32(a.into(), max),
+                        _mm_min_epu32(b.into(), max),
+                    ).simd_into(#token)
+                }
+            }
+            (true, ScalarType::Int, 16 | 32) => {
+                let pack = pack_intrinsic(vec_ty.scalar_bits, true, vec_ty.n_bits());
+                quote! { #pack(a.into(), b.into()).simd_into(#token) }
+            }
+            (false, _, 16) => {
+                let set1 = set1_intrinsic(vec_ty);
+                let pack = pack_intrinsic(16, false, vec_ty.n_bits());
+                quote! {
+                    let mask = #set1(0xff);
+                    #pack(
+                        _mm_and_si128(a.into(), mask),
+                        _mm_and_si128(b.into(), mask),
+                    ).simd_into(#token)
+                }
+            }
+            (false, _, 32) if *self != Self::Sse2 => {
+                let pack = pack_intrinsic(32, false, vec_ty.n_bits());
+                quote! {
+                    let mask = _mm_set1_epi32(0xffff);
+                    #pack(
+                        _mm_and_si128(a.into(), mask),
+                        _mm_and_si128(b.into(), mask),
+                    ).simd_into(#token)
+                }
+            }
+            (false, _, 64) => {
+                quote! {
+                    let a = _mm_shuffle_epi32::<0b10_00_10_00>(a.into());
+                    let b = _mm_shuffle_epi32::<0b10_00_10_00>(b.into());
+                    _mm_unpacklo_epi64(a, b).simd_into(#token)
+                }
+            }
+            // SSE2 autovectorizes acceptably and we don't care to spend the complexity budget optimizing it
+            _ => return fallback_method(op, vec_ty),
+        };
+        self.kernel_method(op, vec_ty, |_| body)
     }
 
     pub(crate) fn handle_binary(&self, op: Op, method: &str, vec_ty: &VecType) -> TokenStream {

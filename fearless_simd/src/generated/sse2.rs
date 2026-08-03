@@ -3782,18 +3782,17 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: i32x4<Sse2>, b: i32x4<Sse2>) -> i16x8<Sse2> {
-                let mask = _mm_set1_epi32(0xffff);
-                let bias = _mm_set1_epi32(0x8000);
-                let a = _mm_sub_epi32(_mm_and_si128(a.into(), mask), bias);
-                let b = _mm_sub_epi32(_mm_and_si128(b.into(), mask), bias);
-                let packed = _mm_packs_epi32(a, b);
-                _mm_xor_si128(packed, _mm_set1_epi16(i16::MIN)).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            a[0usize] as i16,
+            a[1usize] as i16,
+            a[2usize] as i16,
+            a[3usize] as i16,
+            b[0usize] as i16,
+            b[1usize] as i16,
+            b[2usize] as i16,
+            b[3usize] as i16,
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn saturating_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self> {
@@ -4330,18 +4329,17 @@ impl Simd for Sse2 {
     }
     #[inline(always)]
     fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Sse2, a: u32x4<Sse2>, b: u32x4<Sse2>) -> u16x8<Sse2> {
-                let mask = _mm_set1_epi32(0xffff);
-                let bias = _mm_set1_epi32(0x8000);
-                let a = _mm_sub_epi32(_mm_and_si128(a.into(), mask), bias);
-                let b = _mm_sub_epi32(_mm_and_si128(b.into(), mask), bias);
-                let packed = _mm_packs_epi32(a, b);
-                _mm_xor_si128(packed, _mm_set1_epi16(i16::MIN)).simd_into(token)
-            }
-        );
-        kernel(self, a, b)
+        [
+            a[0usize] as u16,
+            a[1usize] as u16,
+            a[2usize] as u16,
+            a[3usize] as u16,
+            b[0usize] as u16,
+            b[1usize] as u16,
+            b[2usize] as u16,
+            b[3usize] as u16,
+        ]
+        .simd_into(self)
     }
     #[inline(always)]
     fn saturating_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self> {
