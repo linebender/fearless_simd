@@ -192,7 +192,7 @@ impl Level for Neon {
                     #method_sig {
                         unsafe {
                             #(#native_decls)*
-                            #intrinsic(dest.as_mut_ptr(), #aggregate_ty(#(#native_values),*))
+                            #intrinsic(dest.as_mut_ptr(), #aggregate_ty(#(#native_values),*));
                         }
                     }
                 }

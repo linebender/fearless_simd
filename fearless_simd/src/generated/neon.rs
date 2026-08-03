@@ -588,7 +588,7 @@ impl Simd for Neon {
             let v1: float32x4_t = vectors[1usize].into();
             let v2: float32x4_t = vectors[2usize].into();
             let v3: float32x4_t = vectors[3usize].into();
-            vst4q_f32(dest.as_mut_ptr(), float32x4x4_t(v0, v1, v2, v3))
+            vst4q_f32(dest.as_mut_ptr(), float32x4x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
@@ -1088,7 +1088,7 @@ impl Simd for Neon {
             let v1: int8x16_t = vectors[1usize].into();
             let v2: int8x16_t = vectors[2usize].into();
             let v3: int8x16_t = vectors[3usize].into();
-            vst4q_s8(dest.as_mut_ptr(), int8x16x4_t(v0, v1, v2, v3))
+            vst4q_s8(dest.as_mut_ptr(), int8x16x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
@@ -1550,7 +1550,7 @@ impl Simd for Neon {
             let v1: uint8x16_t = vectors[1usize].into();
             let v2: uint8x16_t = vectors[2usize].into();
             let v3: uint8x16_t = vectors[3usize].into();
-            vst4q_u8(dest.as_mut_ptr(), uint8x16x4_t(v0, v1, v2, v3))
+            vst4q_u8(dest.as_mut_ptr(), uint8x16x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
@@ -2189,7 +2189,7 @@ impl Simd for Neon {
             let v1: int16x8_t = vectors[1usize].into();
             let v2: int16x8_t = vectors[2usize].into();
             let v3: int16x8_t = vectors[3usize].into();
-            vst4q_s16(dest.as_mut_ptr(), int16x8x4_t(v0, v1, v2, v3))
+            vst4q_s16(dest.as_mut_ptr(), int16x8x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
@@ -2619,7 +2619,7 @@ impl Simd for Neon {
             let v1: uint16x8_t = vectors[1usize].into();
             let v2: uint16x8_t = vectors[2usize].into();
             let v3: uint16x8_t = vectors[3usize].into();
-            vst4q_u16(dest.as_mut_ptr(), uint16x8x4_t(v0, v1, v2, v3))
+            vst4q_u16(dest.as_mut_ptr(), uint16x8x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
@@ -3222,7 +3222,7 @@ impl Simd for Neon {
             let v1: int32x4_t = vectors[1usize].into();
             let v2: int32x4_t = vectors[2usize].into();
             let v3: int32x4_t = vectors[3usize].into();
-            vst4q_s32(dest.as_mut_ptr(), int32x4x4_t(v0, v1, v2, v3))
+            vst4q_s32(dest.as_mut_ptr(), int32x4x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
@@ -3646,7 +3646,7 @@ impl Simd for Neon {
             let v1: uint32x4_t = vectors[1usize].into();
             let v2: uint32x4_t = vectors[2usize].into();
             let v3: uint32x4_t = vectors[3usize].into();
-            vst4q_u32(dest.as_mut_ptr(), uint32x4x4_t(v0, v1, v2, v3))
+            vst4q_u32(dest.as_mut_ptr(), uint32x4x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
@@ -4313,7 +4313,7 @@ impl Simd for Neon {
             let v1: float64x2_t = vectors[1usize].into();
             let v2: float64x2_t = vectors[2usize].into();
             let v3: float64x2_t = vectors[3usize].into();
-            vst4q_f64(dest.as_mut_ptr(), float64x2x4_t(v0, v1, v2, v3))
+            vst4q_f64(dest.as_mut_ptr(), float64x2x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
@@ -4723,7 +4723,7 @@ impl Simd for Neon {
             let v1: int64x2_t = vectors[1usize].into();
             let v2: int64x2_t = vectors[2usize].into();
             let v3: int64x2_t = vectors[3usize].into();
-            vst4q_s64(dest.as_mut_ptr(), int64x2x4_t(v0, v1, v2, v3))
+            vst4q_s64(dest.as_mut_ptr(), int64x2x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
@@ -5123,7 +5123,7 @@ impl Simd for Neon {
             let v1: uint64x2_t = vectors[1usize].into();
             let v2: uint64x2_t = vectors[2usize].into();
             let v3: uint64x2_t = vectors[3usize].into();
-            vst4q_u64(dest.as_mut_ptr(), uint64x2x4_t(v0, v1, v2, v3))
+            vst4q_u64(dest.as_mut_ptr(), uint64x2x4_t(v0, v1, v2, v3));
         }
     }
     #[inline(always)]
