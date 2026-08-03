@@ -14,6 +14,8 @@ You can find its changes [documented below](#060-2026-07-10).
 ### Added
 
 - Added an `Sse2` level. This is the new baseline for i686-* and x86_64-* targets, replacing `Fallback`. ([#270][] by [@Shnatsel][])
+- Added trait bounds on `SimdElement`, and introduced the `SimdIntElement` and `SimdFloatElement` subtraits. These allow generic code to access many math and utility operations on the elements of SIMD vector types. ([#301][] by [@danderson][])
+- Added optional feature `num-traits`. When enabled, the `SimdElement`, `SimdIntElement` and `SimdFloatElement` traits acquire additional trait bounds for operations not covered by Rust core traits, for example wrapping and saturating arithmetic on integers. The `num-traits` feature is `no_std` compatible, with a slightly reduced set of float methods if libm is not available. ([#301][] by [@danderson][])
 
 ### Changed
 
