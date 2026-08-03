@@ -180,6 +180,45 @@ impl Level for Neon {
                     }
                 }
             }
+            OpSig::Widen { target_ty: _ } => {
+                let src_scalar = match vec_ty.scalar {
+                    ScalarType::Int => format!("s{}", vec_ty.scalar_bits),
+                    ScalarType::Unsigned => format!("u{}", vec_ty.scalar_bits),
+                    _ => unreachable!(),
+                };
+                let movl = Ident::new(&format!("vmovl_{src_scalar}"), Span::call_site());
+                let get_low = Ident::new(&format!("vget_low_{src_scalar}"), Span::call_site());
+                let get_high = Ident::new(&format!("vget_high_{src_scalar}"), Span::call_site());
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        (
+                            #movl(#get_low(a.into())).simd_into(#token),
+                            #movl(#get_high(a.into())).simd_into(#token),
+                        )
+                    }
+                })
+            }
+            OpSig::Narrow {
+                target_ty,
+                saturating,
+            } => {
+                let prefix = match vec_ty.scalar {
+                    ScalarType::Int => "s",
+                    ScalarType::Unsigned => "u",
+                    _ => unreachable!(),
+                };
+                let src_scalar = format!("{prefix}{}", vec_ty.scalar_bits);
+                let target_scalar = format!("{prefix}{}", target_ty.scalar_bits);
+                let method_prefix = if saturating { "vqmovn" } else { "vmovn" };
+                let narrow =
+                    Ident::new(&format!("{method_prefix}_{src_scalar}"), Span::call_site());
+                let combine = Ident::new(&format!("vcombine_{target_scalar}"), Span::call_site());
+                self.kernel_method(op, vec_ty, |token| {
+                    quote! {
+                        #combine(#narrow(a.into()), #narrow(b.into())).simd_into(#token)
+                    }
+                })
+            }
             OpSig::Binary => {
                 if vec_ty.scalar_bits == 64
                     && matches!(vec_ty.scalar, ScalarType::Int | ScalarType::Unsigned)

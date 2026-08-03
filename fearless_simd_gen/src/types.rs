@@ -125,6 +125,23 @@ impl VecType {
         Self::new(dst_scalar, dst_scalar_bits, self.n_bits() / dst_scalar_bits)
     }
 
+    /// Returns the same-width vector produced by widening each lane of this vector.
+    pub(crate) fn widened(&self) -> Option<Self> {
+        if !matches!(self.scalar, ScalarType::Unsigned | ScalarType::Int) || self.scalar_bits >= 64
+        {
+            return None;
+        }
+        Some(self.reinterpret(self.scalar, self.scalar_bits * 2))
+    }
+
+    /// Returns the same-width vector produced by narrowing each lane of two vectors of this type.
+    pub(crate) fn narrowed(&self) -> Option<Self> {
+        if !matches!(self.scalar, ScalarType::Unsigned | ScalarType::Int) || self.scalar_bits <= 8 {
+            return None;
+        }
+        Some(self.reinterpret(self.scalar, self.scalar_bits / 2))
+    }
+
     pub(crate) fn mask_ty(&self) -> Self {
         Self::new(ScalarType::Mask, self.scalar_bits, self.len)
     }

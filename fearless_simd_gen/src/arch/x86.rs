@@ -192,6 +192,18 @@ pub(crate) fn simple_sign_unaware_intrinsic(name: &str, vec_ty: &VecType) -> Ide
     intrinsic_ident(name, suffix, vec_ty.n_bits())
 }
 
+pub(crate) fn extend_intrinsic(
+    ty: ScalarType,
+    from_bits: usize,
+    to_bits: usize,
+    ty_bits: usize,
+) -> Ident {
+    let from_suffix = op_suffix(ty, from_bits, true);
+    let to_suffix = op_suffix(ty, to_bits, false);
+
+    intrinsic_ident(&format!("cvt{from_suffix}"), to_suffix, ty_bits)
+}
+
 pub(crate) fn pack_intrinsic(from_bits: usize, signed: bool, ty_bits: usize) -> Ident {
     let unsigned = match signed {
         true => "",

@@ -182,6 +182,58 @@ impl Level for Fallback {
                     }
                 }
             }
+            OpSig::Widen { target_ty } => {
+                let scalar = target_ty.scalar.rust(target_ty.scalar_bits);
+                let half_len = vec_ty.len / 2;
+                let low = make_list(
+                    (0..half_len)
+                        .map(|idx| {
+                            let a = lane(quote! { a }, vec_ty, idx);
+                            quote! { #a as #scalar }
+                        })
+                        .collect::<Vec<_>>(),
+                );
+                let high = make_list(
+                    (half_len..vec_ty.len)
+                        .map(|idx| {
+                            let a = lane(quote! { a }, vec_ty, idx);
+                            quote! { #a as #scalar }
+                        })
+                        .collect::<Vec<_>>(),
+                );
+                quote! {
+                    #method_sig {
+                        (#low.simd_into(self), #high.simd_into(self))
+                    }
+                }
+            }
+            OpSig::Narrow {
+                target_ty,
+                saturating,
+            } => {
+                let scalar = target_ty.scalar.rust(target_ty.scalar_bits);
+                let src_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
+                let convert = |value: TokenStream| {
+                    if saturating {
+                        quote! {
+                            #value.clamp(#scalar::MIN as #src_scalar, #scalar::MAX as #src_scalar) as #scalar
+                        }
+                    } else {
+                        quote! { #value as #scalar }
+                    }
+                };
+                let items = make_list(
+                    (0..vec_ty.len)
+                        .map(|idx| convert(lane(quote! { a }, vec_ty, idx)))
+                        .chain((0..vec_ty.len).map(|idx| convert(lane(quote! { b }, vec_ty, idx))))
+                        .collect::<Vec<_>>(),
+                );
+                quote! {
+                    #method_sig {
+                        #items.simd_into(self)
+                    }
+                }
+            }
             OpSig::Binary => {
                 let items = make_list(
                     (0..vec_ty.len)

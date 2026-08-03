@@ -80,6 +80,7 @@ mod to_bytes;
 mod trunc;
 mod unzip_high;
 mod unzip_low;
+mod widen_narrow;
 mod xor;
 mod zip_high;
 mod zip_low;

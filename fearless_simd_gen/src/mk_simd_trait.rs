@@ -27,7 +27,7 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         }
     }
     let mut code = quote! {
-        use crate::{seal::Seal, Level, SimdElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, Select, Bytes};
+        use crate::{seal::Seal, Level, SimdElement, SimdFrom, SimdInto, SimdCvtTruncate, SimdCvtFloat, SimdWiden, SimdNarrow, Select, Bytes};
         #imports
         /// The main SIMD trait, implemented by all SIMD token types.
         ///
@@ -70,22 +70,32 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
             /// A native-width SIMD vector of [`f64`]s.
             type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>;
             /// A native-width SIMD vector of [`u8`]s.
-            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>;
+            type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>
+                + SimdWiden<Self, Widened = Self::u16s>;
             /// A native-width SIMD vector of [`i8`]s.
-            type i8s: SimdInt<Self, Element = i8, Block = i8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s> + core::ops::Neg<Output = Self::i8s>;
+            type i8s: SimdInt<Self, Element = i8, Block = i8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>
+                + SimdWiden<Self, Widened = Self::i16s> + core::ops::Neg<Output = Self::i8s>;
             /// A native-width SIMD vector of [`u16`]s.
-            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s>;
+            type u16s: SimdInt<Self, Element = u16, Block = u16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s>
+                + SimdNarrow<Self, Narrowed = Self::u8s> + SimdWiden<Self, Widened = Self::u32s>;
             /// A native-width SIMD vector of [`i16`]s.
-            type i16s: SimdInt<Self, Element = i16, Block = i16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s> + core::ops::Neg<Output = Self::i16s>;
+            type i16s: SimdInt<Self, Element = i16, Block = i16x8<Self>, Mask = Self::mask16s, ByteVector = Self::u8s>
+                + SimdNarrow<Self, Narrowed = Self::i8s> + SimdWiden<Self, Widened = Self::i32s>
+                + core::ops::Neg<Output = Self::i16s>;
             /// A native-width SIMD vector of [`u32`]s.
-            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f32s>;
+            type u32s: SimdInt<Self, Element = u32, Block = u32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s>
+                + SimdCvtTruncate<Self::f32s> + SimdNarrow<Self, Narrowed = Self::u16s>
+                + SimdWiden<Self, Widened = Self::u64s>;
             /// A native-width SIMD vector of [`i32`]s.
             type i32s: SimdInt<Self, Element = i32, Block = i32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtTruncate<Self::f32s>
+                + SimdNarrow<Self, Narrowed = Self::i16s> + SimdWiden<Self, Widened = Self::i64s>
                 + core::ops::Neg<Output = Self::i32s>;
             /// A native-width SIMD vector of [`u64`]s.
-            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>;
+            type u64s: SimdInt<Self, Element = u64, Block = u64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+                + SimdNarrow<Self, Narrowed = Self::u32s>;
             /// A native-width SIMD vector of [`i64`]s.
             type i64s: SimdInt<Self, Element = i64, Block = i64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+                + SimdNarrow<Self, Narrowed = Self::i32s>
                 + core::ops::Neg<Output = Self::i64s>;
             /// A native-width SIMD mask with 8-bit lanes.
             type mask8s: SimdMask<Self, Element = i8> + Select<Self::u8s> + Select<Self::i8s> + Select<Self::mask8s>;

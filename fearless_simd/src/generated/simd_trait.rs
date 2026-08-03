@@ -5,7 +5,7 @@
 
 use crate::{
     Bytes, Level, Select, SimdCvtFloat, SimdCvtTruncate, SimdElement, SimdFrom, SimdInto,
-    seal::Seal,
+    SimdNarrow, SimdWiden, seal::Seal,
 };
 use crate::{
     f32x4, f32x8, f32x16, f64x2, f64x4, f64x8, i8x16, i8x32, i8x64, i16x8, i16x16, i16x32, i32x4,
@@ -75,7 +75,7 @@ pub trait Simd:
             Block = u8x16<Self>,
             Mask = Self::mask8s,
             ByteVector = Self::u8s,
-        >;
+        > + SimdWiden<Self, Widened = Self::u16s>;
     #[doc = r" A native-width SIMD vector of [`i8`]s."]
     type i8s: SimdInt<
             Self,
@@ -83,7 +83,8 @@ pub trait Simd:
             Block = i8x16<Self>,
             Mask = Self::mask8s,
             ByteVector = Self::u8s,
-        > + core::ops::Neg<Output = Self::i8s>;
+        > + SimdWiden<Self, Widened = Self::i16s>
+        + core::ops::Neg<Output = Self::i8s>;
     #[doc = r" A native-width SIMD vector of [`u16`]s."]
     type u16s: SimdInt<
             Self,
@@ -91,7 +92,8 @@ pub trait Simd:
             Block = u16x8<Self>,
             Mask = Self::mask16s,
             ByteVector = Self::u8s,
-        >;
+        > + SimdNarrow<Self, Narrowed = Self::u8s>
+        + SimdWiden<Self, Widened = Self::u32s>;
     #[doc = r" A native-width SIMD vector of [`i16`]s."]
     type i16s: SimdInt<
             Self,
@@ -99,7 +101,9 @@ pub trait Simd:
             Block = i16x8<Self>,
             Mask = Self::mask16s,
             ByteVector = Self::u8s,
-        > + core::ops::Neg<Output = Self::i16s>;
+        > + SimdNarrow<Self, Narrowed = Self::i8s>
+        + SimdWiden<Self, Widened = Self::i32s>
+        + core::ops::Neg<Output = Self::i16s>;
     #[doc = r" A native-width SIMD vector of [`u32`]s."]
     type u32s: SimdInt<
             Self,
@@ -107,7 +111,9 @@ pub trait Simd:
             Block = u32x4<Self>,
             Mask = Self::mask32s,
             ByteVector = Self::u8s,
-        > + SimdCvtTruncate<Self::f32s>;
+        > + SimdCvtTruncate<Self::f32s>
+        + SimdNarrow<Self, Narrowed = Self::u16s>
+        + SimdWiden<Self, Widened = Self::u64s>;
     #[doc = r" A native-width SIMD vector of [`i32`]s."]
     type i32s: SimdInt<
             Self,
@@ -116,6 +122,8 @@ pub trait Simd:
             Mask = Self::mask32s,
             ByteVector = Self::u8s,
         > + SimdCvtTruncate<Self::f32s>
+        + SimdNarrow<Self, Narrowed = Self::i16s>
+        + SimdWiden<Self, Widened = Self::i64s>
         + core::ops::Neg<Output = Self::i32s>;
     #[doc = r" A native-width SIMD vector of [`u64`]s."]
     type u64s: SimdInt<
@@ -124,7 +132,7 @@ pub trait Simd:
             Block = u64x2<Self>,
             Mask = Self::mask64s,
             ByteVector = Self::u8s,
-        >;
+        > + SimdNarrow<Self, Narrowed = Self::u32s>;
     #[doc = r" A native-width SIMD vector of [`i64`]s."]
     type i64s: SimdInt<
             Self,
@@ -132,7 +140,8 @@ pub trait Simd:
             Block = i64x2<Self>,
             Mask = Self::mask64s,
             ByteVector = Self::u8s,
-        > + core::ops::Neg<Output = Self::i64s>;
+        > + SimdNarrow<Self, Narrowed = Self::i32s>
+        + core::ops::Neg<Output = Self::i64s>;
     #[doc = r" A native-width SIMD mask with 8-bit lanes."]
     type mask8s: SimdMask<Self, Element = i8>
         + Select<Self::u8s>
@@ -369,6 +378,8 @@ pub trait Simd:
     fn combine_i8x16(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x32<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x16(self, a: i8x16<Self>) -> i8x16<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_i8x16(self, a: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x16(self, val: u8) -> u8x16<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -461,6 +472,8 @@ pub trait Simd:
     fn max_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x32<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_u8x16(self, a: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>);
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -594,6 +607,12 @@ pub trait Simd:
     fn combine_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x16<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i16x8(self, a: i16x8<Self>) -> i16x8<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_i16x8(self, a: i16x8<Self>, b: i16x8<Self>) -> i8x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x8(self, val: u16) -> u16x8<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -686,6 +705,12 @@ pub trait Simd:
     fn max_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x16<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_u16x8(self, a: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u8x16<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -819,6 +844,12 @@ pub trait Simd:
     fn combine_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x8<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i32x4(self, a: i32x4<Self>) -> i32x4<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_i32x4(self, a: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_i32x4(self, a: i32x4<Self>, b: i32x4<Self>) -> i16x8<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -913,6 +944,12 @@ pub trait Simd:
     fn max_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x8<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_u32x4(self, a: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_u32x4(self, a: u32x4<Self>, b: u32x4<Self>) -> u16x8<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -1154,6 +1191,10 @@ pub trait Simd:
     fn combine_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x4<Self>;
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i64x2(self, a: i64x2<Self>) -> i64x2<Self>;
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x2(self, val: u64) -> u64x2<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -1246,6 +1287,10 @@ pub trait Simd:
     fn max_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self>;
     #[doc = "Combine two vectors into a single vector with twice the width.\n\n`a` provides the lower elements and `b` provides the upper elements."]
     fn combine_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x4<Self>;
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -1497,6 +1542,8 @@ pub trait Simd:
     fn split_i8x32(self, a: i8x32<Self>) -> (i8x16<Self>, i8x16<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x32(self, a: i8x32<Self>) -> i8x32<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_i8x32(self, a: i8x32<Self>) -> (i16x16<Self>, i16x16<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x32(self, val: u8) -> u8x32<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -1591,6 +1638,8 @@ pub trait Simd:
     fn combine_u8x32(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x64<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u8x32(self, a: u8x32<Self>) -> (u8x16<Self>, u8x16<Self>);
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_u8x32(self, a: u8x32<Self>) -> (u16x16<Self>, u16x16<Self>);
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask8x32(self, val: bool) -> mask8x32<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -1732,6 +1781,12 @@ pub trait Simd:
     fn split_i16x16(self, a: i16x16<Self>) -> (i16x8<Self>, i16x8<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i16x16(self, a: i16x16<Self>) -> i16x16<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_i16x16(self, a: i16x16<Self>) -> (i32x8<Self>, i32x8<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x16(self, val: u16) -> u16x16<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -1830,6 +1885,12 @@ pub trait Simd:
     fn combine_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x32<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u16x16(self, a: u16x16<Self>) -> (u16x8<Self>, u16x8<Self>);
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_u16x16(self, a: u16x16<Self>) -> (u32x8<Self>, u32x8<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -1967,6 +2028,12 @@ pub trait Simd:
     fn split_i32x8(self, a: i32x8<Self>) -> (i32x4<Self>, i32x4<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i32x8(self, a: i32x8<Self>) -> i32x8<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_i32x8(self, a: i32x8<Self>) -> (i64x4<Self>, i64x4<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -2063,6 +2130,12 @@ pub trait Simd:
     fn combine_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x16<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u32x8(self, a: u32x8<Self>) -> (u32x4<Self>, u32x4<Self>);
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_u32x8(self, a: u32x8<Self>) -> (u64x4<Self>, u64x4<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self>;
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -2310,6 +2383,10 @@ pub trait Simd:
     fn split_i64x4(self, a: i64x4<Self>) -> (i64x2<Self>, i64x2<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i64x4(self, a: i64x4<Self>) -> i64x4<Self>;
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x4(self, val: u64) -> u64x4<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -2404,6 +2481,10 @@ pub trait Simd:
     fn combine_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_u64x4(self, a: u64x4<Self>) -> (u64x2<Self>, u64x2<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self>;
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self>;
     #[doc = "Create a SIMD mask from signed integer mask lanes."]
@@ -2661,6 +2742,8 @@ pub trait Simd:
     fn split_i8x64(self, a: i8x64<Self>) -> (i8x32<Self>, i8x32<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i8x64(self, a: i8x64<Self>) -> i8x64<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_i8x64(self, a: i8x64<Self>) -> (i16x32<Self>, i16x32<Self>);
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u8x64(self, val: u8) -> u8x64<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -2755,6 +2838,8 @@ pub trait Simd:
     fn split_u8x64(self, a: u8x64<Self>) -> (u8x32<Self>, u8x32<Self>);
     #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_u8x64(self, a: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>);
     #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> ();
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -2894,6 +2979,12 @@ pub trait Simd:
     fn split_i16x32(self, a: i16x32<Self>) -> (i16x16<Self>, i16x16<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i16x32(self, a: i16x32<Self>) -> i16x32<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_i16x32(self, a: i16x32<Self>) -> (i32x16<Self>, i32x16<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_i16x32(self, a: i16x32<Self>, b: i16x32<Self>) -> i8x64<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u16x32(self, val: u16) -> u16x32<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -2992,6 +3083,12 @@ pub trait Simd:
     fn split_u16x32(self, a: u16x32<Self>) -> (u16x16<Self>, u16x16<Self>);
     #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_u16x32(self, a: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_u16x32(self, a: u16x32<Self>, b: u16x32<Self>) -> u8x64<Self>;
     #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> ();
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]
@@ -3131,6 +3228,12 @@ pub trait Simd:
     fn split_i32x16(self, a: i32x16<Self>) -> (i32x8<Self>, i32x8<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i32x16(self, a: i32x16<Self>) -> i32x16<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_i32x16(self, a: i32x16<Self>) -> (i64x8<Self>, i64x8<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_i32x16(self, a: i32x16<Self>, b: i32x16<Self>) -> i16x32<Self>;
     #[doc = "Convert each signed 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
     fn cvt_f32_i32x16(self, a: i32x16<Self>) -> f32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
@@ -3231,6 +3334,12 @@ pub trait Simd:
     fn split_u32x16(self, a: u32x16<Self>) -> (u32x8<Self>, u32x8<Self>);
     #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self>;
+    #[doc = "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."]
+    fn widen_u32x16(self, a: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>);
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_u32x16(self, a: u32x16<Self>, b: u32x16<Self>) -> u16x32<Self>;
     #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> ();
     #[doc = "Convert each unsigned 32-bit integer element to a floating-point value.\n\nValues that cannot be exactly represented are rounded to the nearest representable value."]
@@ -3474,6 +3583,10 @@ pub trait Simd:
     fn split_i64x8(self, a: i64x8<Self>) -> (i64x4<Self>, i64x4<Self>);
     #[doc = "Negate each element of the vector, wrapping on overflow."]
     fn neg_i64x8(self, a: i64x8<Self>) -> i64x8<Self>;
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_i64x8(self, a: i64x8<Self>, b: i64x8<Self>) -> i32x16<Self>;
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_u64x8(self, val: u64) -> u64x8<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]
@@ -3568,6 +3681,10 @@ pub trait Simd:
     fn split_u64x8(self, a: u64x8<Self>) -> (u64x4<Self>, u64x4<Self>);
     #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
     fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self>;
+    #[doc = "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self>;
+    #[doc = "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `a` provides the lower result lanes and `b` provides the upper result lanes."]
+    fn saturating_narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self>;
     #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
     fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> ();
     #[doc = "Create a SIMD mask with all lanes set from the given boolean value."]

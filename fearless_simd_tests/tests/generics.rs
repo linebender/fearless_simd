@@ -62,6 +62,39 @@ fn generic_split_combine<S: Simd, V: SimdSplit<S>>(vector: V) -> V {
     left.combine(right)
 }
 
+// Ensure widening and narrowing can be expressed using only the bespoke generic traits.
+fn generic_widen_narrow<S: Simd, V: SimdWiden<S>>(vector: V) -> V {
+    let (low, high) = vector.widen();
+    low.narrow(high)
+}
+
+fn generic_saturating_widen_narrow<S: Simd, V: SimdWiden<S>>(vector: V) -> V {
+    let (low, high) = vector.widen();
+    low.saturating_narrow(high)
+}
+
+fn generic_narrow<S: Simd, V: SimdNarrow<S>>(low: V, high: V) -> V::Narrowed {
+    low.narrow(high)
+}
+
+fn generic_saturating_narrow<S: Simd, V: SimdNarrow<S>>(low: V, high: V) -> V::Narrowed {
+    low.saturating_narrow(high)
+}
+
+// Ensure the native-width associated-type bounds expose every adjacent relationship without
+// additional where-clauses.
+fn generic_native_width_widen<S: Simd>(value: S::u8s) -> (S::u16s, S::u16s) {
+    value.widen()
+}
+
+fn generic_native_width_narrow<S: Simd>(low: S::i64s, high: S::i64s) -> S::i32s {
+    low.narrow(high)
+}
+
+fn generic_native_width_saturating_narrow<S: Simd>(low: S::u32s, high: S::u32s) -> S::u16s {
+    low.saturating_narrow(high)
+}
+
 // Ensure that a generic vector can round-trip through its associated array type
 fn generic_array_roundtrip<S: Simd, V: SimdBase<S>>(vector: V) -> V {
     fn require_debug<T: core::fmt::Debug>(_: &T) {}

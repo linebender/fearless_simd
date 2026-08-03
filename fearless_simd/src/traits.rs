@@ -5,7 +5,7 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-use crate::{Level, Simd, SimdBase, seal::Seal};
+use crate::{Level, Simd, SimdBase, SimdInt, seal::Seal};
 
 /// Element-wise selection between two SIMD vectors using `self`.
 pub trait Select<T: Seal>: Seal {
@@ -205,4 +205,56 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
 
     /// Split this vector into left and right halves.
     fn split(self) -> (Self::Split, Self::Split);
+}
+
+/// Widening conversion of an integer SIMD vector.
+///
+/// Every lane is sign-extended or zero-extended according to its integer type. The result is
+/// returned as two vectors with the same bit width as the input: the first contains the widened
+/// lower lanes and the second contains the widened upper lanes.
+///
+/// ```
+/// use fearless_simd::{prelude::*, u8x16, u16x8};
+///
+/// fn fixed<S: Simd>(value: u8x16<S>) -> (u16x8<S>, u16x8<S>) {
+///     value.widen()
+/// }
+///
+/// fn native<S: Simd>(value: S::u8s) -> (S::u16s, S::u16s) {
+///     value.widen()
+/// }
+/// ```
+pub trait SimdWiden<S: Simd>: SimdInt<S> + Seal {
+    /// The same-width vector type with lanes twice as wide.
+    type Widened: SimdNarrow<S, Narrowed = Self>;
+
+    /// Widen every lane, returning the lower and upper halves in that order.
+    fn widen(self) -> (Self::Widened, Self::Widened);
+}
+
+/// Narrowing conversion of two integer SIMD vectors.
+///
+/// Both inputs have the same bit width as the result. The first input supplies the lower result
+/// lanes and the second input supplies the upper result lanes.
+///
+/// ```
+/// use fearless_simd::{prelude::*, i16x8, i8x16};
+///
+/// fn fixed<S: Simd>(low: i16x8<S>, high: i16x8<S>) -> i8x16<S> {
+///     low.narrow(high)
+/// }
+///
+/// fn native<S: Simd>(low: S::i16s, high: S::i16s) -> S::i8s {
+///     low.saturating_narrow(high)
+/// }
+/// ```
+pub trait SimdNarrow<S: Simd>: SimdInt<S> + Seal {
+    /// The same-width vector type with lanes half as wide.
+    type Narrowed: SimdWiden<S, Widened = Self>;
+
+    /// Narrow by retaining the low bits of every lane.
+    fn narrow(self, high: Self) -> Self::Narrowed;
+
+    /// Narrow by clamping every lane to the destination type's range.
+    fn saturating_narrow(self, high: Self) -> Self::Narrowed;
 }

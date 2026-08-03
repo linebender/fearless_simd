@@ -103,6 +103,13 @@ pub(crate) enum OpSig {
         scalar_bits: usize,
         precise: bool,
     },
+    /// Widens every lane, returning the lower and upper halves as two same-width vectors.
+    Widen { target_ty: VecType },
+    /// Narrows two vectors and concatenates them into one same-width vector.
+    Narrow {
+        target_ty: VecType,
+        saturating: bool,
+    },
     /// Takes an argument of a vector type and another u32 argument (the shift amount), and returns that same vector
     /// type.
     Shift,
@@ -320,6 +327,14 @@ impl Op {
                 let result = vec_ty.reinterpret(*target_ty, *scalar_bits).rust();
                 (vec![vec], quote! { #result<#simd_ty> })
             }
+            OpSig::Widen { target_ty } => {
+                let result = target_ty.rust();
+                (vec![vec], quote! { (#result<#simd_ty>, #result<#simd_ty>) })
+            }
+            OpSig::Narrow { target_ty, .. } => {
+                let result = target_ty.rust();
+                (vec![vec.clone(), vec], quote! { #result<#simd_ty> })
+            }
             OpSig::MaskReduce { .. } => (vec![vec], quote! { bool }),
             OpSig::MaskFromBitmask => (vec![quote! { u64 }], vec),
             OpSig::MaskToBitmask => (vec![vec], quote! { u64 }),
@@ -405,6 +420,7 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self, S>) -> (Self, Self) }
             }
+            OpSig::Widen { .. } | OpSig::Narrow { .. } => return None,
             OpSig::ElementRotate { .. } => {
                 let arg0 = &arg_names[0];
                 quote! { <const OFFSET: usize>(#arg0) -> Self }
@@ -1377,6 +1393,36 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ));
     }
 
+    if let Some(target_ty) = ty.widened() {
+        ops.push(Op::new(
+            "widen",
+            OpKind::OwnTrait,
+            OpSig::Widen { target_ty },
+            "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes.",
+        ));
+    }
+
+    if let Some(target_ty) = ty.narrowed() {
+        ops.push(Op::new(
+            "narrow",
+            OpKind::OwnTrait,
+            OpSig::Narrow {
+                target_ty,
+                saturating: false,
+            },
+            "Truncate the lanes of two vectors and concatenate them into one same-width vector.\n\nEach lane retains its low destination-width bits. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+        ));
+        ops.push(Op::new(
+            "saturating_narrow",
+            OpKind::OwnTrait,
+            OpSig::Narrow {
+                target_ty,
+                saturating: true,
+            },
+            "Narrow the lanes of two vectors with saturation and concatenate them into one same-width vector.\n\nEach lane is clamped to the destination type's range. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+        ));
+    }
+
     if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
         ops.push(Op::new(
             "store_interleaved_128",
@@ -1559,6 +1605,7 @@ impl OpSig {
             Self::Unary
             | Self::Split { .. }
             | Self::Cvt { .. }
+            | Self::Widen { .. }
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask
             | Self::AsArray { .. } => &["a"],
@@ -1571,6 +1618,7 @@ impl OpSig {
             | Self::Interleave
             | Self::Deinterleave
             | Self::Slide { .. } => &["a", "b"],
+            Self::Narrow { .. } => &["a", "b"],
             Self::ElementRotate { .. } => &["a"],
             Self::ElementShift { .. } => &["a", "padding"],
             Self::Ternary | Self::Select => &["a", "b", "c"],
@@ -1592,6 +1640,8 @@ impl OpSig {
             Self::Unary | Self::Cvt { .. } | Self::MaskReduce { .. } | Self::AsArray { .. } => {
                 &["self"]
             }
+            Self::Widen { .. } => &[],
+            Self::Narrow { .. } => &[],
             Self::SwizzleDynWithinBlocks => &["self", "indices"],
             Self::Binary
             | Self::Compare
@@ -1643,6 +1693,8 @@ impl OpSig {
             Self::Select
             | Self::Split { .. }
             | Self::Cvt { .. }
+            | Self::Widen { .. }
+            | Self::Narrow { .. }
             | Self::Shift
             | Self::ElementRotate { .. }
             | Self::ElementShift { .. }
