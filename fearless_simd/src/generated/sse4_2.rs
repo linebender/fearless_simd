@@ -4714,9 +4714,11 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: i64x2<Sse4_2>, b: i64x2<Sse4_2>) -> i32x4<Sse4_2> {
-                let a = _mm_shuffle_epi32::<0b10_00_10_00>(a.into());
-                let b = _mm_shuffle_epi32::<0b10_00_10_00>(b.into());
-                _mm_unpacklo_epi64(a, b).simd_into(token)
+                _mm_castps_si128(_mm_shuffle_ps::<0x88>(
+                    _mm_castsi128_ps(a.into()),
+                    _mm_castsi128_ps(b.into()),
+                ))
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
@@ -5084,9 +5086,11 @@ impl Simd for Sse4_2 {
         crate::kernel!(
             #[inline(always)]
             fn kernel(token: Sse4_2, a: u64x2<Sse4_2>, b: u64x2<Sse4_2>) -> u32x4<Sse4_2> {
-                let a = _mm_shuffle_epi32::<0b10_00_10_00>(a.into());
-                let b = _mm_shuffle_epi32::<0b10_00_10_00>(b.into());
-                _mm_unpacklo_epi64(a, b).simd_into(token)
+                _mm_castps_si128(_mm_shuffle_ps::<0x88>(
+                    _mm_castsi128_ps(a.into()),
+                    _mm_castsi128_ps(b.into()),
+                ))
+                .simd_into(token)
             }
         );
         kernel(self, a, b)
