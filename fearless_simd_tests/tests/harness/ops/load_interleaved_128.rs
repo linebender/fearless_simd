@@ -51,6 +51,34 @@ fn load_interleaved_128_f32x16<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn load_interleaved_128_f64x8<S: Simd>(simd: S) {
+    let data = [
+        0.0,
+        f64::NAN,
+        f64::INFINITY,
+        -3.0,
+        -0.0,
+        f64::MIN,
+        f64::NEG_INFINITY,
+        f64::MAX,
+    ];
+    let expected = [
+        0.0,
+        -0.0,
+        f64::NAN,
+        f64::MIN,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        -3.0,
+        f64::MAX,
+    ];
+
+    // Note: f64::NAN != f64::NAN hence we compare the bit pattern.
+    let result = simd.load_interleaved_128_f64x8(&data);
+    assert_eq!((*result).map(f64::to_bits), expected.map(f64::to_bits));
+}
+
+#[simd_test]
 fn load_interleaved_128_i32x16<S: Simd>(simd: S) {
     #[rustfmt::skip]
     let data: [i32; 16] = [

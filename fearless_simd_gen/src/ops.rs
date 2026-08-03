@@ -1362,10 +1362,6 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ops.push(NEGATE_INT);
     }
 
-    if ty.scalar == ScalarType::Float && ty.scalar_bits == 64 {
-        return ops;
-    }
-
     if matches!(
         ty.scalar,
         ScalarType::Int | ScalarType::Unsigned | ScalarType::Float
@@ -1408,6 +1404,10 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
             `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as \
             `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`.",
         ));
+    }
+
+    if ty.scalar == ScalarType::Float && ty.scalar_bits == 64 {
+        return ops;
     }
 
     if matches!(ty.scalar, ScalarType::Unsigned) {

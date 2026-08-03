@@ -13596,6 +13596,14 @@ impl Simd for Neon {
         )
     }
     #[inline(always)]
+    fn load_interleaved_128_f64x8(self, src: &[f64; 8usize]) -> f64x8<Self> {
+        unsafe { vld4q_f64(src.as_ptr()).simd_into(self) }
+    }
+    #[inline(always)]
+    fn store_interleaved_128_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
+        unsafe { vst4q_f64(dest.as_mut_ptr(), a.into()) }
+    }
+    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)

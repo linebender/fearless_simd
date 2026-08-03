@@ -54,6 +54,37 @@ fn store_interleaved_128_f32x16<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn store_interleaved_128_f64x8<S: Simd>(simd: S) {
+    let input = [
+        0.0,
+        -0.0,
+        f64::NAN,
+        f64::MIN,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        -3.0,
+        f64::MAX,
+    ];
+    let a = f64x8::from_slice(simd, &input);
+    let mut dest = [0.0_f64; 8];
+    simd.store_interleaved_128_f64x8(a, &mut dest);
+
+    let expected = [
+        0.0,
+        f64::NAN,
+        f64::INFINITY,
+        -3.0,
+        -0.0,
+        f64::MIN,
+        f64::NEG_INFINITY,
+        f64::MAX,
+    ];
+
+    // Note: f64::NAN != f64::NAN hence we compare the bit pattern.
+    assert_eq!(dest.map(f64::to_bits), expected.map(f64::to_bits));
+}
+
+#[simd_test]
 fn store_interleaved_128_i8x64<S: Simd>(simd: S) {
     let input: [i8; 64] = [
         -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15,

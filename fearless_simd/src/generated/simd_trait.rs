@@ -3400,6 +3400,10 @@ pub trait Simd:
     fn select_f64x8(self, a: mask64x8<Self>, b: f64x8<Self>, c: f64x8<Self>) -> f64x8<Self>;
     #[doc = "Split a vector into two vectors of half the width.\n\nReturns a tuple of (lower half, upper half)."]
     fn split_f64x8(self, a: f64x8<Self>) -> (f64x4<Self>, f64x4<Self>);
+    #[doc = "Load elements from an array with 4-way interleaving.\n\nThis is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them into one vector.\n\nFor example, with 32-bit lanes, memory laid out as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`."]
+    fn load_interleaved_128_f64x8(self, src: &[f64; 8usize]) -> f64x8<Self>;
+    #[doc = "Store elements to an array with 4-way interleaving.\n\nThis is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit vectors into lane-interleaved memory.\n\nFor example, with 32-bit lanes, a vector containing `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`."]
+    fn store_interleaved_128_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> ();
     #[doc = "Create a SIMD vector with all elements set to the given value."]
     fn splat_i64x8(self, val: i64) -> i64x8<Self>;
     #[doc = "Create a SIMD vector from an array of the same length."]

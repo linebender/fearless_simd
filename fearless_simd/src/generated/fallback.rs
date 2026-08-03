@@ -14099,6 +14099,26 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn load_interleaved_128_f64x8(self, src: &[f64; 8usize]) -> f64x8<Self> {
+        [
+            src[0usize],
+            src[4usize],
+            src[1usize],
+            src[5usize],
+            src[2usize],
+            src[6usize],
+            src[3usize],
+            src[7usize],
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
+        *dest = [
+            a[0usize], a[2usize], a[4usize], a[6usize], a[1usize], a[3usize], a[5usize], a[7usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)

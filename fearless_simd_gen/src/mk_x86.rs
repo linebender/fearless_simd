@@ -3201,8 +3201,8 @@ impl X86 {
         }
         match vec_ty.scalar_bits {
             64 | 32 | 16 | 8 => {
-                let avx2_u64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
-                let block_len = if avx2_u64 {
+                let avx2_64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
+                let block_len = if avx2_64 {
                     4
                 } else {
                     block_size as usize / vec_ty.scalar_bits
@@ -3216,6 +3216,14 @@ impl X86 {
                 let vec_64 = block_ty.reinterpret(block_ty.scalar, 64);
                 let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
                 let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
+                let permute_128 = intrinsic_ident(
+                    match vec_ty.scalar {
+                        ScalarType::Float => "permute2f128",
+                        _ => "permute2x128",
+                    },
+                    coarse_type(&block_ty),
+                    256,
+                );
 
                 let vec_combined =
                     VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
@@ -3227,7 +3235,7 @@ impl X86 {
                     &format!("combine_{}", vec_combined.rust_name()),
                     Span::call_site(),
                 );
-                if avx2_u64 {
+                if avx2_64 {
                     return self.kernel_method(op, vec_ty, |token| {
                         quote! {
                             let (chunks, []) = src.as_chunks::<4>() else {
@@ -3238,8 +3246,8 @@ impl X86 {
 
                             let lo = #unpacklo_64(v0, v1); // [0,4,2,6]
                             let hi = #unpackhi_64(v0, v1); // [1,5,3,7]
-                            let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi); // [0,4,1,5]
-                            let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi); // [2,6,3,7]
+                            let out0 = #permute_128::<0x20>(lo, hi); // [0,4,1,5]
+                            let out1 = #permute_128::<0x31>(lo, hi); // [2,6,3,7]
 
                             #token.#combine_half(out0.simd_into(#token), out1.simd_into(#token))
                         }
@@ -3417,8 +3425,8 @@ impl X86 {
         }
         match vec_ty.scalar_bits {
             64 | 32 | 16 | 8 => {
-                let avx2_u64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
-                let block_len = if avx2_u64 {
+                let avx2_64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
+                let block_len = if avx2_64 {
                     4
                 } else {
                     block_size as usize / vec_ty.scalar_bits
@@ -3432,6 +3440,14 @@ impl X86 {
                 let vec_64 = block_ty.reinterpret(block_ty.scalar, 64);
                 let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
                 let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
+                let permute_128 = intrinsic_ident(
+                    match vec_ty.scalar {
+                        ScalarType::Float => "permute2f128",
+                        _ => "permute2x128",
+                    },
+                    coarse_type(&block_ty),
+                    256,
+                );
 
                 let vec_combined =
                     VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
@@ -3445,15 +3461,15 @@ impl X86 {
                 // For 64-bit values, AVX2 permits a more efficient implementation.
                 // It is special-cased here as a full early return because plumbing it
                 // through the rest of the logic in this function complicates it significantly.
-                if avx2_u64 {
+                if avx2_64 {
                     return self.kernel_method(op, vec_ty, |token| {
                         quote! {
                             let (v0, v1) = #token.#split_full(a);
                             let v0: #native_ty = v0.into();
                             let v1: #native_ty = v1.into();
 
-                            let lo = _mm256_permute2x128_si256::<0x20>(v0, v1); // [0,1,4,5]
-                            let hi = _mm256_permute2x128_si256::<0x31>(v0, v1); // [2,3,6,7]
+                            let lo = #permute_128::<0x20>(v0, v1); // [0,1,4,5]
+                            let hi = #permute_128::<0x31>(v0, v1); // [2,3,6,7]
                             let out0 = #unpacklo_64(lo, hi); // [0,2,4,6]
                             let out1 = #unpackhi_64(lo, hi); // [1,3,5,7]
 

@@ -15798,6 +15798,54 @@ impl Simd for Avx2 {
         )
     }
     #[inline(always)]
+    fn load_interleaved_128_f64x8(self, src: &[f64; 8usize]) -> f64x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, src: &[f64; 8usize]) -> f64x8<Avx2> {
+                let (chunks, []) = src.as_chunks::<4>() else {
+                    unreachable!()
+                };
+                let v0: __m256d =
+                    crate::transmute::checked_transmute_copy::<[f64; 4], __m256d>(&chunks[0]);
+                let v1: __m256d =
+                    crate::transmute::checked_transmute_copy::<[f64; 4], __m256d>(&chunks[1]);
+                let lo = _mm256_unpacklo_pd(v0, v1);
+                let hi = _mm256_unpackhi_pd(v0, v1);
+                let out0 = _mm256_permute2f128_pd::<0x20>(lo, hi);
+                let out1 = _mm256_permute2f128_pd::<0x31>(lo, hi);
+                token.combine_f64x4(out0.simd_into(token), out1.simd_into(token))
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x8<Avx2>, dest: &mut [f64; 8usize]) -> () {
+                let (v0, v1) = token.split_f64x8(a);
+                let v0: __m256d = v0.into();
+                let v1: __m256d = v1.into();
+                let lo = _mm256_permute2f128_pd::<0x20>(v0, v1);
+                let hi = _mm256_permute2f128_pd::<0x31>(v0, v1);
+                let out0 = _mm256_unpacklo_pd(lo, hi);
+                let out1 = _mm256_unpackhi_pd(lo, hi);
+                let (chunks, []) = dest.as_chunks_mut::<4>() else {
+                    unreachable!()
+                };
+                crate::transmute::checked_transmute_store::<__m256d, [f64; 4]>(
+                    out0,
+                    &mut chunks[0],
+                );
+                crate::transmute::checked_transmute_store::<__m256d, [f64; 4]>(
+                    out1,
+                    &mut chunks[1],
+                );
+            }
+        );
+        kernel(self, a, dest);
+    }
+    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)

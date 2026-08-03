@@ -11584,6 +11584,44 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
+    fn load_interleaved_128_f64x8(self, src: &[f64; 8usize]) -> f64x8<Self> {
+        let (chunks, []) = src.as_chunks::<2usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[3]);
+        let out0 = u64x2_shuffle::<0, 2>(v0, v2);
+        let out1 = u64x2_shuffle::<1, 3>(v0, v2);
+        let out2 = u64x2_shuffle::<0, 2>(v1, v3);
+        let out3 = u64x2_shuffle::<1, 3>(v1, v3);
+        let combined_lower = self.combine_f64x2(out0.simd_into(self), out1.simd_into(self));
+        let combined_upper = self.combine_f64x2(out2.simd_into(self), out3.simd_into(self));
+        self.combine_f64x4(combined_lower, combined_upper)
+    }
+    #[inline(always)]
+    fn store_interleaved_128_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
+        let (lower, upper) = self.split_f64x8(a);
+        let (v0_vec, v1_vec) = self.split_f64x4(lower);
+        let (v2_vec, v3_vec) = self.split_f64x4(upper);
+        let v0: v128 = v0_vec.into();
+        let v1: v128 = v1_vec.into();
+        let v2: v128 = v2_vec.into();
+        let v3: v128 = v3_vec.into();
+        let out0 = u64x2_shuffle::<0, 2>(v0, v1);
+        let out1 = u64x2_shuffle::<0, 2>(v2, v3);
+        let out2 = u64x2_shuffle::<1, 3>(v0, v1);
+        let out3 = u64x2_shuffle::<1, 3>(v2, v3);
+        let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {
         let half = self.splat_i64x4(val);
         self.combine_i64x4(half, half)
