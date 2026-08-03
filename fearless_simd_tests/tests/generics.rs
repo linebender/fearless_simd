@@ -5,7 +5,7 @@
 
 #![expect(dead_code, reason = "Compile only tests")]
 
-use fearless_simd::prelude::*;
+use fearless_simd::{f32x4, f64x2, prelude::*};
 
 // Ensure that we can cast between generic native-width vectors
 fn generic_cast<S: Simd>(x: S::f32s) -> S::u32s {
@@ -92,6 +92,26 @@ fn generic_native_width_narrow<S: Simd>(low: S::i64s, high: S::i64s) -> S::i32s 
 }
 
 fn generic_native_width_saturating_narrow<S: Simd>(low: S::u32s, high: S::u32s) -> S::u16s {
+    low.saturating_narrow(high)
+}
+
+fn generic_fixed_width_float_widen<S: Simd>(value: f32x4<S>) -> (f64x2<S>, f64x2<S>) {
+    value.widen()
+}
+
+fn generic_fixed_width_float_narrow<S: Simd>(low: f64x2<S>, high: f64x2<S>) -> f32x4<S> {
+    low.narrow(high)
+}
+
+fn generic_native_width_float_widen<S: Simd>(value: S::f32s) -> (S::f64s, S::f64s) {
+    value.widen()
+}
+
+fn generic_native_width_float_narrow<S: Simd>(low: S::f64s, high: S::f64s) -> S::f32s {
+    low.narrow(high)
+}
+
+fn generic_native_width_float_saturating_narrow<S: Simd>(low: S::f64s, high: S::f64s) -> S::f32s {
     low.saturating_narrow(high)
 }
 

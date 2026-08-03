@@ -214,12 +214,12 @@ impl Level for Fallback {
                 let scalar = target_ty.scalar.rust(target_ty.scalar_bits);
                 let src_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
                 let convert = |value: TokenStream| {
-                    if saturating {
+                    if vec_ty.scalar == ScalarType::Float || !saturating {
+                        quote! { #value as #scalar }
+                    } else {
                         quote! {
                             #value.clamp(#scalar::MIN as #src_scalar, #scalar::MAX as #src_scalar) as #scalar
                         }
-                    } else {
-                        quote! { #value as #scalar }
                     }
                 };
                 let items = make_list(

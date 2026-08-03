@@ -181,6 +181,17 @@ impl Level for Neon {
                 }
             }
             OpSig::Widen { target_ty: _ } => {
+                if vec_ty.scalar == ScalarType::Float {
+                    return self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            (
+                                vcvt_f64_f32(vget_low_f32(a.into())).simd_into(#token),
+                                vcvt_high_f64_f32(a.into()).simd_into(#token),
+                            )
+                        }
+                    });
+                }
+
                 let src_scalar = match vec_ty.scalar {
                     ScalarType::Int => format!("s{}", vec_ty.scalar_bits),
                     ScalarType::Unsigned => format!("u{}", vec_ty.scalar_bits),
@@ -202,6 +213,23 @@ impl Level for Neon {
                 target_ty,
                 saturating,
             } => {
+                if vec_ty.scalar == ScalarType::Float {
+                    if saturating {
+                        let narrow = generic_op_name("narrow", vec_ty);
+                        return quote! {
+                            #method_sig {
+                                self.#narrow(a, b)
+                            }
+                        };
+                    }
+
+                    return self.kernel_method(op, vec_ty, |token| {
+                        quote! {
+                            vcvt_high_f32_f64(vcvt_f32_f64(a.into()), b.into()).simd_into(#token)
+                        }
+                    });
+                }
+
                 let prefix = match vec_ty.scalar {
                     ScalarType::Int => "s",
                     ScalarType::Unsigned => "u",

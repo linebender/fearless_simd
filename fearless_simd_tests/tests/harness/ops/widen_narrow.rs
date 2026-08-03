@@ -351,6 +351,189 @@ fn widen_narrow_i32_wide<S: Simd>(simd: S) {
 }
 
 #[simd_test]
+fn widen_narrow_f32x4<S: Simd>(simd: S) {
+    let input_values = [0.0_f32, -0.0, 1.5, -2.25];
+    let input = f32x4::from_slice(simd, &input_values);
+    let (low, high) = input.widen();
+    for i in 0..f64x2::<S>::N {
+        assert_eq!(low[i].to_bits(), (input_values[i] as f64).to_bits());
+        assert_eq!(
+            high[i].to_bits(),
+            (input_values[i + f64x2::<S>::N] as f64).to_bits()
+        );
+    }
+    let roundtrip = low.narrow(high);
+    for i in 0..f32x4::<S>::N {
+        assert_eq!(roundtrip[i].to_bits(), input_values[i].to_bits());
+    }
+
+    let low_values = [
+        1.0_f64 + 2.0_f64.powi(-24),
+        1.0 + 3.0_f64 * 2.0_f64.powi(-24),
+    ];
+    let high_values = [-0.0_f64, 1.0 / 3.0];
+    let low = f64x2::from_slice(simd, &low_values);
+    let high = f64x2::from_slice(simd, &high_values);
+    let narrowed = low.narrow(high);
+    let saturated = low.saturating_narrow(high);
+    assert_eq!(narrowed[0].to_bits(), 1.0_f32.to_bits());
+    assert_eq!(narrowed[1].to_bits(), (1.0_f32.to_bits() + 2));
+    for i in 0..f32x4::<S>::N {
+        let source = if i < 2 {
+            low_values[i]
+        } else {
+            high_values[i - 2]
+        };
+        let expected = source as f32;
+        assert_eq!(narrowed[i].to_bits(), expected.to_bits());
+        assert_eq!(saturated[i].to_bits(), narrowed[i].to_bits());
+    }
+}
+
+#[simd_test]
+fn widen_narrow_f32x8<S: Simd>(simd: S) {
+    let input_values = [
+        f32::MIN,
+        f32::MAX,
+        f32::MIN_POSITIVE,
+        f32::from_bits(1),
+        -f32::from_bits(1),
+        f32::INFINITY,
+        f32::NEG_INFINITY,
+        42.5,
+    ];
+    let input = f32x8::from_slice(simd, &input_values);
+    let (low, high) = input.widen();
+    for i in 0..f64x4::<S>::N {
+        assert_eq!(low[i].to_bits(), (input_values[i] as f64).to_bits());
+        assert_eq!(
+            high[i].to_bits(),
+            (input_values[i + f64x4::<S>::N] as f64).to_bits()
+        );
+    }
+    let roundtrip = low.saturating_narrow(high);
+    for i in 0..f32x8::<S>::N {
+        assert_eq!(roundtrip[i].to_bits(), input_values[i].to_bits());
+    }
+
+    let half_min_subnormal = 2.0_f64.powi(-150);
+    let low_values = [f32::MAX as f64, f64::MAX, -f64::MAX, f64::INFINITY];
+    let high_values = [
+        f64::NEG_INFINITY,
+        half_min_subnormal,
+        3.0 * half_min_subnormal,
+        f64::NAN,
+    ];
+    let low = f64x4::from_slice(simd, &low_values);
+    let high = f64x4::from_slice(simd, &high_values);
+    let narrowed = low.narrow(high);
+    let saturated = low.saturating_narrow(high);
+    assert_eq!(narrowed[1], f32::INFINITY);
+    assert_eq!(narrowed[2], f32::NEG_INFINITY);
+    assert_eq!(narrowed[5].to_bits(), 0.0_f32.to_bits());
+    assert_eq!(narrowed[6].to_bits(), f32::from_bits(2).to_bits());
+    for i in 0..f32x8::<S>::N {
+        let source = if i < 4 {
+            low_values[i]
+        } else {
+            high_values[i - 4]
+        };
+        let expected = source as f32;
+        if expected.is_nan() {
+            assert!(narrowed[i].is_nan());
+            assert!(saturated[i].is_nan());
+        } else {
+            assert_eq!(narrowed[i].to_bits(), expected.to_bits());
+            assert_eq!(saturated[i].to_bits(), narrowed[i].to_bits());
+        }
+    }
+}
+
+#[simd_test]
+fn widen_narrow_f32x16<S: Simd>(simd: S) {
+    let input_values = [
+        0.0_f32,
+        -0.0,
+        1.0,
+        -1.0,
+        1.0 / 3.0,
+        f32::MIN,
+        f32::MAX,
+        f32::MIN_POSITIVE,
+        f32::from_bits(1),
+        -f32::from_bits(1),
+        f32::INFINITY,
+        f32::NEG_INFINITY,
+        f32::NAN,
+        f32::from_bits(0x7fc0_1234),
+        16_777_216.0,
+        -16_777_216.0,
+    ];
+    let input = f32x16::from_slice(simd, &input_values);
+    let (low, high) = input.widen();
+    for i in 0..f64x8::<S>::N {
+        assert_eq!(low[i].to_bits(), (input_values[i] as f64).to_bits());
+        let source = input_values[i + f64x8::<S>::N];
+        if source.is_nan() {
+            assert!(high[i].is_nan());
+        } else {
+            assert_eq!(high[i].to_bits(), (source as f64).to_bits());
+        }
+    }
+    let roundtrip = low.narrow(high);
+    let saturated_roundtrip = low.saturating_narrow(high);
+    for i in 0..f32x16::<S>::N {
+        if input_values[i].is_nan() {
+            assert!(roundtrip[i].is_nan());
+            assert!(saturated_roundtrip[i].is_nan());
+        } else {
+            assert_eq!(roundtrip[i].to_bits(), input_values[i].to_bits());
+            assert_eq!(saturated_roundtrip[i].to_bits(), input_values[i].to_bits());
+        }
+    }
+
+    let low_values = [
+        0.0_f64,
+        -0.0,
+        1.5,
+        -2.25,
+        1.0 + 2.0_f64.powi(-24),
+        1.0 + 3.0_f64 * 2.0_f64.powi(-24),
+        f32::MAX as f64,
+        f64::MAX,
+    ];
+    let high_values = [
+        -f64::MAX,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        2.0_f64.powi(-150),
+        3.0_f64 * 2.0_f64.powi(-150),
+        f64::MIN_POSITIVE,
+        f64::from_bits(1),
+        f64::NAN,
+    ];
+    let low = f64x8::from_slice(simd, &low_values);
+    let high = f64x8::from_slice(simd, &high_values);
+    let narrowed = low.narrow(high);
+    let saturated = low.saturating_narrow(high);
+    for i in 0..f32x16::<S>::N {
+        let source = if i < 8 {
+            low_values[i]
+        } else {
+            high_values[i - 8]
+        };
+        let expected = source as f32;
+        if expected.is_nan() {
+            assert!(narrowed[i].is_nan());
+            assert!(saturated[i].is_nan());
+        } else {
+            assert_eq!(narrowed[i].to_bits(), expected.to_bits());
+            assert_eq!(saturated[i].to_bits(), narrowed[i].to_bits());
+        }
+    }
+}
+
+#[simd_test]
 #[ignore] // slow: run with `cargo test --release widen_narrow_random -- --ignored`.
 fn widen_narrow_random<S: Simd>(simd: S) {
     let mut rng = fastrand::Rng::with_seed(0x243f_6a88_85a3_08d3);
@@ -589,5 +772,82 @@ fn widen_narrow_random<S: Simd>(simd: S) {
             *saturated, expected_saturated,
             "i64 saturation iteration {iteration}",
         );
+
+        let input_f32: [f32; 8] = core::array::from_fn(|_| f32::from_bits(rng.u32(..)));
+        let input_f32 = f32x8::from_slice(simd, &input_f32);
+        let (low, high) = input_f32.widen();
+        for i in 0..f64x4::<S>::N {
+            let expected_low = input_f32[i] as f64;
+            let expected_high = input_f32[i + 4] as f64;
+            if expected_low.is_nan() {
+                assert!(low[i].is_nan(), "f32 low widening iteration {iteration}");
+            } else {
+                assert_eq!(
+                    low[i].to_bits(),
+                    expected_low.to_bits(),
+                    "f32 low widening iteration {iteration}",
+                );
+            }
+            if expected_high.is_nan() {
+                assert!(high[i].is_nan(), "f32 high widening iteration {iteration}");
+            } else {
+                assert_eq!(
+                    high[i].to_bits(),
+                    expected_high.to_bits(),
+                    "f32 high widening iteration {iteration}",
+                );
+            }
+        }
+        let roundtrip = low.narrow(high);
+        let saturated_roundtrip = low.saturating_narrow(high);
+        for i in 0..f32x8::<S>::N {
+            if input_f32[i].is_nan() {
+                assert!(roundtrip[i].is_nan(), "f32 roundtrip iteration {iteration}");
+                assert!(
+                    saturated_roundtrip[i].is_nan(),
+                    "f32 saturating roundtrip iteration {iteration}",
+                );
+            } else {
+                assert_eq!(
+                    roundtrip[i].to_bits(),
+                    input_f32[i].to_bits(),
+                    "f32 roundtrip iteration {iteration}",
+                );
+                assert_eq!(
+                    saturated_roundtrip[i].to_bits(),
+                    input_f32[i].to_bits(),
+                    "f32 saturating roundtrip iteration {iteration}",
+                );
+            }
+        }
+
+        let a_f64: [f64; 4] = core::array::from_fn(|_| f64::from_bits(rng.u64(..)));
+        let b_f64: [f64; 4] = core::array::from_fn(|_| f64::from_bits(rng.u64(..)));
+        let a_f64 = f64x4::from_slice(simd, &a_f64);
+        let b_f64 = f64x4::from_slice(simd, &b_f64);
+        let narrowed = a_f64.narrow(b_f64);
+        let saturated = a_f64.saturating_narrow(b_f64);
+        for i in 0..f32x8::<S>::N {
+            let source = if i < 4 { a_f64[i] } else { b_f64[i - 4] };
+            let expected = source as f32;
+            if expected.is_nan() {
+                assert!(narrowed[i].is_nan(), "f64 narrowing iteration {iteration}");
+                assert!(
+                    saturated[i].is_nan(),
+                    "f64 saturating narrowing iteration {iteration}",
+                );
+            } else {
+                assert_eq!(
+                    narrowed[i].to_bits(),
+                    expected.to_bits(),
+                    "f64 narrowing iteration {iteration}",
+                );
+                assert_eq!(
+                    saturated[i].to_bits(),
+                    expected.to_bits(),
+                    "f64 saturating narrowing iteration {iteration}",
+                );
+            }
+        }
     }
 }

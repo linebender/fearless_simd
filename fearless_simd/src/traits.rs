@@ -5,7 +5,7 @@
     missing_docs,
     reason = "TODO: https://github.com/linebender/fearless_simd/issues/40"
 )]
-use crate::{Level, Simd, SimdBase, SimdInt, seal::Seal};
+use crate::{Level, Simd, SimdBase, seal::Seal};
 
 /// Element-wise selection between two SIMD vectors using `self`.
 pub trait Select<T: Seal>: Seal {
@@ -207,14 +207,15 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
     fn split(self) -> (Self::Split, Self::Split);
 }
 
-/// Widening conversion of an integer SIMD vector.
+/// Widening conversion of a numeric SIMD vector.
 ///
-/// Every lane is sign-extended or zero-extended according to its integer type. The result is
-/// returned as two vectors with the same bit width as the input: the first contains the widened
-/// lower lanes and the second contains the widened upper lanes.
+/// Integer lanes are sign-extended or zero-extended according to their type. Finite floating-point
+/// lanes are converted losslessly from `f32` to `f64`; infinities and NaNs remain infinities and
+/// NaNs. The result is returned as two vectors with the same bit width as the input: the first
+/// contains the widened lower lanes and the second contains the widened upper lanes.
 ///
 /// ```
-/// use fearless_simd::{prelude::*, u8x16, u16x8};
+/// use fearless_simd::{f32x4, f64x2, prelude::*, u8x16, u16x8};
 ///
 /// fn fixed<S: Simd>(value: u8x16<S>) -> (u16x8<S>, u16x8<S>) {
 ///     value.widen()
@@ -223,8 +224,16 @@ pub trait SimdSplit<S: Simd>: SimdBase<S> + Seal {
 /// fn native<S: Simd>(value: S::u8s) -> (S::u16s, S::u16s) {
 ///     value.widen()
 /// }
+///
+/// fn fixed_float<S: Simd>(value: f32x4<S>) -> (f64x2<S>, f64x2<S>) {
+///     value.widen()
+/// }
+///
+/// fn native_float<S: Simd>(value: S::f32s) -> (S::f64s, S::f64s) {
+///     value.widen()
+/// }
 /// ```
-pub trait SimdWiden<S: Simd>: SimdInt<S> + Seal {
+pub trait SimdWiden<S: Simd>: SimdBase<S> + Seal {
     /// The same-width vector type with lanes twice as wide.
     type Widened: SimdNarrow<S, Narrowed = Self>;
 
@@ -232,13 +241,16 @@ pub trait SimdWiden<S: Simd>: SimdInt<S> + Seal {
     fn widen(self) -> (Self::Widened, Self::Widened);
 }
 
-/// Narrowing conversion of two integer SIMD vectors.
+/// Narrowing conversion of two numeric SIMD vectors.
 ///
 /// Both inputs have the same bit width as the result. The first input supplies the lower result
-/// lanes and the second input supplies the upper result lanes.
+/// lanes and the second input supplies the upper result lanes. Integer narrowing either retains
+/// the low destination-width bits or saturates, depending on the method. Floating-point narrowing
+/// converts `f64` to `f32` using Rust's `as` semantics; for floats,
+/// [`saturating_narrow`](Self::saturating_narrow) is identical to [`narrow`](Self::narrow).
 ///
 /// ```
-/// use fearless_simd::{prelude::*, i16x8, i8x16};
+/// use fearless_simd::{f32x4, f64x2, prelude::*, i16x8, i8x16};
 ///
 /// fn fixed<S: Simd>(low: i16x8<S>, high: i16x8<S>) -> i8x16<S> {
 ///     low.narrow(high)
@@ -247,14 +259,28 @@ pub trait SimdWiden<S: Simd>: SimdInt<S> + Seal {
 /// fn native<S: Simd>(low: S::i16s, high: S::i16s) -> S::i8s {
 ///     low.saturating_narrow(high)
 /// }
+///
+/// fn fixed_float<S: Simd>(low: f64x2<S>, high: f64x2<S>) -> f32x4<S> {
+///     low.narrow(high)
+/// }
+///
+/// fn native_float<S: Simd>(low: S::f64s, high: S::f64s) -> S::f32s {
+///     low.saturating_narrow(high)
+/// }
 /// ```
-pub trait SimdNarrow<S: Simd>: SimdInt<S> + Seal {
+pub trait SimdNarrow<S: Simd>: SimdBase<S> + Seal {
     /// The same-width vector type with lanes half as wide.
     type Narrowed: SimdWiden<S, Widened = Self>;
 
-    /// Narrow by retaining the low bits of every lane.
+    /// Narrow every lane.
+    ///
+    /// Integers are truncated, same as the `as` operator. Floating-point values are rounded to the
+    /// nearest representable `f32`, with ties resolved to even; overflow produces signed infinity.
     fn narrow(self, high: Self) -> Self::Narrowed;
 
-    /// Narrow by clamping every lane to the destination type's range.
+    /// Narrow with saturation for integers. Floats behave identically to [`narrow`](Self::narrow).
+    ///
+    /// Integer values that overflow the narrowed type become the maximum possible value for the narrowed type.
+    /// For example, `1234u16` becomes `u8::MAX` after narrowing.
     fn saturating_narrow(self, high: Self) -> Self::Narrowed;
 }

@@ -627,6 +627,13 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
+        (
+            [a[0usize] as f64, a[1usize] as f64].simd_into(self),
+            [a[2usize] as f64, a[3usize] as f64].simd_into(self),
+        )
+    }
+    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         [
             a[0usize] as u32,
@@ -5467,6 +5474,26 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        [
+            a[0usize] as f32,
+            a[1usize] as f32,
+            b[0usize] as f32,
+            b[1usize] as f32,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        [
+            a[0usize] as f32,
+            a[1usize] as f32,
+            b[0usize] as f32,
+            b[1usize] as f32,
+        ]
+        .simd_into(self)
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         [val; 2usize].simd_into(self)
     }
@@ -6706,6 +6733,13 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val.0[0..4usize]);
         b1.copy_from_slice(&a.val.0[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
+        let (a0, a1) = self.split_f32x8(a);
+        let (a00, a01) = self.widen_f32x4(a0);
+        let (a10, a11) = self.widen_f32x4(a1);
+        (self.combine_f64x2(a00, a01), self.combine_f64x2(a10, a11))
     }
     #[inline(always)]
     fn cvt_u32_f32x8(self, a: f32x8<Self>) -> u32x8<Self> {
@@ -9685,6 +9719,21 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f32x4(self.narrow_f64x2(a0, a1), self.narrow_f64x2(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        let (a0, a1) = self.split_f64x4(a);
+        let (b0, b1) = self.split_f64x4(b);
+        self.combine_f32x4(
+            self.saturating_narrow_f64x2(a0, a1),
+            self.saturating_narrow_f64x2(b0, b1),
+        )
+    }
+    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         let half = self.splat_i64x2(val);
         self.combine_i64x2(half, half)
@@ -10839,6 +10888,13 @@ impl Simd for Fallback {
             src[15usize],
         ]
         .simd_into(self)
+    }
+    #[inline(always)]
+    fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>) {
+        let (a0, a1) = self.split_f32x16(a);
+        let (a00, a01) = self.widen_f32x8(a0);
+        let (a10, a11) = self.widen_f32x8(a1);
+        (self.combine_f64x4(a00, a01), self.combine_f64x4(a10, a11))
     }
     #[inline(always)]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
@@ -14404,6 +14460,21 @@ impl Simd for Fallback {
         b0.copy_from_slice(&a.val.0[0..4usize]);
         b1.copy_from_slice(&a.val.0[4usize..8usize]);
         (b0.simd_into(self), b1.simd_into(self))
+    }
+    #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(self.narrow_f64x4(a0, a1), self.narrow_f64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(
+            self.saturating_narrow_f64x4(a0, a1),
+            self.saturating_narrow_f64x4(b0, b1),
+        )
     }
     #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {

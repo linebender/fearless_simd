@@ -196,6 +196,19 @@ impl Level for WasmSimd128 {
                 }
             }
             OpSig::Widen { target_ty } => {
+                if vec_ty.scalar == ScalarType::Float {
+                    return quote! {
+                        #method_sig {
+                            let a = a.into();
+                            (
+                                f64x2_promote_low_f32x4(a).simd_into(self),
+                                f64x2_promote_low_f32x4(i64x2_shuffle::<1, 1>(a, a))
+                                    .simd_into(self),
+                            )
+                        }
+                    };
+                }
+
                 let target = format!("i{}x{}", target_ty.scalar_bits, target_ty.len);
                 let source = vec_ty.rust_name();
                 let low = Ident::new(&format!("{target}_extend_low_{source}"), Span::call_site());
@@ -206,6 +219,27 @@ impl Level for WasmSimd128 {
                             #low(a.into()).simd_into(self),
                             #high(a.into()).simd_into(self),
                         )
+                    }
+                }
+            }
+            OpSig::Narrow {
+                target_ty: _,
+                saturating,
+            } if vec_ty.scalar == ScalarType::Float => {
+                if saturating {
+                    let narrow = generic_op_name("narrow", vec_ty);
+                    quote! {
+                        #method_sig {
+                            self.#narrow(a, b)
+                        }
+                    }
+                } else {
+                    quote! {
+                        #method_sig {
+                            let low = f32x4_demote_f64x2_zero(a.into());
+                            let high = f32x4_demote_f64x2_zero(b.into());
+                            i64x2_shuffle::<0, 2>(low, high).simd_into(self)
+                        }
                     }
                 }
             }

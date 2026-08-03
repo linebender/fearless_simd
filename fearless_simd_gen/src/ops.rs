@@ -1372,6 +1372,25 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
     }
 
     if ty.scalar == ScalarType::Float && ty.scalar_bits == 64 {
+        let target_ty = ty.narrowed().expect("f64 vectors support narrowing");
+        ops.push(Op::new(
+            "narrow",
+            OpKind::OwnTrait,
+            OpSig::Narrow {
+                target_ty,
+                saturating: false,
+            },
+            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nValues are rounded to the nearest representable `f32`, with ties resolved to even; overflow produces signed infinity. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+        ));
+        ops.push(Op::new(
+            "saturating_narrow",
+            OpKind::OwnTrait,
+            OpSig::Narrow {
+                target_ty,
+                saturating: true,
+            },
+            "Convert the lanes of two `f64` vectors to `f32` and concatenate them into one same-width vector.\n\nFor floating-point vectors this is identical to `narrow`, including its rounding and overflow behavior. `{arg0}` provides the lower result lanes and `{arg1}` provides the upper result lanes.",
+        ));
         return ops;
     }
 
@@ -1394,11 +1413,16 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
     }
 
     if let Some(target_ty) = ty.widened() {
+        let doc = if ty.scalar == ScalarType::Float {
+            "Widen every `f32` lane exactly into two same-width `f64` vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."
+        } else {
+            "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes."
+        };
         ops.push(Op::new(
             "widen",
             OpKind::OwnTrait,
             OpSig::Widen { target_ty },
-            "Widen every lane into two same-width vectors.\n\nThe first result contains the widened lower lanes and the second contains the widened upper lanes.",
+            doc,
         ));
     }
 

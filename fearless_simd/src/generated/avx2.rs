@@ -569,6 +569,20 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f32x4<Avx2>) -> (f64x2<Avx2>, f64x2<Avx2>) {
+                let raw = a.into();
+                (
+                    _mm_cvtps_pd(raw).simd_into(token),
+                    _mm_cvtps_pd(_mm_movehl_ps(raw, raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4413,6 +4427,22 @@ impl Simd for Avx2 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x2<Avx2>, b: f64x2<Avx2>) -> f32x4<Avx2> {
+                let low = _mm_cvtpd_ps(a.into());
+                let high = _mm_cvtpd_ps(b.into());
+                _mm_movelh_ps(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        self.narrow_f64x2(a, b)
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5911,6 +5941,20 @@ impl Simd for Avx2 {
                 (
                     _mm256_extractf128_ps::<0>(a.into()).simd_into(token),
                     _mm256_extractf128_ps::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f32x8<Avx2>) -> (f64x4<Avx2>, f64x4<Avx2>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtps_pd(_mm256_castps256_ps128(raw)).simd_into(token),
+                    _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(raw)).simd_into(token),
                 )
             }
         );
@@ -10705,6 +10749,22 @@ impl Simd for Avx2 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: f64x4<Avx2>, b: f64x4<Avx2>) -> f32x8<Avx2> {
+                let low = _mm256_cvtpd_ps(a.into());
+                let high = _mm256_cvtpd_ps(b.into());
+                _mm256_insertf128_ps::<1>(_mm256_castps128_ps256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        self.narrow_f64x4(a, b)
+    }
+    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12271,6 +12331,13 @@ impl Simd for Avx2 {
             }
         );
         kernel(self, src)
+    }
+    #[inline(always)]
+    fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>) {
+        let (a0, a1) = self.split_f32x16(a);
+        let (a00, a01) = self.widen_f32x8(a0);
+        let (a10, a11) = self.widen_f32x8(a1);
+        (self.combine_f64x4(a00, a01), self.combine_f64x4(a10, a11))
     }
     #[inline(always)]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
@@ -16130,6 +16197,21 @@ impl Simd for Avx2 {
                 val: crate::support::Aligned256(a.val.0[1]),
                 simd: self,
             },
+        )
+    }
+    #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(self.narrow_f64x4(a0, a1), self.narrow_f64x4(b0, b1))
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        let (a0, a1) = self.split_f64x8(a);
+        let (b0, b1) = self.split_f64x8(b);
+        self.combine_f32x8(
+            self.saturating_narrow_f64x4(a0, a1),
+            self.saturating_narrow_f64x4(b0, b1),
         )
     }
     #[inline(always)]

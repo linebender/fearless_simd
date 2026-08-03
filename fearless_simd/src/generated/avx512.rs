@@ -601,6 +601,20 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn widen_f32x4(self, a: f32x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x4<Avx512>) -> (f64x2<Avx512>, f64x2<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm_cvtps_pd(raw).simd_into(token),
+                    _mm_cvtps_pd(_mm_movehl_ps(raw, raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4486,6 +4500,22 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x2<Avx512>, b: f64x2<Avx512>) -> f32x4<Avx512> {
+                let low = _mm_cvtpd_ps(a.into());
+                let high = _mm_cvtpd_ps(b.into());
+                _mm_movelh_ps(low, high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
+        self.narrow_f64x2(a, b)
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -6067,6 +6097,20 @@ impl Simd for Avx512 {
                 (
                     _mm256_extractf128_ps::<0>(a.into()).simd_into(token),
                     _mm256_extractf128_ps::<1>(a.into()).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
+    }
+    #[inline(always)]
+    fn widen_f32x8(self, a: f32x8<Self>) -> (f64x4<Self>, f64x4<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x8<Avx512>) -> (f64x4<Avx512>, f64x4<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm256_cvtps_pd(_mm256_castps256_ps128(raw)).simd_into(token),
+                    _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(raw)).simd_into(token),
                 )
             }
         );
@@ -10875,6 +10919,22 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x4<Avx512>, b: f64x4<Avx512>) -> f32x8<Avx512> {
+                let low = _mm256_cvtpd_ps(a.into());
+                let high = _mm256_cvtpd_ps(b.into());
+                _mm256_insertf128_ps::<1>(_mm256_castps128_ps256(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x4(self, a: f64x4<Self>, b: f64x4<Self>) -> f32x8<Self> {
+        self.narrow_f64x4(a, b)
+    }
+    #[inline(always)]
     fn splat_i64x4(self, val: i64) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12685,6 +12745,20 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, src)
+    }
+    #[inline(always)]
+    fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>) {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f32x16<Avx512>) -> (f64x8<Avx512>, f64x8<Avx512>) {
+                let raw = a.into();
+                (
+                    _mm512_cvtps_pd(_mm512_castps512_ps256(raw)).simd_into(token),
+                    _mm512_cvtps_pd(_mm512_extractf32x8_ps::<1>(raw)).simd_into(token),
+                )
+            }
+        );
+        kernel(self, a)
     }
     #[inline(always)]
     fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
@@ -18124,6 +18198,22 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
+    }
+    #[inline(always)]
+    fn narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, a: f64x8<Avx512>, b: f64x8<Avx512>) -> f32x16<Avx512> {
+                let low = _mm512_cvtpd_ps(a.into());
+                let high = _mm512_cvtpd_ps(b.into());
+                _mm512_insertf32x8::<1>(_mm512_castps256_ps512(low), high).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
+    }
+    #[inline(always)]
+    fn saturating_narrow_f64x8(self, a: f64x8<Self>, b: f64x8<Self>) -> f32x16<Self> {
+        self.narrow_f64x8(a, b)
     }
     #[inline(always)]
     fn splat_i64x8(self, val: i64) -> i64x8<Self> {

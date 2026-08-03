@@ -1496,6 +1496,33 @@ impl X86 {
     }
 
     fn handle_widen(&self, op: Op, vec_ty: &VecType, target_ty: VecType) -> TokenStream {
+        if vec_ty.scalar == ScalarType::Float {
+            return self.kernel_method(op, vec_ty, |token| {
+                let (low, high) = match vec_ty.n_bits() {
+                    128 => (
+                        quote! { _mm_cvtps_pd(raw) },
+                        quote! { _mm_cvtps_pd(_mm_movehl_ps(raw, raw)) },
+                    ),
+                    256 => (
+                        quote! { _mm256_cvtps_pd(_mm256_castps256_ps128(raw)) },
+                        quote! { _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(raw)) },
+                    ),
+                    512 => (
+                        quote! { _mm512_cvtps_pd(_mm512_castps512_ps256(raw)) },
+                        quote! { _mm512_cvtps_pd(_mm512_extractf32x8_ps::<1>(raw)) },
+                    ),
+                    _ => unreachable!(),
+                };
+                quote! {
+                    let raw = a.into();
+                    (
+                        #low.simd_into(#token),
+                        #high.simd_into(#token),
+                    )
+                }
+            });
+        }
+
         if *self == Self::Sse2 {
             let unpack_low =
                 unpack_intrinsic(vec_ty.scalar, vec_ty.scalar_bits, true, vec_ty.n_bits());
@@ -1558,6 +1585,52 @@ impl X86 {
         target_ty: VecType,
         saturating: bool,
     ) -> TokenStream {
+        // Floats are easy: we have hardware instructions for everything.
+        if vec_ty.scalar == ScalarType::Float {
+            if saturating {
+                // Saturating conversion for floats doesn't make sense, floats always follow IEEE rounding.
+                // Pass through to the regular conversion.
+                let method_sig = op.simd_trait_method_sig(vec_ty);
+                let narrow = generic_op_name("narrow", vec_ty);
+                return quote! {
+                    #method_sig {
+                        self.#narrow(a, b)
+                    }
+                };
+            }
+
+            return self.kernel_method(op, vec_ty, |token| {
+                let (low, high, combine) = match vec_ty.n_bits() {
+                    128 => (
+                        quote! { _mm_cvtpd_ps(a.into()) },
+                        quote! { _mm_cvtpd_ps(b.into()) },
+                        quote! { _mm_movelh_ps(low, high) },
+                    ),
+                    256 => (
+                        quote! { _mm256_cvtpd_ps(a.into()) },
+                        quote! { _mm256_cvtpd_ps(b.into()) },
+                        quote! {
+                            _mm256_insertf128_ps::<1>(_mm256_castps128_ps256(low), high)
+                        },
+                    ),
+                    512 => (
+                        quote! { _mm512_cvtpd_ps(a.into()) },
+                        quote! { _mm512_cvtpd_ps(b.into()) },
+                        quote! {
+                            _mm512_insertf32x8::<1>(_mm512_castps256_ps512(low), high)
+                        },
+                    ),
+                    _ => unreachable!(),
+                };
+                quote! {
+                    let low = #low;
+                    let high = #high;
+                    #combine.simd_into(#token)
+                }
+            });
+        }
+
+        // AVX-512 is easy: we have hardware instructions for everything.
         if *self == Self::Avx512 {
             let conversion = match (saturating, vec_ty.scalar) {
                 (false, _) => format!("cvtepi{}", vec_ty.scalar_bits),
@@ -1586,6 +1659,7 @@ impl X86 {
             });
         }
 
+        // From here on out we need emulation for many of the ops. Isn't AVX2 fun?!
         if *self == Self::Avx2 && vec_ty.n_bits() == 256 {
             return self.kernel_method(op, vec_ty, |token| {
                 let reorder = |packed| {

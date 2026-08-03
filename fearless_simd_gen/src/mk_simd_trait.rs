@@ -66,9 +66,11 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         /// ```
         pub trait Simd: Sized + Clone + Copy + Send + Sync + Seal + arch_types::ArchTypes + 'static {
             /// A native-width SIMD vector of [`f32`]s.
-            type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>;
+            type f32s: SimdFloat<Self, Element = f32, Block = f32x4<Self>, Mask = Self::mask32s, ByteVector = Self::u8s> + SimdCvtFloat<Self::u32s> + SimdCvtFloat<Self::i32s>
+                + SimdWiden<Self, Widened = Self::f64s>;
             /// A native-width SIMD vector of [`f64`]s.
-            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>;
+            type f64s: SimdFloat<Self, Element = f64, Block = f64x2<Self>, Mask = Self::mask64s, ByteVector = Self::u8s>
+                + SimdNarrow<Self, Narrowed = Self::f32s>;
             /// A native-width SIMD vector of [`u8`]s.
             type u8s: SimdInt<Self, Element = u8, Block = u8x16<Self>, Mask = Self::mask8s, ByteVector = Self::u8s>
                 + SimdWiden<Self, Widened = Self::u16s>;
