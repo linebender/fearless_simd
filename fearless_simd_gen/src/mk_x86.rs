@@ -1703,6 +1703,19 @@ impl X86 {
         }
 
         let token = Ident::new("token", Span::call_site());
+        let compact_dwords = |high, a, b| {
+            let shuffle = if high {
+                quote! { 0xdd }
+            } else {
+                quote! { 0x88 }
+            };
+            quote! {
+                _mm_castps_si128(_mm_shuffle_ps::<#shuffle>(
+                    _mm_castsi128_ps(#a),
+                    _mm_castsi128_ps(#b),
+                ))
+            }
+        };
         let body = match (saturating, vec_ty.scalar, vec_ty.scalar_bits) {
             (true, ScalarType::Unsigned, 16) => {
                 let pack = pack_intrinsic(16, false, vec_ty.n_bits());
@@ -1729,6 +1742,33 @@ impl X86 {
                 let pack = pack_intrinsic(vec_ty.scalar_bits, true, vec_ty.n_bits());
                 quote! { #pack(a.into(), b.into()).simd_into(#token) }
             }
+            (true, scalar, 64) if *self != Self::Sse2 => {
+                let low = compact_dwords(false, quote! { a }, quote! { b });
+                let high = compact_dwords(true, quote! { a }, quote! { b });
+                let saturate = match scalar {
+                    ScalarType::Int => quote! {
+                        let low_sign = _mm_srai_epi32::<31>(low);
+                        let fits = _mm_cmpeq_epi32(high, low_sign);
+                        let high_sign = _mm_srai_epi32::<31>(high);
+                        let bound = _mm_xor_si128(high_sign, _mm_set1_epi32(i32::MAX));
+                        _mm_blendv_epi8(bound, low, fits)
+                    },
+                    ScalarType::Unsigned => quote! {
+                        let zero = _mm_setzero_si128();
+                        let fits = _mm_cmpeq_epi32(high, zero);
+                        let ones = _mm_cmpeq_epi32(zero, zero);
+                        _mm_or_si128(low, _mm_xor_si128(fits, ones))
+                    },
+                    _ => unreachable!(),
+                };
+                quote! {
+                    let a = a.into();
+                    let b = b.into();
+                    let low = #low;
+                    let high = #high;
+                    #saturate.simd_into(#token)
+                }
+            }
             (false, _, 16) => {
                 let set1 = set1_intrinsic(vec_ty);
                 let pack = pack_intrinsic(16, false, vec_ty.n_bits());
@@ -1751,11 +1791,9 @@ impl X86 {
                 }
             }
             (false, _, 64) => {
+                let low = compact_dwords(false, quote! { a.into() }, quote! { b.into() });
                 quote! {
-                    _mm_castps_si128(_mm_shuffle_ps::<0x88>(
-                        _mm_castsi128_ps(a.into()),
-                        _mm_castsi128_ps(b.into()),
-                    )).simd_into(#token)
+                    #low.simd_into(#token)
                 }
             }
             // SSE2 autovectorizes acceptably and we don't care to spend the complexity budget optimizing it

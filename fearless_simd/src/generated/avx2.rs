@@ -4796,13 +4796,27 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn saturating_narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
-        [
-            a[0usize].clamp(i32::MIN as i64, i32::MAX as i64) as i32,
-            a[1usize].clamp(i32::MIN as i64, i32::MAX as i64) as i32,
-            b[0usize].clamp(i32::MIN as i64, i32::MAX as i64) as i32,
-            b[1usize].clamp(i32::MIN as i64, i32::MAX as i64) as i32,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x2<Avx2>, b: i64x2<Avx2>) -> i32x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let low = _mm_castps_si128(_mm_shuffle_ps::<0x88>(
+                    _mm_castsi128_ps(a),
+                    _mm_castsi128_ps(b),
+                ));
+                let high = _mm_castps_si128(_mm_shuffle_ps::<0xdd>(
+                    _mm_castsi128_ps(a),
+                    _mm_castsi128_ps(b),
+                ));
+                let low_sign = _mm_srai_epi32::<31>(low);
+                let fits = _mm_cmpeq_epi32(high, low_sign);
+                let high_sign = _mm_srai_epi32::<31>(high);
+                let bound = _mm_xor_si128(high_sign, _mm_set1_epi32(i32::MAX));
+                _mm_blendv_epi8(bound, low, fits).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
@@ -5175,13 +5189,26 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn saturating_narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
-        [
-            a[0usize].clamp(u32::MIN as u64, u32::MAX as u64) as u32,
-            a[1usize].clamp(u32::MIN as u64, u32::MAX as u64) as u32,
-            b[0usize].clamp(u32::MIN as u64, u32::MAX as u64) as u32,
-            b[1usize].clamp(u32::MIN as u64, u32::MAX as u64) as u32,
-        ]
-        .simd_into(self)
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x2<Avx2>, b: u64x2<Avx2>) -> u32x4<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let low = _mm_castps_si128(_mm_shuffle_ps::<0x88>(
+                    _mm_castsi128_ps(a),
+                    _mm_castsi128_ps(b),
+                ));
+                let high = _mm_castps_si128(_mm_shuffle_ps::<0xdd>(
+                    _mm_castsi128_ps(a),
+                    _mm_castsi128_ps(b),
+                ));
+                let zero = _mm_setzero_si128();
+                let fits = _mm_cmpeq_epi32(high, zero);
+                let ones = _mm_cmpeq_epi32(zero, zero);
+                _mm_or_si128(low, _mm_xor_si128(fits, ones)).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
