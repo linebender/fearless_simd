@@ -252,12 +252,6 @@ impl Level for X86 {
     }
 
     fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
-        // AVX2 has no native narrowing conversions. Reuse the 128-bit SIMD
-        // implementations and combine their results instead.
-        if *self == Self::Avx2 && matches!(op.sig, OpSig::Narrow { .. }) && vec_ty.n_bits() > 128 {
-            return true;
-        }
-
         if *self == Self::Avx512
             && matches!(
                 op.sig,
@@ -1564,16 +1558,6 @@ impl X86 {
         target_ty: VecType,
         saturating: bool,
     ) -> TokenStream {
-        if *self != Self::Avx512
-            && saturating
-            && (vec_ty.scalar_bits == 64
-                || (*self == Self::Sse2
-                    && vec_ty.scalar == ScalarType::Unsigned
-                    && vec_ty.scalar_bits == 32))
-        {
-            return fallback_method(op, vec_ty);
-        }
-
         if *self == Self::Avx512 {
             let conversion = match (saturating, vec_ty.scalar) {
                 (false, _) => format!("cvtepi{}", vec_ty.scalar_bits),
@@ -1600,6 +1584,131 @@ impl X86 {
                     #combine.simd_into(#token)
                 }
             });
+        }
+
+        if *self == Self::Avx2 && vec_ty.n_bits() == 256 {
+            return self.kernel_method(op, vec_ty, |token| {
+                let reorder = |packed| {
+                    quote! {
+                        _mm256_permute4x64_epi64::<0xd8>(#packed).simd_into(#token)
+                    }
+                };
+                let compact_dwords = |high, a, b| {
+                    let shuffle = if high {
+                        quote! { 0xdd }
+                    } else {
+                        quote! { 0x88 }
+                    };
+                    quote! {
+                        _mm256_permute4x64_epi64::<0xd8>(
+                            _mm256_castps_si256(_mm256_shuffle_ps::<#shuffle>(
+                                _mm256_castsi256_ps(#a),
+                                _mm256_castsi256_ps(#b),
+                            )),
+                        )
+                    }
+                };
+
+                match vec_ty.scalar_bits {
+                    16 | 32 => {
+                        let pack = pack_intrinsic(
+                            vec_ty.scalar_bits,
+                            saturating && vec_ty.scalar == ScalarType::Int,
+                            vec_ty.n_bits(),
+                        );
+                        let packed = if saturating && vec_ty.scalar == ScalarType::Int {
+                            quote! { #pack(a.into(), b.into()) }
+                        } else {
+                            let set1 = set1_intrinsic(vec_ty);
+                            let (prepare, limit_name, limit) = if saturating {
+                                let max = match vec_ty.scalar_bits {
+                                    16 => quote! { u8::MAX as i16 },
+                                    32 => quote! { u16::MAX as i32 },
+                                    _ => unreachable!(),
+                                };
+                                (simple_intrinsic("min", vec_ty), format_ident!("max"), max)
+                            } else {
+                                let mask = match vec_ty.scalar_bits {
+                                    16 => quote! { 0xff },
+                                    32 => quote! { 0xffff },
+                                    _ => unreachable!(),
+                                };
+                                (
+                                    intrinsic_ident("and", "si256", 256),
+                                    format_ident!("mask"),
+                                    mask,
+                                )
+                            };
+                            quote! {{
+                                let #limit_name = #set1(#limit);
+                                #pack(
+                                    #prepare(a.into(), #limit_name),
+                                    #prepare(b.into(), #limit_name),
+                                )
+                            }}
+                        };
+                        reorder(packed)
+                    }
+                    64 => {
+                        if !saturating {
+                            let low =
+                                compact_dwords(false, quote! { a.into() }, quote! { b.into() });
+                            return quote! {
+                                #low.simd_into(#token)
+                            };
+                        }
+
+                        let low = compact_dwords(false, quote! { a }, quote! { b });
+                        match vec_ty.scalar {
+                            ScalarType::Int => {
+                                let high = compact_dwords(true, quote! { a }, quote! { b });
+                                quote! {
+                                    let a = a.into();
+                                    let b = b.into();
+                                    let low = #low;
+                                    let high = #high;
+                                    let low_sign = _mm256_srai_epi32::<31>(low);
+                                    let fits = _mm256_cmpeq_epi32(high, low_sign);
+                                    let high_sign = _mm256_srai_epi32::<31>(high);
+                                    let bound = _mm256_xor_si256(
+                                        high_sign,
+                                        _mm256_set1_epi32(i32::MAX),
+                                    );
+                                    _mm256_blendv_epi8(bound, low, fits).simd_into(#token)
+                                }
+                            }
+                            ScalarType::Unsigned => quote! {
+                                let zero = _mm256_setzero_si256();
+                                let ones = _mm256_cmpeq_epi64(zero, zero);
+                                let a = a.into();
+                                let b = b.into();
+                                let a_fits = _mm256_cmpeq_epi64(
+                                    _mm256_srli_epi64::<32>(a),
+                                    zero,
+                                );
+                                let b_fits = _mm256_cmpeq_epi64(
+                                    _mm256_srli_epi64::<32>(b),
+                                    zero,
+                                );
+                                let a = _mm256_or_si256(a, _mm256_xor_si256(a_fits, ones));
+                                let b = _mm256_or_si256(b, _mm256_xor_si256(b_fits, ones));
+                                #low.simd_into(#token)
+                            },
+                            _ => unreachable!(),
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            });
+        }
+
+        if saturating
+            && (vec_ty.scalar_bits == 64
+                || (*self == Self::Sse2
+                    && vec_ty.scalar == ScalarType::Unsigned
+                    && vec_ty.scalar_bits == 32))
+        {
+            return fallback_method(op, vec_ty);
         }
 
         self.kernel_method(op, vec_ty, |token| {

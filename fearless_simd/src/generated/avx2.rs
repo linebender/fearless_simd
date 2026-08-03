@@ -8091,18 +8091,31 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i8x16(self.narrow_i16x8(a0, a1), self.narrow_i16x8(b0, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> i8x32<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>({
+                    let mask = _mm256_set1_epi16(0xff);
+                    _mm256_packus_epi16(
+                        _mm256_and_si256(a.into(), mask),
+                        _mm256_and_si256(b.into(), mask),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn saturating_narrow_i16x16(self, a: i16x16<Self>, b: i16x16<Self>) -> i8x32<Self> {
-        let (a0, a1) = self.split_i16x16(a);
-        let (b0, b1) = self.split_i16x16(b);
-        self.combine_i8x16(
-            self.saturating_narrow_i16x8(a0, a1),
-            self.saturating_narrow_i16x8(b0, b1),
-        )
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i16x16<Avx2>, b: i16x16<Avx2>) -> i8x32<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_packs_epi16(a.into(), b.into()))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
@@ -8681,18 +8694,37 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u8x16(self.narrow_u16x8(a0, a1), self.narrow_u16x8(b0, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> u8x32<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>({
+                    let mask = _mm256_set1_epi16(0xff);
+                    _mm256_packus_epi16(
+                        _mm256_and_si256(a.into(), mask),
+                        _mm256_and_si256(b.into(), mask),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn saturating_narrow_u16x16(self, a: u16x16<Self>, b: u16x16<Self>) -> u8x32<Self> {
-        let (a0, a1) = self.split_u16x16(a);
-        let (b0, b1) = self.split_u16x16(b);
-        self.combine_u8x16(
-            self.saturating_narrow_u16x8(a0, a1),
-            self.saturating_narrow_u16x8(b0, b1),
-        )
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u16x16<Avx2>, b: u16x16<Avx2>) -> u8x32<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>({
+                    let max = _mm256_set1_epi16(u8::MAX as i16);
+                    _mm256_packus_epi16(
+                        _mm256_min_epu16(a.into(), max),
+                        _mm256_min_epu16(b.into(), max),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_mask16x16(self, val: bool) -> mask16x16<Self> {
@@ -9373,18 +9405,31 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i16x8(self.narrow_i32x4(a0, a1), self.narrow_i32x4(b0, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> i16x16<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>({
+                    let mask = _mm256_set1_epi32(0xffff);
+                    _mm256_packus_epi32(
+                        _mm256_and_si256(a.into(), mask),
+                        _mm256_and_si256(b.into(), mask),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn saturating_narrow_i32x8(self, a: i32x8<Self>, b: i32x8<Self>) -> i16x16<Self> {
-        let (a0, a1) = self.split_i32x8(a);
-        let (b0, b1) = self.split_i32x8(b);
-        self.combine_i16x8(
-            self.saturating_narrow_i32x4(a0, a1),
-            self.saturating_narrow_i32x4(b0, b1),
-        )
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i32x8<Avx2>, b: i32x8<Avx2>) -> i16x16<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_packs_epi32(a.into(), b.into()))
+                    .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn cvt_f32_i32x8(self, a: i32x8<Self>) -> f32x8<Self> {
@@ -9887,18 +9932,37 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u16x8(self.narrow_u32x4(a0, a1), self.narrow_u32x4(b0, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> u16x16<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>({
+                    let mask = _mm256_set1_epi32(0xffff);
+                    _mm256_packus_epi32(
+                        _mm256_and_si256(a.into(), mask),
+                        _mm256_and_si256(b.into(), mask),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn saturating_narrow_u32x8(self, a: u32x8<Self>, b: u32x8<Self>) -> u16x16<Self> {
-        let (a0, a1) = self.split_u32x8(a);
-        let (b0, b1) = self.split_u32x8(b);
-        self.combine_u16x8(
-            self.saturating_narrow_u32x4(a0, a1),
-            self.saturating_narrow_u32x4(b0, b1),
-        )
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u32x8<Avx2>, b: u32x8<Avx2>) -> u16x16<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>({
+                    let max = _mm256_set1_epi32(u16::MAX as i32);
+                    _mm256_packus_epi32(
+                        _mm256_min_epu32(a.into(), max),
+                        _mm256_min_epu32(b.into(), max),
+                    )
+                })
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn cvt_f32_u32x8(self, a: u32x8<Self>) -> f32x8<Self> {
@@ -11056,18 +11120,39 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        self.combine_i32x4(self.narrow_i64x2(a0, a1), self.narrow_i64x2(b0, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i32x8<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_castps_si256(_mm256_shuffle_ps::<0x88>(
+                    _mm256_castsi256_ps(a.into()),
+                    _mm256_castsi256_ps(b.into()),
+                )))
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn saturating_narrow_i64x4(self, a: i64x4<Self>, b: i64x4<Self>) -> i32x8<Self> {
-        let (a0, a1) = self.split_i64x4(a);
-        let (b0, b1) = self.split_i64x4(b);
-        self.combine_i32x4(
-            self.saturating_narrow_i64x2(a0, a1),
-            self.saturating_narrow_i64x2(b0, b1),
-        )
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: i64x4<Avx2>, b: i64x4<Avx2>) -> i32x8<Avx2> {
+                let a = a.into();
+                let b = b.into();
+                let low = _mm256_permute4x64_epi64::<0xd8>(_mm256_castps_si256(
+                    _mm256_shuffle_ps::<0x88>(_mm256_castsi256_ps(a), _mm256_castsi256_ps(b)),
+                ));
+                let high = _mm256_permute4x64_epi64::<0xd8>(_mm256_castps_si256(
+                    _mm256_shuffle_ps::<0xdd>(_mm256_castsi256_ps(a), _mm256_castsi256_ps(b)),
+                ));
+                let low_sign = _mm256_srai_epi32::<31>(low);
+                let fits = _mm256_cmpeq_epi32(high, low_sign);
+                let high_sign = _mm256_srai_epi32::<31>(high);
+                let bound = _mm256_xor_si256(high_sign, _mm256_set1_epi32(i32::MAX));
+                _mm256_blendv_epi8(bound, low, fits).simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_u64x4(self, val: u64) -> u64x4<Self> {
@@ -11500,18 +11585,39 @@ impl Simd for Avx2 {
     }
     #[inline(always)]
     fn narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        self.combine_u32x4(self.narrow_u64x2(a0, a1), self.narrow_u64x2(b0, b1))
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u32x8<Avx2> {
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_castps_si256(_mm256_shuffle_ps::<0x88>(
+                    _mm256_castsi256_ps(a.into()),
+                    _mm256_castsi256_ps(b.into()),
+                )))
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn saturating_narrow_u64x4(self, a: u64x4<Self>, b: u64x4<Self>) -> u32x8<Self> {
-        let (a0, a1) = self.split_u64x4(a);
-        let (b0, b1) = self.split_u64x4(b);
-        self.combine_u32x4(
-            self.saturating_narrow_u64x2(a0, a1),
-            self.saturating_narrow_u64x2(b0, b1),
-        )
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx2, a: u64x4<Avx2>, b: u64x4<Avx2>) -> u32x8<Avx2> {
+                let zero = _mm256_setzero_si256();
+                let ones = _mm256_cmpeq_epi64(zero, zero);
+                let a = a.into();
+                let b = b.into();
+                let a_fits = _mm256_cmpeq_epi64(_mm256_srli_epi64::<32>(a), zero);
+                let b_fits = _mm256_cmpeq_epi64(_mm256_srli_epi64::<32>(b), zero);
+                let a = _mm256_or_si256(a, _mm256_xor_si256(a_fits, ones));
+                let b = _mm256_or_si256(b, _mm256_xor_si256(b_fits, ones));
+                _mm256_permute4x64_epi64::<0xd8>(_mm256_castps_si256(_mm256_shuffle_ps::<0x88>(
+                    _mm256_castsi256_ps(a),
+                    _mm256_castsi256_ps(b),
+                )))
+                .simd_into(token)
+            }
+        );
+        kernel(self, a, b)
     }
     #[inline(always)]
     fn splat_mask64x4(self, val: bool) -> mask64x4<Self> {
