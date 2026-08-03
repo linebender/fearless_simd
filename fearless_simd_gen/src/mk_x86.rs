@@ -1692,10 +1692,10 @@ impl X86 {
                             vec_ty.n_bits(),
                         );
                         let packed = if saturating && vec_ty.scalar == ScalarType::Int {
-                            // AVX2 has a native signed interger narrowing instruction
+                            // AVX2 has a native signed integer narrowing instruction
                             quote! { #pack(a.into(), b.into()) }
                         } else {
-                            // Everyting else needs to be emulated on top of signed integer narrowing via masking
+                            // Everything else needs to be emulated on top of signed integer narrowing via masking
                             let set1 = set1_intrinsic(vec_ty);
                             let limit = match vec_ty.scalar_bits {
                                 16 => quote! { 0xff },
