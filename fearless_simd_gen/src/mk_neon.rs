@@ -5,8 +5,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{ToTokens as _, format_ident, quote};
 
 use crate::generic::{
-    fallback_method, generic_as_array, generic_from_array, generic_mask_set, generic_op_name,
-    generic_store_array, integer_lane_mask_splat_arg,
+    fallback_method, generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
 use crate::ops::{Op, SlideGranularity};
@@ -18,6 +17,19 @@ use crate::{
 
 #[derive(Clone, Copy)]
 pub(crate) struct Neon;
+
+fn neon_multi_vector_ty(vec_ty: &VecType, count: u16) -> Ident {
+    let scalar = match vec_ty.scalar {
+        ScalarType::Float => "float",
+        ScalarType::Unsigned => "uint",
+        ScalarType::Int => "int",
+        ScalarType::Mask => unreachable!("interleaved operations are not defined for masks"),
+    };
+    Ident::new(
+        &format!("{scalar}{}x{}x{count}_t", vec_ty.scalar_bits, vec_ty.len),
+        Span::call_site(),
+    )
+}
 
 impl Level for Neon {
     fn name(&self) -> &'static str {
@@ -138,22 +150,18 @@ impl Level for Neon {
                 block_size,
                 block_count,
             } => {
-                assert_eq!(block_count, 4, "only count of 4 is currently supported");
-                let intrinsic = {
-                    // The function expects 64-bit or 128-bit
-                    let ty = VecType::new(
-                        vec_ty.scalar,
-                        vec_ty.scalar_bits,
-                        block_size as usize / vec_ty.scalar_bits,
-                    );
-                    simple_intrinsic("vld4", &ty)
-                };
+                assert_eq!(
+                    vec_ty.n_bits(),
+                    block_size as usize,
+                    "NEON interleaved loads require full block-sized vectors"
+                );
+                let intrinsic = simple_intrinsic(&format!("vld{block_count}"), vec_ty);
+                let fields = (0..block_count).map(Literal::u16_unsuffixed);
 
                 quote! {
                     #method_sig {
-                        unsafe {
-                            #intrinsic(src.as_ptr()).simd_into(self)
-                        }
+                        let native = unsafe { #intrinsic(src.as_ptr()) };
+                        [#(native.#fields.simd_into(self)),*]
                     }
                 }
             }
@@ -161,22 +169,26 @@ impl Level for Neon {
                 block_size,
                 block_count,
             } => {
-                assert_eq!(block_count, 4, "only count of 4 is currently supported");
-                let intrinsic = {
-                    // The function expects 64-bit or 128-bit
-                    let ty = VecType::new(
-                        vec_ty.scalar,
-                        vec_ty.scalar_bits,
-                        block_size as usize / vec_ty.scalar_bits,
-                    );
-                    simple_intrinsic("vst4", &ty)
-                };
+                assert_eq!(
+                    vec_ty.n_bits(),
+                    block_size as usize,
+                    "NEON interleaved stores require full block-sized vectors"
+                );
+                let intrinsic = simple_intrinsic(&format!("vst{block_count}"), vec_ty);
+                let aggregate_ty = neon_multi_vector_ty(vec_ty, block_count);
+                let indices = 0..block_count as usize;
+                let native_ty = self.arch_ty(vec_ty);
+                let native_values = (0..block_count as usize)
+                    .map(|idx| format_ident!("v{idx}"))
+                    .collect::<Vec<_>>();
+                let native_decls = native_values.iter().zip(indices).map(|(value, idx)| {
+                    quote! { let #value: #native_ty = vectors[#idx].into(); }
+                });
 
                 quote! {
                     #method_sig {
-                        unsafe {
-                            #intrinsic(dest.as_mut_ptr(), a.into())
-                        }
+                        #(#native_decls)*
+                        unsafe { #intrinsic(dest.as_mut_ptr(), #aggregate_ty(#(#native_values),*)); }
                     }
                 }
             }
@@ -569,13 +581,6 @@ impl Level for Neon {
             OpSig::MaskFromBitmask => self.handle_mask_from_bitmask(op, vec_ty),
             OpSig::MaskToBitmask => self.handle_mask_to_bitmask(op, vec_ty),
             OpSig::MaskSet => generic_mask_set(method_sig, vec_ty),
-            OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
-            OpSig::AsArray { kind } => {
-                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
-                    self.arch_ty(vec_ty)
-                })
-            }
-            OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);

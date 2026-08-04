@@ -169,36 +169,6 @@ impl Simd for Fallback {
         [val; 4usize].simd_into(self)
     }
     #[inline(always)]
-    fn load_array_f32x4(self, val: [f32; 4usize]) -> f32x4<Self> {
-        f32x4 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x4(self, val: &[f32; 4usize]) -> f32x4<Self> {
-        f32x4 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x4(self, a: f32x4<Self>) -> [f32; 4usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x4(self, a: &f32x4<Self>) -> &[f32; 4usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x4(self, a: &mut f32x4<Self>) -> &mut [f32; 4usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         let mut dest = [Default::default(); 4usize];
         dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -650,6 +620,40 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_f32x4(self, src: &[f32; 16usize]) -> [f32x4<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize], src[8usize], src[12usize]].simd_into(self),
+            [src[1usize], src[5usize], src[9usize], src[13usize]].simd_into(self),
+            [src[2usize], src[6usize], src[10usize], src[14usize]].simd_into(self),
+            [src[3usize], src[7usize], src[11usize], src[15usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f32x4(
+        self,
+        vectors: [f32x4<Self>; 4usize],
+        dest: &mut [f32; 16usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+        ];
+    }
+    #[inline(always)]
     fn cvt_u32_f32x4(self, a: f32x4<Self>) -> u32x4<Self> {
         [
             a[0usize] as u32,
@@ -692,36 +696,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
         [val; 16usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_i8x16(self, val: [i8; 16usize]) -> i8x16<Self> {
-        i8x16 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x16(self, val: &[i8; 16usize]) -> i8x16<Self> {
-        i8x16 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x16(self, a: i8x16<Self>) -> [i8; 16usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x16(self, a: &i8x16<Self>) -> &[i8; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x16(self, a: &mut i8x16<Self>) -> &mut [i8; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1488,38 +1462,162 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i8x16(self, src: &[i8; 64usize]) -> [i8x16<Self>; 4usize] {
+        [
+            [
+                src[0usize],
+                src[4usize],
+                src[8usize],
+                src[12usize],
+                src[16usize],
+                src[20usize],
+                src[24usize],
+                src[28usize],
+                src[32usize],
+                src[36usize],
+                src[40usize],
+                src[44usize],
+                src[48usize],
+                src[52usize],
+                src[56usize],
+                src[60usize],
+            ]
+            .simd_into(self),
+            [
+                src[1usize],
+                src[5usize],
+                src[9usize],
+                src[13usize],
+                src[17usize],
+                src[21usize],
+                src[25usize],
+                src[29usize],
+                src[33usize],
+                src[37usize],
+                src[41usize],
+                src[45usize],
+                src[49usize],
+                src[53usize],
+                src[57usize],
+                src[61usize],
+            ]
+            .simd_into(self),
+            [
+                src[2usize],
+                src[6usize],
+                src[10usize],
+                src[14usize],
+                src[18usize],
+                src[22usize],
+                src[26usize],
+                src[30usize],
+                src[34usize],
+                src[38usize],
+                src[42usize],
+                src[46usize],
+                src[50usize],
+                src[54usize],
+                src[58usize],
+                src[62usize],
+            ]
+            .simd_into(self),
+            [
+                src[3usize],
+                src[7usize],
+                src[11usize],
+                src[15usize],
+                src[19usize],
+                src[23usize],
+                src[27usize],
+                src[31usize],
+                src[35usize],
+                src[39usize],
+                src[43usize],
+                src[47usize],
+                src[51usize],
+                src[55usize],
+                src[59usize],
+                src[63usize],
+            ]
+            .simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i8x16(
+        self,
+        vectors: [i8x16<Self>; 4usize],
+        dest: &mut [i8; 64usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+            vectors[0usize][4usize],
+            vectors[1usize][4usize],
+            vectors[2usize][4usize],
+            vectors[3usize][4usize],
+            vectors[0usize][5usize],
+            vectors[1usize][5usize],
+            vectors[2usize][5usize],
+            vectors[3usize][5usize],
+            vectors[0usize][6usize],
+            vectors[1usize][6usize],
+            vectors[2usize][6usize],
+            vectors[3usize][6usize],
+            vectors[0usize][7usize],
+            vectors[1usize][7usize],
+            vectors[2usize][7usize],
+            vectors[3usize][7usize],
+            vectors[0usize][8usize],
+            vectors[1usize][8usize],
+            vectors[2usize][8usize],
+            vectors[3usize][8usize],
+            vectors[0usize][9usize],
+            vectors[1usize][9usize],
+            vectors[2usize][9usize],
+            vectors[3usize][9usize],
+            vectors[0usize][10usize],
+            vectors[1usize][10usize],
+            vectors[2usize][10usize],
+            vectors[3usize][10usize],
+            vectors[0usize][11usize],
+            vectors[1usize][11usize],
+            vectors[2usize][11usize],
+            vectors[3usize][11usize],
+            vectors[0usize][12usize],
+            vectors[1usize][12usize],
+            vectors[2usize][12usize],
+            vectors[3usize][12usize],
+            vectors[0usize][13usize],
+            vectors[1usize][13usize],
+            vectors[2usize][13usize],
+            vectors[3usize][13usize],
+            vectors[0usize][14usize],
+            vectors[1usize][14usize],
+            vectors[2usize][14usize],
+            vectors[3usize][14usize],
+            vectors[0usize][15usize],
+            vectors[1usize][15usize],
+            vectors[2usize][15usize],
+            vectors[3usize][15usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         [val; 16usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self> {
-        u8x16 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x16(self, val: &[u8; 16usize]) -> u8x16<Self> {
-        u8x16 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x16(self, a: u8x16<Self>) -> [u8; 16usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x16(self, a: &u8x16<Self>) -> &[u8; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x16(self, a: &mut u8x16<Self>) -> &mut [u8; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -2264,6 +2362,160 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_u8x16(self, src: &[u8; 64usize]) -> [u8x16<Self>; 4usize] {
+        [
+            [
+                src[0usize],
+                src[4usize],
+                src[8usize],
+                src[12usize],
+                src[16usize],
+                src[20usize],
+                src[24usize],
+                src[28usize],
+                src[32usize],
+                src[36usize],
+                src[40usize],
+                src[44usize],
+                src[48usize],
+                src[52usize],
+                src[56usize],
+                src[60usize],
+            ]
+            .simd_into(self),
+            [
+                src[1usize],
+                src[5usize],
+                src[9usize],
+                src[13usize],
+                src[17usize],
+                src[21usize],
+                src[25usize],
+                src[29usize],
+                src[33usize],
+                src[37usize],
+                src[41usize],
+                src[45usize],
+                src[49usize],
+                src[53usize],
+                src[57usize],
+                src[61usize],
+            ]
+            .simd_into(self),
+            [
+                src[2usize],
+                src[6usize],
+                src[10usize],
+                src[14usize],
+                src[18usize],
+                src[22usize],
+                src[26usize],
+                src[30usize],
+                src[34usize],
+                src[38usize],
+                src[42usize],
+                src[46usize],
+                src[50usize],
+                src[54usize],
+                src[58usize],
+                src[62usize],
+            ]
+            .simd_into(self),
+            [
+                src[3usize],
+                src[7usize],
+                src[11usize],
+                src[15usize],
+                src[19usize],
+                src[23usize],
+                src[27usize],
+                src[31usize],
+                src[35usize],
+                src[39usize],
+                src[43usize],
+                src[47usize],
+                src[51usize],
+                src[55usize],
+                src[59usize],
+                src[63usize],
+            ]
+            .simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u8x16(
+        self,
+        vectors: [u8x16<Self>; 4usize],
+        dest: &mut [u8; 64usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+            vectors[0usize][4usize],
+            vectors[1usize][4usize],
+            vectors[2usize][4usize],
+            vectors[3usize][4usize],
+            vectors[0usize][5usize],
+            vectors[1usize][5usize],
+            vectors[2usize][5usize],
+            vectors[3usize][5usize],
+            vectors[0usize][6usize],
+            vectors[1usize][6usize],
+            vectors[2usize][6usize],
+            vectors[3usize][6usize],
+            vectors[0usize][7usize],
+            vectors[1usize][7usize],
+            vectors[2usize][7usize],
+            vectors[3usize][7usize],
+            vectors[0usize][8usize],
+            vectors[1usize][8usize],
+            vectors[2usize][8usize],
+            vectors[3usize][8usize],
+            vectors[0usize][9usize],
+            vectors[1usize][9usize],
+            vectors[2usize][9usize],
+            vectors[3usize][9usize],
+            vectors[0usize][10usize],
+            vectors[1usize][10usize],
+            vectors[2usize][10usize],
+            vectors[3usize][10usize],
+            vectors[0usize][11usize],
+            vectors[1usize][11usize],
+            vectors[2usize][11usize],
+            vectors[3usize][11usize],
+            vectors[0usize][12usize],
+            vectors[1usize][12usize],
+            vectors[2usize][12usize],
+            vectors[3usize][12usize],
+            vectors[0usize][13usize],
+            vectors[1usize][13usize],
+            vectors[2usize][13usize],
+            vectors[3usize][13usize],
+            vectors[0usize][14usize],
+            vectors[1usize][14usize],
+            vectors[2usize][14usize],
+            vectors[3usize][14usize],
+            vectors[0usize][15usize],
+            vectors[1usize][15usize],
+            vectors[2usize][15usize],
+            vectors[3usize][15usize],
+        ];
+    }
+    #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> u16x16<Self> {
         [
             a[0usize] as u16,
@@ -2291,17 +2543,6 @@ impl Simd for Fallback {
         [val; 16usize].simd_into(self)
     }
     #[inline(always)]
-    fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
-        mask8x16 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize] {
-        a.val.0
-    }
-    #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
         let lanes: [i8; 16usize] = [
             if bits & 1 != 0 { !0 } else { 0 },
@@ -2325,7 +2566,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn to_bitmask_mask8x16(self, a: mask8x16<Self>) -> u64 {
-        let lanes = self.as_array_mask8x16(a);
+        let lanes: [i8; 16usize] = a.into();
         let mut bits = 0u64;
         let mut i = 0;
         while i < 16usize {
@@ -2343,9 +2584,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = self.as_array_mask8x16(*a);
+        let mut lanes: [i8; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask8x16(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -2634,36 +2875,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
         [val; 8usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_i16x8(self, val: [i16; 8usize]) -> i16x8<Self> {
-        i16x8 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x8(self, val: &[i16; 8usize]) -> i16x8<Self> {
-        i16x8 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x8(self, a: i16x8<Self>) -> [i16; 8usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x8(self, a: &i16x8<Self>) -> &[i16; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x8(self, a: &mut i16x8<Self>) -> &mut [i16; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -3199,38 +3410,98 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i16x8(self, src: &[i16; 32usize]) -> [i16x8<Self>; 4usize] {
+        [
+            [
+                src[0usize],
+                src[4usize],
+                src[8usize],
+                src[12usize],
+                src[16usize],
+                src[20usize],
+                src[24usize],
+                src[28usize],
+            ]
+            .simd_into(self),
+            [
+                src[1usize],
+                src[5usize],
+                src[9usize],
+                src[13usize],
+                src[17usize],
+                src[21usize],
+                src[25usize],
+                src[29usize],
+            ]
+            .simd_into(self),
+            [
+                src[2usize],
+                src[6usize],
+                src[10usize],
+                src[14usize],
+                src[18usize],
+                src[22usize],
+                src[26usize],
+                src[30usize],
+            ]
+            .simd_into(self),
+            [
+                src[3usize],
+                src[7usize],
+                src[11usize],
+                src[15usize],
+                src[19usize],
+                src[23usize],
+                src[27usize],
+                src[31usize],
+            ]
+            .simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i16x8(
+        self,
+        vectors: [i16x8<Self>; 4usize],
+        dest: &mut [i16; 32usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+            vectors[0usize][4usize],
+            vectors[1usize][4usize],
+            vectors[2usize][4usize],
+            vectors[3usize][4usize],
+            vectors[0usize][5usize],
+            vectors[1usize][5usize],
+            vectors[2usize][5usize],
+            vectors[3usize][5usize],
+            vectors[0usize][6usize],
+            vectors[1usize][6usize],
+            vectors[2usize][6usize],
+            vectors[3usize][6usize],
+            vectors[0usize][7usize],
+            vectors[1usize][7usize],
+            vectors[2usize][7usize],
+            vectors[3usize][7usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         [val; 8usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self> {
-        u16x8 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x8(self, val: &[u16; 8usize]) -> u16x8<Self> {
-        u16x8 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x8(self, a: u16x8<Self>) -> [u16; 8usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x8(self, a: &u16x8<Self>) -> &[u16; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x8(self, a: &mut u16x8<Self>) -> &mut [u16; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -3752,20 +4023,99 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_u16x8(self, src: &[u16; 32usize]) -> [u16x8<Self>; 4usize] {
+        [
+            [
+                src[0usize],
+                src[4usize],
+                src[8usize],
+                src[12usize],
+                src[16usize],
+                src[20usize],
+                src[24usize],
+                src[28usize],
+            ]
+            .simd_into(self),
+            [
+                src[1usize],
+                src[5usize],
+                src[9usize],
+                src[13usize],
+                src[17usize],
+                src[21usize],
+                src[25usize],
+                src[29usize],
+            ]
+            .simd_into(self),
+            [
+                src[2usize],
+                src[6usize],
+                src[10usize],
+                src[14usize],
+                src[18usize],
+                src[22usize],
+                src[26usize],
+                src[30usize],
+            ]
+            .simd_into(self),
+            [
+                src[3usize],
+                src[7usize],
+                src[11usize],
+                src[15usize],
+                src[19usize],
+                src[23usize],
+                src[27usize],
+                src[31usize],
+            ]
+            .simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u16x8(
+        self,
+        vectors: [u16x8<Self>; 4usize],
+        dest: &mut [u16; 32usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+            vectors[0usize][4usize],
+            vectors[1usize][4usize],
+            vectors[2usize][4usize],
+            vectors[3usize][4usize],
+            vectors[0usize][5usize],
+            vectors[1usize][5usize],
+            vectors[2usize][5usize],
+            vectors[3usize][5usize],
+            vectors[0usize][6usize],
+            vectors[1usize][6usize],
+            vectors[2usize][6usize],
+            vectors[3usize][6usize],
+            vectors[0usize][7usize],
+            vectors[1usize][7usize],
+            vectors[2usize][7usize],
+            vectors[3usize][7usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_mask16x8(self, val: bool) -> mask16x8<Self> {
         let val: i16 = if val { !0 } else { 0 };
         [val; 8usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
-        mask16x8 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize] {
-        a.val.0
     }
     #[inline(always)]
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
@@ -3783,7 +4133,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn to_bitmask_mask16x8(self, a: mask16x8<Self>) -> u64 {
-        let lanes = self.as_array_mask16x8(a);
+        let lanes: [i16; 8usize] = a.into();
         let mut bits = 0u64;
         let mut i = 0;
         while i < 8usize {
@@ -3801,9 +4151,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = self.as_array_mask16x8(*a);
+        let mut lanes: [i16; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask16x8(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -3980,36 +4330,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
         [val; 4usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_i32x4(self, val: [i32; 4usize]) -> i32x4<Self> {
-        i32x4 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x4(self, val: &[i32; 4usize]) -> i32x4<Self> {
-        i32x4 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x4(self, a: i32x4<Self>) -> [i32; 4usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x4(self, a: &i32x4<Self>) -> &[i32; 4usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x4(self, a: &mut i32x4<Self>) -> &mut [i32; 4usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -4421,6 +4741,40 @@ impl Simd for Fallback {
         .simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i32x4(self, src: &[i32; 16usize]) -> [i32x4<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize], src[8usize], src[12usize]].simd_into(self),
+            [src[1usize], src[5usize], src[9usize], src[13usize]].simd_into(self),
+            [src[2usize], src[6usize], src[10usize], src[14usize]].simd_into(self),
+            [src[3usize], src[7usize], src[11usize], src[15usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i32x4(
+        self,
+        vectors: [i32x4<Self>; 4usize],
+        dest: &mut [i32; 16usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+        ];
+    }
+    #[inline(always)]
     fn cvt_f32_i32x4(self, a: i32x4<Self>) -> f32x4<Self> {
         [
             a[0usize] as f32,
@@ -4433,36 +4787,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_u32x4(self, val: u32) -> u32x4<Self> {
         [val; 4usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self> {
-        u32x4 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x4(self, val: &[u32; 4usize]) -> u32x4<Self> {
-        u32x4 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x4(self, a: u32x4<Self>) -> [u32; 4usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x4(self, a: &u32x4<Self>) -> &[u32; 4usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x4(self, a: &mut u32x4<Self>) -> &mut [u32; 4usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -4864,6 +5188,40 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_u32x4(self, src: &[u32; 16usize]) -> [u32x4<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize], src[8usize], src[12usize]].simd_into(self),
+            [src[1usize], src[5usize], src[9usize], src[13usize]].simd_into(self),
+            [src[2usize], src[6usize], src[10usize], src[14usize]].simd_into(self),
+            [src[3usize], src[7usize], src[11usize], src[15usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u32x4(
+        self,
+        vectors: [u32x4<Self>; 4usize],
+        dest: &mut [u32; 16usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+            vectors[0usize][2usize],
+            vectors[1usize][2usize],
+            vectors[2usize][2usize],
+            vectors[3usize][2usize],
+            vectors[0usize][3usize],
+            vectors[1usize][3usize],
+            vectors[2usize][3usize],
+            vectors[3usize][3usize],
+        ];
+    }
+    #[inline(always)]
     fn cvt_f32_u32x4(self, a: u32x4<Self>) -> f32x4<Self> {
         [
             a[0usize] as f32,
@@ -4879,17 +5237,6 @@ impl Simd for Fallback {
         [val; 4usize].simd_into(self)
     }
     #[inline(always)]
-    fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
-        mask32x4 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize] {
-        a.val.0
-    }
-    #[inline(always)]
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
         let lanes: [i32; 4usize] = [
             if bits & 1 != 0 { !0 } else { 0 },
@@ -4901,7 +5248,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn to_bitmask_mask32x4(self, a: mask32x4<Self>) -> u64 {
-        let lanes = self.as_array_mask32x4(a);
+        let lanes: [i32; 4usize] = a.into();
         let mut bits = 0u64;
         let mut i = 0;
         while i < 4usize {
@@ -4919,9 +5266,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             4usize
         );
-        let mut lanes = self.as_array_mask32x4(*a);
+        let mut lanes: [i32; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask32x4(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -5030,36 +5377,6 @@ impl Simd for Fallback {
     #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
         [val; 2usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_f64x2(self, val: [f64; 2usize]) -> f64x2<Self> {
-        f64x2 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x2(self, val: &[f64; 2usize]) -> f64x2<Self> {
-        f64x2 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x2(self, a: f64x2<Self>) -> [f64; 2usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x2(self, a: &f64x2<Self>) -> &[f64; 2usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x2(self, a: &mut f64x2<Self>) -> &mut [f64; 2usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -5423,38 +5740,34 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_f64x2(self, src: &[f64; 8usize]) -> [f64x2<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize]].simd_into(self),
+            [src[1usize], src[5usize]].simd_into(self),
+            [src[2usize], src[6usize]].simd_into(self),
+            [src[3usize], src[7usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f64x2(
+        self,
+        vectors: [f64x2<Self>; 4usize],
+        dest: &mut [f64; 8usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         [val; 2usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_i64x2(self, val: [i64; 2usize]) -> i64x2<Self> {
-        i64x2 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x2(self, val: &[i64; 2usize]) -> i64x2<Self> {
-        i64x2 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x2(self, a: i64x2<Self>) -> [i64; 2usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x2(self, a: &i64x2<Self>) -> &[i64; 2usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x2(self, a: &mut i64x2<Self>) -> &mut [i64; 2usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i64x2(self, a: i64x2<Self>, dest: &mut [i64; 2usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -5802,38 +6115,34 @@ impl Simd for Fallback {
         [i64::wrapping_neg(a[0usize]), i64::wrapping_neg(a[1usize])].simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i64x2(self, src: &[i64; 8usize]) -> [i64x2<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize]].simd_into(self),
+            [src[1usize], src[5usize]].simd_into(self),
+            [src[2usize], src[6usize]].simd_into(self),
+            [src[3usize], src[7usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i64x2(
+        self,
+        vectors: [i64x2<Self>; 4usize],
+        dest: &mut [i64; 8usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         [val; 2usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_u64x2(self, val: [u64; 2usize]) -> u64x2<Self> {
-        u64x2 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x2(self, val: &[u64; 2usize]) -> u64x2<Self> {
-        u64x2 {
-            val: crate::support::Aligned128(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x2(self, a: u64x2<Self>) -> [u64; 2usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x2(self, a: &u64x2<Self>) -> &[u64; 2usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x2(self, a: &mut u64x2<Self>) -> &mut [u64; 2usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u64x2(self, a: u64x2<Self>, dest: &mut [u64; 2usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -6177,20 +6486,35 @@ impl Simd for Fallback {
         result.simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_u64x2(self, src: &[u64; 8usize]) -> [u64x2<Self>; 4usize] {
+        [
+            [src[0usize], src[4usize]].simd_into(self),
+            [src[1usize], src[5usize]].simd_into(self),
+            [src[2usize], src[6usize]].simd_into(self),
+            [src[3usize], src[7usize]].simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u64x2(
+        self,
+        vectors: [u64x2<Self>; 4usize],
+        dest: &mut [u64; 8usize],
+    ) -> () {
+        *dest = [
+            vectors[0usize][0usize],
+            vectors[1usize][0usize],
+            vectors[2usize][0usize],
+            vectors[3usize][0usize],
+            vectors[0usize][1usize],
+            vectors[1usize][1usize],
+            vectors[2usize][1usize],
+            vectors[3usize][1usize],
+        ];
+    }
+    #[inline(always)]
     fn splat_mask64x2(self, val: bool) -> mask64x2<Self> {
         let val: i64 = if val { !0 } else { 0 };
         [val; 2usize].simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
-        mask64x2 {
-            val: crate::support::Aligned128(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize] {
-        a.val.0
     }
     #[inline(always)]
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
@@ -6202,7 +6526,7 @@ impl Simd for Fallback {
     }
     #[inline(always)]
     fn to_bitmask_mask64x2(self, a: mask64x2<Self>) -> u64 {
-        let lanes = self.as_array_mask64x2(a);
+        let lanes: [i64; 2usize] = a.into();
         let mut bits = 0u64;
         let mut i = 0;
         while i < 2usize {
@@ -6220,9 +6544,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             2usize
         );
-        let mut lanes = self.as_array_mask64x2(*a);
+        let mut lanes: [i64; 2usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask64x2(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -6308,36 +6632,6 @@ impl Simd for Fallback {
     fn splat_f32x8(self, val: f32) -> f32x8<Self> {
         let half = self.splat_f32x4(val);
         self.combine_f32x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f32x8(self, val: [f32; 8usize]) -> f32x8<Self> {
-        f32x8 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x8(self, val: &[f32; 8usize]) -> f32x8<Self> {
-        f32x8 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x8(self, a: f32x8<Self>) -> [f32; 8usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x8(self, a: &f32x8<Self>) -> &[f32; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x8(self, a: &mut f32x8<Self>) -> &mut [f32; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -6722,36 +7016,6 @@ impl Simd for Fallback {
     fn splat_i8x32(self, val: i8) -> i8x32<Self> {
         let half = self.splat_i8x16(val);
         self.combine_i8x16(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i8x32(self, val: [i8; 32usize]) -> i8x32<Self> {
-        i8x32 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x32(self, val: &[i8; 32usize]) -> i8x32<Self> {
-        i8x32 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x32(self, a: i8x32<Self>) -> [i8; 32usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x32(self, a: &i8x32<Self>) -> &[i8; 32usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x32(self, a: &mut i8x32<Self>) -> &mut [i8; 32usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -7157,36 +7421,6 @@ impl Simd for Fallback {
         self.combine_u8x16(half, half)
     }
     #[inline(always)]
-    fn load_array_u8x32(self, val: [u8; 32usize]) -> u8x32<Self> {
-        u8x32 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x32(self, val: &[u8; 32usize]) -> u8x32<Self> {
-        u8x32 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x32(self, a: u8x32<Self>) -> [u8; 32usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x32(self, a: &u8x32<Self>) -> &[u8; 32usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x32(self, a: &mut u8x32<Self>) -> &mut [u8; 32usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         let mut dest = [Default::default(); 32usize];
         dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -7590,17 +7824,6 @@ impl Simd for Fallback {
         self.combine_mask8x16(half, half)
     }
     #[inline(always)]
-    fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self> {
-        mask8x32 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize] {
-        a.val.0
-    }
-    #[inline(always)]
     fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self> {
         let lo = self.from_bitmask_mask8x16(bits);
         let hi = self.from_bitmask_mask8x16(bits >> 16usize);
@@ -7620,9 +7843,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             32usize
         );
-        let mut lanes = self.as_array_mask8x32(*a);
+        let mut lanes: [i8; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask8x32(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
@@ -7707,36 +7930,6 @@ impl Simd for Fallback {
     fn splat_i16x16(self, val: i16) -> i16x16<Self> {
         let half = self.splat_i16x8(val);
         self.combine_i16x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i16x16(self, val: [i16; 16usize]) -> i16x16<Self> {
-        i16x16 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x16(self, val: &[i16; 16usize]) -> i16x16<Self> {
-        i16x16 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x16(self, a: i16x16<Self>) -> [i16; 16usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x16(self, a: &i16x16<Self>) -> &[i16; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x16(self, a: &mut i16x16<Self>) -> &mut [i16; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -8080,36 +8273,6 @@ impl Simd for Fallback {
     fn splat_u16x16(self, val: u16) -> u16x16<Self> {
         let half = self.splat_u16x8(val);
         self.combine_u16x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_u16x16(self, val: [u16; 16usize]) -> u16x16<Self> {
-        u16x16 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x16(self, val: &[u16; 16usize]) -> u16x16<Self> {
-        u16x16 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x16(self, a: u16x16<Self>) -> [u16; 16usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x16(self, a: &u16x16<Self>) -> &[u16; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x16(self, a: &mut u16x16<Self>) -> &mut [u16; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
@@ -8472,17 +8635,6 @@ impl Simd for Fallback {
         self.combine_mask16x8(half, half)
     }
     #[inline(always)]
-    fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self> {
-        mask16x16 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize] {
-        a.val.0
-    }
-    #[inline(always)]
     fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self> {
         let lo = self.from_bitmask_mask16x8(bits);
         let hi = self.from_bitmask_mask16x8(bits >> 8usize);
@@ -8502,9 +8654,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = self.as_array_mask16x16(*a);
+        let mut lanes: [i16; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask16x16(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
@@ -8589,36 +8741,6 @@ impl Simd for Fallback {
     fn splat_i32x8(self, val: i32) -> i32x8<Self> {
         let half = self.splat_i32x4(val);
         self.combine_i32x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i32x8(self, val: [i32; 8usize]) -> i32x8<Self> {
-        i32x8 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x8(self, val: &[i32; 8usize]) -> i32x8<Self> {
-        i32x8 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x8(self, a: i32x8<Self>) -> [i32; 8usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x8(self, a: &i32x8<Self>) -> &[i32; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x8(self, a: &mut i32x8<Self>) -> &mut [i32; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -8933,36 +9055,6 @@ impl Simd for Fallback {
         self.combine_u32x4(half, half)
     }
     #[inline(always)]
-    fn load_array_u32x8(self, val: [u32; 8usize]) -> u32x8<Self> {
-        u32x8 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x8(self, val: &[u32; 8usize]) -> u32x8<Self> {
-        u32x8 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x8(self, a: u32x8<Self>) -> [u32; 8usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x8(self, a: &u32x8<Self>) -> &[u32; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x8(self, a: &mut u32x8<Self>) -> &mut [u32; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         let mut dest = [Default::default(); 8usize];
         dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -9270,17 +9362,6 @@ impl Simd for Fallback {
         self.combine_mask32x4(half, half)
     }
     #[inline(always)]
-    fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self> {
-        mask32x8 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize] {
-        a.val.0
-    }
-    #[inline(always)]
     fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self> {
         let lo = self.from_bitmask_mask32x4(bits);
         let hi = self.from_bitmask_mask32x4(bits >> 4usize);
@@ -9300,9 +9381,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = self.as_array_mask32x8(*a);
+        let mut lanes: [i32; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask32x8(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -9387,36 +9468,6 @@ impl Simd for Fallback {
     fn splat_f64x4(self, val: f64) -> f64x4<Self> {
         let half = self.splat_f64x2(val);
         self.combine_f64x2(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f64x4(self, val: [f64; 4usize]) -> f64x4<Self> {
-        f64x4 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x4(self, val: &[f64; 4usize]) -> f64x4<Self> {
-        f64x4 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x4(self, a: f64x4<Self>) -> [f64; 4usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x4(self, a: &f64x4<Self>) -> &[f64; 4usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x4(self, a: &mut f64x4<Self>) -> &mut [f64; 4usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -9761,36 +9812,6 @@ impl Simd for Fallback {
         self.combine_i64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_i64x4(self, val: [i64; 4usize]) -> i64x4<Self> {
-        i64x4 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x4(self, val: &[i64; 4usize]) -> i64x4<Self> {
-        i64x4 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x4(self, a: i64x4<Self>) -> [i64; 4usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x4(self, a: &i64x4<Self>) -> &[i64; 4usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x4(self, a: &mut i64x4<Self>) -> &mut [i64; 4usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i64x4(self, a: i64x4<Self>, dest: &mut [i64; 4usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         let mut dest = [Default::default(); 4usize];
         dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -10082,36 +10103,6 @@ impl Simd for Fallback {
         self.combine_u64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_u64x4(self, val: [u64; 4usize]) -> u64x4<Self> {
-        u64x4 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x4(self, val: &[u64; 4usize]) -> u64x4<Self> {
-        u64x4 {
-            val: crate::support::Aligned256(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x4(self, a: u64x4<Self>) -> [u64; 4usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x4(self, a: &u64x4<Self>) -> &[u64; 4usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x4(self, a: &mut u64x4<Self>) -> &mut [u64; 4usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u64x4(self, a: u64x4<Self>, dest: &mut [u64; 4usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         let mut dest = [Default::default(); 4usize];
         dest[..4usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -10398,17 +10389,6 @@ impl Simd for Fallback {
         self.combine_mask64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self> {
-        mask64x4 {
-            val: crate::support::Aligned256(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize] {
-        a.val.0
-    }
-    #[inline(always)]
     fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self> {
         let lo = self.from_bitmask_mask64x2(bits);
         let hi = self.from_bitmask_mask64x2(bits >> 2usize);
@@ -10428,9 +10408,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             4usize
         );
-        let mut lanes = self.as_array_mask64x4(*a);
+        let mut lanes: [i64; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask64x4(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -10515,36 +10495,6 @@ impl Simd for Fallback {
     fn splat_f32x16(self, val: f32) -> f32x16<Self> {
         let half = self.splat_f32x8(val);
         self.combine_f32x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self> {
-        f32x16 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x16(self, val: &[f32; 16usize]) -> f32x16<Self> {
-        f32x16 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x16(self, a: f32x16<Self>) -> [f32; 16usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x16(self, a: &f32x16<Self>) -> &[f32; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -10929,36 +10879,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[8usize],
-            src[12usize],
-            src[1usize],
-            src[5usize],
-            src[9usize],
-            src[13usize],
-            src[2usize],
-            src[6usize],
-            src[10usize],
-            src[14usize],
-            src[3usize],
-            src[7usize],
-            src[11usize],
-            src[15usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        *dest = [
-            a[0usize], a[4usize], a[8usize], a[12usize], a[1usize], a[5usize], a[9usize],
-            a[13usize], a[2usize], a[6usize], a[10usize], a[14usize], a[3usize], a[7usize],
-            a[11usize], a[15usize],
-        ];
-    }
-    #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_f32x16(a);
         self.combine_u32x8(self.cvt_u32_f32x8(a0), self.cvt_u32_f32x8(a1))
@@ -10988,36 +10908,6 @@ impl Simd for Fallback {
     fn splat_i8x64(self, val: i8) -> i8x64<Self> {
         let half = self.splat_i8x32(val);
         self.combine_i8x32(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self> {
-        i8x64 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x64(self, val: &[i8; 64usize]) -> i8x64<Self> {
-        i8x64 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x64(self, a: i8x64<Self>) -> [i8; 64usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x64(self, a: &i8x64<Self>) -> &[i8; 64usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x64(self, a: &mut i8x64<Self>) -> &mut [i8; 64usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -11544,36 +11434,6 @@ impl Simd for Fallback {
         self.combine_u8x32(half, half)
     }
     #[inline(always)]
-    fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self> {
-        u8x64 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x64(self, val: &[u8; 64usize]) -> u8x64<Self> {
-        u8x64 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x64(self, a: u8x64<Self>) -> [u8; 64usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x64(self, a: &u8x64<Self>) -> &[u8; 64usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         let mut dest = [Default::default(); 64usize];
         dest[..64usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -12088,105 +11948,9 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[8usize],
-            src[12usize],
-            src[16usize],
-            src[20usize],
-            src[24usize],
-            src[28usize],
-            src[32usize],
-            src[36usize],
-            src[40usize],
-            src[44usize],
-            src[48usize],
-            src[52usize],
-            src[56usize],
-            src[60usize],
-            src[1usize],
-            src[5usize],
-            src[9usize],
-            src[13usize],
-            src[17usize],
-            src[21usize],
-            src[25usize],
-            src[29usize],
-            src[33usize],
-            src[37usize],
-            src[41usize],
-            src[45usize],
-            src[49usize],
-            src[53usize],
-            src[57usize],
-            src[61usize],
-            src[2usize],
-            src[6usize],
-            src[10usize],
-            src[14usize],
-            src[18usize],
-            src[22usize],
-            src[26usize],
-            src[30usize],
-            src[34usize],
-            src[38usize],
-            src[42usize],
-            src[46usize],
-            src[50usize],
-            src[54usize],
-            src[58usize],
-            src[62usize],
-            src[3usize],
-            src[7usize],
-            src[11usize],
-            src[15usize],
-            src[19usize],
-            src[23usize],
-            src[27usize],
-            src[31usize],
-            src[35usize],
-            src[39usize],
-            src[43usize],
-            src[47usize],
-            src[51usize],
-            src[55usize],
-            src[59usize],
-            src[63usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        *dest = [
-            a[0usize], a[16usize], a[32usize], a[48usize], a[1usize], a[17usize], a[33usize],
-            a[49usize], a[2usize], a[18usize], a[34usize], a[50usize], a[3usize], a[19usize],
-            a[35usize], a[51usize], a[4usize], a[20usize], a[36usize], a[52usize], a[5usize],
-            a[21usize], a[37usize], a[53usize], a[6usize], a[22usize], a[38usize], a[54usize],
-            a[7usize], a[23usize], a[39usize], a[55usize], a[8usize], a[24usize], a[40usize],
-            a[56usize], a[9usize], a[25usize], a[41usize], a[57usize], a[10usize], a[26usize],
-            a[42usize], a[58usize], a[11usize], a[27usize], a[43usize], a[59usize], a[12usize],
-            a[28usize], a[44usize], a[60usize], a[13usize], a[29usize], a[45usize], a[61usize],
-            a[14usize], a[30usize], a[46usize], a[62usize], a[15usize], a[31usize], a[47usize],
-            a[63usize],
-        ];
-    }
-    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
-    }
-    #[inline(always)]
-    fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self> {
-        mask8x64 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize] {
-        a.val.0
     }
     #[inline(always)]
     fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
@@ -12208,9 +11972,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             64usize
         );
-        let mut lanes = self.as_array_mask8x64(*a);
+        let mut lanes: [i8; 64usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask8x64(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -12288,36 +12052,6 @@ impl Simd for Fallback {
     fn splat_i16x32(self, val: i16) -> i16x32<Self> {
         let half = self.splat_i16x16(val);
         self.combine_i16x16(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self> {
-        i16x32 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x32(self, val: &[i16; 32usize]) -> i16x32<Self> {
-        i16x32 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x32(self, a: i16x32<Self>) -> [i16; 32usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x32(self, a: &i16x32<Self>) -> &[i16; 32usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -12726,36 +12460,6 @@ impl Simd for Fallback {
         self.combine_u16x16(half, half)
     }
     #[inline(always)]
-    fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self> {
-        u16x32 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x32(self, val: &[u16; 32usize]) -> u16x32<Self> {
-        u16x32 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x32(self, a: u16x32<Self>) -> [u16; 32usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x32(self, a: &u16x32<Self>) -> &[u16; 32usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         let mut dest = [Default::default(); 32usize];
         dest[..32usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -13152,54 +12856,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[8usize],
-            src[12usize],
-            src[16usize],
-            src[20usize],
-            src[24usize],
-            src[28usize],
-            src[1usize],
-            src[5usize],
-            src[9usize],
-            src[13usize],
-            src[17usize],
-            src[21usize],
-            src[25usize],
-            src[29usize],
-            src[2usize],
-            src[6usize],
-            src[10usize],
-            src[14usize],
-            src[18usize],
-            src[22usize],
-            src[26usize],
-            src[30usize],
-            src[3usize],
-            src[7usize],
-            src[11usize],
-            src[15usize],
-            src[19usize],
-            src[23usize],
-            src[27usize],
-            src[31usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        *dest = [
-            a[0usize], a[8usize], a[16usize], a[24usize], a[1usize], a[9usize], a[17usize],
-            a[25usize], a[2usize], a[10usize], a[18usize], a[26usize], a[3usize], a[11usize],
-            a[19usize], a[27usize], a[4usize], a[12usize], a[20usize], a[28usize], a[5usize],
-            a[13usize], a[21usize], a[29usize], a[6usize], a[14usize], a[22usize], a[30usize],
-            a[7usize], a[15usize], a[23usize], a[31usize],
-        ];
-    }
-    #[inline(always)]
     fn narrow_u16x32(self, a: u16x32<Self>) -> u8x32<Self> {
         let (a0, a1) = self.split_u16x32(a);
         self.combine_u8x16(self.narrow_u16x16(a0), self.narrow_u16x16(a1))
@@ -13208,17 +12864,6 @@ impl Simd for Fallback {
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
         let half = self.splat_mask16x16(val);
         self.combine_mask16x16(half, half)
-    }
-    #[inline(always)]
-    fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self> {
-        mask16x32 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize] {
-        a.val.0
     }
     #[inline(always)]
     fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self> {
@@ -13240,9 +12885,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             32usize
         );
-        let mut lanes = self.as_array_mask16x32(*a);
+        let mut lanes: [i16; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask16x32(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -13323,36 +12968,6 @@ impl Simd for Fallback {
     fn splat_i32x16(self, val: i32) -> i32x16<Self> {
         let half = self.splat_i32x8(val);
         self.combine_i32x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self> {
-        i32x16 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x16(self, val: &[i32; 16usize]) -> i32x16<Self> {
-        i32x16 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x16(self, a: i32x16<Self>) -> [i32; 16usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x16(self, a: &i32x16<Self>) -> &[i32; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -13696,36 +13311,6 @@ impl Simd for Fallback {
         self.combine_u32x8(half, half)
     }
     #[inline(always)]
-    fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self> {
-        u32x16 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x16(self, val: &[u32; 16usize]) -> u32x16<Self> {
-        u32x16 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x16(self, a: u32x16<Self>) -> [u32; 16usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x16(self, a: &u32x16<Self>) -> &[u32; 16usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         let mut dest = [Default::default(); 16usize];
         dest[..16usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -14052,36 +13637,6 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[8usize],
-            src[12usize],
-            src[1usize],
-            src[5usize],
-            src[9usize],
-            src[13usize],
-            src[2usize],
-            src[6usize],
-            src[10usize],
-            src[14usize],
-            src[3usize],
-            src[7usize],
-            src[11usize],
-            src[15usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        *dest = [
-            a[0usize], a[4usize], a[8usize], a[12usize], a[1usize], a[5usize], a[9usize],
-            a[13usize], a[2usize], a[6usize], a[10usize], a[14usize], a[3usize], a[7usize],
-            a[11usize], a[15usize],
-        ];
-    }
-    #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
         self.combine_f32x8(self.cvt_f32_u32x8(a0), self.cvt_f32_u32x8(a1))
@@ -14090,17 +13645,6 @@ impl Simd for Fallback {
     fn splat_mask32x16(self, val: bool) -> mask32x16<Self> {
         let half = self.splat_mask32x8(val);
         self.combine_mask32x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self> {
-        mask32x16 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize] {
-        a.val.0
     }
     #[inline(always)]
     fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
@@ -14122,9 +13666,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = self.as_array_mask32x16(*a);
+        let mut lanes: [i32; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask32x16(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -14202,36 +13746,6 @@ impl Simd for Fallback {
     fn splat_f64x8(self, val: f64) -> f64x8<Self> {
         let half = self.splat_f64x4(val);
         self.combine_f64x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self> {
-        f64x8 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x8(self, val: &[f64; 8usize]) -> f64x8<Self> {
-        f64x8 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x8(self, a: f64x8<Self>) -> [f64; 8usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x8(self, a: &f64x8<Self>) -> &[f64; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
-        *dest = a.val.0;
     }
     #[inline(always)]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -14585,36 +14099,6 @@ impl Simd for Fallback {
         self.combine_i64x4(half, half)
     }
     #[inline(always)]
-    fn load_array_i64x8(self, val: [i64; 8usize]) -> i64x8<Self> {
-        i64x8 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x8(self, val: &[i64; 8usize]) -> i64x8<Self> {
-        i64x8 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x8(self, a: i64x8<Self>) -> [i64; 8usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x8(self, a: &i64x8<Self>) -> &[i64; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x8(self, a: &mut i64x8<Self>) -> &mut [i64; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         let mut dest = [Default::default(); 8usize];
         dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -14915,36 +14399,6 @@ impl Simd for Fallback {
         self.combine_u64x4(half, half)
     }
     #[inline(always)]
-    fn load_array_u64x8(self, val: [u64; 8usize]) -> u64x8<Self> {
-        u64x8 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x8(self, val: &[u64; 8usize]) -> u64x8<Self> {
-        u64x8 {
-            val: crate::support::Aligned512(*val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x8(self, a: u64x8<Self>) -> [u64; 8usize] {
-        a.val.0
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x8(self, a: &u64x8<Self>) -> &[u64; 8usize] {
-        &a.val.0
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x8(self, a: &mut u64x8<Self>) -> &mut [u64; 8usize] {
-        &mut a.val.0
-    }
-    #[inline(always)]
-    fn store_array_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        *dest = a.val.0;
-    }
-    #[inline(always)]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
         let mut dest = [Default::default(); 8usize];
         dest[..8usize - SHIFT].copy_from_slice(&a.val.0[SHIFT..]);
@@ -15235,40 +14689,9 @@ impl Simd for Fallback {
         (b0.simd_into(self), b1.simd_into(self))
     }
     #[inline(always)]
-    fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self> {
-        [
-            src[0usize],
-            src[4usize],
-            src[1usize],
-            src[5usize],
-            src[2usize],
-            src[6usize],
-            src[3usize],
-            src[7usize],
-        ]
-        .simd_into(self)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        *dest = [
-            a[0usize], a[2usize], a[4usize], a[6usize], a[1usize], a[3usize], a[5usize], a[7usize],
-        ];
-    }
-    #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
         let half = self.splat_mask64x4(val);
         self.combine_mask64x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self> {
-        mask64x8 {
-            val: crate::support::Aligned512(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
-        a.val.0
     }
     #[inline(always)]
     fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {
@@ -15290,9 +14713,9 @@ impl Simd for Fallback {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = self.as_array_mask64x8(*a);
+        let mut lanes: [i64; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask64x8(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {

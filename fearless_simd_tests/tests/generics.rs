@@ -67,7 +67,8 @@ fn generic_array_roundtrip<S: Simd, V: SimdBase<S>>(vector: V) -> V {
     fn require_debug<T: core::fmt::Debug>(_: &T) {}
 
     let simd = vector.witness();
-    let mut array: V::Array = vector.into();
+    let mut vector = vector;
+    let mut array = vector.as_array();
     let array_copy = array;
     #[expect(clippy::clone_on_copy, reason = "Deliberate test")]
     let array_clone = array.clone();
@@ -75,5 +76,9 @@ fn generic_array_roundtrip<S: Simd, V: SimdBase<S>>(vector: V) -> V {
     let _: Option<V::Element> = array_clone.into_iter().next();
     let _: &[V::Element] = array.as_ref();
     let _: &mut [V::Element] = array.as_mut();
-    V::simd_from(simd, array_copy)
+    let _: &V::Array = vector.as_array_ref();
+    let _: &mut V::Array = vector.as_array_mut();
+    let _ = V::load_array_ref(simd, &array_copy);
+    vector.store_array(&mut array);
+    V::load_array(simd, array)
 }

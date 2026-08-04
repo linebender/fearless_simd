@@ -18,31 +18,34 @@ impl<S: Simd> Seal for f32x4<S> {}
 impl<S: Simd> SimdFrom<[f32; 4], S> for f32x4<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [f32; 4]) -> Self {
-        simd.load_array_f32x4(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<f32x4<S>> for [f32; 4] {
     #[inline(always)]
     fn from(value: f32x4<S>) -> Self {
-        value.simd.as_array_f32x4(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for f32x4<S> {
     type Target = [f32; 4];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_f32x4(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for f32x4<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_f32x4(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f32x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f32x4", &self.simd, self.simd.as_array_ref_f32x4(self))
+        crate::support::simd_debug_impl(f, "f32x4", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<f32, S> for f32x4<S> {
@@ -55,13 +58,13 @@ impl<S: Simd> core::ops::Index<usize> for f32x4<S> {
     type Output = f32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_f32x4(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f32x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_f32x4(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<f32x4<S>> for mask32x4<S> {
@@ -100,20 +103,19 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f32] {
-        self.simd.as_array_ref_f32x4(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f32] {
-        self.simd.as_array_mut_f32x4(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f32]) -> Self {
-        simd.load_array_ref_f32x4(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [f32]) {
-        self.simd
-            .store_array_f32x4(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f32) -> Self {
@@ -125,7 +127,7 @@ impl<S: Simd> SimdBase<S> for f32x4<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> f32) -> Self {
-        simd.load_array_f32x4([f(0usize), f(1usize), f(2usize), f(3usize)])
+        Self::load_array(simd, [f(0usize), f(1usize), f(2usize), f(3usize)])
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -310,31 +312,34 @@ impl<S: Simd> Seal for i8x16<S> {}
 impl<S: Simd> SimdFrom<[i8; 16], S> for i8x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i8; 16]) -> Self {
-        simd.load_array_i8x16(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i8x16<S>> for [i8; 16] {
     #[inline(always)]
     fn from(value: i8x16<S>) -> Self {
-        value.simd.as_array_i8x16(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i8x16<S> {
     type Target = [i8; 16];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i8x16(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i8x16<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i8x16(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i8x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i8x16", &self.simd, self.simd.as_array_ref_i8x16(self))
+        crate::support::simd_debug_impl(f, "i8x16", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i8, S> for i8x16<S> {
@@ -347,13 +352,13 @@ impl<S: Simd> core::ops::Index<usize> for i8x16<S> {
     type Output = i8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i8x16(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i8x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i8x16(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i8x16<S>> for mask8x16<S> {
@@ -392,20 +397,19 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i8] {
-        self.simd.as_array_ref_i8x16(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.simd.as_array_mut_i8x16(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
-        simd.load_array_ref_i8x16(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i8]) {
-        self.simd
-            .store_array_i8x16(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
@@ -417,24 +421,27 @@ impl<S: Simd> SimdBase<S> for i8x16<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i8) -> Self {
-        simd.load_array_i8x16([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -551,31 +558,34 @@ impl<S: Simd> Seal for u8x16<S> {}
 impl<S: Simd> SimdFrom<[u8; 16], S> for u8x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u8; 16]) -> Self {
-        simd.load_array_u8x16(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u8x16<S>> for [u8; 16] {
     #[inline(always)]
     fn from(value: u8x16<S>) -> Self {
-        value.simd.as_array_u8x16(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u8x16<S> {
     type Target = [u8; 16];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u8x16(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u8x16<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u8x16(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u8x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u8x16", &self.simd, self.simd.as_array_ref_u8x16(self))
+        crate::support::simd_debug_impl(f, "u8x16", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u8, S> for u8x16<S> {
@@ -588,13 +598,13 @@ impl<S: Simd> core::ops::Index<usize> for u8x16<S> {
     type Output = u8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u8x16(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u8x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u8x16(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u8x16<S>> for mask8x16<S> {
@@ -633,20 +643,19 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u8] {
-        self.simd.as_array_ref_u8x16(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.simd.as_array_mut_u8x16(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u8]) -> Self {
-        simd.load_array_ref_u8x16(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u8]) {
-        self.simd
-            .store_array_u8x16(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u8) -> Self {
@@ -658,24 +667,27 @@ impl<S: Simd> SimdBase<S> for u8x16<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u8) -> Self {
-        simd.load_array_u8x16([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -791,18 +803,21 @@ impl<S: Simd> Seal for mask8x16<S> {}
 impl<S: Simd> SimdFrom<[i8; 16], S> for mask8x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i8; 16]) -> Self {
-        simd.load_array_mask8x16(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask8x16_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask8x16<S>> for [i8; 16] {
     #[inline(always)]
     fn from(value: mask8x16<S>) -> Self {
-        value.simd.as_array_mask8x16(value)
+        <S as crate::arch_types::ArchTypes>::mask8x16_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask8x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask8x16(*self);
+        let lanes: [i8; 16] = (*self).into();
         crate::support::simd_debug_impl(f, "mask8x16", &self.simd, &lanes)
     }
 }
@@ -844,12 +859,12 @@ impl<S: Simd> SimdMask<S> for mask8x16<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
         let slice: &[i8; 16] = slice.try_into().unwrap();
-        simd.load_array_mask8x16(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i8]) {
         let slice: &mut [i8; 16] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask8x16(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -883,31 +898,34 @@ impl<S: Simd> Seal for i16x8<S> {}
 impl<S: Simd> SimdFrom<[i16; 8], S> for i16x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i16; 8]) -> Self {
-        simd.load_array_i16x8(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i16x8<S>> for [i16; 8] {
     #[inline(always)]
     fn from(value: i16x8<S>) -> Self {
-        value.simd.as_array_i16x8(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i16x8<S> {
     type Target = [i16; 8];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i16x8(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i16x8<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i16x8(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i16x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i16x8", &self.simd, self.simd.as_array_ref_i16x8(self))
+        crate::support::simd_debug_impl(f, "i16x8", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i16, S> for i16x8<S> {
@@ -920,13 +938,13 @@ impl<S: Simd> core::ops::Index<usize> for i16x8<S> {
     type Output = i16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i16x8(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i16x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i16x8(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i16x8<S>> for mask16x8<S> {
@@ -965,20 +983,19 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i16] {
-        self.simd.as_array_ref_i16x8(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.simd.as_array_mut_i16x8(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
-        simd.load_array_ref_i16x8(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i16]) {
-        self.simd
-            .store_array_i16x8(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
@@ -990,16 +1007,19 @@ impl<S: Simd> SimdBase<S> for i16x8<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i16) -> Self {
-        simd.load_array_i16x8([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1116,31 +1136,34 @@ impl<S: Simd> Seal for u16x8<S> {}
 impl<S: Simd> SimdFrom<[u16; 8], S> for u16x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u16; 8]) -> Self {
-        simd.load_array_u16x8(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u16x8<S>> for [u16; 8] {
     #[inline(always)]
     fn from(value: u16x8<S>) -> Self {
-        value.simd.as_array_u16x8(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u16x8<S> {
     type Target = [u16; 8];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u16x8(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u16x8<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u16x8(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u16x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u16x8", &self.simd, self.simd.as_array_ref_u16x8(self))
+        crate::support::simd_debug_impl(f, "u16x8", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u16, S> for u16x8<S> {
@@ -1153,13 +1176,13 @@ impl<S: Simd> core::ops::Index<usize> for u16x8<S> {
     type Output = u16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u16x8(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u16x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u16x8(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u16x8<S>> for mask16x8<S> {
@@ -1198,20 +1221,19 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u16] {
-        self.simd.as_array_ref_u16x8(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u16] {
-        self.simd.as_array_mut_u16x8(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u16]) -> Self {
-        simd.load_array_ref_u16x8(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u16]) {
-        self.simd
-            .store_array_u16x8(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u16) -> Self {
@@ -1223,16 +1245,19 @@ impl<S: Simd> SimdBase<S> for u16x8<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u16) -> Self {
-        simd.load_array_u16x8([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1348,18 +1373,21 @@ impl<S: Simd> Seal for mask16x8<S> {}
 impl<S: Simd> SimdFrom<[i16; 8], S> for mask16x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i16; 8]) -> Self {
-        simd.load_array_mask16x8(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask16x8_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask16x8<S>> for [i16; 8] {
     #[inline(always)]
     fn from(value: mask16x8<S>) -> Self {
-        value.simd.as_array_mask16x8(value)
+        <S as crate::arch_types::ArchTypes>::mask16x8_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask16x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask16x8(*self);
+        let lanes: [i16; 8] = (*self).into();
         crate::support::simd_debug_impl(f, "mask16x8", &self.simd, &lanes)
     }
 }
@@ -1401,12 +1429,12 @@ impl<S: Simd> SimdMask<S> for mask16x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
         let slice: &[i16; 8] = slice.try_into().unwrap();
-        simd.load_array_mask16x8(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i16]) {
         let slice: &mut [i16; 8] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask16x8(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1440,31 +1468,34 @@ impl<S: Simd> Seal for i32x4<S> {}
 impl<S: Simd> SimdFrom<[i32; 4], S> for i32x4<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i32; 4]) -> Self {
-        simd.load_array_i32x4(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i32x4<S>> for [i32; 4] {
     #[inline(always)]
     fn from(value: i32x4<S>) -> Self {
-        value.simd.as_array_i32x4(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i32x4<S> {
     type Target = [i32; 4];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i32x4(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i32x4<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i32x4(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i32x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i32x4", &self.simd, self.simd.as_array_ref_i32x4(self))
+        crate::support::simd_debug_impl(f, "i32x4", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i32, S> for i32x4<S> {
@@ -1477,13 +1508,13 @@ impl<S: Simd> core::ops::Index<usize> for i32x4<S> {
     type Output = i32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i32x4(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i32x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i32x4(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i32x4<S>> for mask32x4<S> {
@@ -1522,20 +1553,19 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
-        self.simd.as_array_ref_i32x4(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.simd.as_array_mut_i32x4(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
-        simd.load_array_ref_i32x4(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i32]) {
-        self.simd
-            .store_array_i32x4(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
@@ -1547,7 +1577,7 @@ impl<S: Simd> SimdBase<S> for i32x4<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i32) -> Self {
-        simd.load_array_i32x4([f(0usize), f(1usize), f(2usize), f(3usize)])
+        Self::load_array(simd, [f(0usize), f(1usize), f(2usize), f(3usize)])
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1676,31 +1706,34 @@ impl<S: Simd> Seal for u32x4<S> {}
 impl<S: Simd> SimdFrom<[u32; 4], S> for u32x4<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u32; 4]) -> Self {
-        simd.load_array_u32x4(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u32x4<S>> for [u32; 4] {
     #[inline(always)]
     fn from(value: u32x4<S>) -> Self {
-        value.simd.as_array_u32x4(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u32x4<S> {
     type Target = [u32; 4];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u32x4(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u32x4<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u32x4(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u32x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u32x4", &self.simd, self.simd.as_array_ref_u32x4(self))
+        crate::support::simd_debug_impl(f, "u32x4", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u32, S> for u32x4<S> {
@@ -1713,13 +1746,13 @@ impl<S: Simd> core::ops::Index<usize> for u32x4<S> {
     type Output = u32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u32x4(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u32x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u32x4(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u32x4<S>> for mask32x4<S> {
@@ -1758,20 +1791,19 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u32] {
-        self.simd.as_array_ref_u32x4(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u32] {
-        self.simd.as_array_mut_u32x4(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u32]) -> Self {
-        simd.load_array_ref_u32x4(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u32]) {
-        self.simd
-            .store_array_u32x4(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u32) -> Self {
@@ -1783,7 +1815,7 @@ impl<S: Simd> SimdBase<S> for u32x4<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u32) -> Self {
-        simd.load_array_u32x4([f(0usize), f(1usize), f(2usize), f(3usize)])
+        Self::load_array(simd, [f(0usize), f(1usize), f(2usize), f(3usize)])
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -1911,18 +1943,21 @@ impl<S: Simd> Seal for mask32x4<S> {}
 impl<S: Simd> SimdFrom<[i32; 4], S> for mask32x4<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i32; 4]) -> Self {
-        simd.load_array_mask32x4(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask32x4_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask32x4<S>> for [i32; 4] {
     #[inline(always)]
     fn from(value: mask32x4<S>) -> Self {
-        value.simd.as_array_mask32x4(value)
+        <S as crate::arch_types::ArchTypes>::mask32x4_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask32x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask32x4(*self);
+        let lanes: [i32; 4] = (*self).into();
         crate::support::simd_debug_impl(f, "mask32x4", &self.simd, &lanes)
     }
 }
@@ -1964,12 +1999,12 @@ impl<S: Simd> SimdMask<S> for mask32x4<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
         let slice: &[i32; 4] = slice.try_into().unwrap();
-        simd.load_array_mask32x4(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i32]) {
         let slice: &mut [i32; 4] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask32x4(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -2003,31 +2038,34 @@ impl<S: Simd> Seal for f64x2<S> {}
 impl<S: Simd> SimdFrom<[f64; 2], S> for f64x2<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [f64; 2]) -> Self {
-        simd.load_array_f64x2(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<f64x2<S>> for [f64; 2] {
     #[inline(always)]
     fn from(value: f64x2<S>) -> Self {
-        value.simd.as_array_f64x2(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for f64x2<S> {
     type Target = [f64; 2];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_f64x2(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for f64x2<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_f64x2(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f64x2<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f64x2", &self.simd, self.simd.as_array_ref_f64x2(self))
+        crate::support::simd_debug_impl(f, "f64x2", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<f64, S> for f64x2<S> {
@@ -2040,13 +2078,13 @@ impl<S: Simd> core::ops::Index<usize> for f64x2<S> {
     type Output = f64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_f64x2(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f64x2<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_f64x2(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<f64x2<S>> for mask64x2<S> {
@@ -2085,20 +2123,19 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f64] {
-        self.simd.as_array_ref_f64x2(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.simd.as_array_mut_f64x2(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f64]) -> Self {
-        simd.load_array_ref_f64x2(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [f64]) {
-        self.simd
-            .store_array_f64x2(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f64) -> Self {
@@ -2110,7 +2147,7 @@ impl<S: Simd> SimdBase<S> for f64x2<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> f64) -> Self {
-        simd.load_array_f64x2([f(0usize), f(1usize)])
+        Self::load_array(simd, [f(0usize), f(1usize)])
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -2281,31 +2318,34 @@ impl<S: Simd> Seal for i64x2<S> {}
 impl<S: Simd> SimdFrom<[i64; 2], S> for i64x2<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i64; 2]) -> Self {
-        simd.load_array_i64x2(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i64x2<S>> for [i64; 2] {
     #[inline(always)]
     fn from(value: i64x2<S>) -> Self {
-        value.simd.as_array_i64x2(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i64x2<S> {
     type Target = [i64; 2];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i64x2(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i64x2<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i64x2(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i64x2<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i64x2", &self.simd, self.simd.as_array_ref_i64x2(self))
+        crate::support::simd_debug_impl(f, "i64x2", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i64, S> for i64x2<S> {
@@ -2318,13 +2358,13 @@ impl<S: Simd> core::ops::Index<usize> for i64x2<S> {
     type Output = i64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i64x2(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i64x2<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i64x2(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i64x2<S>> for mask64x2<S> {
@@ -2363,20 +2403,19 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i64] {
-        self.simd.as_array_ref_i64x2(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.simd.as_array_mut_i64x2(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
-        simd.load_array_ref_i64x2(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i64]) {
-        self.simd
-            .store_array_i64x2(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i64) -> Self {
@@ -2388,7 +2427,7 @@ impl<S: Simd> SimdBase<S> for i64x2<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i64) -> Self {
-        simd.load_array_i64x2([f(0usize), f(1usize)])
+        Self::load_array(simd, [f(0usize), f(1usize)])
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -2505,31 +2544,34 @@ impl<S: Simd> Seal for u64x2<S> {}
 impl<S: Simd> SimdFrom<[u64; 2], S> for u64x2<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u64; 2]) -> Self {
-        simd.load_array_u64x2(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u64x2<S>> for [u64; 2] {
     #[inline(always)]
     fn from(value: u64x2<S>) -> Self {
-        value.simd.as_array_u64x2(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u64x2<S> {
     type Target = [u64; 2];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u64x2(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u64x2<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u64x2(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u64x2<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u64x2", &self.simd, self.simd.as_array_ref_u64x2(self))
+        crate::support::simd_debug_impl(f, "u64x2", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u64, S> for u64x2<S> {
@@ -2542,13 +2584,13 @@ impl<S: Simd> core::ops::Index<usize> for u64x2<S> {
     type Output = u64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u64x2(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u64x2<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u64x2(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u64x2<S>> for mask64x2<S> {
@@ -2587,20 +2629,19 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u64] {
-        self.simd.as_array_ref_u64x2(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u64] {
-        self.simd.as_array_mut_u64x2(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u64]) -> Self {
-        simd.load_array_ref_u64x2(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u64]) {
-        self.simd
-            .store_array_u64x2(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u64) -> Self {
@@ -2612,7 +2653,7 @@ impl<S: Simd> SimdBase<S> for u64x2<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u64) -> Self {
-        simd.load_array_u64x2([f(0usize), f(1usize)])
+        Self::load_array(simd, [f(0usize), f(1usize)])
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -2728,18 +2769,21 @@ impl<S: Simd> Seal for mask64x2<S> {}
 impl<S: Simd> SimdFrom<[i64; 2], S> for mask64x2<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i64; 2]) -> Self {
-        simd.load_array_mask64x2(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask64x2_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask64x2<S>> for [i64; 2] {
     #[inline(always)]
     fn from(value: mask64x2<S>) -> Self {
-        value.simd.as_array_mask64x2(value)
+        <S as crate::arch_types::ArchTypes>::mask64x2_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask64x2<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask64x2(*self);
+        let lanes: [i64; 2] = (*self).into();
         crate::support::simd_debug_impl(f, "mask64x2", &self.simd, &lanes)
     }
 }
@@ -2781,12 +2825,12 @@ impl<S: Simd> SimdMask<S> for mask64x2<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
         let slice: &[i64; 2] = slice.try_into().unwrap();
-        simd.load_array_mask64x2(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i64]) {
         let slice: &mut [i64; 2] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask64x2(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -2820,31 +2864,34 @@ impl<S: Simd> Seal for f32x8<S> {}
 impl<S: Simd> SimdFrom<[f32; 8], S> for f32x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [f32; 8]) -> Self {
-        simd.load_array_f32x8(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<f32x8<S>> for [f32; 8] {
     #[inline(always)]
     fn from(value: f32x8<S>) -> Self {
-        value.simd.as_array_f32x8(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for f32x8<S> {
     type Target = [f32; 8];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_f32x8(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for f32x8<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_f32x8(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f32x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f32x8", &self.simd, self.simd.as_array_ref_f32x8(self))
+        crate::support::simd_debug_impl(f, "f32x8", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<f32, S> for f32x8<S> {
@@ -2857,13 +2904,13 @@ impl<S: Simd> core::ops::Index<usize> for f32x8<S> {
     type Output = f32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_f32x8(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f32x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_f32x8(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<f32x8<S>> for mask32x8<S> {
@@ -2902,20 +2949,19 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f32] {
-        self.simd.as_array_ref_f32x8(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f32] {
-        self.simd.as_array_mut_f32x8(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f32]) -> Self {
-        simd.load_array_ref_f32x8(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [f32]) {
-        self.simd
-            .store_array_f32x8(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f32) -> Self {
@@ -2927,16 +2973,19 @@ impl<S: Simd> SimdBase<S> for f32x8<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> f32) -> Self {
-        simd.load_array_f32x8([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -3128,31 +3177,34 @@ impl<S: Simd> Seal for i8x32<S> {}
 impl<S: Simd> SimdFrom<[i8; 32], S> for i8x32<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i8; 32]) -> Self {
-        simd.load_array_i8x32(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i8x32<S>> for [i8; 32] {
     #[inline(always)]
     fn from(value: i8x32<S>) -> Self {
-        value.simd.as_array_i8x32(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i8x32<S> {
     type Target = [i8; 32];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i8x32(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i8x32<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i8x32(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i8x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i8x32", &self.simd, self.simd.as_array_ref_i8x32(self))
+        crate::support::simd_debug_impl(f, "i8x32", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i8, S> for i8x32<S> {
@@ -3165,13 +3217,13 @@ impl<S: Simd> core::ops::Index<usize> for i8x32<S> {
     type Output = i8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i8x32(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i8x32<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i8x32(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i8x32<S>> for mask8x32<S> {
@@ -3210,20 +3262,19 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i8] {
-        self.simd.as_array_ref_i8x32(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.simd.as_array_mut_i8x32(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
-        simd.load_array_ref_i8x32(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i8]) {
-        self.simd
-            .store_array_i8x32(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
@@ -3235,40 +3286,43 @@ impl<S: Simd> SimdBase<S> for i8x32<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i8) -> Self {
-        simd.load_array_i8x32([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-            f(16usize),
-            f(17usize),
-            f(18usize),
-            f(19usize),
-            f(20usize),
-            f(21usize),
-            f(22usize),
-            f(23usize),
-            f(24usize),
-            f(25usize),
-            f(26usize),
-            f(27usize),
-            f(28usize),
-            f(29usize),
-            f(30usize),
-            f(31usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+                f(16usize),
+                f(17usize),
+                f(18usize),
+                f(19usize),
+                f(20usize),
+                f(21usize),
+                f(22usize),
+                f(23usize),
+                f(24usize),
+                f(25usize),
+                f(26usize),
+                f(27usize),
+                f(28usize),
+                f(29usize),
+                f(30usize),
+                f(31usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -3392,31 +3446,34 @@ impl<S: Simd> Seal for u8x32<S> {}
 impl<S: Simd> SimdFrom<[u8; 32], S> for u8x32<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u8; 32]) -> Self {
-        simd.load_array_u8x32(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u8x32<S>> for [u8; 32] {
     #[inline(always)]
     fn from(value: u8x32<S>) -> Self {
-        value.simd.as_array_u8x32(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u8x32<S> {
     type Target = [u8; 32];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u8x32(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u8x32<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u8x32(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u8x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u8x32", &self.simd, self.simd.as_array_ref_u8x32(self))
+        crate::support::simd_debug_impl(f, "u8x32", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u8, S> for u8x32<S> {
@@ -3429,13 +3486,13 @@ impl<S: Simd> core::ops::Index<usize> for u8x32<S> {
     type Output = u8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u8x32(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u8x32<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u8x32(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u8x32<S>> for mask8x32<S> {
@@ -3474,20 +3531,19 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u8] {
-        self.simd.as_array_ref_u8x32(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.simd.as_array_mut_u8x32(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u8]) -> Self {
-        simd.load_array_ref_u8x32(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u8]) {
-        self.simd
-            .store_array_u8x32(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u8) -> Self {
@@ -3499,40 +3555,43 @@ impl<S: Simd> SimdBase<S> for u8x32<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u8) -> Self {
-        simd.load_array_u8x32([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-            f(16usize),
-            f(17usize),
-            f(18usize),
-            f(19usize),
-            f(20usize),
-            f(21usize),
-            f(22usize),
-            f(23usize),
-            f(24usize),
-            f(25usize),
-            f(26usize),
-            f(27usize),
-            f(28usize),
-            f(29usize),
-            f(30usize),
-            f(31usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+                f(16usize),
+                f(17usize),
+                f(18usize),
+                f(19usize),
+                f(20usize),
+                f(21usize),
+                f(22usize),
+                f(23usize),
+                f(24usize),
+                f(25usize),
+                f(26usize),
+                f(27usize),
+                f(28usize),
+                f(29usize),
+                f(30usize),
+                f(31usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -3655,18 +3714,21 @@ impl<S: Simd> Seal for mask8x32<S> {}
 impl<S: Simd> SimdFrom<[i8; 32], S> for mask8x32<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i8; 32]) -> Self {
-        simd.load_array_mask8x32(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask8x32_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask8x32<S>> for [i8; 32] {
     #[inline(always)]
     fn from(value: mask8x32<S>) -> Self {
-        value.simd.as_array_mask8x32(value)
+        <S as crate::arch_types::ArchTypes>::mask8x32_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask8x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask8x32(*self);
+        let lanes: [i8; 32] = (*self).into();
         crate::support::simd_debug_impl(f, "mask8x32", &self.simd, &lanes)
     }
 }
@@ -3708,12 +3770,12 @@ impl<S: Simd> SimdMask<S> for mask8x32<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
         let slice: &[i8; 32] = slice.try_into().unwrap();
-        simd.load_array_mask8x32(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i8]) {
         let slice: &mut [i8; 32] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask8x32(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -3747,36 +3809,34 @@ impl<S: Simd> Seal for i16x16<S> {}
 impl<S: Simd> SimdFrom<[i16; 16], S> for i16x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i16; 16]) -> Self {
-        simd.load_array_i16x16(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i16x16<S>> for [i16; 16] {
     #[inline(always)]
     fn from(value: i16x16<S>) -> Self {
-        value.simd.as_array_i16x16(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i16x16<S> {
     type Target = [i16; 16];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i16x16(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i16x16<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i16x16(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i16x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "i16x16",
-            &self.simd,
-            self.simd.as_array_ref_i16x16(self),
-        )
+        crate::support::simd_debug_impl(f, "i16x16", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i16, S> for i16x16<S> {
@@ -3789,13 +3849,13 @@ impl<S: Simd> core::ops::Index<usize> for i16x16<S> {
     type Output = i16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i16x16(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i16x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i16x16(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i16x16<S>> for mask16x16<S> {
@@ -3834,20 +3894,19 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i16] {
-        self.simd.as_array_ref_i16x16(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.simd.as_array_mut_i16x16(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
-        simd.load_array_ref_i16x16(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i16]) {
-        self.simd
-            .store_array_i16x16(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
@@ -3859,24 +3918,27 @@ impl<S: Simd> SimdBase<S> for i16x16<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i16) -> Self {
-        simd.load_array_i16x16([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4002,36 +4064,34 @@ impl<S: Simd> Seal for u16x16<S> {}
 impl<S: Simd> SimdFrom<[u16; 16], S> for u16x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u16; 16]) -> Self {
-        simd.load_array_u16x16(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u16x16<S>> for [u16; 16] {
     #[inline(always)]
     fn from(value: u16x16<S>) -> Self {
-        value.simd.as_array_u16x16(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u16x16<S> {
     type Target = [u16; 16];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u16x16(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u16x16<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u16x16(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u16x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "u16x16",
-            &self.simd,
-            self.simd.as_array_ref_u16x16(self),
-        )
+        crate::support::simd_debug_impl(f, "u16x16", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u16, S> for u16x16<S> {
@@ -4044,13 +4104,13 @@ impl<S: Simd> core::ops::Index<usize> for u16x16<S> {
     type Output = u16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u16x16(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u16x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u16x16(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u16x16<S>> for mask16x16<S> {
@@ -4089,20 +4149,19 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u16] {
-        self.simd.as_array_ref_u16x16(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u16] {
-        self.simd.as_array_mut_u16x16(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u16]) -> Self {
-        simd.load_array_ref_u16x16(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u16]) {
-        self.simd
-            .store_array_u16x16(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u16) -> Self {
@@ -4114,24 +4173,27 @@ impl<S: Simd> SimdBase<S> for u16x16<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u16) -> Self {
-        simd.load_array_u16x16([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4256,18 +4318,21 @@ impl<S: Simd> Seal for mask16x16<S> {}
 impl<S: Simd> SimdFrom<[i16; 16], S> for mask16x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i16; 16]) -> Self {
-        simd.load_array_mask16x16(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask16x16_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask16x16<S>> for [i16; 16] {
     #[inline(always)]
     fn from(value: mask16x16<S>) -> Self {
-        value.simd.as_array_mask16x16(value)
+        <S as crate::arch_types::ArchTypes>::mask16x16_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask16x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask16x16(*self);
+        let lanes: [i16; 16] = (*self).into();
         crate::support::simd_debug_impl(f, "mask16x16", &self.simd, &lanes)
     }
 }
@@ -4309,12 +4374,12 @@ impl<S: Simd> SimdMask<S> for mask16x16<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
         let slice: &[i16; 16] = slice.try_into().unwrap();
-        simd.load_array_mask16x16(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i16]) {
         let slice: &mut [i16; 16] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask16x16(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4348,31 +4413,34 @@ impl<S: Simd> Seal for i32x8<S> {}
 impl<S: Simd> SimdFrom<[i32; 8], S> for i32x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i32; 8]) -> Self {
-        simd.load_array_i32x8(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i32x8<S>> for [i32; 8] {
     #[inline(always)]
     fn from(value: i32x8<S>) -> Self {
-        value.simd.as_array_i32x8(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i32x8<S> {
     type Target = [i32; 8];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i32x8(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i32x8<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i32x8(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i32x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i32x8", &self.simd, self.simd.as_array_ref_i32x8(self))
+        crate::support::simd_debug_impl(f, "i32x8", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i32, S> for i32x8<S> {
@@ -4385,13 +4453,13 @@ impl<S: Simd> core::ops::Index<usize> for i32x8<S> {
     type Output = i32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i32x8(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i32x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i32x8(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i32x8<S>> for mask32x8<S> {
@@ -4430,20 +4498,19 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
-        self.simd.as_array_ref_i32x8(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.simd.as_array_mut_i32x8(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
-        simd.load_array_ref_i32x8(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i32]) {
-        self.simd
-            .store_array_i32x8(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
@@ -4455,16 +4522,19 @@ impl<S: Simd> SimdBase<S> for i32x8<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i32) -> Self {
-        simd.load_array_i32x8([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4600,31 +4670,34 @@ impl<S: Simd> Seal for u32x8<S> {}
 impl<S: Simd> SimdFrom<[u32; 8], S> for u32x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u32; 8]) -> Self {
-        simd.load_array_u32x8(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u32x8<S>> for [u32; 8] {
     #[inline(always)]
     fn from(value: u32x8<S>) -> Self {
-        value.simd.as_array_u32x8(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u32x8<S> {
     type Target = [u32; 8];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u32x8(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u32x8<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u32x8(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u32x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u32x8", &self.simd, self.simd.as_array_ref_u32x8(self))
+        crate::support::simd_debug_impl(f, "u32x8", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u32, S> for u32x8<S> {
@@ -4637,13 +4710,13 @@ impl<S: Simd> core::ops::Index<usize> for u32x8<S> {
     type Output = u32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u32x8(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u32x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u32x8(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u32x8<S>> for mask32x8<S> {
@@ -4682,20 +4755,19 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u32] {
-        self.simd.as_array_ref_u32x8(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u32] {
-        self.simd.as_array_mut_u32x8(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u32]) -> Self {
-        simd.load_array_ref_u32x8(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u32]) {
-        self.simd
-            .store_array_u32x8(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u32) -> Self {
@@ -4707,16 +4779,19 @@ impl<S: Simd> SimdBase<S> for u32x8<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u32) -> Self {
-        simd.load_array_u32x8([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4851,18 +4926,21 @@ impl<S: Simd> Seal for mask32x8<S> {}
 impl<S: Simd> SimdFrom<[i32; 8], S> for mask32x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i32; 8]) -> Self {
-        simd.load_array_mask32x8(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask32x8_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask32x8<S>> for [i32; 8] {
     #[inline(always)]
     fn from(value: mask32x8<S>) -> Self {
-        value.simd.as_array_mask32x8(value)
+        <S as crate::arch_types::ArchTypes>::mask32x8_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask32x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask32x8(*self);
+        let lanes: [i32; 8] = (*self).into();
         crate::support::simd_debug_impl(f, "mask32x8", &self.simd, &lanes)
     }
 }
@@ -4904,12 +4982,12 @@ impl<S: Simd> SimdMask<S> for mask32x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
         let slice: &[i32; 8] = slice.try_into().unwrap();
-        simd.load_array_mask32x8(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i32]) {
         let slice: &mut [i32; 8] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask32x8(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -4943,31 +5021,34 @@ impl<S: Simd> Seal for f64x4<S> {}
 impl<S: Simd> SimdFrom<[f64; 4], S> for f64x4<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [f64; 4]) -> Self {
-        simd.load_array_f64x4(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<f64x4<S>> for [f64; 4] {
     #[inline(always)]
     fn from(value: f64x4<S>) -> Self {
-        value.simd.as_array_f64x4(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for f64x4<S> {
     type Target = [f64; 4];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_f64x4(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for f64x4<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_f64x4(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f64x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f64x4", &self.simd, self.simd.as_array_ref_f64x4(self))
+        crate::support::simd_debug_impl(f, "f64x4", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<f64, S> for f64x4<S> {
@@ -4980,13 +5061,13 @@ impl<S: Simd> core::ops::Index<usize> for f64x4<S> {
     type Output = f64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_f64x4(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f64x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_f64x4(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<f64x4<S>> for mask64x4<S> {
@@ -5025,20 +5106,19 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f64] {
-        self.simd.as_array_ref_f64x4(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.simd.as_array_mut_f64x4(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f64]) -> Self {
-        simd.load_array_ref_f64x4(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [f64]) {
-        self.simd
-            .store_array_f64x4(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f64) -> Self {
@@ -5050,7 +5130,7 @@ impl<S: Simd> SimdBase<S> for f64x4<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> f64) -> Self {
-        simd.load_array_f64x4([f(0usize), f(1usize), f(2usize), f(3usize)])
+        Self::load_array(simd, [f(0usize), f(1usize), f(2usize), f(3usize)])
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -5228,31 +5308,34 @@ impl<S: Simd> Seal for i64x4<S> {}
 impl<S: Simd> SimdFrom<[i64; 4], S> for i64x4<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i64; 4]) -> Self {
-        simd.load_array_i64x4(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i64x4<S>> for [i64; 4] {
     #[inline(always)]
     fn from(value: i64x4<S>) -> Self {
-        value.simd.as_array_i64x4(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i64x4<S> {
     type Target = [i64; 4];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i64x4(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i64x4<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i64x4(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i64x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i64x4", &self.simd, self.simd.as_array_ref_i64x4(self))
+        crate::support::simd_debug_impl(f, "i64x4", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i64, S> for i64x4<S> {
@@ -5265,13 +5348,13 @@ impl<S: Simd> core::ops::Index<usize> for i64x4<S> {
     type Output = i64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i64x4(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i64x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i64x4(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i64x4<S>> for mask64x4<S> {
@@ -5310,20 +5393,19 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i64] {
-        self.simd.as_array_ref_i64x4(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.simd.as_array_mut_i64x4(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
-        simd.load_array_ref_i64x4(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i64]) {
-        self.simd
-            .store_array_i64x4(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i64) -> Self {
@@ -5335,7 +5417,7 @@ impl<S: Simd> SimdBase<S> for i64x4<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i64) -> Self {
-        simd.load_array_i64x4([f(0usize), f(1usize), f(2usize), f(3usize)])
+        Self::load_array(simd, [f(0usize), f(1usize), f(2usize), f(3usize)])
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -5459,31 +5541,34 @@ impl<S: Simd> Seal for u64x4<S> {}
 impl<S: Simd> SimdFrom<[u64; 4], S> for u64x4<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u64; 4]) -> Self {
-        simd.load_array_u64x4(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u64x4<S>> for [u64; 4] {
     #[inline(always)]
     fn from(value: u64x4<S>) -> Self {
-        value.simd.as_array_u64x4(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u64x4<S> {
     type Target = [u64; 4];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u64x4(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u64x4<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u64x4(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u64x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u64x4", &self.simd, self.simd.as_array_ref_u64x4(self))
+        crate::support::simd_debug_impl(f, "u64x4", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u64, S> for u64x4<S> {
@@ -5496,13 +5581,13 @@ impl<S: Simd> core::ops::Index<usize> for u64x4<S> {
     type Output = u64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u64x4(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u64x4<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u64x4(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u64x4<S>> for mask64x4<S> {
@@ -5541,20 +5626,19 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u64] {
-        self.simd.as_array_ref_u64x4(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u64] {
-        self.simd.as_array_mut_u64x4(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u64]) -> Self {
-        simd.load_array_ref_u64x4(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u64]) {
-        self.simd
-            .store_array_u64x4(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u64) -> Self {
@@ -5566,7 +5650,7 @@ impl<S: Simd> SimdBase<S> for u64x4<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u64) -> Self {
-        simd.load_array_u64x4([f(0usize), f(1usize), f(2usize), f(3usize)])
+        Self::load_array(simd, [f(0usize), f(1usize), f(2usize), f(3usize)])
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -5689,18 +5773,21 @@ impl<S: Simd> Seal for mask64x4<S> {}
 impl<S: Simd> SimdFrom<[i64; 4], S> for mask64x4<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i64; 4]) -> Self {
-        simd.load_array_mask64x4(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask64x4_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask64x4<S>> for [i64; 4] {
     #[inline(always)]
     fn from(value: mask64x4<S>) -> Self {
-        value.simd.as_array_mask64x4(value)
+        <S as crate::arch_types::ArchTypes>::mask64x4_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask64x4<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask64x4(*self);
+        let lanes: [i64; 4] = (*self).into();
         crate::support::simd_debug_impl(f, "mask64x4", &self.simd, &lanes)
     }
 }
@@ -5742,12 +5829,12 @@ impl<S: Simd> SimdMask<S> for mask64x4<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
         let slice: &[i64; 4] = slice.try_into().unwrap();
-        simd.load_array_mask64x4(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i64]) {
         let slice: &mut [i64; 4] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask64x4(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -5781,36 +5868,34 @@ impl<S: Simd> Seal for f32x16<S> {}
 impl<S: Simd> SimdFrom<[f32; 16], S> for f32x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [f32; 16]) -> Self {
-        simd.load_array_f32x16(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<f32x16<S>> for [f32; 16] {
     #[inline(always)]
     fn from(value: f32x16<S>) -> Self {
-        value.simd.as_array_f32x16(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for f32x16<S> {
     type Target = [f32; 16];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_f32x16(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for f32x16<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_f32x16(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f32x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "f32x16",
-            &self.simd,
-            self.simd.as_array_ref_f32x16(self),
-        )
+        crate::support::simd_debug_impl(f, "f32x16", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<f32, S> for f32x16<S> {
@@ -5823,13 +5908,13 @@ impl<S: Simd> core::ops::Index<usize> for f32x16<S> {
     type Output = f32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_f32x16(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f32x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_f32x16(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<f32x16<S>> for mask32x16<S> {
@@ -5868,20 +5953,19 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f32] {
-        self.simd.as_array_ref_f32x16(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f32] {
-        self.simd.as_array_mut_f32x16(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f32]) -> Self {
-        simd.load_array_ref_f32x16(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [f32]) {
-        self.simd
-            .store_array_f32x16(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f32) -> Self {
@@ -5894,24 +5978,27 @@ impl<S: Simd> SimdBase<S> for f32x16<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> f32) -> Self {
-        simd.load_array_f32x16([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -6098,31 +6185,34 @@ impl<S: Simd> Seal for i8x64<S> {}
 impl<S: Simd> SimdFrom<[i8; 64], S> for i8x64<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i8; 64]) -> Self {
-        simd.load_array_i8x64(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i8x64<S>> for [i8; 64] {
     #[inline(always)]
     fn from(value: i8x64<S>) -> Self {
-        value.simd.as_array_i8x64(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i8x64<S> {
     type Target = [i8; 64];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i8x64(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i8x64<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i8x64(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i8x64<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i8x64", &self.simd, self.simd.as_array_ref_i8x64(self))
+        crate::support::simd_debug_impl(f, "i8x64", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i8, S> for i8x64<S> {
@@ -6135,13 +6225,13 @@ impl<S: Simd> core::ops::Index<usize> for i8x64<S> {
     type Output = i8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i8x64(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i8x64<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i8x64(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i8x64<S>> for mask8x64<S> {
@@ -6180,20 +6270,19 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i8] {
-        self.simd.as_array_ref_i8x64(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i8] {
-        self.simd.as_array_mut_i8x64(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
-        simd.load_array_ref_i8x64(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i8]) {
-        self.simd
-            .store_array_i8x64(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i8) -> Self {
@@ -6206,72 +6295,75 @@ impl<S: Simd> SimdBase<S> for i8x64<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i8) -> Self {
-        simd.load_array_i8x64([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-            f(16usize),
-            f(17usize),
-            f(18usize),
-            f(19usize),
-            f(20usize),
-            f(21usize),
-            f(22usize),
-            f(23usize),
-            f(24usize),
-            f(25usize),
-            f(26usize),
-            f(27usize),
-            f(28usize),
-            f(29usize),
-            f(30usize),
-            f(31usize),
-            f(32usize),
-            f(33usize),
-            f(34usize),
-            f(35usize),
-            f(36usize),
-            f(37usize),
-            f(38usize),
-            f(39usize),
-            f(40usize),
-            f(41usize),
-            f(42usize),
-            f(43usize),
-            f(44usize),
-            f(45usize),
-            f(46usize),
-            f(47usize),
-            f(48usize),
-            f(49usize),
-            f(50usize),
-            f(51usize),
-            f(52usize),
-            f(53usize),
-            f(54usize),
-            f(55usize),
-            f(56usize),
-            f(57usize),
-            f(58usize),
-            f(59usize),
-            f(60usize),
-            f(61usize),
-            f(62usize),
-            f(63usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+                f(16usize),
+                f(17usize),
+                f(18usize),
+                f(19usize),
+                f(20usize),
+                f(21usize),
+                f(22usize),
+                f(23usize),
+                f(24usize),
+                f(25usize),
+                f(26usize),
+                f(27usize),
+                f(28usize),
+                f(29usize),
+                f(30usize),
+                f(31usize),
+                f(32usize),
+                f(33usize),
+                f(34usize),
+                f(35usize),
+                f(36usize),
+                f(37usize),
+                f(38usize),
+                f(39usize),
+                f(40usize),
+                f(41usize),
+                f(42usize),
+                f(43usize),
+                f(44usize),
+                f(45usize),
+                f(46usize),
+                f(47usize),
+                f(48usize),
+                f(49usize),
+                f(50usize),
+                f(51usize),
+                f(52usize),
+                f(53usize),
+                f(54usize),
+                f(55usize),
+                f(56usize),
+                f(57usize),
+                f(58usize),
+                f(59usize),
+                f(60usize),
+                f(61usize),
+                f(62usize),
+                f(63usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -6388,31 +6480,34 @@ impl<S: Simd> Seal for u8x64<S> {}
 impl<S: Simd> SimdFrom<[u8; 64], S> for u8x64<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u8; 64]) -> Self {
-        simd.load_array_u8x64(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u8x64<S>> for [u8; 64] {
     #[inline(always)]
     fn from(value: u8x64<S>) -> Self {
-        value.simd.as_array_u8x64(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u8x64<S> {
     type Target = [u8; 64];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u8x64(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u8x64<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u8x64(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u8x64<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u8x64", &self.simd, self.simd.as_array_ref_u8x64(self))
+        crate::support::simd_debug_impl(f, "u8x64", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u8, S> for u8x64<S> {
@@ -6425,13 +6520,13 @@ impl<S: Simd> core::ops::Index<usize> for u8x64<S> {
     type Output = u8;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u8x64(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u8x64<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u8x64(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u8x64<S>> for mask8x64<S> {
@@ -6470,20 +6565,19 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u8] {
-        self.simd.as_array_ref_u8x64(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.simd.as_array_mut_u8x64(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u8]) -> Self {
-        simd.load_array_ref_u8x64(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u8]) {
-        self.simd
-            .store_array_u8x64(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u8) -> Self {
@@ -6496,72 +6590,75 @@ impl<S: Simd> SimdBase<S> for u8x64<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u8) -> Self {
-        simd.load_array_u8x64([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-            f(16usize),
-            f(17usize),
-            f(18usize),
-            f(19usize),
-            f(20usize),
-            f(21usize),
-            f(22usize),
-            f(23usize),
-            f(24usize),
-            f(25usize),
-            f(26usize),
-            f(27usize),
-            f(28usize),
-            f(29usize),
-            f(30usize),
-            f(31usize),
-            f(32usize),
-            f(33usize),
-            f(34usize),
-            f(35usize),
-            f(36usize),
-            f(37usize),
-            f(38usize),
-            f(39usize),
-            f(40usize),
-            f(41usize),
-            f(42usize),
-            f(43usize),
-            f(44usize),
-            f(45usize),
-            f(46usize),
-            f(47usize),
-            f(48usize),
-            f(49usize),
-            f(50usize),
-            f(51usize),
-            f(52usize),
-            f(53usize),
-            f(54usize),
-            f(55usize),
-            f(56usize),
-            f(57usize),
-            f(58usize),
-            f(59usize),
-            f(60usize),
-            f(61usize),
-            f(62usize),
-            f(63usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+                f(16usize),
+                f(17usize),
+                f(18usize),
+                f(19usize),
+                f(20usize),
+                f(21usize),
+                f(22usize),
+                f(23usize),
+                f(24usize),
+                f(25usize),
+                f(26usize),
+                f(27usize),
+                f(28usize),
+                f(29usize),
+                f(30usize),
+                f(31usize),
+                f(32usize),
+                f(33usize),
+                f(34usize),
+                f(35usize),
+                f(36usize),
+                f(37usize),
+                f(38usize),
+                f(39usize),
+                f(40usize),
+                f(41usize),
+                f(42usize),
+                f(43usize),
+                f(44usize),
+                f(45usize),
+                f(46usize),
+                f(47usize),
+                f(48usize),
+                f(49usize),
+                f(50usize),
+                f(51usize),
+                f(52usize),
+                f(53usize),
+                f(54usize),
+                f(55usize),
+                f(56usize),
+                f(57usize),
+                f(58usize),
+                f(59usize),
+                f(60usize),
+                f(61usize),
+                f(62usize),
+                f(63usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -6677,18 +6774,21 @@ impl<S: Simd> Seal for mask8x64<S> {}
 impl<S: Simd> SimdFrom<[i8; 64], S> for mask8x64<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i8; 64]) -> Self {
-        simd.load_array_mask8x64(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask8x64_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask8x64<S>> for [i8; 64] {
     #[inline(always)]
     fn from(value: mask8x64<S>) -> Self {
-        value.simd.as_array_mask8x64(value)
+        <S as crate::arch_types::ArchTypes>::mask8x64_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask8x64<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask8x64(*self);
+        let lanes: [i8; 64] = (*self).into();
         crate::support::simd_debug_impl(f, "mask8x64", &self.simd, &lanes)
     }
 }
@@ -6730,12 +6830,12 @@ impl<S: Simd> SimdMask<S> for mask8x64<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i8]) -> Self {
         let slice: &[i8; 64] = slice.try_into().unwrap();
-        simd.load_array_mask8x64(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i8]) {
         let slice: &mut [i8; 64] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask8x64(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -6769,36 +6869,34 @@ impl<S: Simd> Seal for i16x32<S> {}
 impl<S: Simd> SimdFrom<[i16; 32], S> for i16x32<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i16; 32]) -> Self {
-        simd.load_array_i16x32(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i16x32<S>> for [i16; 32] {
     #[inline(always)]
     fn from(value: i16x32<S>) -> Self {
-        value.simd.as_array_i16x32(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i16x32<S> {
     type Target = [i16; 32];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i16x32(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i16x32<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i16x32(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i16x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "i16x32",
-            &self.simd,
-            self.simd.as_array_ref_i16x32(self),
-        )
+        crate::support::simd_debug_impl(f, "i16x32", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i16, S> for i16x32<S> {
@@ -6811,13 +6909,13 @@ impl<S: Simd> core::ops::Index<usize> for i16x32<S> {
     type Output = i16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i16x32(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i16x32<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i16x32(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i16x32<S>> for mask16x32<S> {
@@ -6856,20 +6954,19 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i16] {
-        self.simd.as_array_ref_i16x32(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i16] {
-        self.simd.as_array_mut_i16x32(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
-        simd.load_array_ref_i16x32(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i16]) {
-        self.simd
-            .store_array_i16x32(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i16) -> Self {
@@ -6882,40 +6979,43 @@ impl<S: Simd> SimdBase<S> for i16x32<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i16) -> Self {
-        simd.load_array_i16x32([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-            f(16usize),
-            f(17usize),
-            f(18usize),
-            f(19usize),
-            f(20usize),
-            f(21usize),
-            f(22usize),
-            f(23usize),
-            f(24usize),
-            f(25usize),
-            f(26usize),
-            f(27usize),
-            f(28usize),
-            f(29usize),
-            f(30usize),
-            f(31usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+                f(16usize),
+                f(17usize),
+                f(18usize),
+                f(19usize),
+                f(20usize),
+                f(21usize),
+                f(22usize),
+                f(23usize),
+                f(24usize),
+                f(25usize),
+                f(26usize),
+                f(27usize),
+                f(28usize),
+                f(29usize),
+                f(30usize),
+                f(31usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -7034,36 +7134,34 @@ impl<S: Simd> Seal for u16x32<S> {}
 impl<S: Simd> SimdFrom<[u16; 32], S> for u16x32<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u16; 32]) -> Self {
-        simd.load_array_u16x32(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u16x32<S>> for [u16; 32] {
     #[inline(always)]
     fn from(value: u16x32<S>) -> Self {
-        value.simd.as_array_u16x32(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u16x32<S> {
     type Target = [u16; 32];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u16x32(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u16x32<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u16x32(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u16x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "u16x32",
-            &self.simd,
-            self.simd.as_array_ref_u16x32(self),
-        )
+        crate::support::simd_debug_impl(f, "u16x32", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u16, S> for u16x32<S> {
@@ -7076,13 +7174,13 @@ impl<S: Simd> core::ops::Index<usize> for u16x32<S> {
     type Output = u16;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u16x32(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u16x32<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u16x32(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u16x32<S>> for mask16x32<S> {
@@ -7121,20 +7219,19 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u16] {
-        self.simd.as_array_ref_u16x32(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u16] {
-        self.simd.as_array_mut_u16x32(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u16]) -> Self {
-        simd.load_array_ref_u16x32(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u16]) {
-        self.simd
-            .store_array_u16x32(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u16) -> Self {
@@ -7147,40 +7244,43 @@ impl<S: Simd> SimdBase<S> for u16x32<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u16) -> Self {
-        simd.load_array_u16x32([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-            f(16usize),
-            f(17usize),
-            f(18usize),
-            f(19usize),
-            f(20usize),
-            f(21usize),
-            f(22usize),
-            f(23usize),
-            f(24usize),
-            f(25usize),
-            f(26usize),
-            f(27usize),
-            f(28usize),
-            f(29usize),
-            f(30usize),
-            f(31usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+                f(16usize),
+                f(17usize),
+                f(18usize),
+                f(19usize),
+                f(20usize),
+                f(21usize),
+                f(22usize),
+                f(23usize),
+                f(24usize),
+                f(25usize),
+                f(26usize),
+                f(27usize),
+                f(28usize),
+                f(29usize),
+                f(30usize),
+                f(31usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -7298,18 +7398,21 @@ impl<S: Simd> Seal for mask16x32<S> {}
 impl<S: Simd> SimdFrom<[i16; 32], S> for mask16x32<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i16; 32]) -> Self {
-        simd.load_array_mask16x32(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask16x32_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask16x32<S>> for [i16; 32] {
     #[inline(always)]
     fn from(value: mask16x32<S>) -> Self {
-        value.simd.as_array_mask16x32(value)
+        <S as crate::arch_types::ArchTypes>::mask16x32_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask16x32<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask16x32(*self);
+        let lanes: [i16; 32] = (*self).into();
         crate::support::simd_debug_impl(f, "mask16x32", &self.simd, &lanes)
     }
 }
@@ -7351,12 +7454,12 @@ impl<S: Simd> SimdMask<S> for mask16x32<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i16]) -> Self {
         let slice: &[i16; 32] = slice.try_into().unwrap();
-        simd.load_array_mask16x32(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i16]) {
         let slice: &mut [i16; 32] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask16x32(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -7390,36 +7493,34 @@ impl<S: Simd> Seal for i32x16<S> {}
 impl<S: Simd> SimdFrom<[i32; 16], S> for i32x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i32; 16]) -> Self {
-        simd.load_array_i32x16(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i32x16<S>> for [i32; 16] {
     #[inline(always)]
     fn from(value: i32x16<S>) -> Self {
-        value.simd.as_array_i32x16(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i32x16<S> {
     type Target = [i32; 16];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i32x16(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i32x16<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i32x16(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i32x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "i32x16",
-            &self.simd,
-            self.simd.as_array_ref_i32x16(self),
-        )
+        crate::support::simd_debug_impl(f, "i32x16", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i32, S> for i32x16<S> {
@@ -7432,13 +7533,13 @@ impl<S: Simd> core::ops::Index<usize> for i32x16<S> {
     type Output = i32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i32x16(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i32x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i32x16(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i32x16<S>> for mask32x16<S> {
@@ -7477,20 +7578,19 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i32] {
-        self.simd.as_array_ref_i32x16(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i32] {
-        self.simd.as_array_mut_i32x16(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
-        simd.load_array_ref_i32x16(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i32]) {
-        self.simd
-            .store_array_i32x16(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i32) -> Self {
@@ -7503,24 +7603,27 @@ impl<S: Simd> SimdBase<S> for i32x16<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i32) -> Self {
-        simd.load_array_i32x16([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -7651,36 +7754,34 @@ impl<S: Simd> Seal for u32x16<S> {}
 impl<S: Simd> SimdFrom<[u32; 16], S> for u32x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u32; 16]) -> Self {
-        simd.load_array_u32x16(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u32x16<S>> for [u32; 16] {
     #[inline(always)]
     fn from(value: u32x16<S>) -> Self {
-        value.simd.as_array_u32x16(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u32x16<S> {
     type Target = [u32; 16];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u32x16(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u32x16<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u32x16(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u32x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(
-            f,
-            "u32x16",
-            &self.simd,
-            self.simd.as_array_ref_u32x16(self),
-        )
+        crate::support::simd_debug_impl(f, "u32x16", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u32, S> for u32x16<S> {
@@ -7693,13 +7794,13 @@ impl<S: Simd> core::ops::Index<usize> for u32x16<S> {
     type Output = u32;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u32x16(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u32x16<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u32x16(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u32x16<S>> for mask32x16<S> {
@@ -7738,20 +7839,19 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u32] {
-        self.simd.as_array_ref_u32x16(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u32] {
-        self.simd.as_array_mut_u32x16(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u32]) -> Self {
-        simd.load_array_ref_u32x16(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u32]) {
-        self.simd
-            .store_array_u32x16(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u32) -> Self {
@@ -7764,24 +7864,27 @@ impl<S: Simd> SimdBase<S> for u32x16<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u32) -> Self {
-        simd.load_array_u32x16([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-            f(8usize),
-            f(9usize),
-            f(10usize),
-            f(11usize),
-            f(12usize),
-            f(13usize),
-            f(14usize),
-            f(15usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+                f(8usize),
+                f(9usize),
+                f(10usize),
+                f(11usize),
+                f(12usize),
+                f(13usize),
+                f(14usize),
+                f(15usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -7911,18 +8014,21 @@ impl<S: Simd> Seal for mask32x16<S> {}
 impl<S: Simd> SimdFrom<[i32; 16], S> for mask32x16<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i32; 16]) -> Self {
-        simd.load_array_mask32x16(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask32x16_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask32x16<S>> for [i32; 16] {
     #[inline(always)]
     fn from(value: mask32x16<S>) -> Self {
-        value.simd.as_array_mask32x16(value)
+        <S as crate::arch_types::ArchTypes>::mask32x16_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask32x16<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask32x16(*self);
+        let lanes: [i32; 16] = (*self).into();
         crate::support::simd_debug_impl(f, "mask32x16", &self.simd, &lanes)
     }
 }
@@ -7964,12 +8070,12 @@ impl<S: Simd> SimdMask<S> for mask32x16<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i32]) -> Self {
         let slice: &[i32; 16] = slice.try_into().unwrap();
-        simd.load_array_mask32x16(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i32]) {
         let slice: &mut [i32; 16] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask32x16(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8003,31 +8109,34 @@ impl<S: Simd> Seal for f64x8<S> {}
 impl<S: Simd> SimdFrom<[f64; 8], S> for f64x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [f64; 8]) -> Self {
-        simd.load_array_f64x8(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<f64x8<S>> for [f64; 8] {
     #[inline(always)]
     fn from(value: f64x8<S>) -> Self {
-        value.simd.as_array_f64x8(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for f64x8<S> {
     type Target = [f64; 8];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_f64x8(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for f64x8<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_f64x8(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for f64x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "f64x8", &self.simd, self.simd.as_array_ref_f64x8(self))
+        crate::support::simd_debug_impl(f, "f64x8", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<f64, S> for f64x8<S> {
@@ -8040,13 +8149,13 @@ impl<S: Simd> core::ops::Index<usize> for f64x8<S> {
     type Output = f64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_f64x8(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for f64x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_f64x8(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<f64x8<S>> for mask64x8<S> {
@@ -8085,20 +8194,19 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[f64] {
-        self.simd.as_array_ref_f64x8(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.simd.as_array_mut_f64x8(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[f64]) -> Self {
-        simd.load_array_ref_f64x8(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [f64]) {
-        self.simd
-            .store_array_f64x8(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: f64) -> Self {
@@ -8111,16 +8219,19 @@ impl<S: Simd> SimdBase<S> for f64x8<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> f64) -> Self {
-        simd.load_array_f64x8([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8291,31 +8402,34 @@ impl<S: Simd> Seal for i64x8<S> {}
 impl<S: Simd> SimdFrom<[i64; 8], S> for i64x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i64; 8]) -> Self {
-        simd.load_array_i64x8(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<i64x8<S>> for [i64; 8] {
     #[inline(always)]
     fn from(value: i64x8<S>) -> Self {
-        value.simd.as_array_i64x8(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for i64x8<S> {
     type Target = [i64; 8];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_i64x8(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for i64x8<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_i64x8(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for i64x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "i64x8", &self.simd, self.simd.as_array_ref_i64x8(self))
+        crate::support::simd_debug_impl(f, "i64x8", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<i64, S> for i64x8<S> {
@@ -8328,13 +8442,13 @@ impl<S: Simd> core::ops::Index<usize> for i64x8<S> {
     type Output = i64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_i64x8(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for i64x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_i64x8(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<i64x8<S>> for mask64x8<S> {
@@ -8373,20 +8487,19 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[i64] {
-        self.simd.as_array_ref_i64x8(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [i64] {
-        self.simd.as_array_mut_i64x8(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
-        simd.load_array_ref_i64x8(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i64]) {
-        self.simd
-            .store_array_i64x8(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: i64) -> Self {
@@ -8399,16 +8512,19 @@ impl<S: Simd> SimdBase<S> for i64x8<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> i64) -> Self {
-        simd.load_array_i64x8([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8525,31 +8641,34 @@ impl<S: Simd> Seal for u64x8<S> {}
 impl<S: Simd> SimdFrom<[u64; 8], S> for u64x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [u64; 8]) -> Self {
-        simd.load_array_u64x8(val)
+        Self {
+            val: crate::transmute::checked_transmute_copy(&val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<u64x8<S>> for [u64; 8] {
     #[inline(always)]
     fn from(value: u64x8<S>) -> Self {
-        value.simd.as_array_u64x8(value)
+        crate::transmute::checked_transmute_copy(&value.val)
     }
 }
 impl<S: Simd> core::ops::Deref for u64x8<S> {
     type Target = [u64; 8];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.simd.as_array_ref_u64x8(self)
+        crate::transmute::checked_cast_ref(&self.val)
     }
 }
 impl<S: Simd> core::ops::DerefMut for u64x8<S> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.simd.as_array_mut_u64x8(self)
+        crate::transmute::checked_cast_mut(&mut self.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for u64x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        crate::support::simd_debug_impl(f, "u64x8", &self.simd, self.simd.as_array_ref_u64x8(self))
+        crate::support::simd_debug_impl(f, "u64x8", &self.simd, self.as_array_ref())
     }
 }
 impl<S: Simd> SimdFrom<u64, S> for u64x8<S> {
@@ -8562,13 +8681,13 @@ impl<S: Simd> core::ops::Index<usize> for u64x8<S> {
     type Output = u64;
     #[inline(always)]
     fn index(&self, i: usize) -> &Self::Output {
-        &self.simd.as_array_ref_u64x8(self)[i]
+        &self.as_array_ref()[i]
     }
 }
 impl<S: Simd> core::ops::IndexMut<usize> for u64x8<S> {
     #[inline(always)]
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.simd.as_array_mut_u64x8(self)[i]
+        &mut self.as_array_mut()[i]
     }
 }
 impl<S: Simd> Select<u64x8<S>> for mask64x8<S> {
@@ -8607,20 +8726,19 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     }
     #[inline(always)]
     fn as_slice(&self) -> &[u64] {
-        self.simd.as_array_ref_u64x8(self).as_slice()
+        self.as_array_ref().as_slice()
     }
     #[inline(always)]
     fn as_mut_slice(&mut self) -> &mut [u64] {
-        self.simd.as_array_mut_u64x8(self).as_mut_slice()
+        self.as_array_mut().as_mut_slice()
     }
     #[inline(always)]
     fn from_slice(simd: S, slice: &[u64]) -> Self {
-        simd.load_array_ref_u64x8(slice.try_into().unwrap())
+        Self::load_array_ref(simd, slice.try_into().unwrap())
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [u64]) {
-        self.simd
-            .store_array_u64x8(*self, slice.try_into().unwrap());
+        (*self).store_array(slice.try_into().unwrap());
     }
     #[inline(always)]
     fn splat(simd: S, val: u64) -> Self {
@@ -8633,16 +8751,19 @@ impl<S: Simd> SimdBase<S> for u64x8<S> {
     }
     #[inline(always)]
     fn from_fn(simd: S, mut f: impl FnMut(usize) -> u64) -> Self {
-        simd.load_array_u64x8([
-            f(0usize),
-            f(1usize),
-            f(2usize),
-            f(3usize),
-            f(4usize),
-            f(5usize),
-            f(6usize),
-            f(7usize),
-        ])
+        Self::load_array(
+            simd,
+            [
+                f(0usize),
+                f(1usize),
+                f(2usize),
+                f(3usize),
+                f(4usize),
+                f(5usize),
+                f(6usize),
+                f(7usize),
+            ],
+        )
     }
     #[inline(always)]
     fn slide<const SHIFT: usize>(self, rhs: impl SimdInto<Self, S>) -> Self {
@@ -8758,18 +8879,21 @@ impl<S: Simd> Seal for mask64x8<S> {}
 impl<S: Simd> SimdFrom<[i64; 8], S> for mask64x8<S> {
     #[inline(always)]
     fn simd_from(simd: S, val: [i64; 8]) -> Self {
-        simd.load_array_mask64x8(val)
+        Self {
+            val: <S as crate::arch_types::ArchTypes>::mask64x8_from_array(simd, val),
+            simd,
+        }
     }
 }
 impl<S: Simd> From<mask64x8<S>> for [i64; 8] {
     #[inline(always)]
     fn from(value: mask64x8<S>) -> Self {
-        value.simd.as_array_mask64x8(value)
+        <S as crate::arch_types::ArchTypes>::mask64x8_to_array(value.simd, value.val)
     }
 }
 impl<S: Simd + core::fmt::Debug> core::fmt::Debug for mask64x8<S> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let lanes = self.simd.as_array_mask64x8(*self);
+        let lanes: [i64; 8] = (*self).into();
         crate::support::simd_debug_impl(f, "mask64x8", &self.simd, &lanes)
     }
 }
@@ -8811,12 +8935,12 @@ impl<S: Simd> SimdMask<S> for mask64x8<S> {
     #[inline(always)]
     fn from_slice(simd: S, slice: &[i64]) -> Self {
         let slice: &[i64; 8] = slice.try_into().unwrap();
-        simd.load_array_mask64x8(*slice)
+        Self::simd_from(simd, *slice)
     }
     #[inline(always)]
     fn store_slice(&self, slice: &mut [i64]) {
         let slice: &mut [i64; 8] = slice.try_into().unwrap();
-        *slice = self.simd.as_array_mask64x8(*self);
+        *slice = (*self).into();
     }
     #[inline(always)]
     fn simd_eq(self, rhs: impl SimdInto<Self, S>) -> Self {

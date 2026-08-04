@@ -27,23 +27,6 @@ impl Quantifier {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum RefKind {
-    Value,
-    Ref,
-    Mut,
-}
-
-impl RefKind {
-    pub(crate) fn token(&self) -> Option<TokenStream> {
-        match self {
-            Self::Value => None,
-            Self::Ref => Some(quote! { & }),
-            Self::Mut => Some(quote! { &mut }),
-        }
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum SlideGranularity {
     WithinBlocks,
     AcrossBlocks,
@@ -127,23 +110,16 @@ pub(crate) enum OpSig {
     /// Takes a mutable mask vector, a lane index, and a boolean, and updates the lane in place.
     MaskSet,
     /// Takes an argument of an array of a certain scalar type, with the length (`block_size` * `block_count`) / [scalar
-    /// type's byte size]. Returns a vector type of that scalar type and length.
+    /// type's byte size]. Returns `block_count` vectors whose width is `block_size`.
     ///
     /// First argument is the base block size (i.e. 128), second argument is how many blocks. For example,
     /// `LoadInterleaved(128, 4)` would correspond to the NEON instructions `vld4q_f32`, while `LoadInterleaved(64, 4)`
     /// would correspond to `vld4_f32`.
     LoadInterleaved { block_size: u16, block_count: u16 },
-    /// The inverse of [`OpSig::LoadInterleaved`]. Takes a vector argument with the length (`block_size` * `block_count`) /
-    /// [scalar type's byte size], and a mutable reference to a scalar array of the same length, and returns nothing.
+    /// The inverse of [`OpSig::LoadInterleaved`]. Takes `block_count` vectors whose width is `block_size` and a mutable
+    /// reference to a scalar array with the length (`block_size` * `block_count`) / [scalar type's byte size], and
+    /// returns nothing.
     StoreInterleaved { block_size: u16, block_count: u16 },
-    /// Takes a single argument of the array type corresponding to the vector type (e.g. `[f32; 4]` for `f32x4<S>`), or
-    /// a reference to it, and returns that vector type.
-    FromArray { kind: RefKind },
-    /// Takes a single argument of the vector type, or a reference to it, and returns the corresponding array type (e.g.
-    /// `[f32; 4]` for `f32x4<S>`) or a reference to it.
-    AsArray { kind: RefKind },
-    /// Takes a vector and a mutable reference to an array, and stores the vector elements into the array.
-    StoreArray,
 }
 
 /// Where this operation is defined, and how it is called.
@@ -203,6 +179,14 @@ impl Op {
         }
     }
 
+    pub(crate) fn doc_alias(&self) -> Option<&'static str> {
+        match self.method {
+            "load_four_interleaved" => Some("load_interleaved"),
+            "store_four_interleaved" => Some("store_interleaved"),
+            _ => None,
+        }
+    }
+
     pub(crate) fn simd_trait_method_sig(&self, vec_ty: &VecType) -> TokenStream {
         let method_ident = generic_op_name(self.method, vec_ty);
         let sig = self.simd_trait_sig_parts(vec_ty, quote! { Self });
@@ -238,8 +222,7 @@ impl Op {
         let arg_decls = sig.arg_decls();
         let call_args = &sig.arg_names;
         let ret = &sig.ret;
-        let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. } | OpSig::StoreArray)
-        {
+        let kernel_call = if matches!(self.sig, OpSig::StoreInterleaved { .. }) {
             quote! { kernel(self #(, #call_args)*); }
         } else {
             quote! { kernel(self #(, #call_args)*) }
@@ -286,14 +269,16 @@ impl Op {
                 block_count,
             } => {
                 let arg_ty = load_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                (vec![arg_ty], vec)
+                let block_count = *block_count as usize;
+                (vec![arg_ty], quote! { [#vec; #block_count] })
             }
             OpSig::StoreInterleaved {
                 block_size,
                 block_count,
             } => {
                 let arg_ty = store_interleaved_arg_ty(*block_size, *block_count, vec_ty);
-                (vec![vec.clone(), arg_ty], quote! { () })
+                let block_count = *block_count as usize;
+                (vec![quote! { [#vec; #block_count] }, arg_ty], quote! { () })
             }
             OpSig::Compare => {
                 let result = vec_ty.mask_ty().rust();
@@ -349,29 +334,6 @@ impl Op {
                     vec,
                 )
             }
-            OpSig::FromArray { kind } => {
-                let ref_tok = kind.token();
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                (vec![quote! { #ref_tok #array_ty }], vec)
-            }
-            OpSig::AsArray { kind } => {
-                let ref_tok = kind.token();
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                (
-                    vec![quote! { #ref_tok #vec }],
-                    quote! { #ref_tok #array_ty },
-                )
-            }
-            OpSig::StoreArray => {
-                let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-                let len = vec_ty.len;
-                let array_ty = quote! { [#rust_scalar; #len] };
-                (vec![vec, quote! { &mut #array_ty }], quote! { () })
-            }
         };
 
         SimdTraitSigParts {
@@ -396,7 +358,7 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { (#arg0: S, #arg1: Self::Element) -> Self }
             }
-            OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } | OpSig::StoreArray => {
+            OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
                 return None;
             }
             OpSig::MaskFromBitmask | OpSig::MaskToBitmask | OpSig::MaskSet => return None,
@@ -457,10 +419,7 @@ impl Op {
             // masks.
             OpSig::Select => return None,
             // These signatures involve types not in the Simd trait
-            OpSig::Split { .. }
-            | OpSig::Combine { .. }
-            | OpSig::FromArray { .. }
-            | OpSig::AsArray { .. } => return None,
+            OpSig::Split { .. } | OpSig::Combine { .. } => return None,
         };
         Some(quote! { fn #method_ident #sig_inner })
     }
@@ -526,46 +485,6 @@ const BASE_OPS: &[Op] = &[
         OpKind::BaseTraitMethod,
         OpSig::Splat,
         "Create a SIMD vector with all elements set to the given value.",
-    ),
-    Op::new(
-        "load_array",
-        OpKind::AssociatedOnly,
-        OpSig::FromArray {
-            kind: RefKind::Value,
-        },
-        "Create a SIMD vector from an array of the same length.",
-    ),
-    Op::new(
-        "load_array_ref",
-        OpKind::AssociatedOnly,
-        OpSig::FromArray { kind: RefKind::Ref },
-        "Create a SIMD vector from an array of the same length.",
-    ),
-    Op::new(
-        "as_array",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray {
-            kind: RefKind::Value,
-        },
-        "Convert a SIMD vector to an array.",
-    ),
-    Op::new(
-        "as_array_ref",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray { kind: RefKind::Ref },
-        "Project a reference to a SIMD vector to a reference to the equivalent array.",
-    ),
-    Op::new(
-        "as_array_mut",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray { kind: RefKind::Mut },
-        "Project a mutable reference to a SIMD vector to a mutable reference to the equivalent array.",
-    ),
-    Op::new(
-        "store_array",
-        OpKind::AssociatedOnly,
-        OpSig::StoreArray,
-        "Store a SIMD vector into an array of the same length.",
     ),
     Op::new(
         "slide",
@@ -656,22 +575,6 @@ const MASK_REPRESENTATION_OPS: &[Op] = &[
         OpKind::BaseTraitMethod,
         OpSig::Splat,
         "Create a SIMD mask with all lanes set from the given boolean value.",
-    ),
-    Op::new(
-        "load_array",
-        OpKind::AssociatedOnly,
-        OpSig::FromArray {
-            kind: RefKind::Value,
-        },
-        "Create a SIMD mask from signed integer mask lanes.",
-    ),
-    Op::new(
-        "as_array",
-        OpKind::AssociatedOnly,
-        OpSig::AsArray {
-            kind: RefKind::Value,
-        },
-        "Convert a SIMD mask to signed integer mask lanes.",
     ),
     Op::new(
         "from_bitmask",
@@ -1383,44 +1286,49 @@ pub(crate) fn ops_for_type(ty: &VecType) -> Vec<Op> {
         ops.push(NEGATE_INT);
     }
 
-    if ty.scalar == ScalarType::Float && ty.scalar_bits == 64 {
-        return ops;
-    }
-
-    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
+    if matches!(
+        ty.scalar,
+        ScalarType::Int | ScalarType::Unsigned | ScalarType::Float
+    ) && ty.n_bits() == 128
+    {
         ops.push(Op::new(
-            "load_interleaved_128",
+            "load_four_interleaved",
             OpKind::AssociatedOnly,
             OpSig::LoadInterleaved {
                 block_size: 128,
                 block_count: 4,
             },
-            "Load elements from an array with 4-way interleaving.\n\n\
-            This is different from loading a vector and calling `interleave`: `interleave` combines two already-loaded \
-            vectors, while this operation treats memory as four interleaved 128-bit vectors and deinterleaves them \
-            into one vector.\n\n\
-            For example, with 32-bit lanes, memory laid out as \
-            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]` loads as \
-            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]`.",
+            "Load four 128-bit vectors from an array with 4-way interleaving.\n\n\
+            This is useful e.g. in image processing to turn interleaved RGBA pixels into vectors of each color component.\n\n\
+            For example, with 32-bit lanes, memory laid out as\
+            `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]` loads as\
+            `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]`.",
         ));
     }
 
-    if matches!(ty.scalar, ScalarType::Unsigned | ScalarType::Float) && ty.n_bits() == 512 {
+    if matches!(
+        ty.scalar,
+        ScalarType::Int | ScalarType::Unsigned | ScalarType::Float
+    ) && ty.n_bits() == 128
+    {
         ops.push(Op::new(
-            "store_interleaved_128",
+            "store_four_interleaved",
             OpKind::AssociatedOnly,
             OpSig::StoreInterleaved {
                 block_size: 128,
                 block_count: 4,
             },
-            "Store elements to an array with 4-way interleaving.\n\n\
-            This is the inverse of `load_interleaved_128`. It is different from calling `interleave` and then storing: \
-            `interleave` combines two already-loaded vectors, while this operation stores four consecutive 128-bit \
-            vectors into lane-interleaved memory.\n\n\
-            For example, with 32-bit lanes, a vector containing \
-            `[a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3]` stores as \
-            `[a0, b0, c0, d0, a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]`.",
+            "Store four 128-bit vectors to an array with 4-way interleaving.\n\n\
+            This is the inverse of `load_four_interleaved`.\n\n\
+            This is useful e.g. in image processing to turn vectors of each color component into interleaved RGBA pixels.\n\n\
+            For example, with 32-bit lanes, vectors containing \
+            `[[r0, r1, r2, r3], [g0, g1, g2, g3], [b0, b1, b2, b3], [a0, a1, a2, a3]]` get stored as \
+            `[r0, g0, b0, a0, r1, g1, b1, a1, r2, g2, b2, a2, r3, g3, b3, a3]`.",
         ));
+    }
+
+    if ty.scalar == ScalarType::Float && ty.scalar_bits == 64 {
+        return ops;
     }
 
     if matches!(ty.scalar, ScalarType::Unsigned) {
@@ -1577,9 +1485,6 @@ impl OpSig {
                 | Self::Combine { .. }
                 | Self::LoadInterleaved { .. }
                 | Self::StoreInterleaved { .. }
-                | Self::FromArray { .. }
-                | Self::AsArray { .. }
-                | Self::StoreArray
                 | Self::MaskSet
                 | Self::SwizzleDyn
                 | Self::SwizzleDynPrecise
@@ -1610,7 +1515,7 @@ impl OpSig {
 
     fn simd_trait_arg_names(&self) -> &'static [&'static str] {
         match self {
-            Self::Splat | Self::FromArray { .. } => &["val"],
+            Self::Splat => &["val"],
             Self::MaskFromBitmask => &["bits"],
             Self::MaskSet => &["a", "index", "value"],
             Self::Unary
@@ -1618,8 +1523,7 @@ impl OpSig {
             | Self::Cvt { .. }
             | Self::WidenNarrow { .. }
             | Self::MaskReduce { .. }
-            | Self::MaskToBitmask
-            | Self::AsArray { .. } => &["a"],
+            | Self::MaskToBitmask => &["a"],
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["a", "indices"]
             }
@@ -1636,7 +1540,7 @@ impl OpSig {
             Self::Ternary | Self::Select => &["a", "b", "c"],
             Self::Shift => &["a", "shift"],
             Self::LoadInterleaved { .. } => &["src"],
-            Self::StoreInterleaved { .. } | Self::StoreArray => &["a", "dest"],
+            Self::StoreInterleaved { .. } => &["vectors", "dest"],
         }
     }
     fn vec_trait_arg_names(&self) -> &'static [&'static str] {
@@ -1644,16 +1548,12 @@ impl OpSig {
             Self::Splat => &["simd", "val"],
             Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
-            | Self::FromArray { .. }
             | Self::MaskFromBitmask
             | Self::MaskToBitmask
-            | Self::MaskSet
-            | Self::StoreArray => &[],
-            Self::Unary
-            | Self::Cvt { .. }
-            | Self::WidenNarrow { .. }
-            | Self::MaskReduce { .. }
-            | Self::AsArray { .. } => &["self"],
+            | Self::MaskSet => &[],
+            Self::Unary | Self::Cvt { .. } | Self::WidenNarrow { .. } | Self::MaskReduce { .. } => {
+                &["self"]
+            }
             Self::SwizzleDynWithinBlocks | Self::SwizzleDyn | Self::SwizzleDynPrecise => {
                 &["self", "indices"]
             }
@@ -1716,9 +1616,6 @@ impl OpSig {
             | Self::MaskSet
             | Self::LoadInterleaved { .. }
             | Self::StoreInterleaved { .. }
-            | Self::FromArray { .. }
-            | Self::AsArray { .. }
-            | Self::StoreArray
             | Self::SwizzleDynWithinBlocks
             | Self::SwizzleDyn
             | Self::SwizzleDynPrecise

@@ -18,6 +18,8 @@ You can find its changes [documented below](#060-2026-07-10).
 
 ### Changed
 
+- Breaking change: the `load_interleaved_128_*` and `store_interleaved_128_*` methods, which exchanged one 512-bit vector, have been replaced by `load_four_interleaved_*` and `store_four_interleaved_*`. The new methods exchange an array of four 128-bit vectors directly and are available for all non-mask scalar types.
+
 - The `new_unchecked()` function on SIMD level tokens such as `Avx2` has been renamed to `assume_supported()` and is now safe to call from contexts that already contain the appropriate `#[target_feature]` annotations. Functions without such annotations can still call `assume_supported()` with an `unsafe` block. ([#293][] by [@Shnatsel][])
 - On x86_64 targets with static SSE2 support, `Level::baseline()` now returns `Sse2` instead of `Fallback`. ([#270][] by [@Shnatsel][])
 - The `fxsr` CPU feature is now required for all x86 SIMD levels. It is present in hardware on all SIMD-capable CPUs, but it is possible to disable it in some emulators combined with a custom Rust target specification. ([#270][] by [@Shnatsel][])
@@ -28,6 +30,7 @@ You can find its changes [documented below](#060-2026-07-10).
 - `SimdElement::Mask` now declares that a mask lane type is its own mask lane type, exposing this invariant to generic code.
 - `SimdCombine` and `SimdSplit` now declare their associated vector types as inverse operations, enabling generic code to recover the original vector type without additional equality bounds.
 - `SimdBase::Array` now guarantees `Copy` (and therefore `Clone`), `Debug`, by-value `IntoIterator`, `AsRef`, `AsMut`, and conversion from its vector type, while `SimdBase` guarantees construction from its associated array through `SimdFrom`.
+- Breaking change: the 204 vector-specific `Simd` array conversion methods have been replaced by the `SimdBase::load_array`, `load_array_ref`, `as_array`, `as_array_ref`, `as_array_mut`, and `store_array` methods. Masks continue to use `SimdMask::from_slice` and `store_slice`.
 
 ### Removed
 

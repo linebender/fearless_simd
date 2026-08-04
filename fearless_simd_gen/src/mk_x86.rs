@@ -7,9 +7,9 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{
-    fallback_method, generic_as_array, generic_block_combine, generic_block_split,
-    generic_from_array, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
-    generic_store_array, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
+    fallback_method, generic_block_combine, generic_block_split, generic_mask_from_bitmask,
+    generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
+    recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity};
@@ -87,6 +87,14 @@ impl Level for X86 {
         } else {
             vec_ty.aligned_wrapper_ty(|vec_ty| self.arch_ty(vec_ty), self.max_block_size())
         }
+    }
+
+    fn custom_mask_array_conversion(&self, vec_ty: &VecType) -> Option<TokenStream> {
+        if *self != Self::Avx512 || vec_ty.scalar != ScalarType::Mask {
+            return None;
+        }
+
+        Some(self.avx512_mask_array_conversion(vec_ty))
     }
 
     fn token_doc(&self) -> &'static str {
@@ -327,23 +335,6 @@ impl Level for X86 {
                 block_size,
                 block_count,
             } => self.handle_store_interleaved(op, vec_ty, block_size, block_count),
-            OpSig::FromArray { kind }
-                if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask =>
-            {
-                self.handle_avx512_mask_from_array(op, vec_ty, kind)
-            }
-            OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
-            OpSig::AsArray { kind }
-                if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask =>
-            {
-                self.handle_avx512_mask_as_array(op, vec_ty, kind)
-            }
-            OpSig::AsArray { kind } => {
-                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
-                    self.arch_ty(vec_ty)
-                })
-            }
-            OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::Interleave => self.handle_interleave(op, vec_ty),
             OpSig::Deinterleave => self.handle_deinterleave(op, vec_ty),
         }
@@ -1098,68 +1089,61 @@ impl X86 {
         vec_ty.scalar == ScalarType::Mask && vec_ty.scalar_bits == 16
     }
 
-    pub(crate) fn handle_avx512_mask_from_array(
-        &self,
-        op: Op,
-        vec_ty: &VecType,
-        kind: crate::ops::RefKind,
-    ) -> TokenStream {
+    fn avx512_mask_array_conversion(&self, vec_ty: &VecType) -> TokenStream {
+        assert!(
+            *self == Self::Avx512,
+            "compact mask array conversions are only generated for AVX-512"
+        );
         assert_eq!(
             vec_ty.scalar,
             ScalarType::Mask,
-            "AVX-512 mask array loads only operate on mask types"
+            "compact mask array conversions are only generated for mask types"
         );
+
+        let storage = self.arch_storage_ty(vec_ty);
+        let storage_assoc = vec_ty.rust();
+        let scalar = ScalarType::Int.rust(vec_ty.scalar_bits);
+        let len = vec_ty.len;
+        let from_array = format_ident!("{}_from_array", vec_ty.rust_name());
+        let to_array = format_ident!("{}_to_array", vec_ty.rust_name());
         let movepi_mask = intrinsic_ident(
             &format!("movepi{}", vec_ty.scalar_bits),
             "mask",
             vec_ty.n_bits(),
-        );
-        let transmute_src = if kind == crate::ops::RefKind::Value {
-            quote! { &val }
-        } else {
-            quote! { val }
-        };
-        // Mask arrays are specified as either 0 or -1 per lane, so the sign bit is the
-        // truth value. Other lane values have unspecified results.
-        self.kernel_method(op, vec_ty, |token| {
-            let result = avx512_mask_register_value_with_simd(
-                vec_ty,
-                quote! { #movepi_mask(lanes) },
-                quote! { #token },
-            );
-            quote! {
-                let lanes = crate::transmute::checked_transmute_copy(#transmute_src);
-                #result
-            }
-        })
-    }
-
-    pub(crate) fn handle_avx512_mask_as_array(
-        &self,
-        op: Op,
-        vec_ty: &VecType,
-        kind: crate::ops::RefKind,
-    ) -> TokenStream {
-        assert_eq!(
-            vec_ty.scalar,
-            ScalarType::Mask,
-            "AVX-512 mask array stores only operate on mask types"
-        );
-        assert!(
-            kind == crate::ops::RefKind::Value,
-            "mask array references are not exposed"
         );
         let movm = intrinsic_ident(
             "movm",
             op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true),
             vec_ty.n_bits(),
         );
-        self.kernel_method(op, vec_ty, |_| {
-            quote! {
-                let lanes = #movm(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
+
+        // Mask arrays are specified as either 0 or -1 per lane, so the sign bit is the
+        // truth value. Other lane values have unspecified results.
+        quote! {
+            #[inline(always)]
+            fn #from_array(self, val: [#scalar; #len]) -> Self::#storage_assoc {
+                crate::kernel!(
+                    #[inline(always)]
+                    fn kernel(_token: Avx512, val: [#scalar; #len]) -> #storage {
+                        let lanes = crate::transmute::checked_transmute_copy(&val);
+                        #movepi_mask(lanes)
+                    }
+                );
+                kernel(self, val)
             }
-        })
+
+            #[inline(always)]
+            fn #to_array(self, val: Self::#storage_assoc) -> [#scalar; #len] {
+                crate::kernel!(
+                    #[inline(always)]
+                    fn kernel(_token: Avx512, val: #storage) -> [#scalar; #len] {
+                        let lanes = #movm(val);
+                        crate::transmute::checked_transmute_copy(&lanes)
+                    }
+                );
+                kernel(self, val)
+            }
+        }
     }
 
     pub(crate) fn handle_avx512_mask_set(
@@ -3333,7 +3317,7 @@ impl X86 {
             "only 128-bit blocks are currently supported"
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
-        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
+        if *self == Self::Avx512 {
             return self.handle_avx512_load_interleaved(op, vec_ty, block_size, block_count);
         }
         if *self == Self::Sse2 && matches!(vec_ty.scalar_bits, 8 | 16) {
@@ -3341,8 +3325,8 @@ impl X86 {
         }
         match vec_ty.scalar_bits {
             64 | 32 | 16 | 8 => {
-                let avx2_u64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
-                let block_len = if avx2_u64 {
+                let avx2_64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
+                let block_len = if avx2_64 {
                     4
                 } else {
                     block_size as usize / vec_ty.scalar_bits
@@ -3350,24 +3334,23 @@ impl X86 {
                 let block_ty = VecType::new(vec_ty.scalar, vec_ty.scalar_bits, block_len);
                 let scalar_ty = block_ty.scalar.rust(block_ty.scalar_bits);
                 let native_ty = self.arch_ty(&block_ty);
+                let native_block_ty = self.arch_ty(vec_ty);
                 let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
                 let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
                 let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
                 let vec_64 = block_ty.reinterpret(block_ty.scalar, 64);
                 let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
                 let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
+                let permute_128 = intrinsic_ident(
+                    match vec_ty.scalar {
+                        ScalarType::Float => "permute2f128",
+                        _ => "permute2x128",
+                    },
+                    coarse_type(&block_ty),
+                    256,
+                );
 
-                let vec_combined =
-                    VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
-                let combine_half = Ident::new(
-                    &format!("combine_{}", block_ty.rust_name()),
-                    Span::call_site(),
-                );
-                let combine_full = Ident::new(
-                    &format!("combine_{}", vec_combined.rust_name()),
-                    Span::call_site(),
-                );
-                if avx2_u64 {
+                if avx2_64 {
                     return self.kernel_method(op, vec_ty, |token| {
                         quote! {
                             let (chunks, []) = src.as_chunks::<4>() else {
@@ -3378,10 +3361,17 @@ impl X86 {
 
                             let lo = #unpacklo_64(v0, v1); // [0,4,2,6]
                             let hi = #unpackhi_64(v0, v1); // [1,5,3,7]
-                            let out0 = _mm256_permute2x128_si256::<0x20>(lo, hi); // [0,4,1,5]
-                            let out1 = _mm256_permute2x128_si256::<0x31>(lo, hi); // [2,6,3,7]
+                            let out0 = #permute_128::<0x20>(lo, hi); // [0,4,1,5]
+                            let out1 = #permute_128::<0x31>(lo, hi); // [2,6,3,7]
+                            let outputs: [#native_block_ty; 4] =
+                                crate::transmute::checked_transmute_copy(&[out0, out1]);
 
-                            #token.#combine_half(out0.simd_into(#token), out1.simd_into(#token))
+                            [
+                                outputs[0].simd_into(#token),
+                                outputs[1].simd_into(#token),
+                                outputs[2].simd_into(#token),
+                                outputs[3].simd_into(#token),
+                            ]
                         }
                     });
                 }
@@ -3489,10 +3479,12 @@ impl X86 {
                         #initial_unpack
                         #final_unpack
 
-                        #token.#combine_full(
-                            #token.#combine_half(out0.simd_into(#token), out1.simd_into(#token)),
-                            #token.#combine_half(out2.simd_into(#token), out3.simd_into(#token)),
-                        )
+                        [
+                            out0.simd_into(#token),
+                            out1.simd_into(#token),
+                            out2.simd_into(#token),
+                            out3.simd_into(#token),
+                        ]
                     }
                 })
             }
@@ -3514,16 +3506,22 @@ impl X86 {
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
         assert_eq!(
             vec_ty.n_bits(),
-            512,
-            "AVX-512 interleaved loads only specialize 512-bit vectors"
+            128,
+            "AVX-512 interleaved loads return 128-bit vectors"
+        );
+        let total_ty = VecType::new(
+            vec_ty.scalar,
+            vec_ty.scalar_bits,
+            vec_ty.len * block_count as usize,
         );
         let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
-        let native_ty = self.arch_ty(vec_ty);
-        let len = vec_ty.len;
-        let permute = avx512_permutexvar_intrinsic(vec_ty);
+        let native_ty = self.arch_ty(&total_ty);
+        let native_block_ty = self.arch_ty(vec_ty);
+        let len = total_ty.len;
+        let permute = avx512_permutexvar_intrinsic(&total_ty);
         let indices = avx512_index_vector(
-            vec_ty,
-            interleaved_load_indices(vec_ty.len, block_count as usize),
+            &total_ty,
+            interleaved_load_indices(total_ty.len, block_count as usize),
         );
 
         self.kernel_method(op, vec_ty, |token| {
@@ -3532,7 +3530,15 @@ impl X86 {
                     crate::transmute::checked_transmute_copy::<[#scalar_ty; #len], #native_ty>(
                         src,
                     );
-                #permute(#indices, lanes).simd_into(#token)
+                let lanes = #permute(#indices, lanes);
+                let outputs: [#native_block_ty; 4] =
+                    crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(#token),
+                    outputs[1].simd_into(#token),
+                    outputs[2].simd_into(#token),
+                    outputs[3].simd_into(#token),
+                ]
             }
         })
     }
@@ -3549,7 +3555,7 @@ impl X86 {
             "only 128-bit blocks are currently supported"
         );
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
-        if *self == Self::Avx512 && vec_ty.n_bits() == 512 {
+        if *self == Self::Avx512 {
             return self.handle_avx512_store_interleaved(op, vec_ty, block_size, block_count);
         }
         if *self == Self::Sse2 && matches!(vec_ty.scalar_bits, 8 | 16) {
@@ -3557,8 +3563,8 @@ impl X86 {
         }
         match vec_ty.scalar_bits {
             64 | 32 | 16 | 8 => {
-                let avx2_u64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
-                let block_len = if avx2_u64 {
+                let avx2_64 = *self == Self::Avx2 && vec_ty.scalar_bits == 64;
+                let block_len = if avx2_64 {
                     4
                 } else {
                     block_size as usize / vec_ty.scalar_bits
@@ -3566,34 +3572,42 @@ impl X86 {
                 let block_ty = VecType::new(vec_ty.scalar, vec_ty.scalar_bits, block_len);
                 let scalar_ty = block_ty.scalar.rust(block_ty.scalar_bits);
                 let native_ty = self.arch_ty(&block_ty);
+                let native_block_ty = self.arch_ty(vec_ty);
                 let vec_32 = block_ty.reinterpret(block_ty.scalar, 32);
                 let unpacklo_32 = simple_sign_unaware_intrinsic("unpacklo", &vec_32);
                 let unpackhi_32 = simple_sign_unaware_intrinsic("unpackhi", &vec_32);
                 let vec_64 = block_ty.reinterpret(block_ty.scalar, 64);
                 let unpacklo_64 = simple_sign_unaware_intrinsic("unpacklo", &vec_64);
                 let unpackhi_64 = simple_sign_unaware_intrinsic("unpackhi", &vec_64);
-
-                let vec_combined =
-                    VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
-                let split_half = Ident::new(
-                    &format!("split_{}", vec_combined.rust_name()),
-                    Span::call_site(),
+                let permute_128 = intrinsic_ident(
+                    match vec_ty.scalar {
+                        ScalarType::Float => "permute2f128",
+                        _ => "permute2x128",
+                    },
+                    coarse_type(&block_ty),
+                    256,
                 );
-                let split_full =
-                    Ident::new(&format!("split_{}", vec_ty.rust_name()), Span::call_site());
 
                 // For 64-bit values, AVX2 permits a more efficient implementation.
                 // It is special-cased here as a full early return because plumbing it
                 // through the rest of the logic in this function complicates it significantly.
-                if avx2_u64 {
+                if avx2_64 {
                     return self.kernel_method(op, vec_ty, |token| {
                         quote! {
-                            let (v0, v1) = #token.#split_full(a);
-                            let v0: #native_ty = v0.into();
-                            let v1: #native_ty = v1.into();
+                            let _ = #token;
+                            let inputs: [#native_block_ty; 4] = [
+                                vectors[0].into(),
+                                vectors[1].into(),
+                                vectors[2].into(),
+                                vectors[3].into(),
+                            ];
+                            let wide_inputs: [#native_ty; 2] =
+                                crate::transmute::checked_transmute_copy(&inputs);
+                            let v0 = wide_inputs[0];
+                            let v1 = wide_inputs[1];
 
-                            let lo = _mm256_permute2x128_si256::<0x20>(v0, v1); // [0,1,4,5]
-                            let hi = _mm256_permute2x128_si256::<0x31>(v0, v1); // [2,3,6,7]
+                            let lo = #permute_128::<0x20>(v0, v1); // [0,1,4,5]
+                            let hi = #permute_128::<0x31>(v0, v1); // [2,3,6,7]
                             let out0 = #unpacklo_64(lo, hi); // [0,2,4,6]
                             let out1 = #unpackhi_64(lo, hi); // [1,3,5,7]
 
@@ -3689,13 +3703,11 @@ impl X86 {
 
                 self.kernel_method(op, vec_ty, |token| {
                     quote! {
-                        let (v01, v23) = #token.#split_full(a);
-                        let (v0, v1) = #token.#split_half(v01);
-                        let (v2, v3) = #token.#split_half(v23);
-                        let v0 = v0.into();
-                        let v1 = v1.into();
-                        let v2 = v2.into();
-                        let v3 = v3.into();
+                        let _ = #token;
+                        let v0: #native_ty = vectors[0].into();
+                        let v1: #native_ty = vectors[1].into();
+                        let v2: #native_ty = vectors[2].into();
+                        let v3: #native_ty = vectors[3].into();
 
                         #initial_unpack
                         #final_unpack
@@ -3731,21 +3743,35 @@ impl X86 {
         assert_eq!(block_count, 4, "only count of 4 is currently supported");
         assert_eq!(
             vec_ty.n_bits(),
-            512,
-            "AVX-512 interleaved stores only specialize 512-bit vectors"
+            128,
+            "AVX-512 interleaved stores accept 128-bit vectors"
+        );
+        let total_ty = VecType::new(
+            vec_ty.scalar,
+            vec_ty.scalar_bits,
+            vec_ty.len * block_count as usize,
         );
         let scalar_ty = vec_ty.scalar.rust(vec_ty.scalar_bits);
-        let native_ty = self.arch_ty(vec_ty);
-        let len = vec_ty.len;
-        let permute = avx512_permutexvar_intrinsic(vec_ty);
+        let native_ty = self.arch_ty(&total_ty);
+        let native_block_ty = self.arch_ty(vec_ty);
+        let len = total_ty.len;
+        let permute = avx512_permutexvar_intrinsic(&total_ty);
         let indices = avx512_index_vector(
-            vec_ty,
-            interleaved_store_indices(vec_ty.len, block_count as usize),
+            &total_ty,
+            interleaved_store_indices(total_ty.len, block_count as usize),
         );
 
-        self.kernel_method(op, vec_ty, |_| {
+        self.kernel_method(op, vec_ty, |token| {
             quote! {
-                let lanes = #permute(#indices, a.into());
+                let _ = #token;
+                let inputs: [#native_block_ty; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: #native_ty = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes = #permute(#indices, lanes);
                 crate::transmute::checked_transmute_store::<#native_ty, [#scalar_ty; #len]>(
                     lanes,
                     dest,

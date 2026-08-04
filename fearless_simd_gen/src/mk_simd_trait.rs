@@ -20,8 +20,12 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
         for op in ops_for_type(vec_ty) {
             let method_sig = op.simd_trait_method_sig(vec_ty);
             let doc = op.format_docstring(TyFlavor::SimdTrait);
+            let doc_alias = op
+                .doc_alias()
+                .map(|alias| quote! { #[doc(alias = #alias)] });
             methods.extend(quote! {
                 #[doc = #doc]
+                #doc_alias
                 #method_sig;
             });
         }
@@ -116,11 +120,29 @@ pub(crate) fn mk_simd_trait() -> TokenStream {
 
 pub(crate) fn mk_arch_types() -> TokenStream {
     let mut types = vec![];
+    let mut mask_array_methods = vec![];
     for vec_ty in SIMD_TYPES {
         let ty_name = vec_ty.rust();
         types.push(quote! {
             type #ty_name: Copy + Send + Sync + SimdPod;
         });
+        if vec_ty.scalar == ScalarType::Mask {
+            let from_array = format_ident!("{}_from_array", vec_ty.rust_name());
+            let to_array = format_ident!("{}_to_array", vec_ty.rust_name());
+            let scalar = ScalarType::Int.rust(vec_ty.scalar_bits);
+            let len = vec_ty.len;
+            mask_array_methods.push(quote! {
+                #[inline(always)]
+                fn #from_array(self, val: [#scalar; #len]) -> Self::#ty_name {
+                    crate::transmute::checked_transmute_copy(&val)
+                }
+
+                #[inline(always)]
+                fn #to_array(self, val: Self::#ty_name) -> [#scalar; #len] {
+                    crate::transmute::checked_transmute_copy(&val)
+                }
+            });
+        }
     }
 
     quote! {
@@ -131,8 +153,9 @@ pub(crate) fn mk_arch_types() -> TokenStream {
                 unnameable_types,
                 reason = "The native vector types that back a `Simd` implementation are an internal implementation detail, and intentionally kept private"
             )]
-            pub trait ArchTypes {
+            pub trait ArchTypes: Sized {
                 #( #types )*
+                #( #mask_array_methods )*
             }
         }
     }
@@ -203,6 +226,36 @@ fn mk_simd_base() -> TokenStream {
             ///
             /// The slice must be exactly the size of the SIMD vector.
             fn store_slice(&self, slice: &mut [Self::Element]);
+            /// Create a SIMD vector from its corresponding lane array.
+            #[inline(always)]
+            fn load_array(simd: S, val: Self::Array) -> Self {
+                Self::simd_from(simd, val)
+            }
+            /// Create a SIMD vector from a reference to its corresponding lane array.
+            #[inline(always)]
+            fn load_array_ref(simd: S, val: &Self::Array) -> Self {
+                Self::load_array(simd, *val)
+            }
+            /// Convert this SIMD vector to its corresponding lane array.
+            #[inline(always)]
+            fn as_array(self) -> Self::Array {
+                *self
+            }
+            /// Project this SIMD vector reference to its corresponding lane array reference.
+            #[inline(always)]
+            fn as_array_ref(&self) -> &Self::Array {
+                self
+            }
+            /// Project this mutable SIMD vector reference to its corresponding mutable lane array reference.
+            #[inline(always)]
+            fn as_array_mut(&mut self) -> &mut Self::Array {
+                self
+            }
+            /// Store this SIMD vector into its corresponding lane array.
+            #[inline(always)]
+            fn store_array(self, dest: &mut Self::Array) {
+                *dest = self.as_array();
+            }
             /// Create a SIMD vector from a 128-bit vector of the same scalar
             /// type, repeated.
             fn block_splat(block: Self::Block) -> Self;
