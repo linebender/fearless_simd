@@ -1566,10 +1566,7 @@ impl OpSig {
             return false;
         }
 
-        if matches!(
-            self,
-            Self::ElementRotate { .. } | Self::ElementShift { .. } | Self::SwizzleDyn
-        ) {
+        if matches!(self, Self::ElementRotate { .. } | Self::ElementShift { .. }) {
             return true;
         }
 
@@ -1584,6 +1581,7 @@ impl OpSig {
                 | Self::AsArray { .. }
                 | Self::StoreArray
                 | Self::MaskSet
+                | Self::SwizzleDyn
                 | Self::SwizzleDynPrecise
                 | Self::Slide {
                     granularity: SlideGranularity::AcrossBlocks,

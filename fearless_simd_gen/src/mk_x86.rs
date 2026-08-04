@@ -252,10 +252,6 @@ impl Level for X86 {
     }
 
     fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
-        if matches!(op.sig, OpSig::SwizzleDyn) {
-            return false;
-        }
-
         if *self == Self::Avx512
             && matches!(
                 op.sig,

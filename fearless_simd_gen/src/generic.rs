@@ -137,15 +137,7 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
                 }
             }
         }
-        OpSig::SwizzleDyn => {
-            let precise = generic_op_name("swizzle_dyn_precise", ty);
-            quote! {
-                #method_sig {
-                    self.#precise(a, indices)
-                }
-            }
-        }
-        OpSig::SwizzleDynPrecise => {
+        OpSig::SwizzleDyn | OpSig::SwizzleDynPrecise => {
             panic!("whole-vector swizzles cannot be done via split/combine");
         }
         OpSig::Ternary => {

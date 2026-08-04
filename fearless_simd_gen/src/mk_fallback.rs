@@ -142,13 +142,6 @@ impl Level for Fallback {
         }
     }
 
-    fn should_use_generic_op(&self, op: &Op, vec_ty: &VecType) -> bool {
-        if matches!(op.sig, OpSig::SwizzleDyn) {
-            return false;
-        }
-        op.sig.should_use_generic_op(vec_ty, self.native_width())
-    }
-
     fn make_method(&self, op: Op, vec_ty: &VecType) -> TokenStream {
         let Op { sig, method, .. } = op;
         let method_sig = op.simd_trait_method_sig(vec_ty);
