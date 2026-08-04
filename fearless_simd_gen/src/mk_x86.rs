@@ -9,7 +9,7 @@ use crate::arch::x86::{
 use crate::generic::{
     fallback_method, generic_as_array, generic_block_combine, generic_block_split,
     generic_from_array, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
-    generic_store_array, integer_lane_mask_splat_arg,
+    generic_store_array, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity};
@@ -310,6 +310,7 @@ impl Level for X86 {
                 unreachable!("element moves use generic lowering")
             }
             OpSig::SwizzleDynWithinBlocks => self.handle_swizzle_dyn_within_blocks(op, vec_ty),
+            OpSig::SwizzleDynPrecise => self.handle_swizzle_dyn_precise(op, vec_ty),
             OpSig::Cvt {
                 target_ty,
                 scalar_bits,
@@ -3094,6 +3095,74 @@ impl X86 {
                     val: #wrapper(result),
                     simd: #token,
                 })
+            }
+        })
+    }
+
+    pub(crate) fn handle_swizzle_dyn_precise(&self, op: Op, vec_ty: &VecType) -> TokenStream {
+        let bytes_ty = vec_ty.bytes_ty();
+        let bytes = bytes_ty.rust();
+        let wrapper = bytes_ty.aligned_wrapper();
+
+        if *self == Self::Sse2 || (*self == Self::Sse4_2 && vec_ty.n_bits() == 512) {
+            return fallback_method(op, vec_ty);
+        }
+
+        self.kernel_method(op, vec_ty, |token| {
+            let body = match (*self, vec_ty.n_bits()) {
+                (Self::Sse4_2 | Self::Avx2, 128) => quote! {
+                    let indices = indices.into();
+                    // Preserve the original high bit, and set it for indices 16..=127.
+                    // The added value only changes bits that PSHUFB ignores for valid indices.
+                    let index_out_of_range = _mm_add_epi8(indices, _mm_set1_epi8(112));
+                    let zeroing_indices = _mm_or_si128(indices, index_out_of_range);
+                    let result = _mm_shuffle_epi8(Bytes::to_bytes(a).val.0, zeroing_indices);
+                    let result_bytes = #bytes { val: #wrapper(result), simd: #token };
+                },
+                (Self::Sse4_2, 256) | (Self::Avx2, 512) => {
+                    recursive_swizzle_dyn_precise_body(vec_ty, token)
+                }
+                (Self::Avx2, 256) => quote! {
+                    let bytes = Bytes::to_bytes(a);
+                    let idxs = indices;
+                    let lolo = _mm256_permute2x128_si256::<0x00>(bytes.val.0, bytes.val.0);
+                    let hihi = _mm256_permute2x128_si256::<0x11>(bytes.val.0, bytes.val.0);
+
+                    // Adding 0x60 preserves the low nibble and bit 4 for valid
+                    // indices 0..=31. Larger indices get their high bit set, so
+                    // VPSHUFB supplies the required out-of-bounds zeroing.
+                    let control = _mm256_adds_epu8(idxs.into(), _mm256_set1_epi8(0x60));
+
+                    // Move index bit 4 into each byte's sign bit for VPBLENDVB.
+                    let select_high = _mm256_slli_epi16::<3>(control);
+                    let from_low = _mm256_shuffle_epi8(lolo, control);
+                    let from_high = _mm256_shuffle_epi8(hihi, control);
+                    let result = _mm256_blendv_epi8(from_low, from_high, select_high);
+                    let result_bytes = #bytes { val: #wrapper(result), simd: #token };
+                },
+                (Self::Avx512, 128 | 256 | 512) => {
+                    let min = intrinsic_ident("min", "epu8", vec_ty.n_bits());
+                    let permute = intrinsic_ident("permutex2var", "epi8", vec_ty.n_bits());
+                    let set1 = set1_intrinsic(&bytes_ty);
+                    let setzero =
+                        intrinsic_ident("setzero", coarse_type(&bytes_ty), vec_ty.n_bits());
+                    let byte_count = signed_literal(bytes_ty.len as u64, 8);
+                    quote! {
+                        let bytes = Bytes::to_bytes(a).val.0;
+                        let indices = indices.into();
+                        // Clamp out-of-range indices to the first byte of a
+                        // second, all-zero table.
+                        let indices = #min(indices, #set1(#byte_count));
+                        let result = #permute(bytes, indices, #setzero());
+                        let result_bytes = #bytes { val: #wrapper(result), simd: #token };
+                    }
+                }
+                _ => unreachable!(),
+            };
+
+            quote! {
+                #body
+                Bytes::from_bytes(result_bytes)
             }
         })
     }

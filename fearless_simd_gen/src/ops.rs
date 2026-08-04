@@ -96,6 +96,9 @@ pub(crate) enum OpSig {
     /// Takes a vector and a same-width byte-index vector, and returns the original vector type with its bytes
     /// dynamically swizzled within each 128-bit block.
     SwizzleDynWithinBlocks,
+    /// Takes a vector and a same-width byte-index vector, and returns the original vector type with its bytes
+    /// dynamically swizzled across the whole vector. Out-of-range indices produce zero bytes.
+    SwizzleDynPrecise,
     /// Takes a single argument of the source vector type, and returns a vector type of the target scalar type and the
     /// same length.
     Cvt {
@@ -315,7 +318,7 @@ impl Op {
             OpSig::ElementRotate { .. } => (vec![vec.clone()], vec),
             OpSig::ElementShift { .. } => (vec![vec.clone(), splat_arg_ty(vec_ty)], vec),
             OpSig::Slide { .. } => (vec![vec.clone(), vec.clone()], vec),
-            OpSig::SwizzleDynWithinBlocks => {
+            OpSig::SwizzleDynWithinBlocks | OpSig::SwizzleDynPrecise => {
                 let bytes_ty = vec_ty.bytes_ty().rust();
                 (vec![vec.clone(), quote! { #bytes_ty<#simd_ty> }], vec)
             }
@@ -435,7 +438,7 @@ impl Op {
                 let arg1 = &arg_names[1];
                 quote! { <const SHIFT: usize>(#arg0, #arg1: impl SimdInto<Self, S>) -> Self }
             }
-            OpSig::SwizzleDynWithinBlocks => {
+            OpSig::SwizzleDynWithinBlocks | OpSig::SwizzleDynPrecise => {
                 let arg0 = &arg_names[0];
                 let arg1 = &arg_names[1];
                 quote! { (#arg0, #arg1: impl SimdInto<Self::Bytes, S>) -> Self }
@@ -635,6 +638,13 @@ const BASE_OPS: &[Op] = &[
         "Dynamically swizzle this vector's bytes independently within each 128-bit block.\n\n\
         The `indices` operand is a same-width byte vector. For each output byte, index values `0..=15` select the corresponding byte from the same 128-bit input block.\n\n\
         Out-of-range index behavior varies by platform.",
+    ),
+    Op::new(
+        "swizzle_dyn_precise",
+        OpKind::BaseTraitMethod,
+        OpSig::SwizzleDynPrecise,
+        "Dynamically swizzle this vector's bytes across the whole vector.\n\n\
+        The `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices produce zero bytes.",
     ),
 ];
 
@@ -1601,6 +1611,7 @@ impl OpSig {
                 | Self::AsArray { .. }
                 | Self::StoreArray
                 | Self::MaskSet
+                | Self::SwizzleDynPrecise
                 | Self::Slide {
                     granularity: SlideGranularity::AcrossBlocks,
                     ..
@@ -1638,7 +1649,7 @@ impl OpSig {
             | Self::MaskReduce { .. }
             | Self::MaskToBitmask
             | Self::AsArray { .. } => &["a"],
-            Self::SwizzleDynWithinBlocks => &["a", "indices"],
+            Self::SwizzleDynWithinBlocks | Self::SwizzleDynPrecise => &["a", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Combine { .. }
@@ -1671,7 +1682,7 @@ impl OpSig {
             }
             Self::Widen { .. } => &[],
             Self::Narrow { .. } => &[],
-            Self::SwizzleDynWithinBlocks => &["self", "indices"],
+            Self::SwizzleDynWithinBlocks | Self::SwizzleDynPrecise => &["self", "indices"],
             Self::Binary
             | Self::Compare
             | Self::Zip { .. }
@@ -1736,6 +1747,7 @@ impl OpSig {
             | Self::AsArray { .. }
             | Self::StoreArray
             | Self::SwizzleDynWithinBlocks
+            | Self::SwizzleDynPrecise
             | Self::Slide { .. } => return None,
         };
         Some(args)
