@@ -451,23 +451,16 @@ impl Level for Fallback {
                 let bytes_ty = vec_ty.bytes_ty();
                 let bytes_rust = bytes_ty.rust();
                 let byte_count = bytes_ty.len;
-                let items = make_list(
-                    (0..byte_count)
-                        .map(|idx| {
-                            quote! {
-                                {
-                                    let index = indices[#idx] as usize;
-                                    bytes[index % #byte_count]
-                                }
-                            }
-                        })
-                        .collect::<Vec<_>>(),
-                );
 
                 quote! {
                     #method_sig {
                         let bytes = Bytes::to_bytes(a);
-                        let result: #bytes_rust<Self> = #items.simd_into(self);
+                        let mut output = [0u8; #byte_count];
+                        for lane in 0..#byte_count {
+                            let index = indices[lane] as usize;
+                            output[lane] = bytes[index % #byte_count];
+                        }
+                        let result: #bytes_rust<Self> = output.simd_into(self);
                         Bytes::from_bytes(result)
                     }
                 }
