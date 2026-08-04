@@ -75,20 +75,30 @@ pub(crate) trait Level {
         op.simd_trait_kernel_method(self.token(), vec_ty, body)
     }
 
+    /// Override the default lane-array conversion hooks for compact mask storage.
+    fn custom_mask_array_conversion(&self, _vec_ty: &VecType) -> Option<TokenStream> {
+        None
+    }
+
     fn impl_arch_types(&self) -> TokenStream {
         let mut assoc_types = vec![];
+        let mut mask_array_conversions = vec![];
         for vec_ty in SIMD_TYPES {
             let ty_ident = vec_ty.rust();
             let wrapper_ty = self.arch_storage_ty(vec_ty);
             assoc_types.push(quote! {
                 type #ty_ident = #wrapper_ty;
             });
+            if let Some(conversion) = self.custom_mask_array_conversion(vec_ty) {
+                mask_array_conversions.push(conversion);
+            }
         }
         let level_tok = self.token();
 
         quote! {
             impl ArchTypes for #level_tok {
                 #( #assoc_types )*
+                #( #mask_array_conversions )*
             }
         }
     }

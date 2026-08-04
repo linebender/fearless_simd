@@ -7,7 +7,7 @@ use crate::generic::{
     integer_lane_mask_splat_arg,
 };
 use crate::level::Level;
-use crate::ops::{Op, OpSig, RefKind};
+use crate::ops::{Op, OpSig};
 use crate::types::{ScalarType, VecType};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -538,34 +538,6 @@ impl Level for Fallback {
                 quote! {
                     #method_sig {
                         *dest = #items;
-                    }
-                }
-            }
-            OpSig::FromArray { kind } => {
-                let vec_rust = vec_ty.rust();
-                let wrapper = vec_ty.aligned_wrapper();
-                let expr = match kind {
-                    RefKind::Value => quote! { val },
-                    RefKind::Ref | RefKind::Mut => quote! { *val },
-                };
-                quote! {
-                    #method_sig {
-                        #vec_rust { val: #wrapper(#expr), simd: self }
-                    }
-                }
-            }
-            OpSig::AsArray { kind } => {
-                let ref_tok = kind.token();
-                quote! {
-                    #method_sig {
-                        #ref_tok a.val.0
-                    }
-                }
-            }
-            OpSig::StoreArray => {
-                quote! {
-                    #method_sig {
-                        *dest = a.val.0;
                     }
                 }
             }

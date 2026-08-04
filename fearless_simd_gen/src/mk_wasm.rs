@@ -6,8 +6,7 @@ use quote::{format_ident, quote};
 
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
-    fallback_method, generic_as_array, generic_block_combine, generic_block_split,
-    generic_from_array, generic_mask_set, generic_op_name, generic_store_array,
+    fallback_method, generic_block_combine, generic_block_split, generic_mask_set, generic_op_name,
     integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
@@ -851,13 +850,6 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
-            OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
-            OpSig::AsArray { kind } => {
-                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |_| {
-                    Ident::new("v128", Span::call_site())
-                })
-            }
-            OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);

@@ -7,9 +7,9 @@ use crate::arch::x86::{
     unpack_intrinsic,
 };
 use crate::generic::{
-    fallback_method, generic_as_array, generic_block_combine, generic_block_split,
-    generic_from_array, generic_mask_from_bitmask, generic_mask_set, generic_op_name,
-    generic_store_array, integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
+    fallback_method, generic_block_combine, generic_block_split, generic_mask_from_bitmask,
+    generic_mask_set, generic_op_name, integer_lane_mask_splat_arg,
+    recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
 use crate::ops::{Op, OpSig, Quantifier, SlideGranularity};
@@ -87,6 +87,14 @@ impl Level for X86 {
         } else {
             vec_ty.aligned_wrapper_ty(|vec_ty| self.arch_ty(vec_ty), self.max_block_size())
         }
+    }
+
+    fn custom_mask_array_conversion(&self, vec_ty: &VecType) -> Option<TokenStream> {
+        if *self != Self::Avx512 || vec_ty.scalar != ScalarType::Mask {
+            return None;
+        }
+
+        Some(self.avx512_mask_array_conversion(vec_ty))
     }
 
     fn token_doc(&self) -> &'static str {
@@ -326,23 +334,6 @@ impl Level for X86 {
                 block_size,
                 block_count,
             } => self.handle_store_interleaved(op, vec_ty, block_size, block_count),
-            OpSig::FromArray { kind }
-                if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask =>
-            {
-                self.handle_avx512_mask_from_array(op, vec_ty, kind)
-            }
-            OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
-            OpSig::AsArray { kind }
-                if *self == Self::Avx512 && vec_ty.scalar == ScalarType::Mask =>
-            {
-                self.handle_avx512_mask_as_array(op, vec_ty, kind)
-            }
-            OpSig::AsArray { kind } => {
-                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |vec_ty| {
-                    self.arch_ty(vec_ty)
-                })
-            }
-            OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::Interleave => self.handle_interleave(op, vec_ty),
             OpSig::Deinterleave => self.handle_deinterleave(op, vec_ty),
         }
@@ -1097,68 +1088,61 @@ impl X86 {
         vec_ty.scalar == ScalarType::Mask && vec_ty.scalar_bits == 16
     }
 
-    pub(crate) fn handle_avx512_mask_from_array(
-        &self,
-        op: Op,
-        vec_ty: &VecType,
-        kind: crate::ops::RefKind,
-    ) -> TokenStream {
+    fn avx512_mask_array_conversion(&self, vec_ty: &VecType) -> TokenStream {
+        assert!(
+            *self == Self::Avx512,
+            "compact mask array conversions are only generated for AVX-512"
+        );
         assert_eq!(
             vec_ty.scalar,
             ScalarType::Mask,
-            "AVX-512 mask array loads only operate on mask types"
+            "compact mask array conversions are only generated for mask types"
         );
+
+        let storage = self.arch_storage_ty(vec_ty);
+        let storage_assoc = vec_ty.rust();
+        let scalar = ScalarType::Int.rust(vec_ty.scalar_bits);
+        let len = vec_ty.len;
+        let from_array = format_ident!("{}_from_array", vec_ty.rust_name());
+        let to_array = format_ident!("{}_to_array", vec_ty.rust_name());
         let movepi_mask = intrinsic_ident(
             &format!("movepi{}", vec_ty.scalar_bits),
             "mask",
             vec_ty.n_bits(),
-        );
-        let transmute_src = if kind == crate::ops::RefKind::Value {
-            quote! { &val }
-        } else {
-            quote! { val }
-        };
-        // Mask arrays are specified as either 0 or -1 per lane, so the sign bit is the
-        // truth value. Other lane values have unspecified results.
-        self.kernel_method(op, vec_ty, |token| {
-            let result = avx512_mask_register_value_with_simd(
-                vec_ty,
-                quote! { #movepi_mask(lanes) },
-                quote! { #token },
-            );
-            quote! {
-                let lanes = crate::transmute::checked_transmute_copy(#transmute_src);
-                #result
-            }
-        })
-    }
-
-    pub(crate) fn handle_avx512_mask_as_array(
-        &self,
-        op: Op,
-        vec_ty: &VecType,
-        kind: crate::ops::RefKind,
-    ) -> TokenStream {
-        assert_eq!(
-            vec_ty.scalar,
-            ScalarType::Mask,
-            "AVX-512 mask array stores only operate on mask types"
-        );
-        assert!(
-            kind == crate::ops::RefKind::Value,
-            "mask array references are not exposed"
         );
         let movm = intrinsic_ident(
             "movm",
             op_suffix(vec_ty.scalar, vec_ty.scalar_bits, true),
             vec_ty.n_bits(),
         );
-        self.kernel_method(op, vec_ty, |_| {
-            quote! {
-                let lanes = #movm(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
+
+        // Mask arrays are specified as either 0 or -1 per lane, so the sign bit is the
+        // truth value. Other lane values have unspecified results.
+        quote! {
+            #[inline(always)]
+            fn #from_array(self, val: [#scalar; #len]) -> Self::#storage_assoc {
+                crate::kernel!(
+                    #[inline(always)]
+                    fn kernel(_token: Avx512, val: [#scalar; #len]) -> #storage {
+                        let lanes = crate::transmute::checked_transmute_copy(&val);
+                        #movepi_mask(lanes)
+                    }
+                );
+                kernel(self, val)
             }
-        })
+
+            #[inline(always)]
+            fn #to_array(self, val: Self::#storage_assoc) -> [#scalar; #len] {
+                crate::kernel!(
+                    #[inline(always)]
+                    fn kernel(_token: Avx512, val: #storage) -> [#scalar; #len] {
+                        let lanes = #movm(val);
+                        crate::transmute::checked_transmute_copy(&lanes)
+                    }
+                );
+                kernel(self, val)
+            }
+        }
     }
 
     pub(crate) fn handle_avx512_mask_set(
