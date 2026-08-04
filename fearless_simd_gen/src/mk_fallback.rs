@@ -447,7 +447,10 @@ impl Level for Fallback {
                 // This formulation lowers into one cmov per element on SSE2/SSE4.2
                 // and autovectorizes on RISC-V.
                 // Every byte-vector width is a power of two, so masking preserves all valid indices.
-                assert!(byte_count.is_power_of_two());
+                assert!(
+                    byte_count.is_power_of_two(),
+                    "What have you done to your vector types?!"
+                );
 
                 quote! {
                     #method_sig {
