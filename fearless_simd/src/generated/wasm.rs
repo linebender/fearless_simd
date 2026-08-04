@@ -7836,8 +7836,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -8512,8 +8512,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -9065,8 +9065,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -9679,8 +9679,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -10117,8 +10117,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -10657,8 +10657,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -11030,8 +11030,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -11525,8 +11525,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -11908,8 +11908,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
@@ -12240,8 +12240,8 @@ impl Simd for WasmSimd128 {
         let mut output = [0u8; 64usize];
         for lane in 0..64usize {
             let index = indices[lane] as usize;
-            let in_range = 0u8.wrapping_sub(u8::from(index < 64usize));
-            output[lane] = bytes[index & (64usize - 1)] & in_range;
+            let value = bytes[index % 64usize];
+            output[lane] = if index < 64usize { value } else { 0 };
         }
         let result: u8x64<Self> = output.simd_into(self);
         Bytes::from_bytes(result)
