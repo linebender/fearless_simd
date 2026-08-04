@@ -6,7 +6,7 @@ use quote::{ToTokens, quote};
 
 use crate::{
     level::Level,
-    ops::{ElementDirection, Op, OpSig, RefKind, SlideGranularity},
+    ops::{ElementDirection, Op, OpSig, SlideGranularity},
     types::{ScalarType, VecType},
 };
 
@@ -295,32 +295,10 @@ pub(crate) fn generic_op(op: &Op, ty: &VecType) -> TokenStream {
         OpSig::MaskSet => {
             panic!("Mask set must operate on the full mask vector")
         }
-        OpSig::LoadInterleaved {
-            block_size,
-            block_count,
-        } => {
-            let split_len = (block_size * block_count) as usize / (ty.scalar_bits * 2);
-            let ty_rust = ty.rust();
-            quote! {
-                #method_sig {
-                    let (chunks, _) = src.as_chunks::<#split_len>();
-                    let lo = self.#do_half(&chunks[0]);
-                    let hi = self.#do_half(&chunks[1]);
-                    #ty_rust {
-                        val: crate::transmute::checked_transmute_copy(&[lo.val, hi.val]),
-                        simd: self,
-                    }
-                }
-            }
+        OpSig::LoadInterleaved { .. } | OpSig::StoreInterleaved { .. } => {
+            panic!("Interleaved memory operations must operate on full 128-bit vectors")
         }
-        OpSig::StoreInterleaved { .. } => {
-            panic!("The generic fallback is not implemented for this operation")
-        }
-        OpSig::Split { .. }
-        | OpSig::Combine { .. }
-        | OpSig::AsArray { .. }
-        | OpSig::FromArray { .. }
-        | OpSig::StoreArray => {
+        OpSig::Split { .. } | OpSig::Combine { .. } => {
             panic!("These operations require more information about the target platform");
         }
         OpSig::Interleave => {
@@ -556,71 +534,6 @@ pub(crate) fn generic_block_combine(
     }
 }
 
-pub(crate) fn generic_from_array(
-    method_sig: TokenStream,
-    vec_ty: &VecType,
-    kind: RefKind,
-) -> TokenStream {
-    let inner_ref = if kind == RefKind::Value {
-        quote! { &val }
-    } else {
-        quote! { val }
-    };
-    // There are architecture-specific "load" intrinsics, but they can actually be *worse* for performance. If they
-    // lower to LLVM intrinsics, they will likely not be optimized until much later in the pipeline (if at all),
-    // resulting in substantially worse codegen. See https://github.com/linebender/fearless_simd/pull/185.
-    let expr = quote! {
-        crate::transmute::checked_transmute_copy(#inner_ref)
-    };
-    let vec_rust = vec_ty.rust();
-
-    quote! {
-        #method_sig {
-            #vec_rust { val: #expr, simd: self }
-        }
-    }
-}
-
-pub(crate) fn generic_as_array<T: ToTokens>(
-    method_sig: TokenStream,
-    vec_ty: &VecType,
-    kind: RefKind,
-    max_block_size: usize,
-    arch_ty: impl Fn(&VecType) -> T,
-) -> TokenStream {
-    let rust_scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let num_scalars = vec_ty.len;
-
-    let native_ty =
-        vec_ty.wrapped_native_ty(|vec_ty| arch_ty(vec_ty).into_token_stream(), max_block_size);
-
-    match kind {
-        RefKind::Value => quote! {
-            #method_sig {
-                crate::transmute::checked_transmute_copy::<#native_ty, [#rust_scalar; #num_scalars]>(&a.val.0)
-            }
-        },
-        RefKind::Ref => quote! {
-            #method_sig {
-                crate::transmute::checked_cast_ref::<#native_ty, [#rust_scalar; #num_scalars]>(&a.val.0)
-            }
-        },
-        RefKind::Mut => quote! {
-            #method_sig {
-                crate::transmute::checked_cast_mut::<#native_ty, [#rust_scalar; #num_scalars]>(&mut a.val.0)
-            }
-        },
-    }
-}
-
-pub(crate) fn generic_store_array(method_sig: TokenStream, _vec_ty: &VecType) -> TokenStream {
-    quote! {
-        #method_sig {
-            crate::transmute::checked_transmute_store(a.val.0, dest);
-        }
-    }
-}
-
 pub(crate) fn generic_mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = vec_ty.len;
@@ -642,12 +555,12 @@ pub(crate) fn generic_mask_from_bitmask(method_sig: TokenStream, vec_ty: &VecTyp
 }
 
 pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let as_array = generic_op_name("as_array", vec_ty);
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = vec_ty.len;
 
     quote! {
         #method_sig {
-            let lanes = self.#as_array(a);
+            let lanes: [#scalar; #len] = a.into();
             let mut bits = 0u64;
             let mut i = 0;
             while i < #len {
@@ -662,8 +575,7 @@ pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType)
 }
 
 pub(crate) fn generic_mask_set(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
-    let from_array = generic_op_name("load_array", vec_ty);
-    let as_array = generic_op_name("as_array", vec_ty);
+    let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
     let len = vec_ty.len;
 
     quote! {
@@ -673,9 +585,9 @@ pub(crate) fn generic_mask_set(method_sig: TokenStream, vec_ty: &VecType) -> Tok
                 "mask lane index {index} is out of bounds for {} lanes",
                 #len
             );
-            let mut lanes = self.#as_array(*a);
+            let mut lanes: [#scalar; #len] = (*a).into();
             lanes[index] = if value { !0 } else { 0 };
-            *a = self.#from_array(lanes);
+            *a = lanes.simd_into(self);
         }
     }
 }

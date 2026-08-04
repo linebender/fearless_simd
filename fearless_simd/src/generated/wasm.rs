@@ -104,36 +104,6 @@ impl Simd for WasmSimd128 {
         f32x4_splat(val).simd_into(self)
     }
     #[inline(always)]
-    fn load_array_f32x4(self, val: [f32; 4usize]) -> f32x4<Self> {
-        f32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x4(self, val: &[f32; 4usize]) -> f32x4<Self> {
-        f32x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x4(self, a: f32x4<Self>) -> [f32; 4usize] {
-        crate::transmute::checked_transmute_copy::<v128, [f32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x4(self, a: &f32x4<Self>) -> &[f32; 4usize] {
-        crate::transmute::checked_cast_ref::<v128, [f32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x4(self, a: &mut f32x4<Self>) -> &mut [f32; 4usize] {
-        crate::transmute::checked_cast_mut::<v128, [f32; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -402,6 +372,56 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn load_four_interleaved_f32x4(self, src: &[f32; 16usize]) -> [f32x4<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[3]);
+        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
+        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
+        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
+        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
+        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
+        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
+        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
+        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f32x4(
+        self,
+        vectors: [f32x4<Self>; 4usize],
+        dest: &mut [f32; 16usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
+        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
+        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
+        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
+        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
+        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
+        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
+        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn widen_f32x4(self, a: f32x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
         let a = a.into();
         (
@@ -442,36 +462,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn splat_i8x16(self, val: i8) -> i8x16<Self> {
         i8x16_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_i8x16(self, val: [i8; 16usize]) -> i8x16<Self> {
-        i8x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x16(self, val: &[i8; 16usize]) -> i8x16<Self> {
-        i8x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x16(self, a: i8x16<Self>) -> [i8; 16usize] {
-        crate::transmute::checked_transmute_copy::<v128, [i8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x16(self, a: &i8x16<Self>) -> &[i8; 16usize] {
-        crate::transmute::checked_cast_ref::<v128, [i8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x16(self, a: &mut i8x16<Self>) -> &mut [i8; 16usize] {
-        crate::transmute::checked_cast_mut::<v128, [i8; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -779,6 +769,80 @@ impl Simd for WasmSimd128 {
         i8x16_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i8x16(self, src: &[i8; 64usize]) -> [i8x16<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<16usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[i8; 16usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[i8; 16usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[i8; 16usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[i8; 16usize], v128>(&chunks[3]);
+        let v01_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v0, v1);
+        let v23_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v2, v3);
+        let v01_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v0, v1);
+        let v23_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v2, v3);
+        let out0 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_lower, v23_lower,
+        );
+        let out1 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_lower, v23_lower,
+        );
+        let out2 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_upper, v23_upper,
+        );
+        let out3 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_upper, v23_upper,
+        );
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i8x16(
+        self,
+        vectors: [i8x16<Self>; 4usize],
+        dest: &mut [i8; 64usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower =
+            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v0, v2);
+        let v13_lower =
+            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v1, v3);
+        let v02_upper =
+            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v0, v2);
+        let v13_upper =
+            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v1, v3);
+        let out0 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
+            v02_lower, v13_lower,
+        );
+        let out1 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
+            v02_lower, v13_lower,
+        );
+        let out2 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
+            v02_upper, v13_upper,
+        );
+        let out3 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
+            v02_upper, v13_upper,
+        );
+        let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [i8; 16usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [i8; 16usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [i8; 16usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [i8; 16usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn widen_i8x16(self, a: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
         (
             i16x8_extend_low_i8x16(a.into()).simd_into(self),
@@ -788,36 +852,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn splat_u8x16(self, val: u8) -> u8x16<Self> {
         u8x16_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x16(self, val: &[u8; 16usize]) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x16(self, a: u8x16<Self>) -> [u8; 16usize] {
-        crate::transmute::checked_transmute_copy::<v128, [u8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x16(self, a: &u8x16<Self>) -> &[u8; 16usize] {
-        crate::transmute::checked_cast_ref::<v128, [u8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x16(self, a: &mut u8x16<Self>) -> &mut [u8; 16usize] {
-        crate::transmute::checked_cast_mut::<v128, [u8; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1121,6 +1155,80 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn load_four_interleaved_u8x16(self, src: &[u8; 64usize]) -> [u8x16<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<16usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[3]);
+        let v01_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v0, v1);
+        let v23_lower =
+            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v2, v3);
+        let v01_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v0, v1);
+        let v23_upper =
+            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v2, v3);
+        let out0 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_lower, v23_lower,
+        );
+        let out1 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_lower, v23_lower,
+        );
+        let out2 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
+            v01_upper, v23_upper,
+        );
+        let out3 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
+            v01_upper, v23_upper,
+        );
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u8x16(
+        self,
+        vectors: [u8x16<Self>; 4usize],
+        dest: &mut [u8; 64usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower =
+            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v0, v2);
+        let v13_lower =
+            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v1, v3);
+        let v02_upper =
+            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v0, v2);
+        let v13_upper =
+            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v1, v3);
+        let out0 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
+            v02_lower, v13_lower,
+        );
+        let out1 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
+            v02_lower, v13_lower,
+        );
+        let out2 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
+            v02_upper, v13_upper,
+        );
+        let out3 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
+            v02_upper, v13_upper,
+        );
+        let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
         (
             i16x8_extend_low_u8x16(a.into()).simd_into(self),
@@ -1131,17 +1239,6 @@ impl Simd for WasmSimd128 {
     fn splat_mask8x16(self, val: bool) -> mask8x16<Self> {
         let val: i8 = if val { !0 } else { 0 };
         i8x16_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
-        mask8x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize] {
-        crate::transmute::checked_transmute_copy::<v128, [i8; 16usize]>(&a.val.0)
     }
     #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
@@ -1163,9 +1260,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = self.as_array_mask8x16(*a);
+        let mut lanes: [i8; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask8x16(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -1229,36 +1326,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn splat_i16x8(self, val: i16) -> i16x8<Self> {
         i16x8_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_i16x8(self, val: [i16; 8usize]) -> i16x8<Self> {
-        i16x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x8(self, val: &[i16; 8usize]) -> i16x8<Self> {
-        i16x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x8(self, a: i16x8<Self>) -> [i16; 8usize] {
-        crate::transmute::checked_transmute_copy::<v128, [i16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x8(self, a: &i16x8<Self>) -> &[i16; 8usize] {
-        crate::transmute::checked_cast_ref::<v128, [i16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x8(self, a: &mut i16x8<Self>) -> &mut [i16; 8usize] {
-        crate::transmute::checked_cast_mut::<v128, [i16; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -1506,6 +1573,56 @@ impl Simd for WasmSimd128 {
         i16x8_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i16x8(self, src: &[i16; 32usize]) -> [i16x8<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<8usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[i16; 8usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[i16; 8usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[i16; 8usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[i16; 8usize], v128>(&chunks[3]);
+        let v01_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v0, v1);
+        let v23_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v2, v3);
+        let v01_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v0, v1);
+        let v23_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v2, v3);
+        let out0 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_lower, v23_lower);
+        let out1 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_lower, v23_lower);
+        let out2 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_upper, v23_upper);
+        let out3 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i16x8(
+        self,
+        vectors: [i16x8<Self>; 4usize],
+        dest: &mut [i16; 32usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v0, v2);
+        let v13_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v1, v3);
+        let v02_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v0, v2);
+        let v13_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v1, v3);
+        let out0 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_lower, v13_lower);
+        let out1 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_lower, v13_lower);
+        let out2 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_upper, v13_upper);
+        let out3 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [i16; 8usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
         (
             i32x4_extend_low_i16x8(a.into()).simd_into(self),
@@ -1524,36 +1641,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn splat_u16x8(self, val: u16) -> u16x8<Self> {
         u16x8_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self> {
-        u16x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x8(self, val: &[u16; 8usize]) -> u16x8<Self> {
-        u16x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x8(self, a: u16x8<Self>) -> [u16; 8usize] {
-        crate::transmute::checked_transmute_copy::<v128, [u16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x8(self, a: &u16x8<Self>) -> &[u16; 8usize] {
-        crate::transmute::checked_cast_ref::<v128, [u16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x8(self, a: &mut u16x8<Self>) -> &mut [u16; 8usize] {
-        crate::transmute::checked_cast_mut::<v128, [u16; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -1797,6 +1884,56 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn load_four_interleaved_u16x8(self, src: &[u16; 32usize]) -> [u16x8<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<8usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[3]);
+        let v01_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v0, v1);
+        let v23_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v2, v3);
+        let v01_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v0, v1);
+        let v23_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v2, v3);
+        let out0 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_lower, v23_lower);
+        let out1 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_lower, v23_lower);
+        let out2 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_upper, v23_upper);
+        let out3 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u16x8(
+        self,
+        vectors: [u16x8<Self>; 4usize],
+        dest: &mut [u16; 32usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v0, v2);
+        let v13_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v1, v3);
+        let v02_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v0, v2);
+        let v13_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v1, v3);
+        let out0 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_lower, v13_lower);
+        let out1 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_lower, v13_lower);
+        let out2 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_upper, v13_upper);
+        let out3 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn widen_u16x8(self, a: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
         (
             i32x4_extend_low_u16x8(a.into()).simd_into(self),
@@ -1819,17 +1956,6 @@ impl Simd for WasmSimd128 {
         i16x8_splat(val).simd_into(self)
     }
     #[inline(always)]
-    fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
-        mask16x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize] {
-        crate::transmute::checked_transmute_copy::<v128, [i16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
         let bitset = i16x8_splat(bits as i16);
         let powers = u16x8(1, 2, 4, 8, 16, 32, 64, 128);
@@ -1847,9 +1973,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = self.as_array_mask16x8(*a);
+        let mut lanes: [i16; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask16x8(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -1913,36 +2039,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn splat_i32x4(self, val: i32) -> i32x4<Self> {
         i32x4_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_i32x4(self, val: [i32; 4usize]) -> i32x4<Self> {
-        i32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x4(self, val: &[i32; 4usize]) -> i32x4<Self> {
-        i32x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x4(self, a: i32x4<Self>) -> [i32; 4usize] {
-        crate::transmute::checked_transmute_copy::<v128, [i32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x4(self, a: &i32x4<Self>) -> &[i32; 4usize] {
-        crate::transmute::checked_cast_ref::<v128, [i32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x4(self, a: &mut i32x4<Self>) -> &mut [i32; 4usize] {
-        crate::transmute::checked_cast_mut::<v128, [i32; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -2166,6 +2262,56 @@ impl Simd for WasmSimd128 {
         i32x4_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i32x4(self, src: &[i32; 16usize]) -> [i32x4<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[i32; 4usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[i32; 4usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[i32; 4usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[i32; 4usize], v128>(&chunks[3]);
+        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
+        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
+        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
+        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
+        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
+        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
+        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
+        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i32x4(
+        self,
+        vectors: [i32x4<Self>; 4usize],
+        dest: &mut [i32; 16usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
+        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
+        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
+        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
+        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
+        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
+        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
+        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [i32; 4usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [i32; 4usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [i32; 4usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [i32; 4usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn widen_i32x4(self, a: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
         (
             i64x2_extend_low_i32x4(a.into()).simd_into(self),
@@ -2188,36 +2334,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn splat_u32x4(self, val: u32) -> u32x4<Self> {
         u32x4_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self> {
-        u32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x4(self, val: &[u32; 4usize]) -> u32x4<Self> {
-        u32x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x4(self, a: u32x4<Self>) -> [u32; 4usize] {
-        crate::transmute::checked_transmute_copy::<v128, [u32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x4(self, a: &u32x4<Self>) -> &[u32; 4usize] {
-        crate::transmute::checked_cast_ref::<v128, [u32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x4(self, a: &mut u32x4<Self>) -> &mut [u32; 4usize] {
-        crate::transmute::checked_cast_mut::<v128, [u32; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -2437,6 +2553,56 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn load_four_interleaved_u32x4(self, src: &[u32; 16usize]) -> [u32x4<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<4usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[3]);
+        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
+        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
+        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
+        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
+        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
+        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
+        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
+        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u32x4(
+        self,
+        vectors: [u32x4<Self>; 4usize],
+        dest: &mut [u32; 16usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
+        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
+        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
+        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
+        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
+        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
+        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
+        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
+        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn widen_u32x4(self, a: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
         (
             i64x2_extend_low_u32x4(a.into()).simd_into(self),
@@ -2463,17 +2629,6 @@ impl Simd for WasmSimd128 {
         i32x4_splat(val).simd_into(self)
     }
     #[inline(always)]
-    fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
-        mask32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize] {
-        crate::transmute::checked_transmute_copy::<v128, [i32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
         let bitset = i32x4_splat(bits as i32);
         let powers = u32x4(1, 2, 4, 8);
@@ -2491,9 +2646,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             4usize
         );
-        let mut lanes = self.as_array_mask32x4(*a);
+        let mut lanes: [i32; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask32x4(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -2557,36 +2712,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn splat_f64x2(self, val: f64) -> f64x2<Self> {
         f64x2_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_f64x2(self, val: [f64; 2usize]) -> f64x2<Self> {
-        f64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x2(self, val: &[f64; 2usize]) -> f64x2<Self> {
-        f64x2 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x2(self, a: f64x2<Self>) -> [f64; 2usize] {
-        crate::transmute::checked_transmute_copy::<v128, [f64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x2(self, a: &f64x2<Self>) -> &[f64; 2usize] {
-        crate::transmute::checked_cast_ref::<v128, [f64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x2(self, a: &mut f64x2<Self>) -> &mut [f64; 2usize] {
-        crate::transmute::checked_cast_mut::<v128, [f64; 2usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -2849,6 +2974,48 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn load_four_interleaved_f64x2(self, src: &[f64; 8usize]) -> [f64x2<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<2usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[f64; 2usize], v128>(&chunks[3]);
+        let out0 = u64x2_shuffle::<0, 2>(v0, v2);
+        let out1 = u64x2_shuffle::<1, 3>(v0, v2);
+        let out2 = u64x2_shuffle::<0, 2>(v1, v3);
+        let out3 = u64x2_shuffle::<1, 3>(v1, v3);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f64x2(
+        self,
+        vectors: [f64x2<Self>; 4usize],
+        dest: &mut [f64; 8usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let out0 = u64x2_shuffle::<0, 2>(v0, v1);
+        let out1 = u64x2_shuffle::<0, 2>(v2, v3);
+        let out2 = u64x2_shuffle::<1, 3>(v0, v1);
+        let out3 = u64x2_shuffle::<1, 3>(v2, v3);
+        let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [f64; 2usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
         let low = f32x4_demote_f64x2_zero(a.into());
         let high = f32x4_demote_f64x2_zero(b.into());
@@ -2861,36 +3028,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn splat_i64x2(self, val: i64) -> i64x2<Self> {
         i64x2_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_i64x2(self, val: [i64; 2usize]) -> i64x2<Self> {
-        i64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x2(self, val: &[i64; 2usize]) -> i64x2<Self> {
-        i64x2 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x2(self, a: i64x2<Self>) -> [i64; 2usize] {
-        crate::transmute::checked_transmute_copy::<v128, [i64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x2(self, a: &i64x2<Self>) -> &[i64; 2usize] {
-        crate::transmute::checked_cast_ref::<v128, [i64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x2(self, a: &mut i64x2<Self>) -> &mut [i64; 2usize] {
-        crate::transmute::checked_cast_mut::<v128, [i64; 2usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i64x2(self, a: i64x2<Self>, dest: &mut [i64; 2usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -3110,6 +3247,48 @@ impl Simd for WasmSimd128 {
         i64x2_neg(a.into()).simd_into(self)
     }
     #[inline(always)]
+    fn load_four_interleaved_i64x2(self, src: &[i64; 8usize]) -> [i64x2<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<2usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[i64; 2usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[i64; 2usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[i64; 2usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[i64; 2usize], v128>(&chunks[3]);
+        let out0 = u64x2_shuffle::<0, 2>(v0, v2);
+        let out1 = u64x2_shuffle::<1, 3>(v0, v2);
+        let out2 = u64x2_shuffle::<0, 2>(v1, v3);
+        let out3 = u64x2_shuffle::<1, 3>(v1, v3);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i64x2(
+        self,
+        vectors: [i64x2<Self>; 4usize],
+        dest: &mut [i64; 8usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let out0 = u64x2_shuffle::<0, 2>(v0, v1);
+        let out1 = u64x2_shuffle::<0, 2>(v2, v3);
+        let out2 = u64x2_shuffle::<1, 3>(v0, v1);
+        let out3 = u64x2_shuffle::<1, 3>(v2, v3);
+        let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [i64; 2usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
         i8x16_shuffle::<0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27>(
             a.into(),
@@ -3130,36 +3309,6 @@ impl Simd for WasmSimd128 {
     #[inline(always)]
     fn splat_u64x2(self, val: u64) -> u64x2<Self> {
         u64x2_splat(val).simd_into(self)
-    }
-    #[inline(always)]
-    fn load_array_u64x2(self, val: [u64; 2usize]) -> u64x2<Self> {
-        u64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x2(self, val: &[u64; 2usize]) -> u64x2<Self> {
-        u64x2 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x2(self, a: u64x2<Self>) -> [u64; 2usize] {
-        crate::transmute::checked_transmute_copy::<v128, [u64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x2(self, a: &u64x2<Self>) -> &[u64; 2usize] {
-        crate::transmute::checked_cast_ref::<v128, [u64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x2(self, a: &mut u64x2<Self>) -> &mut [u64; 2usize] {
-        crate::transmute::checked_cast_mut::<v128, [u64; 2usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u64x2(self, a: u64x2<Self>, dest: &mut [u64; 2usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -3395,6 +3544,48 @@ impl Simd for WasmSimd128 {
         }
     }
     #[inline(always)]
+    fn load_four_interleaved_u64x2(self, src: &[u64; 8usize]) -> [u64x2<Self>; 4usize] {
+        let (chunks, []) = src.as_chunks::<2usize>() else {
+            unreachable!()
+        };
+        let v0: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[0]);
+        let v1: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[1]);
+        let v2: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[2]);
+        let v3: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[3]);
+        let out0 = u64x2_shuffle::<0, 2>(v0, v2);
+        let out1 = u64x2_shuffle::<1, 3>(v0, v2);
+        let out2 = u64x2_shuffle::<0, 2>(v1, v3);
+        let out3 = u64x2_shuffle::<1, 3>(v1, v3);
+        [
+            out0.simd_into(self),
+            out1.simd_into(self),
+            out2.simd_into(self),
+            out3.simd_into(self),
+        ]
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u64x2(
+        self,
+        vectors: [u64x2<Self>; 4usize],
+        dest: &mut [u64; 8usize],
+    ) -> () {
+        let v0: v128 = vectors[0].into();
+        let v1: v128 = vectors[1].into();
+        let v2: v128 = vectors[2].into();
+        let v3: v128 = vectors[3].into();
+        let out0 = u64x2_shuffle::<0, 2>(v0, v1);
+        let out1 = u64x2_shuffle::<0, 2>(v2, v3);
+        let out2 = u64x2_shuffle::<1, 3>(v0, v1);
+        let out3 = u64x2_shuffle::<1, 3>(v2, v3);
+        let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
+            unreachable!()
+        };
+        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out0, &mut chunks[0]);
+        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out1, &mut chunks[1]);
+        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out2, &mut chunks[2]);
+        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out3, &mut chunks[3]);
+    }
+    #[inline(always)]
     fn narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
         i8x16_shuffle::<0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27>(
             a.into(),
@@ -3418,17 +3609,6 @@ impl Simd for WasmSimd128 {
         i64x2_splat(val).simd_into(self)
     }
     #[inline(always)]
-    fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
-        mask64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize] {
-        crate::transmute::checked_transmute_copy::<v128, [i64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
         let bitset = i64x2_splat(bits as i64);
         let powers = u64x2(1, 2);
@@ -3446,9 +3626,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             2usize
         );
-        let mut lanes = self.as_array_mask64x2(*a);
+        let mut lanes: [i64; 2usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask64x2(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -3513,36 +3693,6 @@ impl Simd for WasmSimd128 {
     fn splat_f32x8(self, val: f32) -> f32x8<Self> {
         let half = self.splat_f32x4(val);
         self.combine_f32x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f32x8(self, val: [f32; 8usize]) -> f32x8<Self> {
-        f32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x8(self, val: &[f32; 8usize]) -> f32x8<Self> {
-        f32x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x8(self, a: f32x8<Self>) -> [f32; 8usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [f32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x8(self, a: &f32x8<Self>) -> &[f32; 8usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [f32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x8(self, a: &mut f32x8<Self>) -> &mut [f32; 8usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [f32; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -3941,36 +4091,6 @@ impl Simd for WasmSimd128 {
     fn splat_i8x32(self, val: i8) -> i8x32<Self> {
         let half = self.splat_i8x16(val);
         self.combine_i8x16(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i8x32(self, val: [i8; 32usize]) -> i8x32<Self> {
-        i8x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x32(self, val: &[i8; 32usize]) -> i8x32<Self> {
-        i8x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x32(self, a: i8x32<Self>) -> [i8; 32usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [i8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x32(self, a: &i8x32<Self>) -> &[i8; 32usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [i8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x32(self, a: &mut i8x32<Self>) -> &mut [i8; 32usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [i8; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -4387,36 +4507,6 @@ impl Simd for WasmSimd128 {
         self.combine_u8x16(half, half)
     }
     #[inline(always)]
-    fn load_array_u8x32(self, val: [u8; 32usize]) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x32(self, val: &[u8; 32usize]) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x32(self, a: u8x32<Self>) -> [u8; 32usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [u8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x32(self, a: &u8x32<Self>) -> &[u8; 32usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [u8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x32(self, a: &mut u8x32<Self>) -> &mut [u8; 32usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [u8; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         if SHIFT >= 32usize {
             return b;
@@ -4826,17 +4916,6 @@ impl Simd for WasmSimd128 {
         self.combine_mask8x16(half, half)
     }
     #[inline(always)]
-    fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self> {
-        mask8x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [i8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self> {
         let lo = self.from_bitmask_mask8x16(bits);
         let hi = self.from_bitmask_mask8x16(bits >> 16usize);
@@ -4856,9 +4935,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             32usize
         );
-        let mut lanes = self.as_array_mask8x32(*a);
+        let mut lanes: [i8; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask8x32(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
@@ -4948,36 +5027,6 @@ impl Simd for WasmSimd128 {
     fn splat_i16x16(self, val: i16) -> i16x16<Self> {
         let half = self.splat_i16x8(val);
         self.combine_i16x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i16x16(self, val: [i16; 16usize]) -> i16x16<Self> {
-        i16x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x16(self, val: &[i16; 16usize]) -> i16x16<Self> {
-        i16x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x16(self, a: i16x16<Self>) -> [i16; 16usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [i16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x16(self, a: &i16x16<Self>) -> &[i16; 16usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [i16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x16(self, a: &mut i16x16<Self>) -> &mut [i16; 16usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [i16; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -5352,36 +5401,6 @@ impl Simd for WasmSimd128 {
         self.combine_u16x8(half, half)
     }
     #[inline(always)]
-    fn load_array_u16x16(self, val: [u16; 16usize]) -> u16x16<Self> {
-        u16x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x16(self, val: &[u16; 16usize]) -> u16x16<Self> {
-        u16x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x16(self, a: u16x16<Self>) -> [u16; 16usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [u16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x16(self, a: &u16x16<Self>) -> &[u16; 16usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [u16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x16(self, a: &mut u16x16<Self>) -> &mut [u16; 16usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [u16; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         if SHIFT >= 16usize {
             return b;
@@ -5749,17 +5768,6 @@ impl Simd for WasmSimd128 {
         self.combine_mask16x8(half, half)
     }
     #[inline(always)]
-    fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self> {
-        mask16x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [i16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self> {
         let lo = self.from_bitmask_mask16x8(bits);
         let hi = self.from_bitmask_mask16x8(bits >> 8usize);
@@ -5779,9 +5787,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = self.as_array_mask16x16(*a);
+        let mut lanes: [i16; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask16x16(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
@@ -5871,36 +5879,6 @@ impl Simd for WasmSimd128 {
     fn splat_i32x8(self, val: i32) -> i32x8<Self> {
         let half = self.splat_i32x4(val);
         self.combine_i32x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i32x8(self, val: [i32; 8usize]) -> i32x8<Self> {
-        i32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x8(self, val: &[i32; 8usize]) -> i32x8<Self> {
-        i32x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x8(self, a: i32x8<Self>) -> [i32; 8usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [i32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x8(self, a: &i32x8<Self>) -> &[i32; 8usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [i32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x8(self, a: &mut i32x8<Self>) -> &mut [i32; 8usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [i32; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -6244,36 +6222,6 @@ impl Simd for WasmSimd128 {
         self.combine_u32x4(half, half)
     }
     #[inline(always)]
-    fn load_array_u32x8(self, val: [u32; 8usize]) -> u32x8<Self> {
-        u32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x8(self, val: &[u32; 8usize]) -> u32x8<Self> {
-        u32x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x8(self, a: u32x8<Self>) -> [u32; 8usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [u32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x8(self, a: &u32x8<Self>) -> &[u32; 8usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [u32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x8(self, a: &mut u32x8<Self>) -> &mut [u32; 8usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [u32; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -6610,17 +6558,6 @@ impl Simd for WasmSimd128 {
         self.combine_mask32x4(half, half)
     }
     #[inline(always)]
-    fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self> {
-        mask32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [i32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self> {
         let lo = self.from_bitmask_mask32x4(bits);
         let hi = self.from_bitmask_mask32x4(bits >> 4usize);
@@ -6640,9 +6577,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = self.as_array_mask32x8(*a);
+        let mut lanes: [i32; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask32x8(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -6732,36 +6669,6 @@ impl Simd for WasmSimd128 {
     fn splat_f64x4(self, val: f64) -> f64x4<Self> {
         let half = self.splat_f64x2(val);
         self.combine_f64x2(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f64x4(self, val: [f64; 4usize]) -> f64x4<Self> {
-        f64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x4(self, val: &[f64; 4usize]) -> f64x4<Self> {
-        f64x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x4(self, a: f64x4<Self>) -> [f64; 4usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [f64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x4(self, a: &f64x4<Self>) -> &[f64; 4usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [f64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x4(self, a: &mut f64x4<Self>) -> &mut [f64; 4usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [f64; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -7128,36 +7035,6 @@ impl Simd for WasmSimd128 {
         self.combine_i64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_i64x4(self, val: [i64; 4usize]) -> i64x4<Self> {
-        i64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x4(self, val: &[i64; 4usize]) -> i64x4<Self> {
-        i64x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x4(self, a: i64x4<Self>) -> [i64; 4usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [i64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x4(self, a: &i64x4<Self>) -> &[i64; 4usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [i64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x4(self, a: &mut i64x4<Self>) -> &mut [i64; 4usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [i64; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i64x4(self, a: i64x4<Self>, dest: &mut [i64; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -7471,36 +7348,6 @@ impl Simd for WasmSimd128 {
         self.combine_u64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_u64x4(self, val: [u64; 4usize]) -> u64x4<Self> {
-        u64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x4(self, val: &[u64; 4usize]) -> u64x4<Self> {
-        u64x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x4(self, a: u64x4<Self>) -> [u64; 4usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [u64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x4(self, a: &u64x4<Self>) -> &[u64; 4usize] {
-        crate::transmute::checked_cast_ref::<[v128; 2usize], [u64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x4(self, a: &mut u64x4<Self>) -> &mut [u64; 4usize] {
-        crate::transmute::checked_cast_mut::<[v128; 2usize], [u64; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u64x4(self, a: u64x4<Self>, dest: &mut [u64; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         if SHIFT >= 4usize {
             return b;
@@ -7809,17 +7656,6 @@ impl Simd for WasmSimd128 {
         self.combine_mask64x2(half, half)
     }
     #[inline(always)]
-    fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self> {
-        mask64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 2usize], [i64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
     fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self> {
         let lo = self.from_bitmask_mask64x2(bits);
         let hi = self.from_bitmask_mask64x2(bits >> 2usize);
@@ -7839,9 +7675,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             4usize
         );
-        let mut lanes = self.as_array_mask64x4(*a);
+        let mut lanes: [i64; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask64x4(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -7931,36 +7767,6 @@ impl Simd for WasmSimd128 {
     fn splat_f32x16(self, val: f32) -> f32x16<Self> {
         let half = self.splat_f32x8(val);
         self.combine_f32x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self> {
-        f32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x16(self, val: &[f32; 16usize]) -> f32x16<Self> {
-        f32x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x16(self, a: f32x16<Self>) -> [f32; 16usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [f32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x16(self, a: &f32x16<Self>) -> &[f32; 16usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [f32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [f32; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -8347,57 +8153,11 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        let (chunks, []) = src.as_chunks::<4usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[f32; 4usize], v128>(&chunks[3]);
-        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
-        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
-        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
-        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
-        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
-        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
-        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
-        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
-        let combined_lower = self.combine_f32x4(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_f32x4(out2.simd_into(self), out3.simd_into(self));
-        self.combine_f32x8(combined_lower, combined_upper)
-    }
-    #[inline(always)]
     fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>) {
         let (a0, a1) = self.split_f32x16(a);
         let (a00, a01) = self.widen_f32x8(a0);
         let (a10, a11) = self.widen_f32x8(a1);
         (self.combine_f64x4(a00, a01), self.combine_f64x4(a10, a11))
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        let (lower, upper) = self.split_f32x16(a);
-        let (v0_vec, v1_vec) = self.split_f32x8(lower);
-        let (v2_vec, v3_vec) = self.split_f32x8(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
-        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
-        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
-        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
-        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
-        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
-        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
-        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
-        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [f32; 4usize]>(out3, &mut chunks[3]);
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
@@ -8429,36 +8189,6 @@ impl Simd for WasmSimd128 {
     fn splat_i8x64(self, val: i8) -> i8x64<Self> {
         let half = self.splat_i8x32(val);
         self.combine_i8x32(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self> {
-        i8x64 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x64(self, val: &[i8; 64usize]) -> i8x64<Self> {
-        i8x64 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x64(self, a: i8x64<Self>) -> [i8; 64usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [i8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x64(self, a: &i8x64<Self>) -> &[i8; 64usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [i8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x64(self, a: &mut i8x64<Self>) -> &mut [i8; 64usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [i8; 64usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -8991,36 +8721,6 @@ impl Simd for WasmSimd128 {
         self.combine_u8x32(half, half)
     }
     #[inline(always)]
-    fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x64(self, val: &[u8; 64usize]) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x64(self, a: u8x64<Self>) -> [u8; 64usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [u8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x64(self, a: &u8x64<Self>) -> &[u8; 64usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [u8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [u8; 64usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         if SHIFT >= 64usize {
             return b;
@@ -9534,39 +9234,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        let (chunks, []) = src.as_chunks::<16usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[u8; 16usize], v128>(&chunks[3]);
-        let v01_lower =
-            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v0, v1);
-        let v23_lower =
-            u8x16_shuffle::<0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29>(v2, v3);
-        let v01_upper =
-            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v0, v1);
-        let v23_upper =
-            u8x16_shuffle::<2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31>(v2, v3);
-        let out0 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
-            v01_lower, v23_lower,
-        );
-        let out1 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
-            v01_lower, v23_lower,
-        );
-        let out2 = u8x16_shuffle::<0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23>(
-            v01_upper, v23_upper,
-        );
-        let out3 = u8x16_shuffle::<8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 26, 27, 28, 29, 30, 31>(
-            v01_upper, v23_upper,
-        );
-        let combined_lower = self.combine_u8x16(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_u8x16(out2.simd_into(self), out3.simd_into(self));
-        self.combine_u8x32(combined_lower, combined_upper)
-    }
-    #[inline(always)]
     fn widen_u8x64(self, a: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>) {
         let (a0, a1) = self.split_u8x64(a);
         let (a00, a01) = self.widen_u8x32(a0);
@@ -9574,57 +9241,9 @@ impl Simd for WasmSimd128 {
         (self.combine_u16x16(a00, a01), self.combine_u16x16(a10, a11))
     }
     #[inline(always)]
-    fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        let (lower, upper) = self.split_u8x64(a);
-        let (v0_vec, v1_vec) = self.split_u8x32(lower);
-        let (v2_vec, v3_vec) = self.split_u8x32(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let v02_lower =
-            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v0, v2);
-        let v13_lower =
-            u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(v1, v3);
-        let v02_upper =
-            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v0, v2);
-        let v13_upper =
-            u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(v1, v3);
-        let out0 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
-            v02_lower, v13_lower,
-        );
-        let out1 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
-            v02_lower, v13_lower,
-        );
-        let out2 = u8x16_shuffle::<0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23>(
-            v02_upper, v13_upper,
-        );
-        let out3 = u8x16_shuffle::<8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31>(
-            v02_upper, v13_upper,
-        );
-        let (chunks, []) = dest.as_chunks_mut::<16usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [u8; 16usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         let half = self.splat_mask8x32(val);
         self.combine_mask8x32(half, half)
-    }
-    #[inline(always)]
-    fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self> {
-        mask8x64 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [i8; 64usize]>(&a.val.0)
     }
     #[inline(always)]
     fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
@@ -9646,9 +9265,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             64usize
         );
-        let mut lanes = self.as_array_mask8x64(*a);
+        let mut lanes: [i8; 64usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask8x64(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -9731,36 +9350,6 @@ impl Simd for WasmSimd128 {
     fn splat_i16x32(self, val: i16) -> i16x32<Self> {
         let half = self.splat_i16x16(val);
         self.combine_i16x16(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self> {
-        i16x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x32(self, val: &[i16; 32usize]) -> i16x32<Self> {
-        i16x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x32(self, a: i16x32<Self>) -> [i16; 32usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [i16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x32(self, a: &i16x32<Self>) -> &[i16; 32usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [i16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [i16; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -10193,36 +9782,6 @@ impl Simd for WasmSimd128 {
         self.combine_u16x16(half, half)
     }
     #[inline(always)]
-    fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self> {
-        u16x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x32(self, val: &[u16; 32usize]) -> u16x32<Self> {
-        u16x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x32(self, a: u16x32<Self>) -> [u16; 32usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [u16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x32(self, a: &u16x32<Self>) -> &[u16; 32usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [u16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [u16; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         if SHIFT >= 32usize {
             return b;
@@ -10621,27 +10180,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        let (chunks, []) = src.as_chunks::<8usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[u16; 8usize], v128>(&chunks[3]);
-        let v01_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v0, v1);
-        let v23_lower = u16x8_shuffle::<0, 4, 8, 12, 1, 5, 9, 13>(v2, v3);
-        let v01_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v0, v1);
-        let v23_upper = u16x8_shuffle::<2, 6, 10, 14, 3, 7, 11, 15>(v2, v3);
-        let out0 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_lower, v23_lower);
-        let out1 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_lower, v23_lower);
-        let out2 = u16x8_shuffle::<0, 1, 2, 3, 8, 9, 10, 11>(v01_upper, v23_upper);
-        let out3 = u16x8_shuffle::<4, 5, 6, 7, 12, 13, 14, 15>(v01_upper, v23_upper);
-        let combined_lower = self.combine_u16x8(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_u16x8(out2.simd_into(self), out3.simd_into(self));
-        self.combine_u16x16(combined_lower, combined_upper)
-    }
-    #[inline(always)]
     fn widen_u16x32(self, a: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>) {
         let (a0, a1) = self.split_u16x32(a);
         let (a00, a01) = self.widen_u16x16(a0);
@@ -10664,45 +10202,9 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        let (lower, upper) = self.split_u16x32(a);
-        let (v0_vec, v1_vec) = self.split_u16x16(lower);
-        let (v2_vec, v3_vec) = self.split_u16x16(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let v02_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v0, v2);
-        let v13_lower = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v1, v3);
-        let v02_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v0, v2);
-        let v13_upper = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v1, v3);
-        let out0 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_lower, v13_lower);
-        let out1 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_lower, v13_lower);
-        let out2 = u16x8_shuffle::<0, 8, 1, 9, 2, 10, 3, 11>(v02_upper, v13_upper);
-        let out3 = u16x8_shuffle::<4, 12, 5, 13, 6, 14, 7, 15>(v02_upper, v13_upper);
-        let (chunks, []) = dest.as_chunks_mut::<8usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [u16; 8usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
         let half = self.splat_mask16x16(val);
         self.combine_mask16x16(half, half)
-    }
-    #[inline(always)]
-    fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self> {
-        mask16x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [i16; 32usize]>(&a.val.0)
     }
     #[inline(always)]
     fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self> {
@@ -10724,9 +10226,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             32usize
         );
-        let mut lanes = self.as_array_mask16x32(*a);
+        let mut lanes: [i16; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask16x32(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -10812,36 +10314,6 @@ impl Simd for WasmSimd128 {
     fn splat_i32x16(self, val: i32) -> i32x16<Self> {
         let half = self.splat_i32x8(val);
         self.combine_i32x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self> {
-        i32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x16(self, val: &[i32; 16usize]) -> i32x16<Self> {
-        i32x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x16(self, a: i32x16<Self>) -> [i32; 16usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [i32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x16(self, a: &i32x16<Self>) -> &[i32; 16usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [i32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [i32; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -11209,36 +10681,6 @@ impl Simd for WasmSimd128 {
         self.combine_u32x8(half, half)
     }
     #[inline(always)]
-    fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self> {
-        u32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x16(self, val: &[u32; 16usize]) -> u32x16<Self> {
-        u32x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x16(self, a: u32x16<Self>) -> [u32; 16usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [u32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x16(self, a: &u32x16<Self>) -> &[u32; 16usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [u32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [u32; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         if SHIFT >= 16usize {
             return b;
@@ -11567,27 +11009,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        let (chunks, []) = src.as_chunks::<4usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[u32; 4usize], v128>(&chunks[3]);
-        let v01_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v1);
-        let v23_lower = u32x4_shuffle::<0, 4, 1, 5>(v2, v3);
-        let v01_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v1);
-        let v23_upper = u32x4_shuffle::<2, 6, 3, 7>(v2, v3);
-        let out0 = u32x4_shuffle::<0, 1, 4, 5>(v01_lower, v23_lower);
-        let out1 = u32x4_shuffle::<2, 3, 6, 7>(v01_lower, v23_lower);
-        let out2 = u32x4_shuffle::<0, 1, 4, 5>(v01_upper, v23_upper);
-        let out3 = u32x4_shuffle::<2, 3, 6, 7>(v01_upper, v23_upper);
-        let combined_lower = self.combine_u32x4(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_u32x4(out2.simd_into(self), out3.simd_into(self));
-        self.combine_u32x8(combined_lower, combined_upper)
-    }
-    #[inline(always)]
     fn widen_u32x16(self, a: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>) {
         let (a0, a1) = self.split_u32x16(a);
         let (a00, a01) = self.widen_u32x8(a0);
@@ -11610,31 +11031,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        let (lower, upper) = self.split_u32x16(a);
-        let (v0_vec, v1_vec) = self.split_u32x8(lower);
-        let (v2_vec, v3_vec) = self.split_u32x8(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let v02_lower = u32x4_shuffle::<0, 4, 1, 5>(v0, v2);
-        let v13_lower = u32x4_shuffle::<0, 4, 1, 5>(v1, v3);
-        let v02_upper = u32x4_shuffle::<2, 6, 3, 7>(v0, v2);
-        let v13_upper = u32x4_shuffle::<2, 6, 3, 7>(v1, v3);
-        let out0 = u32x4_shuffle::<0, 4, 1, 5>(v02_lower, v13_lower);
-        let out1 = u32x4_shuffle::<2, 6, 3, 7>(v02_lower, v13_lower);
-        let out2 = u32x4_shuffle::<0, 4, 1, 5>(v02_upper, v13_upper);
-        let out3 = u32x4_shuffle::<2, 6, 3, 7>(v02_upper, v13_upper);
-        let (chunks, []) = dest.as_chunks_mut::<4usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [u32; 4usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
         let (a0, a1) = self.split_u32x16(a);
         self.combine_f32x8(self.cvt_f32_u32x8(a0), self.cvt_f32_u32x8(a1))
@@ -11643,17 +11039,6 @@ impl Simd for WasmSimd128 {
     fn splat_mask32x16(self, val: bool) -> mask32x16<Self> {
         let half = self.splat_mask32x8(val);
         self.combine_mask32x8(half, half)
-    }
-    #[inline(always)]
-    fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self> {
-        mask32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [i32; 16usize]>(&a.val.0)
     }
     #[inline(always)]
     fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
@@ -11675,9 +11060,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = self.as_array_mask32x16(*a);
+        let mut lanes: [i32; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask32x16(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -11760,36 +11145,6 @@ impl Simd for WasmSimd128 {
     fn splat_f64x8(self, val: f64) -> f64x8<Self> {
         let half = self.splat_f64x4(val);
         self.combine_f64x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self> {
-        f64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x8(self, val: &[f64; 8usize]) -> f64x8<Self> {
-        f64x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x8(self, a: f64x8<Self>) -> [f64; 8usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [f64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x8(self, a: &f64x8<Self>) -> &[f64; 8usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [f64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [f64; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -12160,36 +11515,6 @@ impl Simd for WasmSimd128 {
         self.combine_i64x4(half, half)
     }
     #[inline(always)]
-    fn load_array_i64x8(self, val: [i64; 8usize]) -> i64x8<Self> {
-        i64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x8(self, val: &[i64; 8usize]) -> i64x8<Self> {
-        i64x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x8(self, a: i64x8<Self>) -> [i64; 8usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [i64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x8(self, a: &i64x8<Self>) -> &[i64; 8usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [i64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x8(self, a: &mut i64x8<Self>) -> &mut [i64; 8usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [i64; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -12507,36 +11832,6 @@ impl Simd for WasmSimd128 {
         self.combine_u64x4(half, half)
     }
     #[inline(always)]
-    fn load_array_u64x8(self, val: [u64; 8usize]) -> u64x8<Self> {
-        u64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x8(self, val: &[u64; 8usize]) -> u64x8<Self> {
-        u64x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x8(self, a: u64x8<Self>) -> [u64; 8usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [u64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x8(self, a: &u64x8<Self>) -> &[u64; 8usize] {
-        crate::transmute::checked_cast_ref::<[v128; 4usize], [u64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x8(self, a: &mut u64x8<Self>) -> &mut [u64; 8usize] {
-        crate::transmute::checked_cast_mut::<[v128; 4usize], [u64; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
         if SHIFT >= 8usize {
             return b;
@@ -12829,23 +12124,6 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self> {
-        let (chunks, []) = src.as_chunks::<2usize>() else {
-            unreachable!()
-        };
-        let v0: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[0]);
-        let v1: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[1]);
-        let v2: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[2]);
-        let v3: v128 = crate::transmute::checked_transmute_copy::<[u64; 2usize], v128>(&chunks[3]);
-        let out0 = u64x2_shuffle::<0, 2>(v0, v2);
-        let out1 = u64x2_shuffle::<1, 3>(v0, v2);
-        let out2 = u64x2_shuffle::<0, 2>(v1, v3);
-        let out3 = u64x2_shuffle::<1, 3>(v1, v3);
-        let combined_lower = self.combine_u64x2(out0.simd_into(self), out1.simd_into(self));
-        let combined_upper = self.combine_u64x2(out2.simd_into(self), out3.simd_into(self));
-        self.combine_u64x4(combined_lower, combined_upper)
-    }
-    #[inline(always)]
     fn narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
         let (a0, a1) = self.split_u64x8(a);
         let (b0, b1) = self.split_u64x8(b);
@@ -12861,41 +12139,9 @@ impl Simd for WasmSimd128 {
         )
     }
     #[inline(always)]
-    fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        let (lower, upper) = self.split_u64x8(a);
-        let (v0_vec, v1_vec) = self.split_u64x4(lower);
-        let (v2_vec, v3_vec) = self.split_u64x4(upper);
-        let v0: v128 = v0_vec.into();
-        let v1: v128 = v1_vec.into();
-        let v2: v128 = v2_vec.into();
-        let v3: v128 = v3_vec.into();
-        let out0 = u64x2_shuffle::<0, 2>(v0, v1);
-        let out1 = u64x2_shuffle::<0, 2>(v2, v3);
-        let out2 = u64x2_shuffle::<1, 3>(v0, v1);
-        let out3 = u64x2_shuffle::<1, 3>(v2, v3);
-        let (chunks, []) = dest.as_chunks_mut::<2usize>() else {
-            unreachable!()
-        };
-        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out0, &mut chunks[0]);
-        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out1, &mut chunks[1]);
-        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out2, &mut chunks[2]);
-        crate::transmute::checked_transmute_store::<v128, [u64; 2usize]>(out3, &mut chunks[3]);
-    }
-    #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
         let half = self.splat_mask64x4(val);
         self.combine_mask64x4(half, half)
-    }
-    #[inline(always)]
-    fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self> {
-        mask64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
-        crate::transmute::checked_transmute_copy::<[v128; 4usize], [i64; 8usize]>(&a.val.0)
     }
     #[inline(always)]
     fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {
@@ -12917,9 +12163,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = self.as_array_mask64x8(*a);
+        let mut lanes: [i64; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = self.load_array_mask64x8(lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {

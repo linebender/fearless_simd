@@ -91,6 +91,270 @@ impl ArchTypes for Avx512 {
     type i64x8 = crate::support::Aligned512<__m512i>;
     type u64x8 = crate::support::Aligned512<__m512i>;
     type mask64x8 = __mmask8;
+    #[inline(always)]
+    fn mask8x16_from_array(self, val: [i8; 16usize]) -> Self::mask8x16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i8; 16usize]) -> __mmask16 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm_movepi8_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask8x16_to_array(self, val: Self::mask8x16) -> [i8; 16usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask16) -> [i8; 16usize] {
+                let lanes = _mm_movm_epi8(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask16x8_from_array(self, val: [i16; 8usize]) -> Self::mask16x8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i16; 8usize]) -> __mmask8 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm_movepi16_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask16x8_to_array(self, val: Self::mask16x8) -> [i16; 8usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask8) -> [i16; 8usize] {
+                let lanes = _mm_movm_epi16(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask32x4_from_array(self, val: [i32; 4usize]) -> Self::mask32x4 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i32; 4usize]) -> __mmask8 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm_movepi32_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask32x4_to_array(self, val: Self::mask32x4) -> [i32; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask8) -> [i32; 4usize] {
+                let lanes = _mm_movm_epi32(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask64x2_from_array(self, val: [i64; 2usize]) -> Self::mask64x2 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i64; 2usize]) -> __mmask8 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm_movepi64_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask64x2_to_array(self, val: Self::mask64x2) -> [i64; 2usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask8) -> [i64; 2usize] {
+                let lanes = _mm_movm_epi64(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask8x32_from_array(self, val: [i8; 32usize]) -> Self::mask8x32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i8; 32usize]) -> __mmask32 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm256_movepi8_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask8x32_to_array(self, val: Self::mask8x32) -> [i8; 32usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask32) -> [i8; 32usize] {
+                let lanes = _mm256_movm_epi8(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask16x16_from_array(self, val: [i16; 16usize]) -> Self::mask16x16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i16; 16usize]) -> __mmask16 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm256_movepi16_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask16x16_to_array(self, val: Self::mask16x16) -> [i16; 16usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask16) -> [i16; 16usize] {
+                let lanes = _mm256_movm_epi16(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask32x8_from_array(self, val: [i32; 8usize]) -> Self::mask32x8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i32; 8usize]) -> __mmask8 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm256_movepi32_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask32x8_to_array(self, val: Self::mask32x8) -> [i32; 8usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask8) -> [i32; 8usize] {
+                let lanes = _mm256_movm_epi32(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask64x4_from_array(self, val: [i64; 4usize]) -> Self::mask64x4 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i64; 4usize]) -> __mmask8 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm256_movepi64_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask64x4_to_array(self, val: Self::mask64x4) -> [i64; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask8) -> [i64; 4usize] {
+                let lanes = _mm256_movm_epi64(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask8x64_from_array(self, val: [i8; 64usize]) -> Self::mask8x64 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i8; 64usize]) -> __mmask64 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm512_movepi8_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask8x64_to_array(self, val: Self::mask8x64) -> [i8; 64usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask64) -> [i8; 64usize] {
+                let lanes = _mm512_movm_epi8(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask16x32_from_array(self, val: [i16; 32usize]) -> Self::mask16x32 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i16; 32usize]) -> __mmask32 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm512_movepi16_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask16x32_to_array(self, val: Self::mask16x32) -> [i16; 32usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask32) -> [i16; 32usize] {
+                let lanes = _mm512_movm_epi16(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask32x16_from_array(self, val: [i32; 16usize]) -> Self::mask32x16 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i32; 16usize]) -> __mmask16 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm512_movepi32_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask32x16_to_array(self, val: Self::mask32x16) -> [i32; 16usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask16) -> [i32; 16usize] {
+                let lanes = _mm512_movm_epi32(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask64x8_from_array(self, val: [i64; 8usize]) -> Self::mask64x8 {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: [i64; 8usize]) -> __mmask8 {
+                let lanes = crate::transmute::checked_transmute_copy(&val);
+                _mm512_movepi64_mask(lanes)
+            }
+        );
+        kernel(self, val)
+    }
+    #[inline(always)]
+    fn mask64x8_to_array(self, val: Self::mask64x8) -> [i64; 8usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(_token: Avx512, val: __mmask8) -> [i64; 8usize] {
+                let lanes = _mm512_movm_epi64(val);
+                crate::transmute::checked_transmute_copy(&lanes)
+            }
+        );
+        kernel(self, val)
+    }
 }
 impl Simd for Avx512 {
     type f32s = f32x16<Self>;
@@ -130,36 +394,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_f32x4(self, val: [f32; 4usize]) -> f32x4<Self> {
-        f32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x4(self, val: &[f32; 4usize]) -> f32x4<Self> {
-        f32x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x4(self, a: f32x4<Self>) -> [f32; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m128, [f32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x4(self, a: &f32x4<Self>) -> &[f32; 4usize] {
-        crate::transmute::checked_cast_ref::<__m128, [f32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x4(self, a: &mut f32x4<Self>) -> &mut [f32; 4usize] {
-        crate::transmute::checked_cast_mut::<__m128, [f32; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f32x4(self, a: f32x4<Self>, dest: &mut [f32; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f32x4<const SHIFT: usize>(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
@@ -619,6 +853,58 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn load_four_interleaved_f32x4(self, src: &[f32; 16usize]) -> [f32x4<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[f32; 16usize]) -> [f32x4<Avx512>; 4usize] {
+                let lanes: __m512 =
+                    crate::transmute::checked_transmute_copy::<[f32; 16usize], __m512>(src);
+                let lanes = _mm512_permutexvar_ps(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    lanes,
+                );
+                let outputs: [__m128; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f32x4(
+        self,
+        vectors: [f32x4<Self>; 4usize],
+        dest: &mut [f32; 16usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [f32x4<Avx512>; 4usize],
+                dest: &mut [f32; 16usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512 = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes = _mm512_permutexvar_ps(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    lanes,
+                );
+                crate::transmute::checked_transmute_store::<__m512, [f32; 16usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn widen_f32x4(self, a: f32x4<Self>) -> (f64x2<Self>, f64x2<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -694,36 +980,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i8x16(self, val: [i8; 16usize]) -> i8x16<Self> {
-        i8x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x16(self, val: &[i8; 16usize]) -> i8x16<Self> {
-        i8x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x16(self, a: i8x16<Self>) -> [i8; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x16(self, a: &i8x16<Self>) -> &[i8; 16usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [i8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x16(self, a: &mut i8x16<Self>) -> &mut [i8; 16usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [i8; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i8x16(self, a: i8x16<Self>, dest: &mut [i8; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i8x16<const SHIFT: usize>(self, a: i8x16<Self>, b: i8x16<Self>) -> i8x16<Self> {
@@ -1232,6 +1488,68 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn load_four_interleaved_i8x16(self, src: &[i8; 64usize]) -> [i8x16<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[i8; 64usize]) -> [i8x16<Avx512>; 4usize] {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[i8; 64usize], __m512i>(src);
+                let lanes = _mm512_permutexvar_epi8(
+                    _mm512_set_epi8(
+                        63, 59, 55, 51, 47, 43, 39, 35, 31, 27, 23, 19, 15, 11, 7, 3, 62, 58, 54,
+                        50, 46, 42, 38, 34, 30, 26, 22, 18, 14, 10, 6, 2, 61, 57, 53, 49, 45, 41,
+                        37, 33, 29, 25, 21, 17, 13, 9, 5, 1, 60, 56, 52, 48, 44, 40, 36, 32, 28,
+                        24, 20, 16, 12, 8, 4, 0,
+                    ),
+                    lanes,
+                );
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i8x16(
+        self,
+        vectors: [i8x16<Self>; 4usize],
+        dest: &mut [i8; 64usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [i8x16<Avx512>; 4usize],
+                dest: &mut [i8; 64usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512i = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes = _mm512_permutexvar_epi8(
+                    _mm512_set_epi8(
+                        63, 47, 31, 15, 62, 46, 30, 14, 61, 45, 29, 13, 60, 44, 28, 12, 59, 43, 27,
+                        11, 58, 42, 26, 10, 57, 41, 25, 9, 56, 40, 24, 8, 55, 39, 23, 7, 54, 38,
+                        22, 6, 53, 37, 21, 5, 52, 36, 20, 4, 51, 35, 19, 3, 50, 34, 18, 2, 49, 33,
+                        17, 1, 48, 32, 16, 0,
+                    ),
+                    lanes,
+                );
+                crate::transmute::checked_transmute_store::<__m512i, [i8; 64usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn widen_i8x16(self, a: i8x16<Self>) -> (i16x8<Self>, i16x8<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -1254,36 +1572,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_u8x16(self, val: [u8; 16usize]) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x16(self, val: &[u8; 16usize]) -> u8x16<Self> {
-        u8x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x16(self, a: u8x16<Self>) -> [u8; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [u8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x16(self, a: &u8x16<Self>) -> &[u8; 16usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [u8; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x16(self, a: &mut u8x16<Self>) -> &mut [u8; 16usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [u8; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u8x16(self, a: u8x16<Self>, dest: &mut [u8; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u8x16<const SHIFT: usize>(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self> {
@@ -1779,6 +2067,68 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn load_four_interleaved_u8x16(self, src: &[u8; 64usize]) -> [u8x16<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[u8; 64usize]) -> [u8x16<Avx512>; 4usize] {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[u8; 64usize], __m512i>(src);
+                let lanes = _mm512_permutexvar_epi8(
+                    _mm512_set_epi8(
+                        63, 59, 55, 51, 47, 43, 39, 35, 31, 27, 23, 19, 15, 11, 7, 3, 62, 58, 54,
+                        50, 46, 42, 38, 34, 30, 26, 22, 18, 14, 10, 6, 2, 61, 57, 53, 49, 45, 41,
+                        37, 33, 29, 25, 21, 17, 13, 9, 5, 1, 60, 56, 52, 48, 44, 40, 36, 32, 28,
+                        24, 20, 16, 12, 8, 4, 0,
+                    ),
+                    lanes,
+                );
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u8x16(
+        self,
+        vectors: [u8x16<Self>; 4usize],
+        dest: &mut [u8; 64usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [u8x16<Avx512>; 4usize],
+                dest: &mut [u8; 64usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512i = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes = _mm512_permutexvar_epi8(
+                    _mm512_set_epi8(
+                        63, 47, 31, 15, 62, 46, 30, 14, 61, 45, 29, 13, 60, 44, 28, 12, 59, 43, 27,
+                        11, 58, 42, 26, 10, 57, 41, 25, 9, 56, 40, 24, 8, 55, 39, 23, 7, 54, 38,
+                        22, 6, 53, 37, 21, 5, 52, 36, 20, 4, 51, 35, 19, 3, 50, 34, 18, 2, 49, 33,
+                        17, 1, 48, 32, 16, 0,
+                    ),
+                    lanes,
+                );
+                crate::transmute::checked_transmute_store::<__m512i, [u8; 64usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn widen_u8x16(self, a: u8x16<Self>) -> (u16x8<Self>, u16x8<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -1798,31 +2148,6 @@ impl Simd for Avx512 {
             val: (if val { 65535u64 } else { 0 }) as _,
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn load_array_mask8x16(self, val: [i8; 16usize]) -> mask8x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i8; 16usize]) -> mask8x16<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask8x16 {
-                    val: _mm_movepi8_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask8x16(self, a: mask8x16<Self>) -> [i8; 16usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask8x16<Avx512>) -> [i8; 16usize] {
-                let lanes = _mm_movm_epi8(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn from_bitmask_mask8x16(self, bits: u64) -> mask8x16<Self> {
@@ -1936,36 +2261,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i16x8(self, val: [i16; 8usize]) -> i16x8<Self> {
-        i16x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x8(self, val: &[i16; 8usize]) -> i16x8<Self> {
-        i16x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x8(self, a: i16x8<Self>) -> [i16; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x8(self, a: &i16x8<Self>) -> &[i16; 8usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [i16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x8(self, a: &mut i16x8<Self>) -> &mut [i16; 8usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [i16; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i16x8(self, a: i16x8<Self>, dest: &mut [i16; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i16x8<const SHIFT: usize>(self, a: i16x8<Self>, b: i16x8<Self>) -> i16x8<Self> {
@@ -2392,6 +2687,64 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn load_four_interleaved_i16x8(self, src: &[i16; 32usize]) -> [i16x8<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[i16; 32usize]) -> [i16x8<Avx512>; 4usize] {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[i16; 32usize], __m512i>(src);
+                let lanes = _mm512_permutexvar_epi16(
+                    _mm512_set_epi16(
+                        31, 27, 23, 19, 15, 11, 7, 3, 30, 26, 22, 18, 14, 10, 6, 2, 29, 25, 21, 17,
+                        13, 9, 5, 1, 28, 24, 20, 16, 12, 8, 4, 0,
+                    ),
+                    lanes,
+                );
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i16x8(
+        self,
+        vectors: [i16x8<Self>; 4usize],
+        dest: &mut [i16; 32usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [i16x8<Avx512>; 4usize],
+                dest: &mut [i16; 32usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512i = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes = _mm512_permutexvar_epi16(
+                    _mm512_set_epi16(
+                        31, 23, 15, 7, 30, 22, 14, 6, 29, 21, 13, 5, 28, 20, 12, 4, 27, 19, 11, 3,
+                        26, 18, 10, 2, 25, 17, 9, 1, 24, 16, 8, 0,
+                    ),
+                    lanes,
+                );
+                crate::transmute::checked_transmute_store::<__m512i, [i16; 32usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn widen_i16x8(self, a: i16x8<Self>) -> (i32x4<Self>, i32x4<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -2438,36 +2791,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_u16x8(self, val: [u16; 8usize]) -> u16x8<Self> {
-        u16x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x8(self, val: &[u16; 8usize]) -> u16x8<Self> {
-        u16x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x8(self, a: u16x8<Self>) -> [u16; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [u16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x8(self, a: &u16x8<Self>) -> &[u16; 8usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [u16; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x8(self, a: &mut u16x8<Self>) -> &mut [u16; 8usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [u16; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u16x8(self, a: u16x8<Self>, dest: &mut [u16; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u16x8<const SHIFT: usize>(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self> {
@@ -2884,6 +3207,64 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn load_four_interleaved_u16x8(self, src: &[u16; 32usize]) -> [u16x8<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[u16; 32usize]) -> [u16x8<Avx512>; 4usize] {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[u16; 32usize], __m512i>(src);
+                let lanes = _mm512_permutexvar_epi16(
+                    _mm512_set_epi16(
+                        31, 27, 23, 19, 15, 11, 7, 3, 30, 26, 22, 18, 14, 10, 6, 2, 29, 25, 21, 17,
+                        13, 9, 5, 1, 28, 24, 20, 16, 12, 8, 4, 0,
+                    ),
+                    lanes,
+                );
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u16x8(
+        self,
+        vectors: [u16x8<Self>; 4usize],
+        dest: &mut [u16; 32usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [u16x8<Avx512>; 4usize],
+                dest: &mut [u16; 32usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512i = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes = _mm512_permutexvar_epi16(
+                    _mm512_set_epi16(
+                        31, 23, 15, 7, 30, 22, 14, 6, 29, 21, 13, 5, 28, 20, 12, 4, 27, 19, 11, 3,
+                        26, 18, 10, 2, 25, 17, 9, 1, 24, 16, 8, 0,
+                    ),
+                    lanes,
+                );
+                crate::transmute::checked_transmute_store::<__m512i, [u16; 32usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn widen_u16x8(self, a: u16x8<Self>) -> (u32x4<Self>, u32x4<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -2927,31 +3308,6 @@ impl Simd for Avx512 {
             val: (if val { 255u64 } else { 0 }) as _,
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn load_array_mask16x8(self, val: [i16; 8usize]) -> mask16x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i16; 8usize]) -> mask16x8<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask16x8 {
-                    val: _mm_movepi16_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask16x8(self, a: mask16x8<Self>) -> [i16; 8usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask16x8<Avx512>) -> [i16; 8usize] {
-                let lanes = _mm_movm_epi16(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn from_bitmask_mask16x8(self, bits: u64) -> mask16x8<Self> {
@@ -3065,36 +3421,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i32x4(self, val: [i32; 4usize]) -> i32x4<Self> {
-        i32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x4(self, val: &[i32; 4usize]) -> i32x4<Self> {
-        i32x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x4(self, a: i32x4<Self>) -> [i32; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x4(self, a: &i32x4<Self>) -> &[i32; 4usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [i32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x4(self, a: &mut i32x4<Self>) -> &mut [i32; 4usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [i32; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i32x4(self, a: i32x4<Self>, dest: &mut [i32; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i32x4<const SHIFT: usize>(self, a: i32x4<Self>, b: i32x4<Self>) -> i32x4<Self> {
@@ -3495,6 +3821,58 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn load_four_interleaved_i32x4(self, src: &[i32; 16usize]) -> [i32x4<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[i32; 16usize]) -> [i32x4<Avx512>; 4usize] {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[i32; 16usize], __m512i>(src);
+                let lanes = _mm512_permutexvar_epi32(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    lanes,
+                );
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i32x4(
+        self,
+        vectors: [i32x4<Self>; 4usize],
+        dest: &mut [i32; 16usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [i32x4<Avx512>; 4usize],
+                dest: &mut [i32; 16usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512i = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes = _mm512_permutexvar_epi32(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    lanes,
+                );
+                crate::transmute::checked_transmute_store::<__m512i, [i32; 16usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn widen_i32x4(self, a: i32x4<Self>) -> (i64x2<Self>, i64x2<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -3551,36 +3929,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_u32x4(self, val: [u32; 4usize]) -> u32x4<Self> {
-        u32x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x4(self, val: &[u32; 4usize]) -> u32x4<Self> {
-        u32x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x4(self, a: u32x4<Self>) -> [u32; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [u32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x4(self, a: &u32x4<Self>) -> &[u32; 4usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [u32; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x4(self, a: &mut u32x4<Self>) -> &mut [u32; 4usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [u32; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u32x4(self, a: u32x4<Self>, dest: &mut [u32; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u32x4<const SHIFT: usize>(self, a: u32x4<Self>, b: u32x4<Self>) -> u32x4<Self> {
@@ -3971,6 +4319,58 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn load_four_interleaved_u32x4(self, src: &[u32; 16usize]) -> [u32x4<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[u32; 16usize]) -> [u32x4<Avx512>; 4usize] {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[u32; 16usize], __m512i>(src);
+                let lanes = _mm512_permutexvar_epi32(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    lanes,
+                );
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u32x4(
+        self,
+        vectors: [u32x4<Self>; 4usize],
+        dest: &mut [u32; 16usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [u32x4<Avx512>; 4usize],
+                dest: &mut [u32; 16usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512i = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes = _mm512_permutexvar_epi32(
+                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
+                    lanes,
+                );
+                crate::transmute::checked_transmute_store::<__m512i, [u32; 16usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn widen_u32x4(self, a: u32x4<Self>) -> (u64x2<Self>, u64x2<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -4025,31 +4425,6 @@ impl Simd for Avx512 {
             val: (if val { 15u64 } else { 0 }) as _,
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn load_array_mask32x4(self, val: [i32; 4usize]) -> mask32x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i32; 4usize]) -> mask32x4<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask32x4 {
-                    val: _mm_movepi32_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask32x4(self, a: mask32x4<Self>) -> [i32; 4usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask32x4<Avx512>) -> [i32; 4usize] {
-                let lanes = _mm_movm_epi32(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn from_bitmask_mask32x4(self, bits: u64) -> mask32x4<Self> {
@@ -4163,36 +4538,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_f64x2(self, val: [f64; 2usize]) -> f64x2<Self> {
-        f64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x2(self, val: &[f64; 2usize]) -> f64x2<Self> {
-        f64x2 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x2(self, a: f64x2<Self>) -> [f64; 2usize] {
-        crate::transmute::checked_transmute_copy::<__m128d, [f64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x2(self, a: &f64x2<Self>) -> &[f64; 2usize] {
-        crate::transmute::checked_cast_ref::<__m128d, [f64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x2(self, a: &mut f64x2<Self>) -> &mut [f64; 2usize] {
-        crate::transmute::checked_cast_mut::<__m128d, [f64; 2usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f64x2(self, a: f64x2<Self>, dest: &mut [f64; 2usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f64x2<const SHIFT: usize>(self, a: f64x2<Self>, b: f64x2<Self>) -> f64x2<Self> {
@@ -4644,6 +4989,52 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn load_four_interleaved_f64x2(self, src: &[f64; 8usize]) -> [f64x2<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[f64; 8usize]) -> [f64x2<Avx512>; 4usize] {
+                let lanes: __m512d =
+                    crate::transmute::checked_transmute_copy::<[f64; 8usize], __m512d>(src);
+                let lanes = _mm512_permutexvar_pd(_mm512_setr_epi64(0, 4, 1, 5, 2, 6, 3, 7), lanes);
+                let outputs: [__m128d; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_f64x2(
+        self,
+        vectors: [f64x2<Self>; 4usize],
+        dest: &mut [f64; 8usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [f64x2<Avx512>; 4usize],
+                dest: &mut [f64; 8usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128d; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512d = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes = _mm512_permutexvar_pd(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), lanes);
+                crate::transmute::checked_transmute_store::<__m512d, [f64; 8usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn narrow_f64x2(self, a: f64x2<Self>, b: f64x2<Self>) -> f32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -4668,36 +5059,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i64x2(self, val: [i64; 2usize]) -> i64x2<Self> {
-        i64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x2(self, val: &[i64; 2usize]) -> i64x2<Self> {
-        i64x2 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x2(self, a: i64x2<Self>) -> [i64; 2usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [i64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x2(self, a: &i64x2<Self>) -> &[i64; 2usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [i64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x2(self, a: &mut i64x2<Self>) -> &mut [i64; 2usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [i64; 2usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i64x2(self, a: i64x2<Self>, dest: &mut [i64; 2usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i64x2<const SHIFT: usize>(self, a: i64x2<Self>, b: i64x2<Self>) -> i64x2<Self> {
@@ -5088,6 +5449,54 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
+    fn load_four_interleaved_i64x2(self, src: &[i64; 8usize]) -> [i64x2<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[i64; 8usize]) -> [i64x2<Avx512>; 4usize] {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[i64; 8usize], __m512i>(src);
+                let lanes =
+                    _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 4, 1, 5, 2, 6, 3, 7), lanes);
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_i64x2(
+        self,
+        vectors: [i64x2<Self>; 4usize],
+        dest: &mut [i64; 8usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [i64x2<Avx512>; 4usize],
+                dest: &mut [i64; 8usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512i = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes =
+                    _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), lanes);
+                crate::transmute::checked_transmute_store::<__m512i, [i64; 8usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn narrow_i64x2(self, a: i64x2<Self>, b: i64x2<Self>) -> i32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5120,36 +5529,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_u64x2(self, val: [u64; 2usize]) -> u64x2<Self> {
-        u64x2 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x2(self, val: &[u64; 2usize]) -> u64x2<Self> {
-        u64x2 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x2(self, a: u64x2<Self>) -> [u64; 2usize] {
-        crate::transmute::checked_transmute_copy::<__m128i, [u64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x2(self, a: &u64x2<Self>) -> &[u64; 2usize] {
-        crate::transmute::checked_cast_ref::<__m128i, [u64; 2usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x2(self, a: &mut u64x2<Self>) -> &mut [u64; 2usize] {
-        crate::transmute::checked_cast_mut::<__m128i, [u64; 2usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u64x2(self, a: u64x2<Self>, dest: &mut [u64; 2usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_u64x2<const SHIFT: usize>(self, a: u64x2<Self>, b: u64x2<Self>) -> u64x2<Self> {
@@ -5530,6 +5909,54 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
+    fn load_four_interleaved_u64x2(self, src: &[u64; 8usize]) -> [u64x2<Self>; 4usize] {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(token: Avx512, src: &[u64; 8usize]) -> [u64x2<Avx512>; 4usize] {
+                let lanes: __m512i =
+                    crate::transmute::checked_transmute_copy::<[u64; 8usize], __m512i>(src);
+                let lanes =
+                    _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 4, 1, 5, 2, 6, 3, 7), lanes);
+                let outputs: [__m128i; 4] = crate::transmute::checked_transmute_copy(&lanes);
+                [
+                    outputs[0].simd_into(token),
+                    outputs[1].simd_into(token),
+                    outputs[2].simd_into(token),
+                    outputs[3].simd_into(token),
+                ]
+            }
+        );
+        kernel(self, src)
+    }
+    #[inline(always)]
+    fn store_four_interleaved_u64x2(
+        self,
+        vectors: [u64x2<Self>; 4usize],
+        dest: &mut [u64; 8usize],
+    ) -> () {
+        crate::kernel!(
+            #[inline(always)]
+            fn kernel(
+                token: Avx512,
+                vectors: [u64x2<Avx512>; 4usize],
+                dest: &mut [u64; 8usize],
+            ) -> () {
+                let _ = token;
+                let inputs: [__m128i; 4] = [
+                    vectors[0].into(),
+                    vectors[1].into(),
+                    vectors[2].into(),
+                    vectors[3].into(),
+                ];
+                let lanes: __m512i = crate::transmute::checked_transmute_copy(&inputs);
+                let lanes =
+                    _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), lanes);
+                crate::transmute::checked_transmute_store::<__m512i, [u64; 8usize]>(lanes, dest);
+            }
+        );
+        kernel(self, vectors, dest);
+    }
+    #[inline(always)]
     fn narrow_u64x2(self, a: u64x2<Self>, b: u64x2<Self>) -> u32x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -5559,31 +5986,6 @@ impl Simd for Avx512 {
             val: (if val { 3u64 } else { 0 }) as _,
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn load_array_mask64x2(self, val: [i64; 2usize]) -> mask64x2<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i64; 2usize]) -> mask64x2<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask64x2 {
-                    val: _mm_movepi64_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask64x2(self, a: mask64x2<Self>) -> [i64; 2usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask64x2<Avx512>) -> [i64; 2usize] {
-                let lanes = _mm_movm_epi64(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn from_bitmask_mask64x2(self, bits: u64) -> mask64x2<Self> {
@@ -5697,36 +6099,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_f32x8(self, val: [f32; 8usize]) -> f32x8<Self> {
-        f32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x8(self, val: &[f32; 8usize]) -> f32x8<Self> {
-        f32x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x8(self, a: f32x8<Self>) -> [f32; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m256, [f32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x8(self, a: &f32x8<Self>) -> &[f32; 8usize] {
-        crate::transmute::checked_cast_ref::<__m256, [f32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x8(self, a: &mut f32x8<Self>) -> &mut [f32; 8usize] {
-        crate::transmute::checked_cast_mut::<__m256, [f32; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f32x8(self, a: f32x8<Self>, dest: &mut [f32; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f32x8<const SHIFT: usize>(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self> {
@@ -6378,36 +6750,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i8x32(self, val: [i8; 32usize]) -> i8x32<Self> {
-        i8x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x32(self, val: &[i8; 32usize]) -> i8x32<Self> {
-        i8x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x32(self, a: i8x32<Self>) -> [i8; 32usize] {
-        crate::transmute::checked_transmute_copy::<__m256i, [i8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x32(self, a: &i8x32<Self>) -> &[i8; 32usize] {
-        crate::transmute::checked_cast_ref::<__m256i, [i8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x32(self, a: &mut i8x32<Self>) -> &mut [i8; 32usize] {
-        crate::transmute::checked_cast_mut::<__m256i, [i8; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i8x32(self, a: i8x32<Self>, dest: &mut [i8; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i8x32<const SHIFT: usize>(self, a: i8x32<Self>, b: i8x32<Self>) -> i8x32<Self> {
@@ -7111,36 +7453,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u8x32(self, val: [u8; 32usize]) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x32(self, val: &[u8; 32usize]) -> u8x32<Self> {
-        u8x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x32(self, a: u8x32<Self>) -> [u8; 32usize] {
-        crate::transmute::checked_transmute_copy::<__m256i, [u8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x32(self, a: &u8x32<Self>) -> &[u8; 32usize] {
-        crate::transmute::checked_cast_ref::<__m256i, [u8; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x32(self, a: &mut u8x32<Self>) -> &mut [u8; 32usize] {
-        crate::transmute::checked_cast_mut::<__m256i, [u8; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u8x32(self, a: u8x32<Self>, dest: &mut [u8; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u8x32<const SHIFT: usize>(self, a: u8x32<Self>, b: u8x32<Self>) -> u8x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -7826,31 +8138,6 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
-    fn load_array_mask8x32(self, val: [i8; 32usize]) -> mask8x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i8; 32usize]) -> mask8x32<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask8x32 {
-                    val: _mm256_movepi8_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask8x32(self, a: mask8x32<Self>) -> [i8; 32usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask8x32<Avx512>) -> [i8; 32usize] {
-                let lanes = _mm256_movm_epi8(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn from_bitmask_mask8x32(self, bits: u64) -> mask8x32<Self> {
         mask8x32 {
             val: (bits & 4294967295u64) as _,
@@ -7976,36 +8263,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i16x16(self, val: [i16; 16usize]) -> i16x16<Self> {
-        i16x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x16(self, val: &[i16; 16usize]) -> i16x16<Self> {
-        i16x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x16(self, a: i16x16<Self>) -> [i16; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m256i, [i16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x16(self, a: &i16x16<Self>) -> &[i16; 16usize] {
-        crate::transmute::checked_cast_ref::<__m256i, [i16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x16(self, a: &mut i16x16<Self>) -> &mut [i16; 16usize] {
-        crate::transmute::checked_cast_mut::<__m256i, [i16; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i16x16(self, a: i16x16<Self>, dest: &mut [i16; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i16x16<const SHIFT: usize>(self, a: i16x16<Self>, b: i16x16<Self>) -> i16x16<Self> {
@@ -8607,36 +8864,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u16x16(self, val: [u16; 16usize]) -> u16x16<Self> {
-        u16x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x16(self, val: &[u16; 16usize]) -> u16x16<Self> {
-        u16x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x16(self, a: u16x16<Self>) -> [u16; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m256i, [u16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x16(self, a: &u16x16<Self>) -> &[u16; 16usize] {
-        crate::transmute::checked_cast_ref::<__m256i, [u16; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x16(self, a: &mut u16x16<Self>) -> &mut [u16; 16usize] {
-        crate::transmute::checked_cast_mut::<__m256i, [u16; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u16x16(self, a: u16x16<Self>, dest: &mut [u16; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u16x16<const SHIFT: usize>(self, a: u16x16<Self>, b: u16x16<Self>) -> u16x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -9223,31 +9450,6 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
-    fn load_array_mask16x16(self, val: [i16; 16usize]) -> mask16x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i16; 16usize]) -> mask16x16<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask16x16 {
-                    val: _mm256_movepi16_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask16x16(self, a: mask16x16<Self>) -> [i16; 16usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask16x16<Avx512>) -> [i16; 16usize] {
-                let lanes = _mm256_movm_epi16(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn from_bitmask_mask16x16(self, bits: u64) -> mask16x16<Self> {
         mask16x16 {
             val: (bits & 65535u64) as _,
@@ -9373,36 +9575,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i32x8(self, val: [i32; 8usize]) -> i32x8<Self> {
-        i32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x8(self, val: &[i32; 8usize]) -> i32x8<Self> {
-        i32x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x8(self, a: i32x8<Self>) -> [i32; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m256i, [i32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x8(self, a: &i32x8<Self>) -> &[i32; 8usize] {
-        crate::transmute::checked_cast_ref::<__m256i, [i32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x8(self, a: &mut i32x8<Self>) -> &mut [i32; 8usize] {
-        crate::transmute::checked_cast_mut::<__m256i, [i32; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i32x8(self, a: i32x8<Self>, dest: &mut [i32; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i32x8<const SHIFT: usize>(self, a: i32x8<Self>, b: i32x8<Self>) -> i32x8<Self> {
@@ -9956,36 +10128,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u32x8(self, val: [u32; 8usize]) -> u32x8<Self> {
-        u32x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x8(self, val: &[u32; 8usize]) -> u32x8<Self> {
-        u32x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x8(self, a: u32x8<Self>) -> [u32; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m256i, [u32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x8(self, a: &u32x8<Self>) -> &[u32; 8usize] {
-        crate::transmute::checked_cast_ref::<__m256i, [u32; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x8(self, a: &mut u32x8<Self>) -> &mut [u32; 8usize] {
-        crate::transmute::checked_cast_mut::<__m256i, [u32; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u32x8(self, a: u32x8<Self>, dest: &mut [u32; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u32x8<const SHIFT: usize>(self, a: u32x8<Self>, b: u32x8<Self>) -> u32x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -10525,31 +10667,6 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
-    fn load_array_mask32x8(self, val: [i32; 8usize]) -> mask32x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i32; 8usize]) -> mask32x8<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask32x8 {
-                    val: _mm256_movepi32_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask32x8(self, a: mask32x8<Self>) -> [i32; 8usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask32x8<Avx512>) -> [i32; 8usize] {
-                let lanes = _mm256_movm_epi32(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn from_bitmask_mask32x8(self, bits: u64) -> mask32x8<Self> {
         mask32x8 {
             val: (bits & 255u64) as _,
@@ -10675,36 +10792,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_f64x4(self, val: [f64; 4usize]) -> f64x4<Self> {
-        f64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x4(self, val: &[f64; 4usize]) -> f64x4<Self> {
-        f64x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x4(self, a: f64x4<Self>) -> [f64; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m256d, [f64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x4(self, a: &f64x4<Self>) -> &[f64; 4usize] {
-        crate::transmute::checked_cast_ref::<__m256d, [f64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x4(self, a: &mut f64x4<Self>) -> &mut [f64; 4usize] {
-        crate::transmute::checked_cast_mut::<__m256d, [f64; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f64x4(self, a: f64x4<Self>, dest: &mut [f64; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f64x4<const SHIFT: usize>(self, a: f64x4<Self>, b: f64x4<Self>) -> f64x4<Self> {
@@ -11269,36 +11356,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_i64x4(self, val: [i64; 4usize]) -> i64x4<Self> {
-        i64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x4(self, val: &[i64; 4usize]) -> i64x4<Self> {
-        i64x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x4(self, a: i64x4<Self>) -> [i64; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m256i, [i64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x4(self, a: &i64x4<Self>) -> &[i64; 4usize] {
-        crate::transmute::checked_cast_ref::<__m256i, [i64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x4(self, a: &mut i64x4<Self>) -> &mut [i64; 4usize] {
-        crate::transmute::checked_cast_mut::<__m256i, [i64; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i64x4(self, a: i64x4<Self>, dest: &mut [i64; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i64x4<const SHIFT: usize>(self, a: i64x4<Self>, b: i64x4<Self>) -> i64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -11794,36 +11851,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u64x4(self, val: [u64; 4usize]) -> u64x4<Self> {
-        u64x4 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x4(self, val: &[u64; 4usize]) -> u64x4<Self> {
-        u64x4 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x4(self, a: u64x4<Self>) -> [u64; 4usize] {
-        crate::transmute::checked_transmute_copy::<__m256i, [u64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x4(self, a: &u64x4<Self>) -> &[u64; 4usize] {
-        crate::transmute::checked_cast_ref::<__m256i, [u64; 4usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x4(self, a: &mut u64x4<Self>) -> &mut [u64; 4usize] {
-        crate::transmute::checked_cast_mut::<__m256i, [u64; 4usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u64x4(self, a: u64x4<Self>, dest: &mut [u64; 4usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u64x4<const SHIFT: usize>(self, a: u64x4<Self>, b: u64x4<Self>) -> u64x4<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -12306,31 +12333,6 @@ impl Simd for Avx512 {
         }
     }
     #[inline(always)]
-    fn load_array_mask64x4(self, val: [i64; 4usize]) -> mask64x4<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i64; 4usize]) -> mask64x4<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask64x4 {
-                    val: _mm256_movepi64_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask64x4(self, a: mask64x4<Self>) -> [i64; 4usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask64x4<Avx512>) -> [i64; 4usize] {
-                let lanes = _mm256_movm_epi64(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
-    }
-    #[inline(always)]
     fn from_bitmask_mask64x4(self, bits: u64) -> mask64x4<Self> {
         mask64x4 {
             val: (bits & 15u64) as _,
@@ -12456,36 +12458,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_f32x16(self, val: [f32; 16usize]) -> f32x16<Self> {
-        f32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f32x16(self, val: &[f32; 16usize]) -> f32x16<Self> {
-        f32x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f32x16(self, a: f32x16<Self>) -> [f32; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m512, [f32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f32x16(self, a: &f32x16<Self>) -> &[f32; 16usize] {
-        crate::transmute::checked_cast_ref::<__m512, [f32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f32x16(self, a: &mut f32x16<Self>) -> &mut [f32; 16usize] {
-        crate::transmute::checked_cast_mut::<__m512, [f32; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f32x16<const SHIFT: usize>(self, a: f32x16<Self>, b: f32x16<Self>) -> f32x16<Self> {
@@ -13109,22 +13081,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn load_interleaved_128_f32x16(self, src: &[f32; 16usize]) -> f32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, src: &[f32; 16usize]) -> f32x16<Avx512> {
-                let lanes: __m512 =
-                    crate::transmute::checked_transmute_copy::<[f32; 16usize], __m512>(src);
-                _mm512_permutexvar_ps(
-                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
-                    lanes,
-                )
-                .simd_into(token)
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
     fn widen_f32x16(self, a: f32x16<Self>) -> (f64x8<Self>, f64x8<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -13137,20 +13093,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, a)
-    }
-    #[inline(always)]
-    fn store_interleaved_128_f32x16(self, a: f32x16<Self>, dest: &mut [f32; 16usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: f32x16<Avx512>, dest: &mut [f32; 16usize]) -> () {
-                let lanes = _mm512_permutexvar_ps(
-                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
-                    a.into(),
-                );
-                crate::transmute::checked_transmute_store::<__m512, [f32; 16usize]>(lanes, dest);
-            }
-        );
-        kernel(self, a, dest);
     }
     #[inline(always)]
     fn cvt_u32_f32x16(self, a: f32x16<Self>) -> u32x16<Self> {
@@ -13216,36 +13158,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i8x64(self, val: [i8; 64usize]) -> i8x64<Self> {
-        i8x64 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i8x64(self, val: &[i8; 64usize]) -> i8x64<Self> {
-        i8x64 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i8x64(self, a: i8x64<Self>) -> [i8; 64usize] {
-        crate::transmute::checked_transmute_copy::<__m512i, [i8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i8x64(self, a: &i8x64<Self>) -> &[i8; 64usize] {
-        crate::transmute::checked_cast_ref::<__m512i, [i8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i8x64(self, a: &mut i8x64<Self>) -> &mut [i8; 64usize] {
-        crate::transmute::checked_cast_mut::<__m512i, [i8; 64usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i8x64(self, a: i8x64<Self>, dest: &mut [i8; 64usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i8x64<const SHIFT: usize>(self, a: i8x64<Self>, b: i8x64<Self>) -> i8x64<Self> {
@@ -14085,36 +13997,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u8x64(self, val: [u8; 64usize]) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u8x64(self, val: &[u8; 64usize]) -> u8x64<Self> {
-        u8x64 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u8x64(self, a: u8x64<Self>) -> [u8; 64usize] {
-        crate::transmute::checked_transmute_copy::<__m512i, [u8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u8x64(self, a: &u8x64<Self>) -> &[u8; 64usize] {
-        crate::transmute::checked_cast_ref::<__m512i, [u8; 64usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u8x64(self, a: &mut u8x64<Self>) -> &mut [u8; 64usize] {
-        crate::transmute::checked_cast_mut::<__m512i, [u8; 64usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u8x64<const SHIFT: usize>(self, a: u8x64<Self>, b: u8x64<Self>) -> u8x64<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -14914,27 +14796,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn load_interleaved_128_u8x64(self, src: &[u8; 64usize]) -> u8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, src: &[u8; 64usize]) -> u8x64<Avx512> {
-                let lanes: __m512i =
-                    crate::transmute::checked_transmute_copy::<[u8; 64usize], __m512i>(src);
-                _mm512_permutexvar_epi8(
-                    _mm512_set_epi8(
-                        63, 59, 55, 51, 47, 43, 39, 35, 31, 27, 23, 19, 15, 11, 7, 3, 62, 58, 54,
-                        50, 46, 42, 38, 34, 30, 26, 22, 18, 14, 10, 6, 2, 61, 57, 53, 49, 45, 41,
-                        37, 33, 29, 25, 21, 17, 13, 9, 5, 1, 60, 56, 52, 48, 44, 40, 36, 32, 28,
-                        24, 20, 16, 12, 8, 4, 0,
-                    ),
-                    lanes,
-                )
-                .simd_into(token)
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
     fn widen_u8x64(self, a: u8x64<Self>) -> (u16x32<Self>, u16x32<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -14949,55 +14810,11 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn store_interleaved_128_u8x64(self, a: u8x64<Self>, dest: &mut [u8; 64usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u8x64<Avx512>, dest: &mut [u8; 64usize]) -> () {
-                let lanes = _mm512_permutexvar_epi8(
-                    _mm512_set_epi8(
-                        63, 47, 31, 15, 62, 46, 30, 14, 61, 45, 29, 13, 60, 44, 28, 12, 59, 43, 27,
-                        11, 58, 42, 26, 10, 57, 41, 25, 9, 56, 40, 24, 8, 55, 39, 23, 7, 54, 38,
-                        22, 6, 53, 37, 21, 5, 52, 36, 20, 4, 51, 35, 19, 3, 50, 34, 18, 2, 49, 33,
-                        17, 1, 48, 32, 16, 0,
-                    ),
-                    a.into(),
-                );
-                crate::transmute::checked_transmute_store::<__m512i, [u8; 64usize]>(lanes, dest);
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn splat_mask8x64(self, val: bool) -> mask8x64<Self> {
         mask8x64 {
             val: if val { u64::MAX } else { 0 },
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn load_array_mask8x64(self, val: [i8; 64usize]) -> mask8x64<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i8; 64usize]) -> mask8x64<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask8x64 {
-                    val: _mm512_movepi8_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask8x64(self, a: mask8x64<Self>) -> [i8; 64usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask8x64<Avx512>) -> [i8; 64usize] {
-                let lanes = _mm512_movm_epi8(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn from_bitmask_mask8x64(self, bits: u64) -> mask8x64<Self> {
@@ -15117,36 +14934,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i16x32(self, val: [i16; 32usize]) -> i16x32<Self> {
-        i16x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i16x32(self, val: &[i16; 32usize]) -> i16x32<Self> {
-        i16x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i16x32(self, a: i16x32<Self>) -> [i16; 32usize] {
-        crate::transmute::checked_transmute_copy::<__m512i, [i16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i16x32(self, a: &i16x32<Self>) -> &[i16; 32usize] {
-        crate::transmute::checked_cast_ref::<__m512i, [i16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i16x32(self, a: &mut i16x32<Self>) -> &mut [i16; 32usize] {
-        crate::transmute::checked_cast_mut::<__m512i, [i16; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i16x32(self, a: i16x32<Self>, dest: &mut [i16; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i16x32<const SHIFT: usize>(self, a: i16x32<Self>, b: i16x32<Self>) -> i16x32<Self> {
@@ -15821,36 +15608,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u16x32(self, val: [u16; 32usize]) -> u16x32<Self> {
-        u16x32 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u16x32(self, val: &[u16; 32usize]) -> u16x32<Self> {
-        u16x32 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u16x32(self, a: u16x32<Self>) -> [u16; 32usize] {
-        crate::transmute::checked_transmute_copy::<__m512i, [u16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u16x32(self, a: &u16x32<Self>) -> &[u16; 32usize] {
-        crate::transmute::checked_cast_ref::<__m512i, [u16; 32usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u16x32(self, a: &mut u16x32<Self>) -> &mut [u16; 32usize] {
-        crate::transmute::checked_cast_mut::<__m512i, [u16; 32usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u16x32<const SHIFT: usize>(self, a: u16x32<Self>, b: u16x32<Self>) -> u16x32<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -16465,25 +16222,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn load_interleaved_128_u16x32(self, src: &[u16; 32usize]) -> u16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, src: &[u16; 32usize]) -> u16x32<Avx512> {
-                let lanes: __m512i =
-                    crate::transmute::checked_transmute_copy::<[u16; 32usize], __m512i>(src);
-                _mm512_permutexvar_epi16(
-                    _mm512_set_epi16(
-                        31, 27, 23, 19, 15, 11, 7, 3, 30, 26, 22, 18, 14, 10, 6, 2, 29, 25, 21, 17,
-                        13, 9, 5, 1, 28, 24, 20, 16, 12, 8, 4, 0,
-                    ),
-                    lanes,
-                )
-                .simd_into(token)
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
     fn widen_u16x32(self, a: u16x32<Self>) -> (u32x16<Self>, u32x16<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -16522,53 +16260,11 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn store_interleaved_128_u16x32(self, a: u16x32<Self>, dest: &mut [u16; 32usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u16x32<Avx512>, dest: &mut [u16; 32usize]) -> () {
-                let lanes = _mm512_permutexvar_epi16(
-                    _mm512_set_epi16(
-                        31, 23, 15, 7, 30, 22, 14, 6, 29, 21, 13, 5, 28, 20, 12, 4, 27, 19, 11, 3,
-                        26, 18, 10, 2, 25, 17, 9, 1, 24, 16, 8, 0,
-                    ),
-                    a.into(),
-                );
-                crate::transmute::checked_transmute_store::<__m512i, [u16; 32usize]>(lanes, dest);
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn splat_mask16x32(self, val: bool) -> mask16x32<Self> {
         mask16x32 {
             val: (if val { 4294967295u64 } else { 0 }) as _,
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn load_array_mask16x32(self, val: [i16; 32usize]) -> mask16x32<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i16; 32usize]) -> mask16x32<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask16x32 {
-                    val: _mm512_movepi16_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask16x32(self, a: mask16x32<Self>) -> [i16; 32usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask16x32<Avx512>) -> [i16; 32usize] {
-                let lanes = _mm512_movm_epi16(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn from_bitmask_mask16x32(self, bits: u64) -> mask16x32<Self> {
@@ -16688,36 +16384,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_i32x16(self, val: [i32; 16usize]) -> i32x16<Self> {
-        i32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i32x16(self, val: &[i32; 16usize]) -> i32x16<Self> {
-        i32x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i32x16(self, a: i32x16<Self>) -> [i32; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m512i, [i32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i32x16(self, a: &i32x16<Self>) -> &[i32; 16usize] {
-        crate::transmute::checked_cast_ref::<__m512i, [i32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i32x16(self, a: &mut i32x16<Self>) -> &mut [i32; 16usize] {
-        crate::transmute::checked_cast_mut::<__m512i, [i32; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i32x16(self, a: i32x16<Self>, dest: &mut [i32; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_i32x16<const SHIFT: usize>(self, a: i32x16<Self>, b: i32x16<Self>) -> i32x16<Self> {
@@ -17320,36 +16986,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u32x16(self, val: [u32; 16usize]) -> u32x16<Self> {
-        u32x16 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u32x16(self, val: &[u32; 16usize]) -> u32x16<Self> {
-        u32x16 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u32x16(self, a: u32x16<Self>) -> [u32; 16usize] {
-        crate::transmute::checked_transmute_copy::<__m512i, [u32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u32x16(self, a: &u32x16<Self>) -> &[u32; 16usize] {
-        crate::transmute::checked_cast_ref::<__m512i, [u32; 16usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u32x16(self, a: &mut u32x16<Self>) -> &mut [u32; 16usize] {
-        crate::transmute::checked_cast_mut::<__m512i, [u32; 16usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u32x16<const SHIFT: usize>(self, a: u32x16<Self>, b: u32x16<Self>) -> u32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17882,22 +17518,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn load_interleaved_128_u32x16(self, src: &[u32; 16usize]) -> u32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, src: &[u32; 16usize]) -> u32x16<Avx512> {
-                let lanes: __m512i =
-                    crate::transmute::checked_transmute_copy::<[u32; 16usize], __m512i>(src);
-                _mm512_permutexvar_epi32(
-                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
-                    lanes,
-                )
-                .simd_into(token)
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
     fn widen_u32x16(self, a: u32x16<Self>) -> (u64x8<Self>, u64x8<Self>) {
         crate::kernel!(
             #[inline(always)]
@@ -17936,20 +17556,6 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn store_interleaved_128_u32x16(self, a: u32x16<Self>, dest: &mut [u32; 16usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u32x16<Avx512>, dest: &mut [u32; 16usize]) -> () {
-                let lanes = _mm512_permutexvar_epi32(
-                    _mm512_setr_epi32(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15),
-                    a.into(),
-                );
-                crate::transmute::checked_transmute_store::<__m512i, [u32; 16usize]>(lanes, dest);
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn cvt_f32_u32x16(self, a: u32x16<Self>) -> f32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -17965,31 +17571,6 @@ impl Simd for Avx512 {
             val: (if val { 65535u64 } else { 0 }) as _,
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn load_array_mask32x16(self, val: [i32; 16usize]) -> mask32x16<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i32; 16usize]) -> mask32x16<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask32x16 {
-                    val: _mm512_movepi32_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask32x16(self, a: mask32x16<Self>) -> [i32; 16usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask32x16<Avx512>) -> [i32; 16usize] {
-                let lanes = _mm512_movm_epi32(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn from_bitmask_mask32x16(self, bits: u64) -> mask32x16<Self> {
@@ -18109,36 +17690,6 @@ impl Simd for Avx512 {
             }
         );
         kernel(self, val)
-    }
-    #[inline(always)]
-    fn load_array_f64x8(self, val: [f64; 8usize]) -> f64x8<Self> {
-        f64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_f64x8(self, val: &[f64; 8usize]) -> f64x8<Self> {
-        f64x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_f64x8(self, a: f64x8<Self>) -> [f64; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m512d, [f64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_f64x8(self, a: &f64x8<Self>) -> &[f64; 8usize] {
-        crate::transmute::checked_cast_ref::<__m512d, [f64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_f64x8(self, a: &mut f64x8<Self>) -> &mut [f64; 8usize] {
-        crate::transmute::checked_cast_mut::<__m512d, [f64; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_f64x8(self, a: f64x8<Self>, dest: &mut [f64; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
     }
     #[inline(always)]
     fn slide_f64x8<const SHIFT: usize>(self, a: f64x8<Self>, b: f64x8<Self>) -> f64x8<Self> {
@@ -18730,36 +18281,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_i64x8(self, val: [i64; 8usize]) -> i64x8<Self> {
-        i64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_i64x8(self, val: &[i64; 8usize]) -> i64x8<Self> {
-        i64x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_i64x8(self, a: i64x8<Self>) -> [i64; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m512i, [i64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_i64x8(self, a: &i64x8<Self>) -> &[i64; 8usize] {
-        crate::transmute::checked_cast_ref::<__m512i, [i64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_i64x8(self, a: &mut i64x8<Self>) -> &mut [i64; 8usize] {
-        crate::transmute::checked_cast_mut::<__m512i, [i64; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_i64x8(self, a: i64x8<Self>, dest: &mut [i64; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_i64x8<const SHIFT: usize>(self, a: i64x8<Self>, b: i64x8<Self>) -> i64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19278,36 +18799,6 @@ impl Simd for Avx512 {
         kernel(self, val)
     }
     #[inline(always)]
-    fn load_array_u64x8(self, val: [u64; 8usize]) -> u64x8<Self> {
-        u64x8 {
-            val: crate::transmute::checked_transmute_copy(&val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn load_array_ref_u64x8(self, val: &[u64; 8usize]) -> u64x8<Self> {
-        u64x8 {
-            val: crate::transmute::checked_transmute_copy(val),
-            simd: self,
-        }
-    }
-    #[inline(always)]
-    fn as_array_u64x8(self, a: u64x8<Self>) -> [u64; 8usize] {
-        crate::transmute::checked_transmute_copy::<__m512i, [u64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_ref_u64x8(self, a: &u64x8<Self>) -> &[u64; 8usize] {
-        crate::transmute::checked_cast_ref::<__m512i, [u64; 8usize]>(&a.val.0)
-    }
-    #[inline(always)]
-    fn as_array_mut_u64x8(self, a: &mut u64x8<Self>) -> &mut [u64; 8usize] {
-        crate::transmute::checked_cast_mut::<__m512i, [u64; 8usize]>(&mut a.val.0)
-    }
-    #[inline(always)]
-    fn store_array_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        crate::transmute::checked_transmute_store(a.val.0, dest);
-    }
-    #[inline(always)]
     fn slide_u64x8<const SHIFT: usize>(self, a: u64x8<Self>, b: u64x8<Self>) -> u64x8<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19782,19 +19273,6 @@ impl Simd for Avx512 {
         kernel(self, a)
     }
     #[inline(always)]
-    fn load_interleaved_128_u64x8(self, src: &[u64; 8usize]) -> u64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, src: &[u64; 8usize]) -> u64x8<Avx512> {
-                let lanes: __m512i =
-                    crate::transmute::checked_transmute_copy::<[u64; 8usize], __m512i>(src);
-                _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 4, 1, 5, 2, 6, 3, 7), lanes)
-                    .simd_into(token)
-            }
-        );
-        kernel(self, src)
-    }
-    #[inline(always)]
     fn narrow_u64x8(self, a: u64x8<Self>, b: u64x8<Self>) -> u32x16<Self> {
         crate::kernel!(
             #[inline(always)]
@@ -19819,48 +19297,11 @@ impl Simd for Avx512 {
         kernel(self, a, b)
     }
     #[inline(always)]
-    fn store_interleaved_128_u64x8(self, a: u64x8<Self>, dest: &mut [u64; 8usize]) -> () {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: u64x8<Avx512>, dest: &mut [u64; 8usize]) -> () {
-                let lanes =
-                    _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), a.into());
-                crate::transmute::checked_transmute_store::<__m512i, [u64; 8usize]>(lanes, dest);
-            }
-        );
-        kernel(self, a, dest);
-    }
-    #[inline(always)]
     fn splat_mask64x8(self, val: bool) -> mask64x8<Self> {
         mask64x8 {
             val: (if val { 255u64 } else { 0 }) as _,
             simd: self,
         }
-    }
-    #[inline(always)]
-    fn load_array_mask64x8(self, val: [i64; 8usize]) -> mask64x8<Self> {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, val: [i64; 8usize]) -> mask64x8<Avx512> {
-                let lanes = crate::transmute::checked_transmute_copy(&val);
-                mask64x8 {
-                    val: _mm512_movepi64_mask(lanes),
-                    simd: token,
-                }
-            }
-        );
-        kernel(self, val)
-    }
-    #[inline(always)]
-    fn as_array_mask64x8(self, a: mask64x8<Self>) -> [i64; 8usize] {
-        crate::kernel!(
-            #[inline(always)]
-            fn kernel(token: Avx512, a: mask64x8<Avx512>) -> [i64; 8usize] {
-                let lanes = _mm512_movm_epi64(a.val);
-                crate::transmute::checked_transmute_copy(&lanes)
-            }
-        );
-        kernel(self, a)
     }
     #[inline(always)]
     fn from_bitmask_mask64x8(self, bits: u64) -> mask64x8<Self> {

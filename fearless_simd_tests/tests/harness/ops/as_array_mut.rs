@@ -9,14 +9,14 @@ use fearless_simd_dev_macros::simd_test;
 #[simd_test]
 fn as_array_mut_i64x2<S: Simd>(simd: S) {
     let mut a = i64x2::from_slice(simd, &[1_i64, -2_i64]);
-    simd.as_array_mut_i64x2(&mut a)[0] = -2_i64;
+    a.as_array_mut()[0] = -2_i64;
     assert_eq!(*a, [-2_i64, -2_i64]);
 }
 
 #[simd_test]
 fn as_array_mut_i64x4<S: Simd>(simd: S) {
     let mut a = i64x4::from_slice(simd, &[1_i64, -2_i64, 3_i64, -4_i64]);
-    simd.as_array_mut_i64x4(&mut a)[0] = -2_i64;
+    a.as_array_mut()[0] = -2_i64;
     assert_eq!(*a, [-2_i64, -2_i64, 3_i64, -4_i64]);
 }
 
@@ -26,7 +26,7 @@ fn as_array_mut_i64x8<S: Simd>(simd: S) {
         simd,
         &[1_i64, -2_i64, 3_i64, -4_i64, 5_i64, -6_i64, 7_i64, -8_i64],
     );
-    simd.as_array_mut_i64x8(&mut a)[0] = -2_i64;
+    a.as_array_mut()[0] = -2_i64;
     assert_eq!(
         *a,
         [-2_i64, -2_i64, 3_i64, -4_i64, 5_i64, -6_i64, 7_i64, -8_i64]
@@ -36,14 +36,14 @@ fn as_array_mut_i64x8<S: Simd>(simd: S) {
 #[simd_test]
 fn as_array_mut_u64x2<S: Simd>(simd: S) {
     let mut a = u64x2::from_slice(simd, &[1_u64, 2_u64]);
-    simd.as_array_mut_u64x2(&mut a)[0] = 2_u64;
+    a.as_array_mut()[0] = 2_u64;
     assert_eq!(*a, [2_u64, 2_u64]);
 }
 
 #[simd_test]
 fn as_array_mut_u64x4<S: Simd>(simd: S) {
     let mut a = u64x4::from_slice(simd, &[1_u64, 2_u64, 3_u64, 4_u64]);
-    simd.as_array_mut_u64x4(&mut a)[0] = 2_u64;
+    a.as_array_mut()[0] = 2_u64;
     assert_eq!(*a, [2_u64, 2_u64, 3_u64, 4_u64]);
 }
 
@@ -53,7 +53,7 @@ fn as_array_mut_u64x8<S: Simd>(simd: S) {
         simd,
         &[1_u64, 2_u64, 3_u64, 4_u64, 5_u64, 6_u64, 7_u64, 8_u64],
     );
-    simd.as_array_mut_u64x8(&mut a)[0] = 2_u64;
+    a.as_array_mut()[0] = 2_u64;
     assert_eq!(*a, [2_u64, 2_u64, 3_u64, 4_u64, 5_u64, 6_u64, 7_u64, 8_u64]);
 }
 
@@ -65,7 +65,7 @@ fn as_array_mut_i8x16<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_i8;
     let mut a = i8x16::from_slice(simd, &values);
-    simd.as_array_mut_i8x16(&mut a)[0] = 42_i8;
+    a.as_array_mut()[0] = 42_i8;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -75,7 +75,7 @@ fn as_array_mut_u8x16<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_u8;
     let mut a = u8x16::from_slice(simd, &values);
-    simd.as_array_mut_u8x16(&mut a)[0] = 42_u8;
+    a.as_array_mut()[0] = 42_u8;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -85,7 +85,7 @@ fn as_array_mut_i8x32<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_i8;
     let mut a = i8x32::from_slice(simd, &values);
-    simd.as_array_mut_i8x32(&mut a)[0] = 42_i8;
+    a.as_array_mut()[0] = 42_i8;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -95,7 +95,7 @@ fn as_array_mut_u8x32<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_u8;
     let mut a = u8x32::from_slice(simd, &values);
-    simd.as_array_mut_u8x32(&mut a)[0] = 42_u8;
+    a.as_array_mut()[0] = 42_u8;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -105,7 +105,7 @@ fn as_array_mut_i8x64<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_i8;
     let mut a = i8x64::from_slice(simd, &values);
-    simd.as_array_mut_i8x64(&mut a)[0] = 42_i8;
+    a.as_array_mut()[0] = 42_i8;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -115,7 +115,7 @@ fn as_array_mut_u8x64<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_u8;
     let mut a = u8x64::from_slice(simd, &values);
-    simd.as_array_mut_u8x64(&mut a)[0] = 42_u8;
+    a.as_array_mut()[0] = 42_u8;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -125,7 +125,7 @@ fn as_array_mut_i16x8<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_i16;
     let mut a = i16x8::from_slice(simd, &values);
-    simd.as_array_mut_i16x8(&mut a)[0] = 42_i16;
+    a.as_array_mut()[0] = 42_i16;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -135,7 +135,7 @@ fn as_array_mut_u16x8<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_u16;
     let mut a = u16x8::from_slice(simd, &values);
-    simd.as_array_mut_u16x8(&mut a)[0] = 42_u16;
+    a.as_array_mut()[0] = 42_u16;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -145,7 +145,7 @@ fn as_array_mut_i16x16<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_i16;
     let mut a = i16x16::from_slice(simd, &values);
-    simd.as_array_mut_i16x16(&mut a)[0] = 42_i16;
+    a.as_array_mut()[0] = 42_i16;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -155,7 +155,7 @@ fn as_array_mut_u16x16<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_u16;
     let mut a = u16x16::from_slice(simd, &values);
-    simd.as_array_mut_u16x16(&mut a)[0] = 42_u16;
+    a.as_array_mut()[0] = 42_u16;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -165,7 +165,7 @@ fn as_array_mut_i16x32<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_i16;
     let mut a = i16x32::from_slice(simd, &values);
-    simd.as_array_mut_i16x32(&mut a)[0] = 42_i16;
+    a.as_array_mut()[0] = 42_i16;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -175,7 +175,7 @@ fn as_array_mut_u16x32<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_u16;
     let mut a = u16x32::from_slice(simd, &values);
-    simd.as_array_mut_u16x32(&mut a)[0] = 42_u16;
+    a.as_array_mut()[0] = 42_u16;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -185,7 +185,7 @@ fn as_array_mut_f32x4<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42.5_f32;
     let mut a = f32x4::from_slice(simd, &values);
-    simd.as_array_mut_f32x4(&mut a)[0] = 42.5_f32;
+    a.as_array_mut()[0] = 42.5_f32;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -195,7 +195,7 @@ fn as_array_mut_i32x4<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_i32;
     let mut a = i32x4::from_slice(simd, &values);
-    simd.as_array_mut_i32x4(&mut a)[0] = 42_i32;
+    a.as_array_mut()[0] = 42_i32;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -205,7 +205,7 @@ fn as_array_mut_u32x4<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_u32;
     let mut a = u32x4::from_slice(simd, &values);
-    simd.as_array_mut_u32x4(&mut a)[0] = 42_u32;
+    a.as_array_mut()[0] = 42_u32;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -215,7 +215,7 @@ fn as_array_mut_f32x8<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42.5_f32;
     let mut a = f32x8::from_slice(simd, &values);
-    simd.as_array_mut_f32x8(&mut a)[0] = 42.5_f32;
+    a.as_array_mut()[0] = 42.5_f32;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -225,7 +225,7 @@ fn as_array_mut_i32x8<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_i32;
     let mut a = i32x8::from_slice(simd, &values);
-    simd.as_array_mut_i32x8(&mut a)[0] = 42_i32;
+    a.as_array_mut()[0] = 42_i32;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -235,7 +235,7 @@ fn as_array_mut_u32x8<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_u32;
     let mut a = u32x8::from_slice(simd, &values);
-    simd.as_array_mut_u32x8(&mut a)[0] = 42_u32;
+    a.as_array_mut()[0] = 42_u32;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -245,7 +245,7 @@ fn as_array_mut_f32x16<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42.5_f32;
     let mut a = f32x16::from_slice(simd, &values);
-    simd.as_array_mut_f32x16(&mut a)[0] = 42.5_f32;
+    a.as_array_mut()[0] = 42.5_f32;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -255,7 +255,7 @@ fn as_array_mut_i32x16<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_i32;
     let mut a = i32x16::from_slice(simd, &values);
-    simd.as_array_mut_i32x16(&mut a)[0] = 42_i32;
+    a.as_array_mut()[0] = 42_i32;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -265,7 +265,7 @@ fn as_array_mut_u32x16<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42_u32;
     let mut a = u32x16::from_slice(simd, &values);
-    simd.as_array_mut_u32x16(&mut a)[0] = 42_u32;
+    a.as_array_mut()[0] = 42_u32;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -275,7 +275,7 @@ fn as_array_mut_f64x2<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42.5_f64;
     let mut a = f64x2::from_slice(simd, &values);
-    simd.as_array_mut_f64x2(&mut a)[0] = 42.5_f64;
+    a.as_array_mut()[0] = 42.5_f64;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -285,7 +285,7 @@ fn as_array_mut_f64x4<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42.5_f64;
     let mut a = f64x4::from_slice(simd, &values);
-    simd.as_array_mut_f64x4(&mut a)[0] = 42.5_f64;
+    a.as_array_mut()[0] = 42.5_f64;
     assert_eq!(a.as_slice(), expected.as_slice());
 }
 
@@ -295,6 +295,6 @@ fn as_array_mut_f64x8<S: Simd>(simd: S) {
     let mut expected = values;
     expected[0] = 42.5_f64;
     let mut a = f64x8::from_slice(simd, &values);
-    simd.as_array_mut_f64x8(&mut a)[0] = 42.5_f64;
+    a.as_array_mut()[0] = 42.5_f64;
     assert_eq!(a.as_slice(), expected.as_slice());
 }

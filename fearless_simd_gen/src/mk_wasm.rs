@@ -6,8 +6,7 @@ use quote::{format_ident, quote};
 
 use crate::arch::wasm::{arch_prefix, v128_intrinsic};
 use crate::generic::{
-    fallback_method, generic_as_array, generic_block_combine, generic_block_split,
-    generic_from_array, generic_mask_set, generic_op_name, generic_store_array,
+    fallback_method, generic_block_combine, generic_block_split, generic_mask_set, generic_op_name,
     integer_lane_mask_splat_arg, recursive_swizzle_dyn_precise_body,
 };
 use crate::level::Level;
@@ -768,19 +767,6 @@ impl Level for WasmSimd128 {
                     _ => panic!("unsupported scalar_bits"),
                 };
 
-                let block_ty = vec_ty.block_ty();
-                let block_ty_2x =
-                    VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
-
-                let combine_method = generic_op_name("combine", &block_ty);
-                let combine_method_2x = generic_op_name("combine", &block_ty_2x);
-
-                let combine_code = quote! {
-                    let combined_lower = self.#combine_method(out0.simd_into(self), out1.simd_into(self));
-                    let combined_upper = self.#combine_method(out2.simd_into(self), out3.simd_into(self));
-                    self.#combine_method_2x(combined_lower, combined_upper)
-                };
-
                 let shuffle_code = if vec_ty.scalar_bits == 64 {
                     quote! {
                         let out0 = #shuffle_fn::<#i1>(v0, v2);
@@ -825,7 +811,12 @@ impl Level for WasmSimd128 {
                             );
 
                             #shuffle_code
-                            #combine_code
+                            [
+                                out0.simd_into(self),
+                                out1.simd_into(self),
+                                out2.simd_into(self),
+                                out3.simd_into(self),
+                            ]
                     }
                 }
             }
@@ -857,24 +848,11 @@ impl Level for WasmSimd128 {
                     _ => panic!("unsupported scalar_bits"),
                 };
 
-                let block_ty = vec_ty.block_ty();
-                let block_ty_2x =
-                    VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 2);
-                let block_ty_4x =
-                    VecType::new(block_ty.scalar, block_ty.scalar_bits, block_ty.len * 4);
-
-                let split_method = generic_op_name("split", &block_ty_2x);
-                let split_method_2x = generic_op_name("split", &block_ty_4x);
-
                 let split_code = quote! {
-                    let (lower, upper) = self.#split_method_2x(a);
-                    let (v0_vec, v1_vec) = self.#split_method(lower);
-                    let (v2_vec, v3_vec) = self.#split_method(upper);
-
-                    let v0: v128 = v0_vec.into();
-                    let v1: v128 = v1_vec.into();
-                    let v2: v128 = v2_vec.into();
-                    let v3: v128 = v3_vec.into();
+                    let v0: v128 = vectors[0].into();
+                    let v1: v128 = vectors[1].into();
+                    let v2: v128 = vectors[2].into();
+                    let v3: v128 = vectors[3].into();
                 };
 
                 let shuffle_code = if vec_ty.scalar_bits == 64 {
@@ -919,13 +897,6 @@ impl Level for WasmSimd128 {
                     }
                 }
             }
-            OpSig::FromArray { kind } => generic_from_array(method_sig, vec_ty, kind),
-            OpSig::AsArray { kind } => {
-                generic_as_array(method_sig, vec_ty, kind, self.max_block_size(), |_| {
-                    Ident::new("v128", Span::call_site())
-                })
-            }
-            OpSig::StoreArray => generic_store_array(method_sig, vec_ty),
             OpSig::Interleave => {
                 let zip_low = generic_op_name("zip_low", vec_ty);
                 let zip_high = generic_op_name("zip_high", vec_ty);
