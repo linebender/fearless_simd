@@ -1116,6 +1116,8 @@ impl X86 {
             vec_ty.n_bits(),
         );
 
+        // Mask arrays are specified as either 0 or -1 per lane, so the sign bit is the
+        // truth value. Other lane values have unspecified results.
         quote! {
             #[inline(always)]
             fn #from_array(self, val: [#scalar; #len]) -> Self::#storage_assoc {

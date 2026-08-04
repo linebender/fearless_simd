@@ -216,6 +216,9 @@ pub(crate) fn mk_simd_types() -> TokenStream {
                 }
             });
         }
+        // There are architecture-specific "load" intrinsics, but they can actually be *worse* for performance. If they
+        // lower to LLVM intrinsics, they will likely not be optimized until much later in the pipeline (if at all),
+        // resulting in substantially worse codegen. See https://github.com/linebender/fearless_simd/pull/185.
         result.extend(quote! {
             #[doc = #doc]
             #[derive(Clone, Copy)]
