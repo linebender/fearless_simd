@@ -560,8 +560,7 @@ pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType)
 
     quote! {
         #method_sig {
-            let mut lanes = [0 as #scalar; #len];
-            a.store_slice(&mut lanes);
+            let lanes: [#scalar; #len] = a.into();
             let mut bits = 0u64;
             let mut i = 0;
             while i < #len {
@@ -577,7 +576,6 @@ pub(crate) fn generic_mask_to_bitmask(method_sig: TokenStream, vec_ty: &VecType)
 
 pub(crate) fn generic_mask_set(method_sig: TokenStream, vec_ty: &VecType) -> TokenStream {
     let scalar = vec_ty.scalar.rust(vec_ty.scalar_bits);
-    let vec_rust = vec_ty.rust();
     let len = vec_ty.len;
 
     quote! {
@@ -587,10 +585,9 @@ pub(crate) fn generic_mask_set(method_sig: TokenStream, vec_ty: &VecType) -> Tok
                 "mask lane index {index} is out of bounds for {} lanes",
                 #len
             );
-            let mut lanes = [0 as #scalar; #len];
-            a.store_slice(&mut lanes);
+            let mut lanes: [#scalar; #len] = (*a).into();
             lanes[index] = if value { !0 } else { 0 };
-            *a = #vec_rust::from_slice(self, &lanes);
+            *a = lanes.simd_into(self);
         }
     }
 }

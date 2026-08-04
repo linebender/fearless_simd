@@ -1046,10 +1046,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = [0 as i8; 16usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i8; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask8x16::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x16(self, a: mask8x16<Self>, b: mask8x16<Self>) -> mask8x16<Self> {
@@ -1627,10 +1626,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = [0 as i16; 8usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i16; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask16x8::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x8(self, a: mask16x8<Self>, b: mask16x8<Self>) -> mask16x8<Self> {
@@ -2168,10 +2166,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             4usize
         );
-        let mut lanes = [0 as i32; 4usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i32; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask32x4::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x4(self, a: mask32x4<Self>, b: mask32x4<Self>) -> mask32x4<Self> {
@@ -2977,10 +2974,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             2usize
         );
-        let mut lanes = [0 as i64; 2usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i64; 2usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask64x2::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x2(self, a: mask64x2<Self>, b: mask64x2<Self>) -> mask64x2<Self> {
@@ -4271,10 +4267,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             32usize
         );
-        let mut lanes = [0 as i8; 32usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i8; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask8x32::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x32(self, a: mask8x32<Self>, b: mask8x32<Self>) -> mask8x32<Self> {
@@ -5089,10 +5084,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = [0 as i16; 16usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i16; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask16x16::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x16(self, a: mask16x16<Self>, b: mask16x16<Self>) -> mask16x16<Self> {
@@ -5836,10 +5830,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = [0 as i32; 8usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i32; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask32x8::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x8(self, a: mask32x8<Self>, b: mask32x8<Self>) -> mask32x8<Self> {
@@ -6890,10 +6883,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             4usize
         );
-        let mut lanes = [0 as i64; 4usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i64; 4usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask64x4::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x4(self, a: mask64x4<Self>, b: mask64x4<Self>) -> mask64x4<Self> {
@@ -8576,10 +8568,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             64usize
         );
-        let mut lanes = [0 as i8; 64usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i8; 64usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask8x64::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask8x64(self, a: mask8x64<Self>, b: mask8x64<Self>) -> mask8x64<Self> {
@@ -9545,10 +9536,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             32usize
         );
-        let mut lanes = [0 as i16; 32usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i16; 32usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask16x32::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask16x32(self, a: mask16x32<Self>, b: mask16x32<Self>) -> mask16x32<Self> {
@@ -10382,10 +10372,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             16usize
         );
-        let mut lanes = [0 as i32; 16usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i32; 16usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask32x16::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask32x16(self, a: mask32x16<Self>, b: mask32x16<Self>) -> mask32x16<Self> {
@@ -11479,10 +11468,9 @@ impl Simd for WasmSimd128 {
             "mask lane index {index} is out of bounds for {} lanes",
             8usize
         );
-        let mut lanes = [0 as i64; 8usize];
-        a.store_slice(&mut lanes);
+        let mut lanes: [i64; 8usize] = (*a).into();
         lanes[index] = if value { !0 } else { 0 };
-        *a = mask64x8::from_slice(self, &lanes);
+        *a = lanes.simd_into(self);
     }
     #[inline(always)]
     fn and_mask64x8(self, a: mask64x8<Self>, b: mask64x8<Self>) -> mask64x8<Self> {
