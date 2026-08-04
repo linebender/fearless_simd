@@ -93,3 +93,57 @@ fn swizzle_dyn_generic_indices<S: Simd>(simd: S) {
 
     assert_swizzle_dyn(bytes, indices, *result);
 }
+
+#[simd_test]
+#[ignore = "this test is slow"]
+// run with: cargo test --release swizzle_dyn_random_u8_all_widths -- --ignored
+fn swizzle_dyn_random_u8_all_widths<S: Simd>(simd: S) {
+    let mut rng = fastrand::Rng::with_seed(0x5eed_5eed_cafe_f00d);
+
+    for iteration in 0..100_000 {
+        let mut bytes: [u8; 64] = [0; 64];
+        let mut indices: [u8; 64] = [0; 64];
+        rng.fill(&mut bytes);
+        rng.fill(&mut indices);
+
+        let bytes16 = &bytes[..16];
+        let indices16 = &indices[..16];
+        let value16 = u8x16::from_slice(simd, bytes16);
+        let index_vec16 = u8x16::from_slice(simd, indices16);
+        let result16 = value16.swizzle_dyn(index_vec16);
+        assert_random_swizzle_dyn_from_slice(bytes16, indices16, *result16, iteration);
+
+        let bytes32 = &bytes[..32];
+        let indices32 = &indices[..32];
+        let value32 = u8x32::from_slice(simd, bytes32);
+        let index_vec32 = u8x32::from_slice(simd, indices32);
+        let result32 = value32.swizzle_dyn(index_vec32);
+        assert_random_swizzle_dyn_from_slice(bytes32, indices32, *result32, iteration);
+
+        let bytes64 = &bytes[..64];
+        let indices64 = &indices[..64];
+        let value64 = u8x64::from_slice(simd, bytes64);
+        let index_vec64 = u8x64::from_slice(simd, indices64);
+        let result64 = value64.swizzle_dyn(index_vec64);
+        assert_random_swizzle_dyn_from_slice(bytes64, indices64, *result64, iteration);
+    }
+}
+
+fn assert_random_swizzle_dyn_from_slice<const N: usize>(
+    bytes: &[u8],
+    indices: &[u8],
+    result: [u8; N],
+    iteration: usize,
+) {
+    assert_eq!(bytes.len(), N);
+    assert_eq!(indices.len(), N);
+    for i in 0..N {
+        let index = indices[i] as usize;
+        if index < N {
+            assert_eq!(
+                result[i], bytes[index],
+                "iteration {iteration}, width {N}, output lane {i}, index {index}"
+            );
+        }
+    }
+}
