@@ -160,10 +160,8 @@ impl Level for Neon {
 
                 quote! {
                     #method_sig {
-                        unsafe {
-                            let native = #intrinsic(src.as_ptr());
-                            [#(native.#fields.simd_into(self)),*]
-                        }
+                        let native = unsafe { #intrinsic(src.as_ptr()) };
+                        [#(native.#fields.simd_into(self)),*]
                     }
                 }
             }
@@ -189,10 +187,8 @@ impl Level for Neon {
 
                 quote! {
                     #method_sig {
-                        unsafe {
-                            #(#native_decls)*
-                            #intrinsic(dest.as_mut_ptr(), #aggregate_ty(#(#native_values),*));
-                        }
+                        #(#native_decls)*
+                        unsafe { #intrinsic(dest.as_mut_ptr(), #aggregate_ty(#(#native_values),*)); }
                     }
                 }
             }

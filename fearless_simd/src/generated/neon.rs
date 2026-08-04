@@ -551,15 +551,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_f32x4(self, src: &[f32; 16usize]) -> [f32x4<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_f32(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_f32(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_f32x4(
@@ -567,11 +565,11 @@ impl Simd for Neon {
         vectors: [f32x4<Self>; 4usize],
         dest: &mut [f32; 16usize],
     ) -> () {
+        let v0: float32x4_t = vectors[0usize].into();
+        let v1: float32x4_t = vectors[1usize].into();
+        let v2: float32x4_t = vectors[2usize].into();
+        let v3: float32x4_t = vectors[3usize].into();
         unsafe {
-            let v0: float32x4_t = vectors[0usize].into();
-            let v1: float32x4_t = vectors[1usize].into();
-            let v2: float32x4_t = vectors[2usize].into();
-            let v3: float32x4_t = vectors[3usize].into();
             vst4q_f32(dest.as_mut_ptr(), float32x4x4_t(v0, v1, v2, v3));
         }
     }
@@ -1035,15 +1033,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_i8x16(self, src: &[i8; 64usize]) -> [i8x16<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_s8(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_s8(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_i8x16(
@@ -1051,11 +1047,11 @@ impl Simd for Neon {
         vectors: [i8x16<Self>; 4usize],
         dest: &mut [i8; 64usize],
     ) -> () {
+        let v0: int8x16_t = vectors[0usize].into();
+        let v1: int8x16_t = vectors[1usize].into();
+        let v2: int8x16_t = vectors[2usize].into();
+        let v3: int8x16_t = vectors[3usize].into();
         unsafe {
-            let v0: int8x16_t = vectors[0usize].into();
-            let v1: int8x16_t = vectors[1usize].into();
-            let v2: int8x16_t = vectors[2usize].into();
-            let v3: int8x16_t = vectors[3usize].into();
             vst4q_s8(dest.as_mut_ptr(), int8x16x4_t(v0, v1, v2, v3));
         }
     }
@@ -1481,15 +1477,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_u8x16(self, src: &[u8; 64usize]) -> [u8x16<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_u8(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_u8(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_u8x16(
@@ -1497,11 +1491,11 @@ impl Simd for Neon {
         vectors: [u8x16<Self>; 4usize],
         dest: &mut [u8; 64usize],
     ) -> () {
+        let v0: uint8x16_t = vectors[0usize].into();
+        let v1: uint8x16_t = vectors[1usize].into();
+        let v2: uint8x16_t = vectors[2usize].into();
+        let v3: uint8x16_t = vectors[3usize].into();
         unsafe {
-            let v0: uint8x16_t = vectors[0usize].into();
-            let v1: uint8x16_t = vectors[1usize].into();
-            let v2: uint8x16_t = vectors[2usize].into();
-            let v3: uint8x16_t = vectors[3usize].into();
             vst4q_u8(dest.as_mut_ptr(), uint8x16x4_t(v0, v1, v2, v3));
         }
     }
@@ -2093,15 +2087,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_i16x8(self, src: &[i16; 32usize]) -> [i16x8<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_s16(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_s16(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_i16x8(
@@ -2109,11 +2101,11 @@ impl Simd for Neon {
         vectors: [i16x8<Self>; 4usize],
         dest: &mut [i16; 32usize],
     ) -> () {
+        let v0: int16x8_t = vectors[0usize].into();
+        let v1: int16x8_t = vectors[1usize].into();
+        let v2: int16x8_t = vectors[2usize].into();
+        let v3: int16x8_t = vectors[3usize].into();
         unsafe {
-            let v0: int16x8_t = vectors[0usize].into();
-            let v1: int16x8_t = vectors[1usize].into();
-            let v2: int16x8_t = vectors[2usize].into();
-            let v3: int16x8_t = vectors[3usize].into();
             vst4q_s16(dest.as_mut_ptr(), int16x8x4_t(v0, v1, v2, v3));
         }
     }
@@ -2507,15 +2499,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_u16x8(self, src: &[u16; 32usize]) -> [u16x8<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_u16(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_u16(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_u16x8(
@@ -2523,11 +2513,11 @@ impl Simd for Neon {
         vectors: [u16x8<Self>; 4usize],
         dest: &mut [u16; 32usize],
     ) -> () {
+        let v0: uint16x8_t = vectors[0usize].into();
+        let v1: uint16x8_t = vectors[1usize].into();
+        let v2: uint16x8_t = vectors[2usize].into();
+        let v3: uint16x8_t = vectors[3usize].into();
         unsafe {
-            let v0: uint16x8_t = vectors[0usize].into();
-            let v1: uint16x8_t = vectors[1usize].into();
-            let v2: uint16x8_t = vectors[2usize].into();
-            let v3: uint16x8_t = vectors[3usize].into();
             vst4q_u16(dest.as_mut_ptr(), uint16x8x4_t(v0, v1, v2, v3));
         }
     }
@@ -3083,15 +3073,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_i32x4(self, src: &[i32; 16usize]) -> [i32x4<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_s32(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_s32(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_i32x4(
@@ -3099,11 +3087,11 @@ impl Simd for Neon {
         vectors: [i32x4<Self>; 4usize],
         dest: &mut [i32; 16usize],
     ) -> () {
+        let v0: int32x4_t = vectors[0usize].into();
+        let v1: int32x4_t = vectors[1usize].into();
+        let v2: int32x4_t = vectors[2usize].into();
+        let v3: int32x4_t = vectors[3usize].into();
         unsafe {
-            let v0: int32x4_t = vectors[0usize].into();
-            let v1: int32x4_t = vectors[1usize].into();
-            let v2: int32x4_t = vectors[2usize].into();
-            let v3: int32x4_t = vectors[3usize].into();
             vst4q_s32(dest.as_mut_ptr(), int32x4x4_t(v0, v1, v2, v3));
         }
     }
@@ -3491,15 +3479,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_u32x4(self, src: &[u32; 16usize]) -> [u32x4<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_u32(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_u32(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_u32x4(
@@ -3507,11 +3493,11 @@ impl Simd for Neon {
         vectors: [u32x4<Self>; 4usize],
         dest: &mut [u32; 16usize],
     ) -> () {
+        let v0: uint32x4_t = vectors[0usize].into();
+        let v1: uint32x4_t = vectors[1usize].into();
+        let v2: uint32x4_t = vectors[2usize].into();
+        let v3: uint32x4_t = vectors[3usize].into();
         unsafe {
-            let v0: uint32x4_t = vectors[0usize].into();
-            let v1: uint32x4_t = vectors[1usize].into();
-            let v2: uint32x4_t = vectors[2usize].into();
-            let v3: uint32x4_t = vectors[3usize].into();
             vst4q_u32(dest.as_mut_ptr(), uint32x4x4_t(v0, v1, v2, v3));
         }
     }
@@ -4131,15 +4117,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_f64x2(self, src: &[f64; 8usize]) -> [f64x2<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_f64(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_f64(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_f64x2(
@@ -4147,11 +4131,11 @@ impl Simd for Neon {
         vectors: [f64x2<Self>; 4usize],
         dest: &mut [f64; 8usize],
     ) -> () {
+        let v0: float64x2_t = vectors[0usize].into();
+        let v1: float64x2_t = vectors[1usize].into();
+        let v2: float64x2_t = vectors[2usize].into();
+        let v3: float64x2_t = vectors[3usize].into();
         unsafe {
-            let v0: float64x2_t = vectors[0usize].into();
-            let v1: float64x2_t = vectors[1usize].into();
-            let v2: float64x2_t = vectors[2usize].into();
-            let v3: float64x2_t = vectors[3usize].into();
             vst4q_f64(dest.as_mut_ptr(), float64x2x4_t(v0, v1, v2, v3));
         }
     }
@@ -4525,15 +4509,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_i64x2(self, src: &[i64; 8usize]) -> [i64x2<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_s64(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_s64(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_i64x2(
@@ -4541,11 +4523,11 @@ impl Simd for Neon {
         vectors: [i64x2<Self>; 4usize],
         dest: &mut [i64; 8usize],
     ) -> () {
+        let v0: int64x2_t = vectors[0usize].into();
+        let v1: int64x2_t = vectors[1usize].into();
+        let v2: int64x2_t = vectors[2usize].into();
+        let v3: int64x2_t = vectors[3usize].into();
         unsafe {
-            let v0: int64x2_t = vectors[0usize].into();
-            let v1: int64x2_t = vectors[1usize].into();
-            let v2: int64x2_t = vectors[2usize].into();
-            let v3: int64x2_t = vectors[3usize].into();
             vst4q_s64(dest.as_mut_ptr(), int64x2x4_t(v0, v1, v2, v3));
         }
     }
@@ -4909,15 +4891,13 @@ impl Simd for Neon {
     }
     #[inline(always)]
     fn load_four_interleaved_u64x2(self, src: &[u64; 8usize]) -> [u64x2<Self>; 4usize] {
-        unsafe {
-            let native = vld4q_u64(src.as_ptr());
-            [
-                native.0.simd_into(self),
-                native.1.simd_into(self),
-                native.2.simd_into(self),
-                native.3.simd_into(self),
-            ]
-        }
+        let native = unsafe { vld4q_u64(src.as_ptr()) };
+        [
+            native.0.simd_into(self),
+            native.1.simd_into(self),
+            native.2.simd_into(self),
+            native.3.simd_into(self),
+        ]
     }
     #[inline(always)]
     fn store_four_interleaved_u64x2(
@@ -4925,11 +4905,11 @@ impl Simd for Neon {
         vectors: [u64x2<Self>; 4usize],
         dest: &mut [u64; 8usize],
     ) -> () {
+        let v0: uint64x2_t = vectors[0usize].into();
+        let v1: uint64x2_t = vectors[1usize].into();
+        let v2: uint64x2_t = vectors[2usize].into();
+        let v3: uint64x2_t = vectors[3usize].into();
         unsafe {
-            let v0: uint64x2_t = vectors[0usize].into();
-            let v1: uint64x2_t = vectors[1usize].into();
-            let v2: uint64x2_t = vectors[2usize].into();
-            let v3: uint64x2_t = vectors[3usize].into();
             vst4q_u64(dest.as_mut_ptr(), uint64x2x4_t(v0, v1, v2, v3));
         }
     }
