@@ -638,7 +638,7 @@ const BASE_OPS: &[Op] = &[
         OpKind::BaseTraitMethod,
         OpSig::SwizzleDyn,
         "Dynamically swizzle this vector's bytes across the whole vector.\n\n\
-        The `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values without undefined behavior.\n\n\
+        The `indices` operand is a same-width byte vector. For each output byte, index values within the vector's byte length select the corresponding byte from the input vector. Out-of-range indices safely produce implementation-defined byte values.\n\n\
         Use [`SimdBase::swizzle_dyn_precise`] if out-of-range indices must produce zero.",
     ),
     Op::new(
